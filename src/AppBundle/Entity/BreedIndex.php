@@ -229,4 +229,17 @@ abstract class BreedIndex
     }
 
 
+    /**
+     * @return array
+     */
+    public static function getTypes()
+    {
+        return [
+            "exterior" => "Exterior",
+            "fertility" => "Fertility",
+            "lamb_meat" => "LambMeat",
+            "worm_resistance" => "WormResistance",
+        ];
+    }
+
 }

@@ -3,6 +3,7 @@
 namespace AppBundle\Report;
 
 
+use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\JsonInputConstant;
@@ -61,11 +62,8 @@ class PedigreeCertificate
     const FAT_DECIMAL_ACCURACY = 2;
     const MUSCLE_THICKNESS_DECIMAL_ACCURACY = 2;
     const GROWTH_DECIMAL_ACCURACY = 1;
-    const LAMB_MEAT_INDEX_DECIMAL_ACCURACY = 0;
 
     const STARS_NULL_VALUE = null;
-    const EMPTY_BREED_VALUE = '-/-';
-    const EMPTY_INDEX_VALUE = '-/-';
     const EMPTY_SCRAPIE_GENOTYPE = '-/-';
 
     const GENERATION_OF_ASCENDANTS = 3;
@@ -806,10 +804,10 @@ class PedigreeCertificate
      */
     private static function getFormattedLambMeatIndexWithAccuracy($breedValuesArray)
     {
-        return BreedValueUtil::getFormattedLamMeatIndexWithAccuracy(
+        return BreedFormat::getJoinedLambMeatIndex(
             $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX],
-            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY],
-            self::EMPTY_INDEX_VALUE);
+            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY]
+        );
     }
 
 

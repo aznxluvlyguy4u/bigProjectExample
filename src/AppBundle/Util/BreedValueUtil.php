@@ -3,6 +3,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\ReportFormat;
@@ -22,23 +23,6 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class BreedValueUtil
 {
-    const DEFAULT_AGE_NULL_FILLER = '-';
-    const DEFAULT_GROWTH_NULL_FILLER = '-';
-    const DEFAULT_WEIGHT_NULL_FILLER = '-';
-    const DEFAULT_DECIMAL_SYMBOL = '.';
-
-    //Scaling
-    const LAMB_MEAT_INDEX_SCALE = 100; //This will be added to the lambMeatIndex value
-
-    //Minimum accuracies for the calculation
-    const MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX = 0.40;
-
-    //If the following accuracy are lower, they are ignored in the PedigreeCertificate
-    const MIN_LAMB_MEAT_INDEX_ACCURACY = 0.30;
-    const MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT = 0.30; //Valid Growth, MuscleThickness and Fat BreedValues should at least have this accuracy
-
-    const DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS = 7;
-
 
     /**
      * @param float $weightOnThatMoment
@@ -50,10 +34,10 @@ class BreedValueUtil
      * @return float
      */
     public static function getGrowthValue($weightOnThatMoment, $ageInDays,
-                                          $ageNullFiller = self::DEFAULT_AGE_NULL_FILLER,
-                                          $growthNullFiller = self::DEFAULT_GROWTH_NULL_FILLER,
-                                          $weightNullFiller = self::DEFAULT_WEIGHT_NULL_FILLER,
-                                          $decimalSymbol = self::DEFAULT_DECIMAL_SYMBOL)
+                                          $ageNullFiller = BreedFormat::DEFAULT_AGE_NULL_FILLER,
+                                          $growthNullFiller = BreedFormat::DEFAULT_GROWTH_NULL_FILLER,
+                                          $weightNullFiller = BreedFormat::DEFAULT_WEIGHT_NULL_FILLER,
+                                          $decimalSymbol = BreedFormat::DEFAULT_DECIMAL_SYMBOL)
     {
         if($weightOnThatMoment == null || $weightOnThatMoment == 0 || $weightOnThatMoment == $weightNullFiller
             || $ageInDays == null || $ageInDays == 0 || $ageInDays == $ageNullFiller) {
@@ -127,11 +111,11 @@ class BreedValueUtil
         foreach ($accuracyLabels as $accuracyLabel) {
             $traitLabel = $traits->get($accuracyLabel);
             if($accuracyLabel == null) {
-                $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
+                $displayedString = BreedFormat::EMPTY_BREED_VALUE;
             } else {
                 $rawBreedValue = Utils::getNullCheckedArrayValue($traitLabel, $breedValues);
-                if($rawBreedValue == null || $breedValues[$accuracyLabel] < self::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
-                    $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
+                if($rawBreedValue == null || $breedValues[$accuracyLabel] < BreedFormat::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
+                    $displayedString = BreedFormat::EMPTY_BREED_VALUE;
                 } else {
                     $breedValue = round($rawBreedValue*$factors->get($accuracyLabel), $decimalAccuracyLabels->get($accuracyLabel));
                     $accuracy = BreedValueUtil::formatAccuracyForDisplay($breedValues[$accuracyLabel]);
@@ -144,37 +128,6 @@ class BreedValueUtil
         $traits = null; $decimalAccuracyLabels = null; $factors = null;
         
         return $results;
-    }
-
-
-    /**
-     * @param $lambMeatIndex
-     * @param $lambMeatIndexAccuracy
-     * @param string $nullString
-     * @return string
-     */
-    public static function getFormattedLamMeatIndexWithAccuracy($lambMeatIndex, $lambMeatIndexAccuracy, $nullString = PedigreeCertificate::EMPTY_INDEX_VALUE)
-    {
-        if($lambMeatIndex == null || $lambMeatIndexAccuracy == null || NumberUtil::isFloatZero($lambMeatIndexAccuracy)) {
-            return $nullString;
-
-        } elseif($lambMeatIndexAccuracy < self::MIN_LAMB_MEAT_INDEX_ACCURACY) {
-            return $nullString;
-
-        } else {
-            $scaledLambMeatIndex = self::calculateScaledLamMeatIndex($lambMeatIndex);
-            return round($scaledLambMeatIndex, PedigreeCertificate::LAMB_MEAT_INDEX_DECIMAL_ACCURACY).'/'.round($lambMeatIndexAccuracy*100);
-        }
-    }
-
-
-    /**
-     * @param float $lambMeatIndex
-     * @return float
-     */
-    public static function calculateScaledLamMeatIndex($lambMeatIndex)
-    {
-        return $lambMeatIndex + self::LAMB_MEAT_INDEX_SCALE;
     }
 
 
@@ -392,9 +345,9 @@ class BreedValueUtil
         
         //First do a null check
         if($allValuesAreNotNull) {
-            return !($muscleThicknessAccuracy >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
-                && $fatAccuracy  >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
-                && $growthAccuracy >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX);
+            return !($muscleThicknessAccuracy >= BreedFormat::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
+                && $fatAccuracy  >= BreedFormat::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
+                && $growthAccuracy >= BreedFormat::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX);
         } else {
             return true;
         }
@@ -427,7 +380,7 @@ class BreedValueUtil
      * @param int $decimals
      * @return float
      */
-    public static function calculateLambMeatIndexAccuracyCoefficient($lambMeatIndex, $lambMeatIndexGeneticVariance, $decimals = self::DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS)
+    public static function calculateLambMeatIndexAccuracyCoefficient($lambMeatIndex, $lambMeatIndexGeneticVariance, $decimals = BreedFormat::DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS)
     {
         return round((pow($lambMeatIndex, 2)) * $lambMeatIndexGeneticVariance, $decimals);
     }

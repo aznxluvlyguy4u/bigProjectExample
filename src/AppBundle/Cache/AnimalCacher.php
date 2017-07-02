@@ -2,6 +2,7 @@
 
 namespace AppBundle\Cache;
 
+use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MeasurementConstant;
@@ -39,7 +40,6 @@ class AnimalCacher
     const GENERAL_NULL_FILLER = '-';
     const EMPTY_DATE_OF_BIRTH = '-';
     const NEUTER_STRING = '-';
-    const EMPTY_INDEX_VALUE = '-/-';
     const FLUSH_BATCH_SIZE = 1000;
 
     //Cache setting
@@ -339,7 +339,7 @@ class AnimalCacher
         $lambMeatIndexAccuracy = $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY];
         //NOTE! Only include the lambIndexValue if the accuracy is at least the MIN accuracy required
         $lambMeatIndexWithoutAccuracy = 'NULL';
-        if($lambMeatIndexAccuracy >= BreedValueUtil::MIN_LAMB_MEAT_INDEX_ACCURACY) {
+        if($lambMeatIndexAccuracy >= BreedFormat::MIN_LAMB_MEAT_INDEX_ACCURACY) {
             $lambMeatIndexWithoutAccuracy = SqlUtil::getNullCheckedValueForSqlQuery($breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX],true);
         }
         $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValuesArray);
@@ -436,7 +436,7 @@ class AnimalCacher
         $lambMeatIndexAccuracy = $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY];
         //NOTE! Only include the lambIndexValue if the accuracy is at least the MIN accuracy required
         $lambMeatIndexWithoutAccuracy = null;
-        if($lambMeatIndexAccuracy >= BreedValueUtil::MIN_LAMB_MEAT_INDEX_ACCURACY) {
+        if($lambMeatIndexAccuracy >= BreedFormat::MIN_LAMB_MEAT_INDEX_ACCURACY) {
             $lambMeatIndexWithoutAccuracy = $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX];
         }
         $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValuesArray);
@@ -823,10 +823,10 @@ class AnimalCacher
      */
     public static function getFormattedLambMeatIndexWithAccuracy($breedValuesArray)
     {
-        return BreedValueUtil::getFormattedLamMeatIndexWithAccuracy(
+        return BreedFormat::getJoinedLambMeatIndex(
             $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX],
-            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY],
-            self::EMPTY_INDEX_VALUE);
+            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY]
+        );
     }
 
 
