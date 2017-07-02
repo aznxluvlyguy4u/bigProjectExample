@@ -216,16 +216,16 @@ class BreedValuesResultTableUpdater
 
             //Update obsolete value to null
             $sql = "UPDATE result_table_breed_grades
-                    SET lamb_meat_index = NULL, lamb_meat_accuracy = NULL
+                    SET $valueVar = NULL, $accuracyVar = NULL
                     WHERE animal_id IN (
                       SELECT r.animal_id
                       FROM result_table_breed_grades r
                         LEFT JOIN
                         (
                           SELECT * FROM breed_index
-                          WHERE type = 'LambMeat'
+                          WHERE type = '$camelCaseType'
                         )i ON r.animal_id = i.animal_id
-                      WHERE i.id ISNULL AND (r.lamb_meat_index NOTNULL OR r.lamb_meat_accuracy NOTNULL)
+                      WHERE i.id ISNULL AND (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL)
                     )";
             $updateCount += SqlUtil::updateWithCount($this->conn, $sql);
 
