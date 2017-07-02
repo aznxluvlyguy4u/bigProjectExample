@@ -19,8 +19,6 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class BreedValuesResultTableUpdater
 {
-    const DEFAULT_PRIORITIZE_SPEED_OVER_DATABASE_SIZE = true;
-
     /** @var ObjectManager */
     private $em;
     /** @var Connection */
@@ -30,8 +28,6 @@ class BreedValuesResultTableUpdater
 
     /** @var string */
     private $resultTableName;
-    /** @var boolean */
-    private $prioritizeSpeedOverDatabaseSize;
 
     /**
      * BreedValuesResultTableUpdater constructor.
@@ -45,7 +41,6 @@ class BreedValuesResultTableUpdater
         $this->logger = $logger;
 
         $this->resultTableName = ResultTableBreedGrades::TABLE_NAME;
-        $this->prioritizeSpeedOverDatabaseSize = self::DEFAULT_PRIORITIZE_SPEED_OVER_DATABASE_SIZE;
     }
 
 
@@ -107,9 +102,6 @@ class BreedValuesResultTableUpdater
          * TODO Updating breedValueIndex result table values and accuracies
          */
 
-        if(!$this->prioritizeSpeedOverDatabaseSize) {
-            $this->deleteObsoleteRecords();
-        }
     }
 
 
@@ -124,24 +116,11 @@ class BreedValuesResultTableUpdater
     {
         $this->write('Inserting blank records into '.$this->resultTableName.' table ...');
 
-        if($this->prioritizeSpeedOverDatabaseSize) {
-            $sql = "INSERT INTO result_table_breed_grades (animal_id)
+        $sql = "INSERT INTO result_table_breed_grades (animal_id)
                      SELECT a.id as animal_id
                         FROM animal a
                         LEFT JOIN result_table_breed_grades r ON r.animal_id = a.id
                         WHERE r.id ISNULL";
-        } else {
-            $sql = "INSERT INTO result_table_breed_grades (animal_id)
-                  SELECT animal_id
-                  FROM breed_value b
-                    LEFT JOIN breed_value_type t ON b.type_id = t.id
-                  WHERE animal_id NOT IN (
-                    SELECT animal_id FROM result_table_breed_grades
-                    GROUP BY animal_id
-                  )
-                  AND b.reliability >= t.min_reliability
-                  GROUP BY animal_id";
-        }
 
         $insertCount = SqlUtil::updateWithCount($this->conn, $sql);
 
@@ -179,8 +158,8 @@ class BreedValuesResultTableUpdater
                          INNER JOIN result_table_breed_grades r ON r.animal_id = b.animal_id
                        WHERE
                          t.result_table_value_variable = '$valueVar' AND
-                         b.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
-                         r.$valueVar ISNULL OR r.$accuracyVar ISNULL
+                         (b.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
+                         r.$valueVar ISNULL OR r.$accuracyVar ISNULL)
                 ) as v(animal_id, value, reliabilty, accuracy)
                 WHERE result_table_breed_grades.animal_id = v.animal_id";
         $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
@@ -190,50 +169,6 @@ class BreedValuesResultTableUpdater
         $this->write($message);
 
         return $updateCount;
-    }
-
-
-    /**
-     * @return int
-     */
-    private function deleteObsoleteRecords()
-    {
-        //TODO Recheck logic later
-
-        $sql = "DELETE FROM result_table_breed_grades r
-                WHERE
-                    lamb_meat_index ISNULL AND
-                    exterior_index ISNULL AND
-                    fertility_index ISNULL AND
-                    worm_resistance_index ISNULL AND
-                    birth_weight ISNULL AND
-                    growth ISNULL AND
-                    fat_thickness1 ISNULL AND
-                    fat_thickness3 ISNULL AND
-                    muscle_thickness ISNULL AND
-                    tail_length ISNULL AND
-                    birth_progress ISNULL AND
-                    total_born ISNULL AND
-                    still_born ISNULL AND
-                    early_fertility ISNULL AND
-                    birth_interval ISNULL AND
-                    leg_work_df ISNULL AND
-                    muscularity_df ISNULL AND
-                    proportion_df ISNULL AND
-                    skull_df ISNULL AND
-                    progress_df ISNULL AND
-                    exterior_type_df ISNULL AND
-                    weight_at8weeks ISNULL AND
-                    weight_at20weeks ISNULL";
-        $deleteCount = SqlUtil::updateWithCount($this->conn, $sql);
-
-        DoctrineUtil::updateTableSequence($this->conn, [$this->resultTableName]);
-
-        $messagePrefix = $deleteCount > 0 ? $deleteCount  : 'No';
-        $message = $messagePrefix . ' records deleted from ' . $this->resultTableName;
-        $this->write($message);
-
-        return $deleteCount;
     }
 
 
