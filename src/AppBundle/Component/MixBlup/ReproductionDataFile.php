@@ -117,6 +117,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     private static function getSqlEarlyFertilityRecords()
     {
         $nullReplacement = "'".MixBlupInstructionFileBase::MISSING_REPLACEMENT."'";
+        $geneDiversityNullReplacement = "'".MixBlupInstructionFileBase::GENE_DIVERSITY_MISSING_REPLACEMENT."'";
+
         return "SELECT
                   3 as record_type_ordination,
                   'early_fertility' as record_type,
@@ -126,10 +128,10 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   $nullReplacement as ".JsonInputConstant::TYPE.",
                   CONCAT(DATE_PART('year', mom.date_of_birth),'_', mom.ubn_of_birth) as ".JsonInputConstant::YEAR_AND_UBN_OF_BIRTH.",
                   mom.".JsonInputConstant::BREED_CODE.",
-                  COALESCE(mom.heterosis, $nullReplacement) as ".JsonInputConstant::HETEROSIS.",
-                  COALESCE(mom.recombination, $nullReplacement) as ".JsonInputConstant::RECOMBINATION.",
-                  $nullReplacement as ".JsonInputConstant::HETEROSIS_LAMB.",
-                  $nullReplacement as ".JsonInputConstant::RECOMBINATION_LAMB.",
+                  COALESCE(mom.heterosis, $geneDiversityNullReplacement) as ".JsonInputConstant::HETEROSIS.",
+                  COALESCE(mom.recombination, $geneDiversityNullReplacement) as ".JsonInputConstant::RECOMBINATION.",
+                  $geneDiversityNullReplacement as ".JsonInputConstant::HETEROSIS_LAMB.",
+                  $geneDiversityNullReplacement as ".JsonInputConstant::RECOMBINATION_LAMB.",
                   NULL as ".JsonInputConstant::BREED_CODE_MOTHER.",
                   NULL as ".JsonInputConstant::PMSG.",
                   $nullReplacement as ".JsonInputConstant::PERM_MIL.",
@@ -160,6 +162,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     private static function getSqlBirthProgressRecords()
     {
         $nullReplacement = "'".MixBlupInstructionFileBase::MISSING_REPLACEMENT."'";
+        $geneDiversityNullReplacement = "'".MixBlupInstructionFileBase::GENE_DIVERSITY_MISSING_REPLACEMENT."'";
+
         return "SELECT
                   2 as record_type_ordination,
                   'birth_progress' as record_type,
@@ -169,10 +173,10 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   lamb.".JsonInputConstant::TYPE.",
                   CONCAT(DATE_PART('year', lamb.date_of_birth),'_', lamb.ubn_of_birth) as ".JsonInputConstant::YEAR_AND_UBN_OF_BIRTH.",
                   lamb.".JsonInputConstant::BREED_CODE.",
-                  COALESCE(mom.heterosis, $nullReplacement) as ".JsonInputConstant::HETEROSIS.",
-                  COALESCE(mom.recombination, $nullReplacement) as ".JsonInputConstant::RECOMBINATION.",
-                  COALESCE(lamb.heterosis, $nullReplacement) as ".JsonInputConstant::HETEROSIS_LAMB.",
-                  COALESCE(lamb.recombination, $nullReplacement) as ".JsonInputConstant::RECOMBINATION_LAMB.",
+                  COALESCE(mom.heterosis, $geneDiversityNullReplacement) as ".JsonInputConstant::HETEROSIS.",
+                  COALESCE(mom.recombination, $geneDiversityNullReplacement) as ".JsonInputConstant::RECOMBINATION.",
+                  COALESCE(lamb.heterosis, $geneDiversityNullReplacement) as ".JsonInputConstant::HETEROSIS_LAMB.",
+                  COALESCE(lamb.recombination, $geneDiversityNullReplacement) as ".JsonInputConstant::RECOMBINATION_LAMB.",
                   mom.breed_code as ".JsonInputConstant::BREED_CODE_MOTHER.",
                   NULL as ".JsonInputConstant::PMSG.",
                   $nullReplacement as ".JsonInputConstant::PERM_MIL.",
@@ -197,7 +201,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   ".self::getSqlBaseFilter()."
                   AND lamb.gender <> '".GenderType::NEUTER."'
                   AND lamb.date_of_birth NOTNULL AND lamb.ubn_of_birth NOTNULL
-                  --   AND mom.recombination NOTNULL AND mom.heterosis NOTNULL".self::getErrorLogAnimalPedigreeFilter('lamb.id');
+                  ".self::getErrorLogAnimalPedigreeFilter('lamb.id');
     }
 
 
@@ -207,6 +211,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     private static function getSqlLitterSizeRecords()
     {
         $nullReplacement = "'".MixBlupInstructionFileBase::MISSING_REPLACEMENT."'";
+        $geneDiversityNullReplacement = "'".MixBlupInstructionFileBase::GENE_DIVERSITY_MISSING_REPLACEMENT."'";
+
         return "SELECT
                   1 as record_type_ordination,
                   'litter_size' as record_type,
@@ -216,10 +222,10 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   $nullReplacement as ".JsonInputConstant::TYPE.",
                   CONCAT(DATE_PART('year', mom.date_of_birth),'_', mom.ubn_of_birth) as ".JsonInputConstant::YEAR_AND_UBN_OF_BIRTH.",
                   mom.".JsonInputConstant::BREED_CODE.",
-                  COALESCE(mom.heterosis, $nullReplacement) as ".JsonInputConstant::HETEROSIS.",
-                  COALESCE(mom.recombination, $nullReplacement) as ".JsonInputConstant::RECOMBINATION.",
-                  COALESCE(l.heterosis, $nullReplacement) as ".JsonInputConstant::HETEROSIS_LAMB.",
-                  COALESCE(l.recombination, $nullReplacement) as ".JsonInputConstant::RECOMBINATION_LAMB.",
+                  COALESCE(mom.heterosis, $geneDiversityNullReplacement) as ".JsonInputConstant::HETEROSIS.",
+                  COALESCE(mom.recombination, $geneDiversityNullReplacement) as ".JsonInputConstant::RECOMBINATION.",
+                  COALESCE(l.heterosis, $geneDiversityNullReplacement) as ".JsonInputConstant::HETEROSIS_LAMB.",
+                  COALESCE(l.recombination, $geneDiversityNullReplacement) as ".JsonInputConstant::RECOMBINATION_LAMB.",
                   NULL as ".JsonInputConstant::BREED_CODE_MOTHER.",
                   m.pmsg as ".JsonInputConstant::PMSG.",
                   mom.id as ".JsonInputConstant::PERM_MIL.",
@@ -239,11 +245,10 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   LEFT JOIN mate m ON m.id = l.mate_id --Check if this should be an INNER JOIN
                 WHERE
                   ".self::getSqlBaseFilter()."
-                  --AND mom.recombination NOTNULL AND mom.heterosis NOTNULL
                   --AND m.pmsg NOTNULL --NULLABLE?
                   --AND mom.breed_code NOTNULL --NULLABLE?
                   AND mom.date_of_birth NOTNULL
-                  AND mom.ubn_of_birth NOTNULL".self::getErrorLogAnimalPedigreeFilter('mom.id');;
+                  AND mom.ubn_of_birth NOTNULL".self::getErrorLogAnimalPedigreeFilter('mom.id');
     }
 
 

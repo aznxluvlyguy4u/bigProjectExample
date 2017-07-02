@@ -394,10 +394,10 @@ class MixBlupDataFileBase
      * @param int $columnWidth
      * @param string $key
      * @param bool $useColumnPadding
-     * @param string $nullReplacement
+     * @param string|int $nullReplacement
      * @return string
      */
-    protected static function getFormattedGeneVarianceFromData($data, $columnWidth, $key, $useColumnPadding = true, $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT)
+    protected static function getFormattedGeneVarianceFromData($data, $columnWidth, $key, $useColumnPadding = true, $nullReplacement = MixBlupInstructionFileBase::GENE_DIVERSITY_MISSING_REPLACEMENT)
     {
         $value = ArrayUtil::get($key, $data, $nullReplacement);
         if($value != $nullReplacement) {
