@@ -362,10 +362,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     protected static function getFormattedEarlyFertility($data)
     {
         $gaveBirthAsOneYearOld = ArrayUtil::get(JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
-        if(!is_bool($gaveBirthAsOneYearOld)) {
-            return CsvWriterUtil::pad(MixBlupInstructionFileBase::MISSING_REPLACEMENT, MaxLength::BOOL_AS_INT, true);
-        }
-        return self::formatMixBlupBoolean($gaveBirthAsOneYearOld);
+        return CsvWriterUtil::pad($gaveBirthAsOneYearOld, MaxLength::BOOL_AS_INT, true);
     }
 
 
