@@ -58,9 +58,9 @@ abstract class MixBlupInstructionFileBase
             ' Vader     I ', //PrimaryKey Father
             ' Moeder    I ', //PrimaryKey Mother
             ' Bedrijf   I '.self::getBlockString($isRelani),//ubn of birth, NOTE it is an integer here
-            ' Sekse     A'. //ram/ooi/N_B
-            ' GebDatum  A'. //dateOfBirth
-            ' Uln       A'. //ULN
+            ' Sekse     A ', //ram/ooi/N_B
+            ' GebDatum  A ', //dateOfBirth
+            ' Uln       A ', //ULN
             ' ',
             'PARFILE  '.MixBlupSetting::PARFILE_FILENAME,
             ' ',
