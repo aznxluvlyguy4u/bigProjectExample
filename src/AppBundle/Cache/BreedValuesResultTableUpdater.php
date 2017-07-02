@@ -4,6 +4,7 @@
 namespace AppBundle\Cache;
 
 
+use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
@@ -89,19 +90,19 @@ class BreedValuesResultTableUpdater
          */
         $results = $this->getResultTableVariables();
 
-        $totalUpdateCount = 0;
+        $totalBreedValueUpdateCount = 0;
         foreach ($results as $result)
         {
-            $totalUpdateCount += $this->updateByBreedValueType($result);
+            $totalBreedValueUpdateCount += $this->updateByBreedValueType($result);
         }
 
-        $messagePrefix = $totalUpdateCount > 0 ? 'In total '.$totalUpdateCount : 'In total NO';
-        $this->write($messagePrefix. ' value breed Value&Accuracy sets were updated');
+        $messagePrefix = $totalBreedValueUpdateCount > 0 ? 'In total '.$totalBreedValueUpdateCount : 'In total NO';
+        $this->write($messagePrefix. ' breed Value&Accuracy sets were updated');
 
-        /*
-         * TODO Updating breedValueIndex result table values and accuracies
-         */
 
+        $breedIndexUpdateCount = $this->updateByBreedValueIndexType();
+        $messagePrefix = $breedIndexUpdateCount > 0 ? 'In total '.$breedIndexUpdateCount : 'In total NO';
+        $this->write($messagePrefix. ' breed Index&Accuracy sets were updated');
     }
 
 
@@ -169,6 +170,73 @@ class BreedValuesResultTableUpdater
         $this->write($message);
 
         return $updateCount;
+    }
+
+
+    /**
+     * @return int
+     */
+    private function updateByBreedValueIndexType()
+    {
+        $totalUpdateCount = 0;
+
+        foreach (BreedIndex::getTypes() as $snakeCaseType => $camelCaseType) {
+            $valueVar = $snakeCaseType . '_index';
+            $accuracyVar = $snakeCaseType . '_accuracy';
+
+            $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
+
+            //Update new values
+            $sql = "UPDATE result_table_breed_grades
+                    SET $valueVar = v.index, $accuracyVar = v.accuracy
+                    FROM (
+                           SELECT i.animal_id, i.index, i.accuracy, r.$accuracyVar, r.$valueVar, i.index <> r.$valueVar, i.accuracy <> r.$accuracyVar
+                           FROM breed_index i
+                             INNER JOIN (
+                                          SELECT ii.animal_id, ii.type, MAX(ii.generation_date) as max_generation_date, MAX(ii.id) as max_id
+                                          FROM breed_index ii
+                                              INNER JOIN (
+                                                  SELECT animal_id, type, generation_date, MAX(id) as max_id
+                                                  FROM breed_index
+                                                  WHERE type = '$camelCaseType'
+                                                  GROUP BY animal_id, type, generation_date
+                                                )gg ON gg.animal_id = ii.animal_id AND gg.type = ii.type
+                                                       AND gg.generation_date = ii.generation_date AND ii.id = max_id
+                                          WHERE ii.type = '$camelCaseType'
+                                          GROUP BY ii.animal_id, ii.type
+                                        )g ON g.max_generation_date = i.generation_date AND i.animal_id = g.animal_id
+                                              AND i.type = g.type AND i.id = g.max_id
+                             INNER JOIN result_table_breed_grades r ON r.animal_id = i.animal_id
+                           WHERE i.type = '$camelCaseType' AND
+                                 (i.index <> r.$valueVar OR i.accuracy <> r.$accuracyVar
+                                  OR r.$valueVar ISNULL OR r.$accuracyVar ISNULL)
+                    ) as v(animal_id, index, accuracy)
+                    WHERE result_table_breed_grades.animal_id = v.animal_id";
+            $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+
+            //Update obsolete value to null
+            $sql = "UPDATE result_table_breed_grades
+                    SET lamb_meat_index = NULL, lamb_meat_accuracy = NULL
+                    WHERE animal_id IN (
+                      SELECT r.animal_id
+                      FROM result_table_breed_grades r
+                        LEFT JOIN
+                        (
+                          SELECT * FROM breed_index
+                          WHERE type = 'LambMeat'
+                        )i ON r.animal_id = i.animal_id
+                      WHERE i.id ISNULL AND (r.lamb_meat_index NOTNULL OR r.lamb_meat_accuracy NOTNULL)
+                    )";
+            $updateCount += SqlUtil::updateWithCount($this->conn, $sql);
+
+            $records = $valueVar.' and '.$accuracyVar. ' records';
+            $message = $updateCount > 0 ? $updateCount . ' '. $records. ' updated.': 'No '.$records.' updated.';
+            $this->write($message);
+
+            $totalUpdateCount += $updateCount;
+        }
+
+        return $totalUpdateCount;
     }
 
 
