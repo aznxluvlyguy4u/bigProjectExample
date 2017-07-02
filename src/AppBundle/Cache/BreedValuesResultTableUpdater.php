@@ -165,6 +165,22 @@ class BreedValuesResultTableUpdater
                 WHERE result_table_breed_grades.animal_id = v.animal_id";
         $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
 
+        //Update obsolete value to null
+        $sql = "UPDATE result_table_breed_grades
+                    SET $valueVar = NULL, $accuracyVar = NULL
+                    WHERE animal_id IN (
+                      SELECT r.animal_id
+                      FROM result_table_breed_grades r
+                        LEFT JOIN
+                        (
+                          SELECT b.id, b.animal_id FROM breed_value b
+                            INNER JOIN breed_value_type t ON t.id = b.type_id
+                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                        )i ON r.animal_id = i.animal_id
+                      WHERE i.id ISNULL AND (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL)
+                    )";
+        $updateCount += SqlUtil::updateWithCount($this->conn, $sql);
+
         $records = $valueVar.' and '.$accuracyVar. ' records';
         $message = $updateCount > 0 ? $updateCount . ' '. $records. ' updated.': 'No '.$records.' updated.';
         $this->write($message);
