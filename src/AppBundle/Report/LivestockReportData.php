@@ -3,6 +3,7 @@
 namespace AppBundle\Report;
 
 
+use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Count;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
@@ -123,13 +124,17 @@ class LivestockReportData extends ReportBase
                   ac.breed_value_growth as a_breed_value_growth, mc.breed_value_growth as m_breed_value_growth, fc.breed_value_growth as f_breed_value_growth,
                   ac.breed_value_muscle_thickness as a_breed_value_muscle_thickness, mc.breed_value_muscle_thickness as m_breed_value_muscle_thickness, fc.breed_value_muscle_thickness as f_breed_value_muscle_thickness,
                   ac.breed_value_fat as a_breed_value_fat, mc.breed_value_fat as m_breed_value_fat, fc.breed_value_fat as f_breed_value_fat,
-                  ac.lamb_meat_index as a_lamb_meat_index, mc.lamb_meat_index as m_lamb_meat_index, fc.lamb_meat_index as f_lamb_meat_index
+                  ab.lamb_meat_index as a_lamb_meat_index_value, mb.lamb_meat_index as m_lamb_meat_index_value, fb.lamb_meat_index as f_lamb_meat_index_value,
+                  ab.lamb_meat_accuracy as a_lamb_meat_accuracy, mb.lamb_meat_accuracy as m_lamb_meat_accuracy_value, fb.lamb_meat_accuracy as f_lamb_meat_accuracy_value
                 FROM animal a
                   LEFT JOIN animal m ON a.parent_mother_id = m.id
                   LEFT JOIN animal f ON a.parent_father_id = f.id
                   LEFT JOIN animal_cache ac ON a.id = ac.animal_id
                   LEFT JOIN animal_cache mc ON m.id = mc.animal_id
                   LEFT JOIN animal_cache fc ON f.id = fc.animal_id
+                  LEFT JOIN result_table_breed_grades ab ON a.id = ab.animal_id 
+                  LEFT JOIN result_table_breed_grades mb ON m.id = mb.animal_id 
+                  LEFT JOIN result_table_breed_grades fb ON f.id = fb.animal_id 
                 WHERE a.is_alive = true AND a.location_id = ".$this->location->getId()."
                 ORDER BY a.animal_order_number ASC"
         ;
@@ -154,6 +159,10 @@ class LivestockReportData extends ReportBase
             $results[$key]['a_production'] = $this->getProduction($results, $key, 'a');
             $results[$key]['m_production'] = $this->getProduction($results, $key, 'm');
             $results[$key]['f_production'] = $this->getProduction($results, $key, 'f');
+
+            $results[$key]['a_lamb_meat_index'] = BreedFormat::getJoinedLambMeatIndex($results[$key]['a_lamb_meat_index_value'], $results[$key]['a_lamb_meat_accuracy']);
+            $results[$key]['m_lamb_meat_index'] = BreedFormat::getJoinedLambMeatIndex($results[$key]['m_lamb_meat_index_value'], $results[$key]['m_lamb_meat_accuracy']);
+            $results[$key]['f_lamb_meat_index'] = BreedFormat::getJoinedLambMeatIndex($results[$key]['f_lamb_meat_index_value'], $results[$key]['f_lamb_meat_accuracy']);
 
             if(self::SHOW_PREDICATE_IN_REPORT) {
                 $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
