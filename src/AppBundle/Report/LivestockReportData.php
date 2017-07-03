@@ -133,7 +133,7 @@ class LivestockReportData extends ReportBase
                   ab.fat_thickness3accuracy as a_breed_value_fat_accuracy, mb.fat_thickness3accuracy as m_breed_value_fat_accuracy, fb.fat_thickness3accuracy as f_breed_value_fat_accuracy,
                   
                   ab.lamb_meat_index as a_lamb_meat_index_value, mb.lamb_meat_index as m_lamb_meat_index_value, fb.lamb_meat_index as f_lamb_meat_index_value,
-                  ab.lamb_meat_accuracy as a_lamb_meat_accuracy, mb.lamb_meat_accuracy as m_lamb_meat_accuracy_value, fb.lamb_meat_accuracy as f_lamb_meat_accuracy_value
+                  ab.lamb_meat_accuracy as a_lamb_meat_accuracy, mb.lamb_meat_accuracy as m_lamb_meat_accuracy, fb.lamb_meat_accuracy as f_lamb_meat_accuracy
                 FROM animal a
                   LEFT JOIN animal m ON a.parent_mother_id = m.id
                   LEFT JOIN animal f ON a.parent_father_id = f.id
