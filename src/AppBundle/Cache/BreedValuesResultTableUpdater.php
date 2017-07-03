@@ -6,6 +6,7 @@ namespace AppBundle\Cache;
 
 use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\ResultTableBreedGrades;
+use AppBundle\Service\BreedValueService;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -26,6 +27,8 @@ class BreedValuesResultTableUpdater
     private $conn;
     /** @var Logger */
     private $logger;
+    /** @var BreedValueService */
+    private $breedValueService;
 
     /** @var string */
     private $resultTableName;
@@ -40,6 +43,8 @@ class BreedValuesResultTableUpdater
         $this->em = $em;
         $this->conn = $em->getConnection();
         $this->logger = $logger;
+
+        $this->breedValueService = new BreedValueService($em, $logger);
 
         $this->resultTableName = ResultTableBreedGrades::TABLE_NAME;
     }
@@ -84,6 +89,11 @@ class BreedValuesResultTableUpdater
     public function update()
     {
         $this->insertMissingBlankRecords();
+
+        /*
+         * NOTE! Without genetic bases the corrected breedValues cannot be calculated, so do this first!
+         */
+        $this->breedValueService->initializeBlankGeneticBases();
 
         /*
          * Updating breedValue result table values and accuracies
@@ -144,9 +154,9 @@ class BreedValuesResultTableUpdater
         $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
 
         $sql = "UPDATE result_table_breed_grades
-                SET $valueVar = v.value, $accuracyVar = v.accuracy
+                SET $valueVar = v.corrected_value, $accuracyVar = v.accuracy
                 FROM (
-                       SELECT b.animal_id, b.value, b.reliability, SQRT(b.reliability) as accuracy
+                       SELECT b.animal_id, b.value - gb.value as corrected_value, b.reliability, SQRT(b.reliability) as accuracy
                        FROM breed_value b
                          INNER JOIN breed_value_type t ON t.id = b.type_id
                          INNER JOIN (
@@ -157,11 +167,12 @@ class BreedValuesResultTableUpdater
                                       GROUP BY b.animal_id, b.type_id
                                     )g ON g.animal_id = b.animal_id AND g.type_id = b.type_id AND g.max_generation_date = b.generation_date
                          INNER JOIN result_table_breed_grades r ON r.animal_id = b.animal_id
+                         INNER JOIN breed_value_genetic_base gb ON gb.breed_value_type_id = t.id AND gb.year = DATE_PART('year', b.generation_date)
                        WHERE
                          t.result_table_value_variable = '$valueVar' AND
-                         (b.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
+                         (b.value - gb.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
                          r.$valueVar ISNULL OR r.$accuracyVar ISNULL)
-                ) as v(animal_id, value, reliabilty, accuracy)
+                ) as v(animal_id, corrected_value, reliabilty, accuracy)
                 WHERE result_table_breed_grades.animal_id = v.animal_id";
         $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
 
