@@ -43,7 +43,7 @@ class ResultTableBreedGrades
 
     /**
      * @var Animal
-     * @ORM\OneToOne(targetEntity="Animal", inversedBy="latestBreedIndices")
+     * @ORM\OneToOne(targetEntity="Animal", inversedBy="latestBreedGrades")
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", nullable=false)
      * @JMS\Type("AppBundle\Entity\Animal")
      */
