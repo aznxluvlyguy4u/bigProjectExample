@@ -58,27 +58,9 @@ class BreedValueUtil
         $breedValueAccuracy = sqrt($breedValueReliability);
 
         if($isFormatted) {
-            return self::formatAccuracyForDisplay($breedValueAccuracy);
+            return BreedFormat::formatAccuracyForDisplay($breedValueAccuracy);
         }
         return $breedValueAccuracy;
-    }
-
-
-    /**
-     * @param float $breedValueAccuracy
-     * @param bool $isInPercentages
-     * @return float
-     */
-    public static function formatAccuracyForDisplay($breedValueAccuracy, $isInPercentages = true)
-    {
-        if($isInPercentages) {
-            $factor = 100;
-            $decimalPrecision = 0;
-        } else {
-            $factor = 1;
-            $decimalPrecision = 2;
-        }
-        return  number_format($breedValueAccuracy*$factor, $decimalPrecision, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR);
     }
 
 
@@ -95,9 +77,9 @@ class BreedValueUtil
         //Add new breedValues here
 
         $decimalAccuracyLabels = new ArrayCollection();
-        $decimalAccuracyLabels->set(BreedValueLabel::GROWTH_ACCURACY, PedigreeCertificate::GROWTH_DECIMAL_ACCURACY);
-        $decimalAccuracyLabels->set(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, PedigreeCertificate::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
-        $decimalAccuracyLabels->set(BreedValueLabel::FAT_ACCURACY, PedigreeCertificate::FAT_DECIMAL_ACCURACY);
+        $decimalAccuracyLabels->set(BreedValueLabel::GROWTH_ACCURACY, BreedFormat::GROWTH_DECIMAL_ACCURACY);
+        $decimalAccuracyLabels->set(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, BreedFormat::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
+        $decimalAccuracyLabels->set(BreedValueLabel::FAT_ACCURACY, BreedFormat::FAT_DECIMAL_ACCURACY);
         //Add new decimal_accuracies here
 
         $factors = new ArrayCollection();
@@ -118,7 +100,7 @@ class BreedValueUtil
                     $displayedString = BreedFormat::EMPTY_BREED_VALUE;
                 } else {
                     $breedValue = round($rawBreedValue*$factors->get($accuracyLabel), $decimalAccuracyLabels->get($accuracyLabel));
-                    $accuracy = BreedValueUtil::formatAccuracyForDisplay($breedValues[$accuracyLabel]);
+                    $accuracy = BreedFormat::formatAccuracyForDisplay($breedValues[$accuracyLabel]);
                     $displayedString = NumberUtil::getPlusSignIfNumberIsPositive($breedValue).$breedValue.'/'.$accuracy;
                 }
             }

@@ -59,10 +59,6 @@ class PedigreeCertificate
     const LITTER_GROUP = 'litterGroup';
     const N_LING = 'nLing';
 
-    const FAT_DECIMAL_ACCURACY = 2;
-    const MUSCLE_THICKNESS_DECIMAL_ACCURACY = 2;
-    const GROWTH_DECIMAL_ACCURACY = 1;
-
     const STARS_NULL_VALUE = null;
     const EMPTY_SCRAPIE_GENOTYPE = '-/-';
 
