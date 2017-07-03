@@ -27,6 +27,9 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     const BIRTH_PROGRESS_ORDINATION = 2;
     const EARLY_FERTILITY_ORDINATION = 3;
 
+    const AGE_NULL_REPLACEMENT = MixBlupInstructionFileBase::POSITIVE_MISSING_REPLACEMENT;
+    const IDM_NULL_REPLACEMENT = 1;
+
     /**
      * @inheritDoc
      */
@@ -130,7 +133,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   'early_fertility' as record_type,
                   CONCAT(mom.uln_country_code, mom.uln_number) as ".JsonInputConstant::ULN.",
                   mom.id as ".JsonInputConstant::ANIMAL_ID.",
-                  $nullReplacement as ".JsonInputConstant::AGE.",
+                  ".self::AGE_NULL_REPLACEMENT." as ".JsonInputConstant::AGE.",
                   $nullReplacement as ".JsonInputConstant::TYPE.",
                   CONCAT(DATE_PART('year', mom.date_of_birth),'_', mom.ubn_of_birth) as ".JsonInputConstant::YEAR_AND_UBN_OF_BIRTH.",
                   mom.".JsonInputConstant::BREED_CODE.",
@@ -140,9 +143,9 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   $geneDiversityNullReplacement as ".JsonInputConstant::RECOMBINATION_LAMB.",
                   NULL as ".JsonInputConstant::BREED_CODE_MOTHER.",
                   NULL as ".JsonInputConstant::PMSG.",
-                  $nullReplacement as ".JsonInputConstant::PERM_MIL.",
-                  $nullReplacement as ".JsonInputConstant::MOTHER_ID.",
-                  $nullReplacement as ".JsonInputConstant::LITTER_GROUP.",
+                  ".self::IDM_NULL_REPLACEMENT." as ".JsonInputConstant::PERM_MIL.",
+                  ".self::IDM_NULL_REPLACEMENT." as ".JsonInputConstant::MOTHER_ID.",
+                  ".MixBlupInstructionFileBase::LITTER_NULL_REPLACEMENT." as ".JsonInputConstant::LITTER_GROUP.",
                   $nullReplacement as ".JsonInputConstant::N_LING.",
                   $nullReplacement as ".JsonInputConstant::TOTAL_STILLBORN_COUNT.",
                   early_fertility.int_val as ".JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD.",
@@ -180,7 +183,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   'birth_progress' as record_type,
                   CONCAT(lamb.uln_country_code, lamb.uln_number) as ".JsonInputConstant::ULN.",
                   lamb.id as ".JsonInputConstant::ANIMAL_ID.",
-                  $nullReplacement as ".JsonInputConstant::AGE.",
+                  ".self::AGE_NULL_REPLACEMENT." as ".JsonInputConstant::AGE.",
                   lamb.".JsonInputConstant::TYPE.",
                   CONCAT(DATE_PART('year', lamb.date_of_birth),'_', lamb.ubn_of_birth) as ".JsonInputConstant::YEAR_AND_UBN_OF_BIRTH.",
                   lamb.".JsonInputConstant::BREED_CODE.",
@@ -190,7 +193,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   COALESCE(lamb.recombination, $geneDiversityNullReplacement) as ".JsonInputConstant::RECOMBINATION_LAMB.",
                   mom.breed_code as ".JsonInputConstant::BREED_CODE_MOTHER.",
                   NULL as ".JsonInputConstant::PMSG.",
-                  $nullReplacement as ".JsonInputConstant::PERM_MIL.",
+                  ".self::IDM_NULL_REPLACEMENT." as ".JsonInputConstant::PERM_MIL.",
                   mom.id as ".JsonInputConstant::MOTHER_ID.",
                   CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as ".JsonInputConstant::LITTER_GROUP.",
                   $nullReplacement as ".JsonInputConstant::N_LING.",
@@ -240,7 +243,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   NULL as ".JsonInputConstant::BREED_CODE_MOTHER.",
                   m.pmsg as ".JsonInputConstant::PMSG.",
                   mom.id as ".JsonInputConstant::PERM_MIL.",
-                  $nullReplacement as ".JsonInputConstant::MOTHER_ID.",
+                  ".self::IDM_NULL_REPLACEMENT." as ".JsonInputConstant::MOTHER_ID.",
                   CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as ".JsonInputConstant::LITTER_GROUP.",
                   born_alive_count + l.stillborn_count as ".JsonInputConstant::N_LING.",
                   stillborn_count as ".JsonInputConstant::TOTAL_STILLBORN_COUNT.",
@@ -346,7 +349,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getFormattedNullableMotherId($data)
     {
-        $motherId = ArrayUtil::get(JsonInputConstant::MOTHER_ID, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        $motherId = ArrayUtil::get(JsonInputConstant::MOTHER_ID, $data, self::IDM_NULL_REPLACEMENT);
         return CsvWriterUtil::pad($motherId, MaxLength::ANIMAL_ID, true);
     }
 

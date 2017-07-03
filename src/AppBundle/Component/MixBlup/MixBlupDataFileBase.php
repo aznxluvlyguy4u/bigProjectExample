@@ -352,7 +352,7 @@ class MixBlupDataFileBase
      */
     protected static function getFormattedLitterGroup($data, $key = JsonInputConstant::LITTER_GROUP)
     {
-        return self::getFormattedValueFromData($data, MaxLength::LITTER_GROUP, $key, true);
+        return self::getFormattedValueFromData($data, MaxLength::LITTER_GROUP, $key, true, MixBlupInstructionFileBase::LITTER_NULL_REPLACEMENT);
     }
 
 
