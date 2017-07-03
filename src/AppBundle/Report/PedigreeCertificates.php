@@ -33,7 +33,6 @@ class PedigreeCertificates extends ReportBase
 
     /** @var array */
     private $reports;
-
     /** @var int */
     private $animalCount;
 

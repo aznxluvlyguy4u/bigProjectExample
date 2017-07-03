@@ -5,15 +5,16 @@ namespace AppBundle\Report;
 
 use AppBundle\Entity\Client;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 
 class ReportBase
 {
     /** @var ObjectManager */
     protected $em;
-
+    /** @var Connection */
+    protected $conn;
     /** @var Client */
     protected $client;
-
     /** @var String */
     protected $fileNameType;
 
@@ -26,6 +27,7 @@ class ReportBase
     public function __construct(ObjectManager $em, $client, $fileNameType)
     {
         $this->em = $em;
+        $this->conn = $em->getConnection();
         $this->client = $client;
         $this->fileNameType = $fileNameType;
     }

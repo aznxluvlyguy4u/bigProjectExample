@@ -37,7 +37,6 @@ class LivestockReportData extends ReportBase
 
     /** @var array */
     private $data;
-
     /** @var Location */
     private $location;
 
@@ -146,7 +145,7 @@ class LivestockReportData extends ReportBase
                 WHERE a.is_alive = true AND a.location_id = ".$this->location->getId()."
                 ORDER BY a.animal_order_number ASC"
         ;
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
 
         $keys = array_keys($results);
         foreach ($keys as $key) {
