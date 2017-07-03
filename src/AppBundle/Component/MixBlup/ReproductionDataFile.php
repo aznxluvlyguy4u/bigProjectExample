@@ -201,8 +201,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   $nullReplacement as ".JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD.",
                   COALESCE(c.birth_weight, $nullReplacement) as ".JsonInputConstant::BIRTH_WEIGHT.",
                   COALESCE(birth_progress.mix_blup_score, $nullReplacement) as ".JsonInputConstant::BIRTH_PROGRESS.",
-                  COALESCE(l.gestation_period, $nullReplacement) as ".JsonInputConstant::GESTATION_PERIOD.",
-                  COALESCE(l.birth_interval, $nullReplacement) as ".JsonInputConstant::BIRTH_INTERVAL.",
+                  $nullReplacement as ".JsonInputConstant::GESTATION_PERIOD.",
+                  $nullReplacement as ".JsonInputConstant::BIRTH_INTERVAL.",
                   lamb.".JsonInputConstant::UBN_OF_BIRTH."
                 FROM animal lamb
                   LEFT JOIN animal_cache c ON c.animal_id = lamb.id
@@ -250,8 +250,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   $nullReplacement as ".JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD.",
                   $nullReplacement as ".JsonInputConstant::BIRTH_WEIGHT.",
                   $nullReplacement as ".JsonInputConstant::BIRTH_PROGRESS.",
-                  $nullReplacement as ".JsonInputConstant::GESTATION_PERIOD.",
-                  $nullReplacement as ".JsonInputConstant::BIRTH_INTERVAL.",
+                  COALESCE(l.gestation_period, $nullReplacement) as ".JsonInputConstant::GESTATION_PERIOD.",
+                  COALESCE(l.birth_interval, $nullReplacement) as ".JsonInputConstant::BIRTH_INTERVAL.",
                   mom.".JsonInputConstant::UBN_OF_BIRTH."
                 FROM litter l
                   INNER JOIN declare_nsfo_base b ON l.id = b.id
