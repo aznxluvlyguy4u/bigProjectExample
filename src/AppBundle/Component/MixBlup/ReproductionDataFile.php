@@ -231,7 +231,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   mom.id as ".JsonInputConstant::ANIMAL_ID.",
                   date_part('year',age(l.litter_date, mom.date_of_birth)) as ".JsonInputConstant::AGE.",
                   $nullReplacement as ".JsonInputConstant::TYPE.",
-                  CONCAT(DATE_PART('year', mom.date_of_birth),'_', mom.ubn_of_birth) as ".JsonInputConstant::YEAR_AND_UBN_OF_BIRTH.",
+                  CONCAT(DATE_PART('year', l.litter_date),'_', mom.ubn_of_birth) as ".JsonInputConstant::YEAR_AND_UBN_OF_BIRTH.",
                   mom.".JsonInputConstant::BREED_CODE.",
                   COALESCE(mom.heterosis, $geneDiversityNullReplacement) as ".JsonInputConstant::HETEROSIS.",
                   COALESCE(mom.recombination, $geneDiversityNullReplacement) as ".JsonInputConstant::RECOMBINATION.",
