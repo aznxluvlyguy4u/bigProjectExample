@@ -215,6 +215,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   ".self::getSqlBaseFilter()."
                   AND lamb.gender <> '".GenderType::NEUTER."'
                   AND lamb.date_of_birth NOTNULL AND lamb.ubn_of_birth NOTNULL
+                  AND lamb.birth_progress NOTNULL
                   ".self::getErrorLogAnimalPedigreeFilter('lamb.id');
     }
 
