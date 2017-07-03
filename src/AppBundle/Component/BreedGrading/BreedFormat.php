@@ -140,7 +140,7 @@ class BreedFormat
         if($accuracy < $minAccuracy) { return $nullString; }
 
         $scaledLambMeatIndex = $index + $scale;
-        return round($scaledLambMeatIndex, BreedFormat::INDEX_DECIMAL_ACCURACY).'/'.round($accuracy*100);
+        return number_format($scaledLambMeatIndex, BreedFormat::INDEX_DECIMAL_ACCURACY, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR).'/'.round($accuracy*100);
     }
 
 
@@ -191,7 +191,7 @@ class BreedFormat
 
         $breedValue = BreedFormat::formatBreedValueValue($correctedValue, $breedValueType);
         $accuracy = BreedFormat::formatAccuracyForDisplay($accuracy);
-        return NumberUtil::getPlusSignIfNumberIsPositive($breedValue).$breedValue.'/'.$accuracy;
+        return NumberUtil::getPlusSignIfNumberIsPositive($correctedValue).$breedValue.'/'.$accuracy;
     }
 
 
@@ -221,7 +221,7 @@ class BreedFormat
                 break;
         }
 
-        return round($correctedValue*$factor, $decimalAccuracy);
+        return number_format($correctedValue*$factor, $decimalAccuracy, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR);
     }
 
 
