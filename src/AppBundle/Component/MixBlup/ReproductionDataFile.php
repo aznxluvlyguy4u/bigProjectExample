@@ -22,6 +22,11 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
 {
     const DEFAULT_PMSG_VALUE = false;
 
+    const RECORD_TYPE_ORDINATION = 'record_type_ordination';
+    const LITTER_ORDINATION = 1;
+    const BIRTH_PROGRESS_ORDINATION = 2;
+    const EARLY_FERTILITY_ORDINATION = 3;
+
     /**
      * @inheritDoc
      */
@@ -105,8 +110,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
             '.self::getSqlBirthProgressRecords().'
             UNION
             '.self::getSqlEarlyFertilityRecords().'
-            ORDER BY record_type_ordination';
-
+            ORDER BY '.self::RECORD_TYPE_ORDINATION;
         return $conn->query($sql)->fetchAll();
     }
     
@@ -122,7 +126,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
         $falseRecordValue = "'".MixBlupSetting::FALSE_RECORD_VALUE."'";
 
         return "SELECT
-                  3 as record_type_ordination,
+                  ".self::EARLY_FERTILITY_ORDINATION." as ".self::RECORD_TYPE_ORDINATION.",
                   'early_fertility' as record_type,
                   CONCAT(mom.uln_country_code, mom.uln_number) as ".JsonInputConstant::ULN.",
                   mom.id as ".JsonInputConstant::ANIMAL_ID.",
@@ -149,13 +153,16 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   mom.".JsonInputConstant::UBN_OF_BIRTH."
                 FROM animal mom
                   INNER JOIN animal_cache c ON c.animal_id = mom.id
-                  INNER JOIN litter l ON l.animal_mother_id = mom.id
-                  INNER JOIN declare_nsfo_base b ON l.id = b.id
+                  INNER JOIN (
+                    SELECT l.animal_mother_id FROM litter l
+                    INNER JOIN declare_nsfo_base b ON l.id = b.id
+                    WHERE ".self::getSqlBaseFilter()."
+                    GROUP BY l.animal_mother_id
+                  )l ON l.animal_mother_id = mom.id
                   INNER JOIN (VALUES (true, $trueRecordValue),(false, $falseRecordValue)) 
                     AS early_fertility(bool_val, int_val) ON c.gave_birth_as_one_year_old = early_fertility.bool_val
                 WHERE
-                  ".self::getSqlBaseFilter()."
-                  AND mom.ubn_of_birth NOTNULL
+                  mom.ubn_of_birth NOTNULL
                   ".self::getErrorLogAnimalPedigreeFilter('mom.id');
     }
     
@@ -169,7 +176,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
         $geneDiversityNullReplacement = "'".MixBlupInstructionFileBase::GENE_DIVERSITY_MISSING_REPLACEMENT."'";
 
         return "SELECT
-                  2 as record_type_ordination,
+                  ".self::BIRTH_PROGRESS_ORDINATION." as ".self::RECORD_TYPE_ORDINATION.",
                   'birth_progress' as record_type,
                   CONCAT(lamb.uln_country_code, lamb.uln_number) as ".JsonInputConstant::ULN.",
                   lamb.id as ".JsonInputConstant::ANIMAL_ID.",
@@ -218,7 +225,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
         $geneDiversityNullReplacement = "'".MixBlupInstructionFileBase::GENE_DIVERSITY_MISSING_REPLACEMENT."'";
 
         return "SELECT
-                  1 as record_type_ordination,
+                  ".self::LITTER_ORDINATION." as ".self::RECORD_TYPE_ORDINATION.",
                   'litter_size' as record_type,
                   CONCAT(mom.uln_country_code, mom.uln_number) as ".JsonInputConstant::ULN.",
                   mom.id as ".JsonInputConstant::ANIMAL_ID.",
@@ -361,7 +368,14 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getFormattedEarlyFertility($data)
     {
-        $gaveBirthAsOneYearOld = ArrayUtil::get(JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        $recordTypeOrdination = intval($data[self::RECORD_TYPE_ORDINATION]);
+
+        if($recordTypeOrdination === self::EARLY_FERTILITY_ORDINATION) {
+            $gaveBirthAsOneYearOld = ArrayUtil::get(JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        } else {
+            $gaveBirthAsOneYearOld = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+        }
+
         return CsvWriterUtil::pad($gaveBirthAsOneYearOld, MaxLength::BOOL_AS_INT, true);
     }
 
