@@ -263,6 +263,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   --AND m.pmsg NOTNULL --NULLABLE?
                   --AND mom.breed_code NOTNULL --NULLABLE?
                   AND mom.date_of_birth NOTNULL
+                  AND l.litter_date > mom.date_of_birth
                   AND mom.ubn_of_birth NOTNULL".self::getErrorLogAnimalPedigreeFilter('mom.id');
     }
 
