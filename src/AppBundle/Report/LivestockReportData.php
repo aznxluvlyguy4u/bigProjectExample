@@ -119,11 +119,19 @@ class LivestockReportData extends ReportBase
                   ac.total_offspring_count as a_total_offspring_count, mc.total_offspring_count as m_total_offspring_count, fc.total_offspring_count as f_total_offspring_count,
                   ac.born_alive_offspring_count as a_born_alive_offspring_count, mc.born_alive_offspring_count as m_born_alive_offspring_count, fc.born_alive_offspring_count as f_born_alive_offspring_count,
                   ac.gave_birth_as_one_year_old as a_gave_birth_as_one_year_old, mc.gave_birth_as_one_year_old as m_gave_birth_as_one_year_old, fc.gave_birth_as_one_year_old as f_gave_birth_as_one_year_old,
+
+                  ab.total_born as a_breed_value_litter_size_value, mb.total_born as m_breed_value_litter_size_value, fb.total_born as f_breed_value_litter_size_value,
+                  ab.total_born_accuracy as a_breed_value_litter_size_accuracy, mb.total_born_accuracy as m_breed_value_litter_size_accuracy, fb.total_born_accuracy as f_breed_value_litter_size_accuracy,
+
+                  ab.growth as a_breed_value_growth_value, mb.growth as m_breed_value_growth_value, fb.growth as f_breed_value_growth_value,
+                  ab.growth_accuracy as a_breed_value_growth_accuracy, mb.growth_accuracy as m_breed_value_growth_accuracy, fb.growth_accuracy as f_breed_value_growth_accuracy,
+
+                  ab.muscle_thickness as a_breed_value_muscle_thickness_value, mb.muscle_thickness as m_breed_value_muscle_thickness_value, fb.muscle_thickness as f_breed_value_muscle_thickness_value,
+                  ab.muscle_thickness_accuracy as a_breed_value_muscle_thickness_accuracy, mb.muscle_thickness_accuracy as m_breed_value_muscle_thickness_accuracy, fb.muscle_thickness_accuracy as f_breed_value_muscle_thickness_accuracy,
                   
-                  ac.breed_value_litter_size as a_breed_value_litter_size, mc.breed_value_litter_size as m_breed_value_litter_size, fc.breed_value_litter_size as f_breed_value_litter_size,
-                  ac.breed_value_growth as a_breed_value_growth, mc.breed_value_growth as m_breed_value_growth, fc.breed_value_growth as f_breed_value_growth,
-                  ac.breed_value_muscle_thickness as a_breed_value_muscle_thickness, mc.breed_value_muscle_thickness as m_breed_value_muscle_thickness, fc.breed_value_muscle_thickness as f_breed_value_muscle_thickness,
-                  ac.breed_value_fat as a_breed_value_fat, mc.breed_value_fat as m_breed_value_fat, fc.breed_value_fat as f_breed_value_fat,
+                  ab.fat_thickness3 as a_breed_value_fat_value, mb.fat_thickness3 as m_breed_value_fat_value, fb.fat_thickness3 as f_breed_value_fat_value,
+                  ab.fat_thickness3accuracy as a_breed_value_fat_accuracy, mb.fat_thickness3accuracy as m_breed_value_fat_accuracy, fb.fat_thickness3accuracy as f_breed_value_fat_accuracy,
+                  
                   ab.lamb_meat_index as a_lamb_meat_index_value, mb.lamb_meat_index as m_lamb_meat_index_value, fb.lamb_meat_index as f_lamb_meat_index_value,
                   ab.lamb_meat_accuracy as a_lamb_meat_accuracy, mb.lamb_meat_accuracy as m_lamb_meat_accuracy_value, fb.lamb_meat_accuracy as f_lamb_meat_accuracy_value
                 FROM animal a
@@ -163,6 +171,23 @@ class LivestockReportData extends ReportBase
             $results[$key]['a_lamb_meat_index'] = BreedFormat::getJoinedLambMeatIndex($results[$key]['a_lamb_meat_index_value'], $results[$key]['a_lamb_meat_accuracy']);
             $results[$key]['m_lamb_meat_index'] = BreedFormat::getJoinedLambMeatIndex($results[$key]['m_lamb_meat_index_value'], $results[$key]['m_lamb_meat_accuracy']);
             $results[$key]['f_lamb_meat_index'] = BreedFormat::getJoinedLambMeatIndex($results[$key]['f_lamb_meat_index_value'], $results[$key]['f_lamb_meat_accuracy']);
+
+            $results[$key]['a_breed_value_growth'] = BreedFormat::formatGrowthBreedValue($results[$key]['a_breed_value_growth_value'], $results[$key]['a_breed_value_growth_accuracy']);
+            $results[$key]['m_breed_value_growth'] = BreedFormat::formatGrowthBreedValue($results[$key]['m_breed_value_growth_value'], $results[$key]['m_breed_value_growth_accuracy']);
+            $results[$key]['f_breed_value_growth'] = BreedFormat::formatGrowthBreedValue($results[$key]['f_breed_value_growth_value'], $results[$key]['f_breed_value_growth_accuracy']);
+            
+            $results[$key]['a_breed_value_muscle_thickness'] = BreedFormat::formatMuscleThicknessBreedValue($results[$key]['a_breed_value_muscle_thickness_value'], $results[$key]['a_breed_value_muscle_thickness_accuracy']);
+            $results[$key]['m_breed_value_muscle_thickness'] = BreedFormat::formatMuscleThicknessBreedValue($results[$key]['m_breed_value_muscle_thickness_value'], $results[$key]['m_breed_value_muscle_thickness_accuracy']);
+            $results[$key]['f_breed_value_muscle_thickness'] = BreedFormat::formatMuscleThicknessBreedValue($results[$key]['f_breed_value_muscle_thickness_value'], $results[$key]['f_breed_value_muscle_thickness_accuracy']);
+            
+            $results[$key]['a_breed_value_fat'] = BreedFormat::formatFatThickness3BreedValue($results[$key]['a_breed_value_fat_value'], $results[$key]['a_breed_value_fat_accuracy']);
+            $results[$key]['m_breed_value_fat'] = BreedFormat::formatFatThickness3BreedValue($results[$key]['m_breed_value_fat_value'], $results[$key]['m_breed_value_fat_accuracy']);
+            $results[$key]['f_breed_value_fat'] = BreedFormat::formatFatThickness3BreedValue($results[$key]['f_breed_value_fat_value'], $results[$key]['f_breed_value_fat_accuracy']);
+
+            $results[$key]['a_breed_value_litter_size'] = BreedFormat::formatBreedValue($results[$key]['a_breed_value_litter_size_value'], $results[$key]['a_breed_value_litter_size_accuracy']);
+            $results[$key]['m_breed_value_litter_size'] = BreedFormat::formatBreedValue($results[$key]['m_breed_value_litter_size_value'], $results[$key]['m_breed_value_litter_size_accuracy']);
+            $results[$key]['f_breed_value_litter_size'] = BreedFormat::formatBreedValue($results[$key]['f_breed_value_litter_size_value'], $results[$key]['f_breed_value_litter_size_accuracy']);
+            
 
             if(self::SHOW_PREDICATE_IN_REPORT) {
                 $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
