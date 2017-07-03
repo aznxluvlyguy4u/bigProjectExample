@@ -184,9 +184,9 @@ class BreedValueService
         }
 
         if($updateCount > 0) {
-            $this->logger->notice($updateCount . ' genetic bases updated');
+            $this->logger->notice($updateCount . ' genetic bases inserted');
         } else {
-            $this->logger->notice('No genetic bases were updated');
+            $this->logger->notice('No genetic bases were inserted');
         }
 
         return $updateCount;
