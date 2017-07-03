@@ -22,7 +22,7 @@ abstract class MixBlupInstructionFileBase
     const GENE_DIVERSITY_MISSING_REPLACEMENT = '0';
     const CONSTANT_MISSING_PARENT_REPLACEMENT = 0;
     const PEDIGREE_FILE_DATE_OF_BIRTH_NULL_REPLACEMENT = '1950-01-01'; //As long as the date is not included in the last 5 years.
-    const LITTER_NULL_REPLACEMENT = 'NVT';
+    const LITTER_NULL_REPLACEMENT = "'NVT'";
     const INCLUDE_COMMENTED_OUT_TRAITS = true;
     const INDIRECT_SUFFIX = '_INDIRECT';
 
