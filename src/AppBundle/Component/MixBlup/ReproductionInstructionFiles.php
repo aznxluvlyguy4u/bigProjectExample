@@ -64,7 +64,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
             ' CovHetLam  R #Heterosis lam of worp', //Heterosis of offspring/litter
             ' CovRecLam  R #Recombinatie lam of worp', //Recombination of offspring/litter
             ' CovTE_M    R #Rasdeel TE van moeder', //BreedCode part TE of mother //TODO definition still unclear
-            ' Inductie   I #Bronstinduction 0=Ja, 1=Nee', //pmsg value in mate 0=FALSE, 1=TRUE
+            ' Inductie   R #Bronstinduction 0=Ja, 1=Nee', //pmsg value in mate 0=FALSE, 1=TRUE
             ' PermMil    I #Permanent milieu is identiek aan de ID van de ooi of moeder',
             ' IDM        I #Het unieke diernummer van de moeder', //TODO definition still unclear
             ' WorpID     A ',
