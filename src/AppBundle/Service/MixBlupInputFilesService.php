@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Constant\Environment;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Component\MixBlup\ExteriorInputProcess;
 use AppBundle\Component\MixBlup\LambMeatIndexInputProcess;
@@ -26,33 +27,27 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
 {
     /** @var Connection */
     private $conn;
-
     /** @var ObjectManager */
     private $em;
-
     /** @var AWSSimpleStorageService */
     private $s3Service;
-
     /** @var MixBlupInputQueueService */
     private $queueService;
-
     /** @var string */
     private $currentEnvironment;
-
     /** @var string */
     private $cacheDir;
-    
     /** @var string */
     private $workingFolder;
-
     /** @var array */
     private $mixBlupProcesses;
-
     /** @var string */
     private $jsonUploadMessage;
-
     /** @var Logger */
     private $logger;
+
+    /** @var boolean */
+    private $purgeCacheAfterSuccessfulRun;
 
     /**
      * MixBlupInputFilesService constructor.
@@ -79,6 +74,21 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorInputProcess($em, $this->workingFolder, $this->logger);
         $this->mixBlupProcesses[MixBlupType::LAMB_MEAT_INDEX] = new LambMeatIndexInputProcess($em, $this->workingFolder, $this->logger);
         $this->mixBlupProcesses[MixBlupType::FERTILITY] = new ReproductionInputProcess($em, $this->workingFolder, $this->logger);
+
+        $this->setCachePurgeSettingByEnvironment();
+    }
+
+
+    protected function setCachePurgeSettingByEnvironment()
+    {
+        switch($this->currentEnvironment) {
+            case Environment::PROD:     $this->purgeCacheAfterSuccessfulRun = true; break;
+            case Environment::STAGE:    $this->purgeCacheAfterSuccessfulRun = true; break;
+            case Environment::DEV:      $this->purgeCacheAfterSuccessfulRun = false; break;
+            case Environment::TEST:     $this->purgeCacheAfterSuccessfulRun = false; break;
+            case Environment::LOCAL:    $this->purgeCacheAfterSuccessfulRun = false; break;
+            default;                    $this->purgeCacheAfterSuccessfulRun = true; break;
+        }
     }
 
 
@@ -123,7 +133,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
             $allUploadsSuccessful = $this->upload();
             $sendMessageResult = $this->sendMessage();
 
-            if($sendMessageResult) {
+            if($sendMessageResult && $this->purgeCacheAfterSuccessfulRun) {
                 $this->deleteMixBlupFilesInCache();
             }
         }
