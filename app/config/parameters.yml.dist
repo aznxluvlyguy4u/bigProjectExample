@@ -8,6 +8,7 @@ parameters:
     database_user:     root
     database_password: ~
 
+    environment: ~
     redis_host:        redis://localhost
 
     mailer_transport:  smtp

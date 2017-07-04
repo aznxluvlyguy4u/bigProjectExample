@@ -39,7 +39,10 @@ class NsfoInfoCommand extends ContainerAwareCommand
         //Print intro
         $this->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $this->writeln(['___ ENVIRONMENT ___', $this->getParameter('kernel.environment'),'']);
+        $this->writeln(['___ ENVIRONMENT ___',
+            'kernel.environment: ' . $this->getParameter('kernel.environment'),
+            'parameters.yml, environment: ' . $this->getParameter('environment'),
+            '']);
 
         $this->writeln(['___ FOLDERS ___',
             'rootDir: '.$this->getParameter('kernel.root_dir'),

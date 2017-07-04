@@ -17,7 +17,7 @@ services:
           - ['%aws_access_key_id%', '%aws_secret_key%'] #credentials
           - %aws_sqs_region% #region
           - %aws_sqs_version% #version
-          - %kernel.environment% #currentEnv
+          - %environment% #currentEnv
 
     app.aws.queueservice.external:
         class: AppBundle\Service\AwsExternalQueueService
@@ -46,7 +46,7 @@ services:
           region: %aws_s3_region%
           version: %aws_s3_version%
           bucket: %aws_s3_bucket%
-          currentEnv: %kernel.environment%
+          currentEnv: %environment%
 
     app.doctrine.entitygetter:
         class: AppBundle\Service\EntityGetter
@@ -68,7 +68,7 @@ services:
         class: AppBundle\Component\MessageBuilderBase
         arguments:
           entityManager: ['@doctrine.orm.entity_manager']
-          currentEnv: %kernel.environment%
+          currentEnv: %environment%
 
     app.mixblup.input:
         class: AppBundle\Service\MixBlupInputFilesService
@@ -76,7 +76,7 @@ services:
           entityManager: '@doctrine.orm.entity_manager'
           AWSSimpleStorageService: '@app.aws.storageservice'
           MixBlupInputQueueService: '@app.aws.queueservice.mixblup_input'
-          currentEnv: %kernel.environment%
+          currentEnv: %environment%
           cacheDir: %kernel.cache_dir%
           logger: '@logger'
 
@@ -86,7 +86,7 @@ services:
           entityManager: '@doctrine.orm.entity_manager'
           AWSSimpleStorageService: '@app.aws.storageservice'
           MixBlupOutputQueueService: '@app.aws.queueservice.mixblup_output'
-          currentEnv: %kernel.environment%
+          currentEnv: %environment%
           cacheDir: %kernel.cache_dir%
           logger: '@logger'
 
