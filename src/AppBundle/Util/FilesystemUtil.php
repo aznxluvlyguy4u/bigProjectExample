@@ -28,7 +28,7 @@ class FilesystemUtil
      * @param Filesystem $fs
      * @return bool
      */
-    public static function filesExist($rootFolder, $fileNames, $fs)
+    public static function filesExist($rootFolder, $fileNames, $fs = null)
     {
         $fullPathFileNames = [];
         if(is_array($fileNames)) {
