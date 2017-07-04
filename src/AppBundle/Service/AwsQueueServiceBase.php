@@ -227,4 +227,13 @@ abstract class AwsQueueServiceBase
         }
         return null;
     }
+
+    /**
+     * @return string
+     */
+    public function getQueueId()
+    {
+        return $this->queueId;
+    }
+
 }

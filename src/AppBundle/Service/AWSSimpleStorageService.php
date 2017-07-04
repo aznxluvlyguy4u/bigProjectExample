@@ -193,4 +193,23 @@ class AWSSimpleStorageService
         $stream = $result['Body'];
         return $stream->getContents();
     }
+
+    /**
+     * @return string
+     */
+    public function getBucket()
+    {
+        return $this->bucket;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPathApppendage()
+    {
+        return $this->pathApppendage;
+    }
+
+
+
 }
