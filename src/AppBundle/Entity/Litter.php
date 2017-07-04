@@ -17,6 +17,13 @@ use JMS\Serializer\Annotation as JMS;
 class Litter extends DeclareNsfoBase
 {
     /**
+     * @ORM\OneToOne(targetEntity="Mate")
+     * @ORM\JoinColumn(name="mate_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Mate")
+     */
+    private $mate;
+
+    /**
      * 2016-04-01T22:00:48.131Z
      *
      * @var DateTime
@@ -29,6 +36,7 @@ class Litter extends DeclareNsfoBase
     private $litterDate;
 
     /**
+     * @var Ram
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ram")
@@ -36,6 +44,7 @@ class Litter extends DeclareNsfoBase
     private $animalFather;
 
     /**
+     * @var Ewe
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ewe")
@@ -43,12 +52,14 @@ class Litter extends DeclareNsfoBase
     private $animalMother;
 
     /**
-     * @var string
+     * The number designating then place in an ordered sequence of litters for a specific ewe
+     * starting at 1.
      *
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
      */
-    private $litterGroup;
+    private $litterOrdinal;
 
     /**
      * @var integer
@@ -106,6 +117,67 @@ class Litter extends DeclareNsfoBase
     private $status;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $suckleCount;
+
+    /**
+     * 2016-04-01T22:00:48.131Z
+     *
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $suckleCountUpdateDate;
+
+    /**
+     * Time in days the fetus has been inside the womb of the mother
+     * Dutch: draagtijd
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $gestationPeriod;
+
+    /**
+     * Time in days between litterDate/dateOfBirth of this animal and the previous litterDate.
+     * If this is the first litter, then this birthInterval is null
+     * Dutch: tussenlamtijd
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $birthInterval;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $heterosis;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $recombination;
+
+    /**
+     * @var boolean
+     * @JMS\Type("boolean")
+     * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
+     */
+    private $updatedGeneDiversity;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
@@ -118,6 +190,7 @@ class Litter extends DeclareNsfoBase
         $this->stillbornCount = 0;
         $this->bornAliveCount = 0;
         $this->declareBirths = new ArrayCollection();
+        $this->updatedGeneDiversity = false;
     }
 
     /**
@@ -128,6 +201,24 @@ class Litter extends DeclareNsfoBase
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return Mate
+     */
+    public function getMate()
+    {
+        return $this->mate;
+    }
+
+    /**
+     * @param Mate $mate
+     * @return Litter
+     */
+    public function setMate($mate)
+    {
+        $this->mate = $mate;
+        return $this;
     }
 
     /**
@@ -176,6 +267,22 @@ class Litter extends DeclareNsfoBase
     public function getLitterDate()
     {
         return $this->litterDate;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getLitterOrdinal()
+    {
+        return $this->litterOrdinal;
+    }
+
+    /**
+     * @param integer $litterOrdinal
+     */
+    public function setLitterOrdinal($litterOrdinal)
+    {
+        $this->litterOrdinal = $litterOrdinal;
     }
 
     /**
@@ -303,22 +410,6 @@ class Litter extends DeclareNsfoBase
     }
 
     /**
-     * @return string
-     */
-    public function getLitterGroup()
-    {
-        return $this->litterGroup;
-    }
-
-    /**
-     * @param string $litterGroup
-     */
-    public function setLitterGroup($litterGroup)
-    {
-        $this->litterGroup = $litterGroup;
-    }
-
-    /**
      * @return mixed
      */
     public function getAbortion()
@@ -433,4 +524,150 @@ class Litter extends DeclareNsfoBase
     {
         return $this->declareBirths;
     }
+
+    /**
+     * @return int
+     */
+    public function getSuckleCount()
+    {
+        return $this->suckleCount;
+    }
+
+
+    /**
+     * @param int $suckleCount
+     * @return Litter
+     */
+    public function setSuckleCount($suckleCount)
+    {
+        $this->suckleCount = $suckleCount;
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getSuckleCountUpdateDate()
+    {
+        return $this->suckleCountUpdateDate;
+    }
+
+    /**
+     * @param DateTime $suckleCountUpdateDate
+     * @return Litter
+     */
+    public function setSuckleCountUpdateDate($suckleCountUpdateDate)
+    {
+        $this->suckleCountUpdateDate = $suckleCountUpdateDate;
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getGestationPeriod()
+    {
+        return $this->gestationPeriod;
+    }
+
+    /**
+     * @param int|null $gestationPeriod
+     * @return AnimalCache
+     */
+    public function setGestationPeriod($gestationPeriod)
+    {
+        $this->gestationPeriod = $gestationPeriod;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBirthInterval()
+    {
+        return $this->birthInterval;
+    }
+
+    /**
+     * @param int $birthInterval
+     * @return AnimalCache
+     */
+    public function setBirthInterval($birthInterval)
+    {
+        $this->birthInterval = $birthInterval;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getHeterosis()
+    {
+        return $this->heterosis;
+    }
+
+    /**
+     * @param float $heterosis
+     * @return Litter
+     */
+    public function setHeterosis($heterosis)
+    {
+        $this->heterosis = $heterosis;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getRecombination()
+    {
+        return $this->recombination;
+    }
+
+    /**
+     * @param float $recombination
+     * @return Litter
+     */
+    public function setRecombination($recombination)
+    {
+        $this->recombination = $recombination;
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isUpdatedGeneDiversity()
+    {
+        return $this->updatedGeneDiversity;
+    }
+
+    /**
+     * @param boolean $updatedGeneDiversity
+     * @return Litter
+     */
+    public function setUpdatedGeneDiversity($updatedGeneDiversity)
+    {
+        $this->updatedGeneDiversity = $updatedGeneDiversity;
+        return $this;
+    }
+    
+
+    /**
+     * @return string
+     */
+    public function getLitterGroup()
+    {
+        $mother = $this->getAnimalMother();
+        if($mother && $this->getLitterOrdinal()) {
+            $uln = $mother->getUln();
+            if($uln) {
+                $paddedLitterOrdinal = str_pad($this->getLitterOrdinal(), 2, "0", STR_PAD_LEFT);
+                return $uln.'_'.$paddedLitterOrdinal;
+            }
+        }
+        return null;
+    }
+
+
 }

@@ -333,6 +333,19 @@ class SqlUtil
     /**
      * @param string|int $key
      * @param array $results
+     * @return array
+     */
+    public static function createSearchArrayByKey($key, $results)
+    {
+        $searchArray = [];
+        foreach ($results as $result) {
+            $searchArray[$result[$key]] = $result;
+        }
+        return $searchArray;
+    }
+
+
+    /**
      * @param bool $isIntVal
      * @param bool $sortResults
      * @return array
@@ -435,5 +448,23 @@ class SqlUtil
             $prefix = ' OR ';
         }
         return $filterString;
+    }
+
+
+    /**
+     * @param array $values
+     * @param string $key
+     * @param boolean $valueIsBetweenSingleQuotationMarks
+     * @return null|string
+     */
+    public static function filterString($values = [], $key, $valueIsBetweenSingleQuotationMarks)
+    {
+        if(count($values) === 0) { return null; }
+
+        if($valueIsBetweenSingleQuotationMarks) {
+            return "(".$key." = '". implode("' OR ".$key." = '", $values) . "')";
+        } else {
+            return "(".$key." = ". implode(" OR ".$key." = ", $values) . ")";
+        }
     }
 }

@@ -24,13 +24,10 @@ class InbreedingCoefficientReportData extends ReportBase
 
     /** @var array */
     private $data;
-
     /** @var Ram */
     private $ram;
-
     /** @var EweRepository */
     private $eweRepository;
-
     /** @var RamRepository */
     private $ramRepository;
 
