@@ -120,6 +120,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $breedValueTypeIdsByDutchDescription;
     /** @var array */
     private $breedIndexTypeIdsByDutchDescription;
+    /** @var array */
+    private $animalIdsInDatabase;
 
     /** @var array */
     private $minReliabilityByBreedValueTypeDutchDescription;
@@ -140,6 +142,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $nullAccuracyCount;
     /** @var boolean */
     private $processScanCount;
+    /** @var array */
+    private $missingAnimalIds;
 
     /**
      * MixBlupOutputFilesService constructor.
@@ -195,6 +199,12 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             $this->breedIndexTypesByDutchDescription[$breedValueType->getNl()] = $breedValueType;
             $this->breedIndexTypeIdsByDutchDescription[$breedValueType->getNl()] = $breedValueType->getId();
         }
+
+        $this->missingAnimalIds = [];
+
+        $sql = "SELECT id FROM animal";
+        $results = $this->conn->query($sql)->fetchAll();
+        $this->animalIdsInDatabase = SqlUtil::getSingleValueGroupedSqlResults('id', $results, true, true);
     }
 
 
@@ -328,6 +338,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->logger->error('The following breedValues had no relani nor solani file: '.implode(', ', $blankBreedValueTypes));
                     $this->logger->error('The following unzips failed (relani or solani file likely missing): '.implode(', ', $unsuccessfulUnzips));
                     $this->logger->notice('The following unzips succeeded: '.implode(', ', $successfulUnzips));
+                }
+
+                $missingAnimalIdsCount = count($this->missingAnimalIds);
+                if($missingAnimalIdsCount > 0) {
+                    $this->logger->error($missingAnimalIdsCount.' AnimalIds missing from database! : '.implode(',', $this->missingAnimalIds));
+                } else {
+                    $this->logger->notice('No animalIds were missing in the database');
                 }
 
                 $this->breedValuesResultTableUpdater->update();
@@ -807,6 +824,11 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
     private function processBreedValue($dutchBreedValueTypeKeyInSolaniArray, $dutchBreedValueTypeForDatabase, $animalId, $relani, $breedValueTypeId)
     {
+        if(!key_exists($animalId, $this->animalIdsInDatabase)) {
+            $this->missingAnimalIds[$animalId] = $animalId;
+            return;
+        }
+
         if($this->breedValueAlreadyExists($dutchBreedValueTypeForDatabase, $animalId)) {
             $this->valueAlreadyExistsCount++;
             if($this->processScanCount%self::PRINT_BATCH_SIZE === 0) {
