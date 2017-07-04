@@ -55,6 +55,7 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
@@ -529,6 +530,8 @@ class IRSerializer implements IRSerializerInterface
         $litter->setBornAliveCount($litterSize-$stillbornCount);
         $litter->setStillbornCount($stillbornCount);
 
+        $breedCodeChild = BreedCodeUtil::calculateBreedCodeFromParentBreedCodes($father, $mother, null);
+
         $children = [];
         /** @var array $child */
         foreach ($childrenContent as $child) {
@@ -650,6 +653,10 @@ class IRSerializer implements IRSerializerInterface
                 $child->setUbnOfBirth($location->getUbn());
                 $child->setLambar($hasLambar);
                 $child->setLitter($litter);
+
+                if(is_string($breedCodeChild)) {
+                    $child->setBreedCode($breedCodeChild);
+                }
 
                 //Create new residence
                 $animalResidence = new AnimalResidence();

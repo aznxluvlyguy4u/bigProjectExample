@@ -5,6 +5,7 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Component\Utils;
+use AppBundle\Entity\Animal;
 
 class BreedCodeUtil
 {
@@ -48,6 +49,21 @@ class BreedCodeUtil
         }
 
         return $result;
+    }
+
+
+    /**
+     * @param Animal $parent1
+     * @param Animal $parent2
+     * @param null $nullResponse
+     * @return null|string
+     */
+    public static function calculateBreedCodeFromParents($parent1, $parent2, $nullResponse = null)
+    {
+        if($parent1 instanceof Animal && $parent2 instanceof Animal) {
+             return self::calculateBreedCodeFromParentBreedCodes($parent1->getBreedCode(), $parent2->getBreedCode(), $nullResponse);
+        }
+        return $nullResponse;
     }
 
 
