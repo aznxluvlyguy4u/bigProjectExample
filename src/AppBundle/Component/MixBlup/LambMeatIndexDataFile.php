@@ -182,7 +182,10 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                         m.type = '".MeasurementType::MUSCLE_THICKNESS."' OR
                         m.type = '".MeasurementType::TAIL_LENGTH."' OR
                         m.type = '".MeasurementType::WEIGHT."'
-                      )".self::getErrorLogAnimalPedigreeFilter('a.id');
+                      )
+                  AND ".self::N_LING_MIN." <= (l.born_alive_count + l.stillborn_count)
+                  AND (l.born_alive_count + l.stillborn_count) <= ".self::N_LING_MAX."
+                  ".self::getErrorLogAnimalPedigreeFilter('a.id');
     }
 
 
@@ -222,7 +225,12 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                 INNER JOIN animal a ON a.id = c.animal_id
                 WHERE
                   ".self::getSqlBaseFilter('date_of_birth', false)."
-                  AND (c.tail_length NOTNULL OR c.birth_weight NOTNULL)".self::getErrorLogAnimalPedigreeFilter('a.id');;
+                  AND (
+                          (c.tail_length NOTNULL 
+                            AND c.tail_length <= " . self::TAIL_LENGTH_MIN . " AND c.tail_length <= " . self::TAIL_LENGTH_MAX . "
+                          ) OR c.birth_weight NOTNULL
+                      )
+                  ".self::getErrorLogAnimalPedigreeFilter('a.id');;
         $results = $conn->query($sql)->fetchAll();
         return SqlUtil::createSearchArrayByKey(JsonInputConstant::ANIMAL_ID, $results);
     }
