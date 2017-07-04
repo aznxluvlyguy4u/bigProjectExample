@@ -1766,11 +1766,11 @@ class ResultTableBreedGrades
     {
         switch ($breedValueTypeEnglish) {
             case 'FAT_THICKNESS_1':
-                return strtolower('FAT_THICKNESS1').'_accuracy';
+                return strtolower('FAT_THICKNESS1').'accuracy';
             case 'FAT_THICKNESS_2':
-                return strtolower('FAT_THICKNESS2').'_accuracy';
+                return strtolower('FAT_THICKNESS2').'accuracy';
             case 'FAT_THICKNESS_3':
-                return strtolower('FAT_THICKNESS3').'_accuracy';
+                return strtolower('FAT_THICKNESS3').'accuracy';
 
             case 'WEIGHT_AT_8_WEEKS':
                 return strtolower('WEIGHT_AT8WEEKS').'_accuracy';
