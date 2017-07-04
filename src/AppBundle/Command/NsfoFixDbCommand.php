@@ -66,6 +66,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             '5: Fix duplicate litters only containing stillborns', "\n",
             '6: Find animals with themselves being their own ascendant', "\n",
             '7: Print from database, animals with themselves being their own ascendant', "\n",
+            '8: Fill missing breedCodes and set breedCode = breedCodeParents if both parents have the same pure (XX100) breedCode', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -110,6 +111,10 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             case 7:
                 $ascendantValidator->printOverview();
                 $output->writeln('Done!');
+                break;
+
+            case 8:
+                DatabaseDataFixer::recursivelyFillMissingBreedCodesHavingBothParentBreedCodes($this->conn, $this->cmdUtil);
                 break;
 
             default:
