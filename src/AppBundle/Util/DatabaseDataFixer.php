@@ -170,7 +170,7 @@ class DatabaseDataFixer
             $fatherBreedCodeString = $result['dad_breed_code'];
             $newChildBreedCode = BreedCodeUtil::calculateBreedCodeFromParentBreedCodes($fatherBreedCodeString, $motherBreedCodeString, $nullResponse);
 
-            if($newChildBreedCode !== $newChildBreedCode) {
+            if($newChildBreedCode !== $nullResponse) {
                 dump($newChildBreedCode . ' = '.$fatherBreedCodeString.' + '.$motherBreedCodeString);
                 $updateString = $updateString . $prefix . "('" . $newChildBreedCode . "'," . $animalId . ')';
                 $prefix = ',';
