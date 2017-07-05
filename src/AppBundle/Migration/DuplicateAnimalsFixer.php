@@ -518,6 +518,8 @@ class DuplicateAnimalsFixer
 
         //Check in which tables have the secondaryAnimalId
         $tableNamesByVariableType = [
+            [ self::TABLE_NAME => 'breed_index',            self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'breed_value',            self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'declare_arrival',        self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'declare_export',         self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'declare_import',         self::VARIABLE_TYPE => 'animal_id' ],
@@ -542,6 +544,7 @@ class DuplicateAnimalsFixer
             [ self::TABLE_NAME => 'ulns_history',           self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'blindness_factor',       self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'predicate',              self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'result_table_breed_grades',  self::VARIABLE_TYPE => 'animal_id' ],
         ];
 
         $sql = "DELETE FROM animal_cache WHERE animal_id = ".$secondaryAnimalId;
@@ -626,7 +629,7 @@ class DuplicateAnimalsFixer
             'parent_father_id', 'parent_mother_id', 'location_id', 'pedigree_country_code', 'pedigree_number', 'name',
             'date_of_birth', 'transfer_state', 'uln_country_code', 'uln_number', 'animal_order_number', 'is_import_animal',
             'is_export_animal', 'is_departed_animal', 'animal_country_origin', 'pedigree_register_id', 'ubn_of_birth', 'location_of_birth_id', 'scrapie_genotype', 'predicate', 'predicate_score', 'nickname', 'blindness_factor',
-            'myo_max', 'mixblup_block', 'collar_color', 'collar_number'
+            'myo_max', 'collar_color', 'collar_number', 'heterosis', 'recombination', 'updated_gene_diversity'
         ];
 
         foreach ($columnHeaders as $columnHeader) {
