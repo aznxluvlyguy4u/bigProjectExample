@@ -84,6 +84,28 @@ class Mate extends DeclareNsfoBase {
      */
     private $ki;
 
+
+    /**
+     * Equal to matching litterOrdinal.
+     * For new mates find the max(litterOrdinal) of current litter. Then add 1.
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $parity;
+
+    /**
+     * The number designating then place in an ordered sequence of mates for a specific ewe
+     * starting at 1 and grouped by parity.
+     * So restart the sequence when parity number is incremented.
+     * 
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $mateOrdinalAfterParity;
+
     /**
      * @var boolean
      * @ORM\Column(type="boolean", nullable=true, options={"default":null})
@@ -324,6 +346,38 @@ class Mate extends DeclareNsfoBase {
         $this->ki = $ki;
     }
 
+    /**
+     * @return integer
+     */
+    public function getParity()
+    {
+        return $this->parity;
+    }
+
+    /**
+     * @param integer $parity
+     */
+    public function setParity($parity)
+    {
+        $this->parity = $parity;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getMateOrdinalAfterParity()
+    {
+        return $this->mateOrdinalAfterParity;
+    }
+
+    /**
+     * @param integer $mateOrdinalAfterParity
+     */
+    public function setMateOrdinalAfterParity($mateOrdinalAfterParity)
+    {
+        $this->mateOrdinalAfterParity = $mateOrdinalAfterParity;
+    }
+    
     /**
      * @return boolean
      */

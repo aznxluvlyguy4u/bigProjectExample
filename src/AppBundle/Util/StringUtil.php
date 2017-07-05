@@ -187,6 +187,17 @@ class StringUtil
 
 
     /**
+     * @param string $string
+     * @param string $suffix
+     * @return mixed
+     */
+    public static function removeSuffix($string, $suffix)
+    {
+        return preg_replace('/'.$suffix.'$/s', '', $string);
+    }
+
+
+    /**
      * @param string $gender
      * @return string
      */

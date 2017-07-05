@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\ColumnType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -332,6 +333,19 @@ class SqlUtil
     /**
      * @param string|int $key
      * @param array $results
+     * @return array
+     */
+    public static function createSearchArrayByKey($key, $results)
+    {
+        $searchArray = [];
+        foreach ($results as $result) {
+            $searchArray[$result[$key]] = $result;
+        }
+        return $searchArray;
+    }
+
+
+    /**
      * @param bool $isIntVal
      * @param bool $sortResults
      * @return array
@@ -414,4 +428,44 @@ class SqlUtil
                 SELECT COUNT(*) AS count FROM rows;";
         return $conn->query($sql)->fetch()['count'];
     }
+
+
+    /**
+     * @param array $results
+     * @return string
+     */
+    public static function getUlnQueryFilter(array $results)
+    {
+        $filterString = '';
+        $prefix = '';
+        foreach ($results as $result)
+        {
+            $ulnCountryCode = $result[JsonInputConstant::ULN_COUNTRY_CODE];
+            $ulnNumber = $result[JsonInputConstant::ULN_NUMBER];
+
+            $filterString = $filterString . $prefix . '(uln_country_code = \''.$ulnCountryCode
+                                                    .'\' AND uln_number = \''.$ulnNumber.'\')';
+            $prefix = ' OR ';
+        }
+        return $filterString;
+    }
+
+
+    /**
+     * @param array $values
+     * @param string $key
+     * @param boolean $valueIsBetweenSingleQuotationMarks
+     * @return null|string
+     */
+    public static function filterString($values = [], $key, $valueIsBetweenSingleQuotationMarks)
+    {
+        if(count($values) === 0) { return null; }
+
+        if($valueIsBetweenSingleQuotationMarks) {
+            return "(".$key." = '". implode("' OR ".$key." = '", $values) . "')";
+        } else {
+            return "(".$key." = ". implode(" OR ".$key." = ", $values) . ")";
+        }
+    }
+
 }

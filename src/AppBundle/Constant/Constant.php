@@ -66,7 +66,6 @@ class Constant
     const PEDIGREE_NUMBER_NAMESPACE = "pedigree_number";
     const PEDIGREE_SNAKE_CASE_NAMESPACE = "pedigree_number";
     const PEDIGREE_COUNTRY_CODE_NAMESPACE = "pedigree_country_code";
-    const LITTER_GROUP_NAMESPACE = "litter_group";
     const LITTER_SIZE_NAMESPACE = "litter_size";
 
     //Other animal variables

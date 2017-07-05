@@ -57,7 +57,7 @@ class NsfoTestCommand extends ContainerAwareCommand
     /** @var AnimalRepository */
     private $animalRepository;
 
-    /** @var String */
+    /** @var string */
     private $databaseName;
 
     private $csvParsingOptions = array(
@@ -105,7 +105,6 @@ class NsfoTestCommand extends ContainerAwareCommand
 
             case 1:
                 $results = $this->locationRepository->findLocationsWithHighestAnimalCount();
-//                dump($results);die;
                 $this->cmdUtil->writeln($results);
                 break;
             case 2:
@@ -128,7 +127,6 @@ class NsfoTestCommand extends ContainerAwareCommand
          * Insert your custom test here
          */
     }
-
 
 
     private function parseCSV() {

@@ -9,6 +9,7 @@ use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\LitterUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -70,21 +71,6 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     /** @var Connection */
     private $conn;
 
-    /** @var array */
-    private $litterSearchArray;
-
-    /** @var array */
-    private $litterValuesSearchArray;
-
-    /** @var array */
-    private $littersWithDateWithin4MonthsOfOtherLittersInDatabase;
-
-    /** @var string */
-    private $rootDir;
-
-    /** @var string */
-    private $outputFolder;
-
     protected function configure()
     {
         $this
@@ -97,6 +83,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        $this->conn = $this->em->getConnection();
         $this->eweRepository = $this->em->getRepository(Ewe::class);
         $this->output = $output;
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
@@ -117,7 +104,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             '1: Generate Litters from source file (incl mother, excl children) and update production cache of mother', "\n",
             '2: Match children with existing litters and set father in litter', "\n",
             '3: Find missing father in animal by searching in litter', "\n",
-            '4: Generate all litter group ids (uln_orderedCount)', "\n",
+            '4: Generate all litterOrdination numbers', "\n",
             '5: Check if children in litter matches bornAliveCount value', "\n",
             '6: Update mismatched n-ling data in cache', "\n",
             '7: Update mismatched production data in cache', "\n",
@@ -140,7 +127,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 break;
 
             case 4:
-                $this->setLitterGroupIds();
+                $this->cmdUtil->writeln(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
                 break;
 
             case 5:
@@ -232,44 +219,6 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
-    }
-
-
-    private function setLitterGroupIds()
-    {
-        $minId = $this->cmdUtil->generateQuestion('Get ewes starting from given primary key/id, default is '.self::DEFAULT_MIN_EWE_ID,self::DEFAULT_MIN_EWE_ID);
-        $maxId = $this->eweRepository->getMaxEweId();
-        $batchSize = self::BATCH_SIZE;
-
-        $sql = "SELECT COUNT(id) FROM ewe WHERE id >= '".$minId."'";
-        $totalEweCount = $this->conn->query($sql)->fetch()['count'];
-
-        $this->cmdUtil->setStartTimeAndPrintIt($totalEweCount, 1, 'Data retrieved from database. Now finding fathers for children...');
-        
-        $eweCount = 0;
-        $litterCount = 0;
-
-        $eweId = 0;
-        $lastFlushedEweId = 0;
-        for($i = $minId; $i <= $maxId; $i += self::BATCH_SIZE) {
-
-
-            $ewes = $this->eweRepository->getEwesById($i, $i+self::BATCH_SIZE-1);
-            foreach ($ewes as $ewe) {
-                /** @var Ewe $ewe */
-                $this->eweRepository->generateLitterIds($ewe, true, false);
-
-                $litterCount += $ewe->getLitters()->count();
-                $eweCount++;
-                $eweId = $ewe->getId();
-
-                $message = 'Ewes: '.$eweCount.'/'.$totalEweCount.' | Litters: '.$litterCount.' Last flushed EweId: '.$lastFlushedEweId;
-                $this->cmdUtil->advanceProgressBar(1, $message);
-            }
-            $lastFlushedEweId = $eweId;
-            DoctrineUtil::flushClearAndGarbageCollect($this->em);
-        }
-        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
 

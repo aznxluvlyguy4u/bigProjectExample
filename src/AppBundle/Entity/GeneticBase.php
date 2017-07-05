@@ -12,6 +12,15 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class GeneticBase
+ *
+ * Once a year in June, the average breedvalue for each trait in the solani file is calculated.
+ * Include only breedvalues of the following animals:
+ * - BreedValues for this BreedIndex should have an accuracy that is at least equal to the $minAccuracy
+ * - Animals must have a year of birth that is X years before the year of the current breed values.
+ *   round by year, not by date
+ *   X = $geneticBaseYear
+ * Both $minAccuracy and $geneticBaseYear are found in the BreedIndexCalculationTerms class.
+ *
  * @ORM\Entity(repositoryClass="AppBundle\Entity\GeneticBaseRepository")
  * @package AppBundle\Entity
  */

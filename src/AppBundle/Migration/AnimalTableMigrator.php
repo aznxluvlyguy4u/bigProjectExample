@@ -21,7 +21,7 @@ use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
 use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\BreedCodeUtil;
+use AppBundle\Util\BreedCodeUtilForAnimalTableMigrator;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
@@ -498,7 +498,7 @@ class AnimalTableMigrator extends MigratorBase
 		$this->checkGendersInDatabase();
 
 		//Fix breedCodes last, because it might take a while
-		$breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
+		$breedCodeUtil = new BreedCodeUtilForAnimalTableMigrator($this->em, $this->cmdUtil);
 		$breedCodeUtil->fixBreedCodes();
 	}
 
