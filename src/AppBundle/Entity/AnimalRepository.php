@@ -1274,7 +1274,10 @@ class AnimalRepository extends BaseRepository
     /** @var GenderHistoryItemRepository $genderHistoryItemRepository */
     $genderHistoryItemRepository = $this->getManager()->getRepository(GenderHistoryItem::class);
     $genderHistoryItemRepository->deleteByAnimalsIds($animalIds);
-    
+
+    $resultTableBreedGradesRepository = $this->getManager()->getRepository(ResultTableBreedGrades::class);
+    $resultTableBreedGradesRepository->deleteByAnimalsIds($animalIds);
+
     $animalIdFilterString = SqlUtil::getFilterStringByIdsArray($animalIds);
     if($animalIdFilterString != '') {
       //Note that the child record in the ram/ewe/neuter table will automatically be deleted as well.
