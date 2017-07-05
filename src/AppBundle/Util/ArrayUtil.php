@@ -23,8 +23,44 @@ class ArrayUtil
     public static function get($key, array $array, $nullReplacement = null)
     {
         if(array_key_exists($key, $array)) {
-            return $array[$key];
+            if($array[$key] !== null) {
+                return $array[$key];
+            }
         }
         return $nullReplacement;
+    }
+
+
+    /**
+     * @param array $arrays
+     * @param boolean $ignoreAllKeys This prevents overwriting values with identical keys, but you lose the keys.
+     * @return array
+     */
+    public static function concatArrayValues(array $arrays, $ignoreAllKeys = true)
+    {
+        $combinedArray = [];
+
+        foreach ($arrays as $array) {
+            foreach ($array as $key => $value) {
+                if(!is_int($key) && !$ignoreAllKeys) {
+                    $combinedArray[$key] = $value;
+                } else {
+                    $combinedArray[] = $value;
+                }
+            }
+        }
+
+        return $combinedArray;
+    }
+
+
+    /**
+     * @param $key
+     * @param array $array
+     * @return int
+     */
+    public static function keyPosition($key, $array)
+    {
+        return array_search($key, array_keys($array));
     }
 }

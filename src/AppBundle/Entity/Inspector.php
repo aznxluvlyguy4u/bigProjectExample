@@ -21,6 +21,21 @@ class Inspector extends Person {
      * @JMS\Type("string")
      */
     private $objectType;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $inspectorCode;
+
+    /**
+     * @var boolean
+     * @Assert\NotBlank
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isAuthorizedNsfoInspector;
   
     /**
      * Constructor
@@ -31,6 +46,7 @@ class Inspector extends Person {
       parent::__construct();
   
       $this->objectType = "Inspector";
+      $this->isAuthorizedNsfoInspector = false;
     }
 
     /**
@@ -56,4 +72,42 @@ class Inspector extends Person {
     {
         return $this->objectType;
     }
+
+    /**
+     * @return string
+     */
+    public function getInspectorCode()
+    {
+        return $this->inspectorCode;
+    }
+
+    /**
+     * @param string $inspectorCode
+     * @return Inspector
+     */
+    public function setInspectorCode($inspectorCode)
+    {
+        $this->inspectorCode = $inspectorCode;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAuthorizedNsfoInspector()
+    {
+        return $this->isAuthorizedNsfoInspector;
+    }
+
+    /**
+     * @param bool $isAuthorizedNsfoInspector
+     * @return Inspector
+     */
+    public function setIsAuthorizedNsfoInspector($isAuthorizedNsfoInspector)
+    {
+        $this->isAuthorizedNsfoInspector = $isAuthorizedNsfoInspector;
+        return $this;
+    }
+    
+
 }

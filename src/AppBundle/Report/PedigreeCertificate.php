@@ -3,6 +3,7 @@
 namespace AppBundle\Report;
 
 
+use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\JsonInputConstant;
@@ -42,6 +43,7 @@ use AppBundle\Util\Translation;
 use AppBundle\Util\TwigOutputUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 
 class PedigreeCertificate
 {
@@ -58,58 +60,37 @@ class PedigreeCertificate
     const LITTER_GROUP = 'litterGroup';
     const N_LING = 'nLing';
 
-    const FAT_DECIMAL_ACCURACY = 2;
-    const MUSCLE_THICKNESS_DECIMAL_ACCURACY = 2;
-    const GROWTH_DECIMAL_ACCURACY = 1;
-    const LAMB_MEAT_INDEX_DECIMAL_ACCURACY = 0;
-
     const STARS_NULL_VALUE = null;
-    const EMPTY_BREED_VALUE = '-/-';
-    const EMPTY_INDEX_VALUE = '-/-';
     const EMPTY_SCRAPIE_GENOTYPE = '-/-';
 
     const GENERATION_OF_ASCENDANTS = 3;
 
     /** @var array */
     private $data;
-
     /** @var  ObjectManager */
     private $em;
-
+    /** @var Connection */
+    private $conn;
     /** @var LitterRepository */
     private $litterRepository;
-
     /** @var ExteriorRepository */
     private $exteriorRepository;
-
-    /** @var BreedValuesSetRepository */
-    private $breedValuesSetRepository;
-
-    /** @var int */
-    private $breedValuesYear;
-
-    /** @var GeneticBase */
-    private $geneticBases;
 
     /**
      * PedigreeCertificate constructor.
      * @param ObjectManager $em
      * @param string $ubn
      * @param int $animalId
-     * @param int $breedValuesYear
-     * @param GeneticBase $geneticBases
      * @param string $trimmedClientName
      * @param CompanyAddress $companyAddress
      */
-    public function __construct(ObjectManager $em, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedClientName, $companyAddress)
+    public function __construct(ObjectManager $em, $ubn, $animalId, $trimmedClientName, $companyAddress)
     {
         $this->em = $em;
+        $this->conn = $em->getConnection();
 
         $this->litterRepository = $em->getRepository(Litter::class);
         $this->exteriorRepository = $em->getRepository(Exterior::class);
-        $this->breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
-        $this->breedValuesYear = $breedValuesYear;
-        $this->geneticBases = $geneticBases;
 
         $this->data = array();
 
@@ -333,8 +314,10 @@ class PedigreeCertificate
      */
     private function addAnimalValues($key, $animalId, $generation)
     {
-        $sql = "SELECT * FROM animal_cache WHERE animal_id = ".$animalId;
-        $animalCache = $this->em->getConnection()->query($sql)->fetch();
+        $sql = "SELECT * FROM animal_cache c
+                  LEFT JOIN result_table_breed_grades r ON r.animal_id = c.animal_id
+                WHERE c.animal_id = ".$animalId;
+        $animalCache = $this->conn->query($sql)->fetch();
 
         if($animalCache) {
 
@@ -348,7 +331,7 @@ class PedigreeCertificate
                     LEFT JOIN company c ON l.company_id = c.id
                     LEFT JOIN address d ON d.id = c.address_id
                 WHERE a.id = ".$animalId;
-                $animalData = $this->em->getConnection()->query($sql)->fetch();
+                $animalData = $this->conn->query($sql)->fetch();
 
                 //AnimalData
                 $uln = $animalData[JsonInputConstant::ULN];
@@ -436,22 +419,7 @@ class PedigreeCertificate
 
             if($generation < self::GENERATION_OF_ASCENDANTS - 1) {
                 //Only retrieve the breedValues and lambMeatIndices for the child, parents and grandparents.
-                $lambMeatIndexWithAccuracy = $animalCache[JsonInputConstant::LAMB_MEAT_INDEX];
-                $lambMeatIndexWithoutAccuracy = $animalCache[JsonInputConstant::LAMB_MEAT_INDEX_WITHOUT_ACCURACY];
-
-                // Set values in result array
-                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $animalCache[JsonInputConstant::BREED_VALUE_MUSCLE_THICKNESS];
-                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $animalCache[JsonInputConstant::BREED_VALUE_FAT];
-                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $animalCache[JsonInputConstant::BREED_VALUE_GROWTH];
-                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
-
-                //LambMeatIndex with Accuracy
-                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = $lambMeatIndexWithAccuracy;
-                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00);
-
-                if($key == ReportLabel::CHILD_KEY) {
-                    $this->addBreedIndex($lambMeatIndexWithoutAccuracy);
-                }
+                $this->addBreedValuesToArrayFromSqlResult($key, $animalCache);
             }
 
 
@@ -511,7 +479,10 @@ class PedigreeCertificate
 
             //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER; //At this moment replace by only breederName
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = self::GENERAL_NULL_FILLER;
+
+            if(!key_exists(ReportLabel::LITTER_GROUP, $this->data[ReportLabel::ANIMALS][$key])) {
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = self::GENERAL_NULL_FILLER;
+            }
 
         } else {
             $this->addAnimalValuesBySql($key, $animalId, $generation);
@@ -519,6 +490,50 @@ class PedigreeCertificate
 
     }
 
+
+    /**
+     * @param int|string $key
+     * @param array $breedGrades
+     */
+    private function addBreedValuesToArrayFromSqlResult($key, $breedGrades)
+    {
+        if(is_array($breedGrades)) {
+            $muscleThickness = BreedFormat::formatMuscleThicknessBreedValue($breedGrades['muscle_thickness'], $breedGrades['muscle_thickness_accuracy']);
+            $bodyFat = BreedFormat::formatFatThickness3BreedValue($breedGrades['fat_thickness3'], $breedGrades['fat_thickness3accuracy']);
+            $growth = BreedFormat::formatGrowthBreedValue($breedGrades['growth'], $breedGrades['growth_accuracy']);
+            $litterSizeBreedValue = BreedFormat::formatBreedValue($breedGrades['total_born'], $breedGrades['total_born_accuracy']);
+            $tailLength = BreedFormat::formatBreedValue($breedGrades['tail_length'], $breedGrades['tail_length_accuracy']);
+
+            $lambMeatIndex = BreedFormat::getJoinedLambMeatIndex($breedGrades['lamb_meat_index'], $breedGrades['lamb_meat_accuracy']);
+            $lambMeatIndexWithoutAccuracy = $breedGrades['lamb_meat_index'];
+        } else {
+            $muscleThickness = BreedFormat::EMPTY_BREED_VALUE;
+            $bodyFat = BreedFormat::EMPTY_BREED_VALUE;
+            $growth = BreedFormat::EMPTY_BREED_VALUE;
+            $litterSizeBreedValue = BreedFormat::EMPTY_BREED_VALUE;
+            $tailLength = BreedFormat::EMPTY_BREED_VALUE;
+
+            $lambMeatIndex = BreedFormat::EMPTY_INDEX_VALUE;
+            $lambMeatIndexWithoutAccuracy = null;
+        }
+
+        // Set values in result array
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $muscleThickness;
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $bodyFat;
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $growth;
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = $litterSizeBreedValue;
+
+        //NOTE this value is not used in the pdf, but it must be fill so there is no null pointer exception
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
+
+        //LambMeatIndex with Accuracy
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = $lambMeatIndex;
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = $tailLength;
+
+        if($key == ReportLabel::CHILD_KEY) {
+            $this->addBreedIndex($lambMeatIndexWithoutAccuracy);
+        }
+    }
 
 
     /**
@@ -535,33 +550,29 @@ class PedigreeCertificate
             //Only retrieve the breedValues and lambMeatIndices for the child, parents and grandparents.
 
             //Breedvalues: The actual breed value not the measurements!
-            $breedValues = self::getUnformattedBreedValues($this->em, $animalId, $this->breedValuesYear, $this->geneticBases);
-            $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValues);
 
-            // Set values in result array
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $formattedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $formattedBreedValues[BreedValueLabel::FAT];
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $formattedBreedValues[BreedValueLabel::GROWTH];
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
-
-            //LambMeatIndex with Accuracy
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = self::getFormattedLambMeatIndexWithAccuracy($breedValues);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00);
-
-            if($key == ReportLabel::CHILD_KEY) {
-                $this->addBreedIndex($breedValues[BreedValueLabel::LAMB_MEAT_INDEX]);
+            if(ctype_digit($animalId) || is_int($animalId)) {
+                //Use a LEFT JOIN, so the necessary keys will always be returned,
+                //even if the result_table_breed_grades record does not exist.
+                $sql = "SELECT r.* FROM animal 
+                LEFT JOIN result_table_breed_grades r ON r.animal_id = animal.id  
+                WHERE animal.id = ".$animalId;
+                $breedGrades = $this->conn->query($sql)->fetch();
+            } else {
+                $breedGrades = null;
             }
+
+            $this->addBreedValuesToArrayFromSqlResult($key, $breedGrades);
         }
 
         //Litter in which animal was born
         $litterData = $this->litterRepository->getLitterData($animalId);
         $litterSize = self::GENERAL_NULL_FILLER;
         $nLing = self::GENERAL_NULL_FILLER;
-        //$litterGroup = self::GENERAL_NULL_FILLER;
+
         if($litterData != null) {
             $litterSize = $litterData[JsonInputConstant::SIZE];
             $nLing = $litterData[JsonInputConstant::N_LING];
-            //$litterGroup = $litterData[JsonInputConstant::LITTER_GROUP];
         }
 
 
@@ -723,7 +734,10 @@ class PedigreeCertificate
         //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
 
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = self::GENERAL_NULL_FILLER;
+
+        if(!key_exists(ReportLabel::LITTER_GROUP, $this->data[ReportLabel::ANIMALS][$key])) {
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = self::GENERAL_NULL_FILLER;
+        }
     }
 
 
@@ -813,10 +827,10 @@ class PedigreeCertificate
      */
     private static function getFormattedLambMeatIndexWithAccuracy($breedValuesArray)
     {
-        return BreedValueUtil::getFormattedLamMeatIndexWithAccuracy(
+        return BreedFormat::getJoinedLambMeatIndex(
             $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX],
-            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY],
-            self::EMPTY_INDEX_VALUE);
+            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY]
+        );
     }
 
 

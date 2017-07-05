@@ -34,7 +34,7 @@ abstract class Animal
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $id;
 
@@ -50,7 +50,7 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $pedigreeCountryCode;
 
@@ -62,7 +62,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 11)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $pedigreeNumber;
 
@@ -99,7 +99,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({"DECLARE","MIXBLUP"})
      */
     protected $dateOfBirth;
 
@@ -118,7 +118,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $gender;
 
@@ -292,7 +292,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $isAlive;
 
@@ -301,7 +301,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $ulnNumber;
 
@@ -312,7 +312,7 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $ulnCountryCode;
 
@@ -443,6 +443,35 @@ abstract class Animal
     protected $breedCode;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     */
+    protected $hasCompleteBreedCode;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    protected $heterosis;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    protected $recombination;
+
+
+    /**
+     * @var boolean
+     * @JMS\Type("boolean")
+     * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
+     */
+    protected $updatedGeneDiversity;
+
+    /**
      * @ORM\ManyToOne(targetEntity="Client")
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
@@ -527,13 +556,6 @@ abstract class Animal
     protected $pedigreeRegister;
 
     /**
-     * @var integer
-     * @JMS\Type("integer")
-     * @ORM\Column(type="integer", nullable=true)
-     */
-    protected $mixblupBlock;
-
-    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -555,6 +577,13 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\BreedValuesSet")
      */
     protected $breedValuesSets;
+
+    /**
+     * @var ResultTableBreedGrades
+     * @ORM\OneToOne(targetEntity="ResultTableBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("AppBundle\Entity\ResultTableBreedGrades")
+     */
+    protected $latestBreedGrades;
 
     /**
      * @var string
@@ -607,6 +636,7 @@ abstract class Animal
         $this->isImportAnimal = false;
         $this->isExportAnimal = false;
         $this->isDepartedAnimal = false;
+        $this->updatedGeneDiversity = false;
     }
 
     /**
@@ -1910,6 +1940,78 @@ abstract class Animal
     }
 
     /**
+     * @return boolean|null
+     */
+    public function hasCompleteBreedCode()
+    {
+        return $this->hasCompleteBreedCode;
+    }
+
+    /**
+     * @param boolean|null $hasCompleteBreedCode
+     * @return Animal
+     */
+    public function setHasCompleteBreedCode($hasCompleteBreedCode)
+    {
+        $this->hasCompleteBreedCode = $hasCompleteBreedCode;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getHeterosis()
+    {
+        return $this->heterosis;
+    }
+
+    /**
+     * @param float $heterosis
+     * @return Animal
+     */
+    public function setHeterosis($heterosis)
+    {
+        $this->heterosis = $heterosis;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getRecombination()
+    {
+        return $this->recombination;
+    }
+
+    /**
+     * @param float $recombination
+     * @return Animal
+     */
+    public function setRecombination($recombination)
+    {
+        $this->recombination = $recombination;
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isUpdatedGeneDiversity()
+    {
+        return $this->updatedGeneDiversity;
+    }
+
+    /**
+     * @param boolean $updatedGeneDiversity
+     * @return Animal
+     */
+    public function setUpdatedGeneDiversity($updatedGeneDiversity)
+    {
+        $this->updatedGeneDiversity = $updatedGeneDiversity;
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function getPredicate()
@@ -2230,23 +2332,6 @@ abstract class Animal
         $this->pedigreeRegister = $pedigreeRegister;
     }
 
-    
-    /**
-     * @return integer
-     */
-    public function getMixblupBlock()
-    {
-        return $this->mixblupBlock;
-    }
-
-    /**
-     * @param integer $mixblupBlock
-     */
-    public function setMixblupBlock($mixblupBlock)
-    {
-        $this->mixblupBlock = $mixblupBlock;
-    }
-
 
     /**
      * @return string
@@ -2327,6 +2412,25 @@ abstract class Animal
             return null;
         }
     }
+
+    /**
+     * @return ResultTableBreedGrades
+     */
+    public function getLatestBreedGrades()
+    {
+        return $this->latestBreedGrades;
+    }
+
+    /**
+     * @param ResultTableBreedGrades $latestBreedGrades
+     * @return Animal
+     */
+    public function setLatestBreedGrades($latestBreedGrades)
+    {
+        $this->latestBreedGrades = $latestBreedGrades;
+        return $this;
+    }
+
 
     /**
      * @return string

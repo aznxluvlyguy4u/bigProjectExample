@@ -2,14 +2,13 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Component\Utils;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\DeclareTagsTransferRepository;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareReplaceTagsOutput;
-use AppBundle\Output\DeclareTagsTransferResponseOutput;
 use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -51,16 +50,21 @@ class TagsReplaceAPIController extends APIController {
   public function createTagReplaceRequest(Request $request)
   {
     $om = $this->getDoctrine()->getManager();
-    
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
     $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
 
+    if(!$client) {
+        return new JsonResponse(array(Constant::CODE_NAMESPACE=>428, Constant::MESSAGE_NAMESPACE => "CLIENT NOT FOUND"), 428);
+    }
+
     $log = ActionLogWriter::declareTagReplacePost($om, $client, $loggedInUser, $content);
-    
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
-    $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
+
+    /** @var AnimalRepository $animalRepository */
+    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+    $isAnimalOfClient = $animalRepository->verifyIfClientOwnsAnimal($client, $animal);
 
     //Check if uln is valid
     if(!$isAnimalOfClient) {
@@ -93,6 +97,8 @@ class TagsReplaceAPIController extends APIController {
         }
     }
 
+    //Set animal in mutating state, so a sync will not add animal
+
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareTagReplace = $this->buildMessageObject(RequestType::DECLARE_TAG_REPLACE, $content, $client, $loggedInUser, $location);
 
@@ -102,7 +108,7 @@ class TagsReplaceAPIController extends APIController {
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($declareTagReplace);
 
-    $log = ActionLogWriter::completeActionLog($om, $log);
+    ActionLogWriter::completeActionLog($om, $log);
     
     return new JsonResponse($messageArray, 200);
   }

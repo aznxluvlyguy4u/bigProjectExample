@@ -14,13 +14,19 @@ use AppBundle\Entity\InspectorRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\PedigreeRegisterRepository;
 use AppBundle\Enumerator\InspectorMeasurementType;
+use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
 class InspectorMigrator
 {
+    //Inspectors prefixes should be 4 chars length
+    const NSFO_INSPECTOR_CODE_PREFIX = 'NSFO';
+    const EXTERNAL_INSPECTOR_CODE_PREFIX = 'EXT0';
+
     /**
      * @param Connection $conn
      * @param array $csv
@@ -201,6 +207,31 @@ class InspectorMigrator
      */
     public static function authorizeInspectorsForExteriorMeasurementsTexelaar(ObjectManager $em, CommandUtil $cmdUtil, array $csv, $admin)
     {
+        self::authorizeInspectorsForExteriorMeasurements($em, $cmdUtil, $csv, $admin, PedigreeAbbreviation::NTS);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param array $csv
+     * @param $admin
+     * @param CommandUtil $cmdUtil
+     */
+    public static function authorizeInspectorsForExteriorMeasurementsBdm(ObjectManager $em, CommandUtil $cmdUtil, array $csv, $admin)
+    {
+        self::authorizeInspectorsForExteriorMeasurements($em, $cmdUtil, $csv, $admin, PedigreeAbbreviation::BdM);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param array $csv
+     * @param $admin
+     * @param CommandUtil $cmdUtil
+     * @param string $pedigreeAbbreviation
+     */
+    private static function authorizeInspectorsForExteriorMeasurements(ObjectManager $em, CommandUtil $cmdUtil, array $csv, $admin, $pedigreeAbbreviation)
+    {
         if(is_int($admin)) {
             /** @var EmployeeRepository $employeeRepository */
             $employeeRepository = $em->getRepository(Employee::class);
@@ -209,7 +240,17 @@ class InspectorMigrator
             $admin = $employeeRepository->find($admin);
         }
 
-        $cmdUtil->setStartTimeAndPrintIt(count($csv) * 2, 1, 'Authorize inspectors for Texelaars');
+        switch ($pedigreeAbbreviation) {
+            case PedigreeAbbreviation::BdM:
+                self::removeExteriorAuthorizations($em, $cmdUtil, $pedigreeAbbreviation, $csv);
+                break;
+            case PedigreeAbbreviation::NTS:
+                self::removeExteriorAuthorizations($em, $cmdUtil, PedigreeAbbreviation::NTS, $csv);
+                self::removeExteriorAuthorizations($em, $cmdUtil, PedigreeAbbreviation::TSNH, $csv);
+                break;
+        }
+
+        $cmdUtil->setStartTimeAndPrintIt(count($csv) * 2, 1, 'Authorize inspectors for '.$pedigreeAbbreviation);
 
         $authorizations = 0;
         $inspectorCount = 0;
@@ -217,7 +258,14 @@ class InspectorMigrator
             $firstName = $row[0];
             $lastName = $row[1];
 
-            $authorizations += self::authorizeInspectorForExteriorMeasurementsTexelaar($em, $admin, $firstName, $lastName);
+            switch ($pedigreeAbbreviation) {
+                case PedigreeAbbreviation::BdM:
+                    $authorizations += self::authorizeInspectorForExteriorMeasurementsBdM($em, $admin, $firstName, $lastName);
+                    break;
+                case PedigreeAbbreviation::NTS:
+                    $authorizations += self::authorizeInspectorForExteriorMeasurementsTexelaar($em, $admin, $firstName, $lastName);
+                    break;
+            }
             $inspectorCount++;
             $cmdUtil->advanceProgressBar(1, 'NewAuthorizations|InspectorsChecked: '.$authorizations.'|'.$inspectorCount);
         }
@@ -233,13 +281,41 @@ class InspectorMigrator
      * @param string $lastName
      * @return int
      */
+    private static function authorizeInspectorForExteriorMeasurementsBdM(ObjectManager $em, Employee $admin, $firstName, $lastName)
+    {
+        /** @var PedigreeRegisterRepository $inspectorAuthorizationRepository */
+        $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
+
+        $pedigreeRegisterBdM = $pedigreeRegisterRepository->findOneBy(['abbreviation' => PedigreeAbbreviation::BdM]);
+
+        /** @var InspectorRepository $inspectorRepository */
+        $inspectorRepository = $em->getRepository(Inspector::class);
+
+        $count = 0;
+        /** @var Inspector $inspector */
+        $inspector = $inspectorRepository->findOneBy(['firstName' => $firstName, 'lastName' => $lastName]);
+        if($inspector != null) {
+            $count += self::authorizeInspector($em, $admin, $inspector, InspectorMeasurementType::EXTERIOR, $pedigreeRegisterBdM);
+            return $count;
+        }
+        return $count;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Employee $admin
+     * @param string $firstName
+     * @param string $lastName
+     * @return int
+     */
     private static function authorizeInspectorForExteriorMeasurementsTexelaar(ObjectManager $em, Employee $admin, $firstName, $lastName)
     {
         /** @var PedigreeRegisterRepository $inspectorAuthorizationRepository */
         $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
 
-        $pedigreeRegisterTexelaarNTS = $pedigreeRegisterRepository->findOneBy(['abbreviation' => 'NTS']);
-        $pedigreeRegisterTexelaarTSNH = $pedigreeRegisterRepository->findOneBy(['abbreviation' => 'TSNH']);
+        $pedigreeRegisterTexelaarNTS = $pedigreeRegisterRepository->findOneBy(['abbreviation' => PedigreeAbbreviation::NTS]);
+        $pedigreeRegisterTexelaarTSNH = $pedigreeRegisterRepository->findOneBy(['abbreviation' => PedigreeAbbreviation::TSNH]);
 
         /** @var InspectorRepository $inspectorRepository */
         $inspectorRepository = $em->getRepository(Inspector::class);
@@ -279,5 +355,258 @@ class InspectorMigrator
             return 1;
         }
         return 0;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param CommandUtil $cmdUtil
+     * @param $pedigreeAbbreviation
+     * @param $csv
+     * @return int
+     */
+    private static function removeExteriorAuthorizations(ObjectManager $em, CommandUtil $cmdUtil, $pedigreeAbbreviation, $csv)
+    {
+        $fullNames = [];
+        foreach ($csv as $row) {
+            $firstName = $row[0];
+            $lastName = $row[1];
+            $fullName = trim($firstName . ' ' . $lastName);
+            $fullNames[$fullName] = $fullName;
+        }
+
+        /** @var PedigreeRegisterRepository $inspectorAuthorizationRepository */
+        $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
+        $pedigreeRegister = $pedigreeRegisterRepository->findOneBy(['abbreviation' => $pedigreeAbbreviation]);
+
+        /** @var InspectorAuthorizationRepository $inspectorAuthorizationRepository */
+        $inspectorAuthorizationRepository = $em->getRepository(InspectorAuthorization::class);
+
+        $currentAuthorizations = $inspectorAuthorizationRepository->findBy(['pedigreeRegister' => $pedigreeRegister, 'measurementType' => InspectorMeasurementType::EXTERIOR]);
+
+        $removeCount= 0;
+        /** @var InspectorAuthorization $currentAuthorization */
+        foreach ($currentAuthorizations as $currentAuthorization)
+        {
+            $inspector = $currentAuthorization->getInspector();
+            $fullNameCurrentInspector = $inspector->getFullName();
+
+            if(!key_exists($fullNameCurrentInspector, $fullNames)) {
+                $em->remove($currentAuthorization);
+                $removeCount++;
+            }
+        }
+        $em->flush();
+        $cmdUtil->writeln('=================');
+        $cmdUtil->writeln($removeCount . ' InspectorAuthorizations deleted for Exterior/'.$pedigreeAbbreviation);
+        $cmdUtil->writeln('=================');
+        return $removeCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function generateInspectorCodes(Connection $conn)
+    {
+        $updateCount = self::generateNsfoInspectorCodes($conn);
+        $updateCount += self::generateExternalInspectorCodes($conn);
+
+        return $updateCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    private static function generateNsfoInspectorCodes(Connection $conn)
+    {
+        $sql = "SELECT id, RANK() OVER (ORDER BY id ASC) AS inspector_ordinal
+                FROM inspector WHERE is_authorized_nsfo_inspector AND (inspector_code ISNULL OR inspector_code = '')";
+        $inspectorRanksById = $conn->query($sql)->fetchAll();
+
+        if(count($inspectorRanksById) == 0) { return 0; }
+
+        $maxInspectorCode = self::findMaxNsfoInspectorCode($conn);
+
+        $updateString = '';
+        $separator = '';
+        foreach ($inspectorRanksById as $inspectorRankById) {
+            $inspectorId = $inspectorRankById['id'];
+            $rank = $inspectorRankById['inspector_ordinal'];
+            $updateString = $updateString.$separator.'('.$inspectorId.",'".self::buildNsfoInspectorCode($rank, $maxInspectorCode)."')";
+            $separator = ',';
+        }
+
+        $sql = "UPDATE inspector SET inspector_code = v.inspector_code
+                FROM (
+                  VALUES ".$updateString."
+                     ) AS v(id, inspector_code) WHERE inspector.id = v.id";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * NOTE! Only external inspectors for which the exterior measurements should be included in the MiXBLUP process,
+     * should get an inspector code.
+     * 
+     * @param Connection $conn
+     * @return int
+     */
+    private static function generateExternalInspectorCodes(Connection $conn)
+    {
+        $sql = "SELECT i.id, RANK() OVER (ORDER BY i.id ASC) AS inspector_ordinal
+                FROM inspector i
+                  INNER JOIN inspector_authorization auth ON auth.inspector_id = i.id
+                  INNER JOIN pedigree_register r ON r.id = auth.pedigree_register_id
+                WHERE i.is_authorized_nsfo_inspector = FALSE AND (i.inspector_code ISNULL OR i.inspector_code = '')
+                  AND r.abbreviation = '".PedigreeAbbreviation::BdM."'";
+        $inspectorRanksById = $conn->query($sql)->fetchAll();
+
+        if(count($inspectorRanksById) == 0) { return 0; }
+
+        $maxInspectorCode = self::findMaxExternalInspectorCode($conn);
+
+        $updateString = '';
+        $separator = '';
+        foreach ($inspectorRanksById as $inspectorRankById) {
+            $inspectorId = $inspectorRankById['id'];
+            $rank = $inspectorRankById['inspector_ordinal'];
+            $updateString = $updateString.$separator.'('.$inspectorId.",'".self::buildExternalInspectorCode($rank, $maxInspectorCode)."')";
+            $separator = ',';
+        }
+
+        $sql = "UPDATE inspector SET inspector_code = v.inspector_code
+                FROM (
+                  VALUES ".$updateString."
+                     ) AS v(id, inspector_code) WHERE inspector.id = v.id";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return string
+     */
+    public static function getNewNsfoInspectorCode(Connection $conn)
+    {
+        return self::buildNsfoInspectorCode(1, self::findMaxNsfoInspectorCode($conn));
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function findMaxNsfoInspectorCode(Connection $conn)
+    {
+        return self::findMaxInspectorCode($conn, true);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function findMaxExternalInspectorCode(Connection $conn)
+    {
+        return self::findMaxInspectorCode($conn, false);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param bool $isAuthorizedNsfoInspector
+     * @return mixed
+     */
+    private static function findMaxInspectorCode(Connection $conn, $isAuthorizedNsfoInspector = true)
+    {
+        $filter = $isAuthorizedNsfoInspector ? '' : ' = FALSE';
+
+        $sql = "SELECT coalesce(
+                    MAX(CAST(substr(inspector_code, length(inspector_code)-2, length(inspector_code)) AS INTEGER)), 
+                    0) as max
+                FROM inspector WHERE (inspector_code NOTNULL AND inspector_code <> '') AND is_authorized_nsfo_inspector".$filter;
+        return $conn->query($sql)->fetch()['max'];
+    }
+
+
+    /**
+     * @param $emptyRank
+     * @param $currentMaxOrdinal
+     * @return string
+     */
+    public static function buildNsfoInspectorCode($emptyRank, $currentMaxOrdinal)
+    {
+        return self::buildInspectorCode(self::NSFO_INSPECTOR_CODE_PREFIX, $emptyRank, $currentMaxOrdinal);
+    }
+
+
+    /**
+     * @param $emptyRank
+     * @param $currentMaxOrdinal
+     * @return string
+     */
+    public static function buildExternalInspectorCode($emptyRank, $currentMaxOrdinal)
+    {
+        return self::buildInspectorCode(self::EXTERNAL_INSPECTOR_CODE_PREFIX, $emptyRank, $currentMaxOrdinal);
+    }
+
+
+    /**
+     * @param $prefix
+     * @param $emptyRank
+     * @param $currentMaxOrdinal
+     * @return string
+     */
+    public static function buildInspectorCode($prefix, $emptyRank, $currentMaxOrdinal)
+    {
+        $inspectorCodeOrdinal = str_pad($emptyRank + $currentMaxOrdinal, 3, 0, STR_PAD_LEFT);
+        return $prefix.$inspectorCodeOrdinal;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public static function setIsAuthorizedNsfoInspectorByNTSAuthorization(Connection $conn, CommandUtil $cmdUtil)
+    {
+        $nts = "'".PedigreeAbbreviation::NTS."'";
+        $tsnh = "'".PedigreeAbbreviation::TSNH."'";
+
+        $sql = "UPDATE inspector SET is_authorized_nsfo_inspector = TRUE, inspector_code = NULL
+                WHERE id IN (
+                  SELECT i.id
+                  FROM inspector i
+                    INNER JOIN person p ON p.id = i.id
+                    INNER JOIN inspector_authorization auth ON i.id = auth.inspector_id
+                    INNER JOIN pedigree_register r ON r.id = auth.pedigree_register_id
+                  WHERE r.abbreviation = $nts AND i.is_authorized_nsfo_inspector = FALSE
+                )";
+        $newAuthorizationCount = SqlUtil::updateWithCount($conn, $sql);
+
+        $sql = "UPDATE inspector SET is_authorized_nsfo_inspector = FALSE, inspector_code = NULL
+                WHERE id IN (
+                  SELECT i.id
+                  FROM inspector i
+                    INNER JOIN person p ON p.id = i.id
+                    LEFT JOIN inspector_authorization auth ON i.id = auth.inspector_id
+                    LEFT JOIN pedigree_register r ON r.id = auth.pedigree_register_id
+                  WHERE
+                    ((r.abbreviation <> $nts AND r.abbreviation <> $tsnh) OR r.abbreviation ISNULL)
+                    AND i.is_authorized_nsfo_inspector = TRUE
+                )";
+        $removedAuthorizationCount = SqlUtil::updateWithCount($conn, $sql);
+
+        $cmdUtil->writeln('InspectorAuthorizations new|removed: '.$newAuthorizationCount.'|'.$removedAuthorizationCount);
+
+        return $removedAuthorizationCount + $newAuthorizationCount;
     }
 }

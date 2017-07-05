@@ -492,7 +492,7 @@ class Utils
      */
     public static function fillZero($value, $replacementText = "-")
     {
-        if($value === 0 || $value === 0.0 || $value === '' || $value === ' '|| $value === null) {
+        if($value === 0 || $value === 0.0 || $value === '0' || $value === '' || $value === ' '|| $value === null) {
             return $replacementText;
         } else {
             return $value;

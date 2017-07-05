@@ -3,6 +3,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\ReportFormat;
@@ -22,30 +23,6 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class BreedValueUtil
 {
-    const DEFAULT_AGE_NULL_FILLER = '-';
-    const DEFAULT_GROWTH_NULL_FILLER = '-';
-    const DEFAULT_WEIGHT_NULL_FILLER = '-';
-    const MOTHER = 'mother';
-    const FATHER = 'father';
-    const HETEROSIS = 'heterosis';
-    const RECOMBINATION = 'recombination';
-    const EIGHT_PART_DENOMINATOR = 64;
-    const HUNDRED_PART_DENOMINATOR = 10000;
-    const IS_IGNORE_INCOMPLETE_CODES = true;
-    const DEFAULT_DECIMAL_SYMBOL = '.';
-
-    //Scaling
-    const LAMB_MEAT_INDEX_SCALE = 100; //This will be added to the lambMeatIndex value
-
-    //Minimum accuracies for the calculation
-    const MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX = 0.40;
-
-    //If the following accuracy are lower, they are ignored in the PedigreeCertificate
-    const MIN_LAMB_MEAT_INDEX_ACCURACY = 0.30;
-    const MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT = 0.30; //Valid Growth, MuscleThickness and Fat BreedValues should at least have this accuracy
-
-    const DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS = 7;
-
 
     /**
      * @param float $weightOnThatMoment
@@ -57,10 +34,10 @@ class BreedValueUtil
      * @return float
      */
     public static function getGrowthValue($weightOnThatMoment, $ageInDays,
-                                          $ageNullFiller = self::DEFAULT_AGE_NULL_FILLER,
-                                          $growthNullFiller = self::DEFAULT_GROWTH_NULL_FILLER,
-                                          $weightNullFiller = self::DEFAULT_WEIGHT_NULL_FILLER,
-                                          $decimalSymbol = self::DEFAULT_DECIMAL_SYMBOL)
+                                          $ageNullFiller = BreedFormat::DEFAULT_AGE_NULL_FILLER,
+                                          $growthNullFiller = BreedFormat::DEFAULT_GROWTH_NULL_FILLER,
+                                          $weightNullFiller = BreedFormat::DEFAULT_WEIGHT_NULL_FILLER,
+                                          $decimalSymbol = BreedFormat::DEFAULT_DECIMAL_SYMBOL)
     {
         if($weightOnThatMoment == null || $weightOnThatMoment == 0 || $weightOnThatMoment == $weightNullFiller
             || $ageInDays == null || $ageInDays == 0 || $ageInDays == $ageNullFiller) {
@@ -68,146 +45,6 @@ class BreedValueUtil
         } else {
             return number_format($weightOnThatMoment / $ageInDays, 5, $decimalSymbol, '');
         }
-    }
-
-
-    /**
-     * If the breedCodes are by parts of 8, the denominator should be 64.
-     * If the breedCodes are by parts of 100, the denominator should be 10.000.
-     *
-     * @param ObjectManager $em
-     * @param int $animalId
-     * @param int $roundingAccuracy
-     * @return float
-     */
-    public static function getHeterosisAndRecombinationBy8Parts(ObjectManager $em, $animalId, $roundingAccuracy = null)
-    {
-        $parentBreedCodes = self::getBreedCodesValuesOfParents($em, $animalId);
-
-        //Null checks, null checks everywhere
-        if($parentBreedCodes == null) { return null; }
-
-        $valuesFather = Utils::getNullCheckedArrayValue(self::FATHER, $parentBreedCodes);
-        $valuesMother = Utils::getNullCheckedArrayValue(self::MOTHER, $parentBreedCodes);
-
-        if($valuesFather == null || $valuesMother == null) { return null; }
-        if(count($valuesFather) == 0 || count($valuesMother) == 0 ) { return null; }
-
-        $codesFather = array_keys($valuesFather);
-        $codesMother = array_keys($valuesMother);
-
-
-        if(self::IS_IGNORE_INCOMPLETE_CODES) {
-            $hasIncompleteCodes = self::hasUnknownBreedCodes($valuesMother)
-                               || self::hasUnknownBreedCodes($valuesFather);
-            if($hasIncompleteCodes) {
-                return null;
-            }
-        }
-
-
-        /* Calculate values */
-        $heterosisSum = 0.0;
-        $recombinationSum = 0.0;
-
-        //Calculate heterosis
-        foreach ($codesMother as $codeMother) {
-            foreach ($codesFather as $codeFather) {
-                if($codeFather != $codeMother) {
-                    $heterosisSum += $valuesMother[$codeMother] * $valuesFather[$codeFather];
-                }
-            }
-        }
-
-        //Calculate recombination
-        $recombinationSum += Utils::getPermutationProduct($valuesFather);
-        $recombinationSum += Utils::getPermutationProduct($valuesMother);
-
-        $heterosisValue = (float)$heterosisSum/self::EIGHT_PART_DENOMINATOR;
-        $recombinationValue = (float)$recombinationSum/self::EIGHT_PART_DENOMINATOR;
-        
-        if($roundingAccuracy != null) {
-            $heterosisValue = round($heterosisValue, $roundingAccuracy);
-            $recombinationValue = round($recombinationValue, $roundingAccuracy);
-        }
-
-        return [
-            self::HETEROSIS => $heterosisValue,
-            self::RECOMBINATION => $recombinationValue
-        ];
-    }
-
-
-    /**
-     * @param ObjectManager $em
-     * @param int $animalId
-     * @return array|null
-     */
-    private static function getBreedCodesValuesOfParents(ObjectManager $em, $animalId)
-    {
-        $sql = "SELECT parent_father_id as father, parent_mother_id as mother FROM animal WHERE id = '".$animalId."'";
-        $result = $em->getConnection()->query($sql)->fetch();
-        $motherId = $result[self::MOTHER];
-        $fatherId = $result[self::FATHER];
-
-        //Null check parents
-        if($motherId == null || $fatherId == null) {
-            return null;
-        }
-
-        $valuesMother = self::getBreedCodes($em, $motherId);
-        $valuesFather = self::getBreedCodes($em, $fatherId);
-
-        //Null check breedCodes
-        if(count($valuesMother) == null || count($valuesFather) == null) {
-            return null;
-        }
-
-        return [self::MOTHER => $valuesMother, self::FATHER => $valuesFather];
-    }
-
-
-    /**
-     * @param ObjectManager $em
-     * @param $animalId
-     * @return array
-     */
-    public static function getBreedCodes(ObjectManager $em, $animalId)
-    {
-        $codes = array();
-
-        $sql = "SELECT breed_code.name as name, breed_code.value as value FROM breed_code INNER JOIN breed_codes ON breed_code.breed_codes_id = breed_codes.id WHERE breed_codes.animal_id = '".$animalId."'";
-        $results = $em->getConnection()->query($sql)->fetchAll();
-
-        foreach ($results as $result) {
-            $codes[$result['name']] = $result['value'];
-        }
-
-        return $codes;
-    }
-
-
-    /**
-     * @param array $breedCodeArray
-     * @return bool
-     */
-    public static function hasUnknownBreedCodes($breedCodeArray)
-    {
-        $unknownCodeExists = array_key_exists(BreedCodeType::NN, $breedCodeArray) || array_key_exists(BreedCodeType::OV, $breedCodeArray);
-        if($unknownCodeExists) {
-            return true;
-        } else {
-            $sum = 0;
-            foreach ($breedCodeArray as $item) {
-                $sum += $item;
-            }
-            $isValuesIncomplete = $sum < 8;
-            if($isValuesIncomplete) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
 
@@ -221,27 +58,9 @@ class BreedValueUtil
         $breedValueAccuracy = sqrt($breedValueReliability);
 
         if($isFormatted) {
-            return self::formatAccuracyForDisplay($breedValueAccuracy);
+            return BreedFormat::formatAccuracyForDisplay($breedValueAccuracy);
         }
         return $breedValueAccuracy;
-    }
-
-
-    /**
-     * @param float $breedValueAccuracy
-     * @param bool $isInPercentages
-     * @return float
-     */
-    public static function formatAccuracyForDisplay($breedValueAccuracy, $isInPercentages = true)
-    {
-        if($isInPercentages) {
-            $factor = 100;
-            $decimalPrecision = 0;
-        } else {
-            $factor = 1;
-            $decimalPrecision = 2;
-        }
-        return  number_format($breedValueAccuracy*$factor, $decimalPrecision, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR);
     }
 
 
@@ -258,9 +77,9 @@ class BreedValueUtil
         //Add new breedValues here
 
         $decimalAccuracyLabels = new ArrayCollection();
-        $decimalAccuracyLabels->set(BreedValueLabel::GROWTH_ACCURACY, PedigreeCertificate::GROWTH_DECIMAL_ACCURACY);
-        $decimalAccuracyLabels->set(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, PedigreeCertificate::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
-        $decimalAccuracyLabels->set(BreedValueLabel::FAT_ACCURACY, PedigreeCertificate::FAT_DECIMAL_ACCURACY);
+        $decimalAccuracyLabels->set(BreedValueLabel::GROWTH_ACCURACY, BreedFormat::GROWTH_DECIMAL_ACCURACY);
+        $decimalAccuracyLabels->set(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, BreedFormat::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
+        $decimalAccuracyLabels->set(BreedValueLabel::FAT_ACCURACY, BreedFormat::FAT_DECIMAL_ACCURACY);
         //Add new decimal_accuracies here
 
         $factors = new ArrayCollection();
@@ -274,14 +93,14 @@ class BreedValueUtil
         foreach ($accuracyLabels as $accuracyLabel) {
             $traitLabel = $traits->get($accuracyLabel);
             if($accuracyLabel == null) {
-                $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
+                $displayedString = BreedFormat::EMPTY_BREED_VALUE;
             } else {
                 $rawBreedValue = Utils::getNullCheckedArrayValue($traitLabel, $breedValues);
-                if($rawBreedValue == null || $breedValues[$accuracyLabel] < self::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
-                    $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
+                if($rawBreedValue == null || $breedValues[$accuracyLabel] < BreedFormat::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
+                    $displayedString = BreedFormat::EMPTY_BREED_VALUE;
                 } else {
                     $breedValue = round($rawBreedValue*$factors->get($accuracyLabel), $decimalAccuracyLabels->get($accuracyLabel));
-                    $accuracy = BreedValueUtil::formatAccuracyForDisplay($breedValues[$accuracyLabel]);
+                    $accuracy = BreedFormat::formatAccuracyForDisplay($breedValues[$accuracyLabel]);
                     $displayedString = NumberUtil::getPlusSignIfNumberIsPositive($breedValue).$breedValue.'/'.$accuracy;
                 }
             }
@@ -291,37 +110,6 @@ class BreedValueUtil
         $traits = null; $decimalAccuracyLabels = null; $factors = null;
         
         return $results;
-    }
-
-
-    /**
-     * @param $lambMeatIndex
-     * @param $lambMeatIndexAccuracy
-     * @param string $nullString
-     * @return string
-     */
-    public static function getFormattedLamMeatIndexWithAccuracy($lambMeatIndex, $lambMeatIndexAccuracy, $nullString = PedigreeCertificate::EMPTY_INDEX_VALUE)
-    {
-        if($lambMeatIndex == null || $lambMeatIndexAccuracy == null || NumberUtil::isFloatZero($lambMeatIndexAccuracy)) {
-            return $nullString;
-
-        } elseif($lambMeatIndexAccuracy < self::MIN_LAMB_MEAT_INDEX_ACCURACY) {
-            return $nullString;
-
-        } else {
-            $scaledLambMeatIndex = self::calculateScaledLamMeatIndex($lambMeatIndex);
-            return round($scaledLambMeatIndex, PedigreeCertificate::LAMB_MEAT_INDEX_DECIMAL_ACCURACY).'/'.round($lambMeatIndexAccuracy*100);
-        }
-    }
-
-
-    /**
-     * @param float $lambMeatIndex
-     * @return float
-     */
-    public static function calculateScaledLamMeatIndex($lambMeatIndex)
-    {
-        return $lambMeatIndex + self::LAMB_MEAT_INDEX_SCALE;
     }
 
 
@@ -539,9 +327,9 @@ class BreedValueUtil
         
         //First do a null check
         if($allValuesAreNotNull) {
-            return !($muscleThicknessAccuracy >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
-                && $fatAccuracy  >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
-                && $growthAccuracy >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX);
+            return !($muscleThicknessAccuracy >= BreedFormat::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
+                && $fatAccuracy  >= BreedFormat::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
+                && $growthAccuracy >= BreedFormat::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX);
         } else {
             return true;
         }
@@ -574,7 +362,7 @@ class BreedValueUtil
      * @param int $decimals
      * @return float
      */
-    public static function calculateLambMeatIndexAccuracyCoefficient($lambMeatIndex, $lambMeatIndexGeneticVariance, $decimals = self::DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS)
+    public static function calculateLambMeatIndexAccuracyCoefficient($lambMeatIndex, $lambMeatIndexGeneticVariance, $decimals = BreedFormat::DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS)
     {
         return round((pow($lambMeatIndex, 2)) * $lambMeatIndexGeneticVariance, $decimals);
     }
