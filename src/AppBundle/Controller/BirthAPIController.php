@@ -393,6 +393,11 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 }
 
 
+                if($child->getLatestBreedGrades()) {
+                    $manager->remove($child->getLatestBreedGrades());
+                }
+
+
                 //Flush the removes separately
                 $manager->flush();
 
