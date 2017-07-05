@@ -145,6 +145,8 @@ class AnimalExterminator
         //Check in which tables have the secondaryAnimalId
         $tableNamesByVariableType = [
             [ self::TABLE_NAME => 'animal_cache',           self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'breed_index',            self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'breed_value',            self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'declare_arrival',        self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'declare_export',         self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'declare_import',         self::VARIABLE_TYPE => 'animal_id' ],
@@ -169,6 +171,7 @@ class AnimalExterminator
             [ self::TABLE_NAME => 'ulns_history',           self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'blindness_factor',       self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'predicate',              self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'result_table_breed_grades',  self::VARIABLE_TYPE => 'animal_id' ],
 
             //This should be the last row!
             [ self::TABLE_NAME => 'animal',              self::VARIABLE_TYPE => 'id' ],

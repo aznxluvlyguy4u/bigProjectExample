@@ -185,7 +185,8 @@ class DatabaseDataFixer
     {
         if(!is_int($locationId) || !ctype_digit($locationId)) { return null; }
 
-        $sql = "DELETE FROM animal_residence
+        foreach (['animal_residence', 'result_table_breed_grades'] as $tableName) {
+            $sql = "DELETE FROM $tableName
                 WHERE animal_id IN (
                   SELECT id
                   FROM animal
@@ -197,7 +198,8 @@ class DatabaseDataFixer
                         AND pedigree_number ISNULL
                         AND type = 'Neuter'
                 )";
-        $animalResidencesDeleted = SqlUtil::updateWithCount($conn, $sql);
+            $recordsDeleted = SqlUtil::updateWithCount($conn, $sql);
+        }
 
         $sql = "DELETE FROM animal
                 WHERE CONCAT(uln_country_code, uln_number) IN (
