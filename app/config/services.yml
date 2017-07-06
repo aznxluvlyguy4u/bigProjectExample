@@ -109,6 +109,12 @@ services:
           logger: '@logger'
           cacheDir: %kernel.cache_dir%
 
+    app.excel.service:
+        class: AppBundle\Service\ExcelService
+        arguments:
+          excelBundle: '@phpexcel'
+          cacheDir: %kernel.cache_dir%
+
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
         arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter']
@@ -124,3 +130,10 @@ services:
           httpUtil: '@security.http_utils'
           unauthedPaths: ['/api/v1/doc', '/api/v1/auth/register', '/api/v1/auth/authorize']
         public: false
+
+    app.report.pedigree_register:
+        class: AppBundle\Service\PedigreeRegisterOverviewReportService
+        arguments:
+          entityManager: '@doctrine.orm.entity_manager'
+          excelBundle: '@app.excel.service'
+          cacheDir: %kernel.cache_dir%
