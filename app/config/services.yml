@@ -114,6 +114,7 @@ services:
         arguments:
           excelBundle: '@phpexcel'
           cacheDir: %kernel.cache_dir%
+          logger: '@logger'
 
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
@@ -136,4 +137,4 @@ services:
         arguments:
           entityManager: '@doctrine.orm.entity_manager'
           excelBundle: '@app.excel.service'
-          cacheDir: %kernel.cache_dir%
+          logger: '@logger'

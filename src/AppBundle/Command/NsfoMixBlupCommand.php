@@ -4,6 +4,8 @@ namespace AppBundle\Command;
 
 use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Entity\BreedValue;
+use AppBundle\Enumerator\PedigreeAbbreviation;
+use AppBundle\Enumerator\ServiceId;
 use AppBundle\Migration\BreedValuesSetMigrator;
 use AppBundle\Migration\LambMeatIndexMigrator;
 use AppBundle\Service\BreedIndexService;
@@ -99,6 +101,10 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             '========================================================================', "\n",
             '30: Print separate csv files of latest breedValues for all ubns', "\n",
             '31: Print separate csv files of latest breedValues for chosen ubn', "\n",
+            '========================================================================', "\n",
+            '40: Clear excel cache folder', "\n",
+            '41: Print excel file for CF pedigree register', "\n",
+            '42: Print excel file for NTS, TSNH, LAX pedigree registers', "\n",
             'DEFAULT: Abort', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -147,6 +153,19 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
                 break;
             case 31:
                 $this->printBreedValuesByUbn();
+                break;
+
+
+            case 40:
+                $this->getContainer()->get(ServiceId::EXCEL_SERVICE)->clearCacheFolder();
+                break;
+            case 41:
+                $filepath = $this->getContainer()->get(ServiceId::PEDIGREE_REGISTER_REPORT)->generate(PedigreeAbbreviation::CF);
+                $this->logger->notice($filepath);
+                break;
+            case 42:
+                $filepath = $this->getContainer()->get(ServiceId::PEDIGREE_REGISTER_REPORT)->generate(PedigreeAbbreviation::NTS);
+                $this->logger->notice($filepath);
                 break;
 
             default:

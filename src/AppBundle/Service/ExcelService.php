@@ -4,7 +4,9 @@
 namespace AppBundle\Service;
 
 use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\LoggerUtil;
 use Liuggio\ExcelBundle\Factory as ExcelFactory;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 /**
@@ -26,10 +28,14 @@ class ExcelService
     const DEFAULT_SUBJECT = 'Schapenfokken';
     const DEFAULT_TITLE = 'Excel File';
 
+    const PRINT_COUNTER = 1000;
+
     /** @var ExcelFactory */
     private $excelBundle;
     /** @var string */
     private $cacheDir;
+    /** @var Logger */
+    private $logger;
 
     /** @var string */
     private $contentMimeType;
@@ -64,13 +70,16 @@ class ExcelService
 
 
     /**
-     * ReportService constructor.
+     * ExcelService constructor.
      * @param ExcelFactory $excelBundle
+     * @param string $cacheDir
+     * @param Logger $logger
      */
-    public function __construct(ExcelFactory $excelBundle, $cacheDir)
+    public function __construct(ExcelFactory $excelBundle, $cacheDir, Logger $logger)
     {
         $this->excelBundle = $excelBundle;
         $this->cacheDir = $cacheDir;
+        $this->logger = $logger;
 
         $this->contentMimeType = self::DEFAULT_CONTENT_MIME_TYPE;
         $this->excelFileType = self::DEFAULT_EXCEL_TYPE;
@@ -85,6 +94,12 @@ class ExcelService
         $this->keywords = self::DEFAULT_KEYWORDS;
         $this->subject = self::DEFAULT_SUBJECT;
         $this->title = self::DEFAULT_TITLE;
+    }
+
+
+    public function clearCacheFolder()
+    {
+        FilesystemUtil::purgeFolder($this->getCacheSubFolder());
     }
 
 
@@ -128,6 +143,9 @@ class ExcelService
         ;
 
 
+        $this->logger->notice('Generating Excel file: '.$this->filename);
+        $this->logger->notice('--Generating header-- ...');
+
         //Insert headers
         foreach (array_keys($data[0]) as $key => $header)
         {
@@ -137,6 +155,11 @@ class ExcelService
         }
 
 
+        $this->logger->notice('--Generating records-- ... ');
+        $this->logger->notice(' ... ');
+        $this->logger->notice(' ... ');
+
+        $recordNumber = 0;
         foreach ($data as $recordNumber => $record)
         {
             $columnCounter = 0;
@@ -149,7 +172,12 @@ class ExcelService
                         ->setCellValue($columnLetter.($recordNumber+2), $value);
                 }
             }
+            if($recordNumber%self::PRINT_COUNTER === 0) {
+                LoggerUtil::overwriteNotice($this->logger, '    record(+2): '.($recordNumber+2));
+            }
         }
+        LoggerUtil::overwriteNotice($this->logger, '    record(+2): '.($recordNumber+2));
+
 
         $phpExcelObject->getActiveSheet()->setTitle('records');
         // Set active sheet index to the first sheet, so Excel opens this as the first sheet
@@ -171,7 +199,10 @@ class ExcelService
         $response->headers->set('Cache-Control', 'maxage=1');
         $response->headers->set('Content-Disposition', $dispositionHeader);
 
+        $this->logger->notice('Saving file ... ');
         $writer->save($this->fullFilepath);
+
+        $this->logger->notice('Finished saving file in: '.$this->fullFilepath);
 
         return $this->fullFilepath;
     }
@@ -191,6 +222,12 @@ class ExcelService
     public function getFullFilepath()
     {
         return $this->fullFilepath;
+    }
+
+
+    public function getFullFilepathWithExtension()
+    {
+        return $this->fullFilepath . '.' . $this->extension;
     }
 
 
@@ -300,7 +337,7 @@ class ExcelService
 
     private function setFilePathWithExtension()
     {
-        $this->fullFilepath = $this->getCacheSubFolder().$this->filename. '.'.$this->extension;
+        $this->fullFilepath = $this->getCacheSubFolder().$this->filename;
     }
 
 

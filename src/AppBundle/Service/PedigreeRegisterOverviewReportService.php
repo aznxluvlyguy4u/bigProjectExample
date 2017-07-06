@@ -15,6 +15,7 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -37,20 +38,26 @@ class PedigreeRegisterOverviewReportService
     private $conn;
     /** @var ExcelService */
     private $excelService;
+    /** @var Logger */
+    private $logger;
+
     /** @var array */
     private $data;
     /** @var string */
     private $filename;
 
     /**
-     * ReportService constructor.
+     * PedigreeRegisterOverviewReportService constructor.
      * @param ObjectManager $em
      * @param ExcelService $excelService
+     * @param Logger $logger
      */
-    public function __construct(ObjectManager $em, ExcelService $excelService)
+    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
+        $this->logger = $logger;
+
         $this->excelService = $excelService;
         $this->excelService
             ->setFolderName(self::FOLDER)
@@ -85,18 +92,20 @@ class PedigreeRegisterOverviewReportService
         $cfFilename = 'nsfo_cf_overzicht_'.$today.'.xls';
         $ntsTsnhLaxFilename = 'nsfo_nts_tsnh_lax_overzicht_'.$today.'.xls';
 
+        $this->logger->notice('Retrieve '.$type.' data ... ');
+
         switch ($type) {
             case PedigreeAbbreviation::CF:
                 $this->data = $this->cfData();
                 $this->filename = $cfFilename;
                 $this->excelService->setTitle(self::TITLE_PREFIX.'stamboek CF');
                 break;
-            case PedigreeAbbreviation::NTS:
-            case PedigreeAbbreviation::TSNH:
+            case PedigreeAbbreviation::NTS://go to case:LAX
+            case PedigreeAbbreviation::TSNH://go to case:LAX
             case PedigreeAbbreviation::LAX:
                 $this->data = $this->ntsTsnhLaxData();
                 $this->filename = $ntsTsnhLaxFilename;
-            $this->excelService->setTitle(self::TITLE_PREFIX.'stamboek NTS, TSNH, LAX');
+                $this->excelService->setTitle(self::TITLE_PREFIX.'stamboek NTS, TSNH, LAX');
                 break;
             default:
                 $code = 428;
@@ -104,17 +113,20 @@ class PedigreeRegisterOverviewReportService
                 return new JsonResponse(['code' => $code, "message" => $message], $code);
         }
 
-        if(count($this->data) <= 1) {
+        $recordCount = count($this->data);
+        if($recordCount <= 1) {
             $code = 428;
             $message = "Data is empty";
             return new JsonResponse(['code' => $code, "message" => $message], $code);
         }
 
+        $this->logger->notice('Retrieved '.$recordCount.' records');
+        $this->logger->notice('Generate data from sql results ... ');
+
         $this->excelService->setFilename($this->filename);
         $this->excelService->generateFromSqlResults($this->data);
-        return $this->excelService->getFullFilepath();
+        return $this->excelService->getFullFilepathWithExtension();
     }
-
 
 
     /**
