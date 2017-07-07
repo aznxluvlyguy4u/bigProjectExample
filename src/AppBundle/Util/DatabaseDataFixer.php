@@ -426,11 +426,15 @@ class DatabaseDataFixer
                 FROM animal a
                  LEFT JOIN location l ON l.id = a.location_id
                  LEFT JOIN (
-                  SELECT MAX(r.end_date) as end_date, r.animal_id
+                  SELECT r.end_date, r.animal_id
                   FROM animal_residence r
-                    INNER JOIN animal a ON a.id = r.animal_id 
-                  WHERE r.location_id = a.location_id AND $ulnFilterString
-                  GROUP BY animal_id, r.location_id
+                      INNER JOIN (
+                                  SELECT MAX(r.end_date) as end_date, r.animal_id, r.location_id
+                                  FROM animal_residence r
+                                    INNER JOIN animal a ON a.id = r.animal_id 
+                                  WHERE r.location_id = a.location_id AND $ulnFilterString
+                                  GROUP BY animal_id, r.location_id
+                      )gg ON gg.end_date = r.end_date AND r.animal_id = gg.animal_id AND r.location_id = gg.location_id
                  )g ON g.animal_id = a.id
                 WHERE " . $ulnFilterString;
 
