@@ -331,10 +331,29 @@ class DatabaseDataFixer
         $ulnCount = count($csv);
         if($ulnCount === 0) { return 0; }
 
-        $updateCount = 0;
-        $cmdUtil->setStartTimeAndPrintIt($ulnCount, 1);
+        $ulns = [];
         foreach ($csv as $records) {
             $ulnString = $records[0];
+            $ulnParts = Utils::getUlnFromString($ulnString);
+            $ulns[$ulnString] = $ulnParts;
+        }
+
+        $sql = "SELECT CONCAT(uln_country_code, uln_number) as uln, a.location_id, ubn 
+                FROM animal a
+                 LEFT JOIN location l ON l.id = a.location_id
+                WHERE " . SqlUtil::getUlnQueryFilter($ulns);
+
+        $cmdUtil->writeln('___Animals in csv file___');
+        foreach ($conn->query($sql)->fetchAll() as $animalRecords) {
+            $uln = $animalRecords['uln'];
+            $locationId = $animalRecords['location_id'];
+            $ubn = $animalRecords['ubn'];
+            $cmdUtil->writeln('uln: ' . $uln . ' |locationId: ' . $locationId .' |ubn : '.$ubn);
+        }
+
+        $updateCount = 0;
+        $cmdUtil->setStartTimeAndPrintIt($ulnCount, 1);
+        foreach ($ulns as $ulnString => $ulnParts) {
             if(self::removeAnimalFromLocationAndAnimalResidence($conn, $ulnString)) {
                 $updateCount++;
             }
