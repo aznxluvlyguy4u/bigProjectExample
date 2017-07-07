@@ -4,6 +4,9 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\Builder\CsvOptions;
+use AppBundle\Component\Utils;
+use AppBundle\Constant\Constant;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -306,4 +309,79 @@ class DatabaseDataFixer
 
         return $sqlBatchUpdateCount + $stringFormattedBatchUpdateCount;
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public static function removeAnimalsFromLocationAndAnimalResidence(Connection $conn, CommandUtil $cmdUtil)
+    {
+        $csvOptions = (new CsvOptions())
+            ->includeFirstLine()
+            ->setInputFolder('app/Resources/imports/corrections/')
+            ->setOutputFolder('app/Resources/output/corrections/')
+            ->setFileName('remove_locations_by_uln.csv')
+            ->setPipeSeparator()
+            ;
+
+        $csv = CsvParser::parse($csvOptions);
+
+        $ulnCount = count($csv);
+        if($ulnCount === 0) { return 0; }
+
+        $updateCount = 0;
+        $cmdUtil->setStartTimeAndPrintIt($ulnCount, 1);
+        foreach ($csv as $records) {
+            $ulnString = $records[0];
+            if(self::removeAnimalFromLocationAndAnimalResidence($conn, $ulnString)) {
+                $updateCount++;
+            }
+            $cmdUtil->advanceProgressBar(1, 'locations of animals updated: '.$updateCount);
+        }
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        return $updateCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param $ulnString
+     * @return bool
+     */
+    private static function removeAnimalFromLocationAndAnimalResidence(Connection $conn, $ulnString)
+    {
+        $uln = Utils::getUlnFromString($ulnString);
+        if($uln === null) { return false; }
+
+        $ulnCountryCode = $uln[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+        $ulnNumber = $uln[Constant::ULN_NUMBER_NAMESPACE];
+
+        $sql = "SELECT location_id FROM animal WHERE uln_country_code = '$ulnCountryCode' AND uln_number = '$ulnNumber'";
+        $locationId = $conn->query($sql)->fetch()['location_id'];
+
+        if($locationId !== null) {
+            $sql = "DELETE FROM animal_residence
+                    WHERE id IN (
+                      SELECT r.id
+                      FROM animal_residence r
+                        INNER JOIN animal a ON a.id = r.animal_id
+                      WHERE uln_country_code = '$ulnCountryCode' AND uln_number = '$ulnNumber'
+                            AND r.location_id = $locationId AND end_date ISNULL   
+                    )";
+            $residenceDeleteCount = SqlUtil::updateWithCount($conn, $sql);
+
+            $sql = "UPDATE animal SET location_id = NULL
+                WHERE uln_country_code = '$ulnCountryCode' AND uln_number = '$ulnNumber'
+                AND location_id NOTNULL";
+            $animalUpdateCount = SqlUtil::updateWithCount($conn, $sql);
+
+            return $animalUpdateCount > 0;
+        }
+
+        return false;
+    }
+
 }

@@ -33,6 +33,8 @@ class NsfoFixDbCommand extends ContainerAwareCommand
     private $conn;
     /** @var Logger */
     private $logger;
+    /** @var string */
+    private $rootDir;
     
     protected function configure()
     {
@@ -52,6 +54,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
         $this->output = $output;
         $this->conn = $this->em->getConnection();
         $this->logger = $this->getContainer()->get('logger');
+        $this->rootDir = $this->getContainer()->getParameter('kernel.root_dir');
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -71,6 +74,8 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             '8: Fill missing breedCodes and set breedCode = breedCodeParents if both parents have the same pure (XX100) breedCode', "\n",
             '=====================================', "\n",
             '20: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n",
+            '=====================================', "\n",
+            '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -133,6 +138,10 @@ class NsfoFixDbCommand extends ContainerAwareCommand
 
                 $animalsDeleted = DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirths($this->conn, $locationId);
                 $output->writeln('Done! ' . $animalsDeleted . ' animals deleted');
+                break;
+
+            case 30:
+                DatabaseDataFixer::removeAnimalsFromLocationAndAnimalResidence($this->conn, $this->cmdUtil);
                 break;
 
             default:
