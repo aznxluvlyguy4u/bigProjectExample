@@ -378,15 +378,27 @@ class DatabaseDataFixer
         $locationId = $conn->query($sql)->fetch()['location_id'];
 
         if($locationId !== null) {
-            $sql = "DELETE FROM animal_residence
+
+            $sql = "SELECT r.id
+                    FROM animal_residence r
+                      INNER JOIN animal a ON a.id = r.animal_id
+                    WHERE uln_country_code = '$ulnCountryCode' AND uln_number = '$ulnNumber'
+                          AND r.location_id = $locationId";
+            $animalResidences = $conn->query($sql)->fetchAll();
+
+            //Always keep at least one animal residence on the location
+            if(count($animalResidences) > 1) {
+                $sql = "DELETE FROM animal_residence
                     WHERE id IN (
-                      SELECT r.id
+                      SELECT MAX(r.id) as id
                       FROM animal_residence r
                         INNER JOIN animal a ON a.id = r.animal_id
                       WHERE uln_country_code = '$ulnCountryCode' AND uln_number = '$ulnNumber'
-                            AND r.location_id = $locationId AND end_date ISNULL   
+                            AND r.location_id = $locationId AND end_date ISNULL
+                      GROUP BY r.location_id, r.animal_id
                     )";
-            $residenceDeleteCount = SqlUtil::updateWithCount($conn, $sql);
+                $residenceDeleteCount = SqlUtil::updateWithCount($conn, $sql);
+            }
 
             $sql = "UPDATE animal SET location_id = NULL
                 WHERE uln_country_code = '$ulnCountryCode' AND uln_number = '$ulnNumber'
@@ -409,7 +421,7 @@ class DatabaseDataFixer
     {
         $ulnFilterString = SqlUtil::getUlnQueryFilter($ulns);
 
-        $sql = "SELECT CONCAT(uln_country_code, uln_number) as uln, a.location_id, ubn,
+        $sql = "SELECT a.id as animal_id, CONCAT(uln_country_code, uln_number) as uln, a.location_id, ubn,
                         DATE(g.end_date) as depart_date, is_alive 
                 FROM animal a
                  LEFT JOIN location l ON l.id = a.location_id
@@ -424,12 +436,13 @@ class DatabaseDataFixer
 
         $cmdUtil->writeln('___Animals in csv file___');
         foreach ($conn->query($sql)->fetchAll() as $animalRecords) {
+            $animalId = $animalRecords['animal_id'];
             $uln = $animalRecords['uln'];
             $locationId = $animalRecords['location_id'];
             $ubn = $animalRecords['ubn'];
             $departDate = $animalRecords['depart_date'];
             $life = boolval($animalRecords['is_alive']) ? 'alive' : 'dead';
-            $cmdUtil->writeln('uln: ' . $uln . ' |locationId: ' . $locationId
+            $cmdUtil->writeln('animalId: ' . $animalId . '| uln: ' . $uln . ' |locationId: ' . $locationId
                 .' |ubn : '.$ubn . '| residence end_date: ' . $departDate . '   '.$life);
         }
 
