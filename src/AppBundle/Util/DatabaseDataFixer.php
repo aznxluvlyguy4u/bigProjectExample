@@ -335,7 +335,7 @@ class DatabaseDataFixer
 
         $ulns = [];
         foreach ($csv as $records) {
-            $ulnString = $records[0];
+            $ulnString = strtr($records[0], [' ' => '']);
             $ulnParts = Utils::getUlnFromString($ulnString);
             $ulns[$ulnString] = $ulnParts;
         }
@@ -435,6 +435,7 @@ class DatabaseDataFixer
                                   WHERE r.location_id = a.location_id AND $ulnFilterString
                                   GROUP BY animal_id, r.location_id
                       )gg ON gg.end_date = r.end_date AND r.animal_id = gg.animal_id AND r.location_id = gg.location_id
+                  LIMIT 1
                  )g ON g.animal_id = a.id
                 WHERE " . $ulnFilterString;
 
