@@ -318,6 +318,8 @@ class DatabaseDataFixer
      */
     public static function removeAnimalsFromLocationAndAnimalResidence(Connection $conn, CommandUtil $cmdUtil)
     {
+        $updateCount = 0;
+
         $csvOptions = (new CsvOptions())
             ->includeFirstLine()
             ->setInputFolder('app/Resources/imports/corrections/')
@@ -329,7 +331,7 @@ class DatabaseDataFixer
         $csv = CsvParser::parse($csvOptions);
 
         $ulnCount = count($csv);
-        if($ulnCount === 0) { return 0; }
+        if($ulnCount === 0) { return $updateCount; }
 
         $ulns = [];
         foreach ($csv as $records) {
@@ -338,28 +340,22 @@ class DatabaseDataFixer
             $ulns[$ulnString] = $ulnParts;
         }
 
-        $sql = "SELECT CONCAT(uln_country_code, uln_number) as uln, a.location_id, ubn 
-                FROM animal a
-                 LEFT JOIN location l ON l.id = a.location_id
-                WHERE " . SqlUtil::getUlnQueryFilter($ulns);
+        self::printAnimalsList($cmdUtil, $conn, $ulns);
 
-        $cmdUtil->writeln('___Animals in csv file___');
-        foreach ($conn->query($sql)->fetchAll() as $animalRecords) {
-            $uln = $animalRecords['uln'];
-            $locationId = $animalRecords['location_id'];
-            $ubn = $animalRecords['ubn'];
-            $cmdUtil->writeln('uln: ' . $uln . ' |locationId: ' . $locationId .' |ubn : '.$ubn);
-        }
+        $continue = $cmdUtil->generateConfirmationQuestion('Continue with removing locations? (y/n, default = no)');
 
-        $updateCount = 0;
-        $cmdUtil->setStartTimeAndPrintIt($ulnCount, 1);
-        foreach ($ulns as $ulnString => $ulnParts) {
-            if(self::removeAnimalFromLocationAndAnimalResidence($conn, $ulnString)) {
-                $updateCount++;
+        if($continue) {
+            $cmdUtil->setStartTimeAndPrintIt($ulnCount, 1);
+            foreach ($ulns as $ulnString => $ulnParts) {
+                if(self::removeAnimalFromLocationAndAnimalResidence($conn, $ulnString)) {
+                    $updateCount++;
+                }
+                $cmdUtil->advanceProgressBar(1, 'locations of animals updated: '.$updateCount);
             }
-            $cmdUtil->advanceProgressBar(1, 'locations of animals updated: '.$updateCount);
+            $cmdUtil->setEndTimeAndPrintFinalOverview();
+
+            self::printAnimalsList($cmdUtil, $conn, $ulns);
         }
-        $cmdUtil->setEndTimeAndPrintFinalOverview();
 
         return $updateCount;
     }
@@ -401,6 +397,42 @@ class DatabaseDataFixer
         }
 
         return false;
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @param Connection $conn
+     * @param array $ulns
+     */
+    private static function printAnimalsList(CommandUtil $cmdUtil, Connection $conn, array $ulns)
+    {
+        $ulnFilterString = SqlUtil::getUlnQueryFilter($ulns);
+
+        $sql = "SELECT CONCAT(uln_country_code, uln_number) as uln, a.location_id, ubn,
+                        DATE(g.end_date) as depart_date, is_alive 
+                FROM animal a
+                 LEFT JOIN location l ON l.id = a.location_id
+                 LEFT JOIN (
+                  SELECT MAX(r.end_date) as end_date, r.animal_id
+                  FROM animal_residence r
+                    INNER JOIN animal a ON a.id = r.animal_id 
+                  WHERE r.location_id = a.location_id AND $ulnFilterString
+                  GROUP BY animal_id, r.location_id
+                 )g ON g.animal_id = a.id
+                WHERE " . $ulnFilterString;
+
+        $cmdUtil->writeln('___Animals in csv file___');
+        foreach ($conn->query($sql)->fetchAll() as $animalRecords) {
+            $uln = $animalRecords['uln'];
+            $locationId = $animalRecords['location_id'];
+            $ubn = $animalRecords['ubn'];
+            $departDate = $animalRecords['depart_date'];
+            $life = boolval($animalRecords['is_alive']) ? 'alive' : 'dead';
+            $cmdUtil->writeln('uln: ' . $uln . ' |locationId: ' . $locationId
+                .' |ubn : '.$ubn . '| residence end_date: ' . $departDate . '   '.$life);
+        }
+
     }
 
 }
