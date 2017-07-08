@@ -37,9 +37,9 @@ use Symfony\Component\Filesystem\Filesystem;
 class MixBlupOutputFilesService implements MixBlupServiceInterface
 {
     const TEST_WITH_DOWNLOADED_ZIPS = false;
-    const PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN = false;
-    const DELETE_QUEUE_MESSAGE_AFTER_SUCCESSFUL_RUN = false;
-    const ONLY_DOWNLOAD_SOLANI_AND_RELANI = false;
+    const PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN = true;
+    const DELETE_QUEUE_MESSAGE_AFTER_SUCCESSFUL_RUN = true;
+    const ONLY_DOWNLOAD_SOLANI_AND_RELANI = true;
     const ONLY_UNZIP_SOLANI_AND_RELANI = true;
 
     const TEST_COLUMN_ALIGNMENT = false;

@@ -44,10 +44,12 @@ use AppBundle\Service\AwsExternalQueueService;
 use AppBundle\Service\AwsInternalQueueService;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\EntityGetter;
+use AppBundle\Service\ExcelService;
 use AppBundle\Service\HealthService;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Service\MixBlupInputQueueService;
 use AppBundle\Service\MixBlupOutputQueueService;
+use AppBundle\Service\PedigreeRegisterOverviewReportService;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
@@ -77,12 +79,14 @@ class APIController extends Controller implements APIControllerInterface
   private $services = [
       ServiceId::ANIMAL_LOCATION_HISTORY => null,
       ServiceId::ENTITY_GETTER => null,
+      ServiceId::EXCEL_SERVICE => null,
       ServiceId::EXTERNAL_QUEUE_SERVICE => null,
       ServiceId::HEALTH_SERVICE => null,
       ServiceId::INTERNAL_QUEUE_SERVICE => null,
       ServiceId::LOGGER => null,
       ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE => null,
       ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE => null,
+      ServiceId::PEDIGREE_REGISTER_REPORT => null,
       ServiceId::REDIS_CLIENT => null,
       ServiceId::SERIALIZER => null,
       ServiceId::STORAGE_SERVICE => null,
@@ -110,6 +114,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getAnimalLocationHistoryService(){ return $this->getService(ServiceId::ANIMAL_LOCATION_HISTORY); }
   /** @return EntityGetter */
   protected function getEntityGetter() { return $this->getService(ServiceId::ENTITY_GETTER); }
+  /** @return ExcelService */
+  protected function getExcelService() { return $this->getService(ServiceId::EXCEL_SERVICE); }
   /** @return AwsExternalQueueService */
   protected function getExternalQueueService(){ return $this->getService(ServiceId::EXTERNAL_QUEUE_SERVICE); }
   /** @return HealthService */
@@ -122,6 +128,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getMixBlupInputQueueService() { return $this->getService(ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE); }
   /** @return MixBlupOutputQueueService */
   protected function getMixBlupOutputQueueService() { return $this->getService(ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE); }
+  /** @return PedigreeRegisterOverviewReportService */
+  protected function getPedigreeRegisterReportService() { return $this->getService(ServiceId::PEDIGREE_REGISTER_REPORT); }
   /** @return \Redis */
   protected function getRedisClient() { return $this->getService(ServiceId::REDIS_CLIENT); }
   /** @return IRSerializer */

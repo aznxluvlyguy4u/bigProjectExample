@@ -467,4 +467,30 @@ class SqlUtil
             return "(".$key." = ". implode(" OR ".$key." = ", $values) . ")";
         }
     }
+
+
+    /**
+     * @param array $dutchByEnglishValues
+     * @param bool $isOnlyCapitalizeFirstLetterKey
+     * @param bool $isOnlyCapitalizeFirstLetterValue
+     * @return string
+     */
+    public static function createSqlValuesString($dutchByEnglishValues, $isOnlyCapitalizeFirstLetterKey = false, $isOnlyCapitalizeFirstLetterValue = true)
+    {
+        $valuesString = '';
+        $prefix = '';
+
+        foreach ($dutchByEnglishValues as $constant => $value)
+        {
+            $constant = $isOnlyCapitalizeFirstLetterKey ? ucfirst(strtolower($constant)) : $constant;
+            $value = $isOnlyCapitalizeFirstLetterValue ? ucfirst(strtolower($value)) : $value;
+
+            $valuesString = $valuesString . $prefix . "('" . $constant . "','" . $value ."')";
+            $prefix = ',';
+        }
+
+        return $valuesString;
+    }
+
+
 }

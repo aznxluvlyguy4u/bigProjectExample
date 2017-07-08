@@ -309,6 +309,11 @@ class MixBlupDataFileBase
      */
     protected static function getFormattedTailLength($data, $key = JsonInputConstant::TAIL_LENGTH)
     {
+        $tailLengthValue = $data[$key];
+        if($tailLengthValue < self::TAIL_LENGTH_MIN || self::TAIL_LENGTH_MAX < $tailLengthValue) {
+            $data[$key] = null;
+        }
+
         return self::getFormattedValueFromData($data, MaxLength::TAIL_LENGTH, $key, true);
     }
 
@@ -369,6 +374,11 @@ class MixBlupDataFileBase
      */
     protected static function getFormattedNLing($data, $key = JsonInputConstant::N_LING)
     {
+        $nLingValue = $data[$key];
+        if($nLingValue < self::N_LING_MIN || self::N_LING_MAX < $nLingValue) {
+            $data[$key] = null;
+        }
+
         return self::getFormattedValueFromData($data, MaxLength::N_LING, $key, true);
     }
 
