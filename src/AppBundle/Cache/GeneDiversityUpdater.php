@@ -64,14 +64,14 @@ class GeneDiversityUpdater
         $sql = "SELECT id FROM animal
                 WHERE parent_father_id = ".$parentId." OR parent_mother_id = ".$parentId;
         $results = $conn->query($sql)->fetchAll();
-        $animalIds = SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results)['id'];
+        $animalIds = ArrayUtil::get('id', SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results), []);
         $animalIds[] = $parentId;
         $updateCount += self::updateByAnimalIds($conn, $animalIds, $recalculateAllValues, null, $cmdUtil, false);
 
         $sql = "SELECT id FROM litter
                 WHERE animal_father_id = ".$parentId." OR animal_mother_id = ".$parentId;
         $results = $conn->query($sql)->fetchAll();
-        $litterIds = SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results)['id'];
+        $litterIds = ArrayUtil::get('id', SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results), []);
         $updateCount += self::updateByLitterIds($conn, $litterIds, $recalculateAllValues, null, $cmdUtil, false);
 
         $updateCount += self::updateLittersWithPureBredOffspring($conn, false);
