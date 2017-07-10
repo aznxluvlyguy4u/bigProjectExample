@@ -9,6 +9,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareBirthRepository;
@@ -395,6 +396,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
                 if($child->getLatestBreedGrades()) {
                     $manager->remove($child->getLatestBreedGrades());
+                }
+
+
+                $breedValueRepository = $manager->getRepository(BreedValue::class);
+                $breedValues = $breedValueRepository->findBy(['animal'=>$child]);
+                foreach ($breedValues as $breedValue) {
+                    $manager->remove($breedValue);
                 }
 
 
