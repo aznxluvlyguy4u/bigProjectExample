@@ -762,7 +762,12 @@ class IRSerializer implements IRSerializerInterface
             $this->entityManager->flush();
 
             //Update recombination and heterosis values in new litters
-            GeneDiversityUpdater::updateByParentId($this->conn, $litter->getId(), false);
+            foreach ([$father, $mother] as $parent) {
+                if($parent instanceof Animal) {
+                    GeneDiversityUpdater::updateByParentId($this->conn, $parent->getId(), false);
+                }
+            }
+
         } catch (UniqueConstraintViolationException $exception) {
             //Reset tags to UNASSIGNED
             $areAllTagsReset = $tagRepository->unassignTags($tags);
