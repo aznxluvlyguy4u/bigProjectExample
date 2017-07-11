@@ -355,7 +355,7 @@ class IRSerializer implements IRSerializerInterface
         }
 
         if(key_exists('father', $declareBirthContentArray->toArray())) {
-            /** @var  $father */
+            /** @var Ram $father */
             $father = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
 
             if(!$father) {
@@ -369,6 +369,7 @@ class IRSerializer implements IRSerializerInterface
         }
 
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
+            /** @var Ewe $mother */
             $mother = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
 
             if(!$mother) {
@@ -442,14 +443,14 @@ class IRSerializer implements IRSerializerInterface
             $ulnCountryCode = $ulnArray[JsonInputConstant::ULN_COUNTRY_CODE];
             $ulnNumber = $ulnArray[JsonInputConstant::ULN_NUMBER];
             $uln = $ulnCountryCode.$ulnNumber;
-            
+
             /** @var Tag $tagToReserve */
             $tagToReserve = $tagRepository->findUnassignedTagByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber, $location->getId());
 
             if (!$tagToReserve) {
                 //Tag does not exist in the database
                 return Validator::createJsonResponse("Opgegeven vrije oormerk: " . $uln . " voor het lam, is niet gevonden.", $statusCode);
-                
+
             } else {
                 $animal = $animalRepository->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
                 if ($animal) {
@@ -530,7 +531,7 @@ class IRSerializer implements IRSerializerInterface
         $litter->setBornAliveCount($litterSize-$stillbornCount);
         $litter->setStillbornCount($stillbornCount);
 
-        $breedCodeChild = BreedCodeUtil::calculateBreedCodeFromParentBreedCodes($father, $mother, null);
+        $breedCodeChild = BreedCodeUtil::calculateBreedCodeFromParents($father, $mother, null, true);
 
         $children = [];
         /** @var array $child */

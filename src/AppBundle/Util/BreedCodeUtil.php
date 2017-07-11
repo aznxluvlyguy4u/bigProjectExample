@@ -56,14 +56,20 @@ class BreedCodeUtil
      * @param Animal $parent1
      * @param Animal $parent2
      * @param null $nullResponse
+     * @param boolean $removeSingleQuotes
      * @return null|string
      */
-    public static function calculateBreedCodeFromParents($parent1, $parent2, $nullResponse = null)
+    public static function calculateBreedCodeFromParents($parent1, $parent2, $nullResponse = null, $removeSingleQuotes = false)
     {
+        $breedCode = $nullResponse;
         if($parent1 instanceof Animal && $parent2 instanceof Animal) {
-             return self::calculateBreedCodeFromParentBreedCodes($parent1->getBreedCode(), $parent2->getBreedCode(), $nullResponse);
+             $breedCode = self::calculateBreedCodeFromParentBreedCodes($parent1->getBreedCode(), $parent2->getBreedCode(), $nullResponse);
         }
-        return $nullResponse;
+
+        if($removeSingleQuotes && !$nullResponse) {
+            return trim($breedCode, "'");
+        }
+        return $breedCode;
     }
 
 

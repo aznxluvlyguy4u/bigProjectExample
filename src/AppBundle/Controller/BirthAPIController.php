@@ -9,9 +9,14 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\BreedValue;
+use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareBirthRepository;
 use AppBundle\Entity\DeclareBirthResponse;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Litter;
@@ -373,6 +378,33 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 foreach ($genderHistories as $genderHistory) {
                     $manager->remove($genderHistory);
                 }
+
+
+                //Remove REVOKED declare losses, exports and departs
+                foreach ([$child->getDeaths(), $child->getDepartures(), $child->getExports()] as $declaresToRemove) {
+                    /** @var DeclareLoss|DeclareDepart|DeclareExport $declareToRemove */
+                    foreach($declaresToRemove as $declareToRemove) {
+                        if($declareToRemove->getRequestState() === RequestStateType::REVOKED) {
+                            foreach ($declareToRemove->getResponses() as $response) {
+                                $manager->remove($response);
+                            }
+                            $manager->remove($declareToRemove);
+                        }
+                    }
+                }
+
+
+                if($child->getLatestBreedGrades()) {
+                    $manager->remove($child->getLatestBreedGrades());
+                }
+
+
+                $breedValueRepository = $manager->getRepository(BreedValue::class);
+                $breedValues = $breedValueRepository->findBy(['animal'=>$child]);
+                foreach ($breedValues as $breedValue) {
+                    $manager->remove($breedValue);
+                }
+
 
                 //Flush the removes separately
                 $manager->flush();
