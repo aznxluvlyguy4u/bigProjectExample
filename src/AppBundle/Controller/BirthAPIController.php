@@ -42,6 +42,7 @@ use AppBundle\Util\WorkerTaskUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\Logic\DeclareBirthAction;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
@@ -1102,4 +1103,34 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     public function getBirthErrors(Request $request) {
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => []), 200);
     }
+
+
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/internal")
+     * @Method("POST")
+     */
+    public function processInternalQueueMessage(Request $request)
+    {
+        $messageId = $this->getContentAsArray($request)->get('message_id');
+        $taskType = 'DECLARE_BIRTH';
+        $jsonMessage = $request->getContent();
+
+        $declareBirthResponse = WorkerTaskUtil::deserializeMessageToDeclareBirthResponse($request, $this->getSerializer());
+
+        $message = 'Message is not a DeclareBirthResponse';
+        $statusCode = 428;
+        if($declareBirthResponse instanceof DeclareBirthResponse) {
+            $sendToQresult = $this->getInternalQueueService()
+                ->sendDeclareResponse($jsonMessage, $taskType, $messageId);
+
+            $statusCode = $sendToQresult['statusCode'];
+            $message = $jsonMessage;
+        }
+
+        return new JsonResponse($message,$statusCode);
+    }
+
+
 }
