@@ -29,6 +29,7 @@ use AppBundle\Entity\Tag;
 use AppBundle\Entity\TagRepository;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -40,6 +41,7 @@ use AppBundle\Util\StringUtil;
 use AppBundle\Util\WorkerTaskUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
+use AppBundle\Validation\AdminValidator;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
@@ -225,6 +227,57 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         return new JsonResponse($result, 200);
     }
+
+
+    /**
+     * Resend OPEN birth declarations to RVO that are missing a response message.
+     *
+     * @ApiDoc(
+     *   section = "Births",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Resend OPEN birth declarations to RVO that are missing a response message"
+     * )
+     * Create a new DeclareBirth request
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/resend")
+     * @Method("POST")
+     */
+    public function resendCreateBirth(Request $request)
+    {
+        $loggedInUser = $this->getLoggedInUser($request);
+        $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::DEVELOPER);
+        if(!$isAdmin) { return AdminValidator::getStandardErrorResponse(); }
+
+        $requestMessages = $this->getDoctrine()->getRepository(DeclareBirth::class)
+            ->findBy(['requestState' => RequestStateType::OPEN]);
+
+        $openCount = count($requestMessages);
+        $resentCount = 0;
+
+        //Creating request succeeded, send to Queue
+        /** @var DeclareBirth $requestMessage */
+        foreach ($requestMessages as $requestMessage) {
+
+            if($requestMessage->getResponses()->count() === 0) {
+                //Resend it to the queue and persist/update any changed state to the database
+                $result[] = $this->sendMessageObjectToQueue($requestMessage);
+                $resentCount++;
+            }
+        }
+
+        return new JsonResponse(['DeclareBirth' => ['found open declares' => $openCount, 'open declares resent' => $resentCount]], 200);
+    }
+
+
 
     /**
      * Revoke a birth of an animal
