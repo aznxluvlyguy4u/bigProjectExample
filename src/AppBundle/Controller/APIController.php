@@ -21,12 +21,10 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
-use AppBundle\Entity\Message;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
-use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Ewe;
@@ -35,22 +33,30 @@ use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\AnimalTransferStatus;
-use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\ServiceId;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\RequestMessageOutputBuilder;
+use AppBundle\Service\AnimalLocationHistoryService;
+use AppBundle\Service\AwsExternalQueueService;
+use AppBundle\Service\AwsInternalQueueService;
+use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\EntityGetter;
+use AppBundle\Service\ExcelService;
+use AppBundle\Service\HealthService;
+use AppBundle\Service\IRSerializer;
+use AppBundle\Service\MixBlupInputQueueService;
+use AppBundle\Service\MixBlupOutputQueueService;
+use AppBundle\Service\PedigreeRegisterOverviewReportService;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Worker\Task\WorkerMessageBody;
-use ClassesWithParents\E;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\LazyCriteriaCollection;
 use Doctrine\ORM\Query;
-use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -69,78 +75,82 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
  */
 class APIController extends Controller implements APIControllerInterface
 {
+  /** @var array */
+  private $services = [
+      ServiceId::ANIMAL_LOCATION_HISTORY => null,
+      ServiceId::ENTITY_GETTER => null,
+      ServiceId::EXCEL_SERVICE => null,
+      ServiceId::EXTERNAL_QUEUE_SERVICE => null,
+      ServiceId::HEALTH_SERVICE => null,
+      ServiceId::INTERNAL_QUEUE_SERVICE => null,
+      ServiceId::LOGGER => null,
+      ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE => null,
+      ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE => null,
+      ServiceId::PEDIGREE_REGISTER_REPORT => null,
+      ServiceId::REDIS_CLIENT => null,
+      ServiceId::SERIALIZER => null,
+      ServiceId::STORAGE_SERVICE => null,
+  ];
+
   /** @var RequestMessageBuilder */
   private $requestMessageBuilder;
 
-  /** @var */
-  private $serializer;
-
-  /** @var \AppBundle\Service\AWSQueueService */
-  private $queueService;
-
-  /** @var \AppBundle\Service\AWSSimpleStorageService */
-  private $storageService;
-
-  /** @var \AppBundle\Service\EntityGetter */
-  private $entityGetter;
-
-  /** @var \AppBundle\Service\HealthService */
-  private $healthService;
-
-  /** @var \AppBundle\Service\EntityGetter */
-  private $animalLocationHistoryService;
-
-  /** @var  \Redis  */
-  private $redisClient;
-
-  /** @var Logger */
-  private $logger;
 
   /**
-   * @return Logger
+   * @param string $controller
+   * @return mixed|null
    */
-  protected function getLogger()
-  {
-    if($this->logger == null){
-      $this->logger = $this->get('logger');
-    }
+  private function getService($controller){
+    if(!key_exists($controller, $this->services)) { return null;}
 
-    return $this->logger;
+    if ($this->services[$controller] == null) {
+      $this->services[$controller] = $this->get($controller);
+    }
+    return $this->services[$controller];
   }
 
-  /**
-   * @return \Redis
-   */
-  protected function getRedisClient() {
-    if($this->redisClient == null){
-      $this->redisClient = $this->get('snc_redis.sncredis');
-    }
 
-    return $this->redisClient;
-  }
+  /** @return AnimalLocationHistoryService */
+  protected function getAnimalLocationHistoryService(){ return $this->getService(ServiceId::ANIMAL_LOCATION_HISTORY); }
+  /** @return EntityGetter */
+  protected function getEntityGetter() { return $this->getService(ServiceId::ENTITY_GETTER); }
+  /** @return ExcelService */
+  protected function getExcelService() { return $this->getService(ServiceId::EXCEL_SERVICE); }
+  /** @return AwsExternalQueueService */
+  protected function getExternalQueueService(){ return $this->getService(ServiceId::EXTERNAL_QUEUE_SERVICE); }
+  /** @return HealthService */
+  protected function getHealthService(){ return $this->getService(ServiceId::HEALTH_SERVICE); }
+  /** @return AwsInternalQueueService */
+  protected function getInternalQueueService() { return $this->getService(ServiceId::INTERNAL_QUEUE_SERVICE); }
+  /** @return Logger */
+  protected function getLogger() { return $this->getService(ServiceId::LOGGER); }
+  /** @return MixBlupInputQueueService */
+  protected function getMixBlupInputQueueService() { return $this->getService(ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE); }
+  /** @return MixBlupOutputQueueService */
+  protected function getMixBlupOutputQueueService() { return $this->getService(ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE); }
+  /** @return PedigreeRegisterOverviewReportService */
+  protected function getPedigreeRegisterReportService() { return $this->getService(ServiceId::PEDIGREE_REGISTER_REPORT); }
+  /** @return \Redis */
+  protected function getRedisClient() { return $this->getService(ServiceId::REDIS_CLIENT); }
+  /** @return IRSerializer */
+  protected function getSerializer() { return $this->getService(ServiceId::SERIALIZER);  }
+  /** @return AWSSimpleStorageService */
+  protected function getStorageService(){ return $this->getService(ServiceId::STORAGE_SERVICE); }
+
 
   /**
-   * @return \AppBundle\Service\EntityGetter
+   * @return RequestMessageBuilder
    */
-  protected function getEntityGetter()
+  protected function getRequestMessageBuilder()
   {
-    if($this->entityGetter == null){
-      $this->entityGetter = $this->get('app.doctrine.entitygetter');
+    if($this->requestMessageBuilder == null) {
+      $serializer = $this->getSerializer();
+      $em = $this->getDoctrine()->getManager();
+      $currentEnvironment = $this->getCurrentEnvironment();
+      $this->requestMessageBuilder = new RequestMessageBuilder($em, $serializer, $currentEnvironment);
     }
 
-    return $this->entityGetter;
-  }
-
-  /**
-   * @return \AppBundle\Service\IRSerializer
-   */
-  protected function getSerializer()
-  {
-    if($this->serializer == null){
-      $this->serializer = $this->get('app.serializer.ir');
-    }
-
-    return $this->serializer;
+    return $this->requestMessageBuilder;
   }
 
 
@@ -163,7 +173,6 @@ class APIController extends Controller implements APIControllerInterface
     return $this->getDecodedJsonSingleObject($object, $type, $enableMaxDepthChecks);
   }
 
-
   /**
    * @param $object
    * @param array $type
@@ -175,86 +184,20 @@ class APIController extends Controller implements APIControllerInterface
     $jsonMessage = $this->getSerializer()->serializeToJSON($object, $type, $enableMaxDepthChecks);
     return json_decode($jsonMessage, true);
   }
-  
 
-  /**
-   * @return RequestMessageBuilder
-   */
-  protected function getRequestMessageBuilder()
-  {
-    if($this->requestMessageBuilder == null) {
-      $serializer = $this->getSerializer();
-      $em = $this->getDoctrine()->getManager();
-      $currentEnvironment = $this->getCurrentEnvironment();
-      $this->requestMessageBuilder = new RequestMessageBuilder($em, $serializer, $currentEnvironment);
-    }
+  /** @return string */
+  protected function getCurrentEnvironment() { return $this->get('kernel')->getEnvironment(); }
 
-    return $this->requestMessageBuilder;
-  }
-
-  /**
-   * @return \AppBundle\Service\AWSQueueService
-   */
-  protected function getQueueService(){
-    if($this->queueService == null){
-      $this->queueService = $this->get('app.aws.queueservice');
-    }
-
-    return $this->queueService;
-  }
-
-  /**
-   * @return \AppBundle\Service\AWSSimpleStorageService
-   */
-  protected function getStorageService(){
-    if($this->storageService == null){
-      $this->storageService = $this->get('app.aws.storageservice');
-    }
-
-    return $this->storageService;
-  }
-
-
-  /**
-   * @return \AppBundle\Service\AnimalLocationHistoryService
-   */
-  protected function getAnimalLocationHistoryService(){
-    if($this->animalLocationHistoryService == null){
-      $this->animalLocationHistoryService = $this->get('app.animallocation.history');
-    }
-
-    return $this->animalLocationHistoryService;
-  }
-
-
-  /**
-   * @return \AppBundle\Service\HealthService
-   */
-  protected function getHealthService(){
-    if($this->healthService == null){
-      $this->healthService = $this->get('app.health.updater');
-    }
-
-    return $this->healthService;
-  }
-  
-  
-  protected function getCurrentEnvironment()
-  {
-    return $this->get('kernel')->getEnvironment();
-  }
-
-
-  /** @return mixed */
+  /** @return string */
   protected function getRootDirectory() { return $this->get('kernel')->getRootDir(); }
 
-  /** @return mixed */
+  /** @return string */
   protected function getWebDirectory() { return realpath($this->getRootDirectory() . '/../web'); }
 
-  /** @return mixed */
+  /** @return string */
   protected function getAssetsDirectory() { return $this->getWebDirectory().'/assets'; }
 
-  /** @return mixed */
+  /** @return string */
   protected function getImagesDirectory() { return $this->getAssetsDirectory().'/images'; }
 
   /**
@@ -384,8 +327,8 @@ class APIController extends Controller implements APIControllerInterface
     //Send serialized message to Queue
     $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
 
-    $sendToQresult = $this->getQueueService()
-      ->send($requestId, $jsonMessage, $requestTypeNameSpace);
+    $sendToQresult = $this->getExternalQueueService()
+      ->send($jsonMessage, $requestTypeNameSpace, $requestId);
 
     //If send to Queue, failed, it needs to be resend, set state to failed
     if ($sendToQresult['statusCode'] != '200') {
@@ -420,8 +363,8 @@ class APIController extends Controller implements APIControllerInterface
     $jsonMessage = $this->getSerializer()->serializeToJSON($workerMessageBody);
 
     //Send  message to Queue
-    $sendToQresult = $this->getQueueService()
-      ->sendToInternalQueue(1, $jsonMessage, $workerMessageBody->getTaskType());
+    $sendToQresult = $this->getInternalQueueService()
+      ->send($jsonMessage, $workerMessageBody->getTaskType(), 1);
 
     //If send to Queue, failed, it needs to be resend, set state to failed
     return $sendToQresult['statusCode'] == '200';

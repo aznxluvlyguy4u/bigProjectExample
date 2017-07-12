@@ -8,6 +8,7 @@ parameters:
     database_user:     root
     database_password: ~
 
+    environment: ~
     redis_host:        redis://localhost
 
     mailer_transport:  smtp
@@ -24,11 +25,10 @@ parameters:
     aws_secret_key: ~
     aws_sqs_region: ~
     aws_sqs_version: ~
-    aws_sqs_queue_stage: ~
-    aws_sqs_queue_prod: ~
-    aws_sqs_queue_dev: ~
-    aws_sqs_queue_test: ~
-    aws_sqs_queue_local: ~
+    aws_sqs_queue_exteral_prefix: ~
+    aws_sqs_queue_interal_prefix: ~
+    aws_sqs_queue_mixblup_input_prefix: ~
+    aws_sqs_queue_mixblup_output_prefix: ~
 
     aws_s3_region: ~
     aws_s3_version: ~

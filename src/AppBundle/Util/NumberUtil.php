@@ -35,11 +35,13 @@ class NumberUtil
      */
     public static function areFloatsEqual($float1, $float2, $accuracy = self::DEFAULT_FLOAT_ACCURACY)
     {
-        if(abs($float1-$float2) < $accuracy) {
+        if($float1 === null && $float2 === null) {
             return true;
-        } else {
-            return false;
+
+        } elseif(is_numeric($float1) && is_numeric($float2)) {
+            return abs($float1-$float2) < $accuracy;
         }
+        return false;
     }
 
 
@@ -83,5 +85,25 @@ class NumberUtil
         } else {
             return '';
         }
+    }
+
+
+    /**
+     * @param $integer
+     * @return boolean
+     */
+    public static function isOdd($integer)
+    {
+        return boolval($integer & 1);
+    }
+
+
+    /**
+     * @param $integer
+     * @return bool
+     */
+    public static function isEven($integer)
+    {
+        return !self::isOdd($integer);
     }
 }

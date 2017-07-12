@@ -50,7 +50,7 @@ class ExteriorRepository extends MeasurementRepository {
                   LEFT JOIN person p ON p.id = m.inspector_id
                   INNER JOIN animal a ON a.id = x.animal_id
                 WHERE x.animal_id = ".$animal->getId().$deletedFilterString." ORDER BY measurement_date DESC";
-        $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        $retrievedMeasurementData = $this->getConnection()->query($sql)->fetchAll();
 
         $count = 0;
         foreach ($retrievedMeasurementData as $measurementData)
@@ -85,32 +85,6 @@ class ExteriorRepository extends MeasurementRepository {
             $count++;
         }
         return $results;
-    }
-
-
-    /**
-     * If no Exterior is found a blank Exterior entity is returned
-     * 
-     * @param Animal $animal
-     * @return Exterior
-     */
-    public function getLatestExterior(Animal $animal)
-    {
-        //Measurement Criteria
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('animal', $animal))
-            ->orderBy(['measurementDate' => Criteria::DESC])
-            ->setMaxResults(1);
-        
-        $latestExterior = $this->getManager()->getRepository(Exterior::class)
-            ->matching($criteria);
-
-        if(sizeof($latestExterior) > 0) {
-            $latestExterior = $latestExterior->get(0);
-        } else { //create an empty default Exterior with default 0.0 values
-            $latestExterior = new Exterior();
-        }
-        return $latestExterior;
     }
 
 
@@ -152,16 +126,17 @@ class ExteriorRepository extends MeasurementRepository {
                                    SELECT animal_id, max(m.measurement_date) as measurement_date
                                    FROM exterior e
                                      INNER JOIN measurement m ON m.id = e.id
-                                   GROUP BY animal_id) y on y.animal_id = x.animal_id WHERE m.measurement_date = y.measurement_date ";
+                                   GROUP BY animal_id) y on y.animal_id = x.animal_id 
+                    WHERE m.measurement_date = y.measurement_date AND m.is_active = TRUE ";
 
         if(is_int($animalId)) {
             $filter = "AND x.animal_id = " . $animalId;
             $sql = $sqlBase.$filter;
-            $result = $this->getManager()->getConnection()->query($sql)->fetch();
+            $result = $this->getConnection()->query($sql)->fetch();
         } else {
             $filter = "";
             $sql = $sqlBase.$filter;
-            $result = $this->getManager()->getConnection()->query($sql)->fetchAll();
+            $result = $this->getConnection()->query($sql)->fetchAll();
         }
         return $result == false ? $nullResult : $result;
     }

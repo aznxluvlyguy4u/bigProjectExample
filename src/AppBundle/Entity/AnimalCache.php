@@ -271,10 +271,85 @@ class AnimalCache
      */
     private $exteriorMeasurementDate;
 
+    /**
+     * Bronstsynchronisatie/Bronstinductie
+     * 
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $pmsg;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $birthWeight;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $weightAt8Weeks;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $weightAt20Weeks;
+
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $tailLength;
+
+
+    /**
+     * @var DateTime
+     * @ORM\Column(type="datetime", options={"default":null}, nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $weightAt8WeeksMeasurementDate;
+
+
+    /**
+     * @var DateTime
+     * @ORM\Column(type="datetime", options={"default":null}, nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $weightAt20WeeksMeasurementDate;
+
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $ageWeightAt8Weeks;
+
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $ageWeightAt20Weeks;
+
+
 
     public function __construct()
     {
         $this->logDate = new \DateTime();
+        $this->pmsg = false;
+        $this->gaveBirthAsOneYearOld = false;
     }
 
     /**
@@ -813,6 +888,168 @@ class AnimalCache
         $this->gaveBirthAsOneYearOld = $gaveBirthAsOneYearOld;
     }
 
+    /**
+     * @return boolean
+     */
+    public function isPmsg()
+    {
+        return $this->pmsg;
+    }
 
-    
+    /**
+     * @param boolean $pmsg
+     * @return AnimalCache
+     */
+    public function setPmsg($pmsg)
+    {
+        $this->pmsg = $pmsg;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getBirthWeight()
+    {
+        return $this->birthWeight;
+    }
+
+    /**
+     * @param float $birthWeight
+     * @return AnimalCache
+     */
+    public function setBirthWeight($birthWeight)
+    {
+        $this->birthWeight = $birthWeight;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getWeightAt8Weeks()
+    {
+        return $this->weightAt8Weeks;
+    }
+
+    /**
+     * @param float $weightAt8Weeks
+     * @return AnimalCache
+     */
+    public function setWeightAt8Weeks($weightAt8Weeks)
+    {
+        $this->weightAt8Weeks = $weightAt8Weeks;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getWeightAt20Weeks()
+    {
+        return $this->weightAt20Weeks;
+    }
+
+    /**
+     * @param float $weightAt20Weeks
+     * @return AnimalCache
+     */
+    public function setWeightAt20Weeks($weightAt20Weeks)
+    {
+        $this->weightAt20Weeks = $weightAt20Weeks;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getTailLength()
+    {
+        return $this->tailLength;
+    }
+
+    /**
+     * @param float $tailLength
+     * @return AnimalCache
+     */
+    public function setTailLength($tailLength)
+    {
+        $this->tailLength = $tailLength;
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getWeightAt8WeeksMeasurementDate()
+    {
+        return $this->weightAt8WeeksMeasurementDate;
+    }
+
+    /**
+     * @param DateTime $weightAt8WeeksMeasurementDate
+     * @return AnimalCache
+     */
+    public function setWeightAt8WeeksMeasurementDate($weightAt8WeeksMeasurementDate)
+    {
+        $this->weightAt8WeeksMeasurementDate = $weightAt8WeeksMeasurementDate;
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getWeightAt20WeeksMeasurementDate()
+    {
+        return $this->weightAt20WeeksMeasurementDate;
+    }
+
+    /**
+     * @param DateTime $weightAt20WeeksMeasurementDate
+     * @return AnimalCache
+     */
+    public function setWeightAt20WeeksMeasurementDate($weightAt20WeeksMeasurementDate)
+    {
+        $this->weightAt20WeeksMeasurementDate = $weightAt20WeeksMeasurementDate;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAgeWeightAt8Weeks()
+    {
+        return $this->ageWeightAt8Weeks;
+    }
+
+    /**
+     * @param int $ageWeightAt8Weeks
+     * @return AnimalCache
+     */
+    public function setAgeWeightAt8Weeks($ageWeightAt8Weeks)
+    {
+        $this->ageWeightAt8Weeks = $ageWeightAt8Weeks;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAgeWeightAt20Weeks()
+    {
+        return $this->ageWeightAt20Weeks;
+    }
+
+    /**
+     * @param int $ageWeightAt20Weeks
+     * @return AnimalCache
+     */
+    public function setAgeWeightAt20Weeks($ageWeightAt20Weeks)
+    {
+        $this->ageWeightAt20Weeks = $ageWeightAt20Weeks;
+        return $this;
+    }
+
+
+
 }
