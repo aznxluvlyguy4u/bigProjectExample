@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 use AppBundle\Cache\AnimalCacher;
+use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
@@ -54,6 +55,7 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
@@ -371,7 +373,7 @@ class IRSerializer implements IRSerializerInterface
         }
 
         if(key_exists('father', $declareBirthContentArray->toArray())) {
-            /** @var  $father */
+            /** @var Ram $father */
             $father = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
 
             if(!$father) {
@@ -385,6 +387,7 @@ class IRSerializer implements IRSerializerInterface
         }
 
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
+            /** @var Ewe $mother */
             $mother = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
 
             if(!$mother) {
@@ -458,14 +461,14 @@ class IRSerializer implements IRSerializerInterface
             $ulnCountryCode = $ulnArray[JsonInputConstant::ULN_COUNTRY_CODE];
             $ulnNumber = $ulnArray[JsonInputConstant::ULN_NUMBER];
             $uln = $ulnCountryCode.$ulnNumber;
-            
+
             /** @var Tag $tagToReserve */
             $tagToReserve = $tagRepository->findUnassignedTagByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber, $location->getId());
 
             if (!$tagToReserve) {
                 //Tag does not exist in the database
                 return Validator::createJsonResponse("Opgegeven vrije oormerk: " . $uln . " voor het lam, is niet gevonden.", $statusCode);
-                
+
             } else {
                 $animal = $animalRepository->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
                 if ($animal) {
@@ -529,10 +532,12 @@ class IRSerializer implements IRSerializerInterface
 
         if ($isAborted || $isPseudoPregnancy || $litterSize == $stillbornCount) {
             $litter->setStatus('COMPLETED');
+            $litter->setRequestState(RequestStateType::FINISHED);
         } else {
             $litter->setStatus('INCOMPLETE');
+            $litter->setRequestState(RequestStateType::OPEN);
         }
-        $litter->setRequestState(RequestStateType::OPEN);
+
         $litter->setActionBy($loggedInUser);
         $litter->setRelationNumberKeeper($location->getCompany()->getOwner()->getRelationNumberKeeper());
         $litter->setUbn($location->getUbn());
@@ -543,6 +548,8 @@ class IRSerializer implements IRSerializerInterface
         $litter->setAnimalFather($father);
         $litter->setBornAliveCount($litterSize-$stillbornCount);
         $litter->setStillbornCount($stillbornCount);
+
+        $breedCodeChild = BreedCodeUtil::calculateBreedCodeFromParents($father, $mother, null, true);
 
         $children = [];
         /** @var array $child */
@@ -666,6 +673,10 @@ class IRSerializer implements IRSerializerInterface
                 $child->setLambar($hasLambar);
                 $child->setLitter($litter);
 
+                if(is_string($breedCodeChild)) {
+                    $child->setBreedCode($breedCodeChild);
+                }
+
                 //Create new residence
                 $animalResidence = new AnimalResidence();
                 $animalResidence->setAnimal($child);
@@ -768,6 +779,14 @@ class IRSerializer implements IRSerializerInterface
 
         try {
             $this->entityManager->flush();
+
+            //Update recombination and heterosis values in new litters
+            foreach ([$father, $mother] as $parent) {
+                if($parent instanceof Animal) {
+                    GeneDiversityUpdater::updateByParentId($this->conn, $parent->getId(), false);
+                }
+            }
+
         } catch (UniqueConstraintViolationException $exception) {
             //Reset tags to UNASSIGNED
             $areAllTagsReset = $tagRepository->unassignTags($tags);

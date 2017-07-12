@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\ColumnType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -327,4 +328,169 @@ class SqlUtil
         }
         return $groupedResults;
     }
+
+
+    /**
+     * @param string|int $key
+     * @param array $results
+     * @return array
+     */
+    public static function createSearchArrayByKey($key, $results)
+    {
+        $searchArray = [];
+        foreach ($results as $result) {
+            $searchArray[$result[$key]] = $result;
+        }
+        return $searchArray;
+    }
+
+
+    /**
+     * @param bool $isIntVal
+     * @param bool $sortResults
+     * @return array
+     */
+    public static function getSingleValueGroupedSqlResults($key, $results, $isIntVal = false, $sortResults = false)
+    {
+        $listOfValues = [];
+        if(!is_array($results)) { return $listOfValues; }
+        if(count($results) == 0) { return $listOfValues; }
+        if(!array_key_exists($key, $results[0])) { return $listOfValues; }
+
+        if($isIntVal) {
+            foreach ($results as $result) {
+                $value = intval($result[$key]);
+                $listOfValues[$value] = $value;
+            }
+        } else {
+            foreach ($results as $result) {
+                $value = $result[$key];
+                $listOfValues[$value] = $value;
+            }
+        }
+
+        if($sortResults) {
+            ksort($listOfValues);
+        }
+
+        return $listOfValues;
+    }
+
+
+    /**
+     * @param string|int $key1
+     * @param string|int $key2
+     * @param array $results
+     * @return array
+     */
+    public static function groupSqlResultsOfKey1ByKey2($key1, $key2, $results)
+    {
+        $groupedResults = [];
+        if(!is_array($results)) { return $groupedResults; }
+        if(count($results) == 0) { return $groupedResults; }
+        if(!array_key_exists($key1, $results[0]) || !array_key_exists($key2, $results[0])) { return $groupedResults; }
+
+        foreach ($results as $result) {
+            $value1 = $result[$key1];
+            $value2 = $result[$key2];
+
+            $groupedResults[$value2] = $value1;
+        }
+        return $groupedResults;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $tableName
+     * @return mixed
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getMaxId(Connection $conn, $tableName)
+    {
+        $sql = "SELECT MAX(id) FROM ".$tableName;
+        return $conn->query($sql)->fetch()['max'];
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $sql
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateWithCount(Connection $conn, $sql)
+    {
+        $sql = "WITH rows AS (
+                  ".$sql."
+                RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows;";
+        return $conn->query($sql)->fetch()['count'];
+    }
+
+
+    /**
+     * @param array $results
+     * @return string
+     */
+    public static function getUlnQueryFilter(array $results)
+    {
+        $filterString = '';
+        $prefix = '';
+        foreach ($results as $result)
+        {
+            $ulnCountryCode = $result[JsonInputConstant::ULN_COUNTRY_CODE];
+            $ulnNumber = $result[JsonInputConstant::ULN_NUMBER];
+
+            $filterString = $filterString . $prefix . '(uln_country_code = \''.$ulnCountryCode
+                                                    .'\' AND uln_number = \''.$ulnNumber.'\')';
+            $prefix = ' OR ';
+        }
+        return $filterString;
+    }
+
+
+    /**
+     * @param array $values
+     * @param string $key
+     * @param boolean $valueIsBetweenSingleQuotationMarks
+     * @return null|string
+     */
+    public static function filterString($values = [], $key, $valueIsBetweenSingleQuotationMarks)
+    {
+        if(count($values) === 0) { return null; }
+
+        if($valueIsBetweenSingleQuotationMarks) {
+            return "(".$key." = '". implode("' OR ".$key." = '", $values) . "')";
+        } else {
+            return "(".$key." = ". implode(" OR ".$key." = ", $values) . ")";
+        }
+    }
+
+
+    /**
+     * @param array $dutchByEnglishValues
+     * @param bool $isOnlyCapitalizeFirstLetterKey
+     * @param bool $isOnlyCapitalizeFirstLetterValue
+     * @return string
+     */
+    public static function createSqlValuesString($dutchByEnglishValues, $isOnlyCapitalizeFirstLetterKey = false, $isOnlyCapitalizeFirstLetterValue = true)
+    {
+        $valuesString = '';
+        $prefix = '';
+
+        foreach ($dutchByEnglishValues as $constant => $value)
+        {
+            $constant = $isOnlyCapitalizeFirstLetterKey ? ucfirst(strtolower($constant)) : $constant;
+            $value = $isOnlyCapitalizeFirstLetterValue ? ucfirst(strtolower($value)) : $value;
+
+            $valuesString = $valuesString . $prefix . "('" . $constant . "','" . $value ."')";
+            $prefix = ',';
+        }
+
+        return $valuesString;
+    }
+
+
 }

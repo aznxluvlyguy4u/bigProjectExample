@@ -12,6 +12,8 @@ class BreedCodeType
   const SW = "SW";
   const BM = "BM";
   const GP = "GP";
+  const FL = "FL";
+  const HD = "HD";
   const OV = "OV";
   const NN = "NN";
 }

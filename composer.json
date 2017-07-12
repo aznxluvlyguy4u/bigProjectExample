@@ -29,7 +29,7 @@
         "incenteev/composer-parameter-handler": "^2.0",
         "snc/redis-bundle": "2.x-dev",
         "predis/predis": "^1.0",
-        "jms/serializer-bundle": "^1.1",
+        "jms/serializer-bundle": "^1.5",
         "aws/aws-sdk-php-symfony": "^1.1",
         "nelmio/cors-bundle": "^1.4",
         "nelmio/api-doc-bundle": "^2.12",

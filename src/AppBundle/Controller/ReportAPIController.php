@@ -8,12 +8,15 @@ use AppBundle\Constant\Environment;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\WorkerTaskType;
 use AppBundle\Output\Output;
 use AppBundle\Report\InbreedingCoefficientReportData;
 use AppBundle\Report\LivestockReportData;
 use AppBundle\Report\PedigreeCertificates;
 use AppBundle\Report\ReportBase;
+use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\TwigOutputUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\InbreedingCoefficientInputValidator;
@@ -215,6 +218,51 @@ class ReportAPIController extends APIController {
 
     return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
   }
+
+
+    /**
+     * Generate pedigree register xls report by abbreviation in query parameter 'type'
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="Generate pedigree register xls report by abbreviation in query parameter 'type'"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate pedigree register xls report by abbreviation in query parameter 'type'"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/excel/pedigreeregister")
+     * @Method("POST")
+     */
+    public function getPedigreeRegisterOverview(Request $request)
+    {
+        $filePath = $this->getPedigreeRegisterReportService()->request($request, $this->getAuthenticatedEmployee($request));
+        if($filePath instanceof JsonResponse) { return $filePath; }
+
+        $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, true);
+
+        if($uploadToS3) {
+            $s3Service = $this->getStorageService();
+            $url = $s3Service->uploadFromFilePath(
+                $filePath,
+                $this->getPedigreeRegisterReportService()->getS3Key(),
+                $this->getPedigreeRegisterReportService()->getContentType()
+            );
+
+            FilesystemUtil::purgeFolder($this->getPedigreeRegisterReportService()->getCacheSubFolder());
+            return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+
+        }
+
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $filePath], 200);
+    }
 
 
   /**

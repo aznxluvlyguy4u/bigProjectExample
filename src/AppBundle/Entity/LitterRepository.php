@@ -95,24 +95,24 @@ class LitterRepository extends BaseRepository {
         $sql = "SELECT COUNT(*) as litter_count, SUM(born_alive_count) as total_born_alive_count,
                     SUM(stillborn_count) as total_stillborn_count, MIN(litter_date) as earliest_litter_date,
                     MAX(litter_date) as latest_litter_date 
-                FROM litter WHERE status <> 'REVOKED' AND animal_mother_id = ".$animalId." OR animal_father_id = ".$animalId;
+                FROM litter WHERE status <> 'REVOKED' AND (animal_mother_id = ".$animalId." OR animal_father_id = ".$animalId.")";
         $result = $this->getManager()->getConnection()->query($sql)->fetch();
         return $result == false ? null : $result;
     }
 
 
     /**
-     * @param $animalId
-     * @return mixed
+     * @param int $animalId
+     * @return array|null
      */
     public function getLitterData($animalId)
     {
         if(!is_int($animalId)) { return null; }
-        $sql = "SELECT l.litter_group, (stillborn_count + l.born_alive_count) as size, 
+        $sql = "SELECT (stillborn_count + l.born_alive_count) as size, 
                 CONCAT(stillborn_count + l.born_alive_count, '-ling') as n_ling 
                 FROM animal a
                   INNER JOIN litter l ON a.litter_id = l.id WHERE a.id = ".$animalId;
-        $result = $this->getManager()->getConnection()->query($sql)->fetch();
+        $result = $this->getConnection()->query($sql)->fetch();
         return $result == false ? null : $result;
     }
 

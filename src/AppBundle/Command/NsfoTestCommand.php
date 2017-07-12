@@ -28,6 +28,7 @@ class NsfoTestCommand extends ContainerAwareCommand
     const INPUT_PATH = '/path/to/file.txt';
     const OUTPUT_FOLDER_NAME = '/Resources/outputs/test';
     const FILENAME = 'test.csv';
+    const DEFAULT_OPTION = 0;
 
     const CREATE_TEST_FOLDER_IF_NULL = true;
 
@@ -45,6 +46,12 @@ class NsfoTestCommand extends ContainerAwareCommand
 
     /** @var AnimalRepository */
     private $animalRepository;
+
+    /** @var CommandUtil */
+    private $cmdUtil;
+
+    /** @var string */
+    private $databaseName;
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
@@ -69,33 +76,49 @@ class NsfoTestCommand extends ContainerAwareCommand
         $this->conn = $em->getConnection();
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
-        $cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->cmdUtil = new CommandUtil($input, $output, $helper);
         if(self::CREATE_TEST_FOLDER_IF_NULL) { NullChecker::createFolderPathIfNull($this->rootDir.self::OUTPUT_FOLDER_NAME); }
         $this->locationRepository = $em->getRepository(Location::class);
         $this->animalRepository = $em->getRepository(Animal::class);
-        
+        $this->databaseName = $this->conn->getDatabase();
+
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
-        $sql = "SELECT uln_country_code, uln_number FROM animal WHERE location_id = 262 AND gender = 'FEMALE'";
-        $results = $this->conn->query($sql)->fetchAll();
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '1: Custom test', "\n",
+            '2: Custom test', "\n",
+            'DEFAULT: Custom test', "\n"
+        ], self::DEFAULT_OPTION);
 
-        $string = '';
-        foreach ($results as $result) {
-            $string = $string.'{ "uln_country_code": "'.$result['uln_country_code'].'", "uln_number": "'.$result['uln_number'].'"},';
+        switch ($option) {
 
+            case 1:
+                //PLACEHOLDER
+                $this->customTest();
+                break;
+            case 2:
+                //PLACEHOLDER
+                $this->customTest();
+                break;
+            default:
+                $this->customTest();
+                break;
         }
+        $output->writeln('DONE');
 
-        $output->writeln(['',
-            '=== Print Something ===',
-            'Result 1: ',
-            'Result 2: ',
-            $string,
-            '']);
 
     }
 
+
+    private function customTest()
+    {
+        /*
+         * Insert your custom test here
+         */
+    }
 
 
     private function parseCSV() {

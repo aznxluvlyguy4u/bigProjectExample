@@ -107,10 +107,19 @@ class ReportLabel
     
     const MOTHER_ID = 'mother_id';
     const FATHER_ID = 'father_id';
+    const MOTHER = 'mother';
+    const FATHER = 'father';
+
+    const HETEROSIS = 'heterosis';
+    const RECOMBINATION = 'recombination';
     
     //Gender
     const FEMALE_SYMBOL = 'female_symbol';
     const MALE_SYMBOL = 'male_symbol';
     const MALE_AND_FEMALE_SYMBOL = 'male_and_female_symbol';
     const NEUTER_SYMBOL = 'neuter_symbol';
+
+    //Position
+    const START = 'START';
+    const END = 'END';
 }

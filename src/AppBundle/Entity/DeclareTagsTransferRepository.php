@@ -84,7 +84,7 @@ class DeclareTagsTransferRepository extends BaseRepository {
    * @param Location $location
    * @param string $ulnCountryCode
    * @param string $ulnNumber
-   * @return bool|null
+   * @return array
    */
   public function validateTag(Client $client, Location $location, $ulnCountryCode, $ulnNumber)
   {

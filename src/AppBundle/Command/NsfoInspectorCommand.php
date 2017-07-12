@@ -23,6 +23,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
     CONST NAME_CORRECTIONS = 'finder_name_corrections';
     CONST NEW_NAMES = 'finder_name_new';
     CONST AUTHORIZE_TEXELAAR = 'finder_authorize_texelaar';
+    CONST AUTHORIZE_BDM = 'finder_authorize_bdm';
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
@@ -30,6 +31,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
         'finder_name_corrections' => 'inspector_name_corrections.csv',
         'finder_name_new' => 'inspector_new_names.csv',
         'finder_authorize_texelaar' => 'authorize_inspectors_texelaar.csv',
+        'finder_authorize_bdm' => 'authorize_inspectors_bdm.csv',
         'ignoreFirstLine' => true
     );
 
@@ -74,6 +76,9 @@ class NsfoInspectorCommand extends ContainerAwareCommand
             '2: Add missing inspectors', "\n",
             '3: Fix duplicate inspectors', "\n",
             '4: Authorize inspectors', "\n",
+            '5: Set and Remove isAuthorizedNsfoInspector status by NTS authorization', "\n",
+            '   (inspectors with updated isAuthorizedNsfoInspector will have inspectorCode set to NULL)', "\n",
+            '6: Generate inspectorCodes, if null', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -99,10 +104,20 @@ class NsfoInspectorCommand extends ContainerAwareCommand
                 break;
 
             case 4:
-                $csv = $this->parseCSV(self::AUTHORIZE_TEXELAAR);
-                $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
-                InspectorMigrator::authorizeInspectorsForExteriorMeasurementsTexelaar($this->em, $this->cmdUtil, $csv, $admin);
+                $this->authorizeTexelaarInspectors();
+                $this->authorizeBdmInspectors();
                 $output->writeln('DONE');
+                break;
+
+            case 5:
+                $updateCount = InspectorMigrator::setIsAuthorizedNsfoInspectorByNTSAuthorization($this->conn, $this->cmdUtil);
+                $output->writeln('DONE');
+                break;
+
+            case 6:
+                $updateCount = InspectorMigrator::generateInspectorCodes($this->conn);
+                $result = $updateCount == 0 ? 'No new inspectorCodes added' : $updateCount.' new inspectorCodes added!' ;
+                $output->writeln($result);
                 break;
 
             default:
@@ -111,6 +126,23 @@ class NsfoInspectorCommand extends ContainerAwareCommand
         }
 
     }
+
+
+    private function authorizeTexelaarInspectors()
+    {
+        $csv = $this->parseCSV(self::AUTHORIZE_TEXELAAR);
+        $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
+        InspectorMigrator::authorizeInspectorsForExteriorMeasurementsTexelaar($this->em, $this->cmdUtil, $csv, $admin);
+    }
+
+
+    private function authorizeBdmInspectors()
+    {
+        $csv = $this->parseCSV(self::AUTHORIZE_BDM);
+        $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
+        InspectorMigrator::authorizeInspectorsForExteriorMeasurementsBdm($this->em, $this->cmdUtil, $csv, $admin);
+    }
+
 
 
     /**

@@ -9,15 +9,22 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\BreedValue;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareBirthRepository;
 use AppBundle\Entity\DeclareBirthResponse;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
 use AppBundle\Entity\MateRepository;
+use AppBundle\Entity\Message;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
@@ -373,6 +380,55 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 foreach ($genderHistories as $genderHistory) {
                     $manager->remove($genderHistory);
                 }
+
+
+                //Remove REVOKED declare losses, exports and departs
+                foreach ([$child->getDeaths(), $child->getDepartures(), $child->getExports(), $child->getArrivals()] as $declaresToRemove) {
+                    /** @var DeclareLoss|DeclareDepart|DeclareExport $declareToRemove */
+                    foreach($declaresToRemove as $declareToRemove) {
+                        if($declareToRemove->getRequestState() === RequestStateType::REVOKED || $declareToRemove->getRequestState() === RequestStateType::FAILED) {
+
+                            foreach ($declareToRemove->getResponses() as $response) {
+                                $manager->remove($response);
+                            }
+
+                            if($declareToRemove instanceof DeclareDepart || $declaresToRemove instanceof DeclareArrival) {
+                                $message = $manager->getRepository(Message::class)->findOneBy(['requestMessage'=>$declareToRemove]);
+                                $manager->remove($message);
+                            }
+
+                            $manager->remove($declareToRemove);
+
+                        } else {
+
+                            $declareType = 'melding';
+                            if($declareToRemove instanceof DeclareLoss) {
+                                $declareType = 'sterftemelding';
+                            } elseif($declareToRemove instanceof DeclareArrival) {
+                                $declareType = 'aanvoermelding';
+                            } elseif($declareToRemove instanceof DeclareDepart) {
+                                $declareType = 'afvoermelding';
+                            } elseif($declareToRemove instanceof DeclareExport) {
+                                $declareType = 'exportmelding';
+                            }
+
+                            return Validator::createJsonResponse('Er bestaat nog een '.$declareType.' die niet is ingetrokken voor dit dier op ubn: '.$declareToRemove->getUbn(), $statusCode);
+                        }
+                    }
+                }
+
+
+                if($child->getLatestBreedGrades()) {
+                    $manager->remove($child->getLatestBreedGrades());
+                }
+
+
+                $breedValueRepository = $manager->getRepository(BreedValue::class);
+                $breedValues = $breedValueRepository->findBy(['animal'=>$child]);
+                foreach ($breedValues as $breedValue) {
+                    $manager->remove($breedValue);
+                }
+
 
                 //Flush the removes separately
                 $manager->flush();

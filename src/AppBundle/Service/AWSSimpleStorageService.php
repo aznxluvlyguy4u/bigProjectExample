@@ -4,8 +4,9 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Constant\Environment;
+use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
-use  Aws\Credentials\Credentials;
+use Aws\Credentials\Credentials;
 
 class AWSSimpleStorageService
 {
@@ -60,10 +61,10 @@ class AWSSimpleStorageService
          */
         switch($currentEnvironment) {
             case Environment::PROD:
-                $this->pathApppendage = "";
+                $this->pathApppendage = "production/";
                 break;
             case Environment::STAGE:
-                $this->pathApppendage = 'stage/';
+                $this->pathApppendage = 'staging/';
                 break;
             case Environment::DEV:
                 $this->pathApppendage = 'dev/';
@@ -158,4 +159,57 @@ class AWSSimpleStorageService
     {
         return $this->upload(file_get_contents($filepath), $key, $contentType);
     }
+
+
+    /**
+     * Download a file from the S3 Bucket specified by the filepath,
+     * and return the download file.
+     *
+     * @param $filepath
+     * @return \Aws\Result|S3Exception|\Exception
+     */
+    public function downloadFile($filepath) {
+        $result = null;
+        $key = $this->pathApppendage . $filepath;
+        // Get the object
+        $result = $this->getS3Client()->getObject(array(
+            'Bucket' => $this->bucket,
+            'Key'    => $key
+        ));
+
+        return $result;
+    }
+
+
+    /**
+     * Download a file from the S3 Bucket specified by the filepath,
+     * and return the downloaded file contents.
+     *
+     * @param $filepath
+     * @return mixed
+     */
+    public function downloadFileContents($filepath) {
+        $result = $this->downloadFile($filepath);
+        $stream = $result['Body'];
+        return $stream->getContents();
+    }
+
+    /**
+     * @return string
+     */
+    public function getBucket()
+    {
+        return $this->bucket;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPathApppendage()
+    {
+        return $this->pathApppendage;
+    }
+
+
+
 }

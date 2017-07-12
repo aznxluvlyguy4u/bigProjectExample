@@ -94,6 +94,38 @@ class AnimalResidence
     private $country;
 
     /**
+     * @var EditType
+     * @ORM\ManyToOne(targetEntity="EditType")
+     * @ORM\JoinColumn(name="start_date_edit_type", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\EditType")
+     * @Expose
+     */
+    private $startDateEditType;
+
+    /**
+     * @var EditType
+     * @ORM\ManyToOne(targetEntity="EditType")
+     * @ORM\JoinColumn(name="end_date_edit_type", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\EditType")
+     * @Expose
+     */
+    private $endDateEditType;
+
+    /**
+     * @var Person
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="start_date_edited_by", referencedColumnName="id")
+     */
+    private $startDateEditedBy;
+
+    /**
+     * @var Person
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="end_date_edited_by", referencedColumnName="id")
+     */
+    private $endDateEditedBy;
+
+    /**
      * AnimalResidence constructor.
      */
     public function __construct($country = CountryEnumerator::NL, $isPending = true)
@@ -243,7 +275,69 @@ class AnimalResidence
         $this->logDate = $logDate;
     }
 
+    /**
+     * @return EditType
+     */
+    public function getStartDateEditType()
+    {
+        return $this->startDateEditType;
+    }
 
+    /**
+     * @param EditType $startDateEditType
+     */
+    public function setStartDateEditType($startDateEditType)
+    {
+        $this->startDateEditType = $startDateEditType;
+    }
+
+    /**
+     * @return EditType
+     */
+    public function getEndDateEditType()
+    {
+        return $this->endDateEditType;
+    }
+
+    /**
+     * @param EditType $endDateEditType
+     */
+    public function setEndDateEditType($endDateEditType)
+    {
+        $this->endDateEditType = $endDateEditType;
+    }
+
+    /**
+     * @return Person
+     */
+    public function getStartDateEditedBy()
+    {
+        return $this->startDateEditedBy;
+    }
+
+    /**
+     * @param Person $startDateEditedBy
+     */
+    public function setStartDateEditedBy($startDateEditedBy)
+    {
+        $this->startDateEditedBy = $startDateEditedBy;
+    }
+
+    /**
+     * @return Person
+     */
+    public function getEndDateEditedBy()
+    {
+        return $this->endDateEditedBy;
+    }
+
+    /**
+     * @param Person $endDateEditedBy
+     */
+    public function setEndDateEditedBy($endDateEditedBy)
+    {
+        $this->endDateEditedBy = $endDateEditedBy;
+    }
 
 
 

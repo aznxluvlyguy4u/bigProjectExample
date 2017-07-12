@@ -3,8 +3,15 @@
 namespace AppBundle\Command;
 
 use AppBundle\Cache\AnimalCacher;
+use AppBundle\Cache\ExteriorCacher;
+use AppBundle\Cache\GeneDiversityUpdater;
+use AppBundle\Cache\NLingCacher;
+use AppBundle\Cache\ProductionCacher;
+use AppBundle\Cache\TailLengthCacher;
+use AppBundle\Cache\WeightCacher;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\LitterUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -57,11 +64,25 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '5: Regenerate all AnimalCache records older than given stringDateTime (YYYY-MM-DD HH:MM:SS)', "\n",
             '6: Generate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '7: Regenerate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
-            '8: Delete duplicate records', "\n",
+            '8: Delete duplicate records', "\n\n",
             '--- Sql Batch Queries ---', "\n",
             '20: BatchUpdate all incongruent production values and n-ling values', "\n",
             '21: BatchUpdate all Incongruent exterior values', "\n",
             '22: BatchUpdate all Incongruent weight values', "\n",
+            '23: BatchUpdate all Incongruent tailLength values', "\n\n",
+            '--- Non AnimalCache Sql Batch Queries ---   ', "\n",
+            '30: BatchUpdate heterosis and recombination values, non-updated only', "\n",
+            '31: BatchUpdate heterosis and recombination values, regenerate all', "\n\n",
+            '32: BatchUpdate match Mates and Litters, non-updated only', "\n",
+            '33: BatchUpdate match Mates and Litters, regenerate all', "\n",
+            '34: BatchUpdate remove Mates from REVOKED Litters', "\n",
+            '35: BatchUpdate count Mates and Litters to be matched', "\n\n",
+            '36: BatchUpdate suckleCount in Litters, update all incongruous values', "\n",
+            '37: BatchUpdate remove suckleCount from REVOKED Litters', "\n\n",
+            '38: BatchUpdate litterOrdinals in Litters, update all incongruous values', "\n",
+            '39: BatchUpdate remove litterOrdinals from REVOKED Litters', "\n\n",
+            '40: BatchUpdate gestationPeriods in Litters, update all incongruous values (incl. revoked litters and mates)', "\n",
+            '41: BatchUpdate birthIntervals in Litters, update all incongruous values (incl. revoked litters and mates NOTE! Update litterOrdinals first!)', "\n\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -112,55 +133,82 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $output->writeln('DONE!');
                 break;
 
-            case 9:
+            case 20:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update production and n-ling cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
                     $output->writeln('Updating all records...');
-                    $productionValuesUpdated = AnimalCacher::updateAllProductionValues($this->conn);
-                    $nLingValuesUpdated = AnimalCacher::updateAllNLingValues($this->conn);
+                    $productionValuesUpdated = ProductionCacher::updateAllProductionValues($this->conn);
+                    $nLingValuesUpdated = NLingCacher::updateAllNLingValues($this->conn);
                 } else {
                     do{
                         $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
                     } while (!ctype_digit($animalId) && !is_int($animalId));
-                    $productionValuesUpdated = AnimalCacher::updateProductionValues($this->conn, [$animalId]);
-                    $nLingValuesUpdated = AnimalCacher::updateNLingValues($this->conn, [$animalId]);
+                    $productionValuesUpdated = ProductionCacher::updateProductionValues($this->conn, [$animalId]);
+                    $nLingValuesUpdated = NLingCacher::updateNLingValues($this->conn, [$animalId]);
                 }
                 $this->cmdUtil->writeln($productionValuesUpdated.' production values updated');
                 $this->cmdUtil->writeln($nLingValuesUpdated.' n-ling values updated');
                 break;
 
             
-            case 10:
+            case 21:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update exterior cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
                     $output->writeln('Updating all records...');
-                    $updateCount = AnimalCacher::updateAllExteriors($this->conn);
+                    $updateCount = ExteriorCacher::updateAllExteriors($this->conn);
                 } else {
                     do{
                         $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
                     } while (!ctype_digit($animalId) && !is_int($animalId));
 
-                    $updateCount = AnimalCacher::updateExteriors($this->conn, [$animalId]);
+                    $updateCount = ExteriorCacher::updateExteriors($this->conn, [$animalId]);
                 }
                 $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;
 
 
-            case 11:
+            case 22:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update weight cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
                     $output->writeln('Updating all records...');
-                    $updateCount = AnimalCacher::updateAllWeights($this->conn);
+                    $updateCount = WeightCacher::updateAllWeights($this->conn);
                 } else {
                     do{
                         $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
                     } while (!ctype_digit($animalId) && !is_int($animalId));
 
-                    $updateCount = AnimalCacher::updateWeights($this->conn, [$animalId]);
+                    $updateCount = WeightCacher::updateWeights($this->conn, [$animalId]);
                 }
                 $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;
 
+            case 23:
+                $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update tailLength cache values of all animals? (y/n, default = no)');
+                if($updateAll) {
+                    $output->writeln('Updating all records...');
+                    $updateCount = TailLengthCacher::updateAll($this->conn);
+                } else {
+                    do{
+                        $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
+                    } while (!ctype_digit($animalId) && !is_int($animalId));
+
+                    $updateCount = TailLengthCacher::update($this->conn, [$animalId]);
+                }
+                $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
+                break;
+
+            case 30: GeneDiversityUpdater::updateAll($this->conn, false, $this->cmdUtil); break;
+            case 31: GeneDiversityUpdater::updateAll($this->conn, true, $this->cmdUtil); break;
+            case 32: $output->writeln(LitterUtil::matchMatchingMates($this->conn, false).' \'mate-litter\'s matched'); break;
+            case 33: $output->writeln(LitterUtil::matchMatchingMates($this->conn, true).' \'mate-litter\'s matched'); break;
+            case 34: $output->writeln(LitterUtil::removeMatesFromRevokedLitters($this->conn).' \'mate-litter\'s unmatched'); break;
+            case 35: $output->writeln(LitterUtil::countToBeMatchedLitters($this->conn).' \'mate-litter\'s to be matched'); break;
+            case 36: $output->writeln(LitterUtil::updateSuckleCount($this->conn).' suckleCounts updated'); break;
+            case 37: $output->writeln(LitterUtil::removeSuckleCountFromRevokedLitters($this->conn).' suckleCounts removed from revoked litters'); break;
+            case 38: $output->writeln(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated'); break;
+            case 39: $output->writeln(LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn).' litterOrdinals removed from revoked litters'); break;
+            case 40: $output->writeln(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated'); break;
+            case 41: $output->writeln(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated'); break;
 
             default:
                 $output->writeln('ABORTED');
