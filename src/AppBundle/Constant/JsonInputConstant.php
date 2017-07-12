@@ -17,6 +17,7 @@ class JsonInputConstant
     const IS_ALIVE = 'is_alive';
     const ANIMAL = 'animal';
     const ANIMAL_ID = 'animal_id';
+    const BIRTH_PROGRESS = 'birth_progress';
     const RAM = 'ram';
     const EWE = 'ewe';
     const NEUTER = 'neuter';
@@ -28,15 +29,21 @@ class JsonInputConstant
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
     const PEDIGREE_NUMBER = 'pedigree_number';
     const DATE_OF_BIRTH = 'date_of_birth';
+    const UBN_OF_BIRTH = 'ubn_of_birth';
     const GENDER = 'gender';
     const IS_REVEAL_HISTORIC_ANIMALS = 'is_reveal_historic_animals';
     const IS_HISTORIC_ANIMAL = 'is_historic_animal';
     const IS_PUBLIC = 'is_public';
     const ULN = 'uln';
+    const ULN_FATHER = 'uln_mother';
+    const ULN_MOTHER = 'uln_father';
+    const MOTHER_ID = 'mother_id';
+    const FATHER_ID = 'father_id';
     const STN = 'stn';
     const SCRAPIE_GENOTYPE = 'scrapie_genotype';
     const BREED = 'breed';
     const BREED_CODE = 'breed_code';
+    const BREED_CODE_MOTHER = 'breed_code_mother';
     const BREED_TYPE = 'breed_type';
     const BLINDNESS_FACTOR = 'blindness_factor';
     const PREDICATE = 'predicate';
@@ -46,6 +53,15 @@ class JsonInputConstant
     const ANIMAL_TYPE = 'animal_type';
     const NICKNAME = 'nickname';
     const ANIMAL_RESIDENCE_HISTORY = 'animal_residence_history';
+    const HETEROSIS = 'heterosis';
+    const RECOMBINATION = 'recombination';
+    const HETEROSIS_LAMB = 'heterosis_lamb';
+    const RECOMBINATION_LAMB = 'recombination_lamb';
+    const AGE = 'age';
+    const PARENT_IDS = 'parent_ids';
+    const PARENT_TYPES = 'parent_types';
+    const EXCLUDE_MOTHER = 'exclude_mother';
+    const EXCLUDE_FATHER = 'exclude_father';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -150,6 +166,8 @@ class JsonInputConstant
 
     //Persons
     const PERSON_ID = 'person_id';
+    const INSPECTOR_CODE = 'inspector_code';
+    const LINEAR_INSPECTOR_CODE = 'linear_inspector_code';
 
     //Measurements
     const MEASUREMENT_ID = 'measurement_id';
@@ -161,11 +179,13 @@ class JsonInputConstant
     const INSPECTOR_ID = 'inspector_id';
     const INSPECTOR_FIRST_NAME = 'inspector_first_name';
     const INSPECTOR_LAST_NAME = 'inspector_last_name';
+    const YEAR_AND_UBN_OF_BIRTH = 'year_and_ubn_of_birth';
 
     //Weight measurements
     const WEIGHT_MEASUREMENTS = 'weight_measurements';
     const WEIGHT = 'weight';
     const IS_BIRTH_WEIGHT = 'is_birth_weight';
+    const BIRTH_WEIGHT = 'birth_weight';
     const IS_VALID_20WEEK_WEIGHT_MEASUREMENT = 'is_valid_20_week_weight_measurement';
     const IS_REVOKED = 'is_revoked';
 
@@ -196,10 +216,14 @@ class JsonInputConstant
 
     //TailLength
     const LENGTH = 'length';
+    const TAIL_LENGTH = 'tail_length';
 
     //Litter
+    const BIRTH_INTERVAL = 'birth_interval';
+    const GESTATION_PERIOD = 'gestation_period';
     const SIZE = 'size';
     const N_LING = 'n_ling';
+    const SUCKLE_COUNT = 'suckle_count';
     const LITTER_GROUP = 'litter_group';
     const LITTER_COUNT = 'litter_count';
     const TOTAL_BORN_ALIVE_COUNT = 'total_born_alive_count';
@@ -207,6 +231,7 @@ class JsonInputConstant
     const EARLIEST_LITTER_DATE = 'earliest_litter_date';
     const LATEST_LITTER_DATE = 'latest_litter_date';
     const PRODUCTION = 'production';
+    const GAVE_BIRTH_AS_ONE_YEAR_OLD = 'gave_birth_as_one_year_old';
 
     //BreedValues
     const BREED_VALUE_LITTER_SIZE = "breed_value_litter_size";
@@ -218,4 +243,14 @@ class JsonInputConstant
 
     //PedigreeRegisters
     const INCLUDE_NON_NSFO_REGISTERS = "include_non_nsfo_registers";
+
+    //MiXBLUP
+    const PERM_MIL = 'perm_mil';
+    const RELANI_1 = 'relani_1';
+    const RELANI_2 = 'relani_2';
+    const RELANI_3 = 'relani_3';
+    const SOLANI_1 = 'solani_1';
+    const SOLANI_2 = 'solani_2';
+    const SOLANI_3 = 'solani_3';
+
 }

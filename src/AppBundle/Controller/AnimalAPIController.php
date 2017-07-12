@@ -550,7 +550,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     if(RequestUtil::getBooleanQuery($request, JsonInputConstant::IS_DUTCH)) {
       $output = BreedType::getAllInDutch();
     } else {
-      $output = BreedType::getAll();
+      $output = BreedType::getConstants();
     }
     return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
   }

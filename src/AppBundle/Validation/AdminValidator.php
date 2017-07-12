@@ -130,4 +130,16 @@ class AdminValidator
 
         return $validationResults;
     }
+
+
+    /**
+     * @return string
+     */
+    public static function getStandardErrorResponse()
+    {
+        $code = self::ERROR_CODE;
+        $message = 'UNAUTHORIZED';
+
+        return new JsonResponse(['code'=>$code, "message" => $message], $code);
+    }
 }

@@ -5,6 +5,7 @@ namespace AppBundle\Component;
 
 
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
@@ -24,6 +25,7 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 
 class AnimalDetailsUpdater
 {
@@ -36,6 +38,9 @@ class AnimalDetailsUpdater
     public static function update(ObjectManager $em, $animal, Collection $content)
     {
         if(!($animal instanceof Animal)){ return $animal; }
+
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
 
         //Keep track if any changes were made
         $anyValueWasUpdated = false;
@@ -61,6 +66,13 @@ class AnimalDetailsUpdater
         if($anyValueWasUpdated) {
             $em->persist($animal);
             $em->flush();
+        }
+
+        //TODO if breedCode was updated toggle $isBreedCodeUpdated boolean to true
+        $isBreedCodeUpdated = false;
+        if($isBreedCodeUpdated) {
+            //Update heterosis and recombination values of parent and children if breedCode of parent was changed
+            GeneDiversityUpdater::updateByParentId($conn, $animal->getId());
         }
 
         return $animal;

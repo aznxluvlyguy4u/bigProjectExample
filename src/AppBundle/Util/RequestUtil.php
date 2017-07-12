@@ -56,8 +56,8 @@ class RequestUtil
         if($queryValue == null) {
             return $nullResult;
         } else {
-            if(!TimeUtil::isFormatDDMMYYYY($queryValue)) {
-                if (!TimeUtil::isFormatYYYYMMDD($queryValue)) {
+            if(!DateUtil::isFormatDDMMYYYY($queryValue)) {
+                if (!DateUtil::isFormatYYYYMMDD($queryValue)) {
                     return $nullResult;
                 }
             }

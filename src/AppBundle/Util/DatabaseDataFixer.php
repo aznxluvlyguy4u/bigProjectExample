@@ -6,6 +6,7 @@ namespace AppBundle\Util;
 
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class DatabaseDataFixer
 {
@@ -93,5 +94,98 @@ class DatabaseDataFixer
         $sql = "UPDATE animal SET animal_order_number = '".$newAnimalOrderNumber."'
                 WHERE id = ".$animalId;
         $conn->exec($sql);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|OutputInterface $output
+     * @return int
+     */
+    public static function recursivelyFillMissingBreedCodesHavingBothParentBreedCodes(Connection $conn, $output)
+    {
+        $totalUpdateCount = 0;
+        $iteration = 0;
+
+        $output->writeln('Fixing breedCodes');
+        
+        do {
+            $iterationUpdateCount = self::fillMissingBreedCodesHavingBothParentBreedCodes($conn);
+            $totalUpdateCount += $iterationUpdateCount;
+
+            if($iterationUpdateCount > 0 && $totalUpdateCount > 0) {
+                $output->writeln('iteration ' . ++$iteration . ' updateCount: '. $iterationUpdateCount);
+            }
+
+        } while($iterationUpdateCount > 0);
+
+        $prefix = $totalUpdateCount > 0 ? $totalUpdateCount : 'NO';
+        $output->writeln('In total ' . $prefix . ' breedCodes were updated');
+
+        return $totalUpdateCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function fillMissingBreedCodesHavingBothParentBreedCodes(Connection $conn)
+    {
+        $sql = "UPDATE animal SET breed_code = v.new_breed_code
+                FROM (
+                  SELECT c.id as animal_id, c.breed_code as old_breed_code, mom.breed_code as new_breed_code
+                  FROM animal c
+                    INNER JOIN animal mom ON mom.id = c.parent_mother_id
+                    INNER JOIN animal dad ON dad.id = c.parent_father_id
+                  WHERE mom.breed_code = dad.breed_code AND c.breed_code ISNULL
+                  UNION
+                  SELECT c.id as animal_id, c.breed_code as old_breed_code, mom.breed_code as new_breed_code
+                  FROM animal c
+                    INNER JOIN animal mom ON mom.id = c.parent_mother_id
+                    INNER JOIN animal dad ON dad.id = c.parent_father_id
+                  WHERE mom.breed_code = dad.breed_code AND c.breed_code <> dad.breed_code
+                        AND length(mom.breed_code) = 5 AND length(c.breed_code) > 5
+                ) as v(animal_id, old_breed_code, new_breed_code)
+                WHERE animal.id = v.animal_id";
+        $sqlBatchUpdateCount = SqlUtil::updateWithCount($conn, $sql);
+
+        $sql = "SELECT c.id as animal_id, mom.breed_code as mom_breed_code, dad.breed_code as dad_breed_code
+                FROM animal c
+                  INNER JOIN animal mom ON mom.id = c.parent_mother_id
+                  INNER JOIN animal dad ON dad.id = c.parent_father_id
+                WHERE mom.breed_code NOTNULL AND dad.breed_code NOTNULL AND c.breed_code ISNULL";
+        $results = $conn->query($sql)->fetchAll();
+
+        $updateString = '';
+        $prefix = '';
+        $toUpdateCount = 0;
+        $loopCounter = 0;
+
+
+        $nullResponse = null;
+        foreach ($results as $result) {
+            $animalId = $result['animal_id'];
+            $motherBreedCodeString = $result['mom_breed_code'];
+            $fatherBreedCodeString = $result['dad_breed_code'];
+            $newChildBreedCode = BreedCodeUtil::calculateBreedCodeFromParentBreedCodes($fatherBreedCodeString, $motherBreedCodeString, $nullResponse);
+
+            if($newChildBreedCode !== $nullResponse) {
+                $updateString = $updateString . $prefix . "(" . $newChildBreedCode . "," . $animalId . ')';
+                $prefix = ',';
+                $toUpdateCount++;
+            }
+            $loopCounter++;
+        }
+
+        $stringFormattedBatchUpdateCount = 0;
+        if($updateString !== '') {
+            $sql = "UPDATE animal SET breed_code = c.new_breed_code
+				FROM (VALUES " . $updateString . ") as c(new_breed_code, animal_id)
+				WHERE c.animal_id = animal.id ";
+            $stringFormattedBatchUpdateCount = SqlUtil::updateWithCount($conn, $sql);
+        }
+
+        return $sqlBatchUpdateCount + $stringFormattedBatchUpdateCount;
     }
 }

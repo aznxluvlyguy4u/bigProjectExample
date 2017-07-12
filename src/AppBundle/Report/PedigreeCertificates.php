@@ -33,7 +33,6 @@ class PedigreeCertificates extends ReportBase
 
     /** @var array */
     private $reports;
-
     /** @var int */
     private $animalCount;
 
@@ -56,12 +55,6 @@ class PedigreeCertificates extends ReportBase
         $animalIds = self::getAnimalsInContentArray($em, $content);
         $this->animalCount = 0;
 
-        /** @var GeneticBaseRepository $geneticBaseRepository */
-        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
-
-        $breedValuesYear = $geneticBaseRepository->getLatestYear();
-        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
-
         if($client == null && $location == null) { //user is admin
             $companyName = null;
             $trimmedCompanyName = null;
@@ -75,7 +68,7 @@ class PedigreeCertificates extends ReportBase
         }
 
         foreach ($animalIds as $animalId) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedCompanyName, $companyAddress);
+            $pedigreeCertificate = new PedigreeCertificate($em, $ubn, $animalId, $trimmedCompanyName, $companyAddress);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 

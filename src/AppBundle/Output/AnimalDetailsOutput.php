@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\Constant;
@@ -210,7 +211,7 @@ class AnimalDetailsOutput
             $correctedBreedValues = $breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animal->getId(), $year, $geneticBases);
 
             $growthAccuracy = $correctedBreedValues[BreedValueLabel::GROWTH_ACCURACY];
-            if($growthAccuracy >= BreedValueUtil::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
+            if($growthAccuracy >= BreedFormat::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
                 $growth = $correctedBreedValues[BreedValueLabel::GROWTH];
             } else {
                 $growth = 0;
@@ -218,7 +219,7 @@ class AnimalDetailsOutput
             }
 
             $fatAccuracy = $correctedBreedValues[BreedValueLabel::FAT_ACCURACY];
-            if($fatAccuracy >= BreedValueUtil::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
+            if($fatAccuracy >= BreedFormat::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
                 $fat = $correctedBreedValues[BreedValueLabel::FAT];
             } else {
                 $fat = 0;
@@ -226,7 +227,7 @@ class AnimalDetailsOutput
             }
 
             $muscleThicknessAccuracy = $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS_ACCURACY];
-            if($muscleThicknessAccuracy >= BreedValueUtil::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
+            if($muscleThicknessAccuracy >= BreedFormat::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
                 $muscleThickness = $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
             } else {
                 $muscleThickness = 0;
@@ -234,7 +235,7 @@ class AnimalDetailsOutput
             }
 
             $lambMeatIndexAccuracy = $correctedBreedValues[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY];
-            if($lambMeatIndexAccuracy >= BreedValueUtil::MIN_LAMB_MEAT_INDEX_ACCURACY) {
+            if($lambMeatIndexAccuracy >= BreedFormat::MIN_LAMB_MEAT_INDEX_ACCURACY) {
                 $lambMeatIndex = $correctedBreedValues[BreedValueLabel::LAMB_MEAT_INDEX];
             } else {
                 $lambMeatIndex = 0;

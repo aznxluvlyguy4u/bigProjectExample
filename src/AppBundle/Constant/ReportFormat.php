@@ -13,6 +13,7 @@ class ReportFormat
     const GROWTH_DISPLAY_FACTOR = 1000;         //1000 = mg/day , 1 = kg/day
     const FAT_DISPLAY_FACTOR = 1;               //1 = mm
     const MUSCLE_THICKNESS_DISPLAY_FACTOR = 1;  //1 = mm
+    const DEFAULT_DISPLAY_FACTOR = 1;
     
     const STAR_SCORE_5_MIN_PERCENTAGE = 90;
     const STAR_SCORE_4_AND_HALF_MIN_PERCENTAGE = 80;
