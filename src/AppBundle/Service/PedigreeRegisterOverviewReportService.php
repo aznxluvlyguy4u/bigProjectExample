@@ -166,7 +166,7 @@ class PedigreeRegisterOverviewReportService
                          ),'/') as FW10_staartlen,
                   NULLIF(CONCAT(dad.pedigree_country_code, dad.pedigree_number),'') as stamboeknummer_vader,
                   NULLIF(CONCAT(mom.pedigree_country_code, mom.pedigree_number),'') as stamboeknummer_moeder,
-                  loc.ubn,
+                  ubn_alive.ubn as huidig_ubn,
                   NULLIF(o.first_name,'') as voornaam_eigenaar,
                   NULLIF(o.last_name,'') as achternaam_eigenaar,
                   address.street_name as straat,
@@ -178,6 +178,11 @@ class PedigreeRegisterOverviewReportService
                   o.email_address as emailadres,
                   NULLIF(o.cellphone_number,'') as mobiel_nummer
                 FROM animal a
+                  LEFT JOIN (
+                                SELECT a.id as animal_id, l.ubn FROM animal a
+                                  INNER JOIN location l ON l.id = a.location_id
+                                  WHERE a.is_alive
+                              )ubn_alive ON ubn_alive.animal_id = a.id
                   LEFT JOIN pedigree_register p ON a.pedigree_register_id = p.id
                   LEFT JOIN litter l ON l.id = a.litter_id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
@@ -268,7 +273,7 @@ class PedigreeRegisterOverviewReportService
                   address_breeder.country as land_fokker,
                   breeder.email_address as emailadres_fokker,
                   NULLIF(breeder.cellphone_number,'') as mobiel_nummer_fokker,
-                  loc.ubn as huidig_ubn,
+                  ubn_alive.ubn as huidig_ubn,
                   NULLIF(o.first_name,'') as voornaam_eigenaar,
                   NULLIF(o.last_name,'') as achternaam_eigenaar,
                   address.street_name as straat_eigenaar,
@@ -280,6 +285,11 @@ class PedigreeRegisterOverviewReportService
                   o.email_address as emailadres_eigenaar,
                   NULLIF(o.cellphone_number,'') as mobiel_nummer_eigenaar
                 FROM animal a
+                  LEFT JOIN (
+                                SELECT a.id as animal_id, l.ubn FROM animal a
+                                  INNER JOIN location l ON l.id = a.location_id
+                                  WHERE a.is_alive
+                              )ubn_alive ON ubn_alive.animal_id = a.id
                   LEFT JOIN pedigree_register p ON a.pedigree_register_id = p.id
                   LEFT JOIN litter l ON l.id = a.litter_id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
