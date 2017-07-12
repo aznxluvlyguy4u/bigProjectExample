@@ -386,7 +386,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 foreach ([$child->getDeaths(), $child->getDepartures(), $child->getExports(), $child->getArrivals()] as $declaresToRemove) {
                     /** @var DeclareLoss|DeclareDepart|DeclareExport $declareToRemove */
                     foreach($declaresToRemove as $declareToRemove) {
-                        if($declareToRemove->getRequestState() === RequestStateType::REVOKED) {
+                        if($declareToRemove->getRequestState() === RequestStateType::REVOKED || $declareToRemove->getRequestState() === RequestStateType::FAILED) {
 
                             foreach ($declareToRemove->getResponses() as $response) {
                                 $manager->remove($response);
