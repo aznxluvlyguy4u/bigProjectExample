@@ -548,4 +548,65 @@ class DatabaseDataFixer
         $cmdUtil->writeln($countPrefix.' animal is_alive states fixed');
         return $updateCount;
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public static function removeDuplicateAnimalResidencesWithEndDateIsNull(Connection $conn, $cmdUtil)
+    {
+        $cmdUtil->writeln('Delete duplicate animal_residences with endDate ISNULL');
+        $cmdUtil->writeln('and keep the one with the lowest startDate and after that the lowest id');
+
+        $sql = "DELETE FROM animal_residence
+                WHERE id IN (                
+                  SELECT r.id
+                  FROM animal_residence r
+                    INNER JOIN (
+                                 SELECT
+                                   min(r.id) AS min_id,
+                                   r.start_date,
+                                   r.animal_id,
+                                   r.location_id
+                                 FROM animal_residence r
+                                   INNER JOIN (
+                                                SELECT
+                                                  min_start_date,
+                                                  g.animal_id,
+                                                  g.location_id
+                                                FROM animal_residence r
+                                                  INNER JOIN (
+                                                               SELECT
+                                                                 animal_id,
+                                                                 location_id,
+                                                                 min(start_date) AS min_start_date
+                                                               FROM animal_residence
+                                                               WHERE end_date ISNULL
+                                                               GROUP BY animal_id, location_id
+                                                               HAVING COUNT(*) > 1
+                                                             ) g ON g.animal_id = r.animal_id AND g.location_id = r.location_id
+                                                WHERE end_date ISNULL
+                                              ) g
+                                     ON g.min_start_date = r.start_date AND g.animal_id = r.animal_id AND g.location_id = r.location_id
+                                 WHERE end_date ISNULL
+                                 GROUP BY start_date, r.animal_id, r.location_id
+                               ) g ON r.start_date = g.start_date AND r.animal_id = g.animal_id AND r.location_id = g.location_id
+                  WHERE r.id <> min_id
+                )";
+
+        $totalDeleteCount = 0;
+
+        do {
+            $deleteCount = SqlUtil::updateWithCount($conn, $sql);
+            $totalDeleteCount += $deleteCount;
+            if($deleteCount > 0) { $cmdUtil->writeln($deleteCount . ' records deleted ...'); }
+        } while ($deleteCount > 0);
+
+        $countPrefix = $totalDeleteCount === 0 ? 'No' : $totalDeleteCount ;
+        $cmdUtil->writeln($countPrefix.' duplicate animal_residences deleted in total');
+
+        return $totalDeleteCount;
+    }
 }
