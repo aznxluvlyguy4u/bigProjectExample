@@ -388,6 +388,8 @@ class DatabaseDataFixer
             self::printAnimalsList($cmdUtil, $conn, $ulns);
         }
 
+        if($updateCount > 0) { DoctrineUtil::updateTableSequence($conn, ['animal_residence']); }
+
         return $updateCount;
     }
 
@@ -606,6 +608,8 @@ class DatabaseDataFixer
 
         $countPrefix = $totalDeleteCount === 0 ? 'No' : $totalDeleteCount ;
         $cmdUtil->writeln($countPrefix.' duplicate animal_residences deleted in total');
+
+        if($totalDeleteCount > 0) { DoctrineUtil::updateTableSequence($conn, ['animal_residence']); }
 
         return $totalDeleteCount;
     }
