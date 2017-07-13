@@ -119,6 +119,8 @@ class DatabaseDataFixer
         }
         
         $cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        self::fillMissingAnimalChildTableRecords($conn, $cmdUtil);
     }
 
 
@@ -177,6 +179,34 @@ class DatabaseDataFixer
         }
 
         $cmdUtilOrOutput->writeln('-------------------------');
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
+     * @return int
+     */
+    private static function fillMissingAnimalChildTableRecords(Connection $conn, $cmdUtilOrOutput)
+    {
+        $totalUpdateCount = 0;
+
+        foreach (['Neuter', 'Ram', 'Ewe'] as $objectType) {
+            $table = strtolower($objectType);
+            $cmdUtilOrOutput->writeln('Filling missing '.$table.' records based on existing animal records ... ');
+
+            $sql = "INSERT INTO $table (id, object_type)
+                  SELECT a.id, '$objectType' as object_type FROM animal a
+                    LEFT JOIN $table c ON c.id = a.id
+                  WHERE a.type = '$objectType' AND c.id ISNULL";
+            $updateCount = SqlUtil::updateWithCount($conn, $sql);
+            $totalUpdateCount += $updateCount;
+
+            $countPrefix = $updateCount === 0 ? 'No' : $updateCount ;
+            $cmdUtilOrOutput->writeln($countPrefix.' records inserted into '.$table.' table');
+        }
+
+        return $totalUpdateCount;
     }
 
 
