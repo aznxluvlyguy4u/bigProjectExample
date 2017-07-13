@@ -462,8 +462,7 @@ class DatabaseDataFixer
      */
     public static function killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss(Connection $conn, CommandUtil $cmdUtil)
     {
-        $cmdUtil->writeln('Killing resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss ... ');
-
+        $title = 'Killing resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss ... ';
         $sql = "UPDATE animal SET is_alive = FALSE WHERE id IN (
                   SELECT a.id as animal_id
                   --, a.is_alive, d.date_of_death, b.ubn,
@@ -487,12 +486,36 @@ class DatabaseDataFixer
                         AND a.date_of_death = d.date_of_death
                   ORDER BY a.date_of_death   
                 )";
-        $updateCount = SqlUtil::updateWithCount($conn, $sql);
-
-        $countPrefix = $updateCount === 0 ? 'No' : $updateCount ;
-        $cmdUtil->writeln($countPrefix.' animal is_alive states fixed');
-
-        return $updateCount;
+        return self::updateIsAliveToFalseBySqlUpdate($conn, $cmdUtil, $sql, $title);
     }
 
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public static function killAliveAnimalsWithADateOfDeath(Connection $conn, CommandUtil $cmdUtil)
+    {
+        $title = 'Killing alive animals with a dateOfDeath, even if they don\'t have a declare loss ... ';
+        $sql = "UPDATE animal SET is_alive = FALSE WHERE date_of_death NOTNULL AND is_alive";
+        return self::updateIsAliveToFalseBySqlUpdate($conn, $cmdUtil, $sql, $title);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @param string $sql
+     * @param string $title
+     * @return int
+     */
+    private static function updateIsAliveToFalseBySqlUpdate(Connection $conn, CommandUtil $cmdUtil, $sql, $title)
+    {
+        $cmdUtil->writeln($title);
+        $updateCount = SqlUtil::updateWithCount($conn, $sql);
+        $countPrefix = $updateCount === 0 ? 'No' : $updateCount ;
+        $cmdUtil->writeln($countPrefix.' animal is_alive states fixed');
+        return $updateCount;
+    }
 }
