@@ -7,6 +7,7 @@ namespace AppBundle\Util;
 use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -451,6 +452,47 @@ class DatabaseDataFixer
                 .' |ubn : '.$ubn . '| residence end_date: ' . $departDate . '   '.$life);
         }
 
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public static function killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss(Connection $conn, CommandUtil $cmdUtil)
+    {
+        $cmdUtil->writeln('Killing resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss ... ');
+
+        $sql = "UPDATE animal SET is_alive = FALSE WHERE id IN (
+                  SELECT a.id as animal_id
+                  --, a.is_alive, d.date_of_death, b.ubn,
+                  --CONCAT(a.uln_country_code, a.uln_number) as uln,
+                  --request_state, r.success_indicator, r.error_message
+                  FROM animal a
+                    INNER JOIN declare_loss d ON d.animal_id = a.id
+                    INNER JOIN declare_base b ON b.id = d.id
+                    INNER JOIN declare_base_response r ON r.request_id = b.request_id
+                    INNER JOIN (
+                                 SELECT d.animal_id, max(b.log_date) as last_log_date
+                                 FROM declare_base b
+                                   INNER JOIN declare_loss d ON d.id = b.id
+                                 WHERE (b.request_state = '".RequestStateType::FINISHED."' 
+                                     OR b.request_state = '".RequestStateType::FINISHED_WITH_WARNING."' 
+                                     OR b.request_state = '".RequestStateType::REVOKED."'
+                                     )
+                                 GROUP BY d.animal_id
+                               )last_declare ON last_declare.animal_id = d.animal_id AND last_declare.last_log_date = b.log_date
+                  WHERE a.date_of_death NOTNULL AND is_alive AND request_state <> 'REVOKED'
+                        AND a.date_of_death = d.date_of_death
+                  ORDER BY a.date_of_death   
+                )";
+        $updateCount = SqlUtil::updateWithCount($conn, $sql);
+
+        $countPrefix = $updateCount === 0 ? 'No' : $updateCount ;
+        $cmdUtil->writeln($countPrefix.' animal is_alive states fixed');
+
+        return $updateCount;
     }
 
 }

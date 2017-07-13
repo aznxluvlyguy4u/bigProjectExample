@@ -76,6 +76,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             '20: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n",
             '=====================================', "\n",
             '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
+            '31: Kill resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -140,9 +141,8 @@ class NsfoFixDbCommand extends ContainerAwareCommand
                 $output->writeln('Done! ' . $animalsDeleted . ' animals deleted');
                 break;
 
-            case 30:
-                DatabaseDataFixer::removeAnimalsFromLocationAndAnimalResidence($this->conn, $this->cmdUtil);
-                break;
+            case 30: DatabaseDataFixer::removeAnimalsFromLocationAndAnimalResidence($this->conn, $this->cmdUtil); break;
+            case 31: DatabaseDataFixer::killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss($this->conn, $this->cmdUtil); break;
 
             default:
                 $output->writeln('ABORTED');
