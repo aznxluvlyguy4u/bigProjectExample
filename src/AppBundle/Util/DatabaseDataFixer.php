@@ -365,10 +365,17 @@ class DatabaseDataFixer
         if($ulnCount === 0) { return $updateCount; }
 
         $ulns = [];
+        $residenceEndDates = [];
         foreach ($csv as $records) {
             $ulnString = strtr($records[0], [' ' => '']);
             $ulnParts = Utils::getUlnFromString($ulnString);
             $ulns[$ulnString] = $ulnParts;
+
+            $endDateString = ArrayUtil::get(1, $records, null);
+            $endDateStringForSql = TimeUtil::getTimeStampForSqlFromAnyDateString($endDateString);
+            if($endDateStringForSql != null) {
+                $residenceEndDates[$ulnString] =  $endDateStringForSql;
+            }
         }
 
         self::printAnimalsList($cmdUtil, $conn, $ulns);
@@ -378,7 +385,8 @@ class DatabaseDataFixer
         if($continue) {
             $cmdUtil->setStartTimeAndPrintIt($ulnCount, 1);
             foreach ($ulns as $ulnString => $ulnParts) {
-                if(self::removeAnimalFromLocationAndAnimalResidence($conn, $ulnString)) {
+                $endDateStringForSql = ArrayUtil::get($ulnString, $residenceEndDates, null);
+                if(self::removeAnimalFromLocationAndAnimalResidence($conn, $ulnString, $endDateStringForSql)) {
                     $updateCount++;
                 }
                 $cmdUtil->advanceProgressBar(1, 'locations of animals updated: '.$updateCount);
@@ -397,9 +405,10 @@ class DatabaseDataFixer
     /**
      * @param Connection $conn
      * @param $ulnString
+     * @param $endDateStringForSql
      * @return bool
      */
-    private static function removeAnimalFromLocationAndAnimalResidence(Connection $conn, $ulnString)
+    private static function removeAnimalFromLocationAndAnimalResidence(Connection $conn, $ulnString, $endDateStringForSql = null)
     {
         $uln = Utils::getUlnFromString($ulnString);
         if($uln === null) { return false; }
@@ -407,8 +416,11 @@ class DatabaseDataFixer
         $ulnCountryCode = $uln[Constant::ULN_COUNTRY_CODE_NAMESPACE];
         $ulnNumber = $uln[Constant::ULN_NUMBER_NAMESPACE];
 
-        $sql = "SELECT location_id FROM animal WHERE uln_country_code = '$ulnCountryCode' AND uln_number = '$ulnNumber'";
-        $locationId = $conn->query($sql)->fetch()['location_id'];
+        $sql = "SELECT location_id, id as animal_id
+                FROM animal WHERE uln_country_code = '$ulnCountryCode' AND uln_number = '$ulnNumber'";
+        $result = $conn->query($sql)->fetch();
+        $locationId = $result['location_id'];
+        $animalId = $result['animal_id'];
 
         if($locationId !== null) {
 
@@ -431,6 +443,13 @@ class DatabaseDataFixer
                       GROUP BY r.location_id, r.animal_id
                     )";
                 $residenceDeleteCount = SqlUtil::updateWithCount($conn, $sql);
+            }
+
+            if($endDateStringForSql != null) {
+                $sql = "UPDATE animal_residence SET end_date = '$endDateStringForSql' WHERE 
+                        animal_id = $animalId AND location_id = $locationId AND start_date <= '$endDateStringForSql'
+                        AND end_date ISNULL";
+                $residenceEndDateUpdateCount = SqlUtil::updateWithCount($conn, $sql);
             }
 
             $sql = "UPDATE animal SET location_id = NULL
