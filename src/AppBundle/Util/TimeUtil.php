@@ -238,6 +238,21 @@ class TimeUtil
     }
 
 
+    /**
+     * @param string $dateString
+     * @return null|string
+     */
+    public static function getTimeStampForSqlFromAnyDateString($dateString)
+    {
+        if(is_string($dateString)) {
+            if(DateUtil::isFormatYYYYMMDD($dateString) || DateUtil::isFormatDDMMYYYY($dateString)) {
+                return TimeUtil::getTimeStampForSql(new \DateTime($dateString));
+            }
+        }
+        return null;
+    }
+
+
     public static function getLogDateString()
     {
         return self::getTimeStampNow('Y-m-d H:i:s');
