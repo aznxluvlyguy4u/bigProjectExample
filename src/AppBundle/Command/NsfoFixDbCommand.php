@@ -78,7 +78,10 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
             '31: Kill resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss', "\n",
             '32: Kill alive animals with a date_of_death, even if they don\'t have a declare loss', "\n",
-            '33: Remove duplicate animal residences with endDate isNull', "\n",
+            '33: Remove duplicate animal residences with endDate isNull', "\n\n",
+
+            '================== DECLARES ===================', "\n",
+            '50: Fill missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -147,6 +150,8 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             case 31: DatabaseDataFixer::killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss($this->conn, $this->cmdUtil); break;
             case 32: DatabaseDataFixer::killAliveAnimalsWithADateOfDeath($this->conn, $this->cmdUtil); break;
             case 33: DatabaseDataFixer::removeDuplicateAnimalResidencesWithEndDateIsNull($this->conn, $this->cmdUtil); break;
+
+            case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
             default:
                 $output->writeln('ABORTED');

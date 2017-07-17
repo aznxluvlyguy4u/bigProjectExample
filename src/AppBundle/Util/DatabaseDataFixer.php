@@ -631,4 +631,30 @@ class DatabaseDataFixer
 
         return $totalDeleteCount;
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public static function fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015(Connection $conn, $cmdUtil)
+    {
+        $cmdUtil->writeln('Filling missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015 ...');
+
+        $sql = "UPDATE declare_base_response SET message_number = v.message_number
+                FROM (
+                    SELECT regexp_replace(error_message, '\D', '', 'g') as message_number_from_error_message, id
+                    FROM declare_base_response
+                    WHERE error_code = 'IRD-00015'
+                    --AND DATE(log_date) = DATE(now())
+                    AND message_number ISNULL
+                ) AS v(message_number, id) WHERE declare_base_response.id = v.id";
+        $updateCount = SqlUtil::updateWithCount($conn, $sql);
+
+        $countPrefix = $updateCount === 0 ? 'No' : $updateCount ;
+        $cmdUtil->writeln($countPrefix.' messageNumbers filled');
+
+        return $updateCount;
+    }
 }
