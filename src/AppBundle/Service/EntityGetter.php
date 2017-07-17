@@ -7,6 +7,7 @@ use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBaseResponse;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
@@ -445,7 +446,8 @@ class EntityGetter
     {
         $requestId = $this->getResponseMessageByMessageNumber($messageNumber)->getRequestId();
 
-        return $this->entityManager->getRepository(Constant::DECLARE_BASE_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$requestId));
+        return $this->entityManager->getRepository(DeclareBase::class)
+            ->findOneBy([Constant::REQUEST_ID_NAMESPACE=>$requestId]);
     }
 
     /**
@@ -454,6 +456,11 @@ class EntityGetter
      */
     public function getResponseMessageByMessageNumber($messageNumber)
     {
-        return $this->entityManager->getRepository(Constant::DECLARE_BASE_RESPONSE_REPOSITORY)->findOneBy(array(Constant::MESSAGE_NUMBER_CAMEL_CASE_NAMESPACE=>$messageNumber));
+        return $this->entityManager->getRepository(DeclareBaseResponse::class)
+            ->findOneBy(
+                [Constant::MESSAGE_NUMBER_CAMEL_CASE_NAMESPACE=>$messageNumber],
+                ['successIndicator' => 'ASC']
+            //Prioritize original declare over a Repeated declare by prioritizing J over N successIndicator
+            );
     }
 }
