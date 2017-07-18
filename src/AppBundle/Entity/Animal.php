@@ -555,15 +555,6 @@ abstract class Animal
     protected $lambar;
 
     /**
-     * @var ArrayCollection
-     *
-     * @ORM\OneToMany(targetEntity="BreedValuesSet", mappedBy="animal", cascade={"persist"})
-     * @ORM\OrderBy({"generationDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\BreedValuesSet")
-     */
-    protected $breedValuesSets;
-
-    /**
      * @var ResultTableBreedGrades
      * @ORM\OneToOne(targetEntity="ResultTableBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
      * @JMS\Type("AppBundle\Entity\ResultTableBreedGrades")
@@ -613,7 +604,6 @@ abstract class Animal
         $this->genderHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
         $this->parents = new ArrayCollection();
-        $this->breedValuesSets = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -2316,53 +2306,6 @@ abstract class Animal
         $this->lambar = $lambar;
     }
 
-
-    /**
-     * Add breedValues
-     *
-     * @param BreedValuesSet $breedValuesSet
-     *
-     * @return Animal
-     */
-    public function addBreedValuesSet(BreedValuesSet $breedValuesSet)
-    {
-        $this->breedValuesSets[] = $breedValuesSet;
-
-        return $this;
-    }
-
-    /**
-     * Remove breedValues
-     *
-     * @param BreedValuesSet $breedValuesSet
-     */
-    public function removeBreedValuesSet(BreedValuesSet $breedValuesSet)
-    {
-        $this->breedValuesSets->removeElement($breedValuesSet);
-    }
-
-    /**
-     * Get BreedValuesSets
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getBreedValuesSets()
-    {
-        return $this->breedValuesSets;
-    }
-
-
-    /**
-     * @return BreedValuesSet|null
-     */
-    public function getLastBreedValuesSet()
-    {
-        if(count($this->breedValuesSets) > 0) {
-            return $this->breedValuesSets->last();
-        } else {
-            return null;
-        }
-    }
 
     /**
      * @return ResultTableBreedGrades
