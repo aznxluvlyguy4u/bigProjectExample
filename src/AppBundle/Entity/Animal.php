@@ -443,13 +443,6 @@ abstract class Animal
     protected $breedCode;
 
     /**
-     * @var boolean
-     * @ORM\Column(type="boolean", nullable=true)
-     * @JMS\Type("boolean")
-     */
-    protected $hasCompleteBreedCode;
-
-    /**
      * @var float
      * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
@@ -1929,24 +1922,6 @@ abstract class Animal
     public function getBreedCode()
     {
         return $this->breedCode;
-    }
-
-    /**
-     * @return boolean|null
-     */
-    public function hasCompleteBreedCode()
-    {
-        return $this->hasCompleteBreedCode;
-    }
-
-    /**
-     * @param boolean|null $hasCompleteBreedCode
-     * @return Animal
-     */
-    public function setHasCompleteBreedCode($hasCompleteBreedCode)
-    {
-        $this->hasCompleteBreedCode = $hasCompleteBreedCode;
-        return $this;
     }
 
     /**
