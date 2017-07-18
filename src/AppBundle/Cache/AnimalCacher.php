@@ -22,6 +22,7 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\ProductionUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
@@ -85,9 +86,12 @@ class AnimalCacher
 
         $count = 0;
 
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+
         //Get ids of already cached animals
         $sql = "SELECT animal_id FROM animal_cache";
-        $results = $em->getConnection()->query($sql)->fetchAll();
+        $results = $conn->query($sql)->fetchAll();
         $cachedAnimalIds = [];
         foreach ($results as $result) {
             $animalId = intval($result['animal_id']);
@@ -119,6 +123,8 @@ class AnimalCacher
 
         //DuplicateCheck
         self::deleteDuplicateAnimalCacheRecords($em);
+
+        DoctrineUtil::updateTableSequence($conn, ['animal_cache']);
     }
 
 
@@ -281,6 +287,8 @@ class AnimalCacher
 
         //DuplicateCheck
         self::deleteDuplicateAnimalCacheRecords($em);
+
+        DoctrineUtil::updateTableSequence($conn, ['animal_cache']);
     }
 
 
