@@ -478,14 +478,6 @@ abstract class Animal
     protected $breeder;
 
     /**
-     * @var BreedCodes
-     * @ORM\OneToOne(targetEntity="BreedCodes", inversedBy="animal", cascade={"persist"})
-     * @ORM\JoinColumn(name="breed_codes_id", referencedColumnName="id", nullable=true)
-     * @JMS\Type("AppBundle\Entity\BreedCodes")
-     */
-    protected $breedCodes;
-
-    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -1035,7 +1027,7 @@ abstract class Animal
      *
      * @param Ram
      *
-     * @return Ram
+     * @return Animal
      */
     public function setParentFather(Ram $parentFather = null)
     {
@@ -1087,7 +1079,7 @@ abstract class Animal
      *
      * @param Ewe $parentMother
      *
-     * @return Ewe
+     * @return Animal
      */
     public function setParentMother($parentMother = null)
     {
@@ -2237,22 +2229,6 @@ abstract class Animal
     public function getParentNeuter()
     {
         return $this->parentNeuter;
-    }
-
-    /**
-     * @return BreedCodes
-     */
-    public function getBreedCodes()
-    {
-        return $this->breedCodes;
-    }
-
-    /**
-     * @param BreedCodes $breedCodes
-     */
-    public function setBreedCodes($breedCodes)
-    {
-        $this->breedCodes = $breedCodes;
     }
 
     /**

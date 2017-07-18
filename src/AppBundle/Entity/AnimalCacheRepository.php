@@ -84,4 +84,14 @@ class AnimalCacheRepository extends BaseRepository {
 
         return $this->getAnimalCacherInputData($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $filter);
     }
+
+
+    /**
+     * @param $animalIds
+     * @return int
+     */
+    public function deleteByAnimalIdsAndSql($animalIds)
+    {
+        return $this->deleteTableRecordsByTableNameAndAnimalIdsAndSql('animal_cache', $animalIds);
+    }
 }
