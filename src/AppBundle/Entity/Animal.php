@@ -39,6 +39,14 @@ abstract class Animal
     protected $id;
 
     /**
+     * @var DateTime
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    protected $creationDate;
+
+    /**
      * @var string
      *
      * Country code as defined by ISO 3166-1:
@@ -589,6 +597,7 @@ abstract class Animal
         $this->isExportAnimal = false;
         $this->isDepartedAnimal = false;
         $this->updatedGeneDiversity = false;
+        $this->creationDate = new \DateTime();
     }
 
     /**
@@ -599,6 +608,24 @@ abstract class Animal
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getCreationDate()
+    {
+        return $this->creationDate;
+    }
+
+    /**
+     * @param DateTime $creationDate
+     * @return Animal
+     */
+    public function setCreationDate($creationDate)
+    {
+        $this->creationDate = $creationDate;
+        return $this;
     }
 
     /**
