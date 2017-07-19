@@ -301,6 +301,13 @@ class AnimalMigrationTable
     private $logDate;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isNewImportAnimal;
+
+    /**
      * AnimalMigrationTable constructor.
      */
     public function __construct()
@@ -929,6 +936,24 @@ class AnimalMigrationTable
     public function setLogDate($logDate)
     {
         $this->logDate = $logDate;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNewImportAnimal()
+    {
+        return $this->isNewImportAnimal;
+    }
+
+    /**
+     * @param bool $isNewImportAnimal
+     * @return AnimalMigrationTable
+     */
+    public function setIsNewImportAnimal($isNewImportAnimal)
+    {
+        $this->isNewImportAnimal = $isNewImportAnimal;
+        return $this;
     }
 
 
