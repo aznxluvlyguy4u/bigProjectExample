@@ -143,28 +143,6 @@ abstract class Animal
     /**
      * @var Animal
      *
-     * @ORM\ManyToOne(targetEntity="Neuter", inversedBy="children", cascade={"persist"})
-     * @ORM\JoinColumn(name="parent_neuter_id", referencedColumnName="id", onDelete="set null")
-     * @JMS\Type("AppBundle\Entity\Animal")
-     */
-    protected $parentNeuter;
-
-    /**
-     *
-     * @var ArrayCollection
-     *
-     * @ORM\ManyToMany(targetEntity="Animal")
-     * @ORM\JoinTable(name="animal_parents",
-     *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="parents_id", referencedColumnName="id", unique=false)}
-     * )
-     * @JMS\Type("AppBundle\Entity\Animal")
-     */
-    protected $parents;
-
-    /**
-     * @var Animal
-     *
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="surrogateChildren", cascade={"persist"})
      * @ORM\JoinColumn(name="surrogate_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
@@ -603,7 +581,6 @@ abstract class Animal
         $this->ulnHistory = new ArrayCollection();
         $this->genderHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
-        $this->parents = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -2138,63 +2115,6 @@ abstract class Animal
         $this->note = $note;
     }
 
-    /**
-     * Add parent
-     *
-     * @param \AppBundle\Entity\Animal $parent
-     *
-     * @return Animal
-     */
-    public function addParent(\AppBundle\Entity\Animal $parent)
-    {
-        $this->parents[] = $parent;
-
-        return $this;
-    }
-
-    /**
-     * Remove parent
-     *
-     * @param \AppBundle\Entity\Animal $parent
-     */
-    public function removeParent(\AppBundle\Entity\Animal $parent)
-    {
-        $this->parents->removeElement($parent);
-    }
-
-    /**
-     * Get parents
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getParents()
-    {
-        return $this->parents;
-    }
-
-    /**
-     * Set parentNeuter
-     *
-     * @param \AppBundle\Entity\Neuter $parentNeuter
-     *
-     * @return Animal
-     */
-    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
-    {
-        $this->parentNeuter = $parentNeuter;
-
-        return $this;
-    }
-
-    /**
-     * Get parentNeuter
-     *
-     * @return \AppBundle\Entity\Neuter
-     */
-    public function getParentNeuter()
-    {
-        return $this->parentNeuter;
-    }
 
     /**
      * @return string

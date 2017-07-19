@@ -451,7 +451,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
                 $child->setParentFather(null);
                 $child->setParentMother(null);
-                $child->setParentNeuter(null);
                 $child->setSurrogate(null);
 
                 $manager->persist($child);
