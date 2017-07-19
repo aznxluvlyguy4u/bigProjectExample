@@ -90,6 +90,12 @@ services:
           cacheDir: %kernel.cache_dir%
           logger: '@logger'
 
+    app.migrator.vsm:
+        class: AppBundle\Service\VsmMigratorService
+        arguments:
+          entityManager: '@doctrine.orm.entity_manager'
+          cacheDir: %kernel.root_dir%
+
     app.breed.index:
         class: AppBundle\Service\BreedIndexService
         arguments:
