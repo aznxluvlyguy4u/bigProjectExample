@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Constant\MeasurementConstant;
+use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
@@ -11,6 +12,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 
 class MeasurementRepository extends BaseRepository {
+
+    const UPDATE_BATCH_SIZE = 10000;
 
     /**
      * @param int $startYear
@@ -107,5 +110,72 @@ class MeasurementRepository extends BaseRepository {
     {
         $sql = "UPDATE measurement SET measurement_date = DATE(measurement_date)";
         $this->getManager()->getConnection()->exec($sql);
+    }
+
+
+    /**
+     * @param CommandUtil|null $cmdUtil
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function setAnimalIdAndDateValues(CommandUtil $cmdUtil = null)
+    {
+        //Retrieve the mismatched measurementRecords
+        $sql = "SELECT m.id, CONCAT(x.animal_id,'_',DATE(measurement_date)) as animal_id_and_date, m.type FROM measurement m
+                  INNER JOIN exterior x ON x.id = m.id
+                WHERE m.animal_id_and_date <> CONCAT(x.animal_id,'_',DATE(measurement_date))
+                UNION
+                SELECT m.id, CONCAT(x.animal_id,'_',DATE(measurement_date)) as animal_id_and_date, m.type FROM measurement m
+                  INNER JOIN body_fat x ON x.id = m.id
+                WHERE m.animal_id_and_date <> CONCAT(x.animal_id,'_',DATE(measurement_date))
+                UNION
+                SELECT m.id, CONCAT(x.animal_id,'_',DATE(measurement_date)) as animal_id_and_date, m.type FROM measurement m
+                  INNER JOIN weight x ON x.id = m.id
+                WHERE m.animal_id_and_date <> CONCAT(x.animal_id,'_',DATE(measurement_date))
+                UNION
+                SELECT m.id, CONCAT(x.animal_id,'_',DATE(measurement_date)) as animal_id_and_date, m.type FROM measurement m
+                  INNER JOIN muscle_thickness x ON x.id = m.id
+                WHERE m.animal_id_and_date <> CONCAT(x.animal_id,'_',DATE(measurement_date))
+                UNION
+                SELECT m.id, CONCAT(x.animal_id,'_',DATE(measurement_date)) as animal_id_and_date, m.type FROM measurement m
+                  INNER JOIN tail_length x ON x.id = m.id
+                WHERE m.animal_id_and_date <> CONCAT(x.animal_id,'_',DATE(measurement_date))
+                ORDER BY id";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        $totalCount = count($results);
+
+        if($totalCount == 0) {
+            $cmdUtil->writeln('All animalIdAndDate values match!');
+            return;
+        }
+
+        $updateString = '';
+        $count = 0;
+        $inBatchCount = 0;
+        $updatedCount = 0;
+
+        if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($totalCount, 1); }
+
+        foreach ($results as $result) {
+            $id = $result['id'];
+            $animalIdAndDate = $result['animal_id_and_date'];
+
+            $updateString = $updateString."('".$animalIdAndDate."',".$id.")";
+            $count++;
+            if($count == $totalCount || $count%self::UPDATE_BATCH_SIZE == 0) {
+                $sql = "UPDATE measurement as m SET animal_id_and_date = v.animal_id_and_date
+						FROM (VALUES ".$updateString."
+							 ) as v(animal_id_and_date, id) WHERE m.id = v.id";
+                $this->getConnection()->exec($sql);
+                //Reset batch string and counters
+                $updateString = '';
+                $updatedCount += $inBatchCount;
+                $inBatchCount = 0;
+            } else {
+                $inBatchCount++;
+                $updateString = $updateString.',';
+            }
+            if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'animalIdAndDate in measurement updated|inBatch: '.$updatedCount.'|'.$inBatchCount); }
+        }
+        if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
 }

@@ -47,10 +47,16 @@ class PredicatesMigrator extends MigratorBase
         $latestCsvPredicatesByAnimalId = new ArrayCollection();
 
         $animalIdByVsmIdSearchArray = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
-
+        $this->resetPrimaryVsmIdsBySecondaryVsmId();
+        
         foreach ($this->data as $records) {
 
             $vsmId = $records[0];
+            if(array_key_exists($vsmId, $this->primaryVsmIdsBySecondaryVsmId)) {
+                $vsmId = $this->primaryVsmIdsBySecondaryVsmId[$vsmId];
+            }
+
+
             //Skip data for missing animals
             if(array_key_exists($vsmId, $animalIdByVsmIdSearchArray)) {
                 $animalId = $animalIdByVsmIdSearchArray[$vsmId];
@@ -152,8 +158,8 @@ class PredicatesMigrator extends MigratorBase
                 $csvEndDateString = $csvEndDateString == null ? 'NULL' : "'".$csvEndDateString."'";
                 $csvPredicateScore = $csvPredicateScore == null ? 'NULL' : $csvPredicateScore;
 
-                $sql = "INSERT INTO predicate (id, animal_id, start_date, end_date, predicate, predicate_score) VALUES (nextval('measurement_id_seq')," . $animalId . "," . $csvStartDateString . "," . $csvEndDateString . ",'" . $csvPredicateValue . "'," . $csvPredicateScore . ")";
-                $this->em->getConnection()->exec($sql);
+                $sql = "INSERT INTO predicate (id, animal_id, start_date, end_date, predicate, predicate_score) VALUES (nextval('predicate_id_seq')," . $animalId . "," . $csvStartDateString . "," . $csvEndDateString . ",'" . $csvPredicateValue . "'," . $csvPredicateScore . ")";
+                $this->conn->exec($sql);
 
                 $newCount++;
             }

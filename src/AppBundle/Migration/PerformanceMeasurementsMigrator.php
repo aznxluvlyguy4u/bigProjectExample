@@ -14,6 +14,8 @@ use AppBundle\Entity\Inspector;
 use AppBundle\Entity\InspectorRepository;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\MuscleThicknessRepository;
+use AppBundle\Entity\VsmIdGroup;
+use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Util\CommandUtil;
@@ -152,7 +154,7 @@ class PerformanceMeasurementsMigrator extends MigratorBase
         $this->weightsInDb = $this->weightRepository->getAllWeightsBySql(self::IS_GROUPED_BY_ANIMAL_AND_DATE, $isIncludeRevokedWeights);
         $this->bodyFatsInDb = $this->bodyFatRepository->getAllBodyFatsBySql(self::IS_GROUPED_BY_ANIMAL_AND_DATE);
         $this->muscleThicknessesInDb = $this->muscleThicknessRepository->getAllMuscleThicknessesBySql(self::IS_GROUPED_BY_ANIMAL_AND_DATE);
-
+        $this->resetPrimaryVsmIdsBySecondaryVsmId();
 
         //Result arrays
         $vsmIdsNotInDatabase = array();
@@ -177,6 +179,10 @@ class PerformanceMeasurementsMigrator extends MigratorBase
         foreach ($this->data as $row)
         {
             $vsmId = $row[0];
+            if(array_key_exists($vsmId, $this->primaryVsmIdsBySecondaryVsmId)) {
+                $vsmId = $this->primaryVsmIdsBySecondaryVsmId[$vsmId];
+            }
+
             $measurementDateString = TimeUtil::fillDateStringWithLeadingZeroes($row[1]);
             $inspectorName = $row[2];
 

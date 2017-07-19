@@ -87,8 +87,6 @@ class PersonRepository extends BaseRepository
       $sql = "INSERT INTO token (id, owner_id, code, type, creation_date_time, is_verified) VALUES (nextval('token_id_seq'),'" 
           .$id. "','" . $tokenCode . "','ACCESS','".$dateString."',TRUE)";
       $this->getConnection()->exec($sql);
-      
-      $isInsertSuccessFul = true;
     }
     return $id;
   }

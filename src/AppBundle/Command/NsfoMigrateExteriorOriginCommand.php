@@ -2,29 +2,42 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Entity\Inspector;
+use AppBundle\Entity\InspectorRepository;
+use AppBundle\Entity\Measurement;
+use AppBundle\Entity\MeasurementRepository;
+use AppBundle\Migration\ExteriorMeasurementsMigrator;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 use Doctrine\Common\Persistence\ObjectManager;
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
 use AppBundle\Util\CommandUtil;
 
 class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrating Exterior from original data source';
     const DEFAULT_START_ROW = 0;
+    const DEFAULT_OPTION = 0;
 
-    private $csvParsingOptions = array(
-        'finder_in' => 'app/Resources/imports/',
-        'finder_name' => 'animal_exterior_measurements_migration_update.csv',
-        'ignoreFirstLine' => true
-    );
+    private $csvParsingOptions;
+
+    /** @var CommandUtil */
+    private $cmdUtil;
+
+    /** @var OutputInterface */
+    private $output;
+
+    /** @var Connection */
+    private $conn;
+
+    /** @var ObjectManager */
+    private $em;
 
     protected function configure()
     {
@@ -35,22 +48,121 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $csv = $this->parseCSV();
-        $totalNumberOfRows = sizeof($csv);
 
-        /**
-         * @var ObjectManager $em
-         */
-        $em = $this->getContainer()->get('doctrine')->getManager();
-        $em->getConnection()->getConfiguration()->setSQLLogger(null);
+        /** @var ObjectManager $em */
+        $this->em = $this->getContainer()->get('doctrine')->getManager();
+        /** @var Connection $conn */
+        $this->conn = $this->em->getConnection();
+        $this->conn->getConfiguration()->setSQLLogger(null);
         $helper = $this->getHelper('question');
-        $cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->output = $output;
+
+        $this->cmdUtil->generateTitle(self::TITLE);
+
+        $this->cmdUtil->writeln(DoctrineUtil::getDatabaseHostAndNameString($this->em));
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            ' ', "\n",
+            'Choose option: ', "\n",
+            '1: file 20161007_1156_Stamboekinspectietabel_edited.csv', "\n",
+            '2: Update height, breastDepth & torsolength from 20161007_1156_Stamboekinspectietabel_edited.csv', "\n",
+            '3: import version 2016Aug', "\n",
+            '4: update animalIdAndDate values', "\n",
+            '5: Delete exact duplicates', "\n",
+            '6: Fill missing values in breastDepth, torsoLength and Height. Then delete exact duplicates', "\n",
+            '7: Update animalCache records with outdated breastDepth, torsoLength and Height', "\n",
+            'abort (other)', "\n"
+        ], self::DEFAULT_OPTION);
+        
+        switch ($option) {
+            case 1:
+                $this->csvParsingOptions = [
+                    'finder_in' => 'app/Resources/imports/vsm2016nov',
+                    'finder_name' => '20161007_1156_Stamboekinspectietabel_edited.csv',
+                    'ignoreFirstLine' => true];
+                $this->migrateExteriorMeasurementsCsvFile2();
+                break;
+
+            case 2:
+                $this->csvParsingOptions = [
+                    'finder_in' => 'app/Resources/imports/vsm2016nov',
+                    'finder_name' => '20161007_1156_Stamboekinspectietabel_edited.csv',
+                    'ignoreFirstLine' => true];
+                $this->updateHeightDepthLength();
+                break;
+
+            case 3:
+                $this->csvParsingOptions = [
+                    'finder_in' => 'app/Resources/imports/',
+                    'finder_name' => 'animal_exterior_measurements_migration_update.csv',
+                    'ignoreFirstLine' => true];
+                $this->migrateExteriorMeasurementsCsvFile1();
+                break;
+
+            case 4:
+                /** @var MeasurementRepository $repository */
+                $repository = $this->em->getRepository(Measurement::class);
+                $repository->setAnimalIdAndDateValues($this->cmdUtil);
+                break;
+
+            case 5:
+                ExteriorMeasurementsMigrator::deleteExactDuplicates($this->conn, $this->cmdUtil);
+                break;
+
+            case 6:
+                ExteriorMeasurementsMigrator::fillZeroHeightBreastDepthAndTorsoLengthFromDuplicates($this->conn, $this->cmdUtil);
+                ExteriorMeasurementsMigrator::deleteExactDuplicates($this->conn, $this->cmdUtil);
+                break;
+
+            case 7:
+                ExteriorMeasurementsMigrator::cacheAnimalWithZeroHeightBreastDepthTorsoLength($this->em, $this->cmdUtil);
+                break;
+
+            default:
+                $output->writeln('ABORTED');
+                return;
+        }
+
+        $output->writeln('DONE');
+    }
+
+
+    private function migrateExteriorMeasurementsCsvFile2()
+    {
+        $this->output->writeln(['Parsing csv...']);
+        $data = $this->parseCSV(';');
+        if(count($data) == 0) { return false; }
+
+        $exteriorMeasurementsMigrator = new ExteriorMeasurementsMigrator($this->cmdUtil, $this->em, $this->output, $data);
+        $exteriorMeasurementsMigrator->migrate();
+        return true;
+    }
+
+
+    private function updateHeightDepthLength()
+    {
+        $this->output->writeln(['Parsing csv...']);
+        $data = $this->parseCSV(';');
+        if(count($data) == 0) { return false; }
+
+        $exteriorMeasurementsMigrator = new ExteriorMeasurementsMigrator($this->cmdUtil, $this->em, $this->output, $data);
+        $exteriorMeasurementsMigrator->updateHeightDepthLength();
+        return true;
+    }
+
+
+    private function migrateExteriorMeasurementsCsvFile1()
+    {
+        $startCounter = $this->cmdUtil->generateQuestion('Please enter start row (default = '.self::DEFAULT_START_ROW.')', self::DEFAULT_START_ROW);
+
+        $this->output->writeln('Parsing csv...');
+
+        $csv = $this->parseCSV(',');
+        $totalNumberOfRows = sizeof($csv);
+        $this->cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
+
         $counter = 0;
-
-        $startCounter = $cmdUtil->generateQuestion('Please enter start row: ', self::DEFAULT_START_ROW);
-
-        $cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
-
         for($i = $startCounter; $i < $totalNumberOfRows; $i++) {
 
             $line = $csv[$i];
@@ -58,7 +170,7 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
             if($line[1] != '' && $line[1] != null) {
 
                 $name = $line[0];
-                $measurementDate = new \DateTime(StringUtil::changeDateFormatStringFromAmericanToISO($line[1]));
+                $measurementDate = new \DateTime(TimeUtil::changeDateFormatStringFromAmericanToISO($line[1]));
                 $measurementDateStamp = $measurementDate->format('Y-m-d H:i:s');
                 $measurementDate->add(new \DateInterval('P1D'));
                 $nextDayStamp = $measurementDate->format('Y-m-d H:i:s');
@@ -70,28 +182,29 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
                 $message = $i; //defaultMessage
                 if(NullChecker::isNotNull($measurementDate)){
                     $sql = "SELECT exterior.id as id FROM exterior  INNER JOIN measurement ON exterior.id = measurement.id INNER JOIN animal ON exterior.animal_id = animal.id WHERE animal.name = '".$name."' AND measurement.measurement_date BETWEEN '".$measurementDateStamp."' AND '".$nextDayStamp."'";
-                    $result = $em->getConnection()->query($sql)->fetch();
+                    $result = $this->conn->query($sql)->fetch();
 
                     if ($result) {
                         if($result['id'] != '') {
                             $sql = "UPDATE exterior SET height = '".$height."', progress = '".$progress."', kind = '".$kind."' WHERE exterior.id = '".$result['id']."'";
-                            $em->getConnection()->exec($sql);
+                            $this->conn->exec($sql);
                             $message = $i . ' +';
                             $counter++;
                         }
                     }
                 }
 
-                $cmdUtil->advanceProgressBar(1, $message);
+                $this->cmdUtil->advanceProgressBar(1, $message);
             }
 
         }
 
-        $cmdUtil->setEndTimeAndPrintFinalOverview();
-        $output->writeln("LINES IMPORTED: " . $counter);
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln("LINES IMPORTED: " . $counter);
     }
 
-    private function parseCSV() {
+
+    private function parseCSV($separator = ';') {
         $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
 
         $finder = new Finder();
@@ -104,7 +217,7 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
         $rows = array();
         if (($handle = fopen($csv->getRealPath(), "r")) !== FALSE) {
             $i = 0;
-            while (($data = fgetcsv($handle, null, ",")) !== FALSE) {
+            while (($data = fgetcsv($handle, null, $separator)) !== FALSE) {
                 $i++;
                 if ($ignoreFirstLine && $i == 1) { continue; }
                 $rows[] = $data;

@@ -3,6 +3,9 @@
 namespace AppBundle\Command;
 
 use AppBundle\Cache\AnimalCacher;
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Cache\ExteriorCacher;
 use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Cache\NLingCacher;
@@ -26,15 +29,19 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
     const TITLE = 'Generate cache for animals';
     const DEFAULT_OPTION = 0;
     const DEFAULT_LOCATION_ID = 262;
+    const DEFAULT_UBN = 1674459;
 
     /** @var ObjectManager $em */
     private $em;
 
+    /** @var Connection $conn */
+    private $conn;
+
     /** @var CommandUtil */
     private $cmdUtil;
 
-    /** @var Connection */
-    private $conn;
+    /** @var AnimalRepository */
+    private $animalRepository;
 
     protected function configure()
     {
@@ -52,11 +59,15 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
         $this->conn = $em->getConnection();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->animalRepository = $em->getRepository(Animal::class);
 
-        $output->writeln(['',DoctrineUtil::getDatabaseHostAndNameString($em),'']);
+        $this->cmdUtil->printTitle('AnimalCache / ResultTable');
+
+        $this->cmdUtil->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
+            '--- All & By Location ---', "\n",
             '1: Generate new AnimalCache records for all animals that do not have one yet', "\n",
             '2: Generate new AnimalCache records only for given locationId', "\n",
             '3: Regenerate all AnimalCache records for all animals', "\n",
@@ -64,7 +75,11 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '5: Regenerate all AnimalCache records older than given stringDateTime (YYYY-MM-DD HH:MM:SS)', "\n",
             '6: Generate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '7: Regenerate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
-            '8: Delete duplicate records', "\n\n",
+            '8: Delete duplicate records', "\n",
+            '9: Update location_of_birth_id for all animals and locations', "\n",
+            '--- Location Focused ---', "\n",
+            '11: Update AnimalCache of one Animal by animalId', "\n",
+            '12: Generate new AnimalCache records for all animals, batched by location and ascendants', "\n",
             '--- Sql Batch Queries ---', "\n",
             '20: BatchUpdate all incongruent production values and n-ling values', "\n",
             '21: BatchUpdate all Incongruent exterior values', "\n",
@@ -83,6 +98,11 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '39: BatchUpdate remove litterOrdinals from REVOKED Litters', "\n\n",
             '40: BatchUpdate gestationPeriods in Litters, update all incongruous values (incl. revoked litters and mates)', "\n",
             '41: BatchUpdate birthIntervals in Litters, update all incongruous values (incl. revoked litters and mates NOTE! Update litterOrdinals first!)', "\n\n",
+
+            '', "\n",
+            '--- Helper Commands ---', "\n",
+            '99: Get locationId from UBN', "\n",
+
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -133,6 +153,23 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $output->writeln('DONE!');
                 break;
 
+            case 9:
+                $this->animalRepository->updateAllLocationOfBirths($this->cmdUtil);
+                $output->writeln('DONE!');
+                break;
+
+
+            case 11:
+                $this->cacheOneAnimalById();
+                $output->writeln('DONE!');
+                break;
+
+            case 12:
+                AnimalCacher::cacheAllAnimalsByLocationGroupsIncludingAscendants($em, $this->cmdUtil);
+                $output->writeln('DONE!');
+                break;
+            
+
             case 20:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update production and n-ling cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
@@ -150,7 +187,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $this->cmdUtil->writeln($nLingValuesUpdated.' n-ling values updated');
                 break;
 
-            
+
             case 21:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update exterior cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
@@ -210,10 +247,58 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             case 40: $output->writeln(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated'); break;
             case 41: $output->writeln(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated'); break;
 
+            case 99:
+                $this->printLocationIdFromGivenUbn();
+                $output->writeln('DONE!');
+                break;
+
             default:
                 $output->writeln('ABORTED');
                 break;
         }
+    }
+    
+    
+    private function printLocationIdFromGivenUbn()
+    {
+        do {
+            $ubn = $this->cmdUtil->generateQuestion('Insert UBN (default = '.self::DEFAULT_UBN.')', self::DEFAULT_UBN);
+        } while (!ctype_digit($ubn) && !is_int($ubn));
+
+        $result = $this->conn->query("SELECT id, is_active FROM location WHERE ubn = '".$ubn."' ORDER BY is_active DESC LIMIT 1")->fetch();
+        
+
+        if($result) {
+            $isActiveText = ArrayUtil::get('is_active', $result) ? 'ACTIVE' : 'NOT ACTIVE';
+            $this->cmdUtil->writeln('locationId: ' . ArrayUtil::get('id', $result) .' ('. $isActiveText.')');
+        } else {
+            $this->cmdUtil->writeln('NO LOCATION');
+        }
+
+    }
+
+
+    private function cacheOneAnimalById()
+    {
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->em->getRepository(Animal::class);
+
+        do {
+            $animal = null;
+            $animalId = $this->cmdUtil->generateQuestion('Insert animalId', null);
+
+            if(ctype_digit($animalId) || is_int($animalId)) {
+                /** @var Animal $animal */
+                $animal = $animalRepository->find($animalId);
+
+                if($animal == null) { $this->cmdUtil->writeln('No animal found for given id: '.$animalId); }
+            } else {
+                $this->cmdUtil->writeln('AnimalId '.$animalId.' is incorrect. It must be an integer.');
+            }
+
+        } while ($animal == null);
+
+        AnimalCacher::cacheByAnimal($this->em, $animal);
     }
 
 }

@@ -2,6 +2,9 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Cache\AnimalCacher;
+use AppBundle\Cache\NLingCacher;
+use AppBundle\Cache\ProductionCacher;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\EweRepository;
 use AppBundle\Entity\Litter;
@@ -10,6 +13,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\LitterUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -23,16 +27,24 @@ use Symfony\Component\Finder\Finder;
 class NsfoMigrateLittersCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrate litters';
-    const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20160307_1349.csv';
+    const OLD_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20160307_1349.csv';
+    const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20161007_1156.csv';
+    const OUTPUT_FOLDER_NAME = '/Resources/outputs/migration/';
+    const OUTPUT_FILE_NAME = 'updated_litters.csv';
+    const OUTPUT_FILE_NAME_LITTER_DATES = 'strange_litter_dates.csv';
+    const OUTPUT_FILE_NAME_HALF_YEAR_LITTER = 'half_year_litters.csv';
     const BATCH_SIZE = 1000;
+    const UPDATE_BATCH_SIZE = 10000;
     const DEFAULT_MIN_EWE_ID = 1;
     const DEFAULT_OPTION = 0;
 
     const DEFAULT_START_ROW = 0;
+    const SEPARATOR = '__';
 
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
+        'finder_out' => 'app/Resources/outputs/migration/',
         'finder_name' => 'animal_litters_20160307_1349.csv',
         'ignoreFirstLine' => true
     );
@@ -85,11 +97,13 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '1: Generate Litters from source file (incl mother, excl children)', "\n",
+            '1: Generate Litters from source file (incl mother, excl children) and update production cache of mother', "\n",
             '2: Match children with existing litters and set father in litter', "\n",
             '3: Find missing father in animal by searching in litter', "\n",
             '4: Generate all litterOrdination numbers', "\n",
             '5: Check if children in litter matches bornAliveCount value', "\n",
+            '6: BatchUpdate all incongruent production values and n-ling values', "\n",
+            '7: Printout strange litter dates', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -99,19 +113,41 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 break;
 
             case 2:
-                $this->matchChildrenWithExistingLittersAndSetFatherInLitter();
+                $this->matchChildrenWithExistingLittersBySql();
+                $this->setMissingFatherInLitterBySql();
                 break;
 
             case 3:
-                $this->findMissingFathersForAnimalFromLitter();
+                $this->setMissingFatherInAnimalFromFatherInLitterBySql();
                 break;
 
             case 4:
-                $this->setLitterOrdinationNumbers();
+                $this->cmdUtil->writeln(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
                 break;
 
             case 5:
                 $this->checkBornAliveCount();
+                break;
+
+            case 6:
+                $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update production and n-ling cache values of all animals? (y/n, default = no)');
+                if($updateAll) {
+                    $output->writeln('Updating all records...');
+                    $productionValuesUpdated = ProductionCacher::updateAllProductionValues($this->conn);
+                    $nLingValuesUpdated = NLingCacher::updateAllNLingValues($this->conn);
+                } else {
+                    do{
+                        $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
+                    } while (!ctype_digit($animalId) && !is_int($animalId));
+                    $productionValuesUpdated = ProductionCacher::updateProductionValues($this->conn, [$animalId]);
+                    $nLingValuesUpdated = NLingCacher::updateNLingValues($this->conn, [$animalId]);
+                }
+                $this->cmdUtil->writeln($productionValuesUpdated.' production values updated');
+                $this->cmdUtil->writeln($nLingValuesUpdated.' n-ling values updated');
+                break;
+
+            case 7:
+                $this->printOutStrangeLitterDates();
                 break;
 
             default:
@@ -145,7 +181,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $maxId = $litterRepository->getMaxLitterId();
 
         $sql = "SELECT COUNT(id) FROM litter WHERE id >= '".$minId."'";
-        $totalLitterSize = $this->em->getConnection()->query($sql)->fetch()['count'];
+        $totalLitterSize = $this->conn->query($sql)->fetch()['count'];
 
         $this->cmdUtil->setStartTimeAndPrintIt($totalLitterSize, 1, 'Data retrieved from database. Now checking born alive count...');
 
@@ -189,127 +225,158 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     }
 
 
-    private function setLitterOrdinationNumbers()
+    /**
+     * Set missing litterIds based on mother and dateOfBirth
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function matchChildrenWithExistingLittersBySql()
     {
-        $this->cmdUtil->writeln(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
+        $sql = "SELECT a.id as animal_id, l.id as litter_id
+                FROM animal a
+                INNER JOIN litter l ON DATE(a.date_of_birth) = DATE(l.litter_date) AND a.parent_mother_id = l.animal_mother_id
+                WHERE a.litter_id ISNULL";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $totalLitterIdCount = count($results);
+        if($totalLitterIdCount == 0) {
+            $this->output->writeln('No missing litterIds in animals!');
+            return;
+        }
+
+        $litterIdUpdateString = '';
+        $litterIdsToUpdateCount = 0;
+        $litterIdsUpdatedCount = 0;
+        $loopCounter = 0;
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalLitterIdCount, 1);
+
+        foreach ($results as $result) {
+            $animalId = intval($result['animal_id']);
+            $litterId = intval($result['litter_id']);
+
+            $litterIdUpdateString = $litterIdUpdateString . '(' . $litterId . ',' . $animalId . '),';
+            $litterIdsToUpdateCount++;
+            $loopCounter++;
+
+            //Update fathers
+            if (($totalLitterIdCount == $loopCounter || ($litterIdsToUpdateCount % self::UPDATE_BATCH_SIZE == 0 && $litterIdsToUpdateCount != 0))
+                && $litterIdUpdateString != ''
+            ) {
+                $litterIdUpdateString = rtrim($litterIdUpdateString, ',');
+                $sql = "UPDATE animal as a SET litter_id = c.litter_id
+				FROM (VALUES " . $litterIdUpdateString . ") as c(litter_id, animal_id) WHERE c.animal_id = a.id ";
+                $this->conn->exec($sql);
+                //Reset batch values
+                $litterIdUpdateString = '';
+                $litterIdsUpdatedCount += $litterIdsToUpdateCount;
+                $litterIdsToUpdateCount = 0;
+            }
+            $this->cmdUtil->advanceProgressBar(1, 'LitterIds_in_Animal updated|inBatch: '.$litterIdsUpdatedCount.'|'.$litterIdsToUpdateCount);
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln('LitterIds in animals set!');
     }
 
 
-    private function findMissingFathersForAnimalFromLitter()
+    private function setMissingFatherInLitterBySql()
     {
-        //Retrieve data from db
-        $totalMissingFathersStart = $this->getMissingFathersCount();
+        //Set missing litterIds based on mother and dateOfBirth
+        $sql = "SELECT a.parent_father_id, l.id as litter_id
+                FROM animal a
+                INNER JOIN litter l ON a.litter_id = l.id
+                WHERE l.animal_father_id ISNULL AND a.parent_father_id NOTNULL
+                GROUP BY a.parent_father_id, l.id";
+        $results = $this->conn->query($sql)->fetchAll();
 
-        $sql = "SELECT id as animal_id, animal.litter_id as animal_litter_id FROM animal WHERE animal.litter_id IS NOT NULL AND animal.parent_father_id IS NULL";
-        $childrenResults = $this->em->getConnection()->query($sql)->fetchAll();
-
-        $sql = "SELECT animal_father_id, id as litter_id FROM litter WHERE animal_father_id IS NOT NULL";
-        $litterResults = $this->em->getConnection()->query($sql)->fetchAll();
-
-        $this->cmdUtil->setStartTimeAndPrintIt(count($childrenResults), 1, 'Data retrieved from database. Now finding fathers for children...');
-
-        //Create search arrays
-        $animalSearchArray = new ArrayCollection();
-        $fatherSearchArray = new ArrayCollection();
-
-        foreach ($childrenResults as $childResult) {
-            $animalSearchArray->set($childResult['animal_litter_id'], $childResult['animal_id']);
-        }
-        foreach ($litterResults as $litterResult) {
-            $fatherSearchArray->set($litterResult['litter_id'], $litterResult['animal_father_id']);
+        $totalLitterIdCount = count($results);
+        if($totalLitterIdCount == 0) {
+            $this->output->writeln('All missing fathers in litters have been set!');
+            return;
         }
 
-        $missingFathersCount = 0;
-        $foundFathersCount = 0;
-        $animalLitterIds = $animalSearchArray->getKeys();
-        foreach ($animalLitterIds as $litterId) {
-            $animalId = $animalSearchArray->get($litterId);
-            $fatherId = $fatherSearchArray->get($litterId);
-            if ($litterId != null && $fatherId != null) {
-                $sql = "UPDATE animal SET parent_father_id = '" . $fatherId . "' WHERE id = '" . $animalId . "'";
-                $this->em->getConnection()->exec($sql);
+        $litterIdUpdateString = '';
+        $litterIdsToUpdateCount = 0;
+        $litterIdsUpdatedCount = 0;
+        $loopCounter = 0;
 
-                $animalProgressBarMessage = 'FATHER FOUND FOR ANIMAL: ' . $animalId;
-            } else {
-                $animalProgressBarMessage = 'NO FATHER FOUND FOR ANIMAL: ' . $animalId;
+        $this->cmdUtil->setStartTimeAndPrintIt($totalLitterIdCount, 1);
+
+        foreach ($results as $result) {
+            $fatherId = intval($result['parent_father_id']);
+            $litterId = intval($result['litter_id']);
+
+            $litterIdUpdateString = $litterIdUpdateString . '(' . $litterId . ',' . $fatherId . '),';
+            $litterIdsToUpdateCount++;
+            $loopCounter++;
+
+            //Update fathers
+            if (($totalLitterIdCount == $loopCounter || ($litterIdsToUpdateCount % self::UPDATE_BATCH_SIZE == 0 && $litterIdsToUpdateCount != 0))
+                && $litterIdUpdateString != ''
+            ) {
+                $litterIdUpdateString = rtrim($litterIdUpdateString, ',');
+                $sql = "UPDATE litter as l SET animal_father_id = c.father_id
+				FROM (VALUES " . $litterIdUpdateString . ") as c(litter_id, father_id) WHERE c.litter_id = l.id ";
+                $this->conn->exec($sql);
+                //Reset batch values
+                $litterIdUpdateString = '';
+                $litterIdsUpdatedCount += $litterIdsToUpdateCount;
+                $litterIdsToUpdateCount = 0;
             }
-
-
-            $this->cmdUtil->advanceProgressBar(1, $animalProgressBarMessage .
-                '  | FATHERS FOUND: ' . $foundFathersCount .
-                '  | FATHERS MISSING: ' . $missingFathersCount);
+            $this->cmdUtil->advanceProgressBar(1, 'Fathers_in_Litters updated|inBatch: '.$litterIdsUpdatedCount.'|'.$litterIdsToUpdateCount);
         }
-        $totalMissingFathersEnd = $this->getMissingFathersCount();
-        $this->cmdUtil->setProgressBarMessage('Total fathers missing, before: ' . $totalMissingFathersStart . ' | after: ' . $totalMissingFathersEnd);
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln('Missing fathers in litters set!');
     }
 
 
-    private function matchChildrenWithExistingLittersAndSetFatherInLitter()
+    private function setMissingFatherInAnimalFromFatherInLitterBySql()
     {
-        $sql = "SELECT DATE(date_of_birth) as date_of_birth, id as animal_id, animal.litter_id as animal_litter_id, parent_mother_id, parent_father_id FROM animal";
-        $childrenResults = $this->em->getConnection()->query($sql)->fetchAll();
+        //Set missing litterIds based on mother and dateOfBirth
+        $sql = "SELECT l.animal_father_id, a.id as animal_id
+                FROM animal a
+                  INNER JOIN litter l ON a.litter_id = l.id
+                WHERE a.parent_father_id ISNULL AND l.animal_father_id NOTNULL";
+        $results = $this->conn->query($sql)->fetchAll();
 
-        $sql = "SELECT animal_mother_id, DATE(litter.litter_date) as litter_date, id as litter_id FROM litter";
-        $litterResults = $this->em->getConnection()->query($sql)->fetchAll();
+        $totalAnimalIdCount = count($results);
+        if($totalAnimalIdCount == 0) {
+            $this->output->writeln('All missing fathers in animals have been set!');
+            return;
+        }
 
-        $this->cmdUtil->setStartTimeAndPrintIt(count($childrenResults), 1, 'Data retrieved from database. Now matching Children with Litters...');
+        $fatherIdUpdateString = '';
+        $fatherIdsToUpdateCount = 0;
+        $fatherIdsUpdatedCount = 0;
+        $loopCounter = 0;
 
-        //Create search arrays
-        $animalSearchArray = new ArrayCollection();
-        $litterSearchArray = new ArrayCollection();
+        $this->cmdUtil->setStartTimeAndPrintIt($totalAnimalIdCount, 1);
 
-        foreach ($childrenResults as $childResult) {
-            $motherDateString = $this->createAnimalSearchString($childResult);
-            $childrenArray = $animalSearchArray->get($motherDateString);
-            if($childrenArray == null) {
-                $childrenArray = new ArrayCollection();
+        foreach ($results as $result) {
+            $fatherId = intval($result['animal_father_id']);
+            $animalId = intval($result['animal_id']);
+
+            $fatherIdUpdateString = $fatherIdUpdateString . '(' . $animalId . ',' . $fatherId . '),';
+            $fatherIdsToUpdateCount++;
+            $loopCounter++;
+
+            //Update fathers
+            if (($totalAnimalIdCount == $loopCounter || ($fatherIdsToUpdateCount % self::UPDATE_BATCH_SIZE == 0 && $fatherIdsToUpdateCount != 0))
+                && $fatherIdUpdateString != ''
+            ) {
+                $fatherIdUpdateString = rtrim($fatherIdUpdateString, ',');
+                $sql = "UPDATE animal as a SET parent_father_id = c.father_id
+				FROM (VALUES " . $fatherIdUpdateString . ") as c(animal_id, father_id) WHERE c.animal_id = a.id ";
+                $this->conn->exec($sql);
+                //Reset batch values
+                $fatherIdUpdateString = '';
+                $fatherIdsUpdatedCount += $fatherIdsToUpdateCount;
+                $fatherIdsToUpdateCount = 0;
             }
-            $childrenArray->add($childResult);
-            $animalSearchArray->set($motherDateString, $childrenArray);
+            $this->cmdUtil->advanceProgressBar(1, 'Fathers_in_Animals updated|inBatch: '.$fatherIdsUpdatedCount.'|'.$fatherIdsToUpdateCount);
         }
-
-        foreach ($litterResults as $litterResult) {
-            $motherDateString = $this->createLitterSearchString($litterResult);
-            $litterSearchArray->set($motherDateString, $litterResult['litter_id']);
-        }
-
-        //Match arrays: For each child find a matching litter
-        $foundLittersCount = 0;
-        $noLitterFoundCount = 0;
-        $missingFatherCount = 0;
-        $animalMotherDateStrings = $animalSearchArray->getKeys();
-        foreach ($animalMotherDateStrings as $animalMotherDateString) {
-            $litterId = $litterSearchArray->get($animalMotherDateString);
-            $childrenArray = $animalSearchArray->get($animalMotherDateString);
-
-            foreach($childrenArray as $childResult) {
-                $animalId = $childResult['animal_id'];
-                $fatherId = $childResult['parent_father_id'];
-
-                if ($litterId != null) {
-
-                    $sql = "UPDATE animal SET litter_id = '" . $litterId . "' WHERE id = '" . $animalId . "'";
-                    $this->em->getConnection()->exec($sql);
-
-                    if ($fatherId != null) {
-                        $sql = "UPDATE litter SET animal_father_id = '" . $fatherId . "' WHERE id = '" . $litterId . "'";
-                        $this->em->getConnection()->exec($sql);
-                        $missingFatherCount++;
-                    }
-
-                    $foundLittersCount++;
-                    $animalProgressBarMessage = 'LITTER FOUND FOR ANIMAL (id): '.$animalId.' | Found litters: '.$foundLittersCount.' | Missing litters: '.$noLitterFoundCount;
-                } else {
-                    $noLitterFoundCount++;
-                    $animalProgressBarMessage = 'MISSING LITTER FOR ANIMAL (id): '.$animalId.' | Found litters: '.$foundLittersCount.' | Missing litters: '.$noLitterFoundCount;
-                }
-                $this->cmdUtil->advanceProgressBar(1, $animalProgressBarMessage);
-            }
-        }
-        $animalProgressBarMessage = $foundLittersCount.'  | LITTERS MISSING: '.$noLitterFoundCount.'  | FATHERS MISSING: '.$missingFatherCount;
-        $this->cmdUtil->setProgressBarMessage($animalProgressBarMessage);
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln('Missing fathers in animals set!');
     }
 
 
@@ -322,7 +389,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $dateTime = substr($childResult['date_of_birth'], 0, 10);
         $motherId = $childResult['parent_mother_id'];
 
-        return $motherId . '__' . $dateTime;
+        return $motherId . self::SEPARATOR . $dateTime;
     }
 
 
@@ -335,7 +402,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $dateTime = substr($litterResult['litter_date'], 0, 10);
         $motherId = $litterResult['animal_mother_id'];
 
-        return $motherId . '__' . $dateTime;
+        return $motherId . self::SEPARATOR . $dateTime;
     }
 
 
@@ -343,13 +410,58 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     {
         //Input folder input
         $inputFolderPath = $this->cmdUtil->generateQuestion('Please enter input folder path (empty for default path)', self::DEFAULT_INPUT_PATH);
+        $this->output->writeln('Chosen path: '.$inputFolderPath);
         $this->dataWithoutHeader = CommandUtil::getRowsFromCsvFileWithoutHeader($inputFolderPath);
 
-        $minEweId = $this->cmdUtil->generateQuestion('Please enter minimum ewe primaryKey (default = 1)', self::DEFAULT_MIN_EWE_ID);
+        //minEweId
+        $continueFromPreviousMigration = $this->cmdUtil->generateConfirmationQuestion('Use eweId of latest litter as minEweId? (y/n)');
+        if($continueFromPreviousMigration) {
+            $sql = "SELECT animal_mother_id as last_ewe_id FROM litter ORDER BY id DESC LIMIT 1";
+            $minEweId = $this->conn->query($sql)->fetch()['last_ewe_id'] - 1;
+        } else {
+            $minEweId = $this->cmdUtil->generateQuestion('Please enter minimum ewe primaryKey (default = 1)', self::DEFAULT_MIN_EWE_ID);
+        }
 
-        $this->cmdUtil->setStartTimeAndPrintIt(count($this->dataWithoutHeader) * 2, $minEweId);
+        //maxEweId
+        $sql = "SELECT MAX(id) FROM animal WHERE type = 'Ewe'";
+        $maxEweId = $this->conn->query($sql)->fetch()['max'];
+        
+        $this->cmdUtil->setStartTimeAndPrintIt($maxEweId, $minEweId);
 
-        $this->animalPrimaryKeysByVsmId = $this->eweRepository->getAnimalPrimaryKeysByVsmId(); //Migrate litters
+        //Create SearchArrays
+        $this->animalPrimaryKeysByVsmId = $this->eweRepository->getAnimalPrimaryKeysByVsmId();
+
+        $this->littersWithDateWithin4MonthsOfOtherLittersInDatabase = $this->getLittersWithDateWithin4MonthsOfOtherLittersInDatabase();
+
+        $this->litterSearchArray = [];
+        $this->litterValuesSearchArray = [];
+        $sql = "SELECT litter_date, animal_mother_id, name,
+                    l.id, litter_group, born_alive_count, stillborn_count,
+                    CONCAT(uln_country_code, uln_number) as uln, CONCAT(pedigree_country_code, pedigree_number) as stn
+                FROM litter l INNER JOIN animal a ON l.animal_mother_id = a.id";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        foreach ($results as $result) {
+            $eweId = $result['animal_mother_id'];
+            $litterDate = $result['litter_date'];
+            $key = $eweId.self::SEPARATOR.$litterDate;
+            $this->litterSearchArray[$key] = $key;
+            $values = [
+                'id' => intval($result['id']),
+                'litter_group' => $result['litter_group'],
+                'born_alive_count' => intval($result['born_alive_count']),
+                'stillborn_count' => intval($result['stillborn_count']),
+                'uln' => $result['uln'],
+                'stn' => $result['stn'],
+                'ewe_id' => $eweId,
+                'litter_date' => $litterDate,
+                'vsm_id' => $result['name'],
+            ];
+            $this->litterValuesSearchArray[$key] = $values;
+        }
+
+        //Write headers for errors file
+        $this->writeMigrationErrorRowToCsv('worp_id;uln;stn;ooi_id;vsm_id;worpdatum;levendgeboren;levendgeboren_oud;doodgeboren;doodgeboren_old;');
 
         $rowCount = 0;
         $this->litterSets = new ArrayCollection();
@@ -372,16 +484,21 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             }
         }
         $eweIds = array_diff($eweIds, $removeIds);
+        sort($eweIds);
         $this->cmdUtil->setProgressBarMessage('Ewes to process: ' . sizeof($eweIds) . ' | Creating new litters...');
 
         $litterCount = 0;
         $eweCount = 0;
+        $skippedCount = 0;
+        $updatedCount = 0;
+        $incorrectLitterDateCount = 0;
+        $productionCacheUpdatedCount = 0;
 
         $today = new \DateTime('today');
         $todayString = $today->format('Y-m-d');
 
-        /** @var LitterRepository $litterRepository */
-        $litterRepository = $this->em->getRepository(Litter::class);
+        //Check for broken half imports and delete them
+        $this->deleteBrokenLitterImport();
 
         foreach ($eweIds as $eweId) {
             if ($this->isEweExists($eweId)) {
@@ -389,27 +506,76 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 $littersDataSet = $this->litterSets->get($eweId);
                 $litterDates = $littersDataSet->getKeys();
 
+                $areAnyLittersUpdated = false;
+
                 foreach ($litterDates as $litterDateString) {
                     $children = $littersDataSet->get($litterDateString);
 
                     $litterDate = new \DateTime($litterDateString);
-                    $bornAliveCount = $children[0];
-                    $stillbornCount = $children[1];
+                    $bornAliveCount = intval($children[0]);
+                    $stillbornCount = intval($children[1]);
 
-                    //CREATE LITTERS
-                    if (!$this->isLitterAlreadyExists($eweId, $litterDateString)) {
 
-                        $sql = "SELECT MAX(id) FROM litter";
-                        $result = $this->em->getConnection()->query($sql)->fetch();
-                        $litterId = $result['max'] + 1;
+                    if($this->isLitterDateWithin4MonthsOfOtherLittersInDatabase($eweId, $litterDateString)) {
+                        $incorrectLitterDateCount++;
 
-//                      Litter data has not been migrated yet, so persist a new litter
-                        $sql = "INSERT INTO litter (id, animal_mother_id, log_date, litter_date, stillborn_count, born_alive_count) VALUES ('" . $litterId . "','" . $eweId . "','" . $todayString . "','" . $litterDateString . "','" . $stillbornCount . "','" . $bornAliveCount . "')";
-                        $this->em->getConnection()->exec($sql);
+                    } elseif (!$this->isLitterAlreadyExists($eweId, $litterDateString)) {
+                        //CREATE LITTERS
+
+                        //Litter data has not been migrated yet, so persist a new litter
+                        $sql = "INSERT INTO declare_nsfo_base (id, log_date, request_state, type
+                                ) VALUES (nextval('declare_nsfo_base_id_seq'),'" .$todayString."','IMPORTED','Litter')
+                                RETURNING id";
+                        $id = $this->conn->query($sql)->fetch()['id'];
+
+                        $sql = "INSERT INTO litter (id, animal_mother_id, litter_date, stillborn_count, born_alive_count,
+                                status
+                                ) VALUES ($id,'" .$eweId."','".$litterDateString."','".$stillbornCount."','".$bornAliveCount."','INCOMPLETE')";
+                        $this->conn->exec($sql);
+
                         $litterCount++;
+                        $areAnyLittersUpdated = true;
+                    } else {
+                        //If it already exists, check if values are equal. Otherwise update
+                        $values = $this->litterValuesSearchArray[$eweId.self::SEPARATOR.$litterDateString];
+                        $bornAliveCountInDb = $values['born_alive_count'];
+                        $stillbornCountInDb = $values['stillborn_count'];
+
+                        $valuesAreIdentical = $bornAliveCount == $bornAliveCountInDb && $stillbornCountInDb == $stillbornCountInDb;
+
+                        if($valuesAreIdentical) {
+                            $skippedCount++;
+
+                        } else {
+                            //Fix values
+                            $id = $values['id'];
+                            $litterGroupInDb = $values['litter_group'];
+                            $uln = $values['uln'];
+                            $stn = $values['stn'];
+                            $eweId = $values['ewe_id'];
+                            $vsmId = $values['vsm_id'];
+
+                            $row = $id.';'.$uln.';'.$stn.';'.$eweId.';'.$vsmId.';'.$litterDateString.';'.$bornAliveCount.';'.$bornAliveCountInDb.';'.$stillbornCount.';'.$stillbornCountInDb.';';
+                            $this->writeMigrationErrorRowToCsv($row);
+                            
+                            $sql = "UPDATE litter SET born_alive_count = ".$bornAliveCount.", stillborn_count = ".$stillbornCount."
+                                    WHERE id = ".$id;
+                            $this->conn->exec($sql);
+
+                            $sql = "UPDATE declare_nsfo_base SET log_date = '".$todayString."' WHERE id = ".$id;
+                            $this->conn->exec($sql);
+
+                            $updatedCount++;
+                            $areAnyLittersUpdated = true;
+                        }
                     }
 
-                    $this->cmdUtil->advanceProgressBar(1, 'Checked LitterCount: ' . $litterCount . ' |  EweCount: ' . $eweCount . ' |  last Id: ' . $eweId);
+                    if($areAnyLittersUpdated) {
+                        $isCacheUpdated = ProductionCacher::updateProductionValues($this->conn, [$eweId]) > 0;
+                        if($isCacheUpdated) { $productionCacheUpdatedCount++; }
+                    }
+
+                    $this->cmdUtil->advanceProgressBar(1, 'LitterCount inserted|updated|skipped|wrong: '.$litterCount.'|'.$updatedCount.'|'.$skippedCount.'|'.$incorrectLitterDateCount.' - Ewe Count|lastId: '.$eweCount.'|'.$eweId.' - ProductionCacheUpdated: '.$productionCacheUpdatedCount);
                 }
                 $eweCount++;
             }
@@ -463,7 +629,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         if (count($parts) < 2) {
             return $stringDate;
         } else {
-            return $parts[2] . '-' . $parts[1] . '-' . $parts[0] . ' 00:00:00';
+            return $parts[2] . '-' . str_pad($parts[1], 2, '0', STR_PAD_LEFT) . '-' . str_pad($parts[0], 2, '0', STR_PAD_LEFT) . ' 00:00:00';
         }
     }
 
@@ -475,19 +641,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     private function isEweExists($eweId)
     {
         $sql = "SELECT id FROM ewe WHERE id = '" . $eweId . "'";
-        $result = $this->em->getConnection()->query($sql)->fetch();
-        if ($result['id'] != null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-
-    private function isLitterAlreadyExists($eweId, $measurementDateString)
-    {
-        $sql = "SELECT id FROM litter WHERE animal_mother_id = '" . $eweId . "' AND litter_date = '" . $measurementDateString . "'";
-        $result = $this->em->getConnection()->query($sql)->fetch();
+        $result = $this->conn->query($sql)->fetch();
         if ($result['id'] != null) {
             return true;
         } else {
@@ -497,11 +651,220 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
 
     /**
+     * @param $eweId
+     * @param $measurementDateString
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function isLitterAlreadyExists($eweId, $measurementDateString)
+    {
+        $searchKey = $eweId.self::SEPARATOR.$measurementDateString;
+        return array_key_exists($searchKey, $this->litterSearchArray);
+    }
+
+
+    /**
      * @return int
      */
     private function getMissingFathersCount()
     {
         $sql = "SELECT COUNT(id) FROM animal WHERE animal.parent_father_id IS NULL";
-        return $this->em->getConnection()->query($sql)->fetch()['count'];
+        return $this->conn->query($sql)->fetch()['count'];
+    }
+
+
+    /**
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function deleteBrokenLitterImport()
+    {
+        $sql = "SELECT COUNT(*) FROM declare_nsfo_base a
+                    LEFT JOIN litter ON a.id = litter.id
+                  WHERE litter.id ISNULL AND type = 'Litter'";
+        $count = $this->conn->query($sql)->fetch()['count'];
+
+        if($count > 0) {
+            $sql = "DELETE FROM declare_nsfo_base
+                WHERE id IN(
+                  SELECT a.id FROM declare_nsfo_base a
+                    LEFT JOIN litter ON a.id = litter.id
+                  WHERE litter.id ISNULL AND type = 'Litter'
+                )";
+            $this->conn->exec($sql);
+            $this->output->writeln($count.' broken litter imports deleted');
+        } else {
+            $this->output->writeln('There are no broken litter imports!');
+        }
+
+    }
+
+
+    /**
+     * @param $row
+     */
+    private function writeMigrationErrorRowToCsv($row)
+    {
+        file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME, $row."\n", FILE_APPEND);
+    }
+
+
+    private function printOutStrangeLitterDates()
+    {
+        $sql = "SELECT a.name as vsm_id, r.animal_mother_id, l.ubn,
+                  CONCAT(uln_country_code, uln_number) as uln, CONCAT(pedigree_country_code, pedigree_number) as stn,
+                  litter_date, litter_group, born_alive_count, stillborn_count, ped.abbreviation FROM litter r
+                INNER JOIN (
+                    SELECT l.animal_mother_id FROM litter l
+                      INNER JOIN (
+                                   SELECT animal_mother_id FROM litter a
+                                   WHERE litter_group NOTNULL
+                                 )y ON y.animal_mother_id = l.animal_mother_id
+                      INNER JOIN (
+                                   SELECT animal_mother_id FROM litter b
+                                   WHERE litter_group ISNULL
+                                 )x ON x.animal_mother_id = l.animal_mother_id
+                    GROUP BY l.animal_mother_id
+                    )z ON z.animal_mother_id = r.animal_mother_id
+                INNER JOIN animal a ON a.id = r.animal_mother_id
+                LEFT JOIN pedigree_register ped ON a.pedigree_register_id = ped.id
+                LEFT JOIN location l ON l.id = a.location_id
+                ORDER BY r.animal_mother_id, r.litter_date";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $totalCount = count($results);
+        if($totalCount == 0) { $this->output->writeln('No strange litterDates!'); return; }
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalCount,1, 'creating searchArrays');
+
+        $headerRow = 'animalId;uln;stn;stamboek;maandVerschilWorpDatumOudEnNieuw;worpdatumNieuwwCsv;worpdatumOudCsv;levendNieuw;levendOud;doodgebNew;doodgebOud;';
+        file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_LITTER_DATES, $headerRow."\n", FILE_APPEND);
+        file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_HALF_YEAR_LITTER, $headerRow."\n", FILE_APPEND);
+
+        //Group by ewe
+        $groupedSearchArray = [];
+        foreach ($results as $result) {
+            $eweId = $result['animal_mother_id'];
+
+            $group = [];
+            if(array_key_exists($eweId, $groupedSearchArray)) {
+                $group = $groupedSearchArray[$eweId];
+            }
+
+            $group[] = $result;
+            $groupedSearchArray[$eweId] = $group;
+        }
+
+        $eweIds = array_keys($groupedSearchArray);
+        sort($eweIds);
+
+        $ewesCount = 0;
+        $strangeLitterDateCount = 0;
+        $halfYearLitterCount = 0;
+        foreach ($eweIds as $eweId) {
+            $group = $groupedSearchArray[$eweId];
+
+            $oldLitterDatesAndResults = [];
+            $newLitterDatesAndResults = [];
+
+            foreach ($group as $result) {
+                $litterDate = $result['litter_date'];
+                $litterGroup = $result['litter_group'];
+                if($litterGroup == null) {
+                    $newLitterDatesAndResults[$litterDate] = $result;
+                } else {
+                    $oldLitterDatesAndResults[$litterDate] = $result;
+                }
+            }
+
+            $oldLitterDates = array_keys($oldLitterDatesAndResults);
+            $newLitterDates = array_keys($newLitterDatesAndResults);
+            foreach ($newLitterDates as $newLitterDateString) {
+                foreach ($oldLitterDates as $oldLitterDateString) {
+                    $newLitterDate = new \DateTime($newLitterDateString);
+                    $oldLitterDate = new \DateTime($oldLitterDateString);
+                    $ageInMonths = TimeUtil::getAgeMonths($newLitterDate, $oldLitterDate);
+                    
+                    if($ageInMonths < 6) {
+                        $newResult = $newLitterDatesAndResults[$newLitterDateString];
+                        $oldResult = $oldLitterDatesAndResults[$oldLitterDateString];
+                        $row = $this->parseStrangeLitterDateRow($eweId, $newResult, $oldResult, $newLitterDateString, $oldLitterDateString, $ageInMonths);
+                        file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_LITTER_DATES, $row."\n", FILE_APPEND);
+                        $strangeLitterDateCount++;
+
+                    } elseif($ageInMonths < 8) {
+                        $newResult = $newLitterDatesAndResults[$newLitterDateString];
+                        $oldResult = $oldLitterDatesAndResults[$oldLitterDateString];
+                        $row = $this->parseStrangeLitterDateRow($eweId, $newResult, $oldResult, $newLitterDateString, $oldLitterDateString, $ageInMonths);
+                        file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_HALF_YEAR_LITTER, $row."\n", FILE_APPEND);
+                        $halfYearLitterCount++;
+                    }
+                }
+            }
+            $ewesCount++;
+            $this->cmdUtil->advanceProgressBar(1, 'StrangeLitterDateCount|halfYearLitterCount: '.$strangeLitterDateCount.'|'.$halfYearLitterCount);
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+    private function parseStrangeLitterDateRow($eweId, $newResult, $oldResult, $newLitterDate, $oldLitterDate, $ageInMonths)
+    {
+        $uln = $newResult['uln'];
+        $stn = $newResult['stn'];
+        $abbreviation = $newResult['abbreviation'];
+        $bornAliveCountNew = $newResult['born_alive_count'];
+        $stillbornCountNew = $newResult['stillborn_count'];
+        $bornAliveCountOld = $oldResult['born_alive_count'];
+        $stillbornCountOld = $oldResult['stillborn_count'];
+        $newLitterDate = rtrim($newLitterDate, ' 00:00:00');
+        $oldLitterDate = rtrim($oldLitterDate, ' 00:00:00');
+
+        return $eweId.';'.$uln.';'.$stn.';'.$abbreviation.';'.$ageInMonths.';'.$newLitterDate.';'.$oldLitterDate.';'.$bornAliveCountNew.';'.$bornAliveCountOld.';'.$stillbornCountNew.';'.$stillbornCountOld.';';
+    }
+
+
+    private function isLitterDateWithin4MonthsOfOtherLittersInDatabase($eweId, $newLitterDate)
+    {
+        $checkString = $eweId.self::SEPARATOR.$newLitterDate;
+        return array_key_exists($checkString, $this->littersWithDateWithin4MonthsOfOtherLittersInDatabase);
+    }
+
+
+    /**
+     * @return array
+     */
+    private function getLittersWithDateWithin4MonthsOfOtherLittersInDatabase()
+    {
+        return [
+            '913--2001-03-01' => '913--2001-03-01',
+            '927--2006-03-21' => '927--2006-03-21',
+            '938--2003-02-03' => '938--2003-02-03',
+            '973--2006-03-02' => '973--2006-03-02',
+            '996--2008-03-15' => '996--2008-03-15',
+            '998--2008-03-12' => '998--2008-03-12',
+            '6597--1993-02-22' => '6597--1993-02-22',
+            '20557--1999-03-29' => '20557--1999-03-29',
+            '20557--2002-01-01' => '20557--2002-01-01',
+            '29539--2000-03-24' => '29539--2000-03-24',
+            '29544--2003-03-19' => '29544--2003-03-19',
+            '29545--2004-04-06' => '29545--2004-04-06',
+            '40724--2002-03-06' => '40724--2002-03-06',
+            '42283--2005-02-28' => '42283--2005-02-28',
+            '93499--2011-03-18' => '93499--2011-03-18',
+            '176259--2016-03-01' => '176259--2016-03-01',
+            '184319--2008-02-28' => '184319--2008-02-28',
+            '186994--2010-01-01' => '186994--2010-01-01',
+            '207574--2014-04-01' => '207574--2014-04-01',
+            '225650--2010-05-14' => '225650--2010-05-14',
+            '239998--2011-03-01' => '239998--2011-03-01',
+            '258456--2012-03-23' => '258456--2012-03-23',
+            '259658--2013-04-03' => '259658--2013-04-03',
+            '331009--1985-03-28' => '331009--1985-03-28',
+            '331009--1987-03-15' => '331009--1987-03-15',
+            '331694--2008-02-28' => '331694--2008-02-28',
+            '348261--2014-04-01' => '348261--2014-04-01',
+            '438395--2015-03-09' => '438395--2015-03-09',
+            '443880--2015-03-01' => '443880--2015-03-01',
+            '461542--2015-01-15' => '461542--2015-01-15',
+        ];
     }
 }

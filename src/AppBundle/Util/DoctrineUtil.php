@@ -13,6 +13,7 @@ use AppBundle\Entity\Tag;
 use AppBundle\Entity\Token;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class DoctrineUtil
 {
@@ -38,6 +39,50 @@ class DoctrineUtil
         $om->flush();
         $om->clear();
         gc_collect_cycles();
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param $lastName
+     * @return Employee
+     */
+    public static function getDeveloper(ObjectManager $em, $lastName = null)
+    {
+        $employeeRepository = $em->getRepository(Employee::class);
+        $criteria = [];
+        if(is_string($lastName)) {
+            $criteria = ['lastName' => $lastName];
+        }
+
+        $developers = $employeeRepository->findBy($criteria, ['id' => 'ASC'], 1);
+        if(count($developers) == 1) {
+            return $developers[0];
+        }
+        return null;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function printDeveloperLastNamesInDatabase(Connection $conn, $cmdUtilOrOutput)
+    {
+        $sql = "SELECT last_name FROM person p
+                INNER JOIN employee e ON e.id = p.id
+                WHERE e.access_level = 'DEVELOPER'";
+        $results = $conn->query($sql)->fetchAll();
+
+        if(count($results) == 0) {
+            $cmdUtilOrOutput->writeln('There are no developers in this database');
+        }
+
+        $cmdUtilOrOutput->writeln('Developer lastNames in the database:');
+        foreach ($results as $result) {
+            $cmdUtilOrOutput->writeln($result['last_name']);
+        }
     }
 
 
@@ -159,7 +204,7 @@ class DoctrineUtil
             $clazz = Animal::class;
         }
 
-        $sql = "SELECT * FROM animal a WHERE a.location_id = ".$location->getId()." AND is_alive = TRUE AND a.transfer_state IS NULL ".$typeFilter;
+        $sql = "SELECT * FROM animal a WHERE a.location_id = ".$location->getId()." AND is_alive = TRUE AND a.transfer_state IS NULL".$typeFilter;
         $results = $em->getConnection()->query($sql)->fetchAll();
         return self::getRandomItemFromResults($em, $results, $clazz);
     }
@@ -206,6 +251,41 @@ class DoctrineUtil
             }
         }
         return null;
+    }
+
+
+    /**
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutputInterface
+     * @param Animal $animal
+     * @param string $header
+     */
+    public static function printAnimalData($cmdUtilOrOutputInterface, Animal $animal, $header = '-- Following animal found --')
+    {
+        if(!($cmdUtilOrOutputInterface instanceof CommandUtil || $cmdUtilOrOutputInterface instanceof OutputInterface)) {
+            return;
+        }
+
+        if($animal == null) { $cmdUtilOrOutputInterface->writeln('Animal is empty'); return; }
+
+        if($animal->getIsAlive() === true) {
+            $isAliveString = 'true';
+        } elseif($animal->getIsAlive() === false) {
+            $isAliveString = 'false';
+        } else {
+            $isAliveString = 'null';
+        }
+
+        $cmdUtilOrOutputInterface->writeln([  $header,
+            'id: '.$animal->getId(),
+            'uln: '.$animal->getUln(),
+            'pedigree: '.$animal->getPedigreeCountryCode().$animal->getPedigreeNumber(),
+            'aiind/vsmId: '.$animal->getName(),
+            'gender: '.$animal->getGender(),
+            'isAlive: '.$isAliveString,
+            'dateOfBirth: '.$animal->getDateOfBirthString(),
+            'dateOfDeath: '.$animal->getDateOfDeathString(),
+            'current ubn: '.$animal->getUbn(),
+        ]);
     }
 
 

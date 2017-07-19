@@ -115,6 +115,7 @@ abstract class DeclareBaseResponse
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     * @JMS\Type("Person")
      */
     protected $actionBy;
 

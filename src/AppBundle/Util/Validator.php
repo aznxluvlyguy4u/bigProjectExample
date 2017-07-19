@@ -41,6 +41,27 @@ class Validator
         $roundedNumber = round($number,$maxNumberOfDecimals);
         return $roundedNumber == $number;
     }
+
+
+    /**
+     * @param $string
+     * @return bool
+     */
+    public static function isStringAFloat($string)
+    {
+        if($string == null || $string == '') { return false; }
+
+        //First convert comma decimals to point decimals
+        $string = StringUtil::replaceCommasWithDots($string);
+
+        $decimalCount = substr_count($string, '.');
+        if($decimalCount > 1) {
+            return false;
+        }
+
+        $string = str_replace('.', '', $string);
+        return ctype_digit($string);
+    }
     
 
     /**

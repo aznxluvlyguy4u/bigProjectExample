@@ -5,6 +5,7 @@ namespace AppBundle\Util;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\GenderType;
 
 class StringUtil
@@ -242,19 +243,6 @@ class StringUtil
 
 
     /**
-     * Change string with dateFormat of MM/DD/YYYY to YYYY-MM-DD
-     *
-     * @param string $americanDate
-     * @return string
-     */
-    public static function changeDateFormatStringFromAmericanToISO($americanDate)
-    {
-        $dateParts = explode('/', $americanDate);
-        return $dateParts[2].'-'.$dateParts[0].'-'.$dateParts[1];
-    }
-
-
-    /**
      * @param $haystack
      * @param $needle
      * @return bool
@@ -425,5 +413,34 @@ class StringUtil
         $ubn = ltrim(substr(trim($ulnNumber), 0, -5), '0');
 
         return Validator::hasValidUbnFormat($ubn) ? $ubn : null;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param \DateTime $date
+     * @param bool $mustHaveDateOfBirth
+     * @return null|string
+     */
+    public static function getAnimalIdAndDateString(Animal $animal, \DateTime $date, $mustHaveDateOfBirth = true)
+    {
+        if($animal == null || ($mustHaveDateOfBirth && $date == null)) { return null; }
+
+        $dateString = '';
+        if($date) {
+            $dateString = $animal->getDateOfBirth()->format('Y-m-d');
+        }
+        
+        return $animal->getId().'_'.$dateString;
+    }
+
+
+    /**
+     * @param $string
+     * @return string
+     */
+    public static function replaceCommasWithDots($string)
+    {
+        return strtr($string, [',' => '.'] );
     }
 }

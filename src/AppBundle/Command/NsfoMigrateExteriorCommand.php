@@ -2,6 +2,7 @@
 
 namespace AppBundle\Command;
 
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -36,7 +37,9 @@ class NsfoMigrateExteriorCommand extends ContainerAwareCommand
          * @var ObjectManager $em
          */
         $em = $this->getContainer()->get('doctrine')->getManager();
-        $em->getConnection()->getConfiguration()->setSQLLogger(null);
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+        $conn->getConfiguration()->setSQLLogger(null);
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
         $counter = 0;
@@ -68,20 +71,20 @@ class NsfoMigrateExteriorCommand extends ContainerAwareCommand
             }
 
             $sql = "SELECT animal.id FROM animal WHERE uln_country_code = '".$ulnCountryCode."' AND uln_number = '".$ulnNumber."' ORDER BY animal.id DESC LIMIT 1";
-            $result = $em->getConnection()->query($sql)->fetch();
+            $result = $conn->query($sql)->fetch();
 
             if ($result['id'] != "" || $result['id'] != null) {
 
                 if($inspectorId == "") {
                     $sql = "INSERT INTO measurement (id, log_date, measurement_date, type) VALUES (nextval('measurement_id_seq'),'" .$logDate. "','" . $measurementDate . "','Exterior')";
-                    $em->getConnection()->exec($sql);
+                    $conn->exec($sql);
                 } else {
                     $sql = "INSERT INTO measurement (id, inspector_id, log_date, measurement_date, type) VALUES (nextval('measurement_id_seq'),'" . $inspectorId . "','" . $logDate . "','" . $measurementDate . "','Exterior')";
-                    $em->getConnection()->exec($sql);
+                    $conn->exec($sql);
                 }
 
                 $sql = "INSERT INTO exterior (id, animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearance, height, breast_depth, torso_length, markings) VALUES (currval('measurement_id_seq'),'".$result['id']."','".$skull."','".$muscularity."','".$proportion."','".$exterior."','".$leg."','".$fur."','".$general."','".$height."','".$breast."','".$torso."','".$markings."')";
-                $em->getConnection()->exec($sql);
+                $conn->exec($sql);
             }
         }
 

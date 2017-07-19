@@ -7,9 +7,11 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -28,6 +30,12 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
     /** @var CommandUtil */
     private $cmdUtil;
 
+    /** @var ObjectManager */
+    private $em;
+
+    /** @var Connection */
+    private $conn;
+
     protected function configure()
     {
         $this
@@ -41,24 +49,33 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        $this->conn = $em->getConnection();
         $this->output = $output;
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
-        
+
+        $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
+
+        $developer = null;
+        do {
+            $lastName = null;
+            $chooseDeveloperByLastName = $this->cmdUtil->generateConfirmationQuestion('Choose developer by lastName? (y/n, default = n = just use first developer in database)');
+            if($chooseDeveloperByLastName) {
+                DoctrineUtil::printDeveloperLastNamesInDatabase($this->conn, $output);
+                $lastName = $this->cmdUtil->generateQuestion('Insert lastName of developer', null);
+                $lastName = strval($lastName);
+            }
+            $developer = DoctrineUtil::getDeveloper($em, $lastName);
+        } while ($developer == null);
+        $this->cmdUtil->writeln(['','Chosen developer: '.$developer->getLastName(),'']);
+
         $id = $this->cmdUtil->generateQuestion('Insert id or uln of animal for which the gender needs to be changed', null);
         if($id === null) { $this->printNoAnimalFoundMessage($id); return;}
 
-        /** @var AnimalRepository $animalRepository */
-        $animalRepository = $em->getRepository(Animal::class);
-
-        if(StringUtil::isStringContains($id, 'NL')) {
-            $animal = $animalRepository->findAnimalByUlnString($id);
-        } else {
-            $animal = $animalRepository->find($id);
-        }
+        $animal = $this->findAnimalByIdOrUln($id);
 
         if(!($animal instanceof Animal)) {
             $this->printNoAnimalFoundMessage($id);
@@ -66,7 +83,7 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
             return;
         }
 
-        $this->printAnimalData($animal);
+        DoctrineUtil::printAnimalData($output, $animal, '-- Data of Animal before gender change --');
         $newGender = $this->askForNewGender();
 
         if($newGender == null) {
@@ -90,13 +107,13 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
 
         switch ($newGender) {
             case AnimalObjectType::RAM:
-                $result = $genderChanger->changeToGender($animal, Ram::class);
+                $result = $genderChanger->changeToGender($animal, Ram::class, $developer);
                 break;
             case AnimalObjectType::EWE:
-                $result = $genderChanger->changeToGender($animal, Ewe::class);
+                $result = $genderChanger->changeToGender($animal, Ewe::class, $developer);
                 break;
             case AnimalObjectType::NEUTER:
-                $result = $genderChanger->changeToGender($animal, Neuter::class);
+                $result = $genderChanger->changeToGender($animal, Neuter::class, $developer);
                 break;
             default:
                 $this->output->writeln(self::taskAbortedNamespace);
@@ -104,7 +121,9 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
         }
 
         if (!$result instanceof JsonResponse) {
-            $this->printAnimalData($result, '-- Data of Animal after gender change --');
+            $em->clear();
+            $animal = $this->findAnimalByIdOrUln($id);
+            DoctrineUtil::printAnimalData($output, $animal, '-- Data of Animal after gender change --');
         } else { //Error has been occured, print message
             $this->output->writeln($result);
         }
@@ -145,26 +164,20 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
         $this->output->writeln('no animal found for input: '.$id);
     }
 
-    private function printAnimalData(Animal $animal, $header = '-- Following animal found --')
-    {
-        if($animal->getIsAlive() === true) {
-            $isAliveString = 'true';
-        } elseif($animal->getIsAlive() === false) {
-            $isAliveString = 'false';
-        } else {
-            $isAliveString = 'null';
-        }
 
-        $this->output->writeln([  $header,
-            'id: '.$animal->getId(),
-            'uln: '.$animal->getUln(),
-            'pedigree: '.$animal->getPedigreeCountryCode().$animal->getPedigreeNumber(),
-            'aiind/vsmId: '.$animal->getName(),
-            'gender: '.$animal->getGender(),
-            'isAlive: '.$isAliveString,
-            'dateOfBirth: '.$animal->getDateOfBirthString(),
-            'dateOfDeath: '.$animal->getDateOfDeathString(),
-            'current ubn: '.$animal->getUbn(),
-        ]);
+    /**
+     * @param string|int $id
+     * @return Animal|Ewe|Neuter|Ram|null
+     */
+    private function findAnimalByIdOrUln($id)
+    {
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->em->getRepository(Animal::class);
+
+        if(StringUtil::isStringContains($id, 'NL')) {
+            return $animalRepository->findAnimalByUlnString($id);
+        } else {
+            return $animalRepository->find($id);
+        }
     }
 }

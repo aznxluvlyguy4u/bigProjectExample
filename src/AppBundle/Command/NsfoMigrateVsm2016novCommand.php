@@ -6,6 +6,10 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\VsmIdGroup;
+use AppBundle\Entity\VsmIdGroupRepository;
+use AppBundle\Migration\AnimalMigrationTableFixer;
+use AppBundle\Migration\BirthWeightAndProgressMigrator;
+use AppBundle\Migration\DateOfDeathMigrator;
 use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
 use AppBundle\Migration\BreederNumberMigrator;
@@ -17,10 +21,13 @@ use AppBundle\Migration\PerformanceMeasurementsMigrator;
 use AppBundle\Migration\PredicatesMigrator;
 use AppBundle\Migration\RacesMigrator;
 use AppBundle\Migration\TagReplaceMigrator;
+use AppBundle\Migration\UlnByAnimalIdMigrator;
 use AppBundle\Migration\VsmIdGroupMigrator;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -40,6 +47,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     const ANIMAL_RESIDENCE = 'animal_residence';
     const PERFORMANCE_MEASUREMENTS = 'performance_measurements';
     const ANIMAL_TABLE = 'animal_table';
+    const EXTRA_ANIMAL_TABLE = 'extra_animal_table';
     const BLINDNESS_FACTOR = 'blindness_factor';
     const MYO_MAX = 'myo_max';
     const TAG_REPLACES = 'tag_replaces';
@@ -59,6 +67,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
     /** @var ObjectManager $em */
     private $em;
+
+    /** @var Connection $conn */
+    private $conn;
 
     /** @var CommandUtil */
     private $cmdUtil;
@@ -82,6 +93,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        $this->conn = $this->em->getConnection();
         $this->output = $output;
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
@@ -98,13 +110,17 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             self::PREDICATES => '20161019_0854_DierPredikaat_NSFO-correct.csv',
             self::SUBSCRIPTIONS => 'lidmaatschappen_voor_2010.txt',
             self::CF_TOON_VERHOEVEN => 'Overzicht_UK-dieren_CF_ToonVerhoeven.csv',
+            self::EXTRA_ANIMAL_TABLE => '20161219_Lijst_onbekendstamboek_statusVolbloed_gesorteerdRasbalk_edited.csv',
         );
 
         //Setup folders if missing
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         NullChecker::createFolderPathsFromArrayIfNull($this->rootDir, $this->csvParsingOptions);
-        
+
+        $output->writeln([' ', DoctrineUtil::getDatabaseHostAndNameString($em)]);
+
         $option = $this->cmdUtil->generateMultiLineQuestion([
+            ' ', "\n",
             'Choose option: ', "\n",
             '1: Delete (test)animals with ulnCountryCode \'XD\'', "\n",
             '2: Update pedigreeRegisters', "\n",
@@ -113,6 +129,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '5: Import breederNumbers', "\n",
             '6: Import data for CF ToonVerhoeven', "\n",
             '7: Fix imported animalTable data', "\n",
+            '----------------------------------------------------', "\n",
             '8: Migrate AnimalTable data', "\n",
             '9: Migrate Races', "\n",
             '10: Migrate MyoMax', "\n",
@@ -120,12 +137,39 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '12: Migrate Predicates and update values in Animal', "\n",
             '13: Migrate Performance Measurements', "\n",
             '14: Migrate Company SubscriptionDate', "\n",
+            '----------------------------------------------------', "\n",
             '15: Export animal_migration_table to csv', "\n",
             '16: Import animal_migration_table from exported csv', "\n",
             '17: Export vsm_id_group to csv', "\n",
             '18: Import vsm_id_group from exported csv', "\n",
             '19: Export breeder_number to csv', "\n",
             '20: Import breeder_number from exported csv', "\n",
+            '21: Export uln by animalId to csv', "\n",
+            '22: Import uln by animalId to csv', "\n",
+            '----------------------------------------------------', "\n",
+            '23: Fix animal table after animalTable migration', "\n",
+            '24: Fix missing ulns by data in declares and migrationTable', "\n",
+            '25: Add missing animals to migrationTable', "\n",
+            '26: Fix duplicateDeclareTagTransfers', "\n",
+            '27: Fix vsmIds part1', "\n",
+            '28: Fix vsmIds part2', "\n",
+            '29: Migrate dateOfDeath & isAlive status', "\n",
+            '----------------------------------------------------', "\n",
+            '30: Import missing pedigreeRegisters from '.$this->filenames[self::EXTRA_ANIMAL_TABLE], "\n",
+            '31: Migrate BirthWeights into weight and birthProgress into animal', "\n",
+            '39: Fill missing british ulnNumbers in AnimalMigrationTable', "\n",
+            '----------------------------------------------------', "\n",
+            '40: Fill missing ulnNumbers in AnimalMigrationTable', "\n",
+            '41: Fix animalIds in AnimalMigrationTable (likely incorrect due to duplicate fix)', "\n",
+            '42: Fix genderInDatabase values in AnimalMigrationTable (likely incorrect due to genderChange)', "\n",
+            '43: Fix parentId values in AnimalMigrationTable', "\n",
+            '44: Fix inverted primary and secondary vsmIds in the vsmIdGroup table', "\n",
+            '----------------------------------------------------', "\n",
+            '45: Migrate AnimalTable data V2', "\n",
+            '46: Migrate AnimalTable data: UPDATE Synced Animals', "\n",
+            '47: Fix missing pedigreeNumbers', "\n",
+            '48: Set missing parents on animal', "\n",
+            '----------------------------------------------------', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -230,6 +274,113 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 $output->writeln($result);
                 break;
 
+            case 21:
+                $result = $this->exportUlnByAnimalId() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 22:
+                $result = $this->importUlnByAnimalId() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 23:
+                $result = $this->fixAnimalTable() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 24:
+                $result = $this->fixMissingUlnsByDeclaresAndMigrationTable() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 25:
+                $result = $this->addMissingAnimalsToMigrationTable() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 26:
+                $result = $this->fixDeclareTagTransfers() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 27:
+                $result = $this->fixVsmIds(1) ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 28:
+                $result = $this->fixVsmIds(2) ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 29:
+                $result = $this->migrateDateOfDeathAndIsAliveStatus() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 30:
+                $result = $this->importMissingPedigreeRegisters20161219() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 31:
+                $result = $this->importBirthWeightsAndProgress() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 39:
+                AnimalMigrationTableFixer::fillEmptyBritishUlns($this->cmdUtil, $this->conn);
+                $output->writeln('DONE');
+                break;
+
+            case 40:
+                AnimalMigrationTableFixer::fillEmptyUlnsByGivenUlnLength($this->cmdUtil, $this->conn);
+                $output->writeln('DONE');
+                break;
+
+            case 41:
+                AnimalMigrationTableFixer::updateAnimalIdsInMigrationTable($this->cmdUtil, $this->conn);
+                $output->writeln('DONE');
+                break;
+
+            case 42:
+                AnimalMigrationTableFixer::updateGenderInDatabaseInMigrationTable($this->cmdUtil, $this->conn);
+                $output->writeln('DONE');
+                break;
+
+            case 43:
+                AnimalMigrationTableFixer::updateParentIdsInMigrationTable($this->cmdUtil, $this->conn);
+                $output->writeln('DONE');
+                break;
+
+            case 44:
+                /** @var VsmIdGroupRepository $vsmIdGroupRepository */
+                $vsmIdGroupRepository = $this->em->getRepository(VsmIdGroup::class);
+                $vsmIdGroupRepository->fixSwappedPrimaryAndSecondaryVsmId($this->cmdUtil);
+                $output->writeln('DONE');
+                break;
+
+            case 45:
+                $result = $this->migrateAnimalTableV2() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 46:
+                $result = $this->updateSyncedAnimals() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 47:
+                AnimalTableMigrator::fillMissingPedigreeNumbers($this->conn) ;
+                $output->writeln('DONE');
+                break;
+
+            case 48:
+                AnimalTableMigrator::setParentsFromMigrationTableBySql($this->conn, $this->cmdUtil);
+                $output->writeln('DONE');
+                break;
+
             default:
                 $output->writeln('ABORTED');
                 break;
@@ -301,6 +452,80 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         return null;
     }
 
+
+
+    /**
+     * @return bool
+     */
+    private function importBirthWeightsAndProgress()
+    {
+        $data = $this->parseCSV($this->filenames[self::BIRTH]);
+        if(count($data) == 0) { return false; }
+
+        $dateOfDeathMigrator = new BirthWeightAndProgressMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $dateOfDeathMigrator->migrate();
+        return true;
+    }
+    
+    
+    
+    /**
+     * @return bool
+     */
+    private function migrateDateOfDeathAndIsAliveStatus()
+    {
+        $data = $this->parseCSV($this->filenames[self::ANIMAL_RESIDENCE]);
+        if(count($data) == 0) { return false; }
+
+        $dateOfDeathMigrator = new DateOfDeathMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $dateOfDeathMigrator->migrate();
+        return true;
+    }
+
+
+    /**
+     * @param  int $part
+     * @return bool
+     */
+    private function fixVsmIds($part = null)
+    {
+        $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
+        if(count($data) == 0) { return false; }
+
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        switch ($part) {
+            case 1:     $animalTableMigrator->fixVsmIds(); break;
+            case 2:     $animalTableMigrator->fixVsmIdsPart2(); break;
+            default:    $animalTableMigrator->fixVsmIds();
+                        $animalTableMigrator->fixVsmIdsPart2(); break;
+        }
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function fixDeclareTagTransfers()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator->fixDeclareTagTransfers();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function addMissingAnimalsToMigrationTable()
+    {
+        $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
+        if(count($data) == 0) { return false; }
+
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator->addMissingAnimalsToMigrationTable();
+        return true;
+    }
+    
 
     /**
      * @return bool
@@ -389,6 +614,47 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /**
      * @return bool
      */
+    private function exportUlnByAnimalId()
+    {
+        $unlNumberMigrator = new UlnByAnimalIdMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $this->output->writeln('Exporting ulns by animalId to csv');
+        $unlNumberMigrator->exportToCsv();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function importUlnByAnimalId()
+    {
+        $columnHeaders = $this->parseCSVHeader(UlnByAnimalIdMigrator::FILENAME_CSV_EXPORT, false);
+        $data = $this->parseCSV(UlnByAnimalIdMigrator::FILENAME_CSV_EXPORT, false);
+        if(count($data) == 0 && $columnHeaders != null) { return false; }
+
+        $unlNumberMigrator = new UlnByAnimalIdMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
+        $this->output->writeln('Importing ulns by animalId from csv');
+        $unlNumberMigrator->updateUlnsFromCsv();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function fixMissingUlnsByDeclaresAndMigrationTable()
+    {
+        $unlNumberMigrator = new UlnByAnimalIdMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir, null);
+        $this->output->writeln('Fix missing ulns by declares and animalMigrationData');
+        $unlNumberMigrator->fixUlnsByDeclares();
+        $unlNumberMigrator->fixMissingUlnsByVsmIdInMigrationTable();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
     private function deleteTestAnimals()
     {
         /** @var AnimalRepository $animalRepository */
@@ -408,6 +674,20 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
         $animalTableMigrator->importAnimalTableCsvFileIntoDatabase();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function importMissingPedigreeRegisters20161219()
+    {
+        $data = $this->parseCSV($this->filenames[self::EXTRA_ANIMAL_TABLE]);
+        if(count($data) == 0) { return false; }
+
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator->importMissingPedigreeRegisters20161219();
         return true;
     }
 
@@ -502,6 +782,30 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
         return true;
     }
+
+
+    /**
+     * @return bool
+     */
+    private function migrateAnimalTableV2()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator->migrateV2();
+
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function updateSyncedAnimals()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator->updateSyncedAnimals();
+
+        return true;
+    }
     
     
     /**
@@ -587,6 +891,15 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $migrator = new CompanySubscriptionMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
         $migrator->migrate();
         $migrator->printOutCsvOfCompaniesWithoutSubscriptionDate();
+        return true;
+    }
+
+
+    private function fixAnimalTable()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $this->output->writeln('Fixing animalTable');
+        $animalTableMigrator->fixAnimalTableAfterImport();
         return true;
     }
 }

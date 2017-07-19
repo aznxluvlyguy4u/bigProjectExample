@@ -6,11 +6,14 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
+use AppBundle\ManualTest\ManualAnimalTest;
+use AppBundle\Migration\AnimalExterminator;
 use AppBundle\Util\CommandUtil;
 
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -29,6 +32,7 @@ class NsfoTestCommand extends ContainerAwareCommand
     const OUTPUT_FOLDER_NAME = '/Resources/outputs/test';
     const FILENAME = 'test.csv';
     const DEFAULT_OPTION = 0;
+    const BLOCKED_DATABASE_NAME_PART = 'prod';
 
     const CREATE_TEST_FOLDER_IF_NULL = true;
 
@@ -38,6 +42,12 @@ class NsfoTestCommand extends ContainerAwareCommand
     /** @var Connection $conn */
     private $conn;
 
+    /** @var OutputInterface */
+    private $output;
+
+    /** @var CommandUtil */
+    private $cmdUtil;
+
     /** @var string */
     private $rootDir;
 
@@ -46,9 +56,6 @@ class NsfoTestCommand extends ContainerAwareCommand
 
     /** @var AnimalRepository */
     private $animalRepository;
-
-    /** @var CommandUtil */
-    private $cmdUtil;
 
     /** @var string */
     private $databaseName;
@@ -73,6 +80,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        $this->output = $output;
         $this->conn = $em->getConnection();
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
@@ -88,28 +96,28 @@ class NsfoTestCommand extends ContainerAwareCommand
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '1: Custom test', "\n",
-            '2: Custom test', "\n",
+            '1: Find locations with highest animal count', "\n",
+            '2: Delete animal and all related records', "\n",
             'DEFAULT: Custom test', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
 
             case 1:
-                //PLACEHOLDER
-                $this->customTest();
+                $results = $this->locationRepository->findLocationsWithHighestAnimalCount();
+                $this->cmdUtil->writeln($results);
                 break;
             case 2:
-                //PLACEHOLDER
-                $this->customTest();
+                if($this->isBlockedDatabase()) { $this->printDatabaseError(); break; }
+                AnimalExterminator::deleteAnimalsByCliInput($em, $this->cmdUtil);
                 break;
             default:
                 $this->customTest();
                 break;
         }
         $output->writeln('DONE');
-
-
+        
+        
     }
 
 
@@ -146,4 +154,19 @@ class NsfoTestCommand extends ContainerAwareCommand
         return $rows;
     }
 
+
+    private function printDatabaseError()
+    {
+        $this->output->writeln('THIS COMMAND IS NOT ALLOWED FOR ANY DATABASE '.
+            "WHICH NAME CONTAINS '".self::BLOCKED_DATABASE_NAME_PART."'!");
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function isBlockedDatabase()
+    {
+        return StringUtil::isStringContains(strtolower($this->databaseName), self::BLOCKED_DATABASE_NAME_PART);
+    }
 }
