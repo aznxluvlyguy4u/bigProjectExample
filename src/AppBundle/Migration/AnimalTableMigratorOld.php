@@ -32,7 +32,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class AnimalTableMigrator extends MigratorBase
+class AnimalTableMigratorOld extends MigratorBase
 {
 	const PRINT_OUT_INVALID_UBNS_OF_BIRTH = true;
 	const PRINT_OUT_FILENAME_INCORRECT_GENDERS = true;

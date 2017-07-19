@@ -10,7 +10,7 @@ use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Migration\AnimalMigrationTableFixer;
 use AppBundle\Migration\BirthWeightAndProgressMigrator;
 use AppBundle\Migration\DateOfDeathMigrator;
-use AppBundle\Migration\AnimalTableMigrator;
+use AppBundle\Migration\AnimalTableMigratorOld;
 use AppBundle\Migration\BlindnessFactorsMigrator;
 use AppBundle\Migration\BreederNumberMigrator;
 use AppBundle\Migration\CFToonVerhoevenMigrator;
@@ -372,12 +372,12 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 47:
-                AnimalTableMigrator::fillMissingPedigreeNumbers($this->conn) ;
+                AnimalTableMigratorOld::fillMissingPedigreeNumbers($this->conn) ;
                 $output->writeln('DONE');
                 break;
 
             case 48:
-                AnimalTableMigrator::setParentsFromMigrationTableBySql($this->conn, $this->cmdUtil);
+                AnimalTableMigratorOld::setParentsFromMigrationTableBySql($this->conn, $this->cmdUtil);
                 $output->writeln('DONE');
                 break;
 
@@ -492,7 +492,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
         if(count($data) == 0) { return false; }
 
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
         switch ($part) {
             case 1:     $animalTableMigrator->fixVsmIds(); break;
             case 2:     $animalTableMigrator->fixVsmIdsPart2(); break;
@@ -507,7 +507,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function fixDeclareTagTransfers()
     {
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $animalTableMigrator->fixDeclareTagTransfers();
         return true;
     }
@@ -521,7 +521,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
         if(count($data) == 0) { return false; }
 
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
         $animalTableMigrator->addMissingAnimalsToMigrationTable();
         return true;
     }
@@ -532,7 +532,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function exportAnimalMigrationTableCsv()
     {
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $this->output->writeln('Exporting animal_migration_table to csv');
         $animalTableMigrator->exportToCsv();
         return true;
@@ -544,11 +544,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function importAnimalMigrationTableCsv()
     {
-        $columnHeaders = $this->parseCSVHeader(AnimalTableMigrator::FILENAME_CSV_EXPORT, false);
-        $data = $this->parseCSV(AnimalTableMigrator::FILENAME_CSV_EXPORT, false);
+        $columnHeaders = $this->parseCSVHeader(AnimalTableMigratorOld::FILENAME_CSV_EXPORT, false);
+        $data = $this->parseCSV(AnimalTableMigratorOld::FILENAME_CSV_EXPORT, false);
         if(count($data) == 0 && $columnHeaders != null) { return false; }
 
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
         $this->output->writeln('Importing animal_migration_table from csv');
         $animalTableMigrator->importFromCsv();
         return true;
@@ -672,7 +672,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
         if(count($data) == 0) { return false; }
 
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
         $animalTableMigrator->importAnimalTableCsvFileIntoDatabase();
         return true;
     }
@@ -686,7 +686,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $data = $this->parseCSV($this->filenames[self::EXTRA_ANIMAL_TABLE]);
         if(count($data) == 0) { return false; }
 
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
         $animalTableMigrator->importMissingPedigreeRegisters20161219();
         return true;
     }
@@ -711,7 +711,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function fixImportedAnimalTableData()
     {
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $animalTableMigrator->fixValuesInAnimalMigrationTable();
         //TODO
         return true;
@@ -766,7 +766,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function updatePedigreeRegister()
     {
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $animalTableMigrator->updatePedigreeRegister();
         return true;
     }
@@ -777,7 +777,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function migrateAnimalTable()
     {
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $animalTableMigrator->migrate();
 
         return true;
@@ -789,7 +789,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function migrateAnimalTableV2()
     {
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $animalTableMigrator->migrateV2();
 
         return true;
@@ -801,7 +801,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function updateSyncedAnimals()
     {
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $animalTableMigrator->updateSyncedAnimals();
 
         return true;
@@ -897,7 +897,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
     private function fixAnimalTable()
     {
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator = new AnimalTableMigratorOld($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $this->output->writeln('Fixing animalTable');
         $animalTableMigrator->fixAnimalTableAfterImport();
         return true;
