@@ -9,7 +9,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class AnimalMigrationTable
- * @ORM\Table(name="animal_migration_table", indexes={@ORM\Index(name="migration_idx", columns={"vsm_id", "animal_id", "mother_id", "father_id"})})
+ * @ORM\Table(name="animal_migration_table", indexes={@ORM\Index(name="migration_idx", columns={"vsm_id", "animal_id", "mother_id", "father_id", "gender_in_database"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalMigrationTableRepository")
  * @package AppBundle\Entity
  */
