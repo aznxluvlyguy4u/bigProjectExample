@@ -95,6 +95,41 @@ class RetrieveAnimals
     private $actionBy;
 
     /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $currentAnimalsCount;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $retrievedAnimalsCount;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $newAnimalsCount;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $blockedNewAnimalsCount;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $removedAnimalsCount;
+
+    /**
      * RetrieveAnimals constructor
      */
     public function __construct() {
@@ -307,7 +342,7 @@ class RetrieveAnimals
     }
 
     /**
-     * @return Client|Employee
+     * @return Client|Employee|Person
      */
     public function getActionBy()
     {
@@ -316,10 +351,103 @@ class RetrieveAnimals
 
     /**
      * @param Person $actionBy
+     * @return $this
      */
     public function setActionBy($actionBy)
     {
         $this->actionBy = $actionBy;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCurrentAnimalsCount()
+    {
+        return $this->currentAnimalsCount;
+    }
+
+    /**
+     * @param int $currentAnimalsCount
+     * @return RetrieveAnimals
+     */
+    public function setCurrentAnimalsCount($currentAnimalsCount)
+    {
+        $this->currentAnimalsCount = $currentAnimalsCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRetrievedAnimalsCount()
+    {
+        return $this->retrievedAnimalsCount;
+    }
+
+    /**
+     * @param int $retrievedAnimalsCount
+     * @return RetrieveAnimals
+     */
+    public function setRetrievedAnimalsCount($retrievedAnimalsCount)
+    {
+        $this->retrievedAnimalsCount = $retrievedAnimalsCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getNewAnimalsCount()
+    {
+        return $this->newAnimalsCount;
+    }
+
+    /**
+     * @param int $newAnimalsCount
+     * @return RetrieveAnimals
+     */
+    public function setNewAnimalsCount($newAnimalsCount)
+    {
+        $this->newAnimalsCount = $newAnimalsCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBlockedNewAnimalsCount()
+    {
+        return $this->blockedNewAnimalsCount;
+    }
+
+    /**
+     * @param int $blockedNewAnimalsCount
+     * @return RetrieveAnimals
+     */
+    public function setBlockedNewAnimalsCount($blockedNewAnimalsCount)
+    {
+        $this->blockedNewAnimalsCount = $blockedNewAnimalsCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRemovedAnimalsCount()
+    {
+        return $this->removedAnimalsCount;
+    }
+
+    /**
+     * @param int $removedAnimalsCount
+     * @return RetrieveAnimals
+     */
+    public function setRemovedAnimalsCount($removedAnimalsCount)
+    {
+        $this->removedAnimalsCount = $removedAnimalsCount;
+        return $this;
     }
 
 
