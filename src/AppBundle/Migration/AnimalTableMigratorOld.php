@@ -20,6 +20,7 @@ use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
+use AppBundle\Service\AnimalTableImporter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\SqlUtil;
@@ -160,7 +161,7 @@ class AnimalTableMigratorOld extends MigratorBase
 		foreach ($this->data as $record) {
 
 			$uln = StringUtil::getNullAsStringOrWrapInQuotes($record[3]);
-			$ulnParts = $this->parseUln($record[3]);
+			$ulnParts = AnimalTableImporter::parseUln($record[3]);
 
 			$searchKey = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE].$ulnParts[JsonInputConstant::ULN_NUMBER].TimeUtil::fillDateStringWithLeadingZeroes($record[8]);
 
@@ -172,7 +173,7 @@ class AnimalTableMigratorOld extends MigratorBase
 				if($vsmIdInAnimal != $vsmIdInCsv && $vsmIdInAnimal != null && $vsmIdInCsv != null && $vsmIdInAnimal != '' && $vsmIdInCsv != '') {
 					$updateString = $updateString."('".$vsmIdInAnimal."','".$vsmIdInCsv."'),";
 
-					$genderInFile = $this->parseGender($record[7]);
+					$genderInFile = AnimalTableImporter::parseGender($record[7]);
 					if($genderInFile == GenderType::FEMALE) {
 						$updateStringMother = $updateStringMother."('".$vsmIdInAnimal."','".$vsmIdInCsv."'),";
 					} elseif ($genderInFile == GenderType::MALE) {
@@ -243,7 +244,7 @@ class AnimalTableMigratorOld extends MigratorBase
 		$this->output->writeln('Creating searchArrays ...');
 		$recordsByUln = [];
 		foreach ($this->data as $record) {
-			$ulnParts = $this->parseUln($record[3]);
+			$ulnParts = AnimalTableImporter::parseUln($record[3]);
 			$uln = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE].$ulnParts[JsonInputConstant::ULN_NUMBER];
 			$recordsByUln[$uln] = $record;
 		}
@@ -415,7 +416,7 @@ class AnimalTableMigratorOld extends MigratorBase
 		foreach ($this->data as $record) {
 
 			$uln = StringUtil::getNullAsStringOrWrapInQuotes($record[3]);
-			$ulnParts = $this->parseUln($record[3]);
+			$ulnParts = AnimalTableImporter::parseUln($record[3]);
 
 			$searchKey = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE].$ulnParts[JsonInputConstant::ULN_NUMBER].TimeUtil::fillDateStringWithLeadingZeroes($record[8]);
 
@@ -426,7 +427,7 @@ class AnimalTableMigratorOld extends MigratorBase
 
 				$vsmId = intval($record[0]);
 				$stnImport = StringUtil::getNullAsStringOrWrapInQuotes($record[1]);
-				$stnParts = $this->parseStn($record[1]);
+				$stnParts = AnimalTableImporter::parseStn($record[1]);
 				$pedigreeCountryCode = StringUtil::getNullAsStringOrWrapInQuotes($stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE]);
 				$pedigreeNumber = StringUtil::getNullAsStringOrWrapInQuotes($stnParts[JsonInputConstant::PEDIGREE_NUMBER]);
 
@@ -438,7 +439,7 @@ class AnimalTableMigratorOld extends MigratorBase
 				$nickName = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
 				$fatherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[5], false);
 				$motherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[6], false);
-				$genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
+				$genderInFile = StringUtil::getNullAsStringOrWrapInQuotes(AnimalTableImporter::parseGender($record[7]));
 				$dateOfBirthString = StringUtil::getNullAsStringOrWrapInQuotes(TimeUtil::fillDateStringWithLeadingZeroes($record[8]));
 				$breedCode = StringUtil::getNullAsStringOrWrapInQuotes($record[9]);
 				$ubnOfBirth = StringUtil::getNullAsStringOrWrapInQuotes($record[10]); //ubnOfBreeder
@@ -539,7 +540,7 @@ class AnimalTableMigratorOld extends MigratorBase
 		foreach ($this->data as $record) {
 
 			$uln = StringUtil::getNullAsStringOrWrapInQuotes($record[3]);
-			$ulnParts = $this->parseUln($record[3]);
+			$ulnParts = AnimalTableImporter::parseUln($record[3]);
 			$ulnCountryCode = StringUtil::getNullAsStringOrWrapInQuotes($ulnParts[JsonInputConstant::ULN_COUNTRY_CODE]);
 			$ulnNumber = StringUtil::getNullAsStringOrWrapInQuotes($ulnParts[JsonInputConstant::ULN_NUMBER]);
 
@@ -550,7 +551,7 @@ class AnimalTableMigratorOld extends MigratorBase
             if(array_key_exists($vsmId, $processedAnimals)) { $animalsAlreadyInDatabase++; $this->cmdUtil->advanceProgressBar(1); continue; }
 
             $stnImport = StringUtil::getNullAsStringOrWrapInQuotes($record[1]);
-            $stnParts = $this->parseStn($record[1]);
+            $stnParts = AnimalTableImporter::parseStn($record[1]);
             $pedigreeCountryCode = StringUtil::getNullAsStringOrWrapInQuotes($stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE]);
             $pedigreeNumber = StringUtil::getNullAsStringOrWrapInQuotes($stnParts[JsonInputConstant::PEDIGREE_NUMBER]);
 
@@ -562,7 +563,7 @@ class AnimalTableMigratorOld extends MigratorBase
 			$nickName = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
             $fatherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[5], false);
             $motherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[6], false);
-            $genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
+            $genderInFile = StringUtil::getNullAsStringOrWrapInQuotes(AnimalTableImporter::parseGender($record[7]));
 			$dateOfBirthString = StringUtil::getNullAsStringOrWrapInQuotes($record[8]);
 			$breedCode = StringUtil::getNullAsStringOrWrapInQuotes($record[9]);
 			$ubnOfBirth = StringUtil::getNullAsStringOrWrapInQuotes($record[10]); //ubnOfBreeder
@@ -2256,14 +2257,14 @@ class AnimalTableMigratorOld extends MigratorBase
 				}
 			}
 
-			$ulnParts = $this->parseUln($ulnOrigin);
+			$ulnParts = AnimalTableImporter::parseUln($ulnOrigin);
 			$ulnCountryCode = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE];
 			$ulnNumber = $ulnParts[JsonInputConstant::ULN_NUMBER];
 			$animalOrderNumber = $ulnNumber != null ? StringUtil::getLast5CharactersFromString($ulnNumber) : null;
 
 			if($validatedStnOrigin != null) { $stnOrigin = $validatedStnOrigin;	}
 
-			$stnParts = $this->parseStn($stnOrigin);
+			$stnParts = AnimalTableImporter::parseStn($stnOrigin);
 			$pedigreeCountryCode = $stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE];
 			$pedigreeNumber = $stnParts[JsonInputConstant::PEDIGREE_NUMBER];
 
@@ -2839,62 +2840,6 @@ class AnimalTableMigratorOld extends MigratorBase
 
 
 	/**
-	 * @param string $gender
-	 * @return string
-	 */
-	private function parseGender($gender)
-	{
-		//The only genders in the file are 'M' and 'V'
-		switch ($gender) {
-			case GenderType::M: return GenderType::MALE;
-			case GenderType::V: return GenderType::FEMALE;
-			default: return GenderType::NEUTER;
-		}
-	}
-
-
-	/**
-	 *
-	 * @param string $ulnString
-	 * @return array
-	 */
-	private function parseUln($ulnString)
-	{
-		if(Validator::verifyUlnFormat($ulnString, true)) {
-			$parts = explode(' ', $ulnString);
-			$parts[0] = str_replace('GB', 'UK', $parts[0]);
-		} else {
-			$parts = [null, null];
-		}
-
-        return [
-            JsonInputConstant::ULN_COUNTRY_CODE => $parts[0],
-            JsonInputConstant::ULN_NUMBER => $parts[1],
-        ];
-
-    }
-
-    /**
-     * @param string $stnString
-     * @return array
-     */
-	private function parseStn($stnString)
-	{
-        if(Validator::verifyPedigreeCountryCodeAndNumberFormat($stnString, true)) {
-            $parts = explode(' ', $stnString);
-            $parts[0] = str_replace('GB', 'UK', $parts[0]);
-        } else {
-            $parts = [null, null];
-        }
-
-        return [
-            JsonInputConstant::PEDIGREE_COUNTRY_CODE => $parts[0],
-            JsonInputConstant::PEDIGREE_NUMBER => $parts[1],
-        ];
-	}
-
-
-	/**
 	 * These values are based on the pedigreeRegister data in the import file
 	 * compared to the values in the database on 2016
 	 */
@@ -3010,7 +2955,7 @@ class AnimalTableMigratorOld extends MigratorBase
 		foreach ($this->data as $record) {
 
 			$vsmId = $record[0];
-			$gender = $this->parseGender($record[7]);
+			$gender = AnimalTableImporter::parseGender($record[7]);
 
 			if (array_key_exists($vsmId, $neutersByVsmId)) {
 				//Neuter with this vsmId currently exists in the database
@@ -3776,7 +3721,7 @@ class AnimalTableMigratorOld extends MigratorBase
 
 			//In animalId is still null, find by uln
 			if($animalId == null) {
-				$ulnParts = $this->parseUln($record[3]);
+				$ulnParts = AnimalTableImporter::parseUln($record[3]);
 				$ulnCountryCode = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE];
 				$ulnNumber = $ulnParts[JsonInputConstant::ULN_NUMBER];
 
@@ -3828,7 +3773,7 @@ class AnimalTableMigratorOld extends MigratorBase
 //			$nickName = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
 //			$fatherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[5], false);
 //			$motherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[6], false);
-//			$genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
+//			$genderInFile = StringUtil::getNullAsStringOrWrapInQuotes(AnimalTableImporter::parseGender($record[7]));
 //
 //			$breedCode = StringUtil::getNullAsStringOrWrapInQuotes($record[9]);
 //			$ubnOfBirth = StringUtil::getNullAsStringOrWrapInQuotes($record[10]); //ubnOfBreeder

@@ -95,6 +95,13 @@ services:
         arguments:
           entityManager: '@doctrine.orm.entity_manager'
           cacheDir: %kernel.root_dir%
+          animalTableImporter: '@app.migrator.importer.animaltable'
+
+    app.migrator.importer.animaltable:
+        class: AppBundle\Service\AnimalTableImporter
+        arguments:
+          entityManager: '@doctrine.orm.entity_manager'
+          cacheDir: %kernel.root_dir%
 
     app.breed.index:
         class: AppBundle\Service\BreedIndexService
