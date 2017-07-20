@@ -93,6 +93,7 @@ class AnimalTableImporter
             ' ', "\n",
             'Choose option: ', "\n",
             '1: Import AnimalTable csv file into database', "\n",
+            '2: Update animal_migration_table empty animal table values', "\n",
             '----------------------------------------------------', "\n",
 //            '2: Export animal_migration_table to csv', "\n",
 //            '3: Import animal_migration_table from exported csv', "\n",
@@ -107,8 +108,7 @@ class AnimalTableImporter
 
         switch ($option) {
             case 1: $this->importAnimalTableCsvFileIntoDatabase(); break;
-//            case 2:
-//                break;
+            case 2: $this->updateValues(); break;
 //            case 3:
 //                break;
 //            case 4:
@@ -324,6 +324,115 @@ class AnimalTableImporter
         }
         return null;
     }
+
+
+
+    private function updateValues()
+    {
+        $queries = [
+
+            'Update incongruent animal_id where vsmId = name in animal table ...' =>
+                "UPDATE animal_migration_table SET animal_id = v.animal_id
+                    FROM (
+                        SELECT vsm_id, a.id
+                        FROM animal_migration_table m
+                            INNER JOIN animal a ON CAST(a.name AS INTEGER) = m.vsm_id
+                                                   AND (animal_id ISNULL
+                                                        OR animal_id <> a.id
+                                                   )
+                        WHERE a.name NOTNULL AND vsm_id NOT IN (
+                            --SKIP duplicate vsmIds in database
+                            SELECT CAST(a.name AS INTEGER)
+                            FROM animal
+                            WHERE name NOTNULL
+                            GROUP BY name HAVING COUNT(*) > 1
+                        )
+                    ) AS v(vsm_id, animal_id) WHERE animal_migration_table.vsm_id = v.vsm_id",
+
+            'Update incongruent gender_in_database where vsmId = name in animal table ...' =>
+                "UPDATE animal_migration_table SET gender_in_database = v.gender_in_database
+                    FROM (
+                        SELECT vsm_id, a.gender
+                        FROM animal_migration_table m
+                            INNER JOIN animal a ON CAST(a.name AS INTEGER) = m.vsm_id
+                                                   AND (m.gender_in_database <> a.gender
+                                                        OR m.gender_in_database ISNULL AND a.gender NOTNULL
+                                                   )
+                        WHERE a.name NOTNULL AND vsm_id NOT IN (
+                            --SKIP duplicate vsmIds in database
+                            SELECT CAST(a.name AS INTEGER)
+                            FROM animal
+                            WHERE name NOTNULL
+                            GROUP BY name HAVING COUNT(*) > 1
+                        )
+                    ) AS v(vsm_id, gender_in_database) WHERE animal_migration_table.vsm_id = v.vsm_id",
+
+            'Update incongruent father_id where father_vsm_id = name in animal table ...' =>
+                "UPDATE animal_migration_table SET father_id = v.father_id
+                    FROM (
+                           SELECT father_vsm_id, dad.id
+                           FROM animal_migration_table m
+                             INNER JOIN animal dad ON CAST(dad.name AS INTEGER) = m.father_vsm_id
+                                                      AND (father_id ISNULL OR father_id <> dad.id)
+                                                      AND dad.type = 'Ewe'
+                           WHERE dad.name NOTNULL AND vsm_id NOT IN (
+                             --SKIP duplicate vsmIds in database
+                             SELECT CAST(dad.name AS INTEGER)
+                             FROM animal
+                             WHERE name NOTNULL
+                             GROUP BY name HAVING COUNT(*) > 1
+                           )
+                         ) AS v(father_vsm_id, father_id) WHERE animal_migration_table.father_vsm_id = v.father_vsm_id",
+
+            'Update incongruent mother_id where mother_vsm_id = name in animal table ...' =>
+                "UPDATE animal_migration_table SET mother_id = v.mother_id
+                    FROM (
+                           SELECT mother_vsm_id, mom.id
+                           FROM animal_migration_table m
+                             INNER JOIN animal mom ON CAST(mom.name AS INTEGER) = m.mother_vsm_id
+                                                      AND (mother_id ISNULL OR mother_id <> mom.id)
+                                                      AND mom.type = 'Ewe'
+                           WHERE mom.name NOTNULL AND vsm_id NOT IN (
+                             --SKIP duplicate vsmIds in database
+                             SELECT CAST(mom.name AS INTEGER)
+                             FROM animal
+                             WHERE name NOTNULL
+                             GROUP BY name HAVING COUNT(*) > 1
+                           )
+                         ) AS v(mother_vsm_id, mother_id) WHERE animal_migration_table.mother_vsm_id = v.mother_vsm_id",
+
+            'Update incongruent location_of_birth_id where ubn_of_birth = ubn in location table ...' =>
+            "UPDATE animal_migration_table SET location_of_birth_id = v.location_id
+                FROM (
+                  SELECT m.id, l.id
+                  FROM animal_migration_table m
+                    INNER JOIN location l ON l.ubn = m.ubn_of_birth
+                                             AND (m.location_of_birth_id ISNULL
+                                                    OR m.location_of_birth_id <> l.id)
+                                             AND l.is_active
+                  WHERE l.ubn NOT IN (
+                    --ignore duplicate active ubns
+                    SELECT ubn FROM location WHERE is_active
+                    GROUP BY ubn HAVING COUNT(*) > 1
+                  )
+                ) AS v(id, location_id) WHERE animal_migration_table.id = v.id"
+
+        ];
+
+        foreach ($queries as $title => $sql) {
+            $this->updateBySql($title, $sql);
+        }
+    }
+
+
+    private function updateBySql($title, $sql)
+    {
+        $this->writeLn($title);
+        $count = SqlUtil::updateWithCount($this->conn, $sql);
+        $prefix = $count === 0 ? 'No' : $count;
+        $this->writeLn($prefix . ' records updated');
+    }
+
 
 
     /**

@@ -190,4 +190,7 @@ class VsmMigratorService
         $this->csvOptions->setFileName($filename);
         return CsvParser::parse($this->csvOptions);
     }
+
+
+
 }
