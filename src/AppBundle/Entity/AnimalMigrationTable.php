@@ -315,6 +315,13 @@ class AnimalMigrationTable
     private $isNewImportAnimal;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isUnreliableParent;
+
+    /**
      * AnimalMigrationTable constructor.
      */
     public function __construct()
@@ -981,6 +988,24 @@ class AnimalMigrationTable
         return $this;
     }
 
+
+    /**
+     * @return bool
+     */
+    public function isUnreliableParent()
+    {
+        return $this->isUnreliableParent;
+    }
+
+    /**
+     * @param bool $isUnreliableParent
+     * @return AnimalMigrationTable
+     */
+    public function setIsUnreliableParent($isUnreliableParent)
+    {
+        $this->isUnreliableParent = $isUnreliableParent;
+        return $this;
+    }
 
     
 }
