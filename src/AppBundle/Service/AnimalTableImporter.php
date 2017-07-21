@@ -344,7 +344,7 @@ class AnimalTableImporter
                                                    )
                         WHERE a.name NOTNULL AND vsm_id NOT IN (
                             --SKIP duplicate vsmIds in database
-                            SELECT CAST(a.name AS INTEGER)
+                            SELECT CAST(name AS INTEGER)
                             FROM animal
                             WHERE name NOTNULL
                             GROUP BY name HAVING COUNT(*) > 1
@@ -369,7 +369,7 @@ class AnimalTableImporter
                                                       AND dad.type = 'Ewe'
                            WHERE dad.name NOTNULL AND vsm_id NOT IN (
                              --SKIP duplicate vsmIds in database
-                             SELECT CAST(dad.name AS INTEGER)
+                             SELECT CAST(name AS INTEGER)
                              FROM animal
                              WHERE name NOTNULL
                              GROUP BY name HAVING COUNT(*) > 1
@@ -386,7 +386,7 @@ class AnimalTableImporter
                                                       AND mom.type = 'Ewe'
                            WHERE mom.name NOTNULL AND vsm_id NOT IN (
                              --SKIP duplicate vsmIds in database
-                             SELECT CAST(mom.name AS INTEGER)
+                             SELECT CAST(name AS INTEGER)
                              FROM animal
                              WHERE name NOTNULL
                              GROUP BY name HAVING COUNT(*) > 1
