@@ -95,6 +95,7 @@ class AnimalTableImporter
             'Choose option: ', "\n",
             '1: Import AnimalTable csv file into database', "\n",
             '2: Update animal_migration_table empty animal table values', "\n",
+            '3: Fix animal_migration_table values, including issues as requested by Reinard', "\n",
             '----------------------------------------------------', "\n",
 //            '2: Export animal_migration_table to csv', "\n",
 //            '3: Import animal_migration_table from exported csv', "\n",
@@ -110,8 +111,7 @@ class AnimalTableImporter
         switch ($option) {
             case 1: $this->importAnimalTableCsvFileIntoDatabase(); break;
             case 2: $this->updateValues(); break;
-//            case 3:
-//                break;
+            case 3: $this->fixValues(); break;
 //            case 4:
 //                break;
 //            case 5:
@@ -223,6 +223,8 @@ class AnimalTableImporter
         $this->sqlBatchProcessor->end();
 
         DoctrineUtil::updateTableSequence($this->conn, ['animal_migration_table']);
+
+        $this->initializeStartValues();
     }
 
 
@@ -329,12 +331,41 @@ class AnimalTableImporter
 
 
 
-    private function updateValues()
+    private function initializeStartValues()
     {
+        $this->writeLn('=== Initialize first values after csv import to animal_migration_table ===');
+
         $queries = [
 
             'Update incongruent animal_id where vsmId = name in animal table ...' =>
-                "UPDATE animal_migration_table SET animal_id = v.animal_id
+                $this->getUpdateIncongruentAnimalIdsSqlQuery(),
+
+            //Only run this query AFTER updating the animalId values!
+            'Set is_new_import_animal = TRUE for newly imported animals without an animalId, secondary_vsm_id, NOR replaced uln ...' =>
+                "UPDATE animal_migration_table SET is_new_import_animal = TRUE
+                    WHERE animal_id ISNULL
+                          AND vsm_id NOT IN (
+                              SELECT CAST(secondary_vsm_id AS INTEGER) FROM vsm_id_group
+                          )
+                          AND CONCAT(uln_country_code,uln_number) NOT IN (
+                              SELECT CONCAT(uln_country_code, uln_number) as uln FROM tag WHERE tag_status = 'REPLACED'
+                          )
+                          AND is_new_import_animal = FALSE",
+
+        ];
+
+        foreach ($queries as $title => $sql) {
+            $this->updateBySql($title, $sql);
+        }
+    }
+
+
+    /**
+     * @return string
+     */
+    private function getUpdateIncongruentAnimalIdsSqlQuery()
+    {
+        return "UPDATE animal_migration_table SET animal_id = v.animal_id
                     FROM (
                         SELECT vsm_id, a.id
                         FROM animal_migration_table m
@@ -349,7 +380,18 @@ class AnimalTableImporter
                             WHERE name NOTNULL
                             GROUP BY name HAVING COUNT(*) > 1
                         )
-                    ) AS v(vsm_id, animal_id) WHERE animal_migration_table.vsm_id = v.vsm_id",
+                    ) AS v(vsm_id, animal_id) WHERE animal_migration_table.vsm_id = v.vsm_id";
+    }
+
+
+    private function updateValues()
+    {
+        $this->writeLn('=== Update incongruent/empty values in animal_migration_table ===');
+
+        $queries = [
+
+            'Update incongruent animal_id where vsmId = name in animal table ...' =>
+                $this->getUpdateIncongruentAnimalIdsSqlQuery(),
 
             'Update incongruent gender_in_database where animal_id = id in animal table (only run after animal_id update) ...' =>
                 "UPDATE animal_migration_table SET gender_in_database = v.gender_in_database
@@ -417,12 +459,245 @@ class AnimalTableImporter
     }
 
 
+    /**
+     * @param string $title
+     * @param string $sql
+     * @return int count
+     */
     private function updateBySql($title, $sql)
     {
         $this->writeLn($title);
         $count = SqlUtil::updateWithCount($this->conn, $sql);
         $prefix = $count === 0 ? 'No' : $count;
         $this->writeLn($prefix . ' records updated');
+        return $count;
+    }
+
+
+    private function fixValues()
+    {
+        $this->markUnreliableParents();
+        $this->fixGenderOfNeutersByMigrationValues();
+        $this->fixValuesByInstructionsOfReinard();
+    }
+
+
+    private function markUnreliableParents()
+    {
+        $sql = "UPDATE animal_migration_table SET is_unrealiable_parent = TRUE 
+                    WHERE vsm_id IN (
+                      --Males that are also mothers in csv
+                      SELECT amt.vsm_id
+                      FROM animal_migration_table amt
+                        INNER JOIN (
+                                     SELECT m.vsm_id, COUNT(m.id) as mother_count_in_csv
+                                     FROM animal_migration_table m
+                                       INNER JOIN animal_migration_table c ON c.mother_vsm_id = m.vsm_id
+                                     WHERE m.gender_in_file = 'MALE'
+                                     GROUP BY m.vsm_id
+                                   )g ON g.vsm_id = amt.vsm_id
+                        LEFT JOIN (
+                                    SELECT m.vsm_id, COUNT(m.id) as father_count_in_csv
+                                    FROM animal_migration_table m
+                                      INNER JOIN animal_migration_table c ON c.father_vsm_id = m.vsm_id
+                                    WHERE m.gender_in_file = 'MALE'
+                                    GROUP BY m.vsm_id
+                                  )mc ON mc.vsm_id = amt.vsm_id
+                        LEFT JOIN pedigree_register r ON r.id = amt.pedigree_register_id
+                      UNION
+                      --Females that are also fathers in csv
+                      SELECT amt.vsm_id
+                      FROM animal_migration_table amt
+                        INNER JOIN (
+                                     SELECT m.vsm_id, COUNT(m.id) as father_count_in_csv
+                                     FROM animal_migration_table m
+                                       INNER JOIN animal_migration_table c ON c.father_vsm_id = m.vsm_id
+                                     WHERE m.gender_in_file = 'FEMALE'
+                                     GROUP BY m.vsm_id
+                                   )g ON g.vsm_id = amt.vsm_id
+                        LEFT JOIN (
+                                    SELECT m.vsm_id, COUNT(m.id) as mother_count_in_csv
+                                    FROM animal_migration_table m
+                                      INNER JOIN animal_migration_table c ON c.mother_vsm_id = m.vsm_id
+                                    WHERE m.gender_in_file = 'FEMALE'
+                                    GROUP BY m.vsm_id
+                                  )mc ON mc.vsm_id = amt.vsm_id
+                        LEFT JOIN pedigree_register r ON r.id = amt.pedigree_register_id   
+                    ) AND is_unrealiable_parent = FALSE";
+        $this->updateBySql('Mark unreliable parents (Ewes as father, Rams as mother) ...', $sql);
+    }
+
+
+    private function fixGenderOfNeutersByMigrationValues()
+    {
+        $this->writeLn('=== Fix Neuters in animal table by new genders in animal_migration_table ===');
+
+        $queries = [];
+        $neuterGender = GenderType::NEUTER;
+
+        foreach (['Ram' => 'MALE', 'Ewe' => 'FEMALE'] as $type => $gender) {
+
+            $sql =
+                "UPDATE animal SET type = '$type', gender = '$gender' WHERE id IN(
+                  SELECT animal_id
+                  FROM animal_migration_table
+                  WHERE gender_in_file = '$gender' AND gender_in_database = '$neuterGender'
+                        AND animal_id NOTNULL
+                        AND is_unrealiable_parent = FALSE
+                ) AND type = 'Neuter'";
+
+            $updateCount = $this->updateBySql('Updating Neuters in animal table by '.$type.' gender in migration data ...', $sql);
+
+            if($updateCount > 0) {
+
+                $table = strtolower($type);
+
+                $queries['Inserting new records in ram table ...'] =
+                    "INSERT INTO $table (id, object_type)
+                      SELECT animal_id, '$type'
+                      FROM animal_migration_table
+                        LEFT JOIN $table r ON r.id = animal_id
+                      WHERE gender_in_file = '$gender' AND gender_in_database = '$neuterGender'
+                            AND animal_id NOTNULL
+                            AND r.id ISNULL --check if the record does not already exists
+                            AND is_unrealiable_parent = FALSE";
+
+                $queries['Deleting orphaned records in neuter table ...'] =
+                    "DELETE FROM neuter WHERE id IN (
+                      SELECT animal_id
+                      FROM animal_migration_table
+                        LEFT JOIN neuter n ON n.id = animal_id
+                      WHERE gender_in_file = '$gender' AND gender_in_database = '$neuterGender'
+                            AND animal_id NOTNULL
+                            AND n.id NOTNULL --check if the record still exists
+                            AND is_unrealiable_parent = FALSE
+                      )";
+
+                $queries['Saving Neuter to '.$type.' change in gender_history_item ...'] =
+                    "INSERT INTO gender_history_item (animal_id, log_date, previous_gender, new_gender)
+                      SELECT amt.animal_id, NOW(), 'Neuter' as previous_gender, '$type' as new_gender
+                      FROM animal_migration_table amt
+                        LEFT JOIN gender_history_item g ON g.animal_id = amt.animal_id
+                        LEFT JOIN (
+                          --Find the last gender_history_item of the animal
+                          SELECT last_g.* FROM gender_history_item last_g
+                            INNER JOIN (
+                                         SELECT animal_id, MAX(log_date) as max_log_date FROM gender_history_item
+                                         GROUP BY animal_id
+                                       )gg ON gg.animal_id = last_g.animal_id AND gg.max_log_date = last_g.log_date
+                          )last_g ON last_g.animal_id = g.animal_id
+                      WHERE gender_in_file = '$gender' AND gender_in_database = '$neuterGender'
+                            AND amt.animal_id NOTNULL
+                            AND is_unrealiable_parent = FALSE
+                            --check if the record does not already exists
+                            AND g.animal_id ISNULL OR
+                            (last_g.previous_gender <> 'Neuter' AND last_g.new_gender <> '$type')";
+
+                foreach ($queries as $title => $sql) {
+                    $this->updateBySql($title, $sql);
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Note! Fix neuter genders first
+     */
+    private function fixValuesByInstructionsOfReinard()
+    {
+        $this->writeLn('=== Fix values in animal_migration_table using the instructions from Reinard ===');
+
+        /*
+         * The following notes are from the file of Reinard
+         * FL100_20170524_Instructie-inlezen-data.docx
+         * 2017 May 24
+         */
+
+        $queries = [
+            /*
+             * 1. Er zijn behoorlijk wat FL100 dieren die als stamboek ‘NTS: Nederlands Texels Schapenstamboek’
+             * of ‘TSNH: Texels Schapenstamboek in Noord-Holland’ of ‘* Onbekend stamboek schaap’ hebben,
+             * en daarnaast ook de status ‘Volbloed’ hebben. Deze dieren mogen allemaal als NFS worden ingelezen.
+             */
+            'Fix 1) Fix FL100 pedigreeRegisters ...' =>
+                "UPDATE animal_migration_table
+                    SET pedigree_register_id = (SELECT id FROM pedigree_register WHERE abbreviation = 'NFS')
+                    WHERE breed_code = 'FL100'
+                      AND (pedigree_register_id IN (
+                        SELECT id
+                        FROM pedigree_register
+                        WHERE abbreviation = 'NTS' OR abbreviation = 'TSNH'
+                      ) OR pedigree_register_id ISNULL)
+                      AND breed_type = 'PURE_BRED'",
+
+            /*
+             * 2. Er is een groot aantal dieren waar de rasstatus voor dieren met rasbalk ‘FL100’ niet is ingevuld.
+             * Wanneer de beide ouders bekend zijn EN de rasbalk is FL100 dan mogen deze dieren
+             * de status ‘Volbloed’ krijgen (het gaat om zo’n 8000 dieren waar dit voor geldt).
+             */
+            'Fix 2) Fill missing PURE_BRED values for FL100 ...' =>
+                "UPDATE animal_migration_table SET breed_type = 'PURE_BRED'
+                      WHERE vsm_id 
+                      IN (
+                            SELECT c.vsm_id FROM animal_migration_table c
+                              INNER JOIN animal_migration_table f ON f.vsm_id = c.father_vsm_id
+                              INNER JOIN animal_migration_table m ON m.vsm_id = c.mother_vsm_id
+                            WHERE c.breed_code = 'FL100' AND c.breed_type ISNULL
+                                  AND ((m.gender_in_database <> 'NEUTER' AND m.gender_in_database <> 'MALE') OR m.gender_in_database ISNULL)
+                                  AND m.is_unrealiable_parent = FALSE
+                                  AND ((f.gender_in_database <> 'NEUTER' AND f.gender_in_database <> 'FEMALE') OR f.gender_in_database ISNULL)
+                                  AND f.is_unrealiable_parent = FALSE
+                                  AND f.breed_code = 'FL100' AND m.breed_code = 'FL100'   
+                          )",
+
+            /*
+             * 3. Waar status is ‘Volbloed’ of ‘Register’, rasbalk is ‘FL100’ en veld voor stamboek is _niet_ gevuld,
+             * maak daar van ‘NFS’ als stamboek.
+             */
+            'Fix 3) Set predigreeRegister = NFS where breed_code = FL100 and breed_type = PURE_BRED or REGISTER ...'=>
+                "UPDATE animal_migration_table
+                    SET pedigree_register_id = (SELECT id FROM pedigree_register WHERE abbreviation = 'NFS')
+                    WHERE vsm_id IN (
+                      SELECT vsm_id FROM animal_migration_table
+                      WHERE (breed_type = 'REGISTER' OR breed_type = 'PURE_BRED')
+                            AND breed_code = 'FL100' AND pedigree_register_id ISNULL
+                    ) AND pedigree_register_id ISNULL",
+
+            /*
+             * 4. Waar het werknummer in het stamboeknummer bij dieren met de rasbalk ‘FL100’ *6* posities bevatten,
+             * is de eerste positie altijd een letter. Knip deze letter eraf,
+             * lees de rest van het werknummer binnen het stamboeknummer in als het werknummer met 5 posities.
+             * Plaats de letter die eraf geknipt is in het veld voor ‘Naam’.
+             *
+             *      a. Voorbeeld: NL 09019-N00029 wordt dan NL 09019-00029
+             *         waarbij de letter N in het veld voor ‘Naam’ wordt gezet.
+             */
+//            'Fix 4)' =>
+//                "",
+
+            /*
+             * 5. Waar het werknummer in het stamboeknummer bij dieren met de rasbalk ‘FL100’
+             * *5* posities bevatten *EN* de eerste positie een letter is, doe daar het volgende.
+             * Kopieer deze letter, houdt het werknummer intact en kopieer de letter in het veld voor ‘Naam’.
+             */
+//            'Fix 5)' =>
+//                "",
+
+            /*
+             * 6. Waar het stamboeknummer is gelijk aan het ULN nummer (bijv. bij NL 100125536154), kijk of er op het
+             * zelfde geboorte UBN (in dit geval UBN 1121115) of er dieren zijn met een stamboeknummer
+             * met daarin het – teken. Dit blijkt er te zijn, bijv. NL 09084-36155.
+             * Het stamboeknummer van NL 100125536154 moet dus zijn NL 09084-36154.
+             */
+//            'Fix 6)' =>
+//                "",
+
+        ];
+
+        foreach ($queries as $title => $sql) {
+            $this->updateBySql($title, $sql);
+        }
     }
 
 
