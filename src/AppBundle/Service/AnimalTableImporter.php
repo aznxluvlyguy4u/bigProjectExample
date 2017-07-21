@@ -14,6 +14,7 @@ use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\SqlBatchProcessorWithProgressBar;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -230,6 +231,7 @@ class AnimalTableImporter
      */
     private function writeLn($line)
     {
+        $line = is_string($line) ? TimeUtil::getTimeStampNow() . ': ' .$line : $line;
         $this->cmdUtil->writeln($line);
     }
 
