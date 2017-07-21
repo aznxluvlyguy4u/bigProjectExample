@@ -754,8 +754,26 @@ class AnimalTableImporter
              * lees de rest van het werknummer binnen het stamboeknummer in als het werknummer met 5 posities.
              * Plaats de letter die eraf geknipt is in het veld voor ‘Naam’.
              */
-//            'Fix 4: STN fix) If last part of STN has length of 6, cut of the first letter' =>
-//                "",
+            'Fix 4: STN fix) If last part of STN has length of 6, cut of the first letter' =>
+                "UPDATE animal_migration_table
+                    SET pedigree_country_code = v.pedigree_country_code, pedigree_number = v.pedigree_number
+                    FROM (
+                      SELECT
+                        vsm_id, stn_origin,
+                        regexp_matches(stn_origin, '([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{6})'),
+                        substr(stn_origin, 1,2) as pedigree_country_code,
+                        CONCAT(substr(stn_origin, 4,6),substr(stn_origin, 11,5)) as pedigree_number
+                      FROM animal_migration_table
+                      WHERE length(stn_origin) = 15
+                            AND breed_code = 'FL100'
+                    ) AS v(vsm_id, stn_origin, regex, pedigree_country_code, pedigree_number)
+                    WHERE animal_migration_table.vsm_id = v.vsm_id
+                      AND (
+                            animal_migration_table.pedigree_country_code ISNULL OR
+                            animal_migration_table.pedigree_country_code <> v.pedigree_country_code OR
+                            animal_migration_table.pedigree_number ISNULL OR
+                            animal_migration_table.pedigree_number <> v.pedigree_number
+                          )",
 
             /*
              * 6. Waar het stamboeknummer is gelijk aan het ULN nummer (bijv. bij NL 100125536154), kijk of er op het
