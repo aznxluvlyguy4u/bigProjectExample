@@ -92,6 +92,13 @@ class AnimalMigrationTable
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
+    private $stnPrefixLetters;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
     private $nickName;
 
     /**
@@ -472,6 +479,24 @@ class AnimalMigrationTable
     public function setPedigreeNumber($pedigreeNumber)
     {
         $this->pedigreeNumber = $pedigreeNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStnPrefixLetters()
+    {
+        return $this->stnPrefixLetters;
+    }
+
+    /**
+     * @param string $stnPrefixLetters
+     * @return AnimalMigrationTable
+     */
+    public function setStnPrefixLetters($stnPrefixLetters)
+    {
+        $this->stnPrefixLetters = $stnPrefixLetters;
+        return $this;
     }
 
     /**
