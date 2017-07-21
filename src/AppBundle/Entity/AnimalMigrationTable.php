@@ -319,7 +319,7 @@ class AnimalMigrationTable
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
      */
-    private $isUnrealiableParent;
+    private $isUnreliableParent;
 
     /**
      * AnimalMigrationTable constructor.
@@ -991,18 +991,18 @@ class AnimalMigrationTable
     /**
      * @return bool
      */
-    public function isUnrealiableParent()
+    public function isUnreliableParent()
     {
-        return $this->isUnrealiableParent;
+        return $this->isUnreliableParent;
     }
 
     /**
-     * @param bool $isUnrealiableParent
+     * @param bool $isUnreliableParent
      * @return AnimalMigrationTable
      */
-    public function setIsUnrealiableParent($isUnrealiableParent)
+    public function setIsUnreliableParent($isUnreliableParent)
     {
-        $this->isUnrealiableParent = $isUnrealiableParent;
+        $this->isUnreliableParent = $isUnreliableParent;
         return $this;
     }
 
