@@ -349,23 +349,13 @@ class AnimalTableImporter
                         )
                     ) AS v(vsm_id, animal_id) WHERE animal_migration_table.vsm_id = v.vsm_id",
 
-            'Update incongruent gender_in_database where vsmId = name in animal table ...' =>
+            'Update incongruent gender_in_database where animal_id = id in animal table (only run after animal_id update) ...' =>
                 "UPDATE animal_migration_table SET gender_in_database = v.gender_in_database
                     FROM (
-                        SELECT vsm_id, a.gender
-                        FROM animal_migration_table m
-                            INNER JOIN animal a ON CAST(a.name AS INTEGER) = m.vsm_id
-                                                   AND (m.gender_in_database <> a.gender
-                                                        OR m.gender_in_database ISNULL AND a.gender NOTNULL
-                                                   )
-                        WHERE a.name NOTNULL AND vsm_id NOT IN (
-                            --SKIP duplicate vsmIds in database
-                            SELECT CAST(a.name AS INTEGER)
-                            FROM animal
-                            WHERE name NOTNULL
-                            GROUP BY name HAVING COUNT(*) > 1
-                        )
-                    ) AS v(vsm_id, gender_in_database) WHERE animal_migration_table.vsm_id = v.vsm_id",
+                           SELECT animal_id, gender
+                           FROM animal_migration_table m
+                             INNER JOIN animal a ON a.id = m.animal_id AND (m.gender_in_database <> a.gender OR m.gender_in_database ISNULL)
+                         ) AS v(animal_id, gender_in_database) WHERE animal_migration_table.animal_id = v.animal_id",
 
             'Update incongruent father_id where father_vsm_id = name in animal table ...' =>
                 "UPDATE animal_migration_table SET father_id = v.father_id
