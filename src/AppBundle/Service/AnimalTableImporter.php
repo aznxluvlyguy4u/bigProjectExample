@@ -499,7 +499,7 @@ class AnimalTableImporter
 
     private function markUnreliableParents()
     {
-        $sql = "UPDATE animal_migration_table SET is_unrealiable_parent = TRUE 
+        $sql = "UPDATE animal_migration_table SET is_unreliable_parent = TRUE 
                     WHERE vsm_id IN (
                       --Males that are also mothers in csv
                       SELECT amt.vsm_id
@@ -538,7 +538,7 @@ class AnimalTableImporter
                                     GROUP BY m.vsm_id
                                   )mc ON mc.vsm_id = amt.vsm_id
                         LEFT JOIN pedigree_register r ON r.id = amt.pedigree_register_id   
-                    ) AND is_unrealiable_parent = FALSE";
+                    ) AND is_unreliable_parent = FALSE";
         $this->updateBySql('Mark unreliable parents (Ewes as father, Rams as mother) ...', $sql);
     }
 
@@ -560,7 +560,7 @@ class AnimalTableImporter
                   FROM animal_migration_table
                   WHERE gender_in_file = '$gender' AND gender_in_database = '$neuterGender'
                         AND animal_id NOTNULL
-                        AND is_unrealiable_parent = FALSE
+                        AND is_unreliable_parent = FALSE
                 ) AND type = 'Neuter'";
 
             $updateCount = $this->updateBySql('Updating Neuters in animal table by '.$type.' gender in migration data ...', $sql);
@@ -578,7 +578,7 @@ class AnimalTableImporter
                       WHERE gender_in_file = '$gender' AND gender_in_database = '$neuterGender'
                             AND animal_id NOTNULL
                             AND r.id ISNULL --check if the record does not already exists
-                            AND is_unrealiable_parent = FALSE";
+                            AND is_unreliable_parent = FALSE";
 
                 $queries['Deleting orphaned records in neuter table ...'] =
                     "DELETE FROM neuter WHERE id IN (
@@ -588,7 +588,7 @@ class AnimalTableImporter
                       WHERE gender_in_file = '$gender' AND gender_in_database = '$neuterGender'
                             AND animal_id NOTNULL
                             AND n.id NOTNULL --check if the record still exists
-                            AND is_unrealiable_parent = FALSE
+                            AND is_unreliable_parent = FALSE
                       )";
 
                 $queries['Saving Neuter to '.$type.' change in gender_history_item ...'] =
@@ -606,7 +606,7 @@ class AnimalTableImporter
                           )last_g ON last_g.animal_id = g.animal_id
                       WHERE gender_in_file = '$gender' AND gender_in_database = '$neuterGender'
                             AND amt.animal_id NOTNULL
-                            AND is_unrealiable_parent = FALSE
+                            AND is_unreliable_parent = FALSE
                             --check if the record does not already exists
                             AND g.animal_id ISNULL OR
                             (last_g.previous_gender <> 'Neuter' AND last_g.new_gender <> '$type')";
@@ -668,9 +668,9 @@ class AnimalTableImporter
                               INNER JOIN animal_migration_table m ON m.vsm_id = c.mother_vsm_id
                             WHERE c.breed_code = 'FL100' AND c.breed_type ISNULL
                                   AND ((m.gender_in_database <> 'NEUTER' AND m.gender_in_database <> 'MALE') OR m.gender_in_database ISNULL)
-                                  AND m.is_unrealiable_parent = FALSE
+                                  AND m.is_unreliable_parent = FALSE
                                   AND ((f.gender_in_database <> 'NEUTER' AND f.gender_in_database <> 'FEMALE') OR f.gender_in_database ISNULL)
-                                  AND f.is_unrealiable_parent = FALSE
+                                  AND f.is_unreliable_parent = FALSE
                                   AND f.breed_code = 'FL100' AND m.breed_code = 'FL100'   
                           )",
 
