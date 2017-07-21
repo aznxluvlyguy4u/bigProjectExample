@@ -308,6 +308,13 @@ class AnimalMigrationTable
     private $isNewImportAnimal;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isUnrealiableParent;
+
+    /**
      * AnimalMigrationTable constructor.
      */
     public function __construct()
@@ -953,6 +960,24 @@ class AnimalMigrationTable
     public function setIsNewImportAnimal($isNewImportAnimal)
     {
         $this->isNewImportAnimal = $isNewImportAnimal;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUnrealiableParent()
+    {
+        return $this->isUnrealiableParent;
+    }
+
+    /**
+     * @param bool $isUnrealiableParent
+     * @return AnimalMigrationTable
+     */
+    public function setIsUnrealiableParent($isUnrealiableParent)
+    {
+        $this->isUnrealiableParent = $isUnrealiableParent;
         return $this;
     }
 
