@@ -9,6 +9,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
+use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\SqlBatchProcessorWithProgressBar;
@@ -535,6 +536,8 @@ class AnimalTableImporter
         $queries = [];
         $neuterGender = GenderType::NEUTER;
 
+        $totalUpdateCount = 0;
+
         foreach (['Ram' => 'MALE', 'Ewe' => 'FEMALE'] as $type => $gender) {
 
             $sql =
@@ -547,6 +550,7 @@ class AnimalTableImporter
                 ) AND type = 'Neuter'";
 
             $updateCount = $this->updateBySql('Updating Neuters in animal table by '.$type.' gender in migration data ...', $sql);
+            $totalUpdateCount += $updateCount;
 
             if($updateCount > 0) {
 
@@ -596,7 +600,12 @@ class AnimalTableImporter
                 foreach ($queries as $title => $sql) {
                     $this->updateBySql($title, $sql);
                 }
+
             }
+        }
+
+        if ($totalUpdateCount > 0) {
+            DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil);
         }
     }
 

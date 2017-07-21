@@ -72,6 +72,8 @@ class DatabaseDataFixer
      */
     public static function fixGenderTables(Connection $conn, CommandUtil $cmdUtil)
     {
+        $cmdUtil->writeln('Fixing incongruent genders vs Ewe/Ram/Neuter records ...');
+
         /* Diagnosis */
 
         $sql = "SELECT animal.id, ram.object_type, animal.type FROM animal INNER JOIN ram ON animal.id = ram.id WHERE ram.object_type <> animal.type";
