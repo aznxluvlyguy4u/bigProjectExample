@@ -453,7 +453,7 @@ class AnimalTableImporter
                 ) AS v(id, location_id) WHERE animal_migration_table.id = v.id",
 
             'Fill missing uln_country_code and uln_number from uln that is in stn_origin column ...' =>
-            "UPDATE animal_migration_table SET uln_country_code = v.uln_country_code, uln_number = v.uln_number
+            "UPDATE animal_migration_table SET uln_country_code = v.uln_country_code, uln_number = v.uln_number, is_uln_updated = TRUE
                 FROM (
                   SELECT
                     id,
@@ -756,7 +756,7 @@ class AnimalTableImporter
              */
             'Fix 4: STN fix) If last part of STN has length of 6, cut of the first letter' =>
                 "UPDATE animal_migration_table
-                    SET pedigree_country_code = v.pedigree_country_code, pedigree_number = v.pedigree_number
+                    SET pedigree_country_code = v.pedigree_country_code, pedigree_number = v.pedigree_number, is_stn_updated = TRUE
                     FROM (
                       SELECT
                         vsm_id, stn_origin,
