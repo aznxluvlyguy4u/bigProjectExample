@@ -695,16 +695,66 @@ class AnimalTableImporter
              *
              *      a. Voorbeeld: NL 09019-N00029 wordt dan NL 09019-00029
              *         waarbij de letter N in het veld voor ‘Naam’ wordt gezet.
-             */
-//            'Fix 4)' =>
-//                "",
-
-            /*
+             *
              * 5. Waar het werknummer in het stamboeknummer bij dieren met de rasbalk ‘FL100’
              * *5* posities bevatten *EN* de eerste positie een letter is, doe daar het volgende.
              * Kopieer deze letter, houdt het werknummer intact en kopieer de letter in het veld voor ‘Naam’.
              */
-//            'Fix 5)' =>
+            'Fix 4 & 5: letter extraction) extracting the prefix letters in last part of STN' =>
+                "UPDATE animal_migration_table
+                    SET nick_name = v.stn_prefix_letters, stn_prefix_letters = v.stn_prefix_letters
+                    FROM (
+                      -- length animalOrderNumber part of stn = 5, and has 1 leading letters
+                      SELECT vsm_id, regexp_matches(stn_origin, '([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{5})'),
+                        substr(stn_origin, 10,1),
+                        regexp_matches(substr(stn_origin, 10,1), '[A-Z]{1}'),
+                        regexp_matches(substr(stn_origin, 11,1), '[0-9]{1}') as trailing_check
+                      FROM animal_migration_table
+                      WHERE length(stn_origin) = 14
+                            AND breed_code = 'FL100'
+                      UNION
+                      -- length animalOrderNumber part of stn = 5, and has 2 leading letters
+                      SELECT vsm_id, regexp_matches(stn_origin, '([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{5})'),
+                        substr(stn_origin, 10,2),
+                        regexp_matches(substr(stn_origin, 10,2), '[A-Z]{2}'),
+                        null as trailing_check
+                      FROM animal_migration_table
+                      WHERE length(stn_origin) = 14
+                            AND breed_code = 'FL100'
+                      UNION
+                      -- length animalOrderNumber part of stn = 6, and has 2 leading letters
+                      SELECT
+                        vsm_id, regexp_matches(stn_origin, '([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{6})'),
+                        substr(stn_origin, 10,2),
+                        regexp_matches(substr(stn_origin, 10,2), '[A-Z]{2}'),
+                        null as trailing_check
+                      FROM animal_migration_table
+                      WHERE length(stn_origin) = 15
+                            AND breed_code = 'FL100'
+                      UNION
+                      -- length animalOrderNumber part of stn = 6, and has 1 leading letter
+                      SELECT
+                        vsm_id, regexp_matches(stn_origin, '([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{6})'),
+                        substr(stn_origin, 10,1),
+                        regexp_matches(substr(stn_origin, 10,1), '[A-Z]{1}'),
+                        regexp_matches(substr(stn_origin, 11,1), '[0-9]{1}') as trailing_check
+                      FROM animal_migration_table
+                      WHERE length(stn_origin) = 15
+                            AND breed_code = 'FL100'
+                    ) AS v(vsm_id, regex1, stn_prefix_letters, regex2, trailing_check)
+                    WHERE animal_migration_table.vsm_id = v.vsm_id
+                          AND (nick_name ISNULL OR nick_name <> v.stn_prefix_letters
+                              OR animal_migration_table.stn_prefix_letters ISNULL
+                              OR animal_migration_table.stn_prefix_letters <> v.stn_prefix_letters
+                          )",
+
+            /*
+             * 4. Waar het werknummer in het stamboeknummer bij dieren met de rasbalk ‘FL100’ *6* posities bevatten,
+             * is de eerste positie altijd een letter. Knip deze letter eraf,
+             * lees de rest van het werknummer binnen het stamboeknummer in als het werknummer met 5 posities.
+             * Plaats de letter die eraf geknipt is in het veld voor ‘Naam’.
+             */
+//            'Fix 4: STN fix) If last part of STN has length of 6, cut of the first letter' =>
 //                "",
 
             /*
