@@ -450,7 +450,21 @@ class AnimalTableImporter
                     SELECT ubn FROM location WHERE is_active
                     GROUP BY ubn HAVING COUNT(*) > 1
                   )
-                ) AS v(id, location_id) WHERE animal_migration_table.id = v.id"
+                ) AS v(id, location_id) WHERE animal_migration_table.id = v.id",
+
+            'Fill missing uln_country_code and uln_number from uln that is in stn_origin column ...' =>
+            "UPDATE animal_migration_table SET uln_country_code = v.uln_country_code, uln_number = v.uln_number
+                FROM (
+                  SELECT
+                    id,
+                    substr(stn_origin, 1,2) as uln_country_code,
+                    substr(stn_origin, 4, length(stn_origin)) as uln_number,
+                    regexp_matches(stn_origin, '([A-Z]{2})+[ ]+([0-9]{8,12})')
+                  FROM animal_migration_table
+                  WHERE uln_number ISNULL
+                ) AS v(id, uln_country_code, uln_number, regex_matches)
+                WHERE animal_migration_table.id = v.id
+                   AND animal_migration_table.uln_number ISNULL",
 
         ];
 
