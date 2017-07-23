@@ -95,6 +95,14 @@ class RetrieveAnimals
     private $actionBy;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @Assert\NotBlank
+     * @JMS\Type("boolean")
+     */
+    private $isRvoLeading;
+
+    /**
      * @var integer
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
@@ -135,6 +143,7 @@ class RetrieveAnimals
     public function __construct() {
         $this->logDate = new \DateTime();
         $this->animalType = AnimalType::sheep;
+        $this->isRvoLeading = false;
     }
 
     /**
@@ -357,6 +366,24 @@ class RetrieveAnimals
     {
         $this->actionBy = $actionBy;
 
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRvoLeading()
+    {
+        return $this->isRvoLeading;
+    }
+
+    /**
+     * @param bool $isRvoLeading
+     * @return RetrieveAnimals
+     */
+    public function setIsRvoLeading($isRvoLeading)
+    {
+        $this->isRvoLeading = $isRvoLeading;
         return $this;
     }
 
