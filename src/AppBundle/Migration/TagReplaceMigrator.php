@@ -5,236 +5,182 @@ namespace AppBundle\Migration;
 
 
 use AppBundle\Component\MessageBuilderBase;
-use AppBundle\Entity\DeclareTagReplace;
-use AppBundle\Entity\Employee;
-use AppBundle\Enumerator\ActionType;
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Enumerator\RecoveryIndicatorType;
-use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Enumerator\QueryType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
+use Com\Tecnick\Color\Exception;
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class TagReplaceMigrator
+ */
 class TagReplaceMigrator extends MigratorBase
 {
     const BATCH = 1000;
+    const TAG_INSERT = 'TAG_INSERT';
+    const ULN_HISTORY_INSERT = 'ULN_HISTORY_INSERT';
 
-    /** @var Employee */
-    private $developer;
+    /** @var int */
+    private $developerId;
 
-    /** @var array */
-    private $declareTagReplaceIdByOldUlns;
-
-    /** @var array */
-    private $oldUlnsByNewUlns;
 
     /**
-     * RacesMigrator constructor.
+     * TagReplaceMigrator constructor.
      * @param CommandUtil $cmdUtil
      * @param ObjectManager $em
-     * @param OutputInterface $outputInterface
      * @param array $data
-     * @param Employee $developer
+     * @param int $developerId
      */
-    public function __construct(CommandUtil $cmdUtil, ObjectManager $em, OutputInterface $outputInterface, array $data, Employee $developer = null)
+    public function __construct(CommandUtil $cmdUtil, ObjectManager $em, array $data, $developerId)
     {
-        parent::__construct($cmdUtil, $em, $outputInterface, $data);
-        $this->developer = $developer;
+        parent::__construct($cmdUtil, $em, $cmdUtil->getOutputInterface(), $data);
+        $this->developerId = $developerId;
     }
-    
+
     public function migrate()
     {
+        DoctrineUtil::updateTableSequence($this->conn, ['declare_base', 'tag']);
+
         $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
-        $animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmId();
+        $animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
 
-        $sql = "SELECT uln_country_code_replacement, uln_country_code_to_replace, uln_number_to_replace, uln_number_replacement FROM declare_tag_replace";
-        $results = $this->conn->query($sql)->fetchAll();
-        $ulnReplacementsInDatabase = [];
-        foreach ($results as $result) {
-            $uln = $result['uln_country_code_replacement'].' '.$result['uln_number_replacement'];
-            $ulnReplacementsInDatabase[$uln] = $uln;
-        }
+        $sql = "SELECT
+                CONCAT(uln_country_code_to_replace,' ',uln_number_to_replace,'|',uln_country_code_replacement,' ',uln_number_replacement) as uln_set, replace_date 
+                FROM declare_tag_replace";
 
-        $newCount = 0;
-        foreach ($this->data as $record) {
+        $currentTagReplacements = SqlUtil::groupSqlResultsOfKey1ByKey2(
+            'replace_date', 'uln_set', $this->conn->query($sql)->fetchAll());
 
-            $ulnNew = $record[3];
+        /*
+         * NOTE! The batches are processed alphabetically. So make sure the base insert batch starts first alphabetically.
+         * And ulnHistory comes after tag insert,
+         */
+        $this->sqlBatchProcessor
+            ->purgeAllSets()
+            ->createBatchSet(QueryType::BASE_INSERT)
+            ->createBatchSet(QueryType::INSERT)
+            ->createBatchSet(self::TAG_INSERT)
+            ->createBatchSet(self::ULN_HISTORY_INSERT)
+        ;
 
-            //Check if record was already saved in the database
-            if(!array_key_exists($ulnNew, $ulnReplacementsInDatabase)) {
+        $baseInsertBatchSet = $this->sqlBatchProcessor->getSet(QueryType::BASE_INSERT);
+        $insertBatchSet = $this->sqlBatchProcessor->getSet(QueryType::INSERT);
+        $tagBatchSet = $this->sqlBatchProcessor->getSet(self::TAG_INSERT);
+        $ulnHistoryBatchSet = $this->sqlBatchProcessor->getSet(self::ULN_HISTORY_INSERT);
+
+        $baseInsertBatchSet->setSqlQueryBase("INSERT INTO declare_base (id, log_date, request_id, message_id, request_state, 
+                                      action, recovery_indicator, relation_number_keeper, ubn, type, action_by_id) VALUES ");
+
+        $insertBatchSet->setSqlQueryBase("INSERT INTO declare_tag_replace (id, animal_id, animal_type, replace_date,
+                                 uln_country_code_to_replace, uln_number_to_replace, animal_order_number_to_replace, 
+                                 uln_country_code_replacement, uln_number_replacement, animal_order_number_replacement)
+                    VALUES ");
+
+        $tagBatchSet->setSqlQueryBase('INSERT INTO tag (id, animal_id, tag_status, animal_order_number, order_date, uln_country_code, uln_number) VALUES ');
+
+        $ulnHistoryBatchSet->setSqlQueryBase("INSERT INTO ulns_history (tag_id, animal_id) VALUES ");
+
+        $this->sqlBatchProcessor->start(count($this->data));
+
+        $maxDeclareBaseId = SqlUtil::getMaxId($this->conn, 'declare_base');
+        $maxTagId = SqlUtil::getMaxId($this->conn, 'tag');
+        $firstMaxTagId = $maxTagId+1;
+        $animalIdNullValue = 'NULL';
+        $logDate = TimeUtil::getLogDateString();
+
+        try {
+
+            foreach ($this->data as $record) {
+
+                $ulnOld = $record[2];
+                $ulnNew = $record[3];
+
+                $ulnOldParts = explode(' ', $ulnOld);
+                $ulnNewParts = explode(' ', $ulnNew);
+
+                if (count($ulnOldParts) != 2 || count($ulnNewParts) != 2) {
+                    $baseInsertBatchSet->incrementSkippedCount();
+                    $insertBatchSet->incrementSkippedCount();
+                    $tagBatchSet->incrementSkippedCount();
+                    $ulnHistoryBatchSet->incrementSkippedCount();
+                    $this->sqlBatchProcessor->advanceProgressBar();
+                    continue;
+                }
+
+                $ulnSet = $ulnOld . '|' . $ulnNew;
+
+                if (key_exists($ulnSet, $currentTagReplacements)) {
+                    $baseInsertBatchSet->incrementAlreadyDoneCount();
+                    $insertBatchSet->incrementAlreadyDoneCount();
+                    $tagBatchSet->incrementAlreadyDoneCount();
+                    $ulnHistoryBatchSet->incrementAlreadyDoneCount();
+                    $this->sqlBatchProcessor->advanceProgressBar();
+                    continue;
+                }
 
                 $vsmId = $record[0];
-                $dateTimeString = $record[1];
-                $dateTime = $dateTimeString == null || $dateTimeString == '' ? self::getBlankDateFillerDateTime() : new \DateTime($dateTimeString);
-                $ulnOld = $record[2];
+                $animalId = ArrayUtil::get($vsmId, $animalIdsByVsmId, $animalIdNullValue);
+
+                //ReplaceDate cannot be null
+                $replaceDateString = TimeUtil::getTimeStampForSqlFromAnyDateString($record[1]);
+                if($replaceDateString == null) {
+                    $replaceDateString = TimeUtil::getTimeStampForSqlFromAnyDateString(self::BLANK_DATE_FILLER);
+                }
+                $replaceDateString = SqlUtil::getNullCheckedValueForSqlQuery($replaceDateString, true);
 
 
-                $oldUlnParts = explode(' ', $ulnOld);
+                $ulnCountryCodeOld = $ulnOldParts[0];
+                $ulnNumberOld = $ulnOldParts[1];
+                $animalOrderNumberOld = StringUtil::getLast5CharactersFromString($ulnNumberOld);
 
-                $oldUlnCountryCode = null;
-                $oldUlnNumber = null;
-                switch (count($oldUlnParts)) {
-                    case 1:
-                        $oldUlnCountryCode = 'NL';
-                        $oldUlnNumber = StringUtil::padUlnNumberWithZeroes($oldUlnParts[0]);
-                        break;
+                $ulnCountryCodeNew = $ulnNewParts[0];
+                $ulnNumberNew = $ulnNewParts[1];
+                $animalOrderNumberNew = StringUtil::getLast5CharactersFromString($ulnNumberNew);
 
-                    case 2:
-                        $oldUlnCountryCode = $oldUlnParts[0];
-                        $oldUlnNumber = StringUtil::padUlnNumberWithZeroes($oldUlnParts[1]);
-                        break;
+                $requestId = MessageBuilderBase::getNewRequestId();
+                $baseInsertBatchSet->appendValuesString("(".++$maxDeclareBaseId.",'".$logDate."','".$requestId."','".$requestId."','IMPORTED','V','N','IMPORTED','IMPORTED','DeclareTagReplace',2151)");
+                $baseInsertBatchSet->incrementBatchCount();
 
-                    case 3:
-                        $oldUlnCountryCode = $oldUlnParts[0];
-                        $oldUlnNumber =  StringUtil::padUlnNumberWithZeroes($oldUlnParts[2]);
-                        break;
+                $insertBatchSet->appendValuesString("(".$maxDeclareBaseId.','. $animalId . ",3," . $replaceDateString . ",'"
+                    . $ulnCountryCodeOld . "','" . $ulnNumberOld . "','" . $animalOrderNumberOld . "','"
+                    . $ulnCountryCodeNew . "','" . $ulnNumberNew . "','" . $animalOrderNumberNew . "')");
+                $insertBatchSet->incrementBatchCount();
+
+                if ($animalId !== $animalIdNullValue) {
+                    $tagBatchSet->appendValuesString("(".++$maxTagId.",NULL,'".TagStateType::REPLACED."','".$animalOrderNumberOld."',". $replaceDateString.",'".$ulnCountryCodeOld."','".$ulnNumberOld."')");
+
+                    $ulnHistoryBatchSet->appendValuesString("(".$maxTagId.",".$animalId.")");
+
+                    $tagBatchSet->incrementBatchCount();
+                    $ulnHistoryBatchSet->incrementBatchCount();
                 }
 
-                $newUlnParts = explode(' ', $ulnNew);
-                $newUlnCountryCode = $newUlnParts[0];
-                $newUlnNumber = StringUtil::padUlnNumberWithZeroes($newUlnParts[1]);
-
-                if($newUlnCountryCode != null && $newUlnNumber != null && $oldUlnNumber != null && $oldUlnCountryCode != null) {
-                    $declareTagTransfer = new DeclareTagReplace();
-                    $declareTagTransfer->setUlnCountryCodeToReplace($oldUlnCountryCode);
-                    $declareTagTransfer->setUlnNumberToReplace($oldUlnNumber);
-                    $declareTagTransfer->setUlnCountryCodeReplacement($newUlnCountryCode);
-                    $declareTagTransfer->setUlnNumberReplacement($newUlnNumber);
-
-                    $declareTagTransfer->setAnimalOrderNumberReplacement(StringUtil::getLast5CharactersFromString($newUlnNumber));
-                    $declareTagTransfer->setAnimalOrderNumberToReplace(StringUtil::getLast5CharactersFromString($oldUlnNumber));
-
-                    $declareTagTransfer->setAnimalType(AnimalType::sheep);
-                    $declareTagTransfer->setReplaceDate($dateTime);
-                    $declareTagTransfer->setLogDate(new \DateTime());
-                    $declareTagTransfer->setRequestState(RequestStateType::IMPORTED);
-                    $requestId = MessageBuilderBase::getNewRequestId();
-                    $declareTagTransfer->setRequestId($requestId);
-                    $declareTagTransfer->setMessageId($requestId);
-                    $declareTagTransfer->setAction(ActionType::V_MUTATE);
-                    $declareTagTransfer->setRecoveryIndicator(RecoveryIndicatorType::N);
-                    $declareTagTransfer->setRelationNumberKeeper(RequestStateType::IMPORTED);
-                    $declareTagTransfer->setUbn(RequestStateType::IMPORTED);
-                    $declareTagTransfer->setActionBy($this->developer);
-
-                    $animalId = null;
-                    if($animalIdsByVsmId->containsKey($vsmId)) {
-                        $animal = $this->animalRepository->find($animalIdsByVsmId->get($vsmId));
-                        $declareTagTransfer->setAnimal($animal);
-                        $animalId = $animal->getId();
-                    }
-                    $this->em->persist($declareTagTransfer);
-                    $this->insertReplacedTag($oldUlnCountryCode, $oldUlnNumber, $dateTime, $animalId);
-                    $newCount++;
-                }
-
-                $this->cmdUtil->advanceProgressBar(1,'Records to be persisted: '.$newCount);
-                if($newCount%self::BATCH == 0) { $this->em->flush(); }
+                $this->sqlBatchProcessor
+                    ->processAtBatchSize()
+                    ->advanceProgressBar()
+                ;
             }
-        }
-        $this->em->flush();
-        $this->cmdUtil->setProgressBarMessage($newCount.' new records persisted');
-        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
-    }
+            $this->sqlBatchProcessor->end();
 
-
-    /**
-     * @param string $oldUlnCountryCode
-     * @param string $oldUlnNumber
-     * @param \DateTime $orderDate
-     * @param int $animalIdUlnHistory
-     * @return int
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    private function insertReplacedTag($oldUlnCountryCode, $oldUlnNumber, $orderDate, $animalIdUlnHistory)
-    {
-        if(!is_string($oldUlnCountryCode) || !is_string($oldUlnNumber)) { return null; }
-
-        $animalIdInReplacedTag = SqlUtil::NULL;
-        $animalOrderNumber =  StringUtil::getLast5CharactersFromString($oldUlnNumber);
-        $dateString = $orderDate != null ? $orderDate->format(SqlUtil::DATE_FORMAT) : self::getBlankDateFillerDateString();
-
-        $sql = "SELECT MAX(id) FROM tag";
-        $maxId = $this->conn->query($sql)->fetch()['max'];
-        $tagId = $maxId + 1;
-        
-        $sql = "INSERT INTO tag (id, animal_id, tag_status, animal_order_number, order_date, uln_country_code, uln_number) VALUES (".$tagId.",".$animalIdInReplacedTag.",'".TagStateType::REPLACED."','".$animalOrderNumber."','". $dateString."','".$oldUlnCountryCode."','".$oldUlnNumber."')";
-        $this->conn->exec($sql);
-
-        if(is_int($animalIdUlnHistory)) {
-            $sql = "INSERT INTO ulns_history (tag_id, animal_id) VALUES (".$tagId.",".$animalIdUlnHistory.")";
-            $this->conn->exec($sql);
-        }
-    }
-
-
-
-    /**
-     * @return bool
-     */
-    public function setAnimalIdsOnDeclareTagReplaces()
-    {
-        //Create SearchArrays
-        $sql = "SELECT id, uln_country_code_to_replace, uln_number_to_replace, uln_country_code_replacement, uln_number_replacement FROM declare_tag_replace
-                WHERE animal_id ISNULL ";
-        $results = $this->conn->query($sql)->fetchAll();
-        
-        if(count($results) == 0) { return false; }
-
-        $this->declareTagReplaceIdByOldUlns = [];
-        $this->oldUlnsByNewUlns = [];
-        foreach ($results as $result) {
-            $oldUln = $result['uln_country_code_to_replace'].$result['uln_number_to_replace'];
-            $declareTagReplaceId = $result['id'];
-            $this->declareTagReplaceIdByOldUlns[$oldUln] = $declareTagReplaceId;
-
-            $newUln = $result['uln_country_code_replacement'].$result['uln_number_replacement'];
-            $this->oldUlnsByNewUlns[$newUln] = $oldUln;
-        }
-
-
-        //Set AnimalIds
-        $sql = "SELECT a.id as animal_id, a.uln_country_code, a.uln_number, t.id, t.uln_country_code_to_replace, t.uln_number_to_replace FROM animal a
-                INNER JOIN declare_tag_replace t ON a.uln_country_code = t.uln_country_code_replacement AND a.uln_number = t.uln_number_replacement
-                WHERE animal_id ISNULL ";
-        $results = $this->conn->query($sql)->fetchAll();
-
-        foreach ($results as $result) {
-            $animalId = intval($result['animal_id']);
-            $declareTagReplaceId = intval($result['id']);
-            $sql = "UPDATE declare_tag_replace SET animal_id = ".$animalId." WHERE id = ".$declareTagReplaceId;
+        } catch (Exception $exception) {
+            $sql = "DELETE FROM declare_base WHERE log_date = CAST('".$logDate."' AS TIMESTAMP) 
+            AND ubn = 'IMPORTED' AND type = 'DeclareTagReplace'";
             $this->conn->exec($sql);
 
-            $oldUln = $result['uln_country_code_to_replace'].$result['uln_number_to_replace'];
-            $this->setAnimalIdByOldUln($animalId, $oldUln);
-        }
-        
-        return true;
-    }
+            throw new Exception($exception);
 
-
-    /**
-     * @param int $animalId
-     * @param string $oldUln
-     */
-    private function setAnimalIdByOldUln($animalId, $oldUln)
-    {
-        if(array_key_exists($oldUln, $this->declareTagReplaceIdByOldUlns)) {
-            $declareTagReplaceId = $this->declareTagReplaceIdByOldUlns[$oldUln];
-
-            $sql = "UPDATE declare_tag_replace SET animal_id = ".$animalId." WHERE id = ".$declareTagReplaceId;
-            $this->conn->exec($sql);
-            unset($this->declareTagReplaceIdByOldUlns[$oldUln]);
-
-            //Recursively search for old ulns
-            if(array_key_exists($oldUln, $this->declareTagReplaceIdByOldUlns)) {
-                $olderUln = $this->oldUlnsByNewUlns[$oldUln];
-                $this->setAnimalIdByOldUln($animalId, $olderUln);
-            }
+        } finally {
+            DoctrineUtil::updateTableSequence($this->conn, ['declare_base','tag']);
+            $this->cmdUtil->writeln('First Max TagId inserted: '.$firstMaxTagId);
+            $this->cmdUtil->writeln('Imported TagDeclares logDate: '.$logDate);
+            $this->cmdUtil->printClosingLine();
         }
     }
+
 
 }

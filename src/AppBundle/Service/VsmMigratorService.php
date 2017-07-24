@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Component\Builder\CsvOptions;
+use AppBundle\Migration\TagReplaceMigrator;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
 use AppBundle\Util\DoctrineUtil;
@@ -102,9 +103,10 @@ class VsmMigratorService
             ' ', "\n",
             'Choose option: ', "\n",
             '1: AnimalTableImporter options ...', "\n",
-//            '2: Set AnimalIds on current TagReplaces, THEN Migrate TagReplaces', "\n",
-//            '3: Fix imported animalTable data', "\n",
-//            '----------------------------------------------------', "\n",
+//            '2: ', "\n",
+//            '3: Migrate TagReplaces', "\n",
+            '----------------------------------------------------', "\n",
+            '10: Migrate TagReplaces (WARNING make sure no other declareBases are inserted during this)', "\n",
 //            '4: Migrate AnimalTable data', "\n",
 //            '13: Migrate Performance Measurements', "\n",
 //            '----------------------------------------------------', "\n",
@@ -142,8 +144,6 @@ class VsmMigratorService
 
         switch ($option) {
             case 1: $this->importer->run($this->cmdUtil); break;
-//            case 2:
-//                break;
 //            case 3:
 //                break;
 //            case 4:
@@ -158,8 +158,7 @@ class VsmMigratorService
 //                break;
 //            case 9:
 //                break;
-//            case 10:
-//                break;
+            case 10: $this->migrateTagReplaces(); break;
 //            case 11:
 //                break;
 //            case 12:
@@ -187,10 +186,16 @@ class VsmMigratorService
      */
     private function parseCSV($filename) {
 
-        $this->csvOptions->setFileName($filename);
+        $this->csvOptions->setFileName($this->filenames[$filename]);
         return CsvParser::parse($this->csvOptions);
     }
 
 
+    private function migrateTagReplaces()
+    {
+        $data = $this->parseCSV(self::TAG_REPLACES);
+        $migrator = new TagReplaceMigrator($this->cmdUtil, $this->em, $data,self::DEVELOPER_PRIMARY_KEY);
+        $migrator->migrate();
+    }
 
 }
