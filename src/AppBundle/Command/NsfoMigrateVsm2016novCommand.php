@@ -20,7 +20,7 @@ use AppBundle\Migration\MyoMaxMigrator;
 use AppBundle\Migration\PerformanceMeasurementsMigrator;
 use AppBundle\Migration\PredicatesMigrator;
 use AppBundle\Migration\RacesMigrator;
-use AppBundle\Migration\TagReplaceMigrator;
+use AppBundle\Migration\TagReplaceMigratorOld;
 use AppBundle\Migration\UlnByAnimalIdMigrator;
 use AppBundle\Migration\VsmIdGroupMigrator;
 use AppBundle\Util\CommandUtil;
@@ -724,7 +724,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     private function setAnimalIdsOnCurrentTagReplaces()
     {
         $developer = $this->em->getRepository(Employee::class)->find(self::DEVELOPER_PRIMARY_KEY);
-        $tagReplaceMigrator = new TagReplaceMigrator($this->cmdUtil, $this->em, $this->output, [], $developer);
+        $tagReplaceMigrator = new TagReplaceMigratorOld($this->cmdUtil, $this->em, $this->output, [], $developer);
         return $tagReplaceMigrator->setAnimalIdsOnDeclareTagReplaces();
     }
 
@@ -741,7 +741,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         if(count($data) == 0) { return false; }
 
         $developer = $this->em->getRepository(Employee::class)->find(self::DEVELOPER_PRIMARY_KEY);
-        $tagReplaceMigrator = new TagReplaceMigrator($this->cmdUtil, $this->em, $this->output, $data, $developer);
+        $tagReplaceMigrator = new TagReplaceMigratorOld($this->cmdUtil, $this->em, $this->output, $data, $developer);
         $tagReplaceMigrator->migrate();
         return true;
     }
