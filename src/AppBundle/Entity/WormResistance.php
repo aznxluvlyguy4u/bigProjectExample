@@ -52,8 +52,9 @@ class WormResistance
 
     /**
      * @var int
+     * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=false)
      */
     private $year;
 
@@ -120,6 +121,14 @@ class WormResistance
      * @ORM\Column(type="string", nullable=true)
      */
     private $notes;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false, options={"default":true})
+     * @JMS\Type("boolean")
+     */
+    private $isActive;
 
     /**
      * WormResistance constructor.
@@ -344,6 +353,24 @@ class WormResistance
         return $this;
     }
 
+
+    /**
+     * @return bool
+     */
+    public function isActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param bool $isActive
+     * @return WormResistance
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
+        return $this;
+    }
 
 
 }
