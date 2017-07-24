@@ -1005,25 +1005,5 @@ class AnimalMigrationTable
         $this->isUnreliableParent = $isUnreliableParent;
         return $this;
     }
-
-
-    /**
-     * @return bool
-     */
-    public function isUnreliableParent()
-    {
-        return $this->isUnreliableParent;
-    }
-
-    /**
-     * @param bool $isUnreliableParent
-     * @return AnimalMigrationTable
-     */
-    public function setIsUnreliableParent($isUnreliableParent)
-    {
-        $this->isUnreliableParent = $isUnreliableParent;
-        return $this;
-    }
-
     
 }
