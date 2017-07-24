@@ -20,23 +20,8 @@ class SqlBatchProcessorWithProgressBar
     /** @var int */
     private $batchSize;
 
-    //Sql batch values
-    /** @var string */
-    private $sqlQueryBase;
-    /** @var string */
-    private $insertString;
-    /** @var string */
-    private $prefix;
-    /** @var int */
-    private $sqlBatchCount;
-
-    //Overal batch counters
-    /** @var int */
-    private $recordsInsertedCount;
-    /** @var int */
-    private $recordsSkipped;
-    /** @var int */
-    private $recordsAlreadyImported;
+    /** @var array */
+    private $sqlBatchSets;
 
     /**
      * SqlBatchProcessorWithProgressBar constructor.
@@ -49,6 +34,52 @@ class SqlBatchProcessorWithProgressBar
         $this->conn = $conn;
         $this->cmdUtil = $cmdUtil;
         $this->batchSize = $batchSize;
+        $this->sqlBatchSets = [];
+    }
+
+
+    /**
+     * @param string|int $key
+     * @return SqlBatchProcessorWithProgressBar $this
+     * @throws \Exception
+     */
+    public function createBatchSet($key)
+    {
+        if (key_exists($key, $this->sqlBatchSets)) {
+            throw new \Exception('Key is already used for another batchSet', 428);
+        }
+
+        $this->sqlBatchSets[$key] = new SqlBatchSetData($key, $this->batchSize, $this->conn);
+        return $this;
+    }
+
+
+    /**
+     * @return SqlBatchProcessorWithProgressBar $this
+     */
+    public function purgeAllSets()
+    {
+        foreach ($this->sqlBatchSets as $set) {
+            $this->sqlBatchSets[$set] = null;
+        }
+        $this->sqlBatchSets = [];
+        gc_collect_cycles();
+        return $this;
+    }
+
+
+    /**
+     * @param string|int $key
+     * @return SqlBatchSetData
+     * @throws \Exception
+     */
+    public function getSet($key)
+    {
+        if (!key_exists($key, $this->sqlBatchSets)) {
+            throw new \Exception('Batch set for given key does not exist', 428);
+        }
+
+        return $this->sqlBatchSets[$key];
     }
 
 
@@ -59,11 +90,17 @@ class SqlBatchProcessorWithProgressBar
      */
     public function start($recordsCount)
     {
-        if ($this->sqlQueryBase === null) {
-            throw new \Exception('Sql QueryBase is empty', 428);
+        if (count($this->sqlBatchSets) == 0) {
+            throw new \Exception('Sql batchSets are empty', 428);
         }
 
-        $this->resetOverallBatchCounters();
+        /** @var SqlBatchSetData $set */
+        foreach ($this->sqlBatchSets as $set) {
+            $set->resetOverallBatchCounters();
+            if ($set->getSqlQueryBase() === null) {
+                throw new \Exception('SqlBatchQuery ISNULL for set: '.  $set->getKey(), 428);
+            }
+        }
 
         $this->cmdUtil->setStartTimeAndPrintIt($recordsCount+1, 1, 'Importing records ...');
 
@@ -71,36 +108,6 @@ class SqlBatchProcessorWithProgressBar
     }
 
 
-    private function resetOverallBatchCounters()
-    {
-        $this->recordsSkipped = 0;
-        $this->recordsInsertedCount = 0;
-        $this->recordsAlreadyImported = 0;
-    }
-
-    /** @return SqlBatchProcessorWithProgressBar $this */
-    public function incrementInsertedCount() {
-        $this->recordsInsertedCount++;
-        return $this;
-    }
-
-    /** @return SqlBatchProcessorWithProgressBar $this */
-    public function incrementSkippedCount() {
-        $this->recordsSkipped++;
-        return $this;
-    }
-
-    /** @return SqlBatchProcessorWithProgressBar $this */
-    public function incrementAlreadyImportedCount() {
-        $this->recordsAlreadyImported++;
-        return $this;
-    }
-
-    /** @return SqlBatchProcessorWithProgressBar $this */
-    public function incrementBatchCount() {
-        $this->sqlBatchCount++;
-        return $this;
-    }
 
     /** @return SqlBatchProcessorWithProgressBar $this */
     public function advanceProgressBar()
@@ -114,80 +121,37 @@ class SqlBatchProcessorWithProgressBar
      */
     private function getProgressBarMessage()
     {
-        return 'Records skipped|alreadyImported||inBatch|inserted:  '
-            .$this->recordsSkipped.'|'.$this->recordsAlreadyImported.'||'.$this->sqlBatchCount.'|'.$this->recordsInsertedCount;
-    }
+        $prefix = '';
+        $message = '';
 
-
-    private function resetSqlBatchValues()
-    {
-        $this->insertString = '';
-        $this->prefix = '';
-        $this->recordsInsertedCount += $this->sqlBatchCount;
-        $this->sqlBatchCount = 0;
-    }
-
-
-    /**
-     * @param $sqlBase
-     * @return SqlBatchProcessorWithProgressBar $this
-     */
-    public function setSqlQueryBase($sqlBase)
-    {
-        $this->sqlQueryBase = $sqlBase;
-        return $this;
-    }
-
-
-    /**
-     * @param $string
-     * @return SqlBatchProcessorWithProgressBar $this
-     */
-    public function appendInsertString($string)
-    {
-        $this->sqlBatchCount++;
-        $this->insertString = $this->insertString.$this->prefix.$string;
-        $this->prefix = ',';
-        return $this;
-    }
-
-
-    /**
-     * @return SqlBatchProcessorWithProgressBar $this
-     */
-    public function insertAtBatchSize()
-    {
-        //Inserting by Batch
-        if($this->sqlBatchCount%$this->batchSize === 0 && $this->sqlBatchCount != 0) {
-            $this->insertAnimalMigrationTableRecordsByBatch();
+        /** @var SqlBatchSetData $set */
+        foreach ($this->sqlBatchSets as $set) {
+            $message = $message . $prefix . $set->getProgressBarMessage();
+            $prefix = ' ** ';
         }
-        return $this;
+
+        return $message;
     }
 
 
-    /**
-     * @return int
-     */
-    private function insertAnimalMigrationTableRecordsByBatch()
-    {
-        if($this->insertString === '') { return 0; }
-        $sql = $this->sqlQueryBase." ".$this->insertString;
-        $sqlBatchCount = SqlUtil::updateWithCount($this->conn, $sql);
-        $this->resetSqlBatchValues();
-        return $sqlBatchCount;
-    }
+
 
     /**
      * @return SqlBatchProcessorWithProgressBar $this
      */
     public function end()
     {
-        $this->insertAnimalMigrationTableRecordsByBatch();
+        /** @var SqlBatchSetData $set */
+        foreach ($this->sqlBatchSets as $set) {
+            $set->processAnimalMigrationTableRecordsByBatch();
+        }
 
         $this->cmdUtil->setProgressBarMessage($this->getProgressBarMessage());
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
-        $this->resetOverallBatchCounters();
-        $this->resetSqlBatchValues();
+        foreach ($this->sqlBatchSets as $set) {
+            $set->resetOverallBatchCounters();
+            $set->resetSqlBatchValues();
+        }
         $this->cmdUtil->printClosingLine();
         return $this;
     }

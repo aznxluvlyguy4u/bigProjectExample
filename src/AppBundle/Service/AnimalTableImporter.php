@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\QueryType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
@@ -157,12 +158,18 @@ class AnimalTableImporter
 
         DoctrineUtil::updateTableSequence($this->conn, ['animal_migration_table']);
 
+        $insertBatchSet = $this->sqlBatchProcessor
+            ->purgeAllSets()
+            ->createBatchSet(QueryType::INSERT)
+            ->getSet(QueryType::INSERT)
+        ;
+
         $sqlBase = "INSERT INTO animal_migration_table (id, vsm_id, uln_origin, stn_origin, uln_country_code, uln_number, animal_order_number,
 						pedigree_country_code, pedigree_number, nick_name, father_vsm_id, mother_vsm_id, gender_in_file, date_of_birth,breed_code,ubn_of_birth,pedigree_register_id,breed_type,scrapie_genotype
 						)VALUES ";
+        $insertBatchSet->setSqlQueryBase($sqlBase);
 
         $this->sqlBatchProcessor
-            ->setSqlQueryBase($sqlBase)
             ->start(count($this->data))
         ;
 
@@ -171,9 +178,8 @@ class AnimalTableImporter
 
             $vsmId = intval($record[0]);
             if(array_key_exists($vsmId, $processedAnimals)) {
-                $this->sqlBatchProcessor
-                    ->incrementAlreadyImportedCount()
-                    ->advanceProgressBar();
+                $insertBatchSet->incrementAlreadyDoneCount();
+                $this->sqlBatchProcessor->advanceProgressBar();
                 continue;
             }
 
@@ -183,9 +189,8 @@ class AnimalTableImporter
             $ulnNumber = StringUtil::getNullAsStringOrWrapInQuotes($ulnParts[JsonInputConstant::ULN_NUMBER]);
 
             if($ulnCountryCode == "'XD'") { // These are testAnimals and should be skipped
-                $this->sqlBatchProcessor
-                    ->incrementSkippedCount()
-                    ->advanceProgressBar();
+                $insertBatchSet->incrementSkippedCount();
+                $this->sqlBatchProcessor->advanceProgressBar();
                 continue;
             }
 
@@ -215,11 +220,9 @@ class AnimalTableImporter
 
             $sqlInsertGroup = "(nextval('animal_migration_table_id_seq'),".$vsmId.",".$uln.",".$stnImport.",".$ulnCountryCode.",".$ulnNumber.",".$animalOrderNumber.",".$pedigreeCountryCode.",".$pedigreeNumber.",".$nickName.",".$fatherVsmId.",".$motherVsmId.",".$genderInFile.",".$dateOfBirthString.",".$breedCode.",".$ubnOfBirth.",".$pedigreeRegisterId.",".$breedType.",".$scrapieGenotype.")";
 
-            $this->sqlBatchProcessor
-                ->appendInsertString($sqlInsertGroup)
-                ->insertAtBatchSize()
-                ->advanceProgressBar()
-            ;
+            $insertBatchSet->appendValuesString($sqlInsertGroup);
+            $insertBatchSet->processAtBatchSize();
+            $this->sqlBatchProcessor->advanceProgressBar();
         }
         $this->sqlBatchProcessor->end();
 
