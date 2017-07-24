@@ -122,6 +122,14 @@ class WormResistance
     private $notes;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false, options={"default":true})
+     * @JMS\Type("boolean")
+     */
+    private $isActive;
+
+    /**
      * WormResistance constructor.
      */
     public function __construct()
@@ -343,6 +351,25 @@ class WormResistance
         $this->notes = $notes;
         return $this;
     }
+
+    /**
+     * @return bool
+     */
+    public function isActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param bool $isActive
+     * @return WormResistance
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
+        return $this;
+    }
+
 
 
 
