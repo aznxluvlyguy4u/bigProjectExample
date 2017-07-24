@@ -296,6 +296,14 @@ class CommandUtil
         ];
     }
 
+
+    public function printClosingLine()
+    {
+        $this->writeLn('--------------------------------------------');
+        $this->writeLn(' ');
+        $this->writeLn(' ');
+    }
+
     
     /**
      * @param Collection $parents

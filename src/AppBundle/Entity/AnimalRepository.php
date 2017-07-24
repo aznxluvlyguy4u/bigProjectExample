@@ -704,15 +704,6 @@ class AnimalRepository extends BaseRepository
     return $this->executeSqlQuery($sql);
   }
 
-  /**
-   * @return int|null
-   * @throws \Doctrine\DBAL\DBALException
-   */
-  public function getMinIdOfAnimalsWithoutBreedCodesSetForExistingBreedCode()
-  {
-    $sql = "SELECT MIN(id) FROM animal WHERE (breed_codes_id IS NULL AND breed_code IS NOT NULL)";
-    return $this->executeSqlQuery($sql);
-  }
 
   /**
    * @param array $animalArray
@@ -920,25 +911,6 @@ class AnimalRepository extends BaseRepository
    */
   public function deleteTestAnimal(OutputInterface $output = null, CommandUtil $cmdUtil = null)
   {
-    $sql = "SELECT a.id FROM animal a
-            INNER JOIN breed_values_set b ON a.id = b.animal_id
-            WHERE a.uln_country_code = 'XD'";
-    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
-    if(count($results) > 0) {
-
-      if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt(count($results) + 1, 1, 'Deleting breedValuesSets of testAnimals'); }
-      foreach ($results as $result) {
-        $animalId = intval($result['id']);
-        $sql = "DELETE FROM breed_values_set WHERE animal_id = ".$animalId;
-        $this->getManager()->getConnection()->exec($sql);
-        if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'Deleting breedValuesSets of testAnimals'); }
-      }
-      if($cmdUtil != null) {
-        $cmdUtil->setProgressBarMessage('BreedValuesSets of testAnimals deleted');
-        $cmdUtil->setEndTimeAndPrintFinalOverview();
-      }
-    }
-
     if($output != null) { $output->writeln('Find all testAnimals...'); }
     
     /** @var AnimalRepository $animalRepository */
@@ -1182,20 +1154,6 @@ class AnimalRepository extends BaseRepository
     if(!is_string($type) || (!is_int($animalId) && !ctype_digit($animalId))) { return false; }
     if($type != 'Ewe' && $type != 'Ram' && $type != 'Neuter') { return false; }
 
-    //Deleting breedCodes
-
-    $sql = "SELECT id FROM breed_codes WHERE animal_id = ".$animalId;
-    $breedCodesId = $this->getConnection()->query($sql)->fetch()['id'];
-
-    $sql = "DELETE FROM breed_code WHERE breed_codes_id = ".$breedCodesId;
-    $this->getConnection()->exec($sql);
-
-    $sql = "UPDATE animal SET breed_codes_id = NULL WHERE id = ".$animalId;
-    $this->getConnection()->exec($sql);
-
-    $sql = "DELETE FROM breed_codes WHERE animal_id = ".$animalId;
-    $this->getConnection()->exec($sql);
-
     //Deleting animal
 
     $sql = "DELETE FROM ".strtolower($type)." WHERE id = ".$animalId;
@@ -1216,15 +1174,20 @@ class AnimalRepository extends BaseRepository
     if(!is_array($animalIds)) { return; }
     if(count($animalIds) == 0) { return; }
 
-    //Delete blank breedValuesSet
-    /** @var BreedValuesSetRepository $breedValuesSetRepository */
-    $breedValuesSetRepository = $this->getManager()->getRepository(BreedValuesSet::class);
-    $breedValuesSetRepository->deleteBlankSetsByAnimalIdsAndSql($animalIds);
+    //Delete animalCache records
+    /** @var AnimalCacheRepository $animalCacheRepository */
+    $animalCacheRepository = $this->getManager()->getRepository(AnimalCache::class);
+    $animalCacheRepository->deleteByAnimalIdsAndSql($animalIds);
 
-    //DeleteBreedCodes
-    /** @var BreedCodesRepository $breedCodesRepository */
-    $breedCodesRepository = $this->getManager()->getRepository(BreedCodes::class);
-    $breedCodesRepository->deleteByAnimalIds($animalIds);
+    //Delete resultTableBreedGrade record
+    /** @var ResultTableBreedGradesRepository $resultTableBreedGradeRepository */
+    $resultTableBreedGradeRepository = $this->getManager()->getRepository(ResultTableBreedGrades::class);
+    $resultTableBreedGradeRepository->deleteByAnimalIdsAndSql($animalIds);
+
+    //Delete animalResidence records
+    /** @var AnimalResidenceRepository $animalResidenceRepository */
+    $animalResidenceRepository = $this->getManager()->getRepository(AnimalResidence::class);
+    $animalResidenceRepository->deleteByAnimalIdsAndSql($animalIds);
 
     $animalIdFilterString = SqlUtil::getFilterStringByIdsArray($animalIds);
     if($animalIdFilterString != '') {

@@ -9,13 +9,9 @@ use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalCacheRepository;
-use AppBundle\Entity\BreedValuesSet;
-use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
-use AppBundle\Entity\GeneticBase;
-use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Ram;
@@ -26,6 +22,7 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\ProductionUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
@@ -87,17 +84,14 @@ class AnimalCacher
         $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataPerLocation($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $locationId);
         if(count($animalCacherInputData) == 0) { return; }
 
-        /** @var GeneticBaseRepository $geneticBaseRepository */
-        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
-
-        $breedValuesYear = $geneticBaseRepository->getLatestYear();
-        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
-
         $count = 0;
+
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
 
         //Get ids of already cached animals
         $sql = "SELECT animal_id FROM animal_cache";
-        $results = $em->getConnection()->query($sql)->fetchAll();
+        $results = $conn->query($sql)->fetchAll();
         $cachedAnimalIds = [];
         foreach ($results as $result) {
             $animalId = intval($result['animal_id']);
@@ -109,7 +103,7 @@ class AnimalCacher
             foreach ($animalCacherInputData as $record) {
                 $animalId = $record['animal_id'];
                 if(!array_key_exists($animalId, $cachedAnimalIds) || !$ignoreAnimalsWithAnExistingCache) { //Double checks for duplicates
-                    self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                    self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $record['animal_cache_id'] != null, $flushPerRecord);
                 }
                 if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
                 $cmdUtil->advanceProgressBar(1);
@@ -119,7 +113,7 @@ class AnimalCacher
             foreach ($animalCacherInputData as $record) {
                 $animalId = $record['animal_id'];
                 if(!array_key_exists($animalId, $cachedAnimalIds) || !$ignoreAnimalsWithAnExistingCache) { //Double checks for duplicates
-                    self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                    self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $record['animal_cache_id'] != null, $flushPerRecord);
                 }
                 if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
             }
@@ -129,6 +123,8 @@ class AnimalCacher
 
         //DuplicateCheck
         self::deleteDuplicateAnimalCacheRecords($em);
+
+        DoctrineUtil::updateTableSequence($conn, ['animal_cache']);
     }
 
 
@@ -172,12 +168,6 @@ class AnimalCacher
             $cachedAnimalIds[$animalId] = $animalId;
         }
 
-        /** @var GeneticBaseRepository $geneticBaseRepository */
-        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
-
-        $breedValuesYear = $geneticBaseRepository->getLatestYear();
-        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
-
         /** @var AnimalCacheRepository $animalCacheRepository */
         $animalCacheRepository = $em->getRepository(AnimalCache::class);
 
@@ -194,7 +184,7 @@ class AnimalCacher
                     foreach ($animalCacherInputData as $record) {
                         $animalId = $record['animal_id'];
                         if(!array_key_exists($animalId, $cachedAnimalIds) || !$ignoreAnimalsWithAnExistingCache) { //THIS PREVENTS DUPLICATES!
-                            self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                            self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $record['animal_cache_id'] != null, $flushPerRecord);
 
                             //Add animalId to array to check for duplicates
                             $cachedAnimalIds[$animalId] = $animalId;
@@ -215,7 +205,7 @@ class AnimalCacher
                     foreach ($animalCacherInputData as $record) {
                         $animalId = $record['animal_id'];
                         if(!array_key_exists($animalId, $cachedAnimalIds) || !$ignoreAnimalsWithAnExistingCache) { //THIS PREVENTS DUPLICATES!
-                            self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                            self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $record['animal_cache_id'] != null, $flushPerRecord);
 
                             //Add animalId to array to check for duplicates
                             $cachedAnimalIds[$animalId] = $animalId;
@@ -251,12 +241,6 @@ class AnimalCacher
         $totalCount = count($animalCacherInputData);
         if($totalCount == 0) { return; }
 
-        /** @var GeneticBaseRepository $geneticBaseRepository */
-        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
-
-        $breedValuesYear = $geneticBaseRepository->getLatestYear();
-        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
-
         //Get ids of already cached animals
         $sql = "SELECT animal_id FROM animal_cache";
         $results = $conn->query($sql)->fetchAll();
@@ -281,7 +265,7 @@ class AnimalCacher
             $loopCount++;
             $animalId = $record['animal_id'];
             if(!array_key_exists($animalId, $cachedAnimalIds)) { //Double checks for duplicates
-                $insertString = $insertString . self::getCacheByIdInsertString($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $maxAnimalCacheId).',';
+                $insertString = $insertString . self::getCacheByIdInsertString($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $maxAnimalCacheId).',';
                 $maxAnimalCacheId++;
                 $batchCount++;
             }
@@ -303,6 +287,8 @@ class AnimalCacher
 
         //DuplicateCheck
         self::deleteDuplicateAnimalCacheRecords($em);
+
+        DoctrineUtil::updateTableSequence($conn, ['animal_cache']);
     }
 
 
@@ -310,8 +296,7 @@ class AnimalCacher
     {
         $insertString = rtrim($insertString, ',');
         $sql = "INSERT INTO animal_cache (id, log_date, animal_id, dutch_breed_status,
-						  n_ling, production_age, litter_count, total_offspring_count, born_alive_offspring_count, gave_birth_as_one_year_old, breed_value_growth, breed_value_muscle_thickness, 
-						  breed_value_fat, lamb_meat_index, lamb_meat_index_without_accuracy, last_weight, weight_measurement_date, kind, skull, muscularity, proportion, progress,
+						  n_ling, production_age, litter_count, total_offspring_count, born_alive_offspring_count, gave_birth_as_one_year_old, last_weight, weight_measurement_date, kind, skull, muscularity, proportion, progress,
 						  exterior_type, leg_work, fur, general_appearance, height, breast_depth,
 						  torso_length, markings, exterior_measurement_date						  
 						)VALUES ".$insertString;
@@ -319,7 +304,7 @@ class AnimalCacher
     }
 
     
-    private static function getCacheByIdInsertString(ObjectManager $em, $animalId, $gender, $dateOfBirthString, $breedType, $breedValuesYear, $geneticBases, $maxAnimalCacheId)
+    private static function getCacheByIdInsertString(ObjectManager $em, $animalId, $gender, $dateOfBirthString, $breedType, $maxAnimalCacheId)
     {
         //Animal Entity Data
         $gender = SqlUtil::getNullCheckedValueForSqlQuery(Translation::getGenderInDutch($gender, self::NEUTER_STRING),true);
@@ -333,21 +318,6 @@ class AnimalCacher
         $totalOffspring = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getTotalOffspringCountFromProductionString($productionString),false);
         $totalBornOffspring = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getBornAliveCountFromProductionString($productionString),false);
         $hasOneYearMark = StringUtil::getBooleanAsString(ProductionUtil::hasOneYearMark($productionString), 'FALSE');
-
-        //Breed Values
-        $breedValuesArray = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
-        $lambMeatIndexAccuracy = $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY];
-        //NOTE! Only include the lambIndexValue if the accuracy is at least the MIN accuracy required
-        $lambMeatIndexWithoutAccuracy = 'NULL';
-        if($lambMeatIndexAccuracy >= BreedFormat::MIN_LAMB_MEAT_INDEX_ACCURACY) {
-            $lambMeatIndexWithoutAccuracy = SqlUtil::getNullCheckedValueForSqlQuery($breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX],true);
-        }
-        $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValuesArray);
-
-        $breedValueGrowth = SqlUtil::getNullCheckedValueForSqlQuery($formattedBreedValues[BreedValueLabel::GROWTH],true);
-        $breedValueMuscleThickness = SqlUtil::getNullCheckedValueForSqlQuery($formattedBreedValues[BreedValueLabel::MUSCLE_THICKNESS],true);
-        $breedValueFat = SqlUtil::getNullCheckedValueForSqlQuery($formattedBreedValues[BreedValueLabel::FAT],true);
-        $lambMeatIndex = SqlUtil::getNullCheckedValueForSqlQuery(self::getFormattedLambMeatIndexWithAccuracy($breedValuesArray),true);
 
         //Weight Data
         /** @var WeightRepository $weightRepository */
@@ -382,8 +352,7 @@ class AnimalCacher
 
         return "(".$maxAnimalCacheId.",'".$logDate."',".$animalId.",".$dutchBreedStatus
             .",".$nLing.",".$productionAge.",".$litterCount.",".$totalOffspring.",".$totalBornOffspring.",".$hasOneYearMark
-            .",".$breedValueGrowth.",".$breedValueMuscleThickness
-            .",".$breedValueFat.",".$lambMeatIndex.",".$lambMeatIndexWithoutAccuracy.",".$weight.",".$weightMeasurementDateString
+            .",".$weight.",".$weightMeasurementDateString
             .",".$kind.",".$skull.",".$muscularity.",".$proportion.",".$progress.",".$exteriorType.",".$legWork.",".$fur
             .",".$generalAppearance.",".$height.",".$breastDepth.",".$torsoLength.",".$markings.",".$exteriorMeasurementDateString.")";
     }
@@ -394,14 +363,10 @@ class AnimalCacher
      * @param bool $flush
      */
     public static function cacheByAnimal(ObjectManager $em, Animal $animal, $flush = true) {
-        /** @var GeneticBaseRepository $geneticBaseRepository */
-        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
-        $breedValuesYear = $geneticBaseRepository->getLatestYear();
-        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
 
         $animalId = $animal->getId();
         if($animalId != null) {
-            self::cacheById($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString(), $animal->getBreedType(), $breedValuesYear, $geneticBases, false, $flush);
+            self::cacheById($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString(), $animal->getBreedType(), false, $flush);
         }
     }
 
@@ -411,12 +376,10 @@ class AnimalCacher
      * @param string $gender
      * @param string $dateOfBirthString
      * @param string $breedType
-     * @param int $breedValuesYear
-     * @param GeneticBase $geneticBases
      * @param boolean $isUpdate
      * @param boolean $flush
      */
-    public static function cacheById(ObjectManager $em, $animalId, $gender, $dateOfBirthString, $breedType, $breedValuesYear, $geneticBases, $isUpdate, $flush = true)
+    public static function cacheById(ObjectManager $em, $animalId, $gender, $dateOfBirthString, $breedType, $isUpdate, $flush = true)
     {
         //Animal Entity Data
         $gender = Translation::getGenderInDutch($gender, self::NEUTER_STRING);
@@ -430,21 +393,6 @@ class AnimalCacher
         $totalOffspring = ProductionUtil::getTotalOffspringCountFromProductionString($productionString);
         $totalBornOffspring = ProductionUtil::getBornAliveCountFromProductionString($productionString);
         $hasOneYearMark = ProductionUtil::hasOneYearMark($productionString);
-
-        //Breed Values
-        $breedValuesArray = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
-        $lambMeatIndexAccuracy = $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY];
-        //NOTE! Only include the lambIndexValue if the accuracy is at least the MIN accuracy required
-        $lambMeatIndexWithoutAccuracy = null;
-        if($lambMeatIndexAccuracy >= BreedFormat::MIN_LAMB_MEAT_INDEX_ACCURACY) {
-            $lambMeatIndexWithoutAccuracy = $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX];
-        }
-        $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValuesArray);
-
-        $breedValueGrowth = $formattedBreedValues[BreedValueLabel::GROWTH];
-        $breedValueMuscleThickness = $formattedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
-        $breedValueFat = $formattedBreedValues[BreedValueLabel::FAT];
-        $lambMeatIndex = self::getFormattedLambMeatIndexWithAccuracy($breedValuesArray);
 
         //Weight Data
         /** @var WeightRepository $weightRepository */
@@ -477,7 +425,6 @@ class AnimalCacher
         $exteriorMeasurementDate = new \DateTime($exteriorMeasurementDateString);
         
         //TODO Still blank at the moment
-        $breedValueLitterSize = null;
         $predicate = null;
 
 
@@ -517,12 +464,6 @@ class AnimalCacher
         $record->setDutchBreedStatus($dutchBreedStatus);
         $record->setPredicate($predicate);
         $record->setNLing($nLing);
-        $record->setBreedValueLitterSize($breedValueLitterSize);
-        $record->setBreedValueGrowth($breedValueGrowth);
-        $record->setBreedValueMuscleThickness($breedValueMuscleThickness);
-        $record->setBreedValueFat($breedValueFat);
-        $record->setLambMeatIndex($lambMeatIndex);
-        $record->setLambMeatIndexWithoutAccuracy($lambMeatIndexWithoutAccuracy);
         if($weightExists) {
             $record->setLastWeight($weight);
             $record->setWeightMeasurementDateByDateString($weightMeasurementDateString);
@@ -799,34 +740,6 @@ class AnimalCacher
         //Litter in which animal was born
         $litterSize = $litterRepository->getLitterSize($animalId);
         return DisplayUtil::parseNLingString($litterSize);
-    }
-
-
-    /**
-     * @param int $animalId
-     * @param int $breedValuesYear
-     * @param GeneticBase $geneticBases
-     * @param ObjectManager $em
-     * @return array
-     */
-    private static function getUnformattedBreedValues($em, $animalId, $breedValuesYear = null, $geneticBases = null)
-    {
-        /** @var BreedValuesSetRepository $breedValuesSetRepository */
-        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
-        return $breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animalId, $breedValuesYear, $geneticBases);
-    }
-
-
-    /**
-     * @param array $breedValuesArray
-     * @return string
-     */
-    public static function getFormattedLambMeatIndexWithAccuracy($breedValuesArray)
-    {
-        return BreedFormat::getJoinedLambMeatIndex(
-            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX],
-            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY]
-        );
     }
 
 
