@@ -472,6 +472,11 @@ class AnimalTableImporter
                 WHERE animal_migration_table.id = v.id
                    AND animal_migration_table.uln_number ISNULL",
 
+            'Fix incongruent animalOrderNumbers ...' =>
+            "UPDATE animal_migration_table SET animal_order_number = substr(uln_number, length(uln_number)-4,5)
+                WHERE animal_order_number <> substr(uln_number, length(uln_number)-4,5) OR
+                      (animal_order_number ISNULL AND uln_number NOTNULL)",
+
         ];
 
         foreach ($queries as $title => $sql) {
