@@ -52,8 +52,9 @@ class WormResistance
 
     /**
      * @var int
+     * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=false)
      */
     private $year;
 
