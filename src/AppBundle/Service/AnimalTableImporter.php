@@ -97,7 +97,8 @@ class AnimalTableImporter
             'Choose option: ', "\n",
             '1: Import AnimalTable csv file into database', "\n",
             '2: Update animal_migration_table empty animal table values', "\n",
-            '3: Fix animal_migration_table values, including issues as requested by Reinard', "\n",
+            '3: Extract breederNumbers from pedigreeNumbers and ubnOfBirths', "\n",
+            '4: Fix animal_migration_table values, including issues as requested by Reinard', "\n",
             '----------------------------------------------------', "\n",
 //            '2: Export animal_migration_table to csv', "\n",
 //            '3: Import animal_migration_table from exported csv', "\n",
@@ -113,9 +114,8 @@ class AnimalTableImporter
         switch ($option) {
             case 1: $this->importAnimalTableCsvFileIntoDatabase(); break;
             case 2: $this->updateValues(); break;
-            case 3: $this->fixValues(); break;
-//            case 4:
-//                break;
+            case 3: $this->extractBreederNumbers(); break;
+            case 4: $this->fixValues(); break;
 //            case 5:
 //                break;
 //            case 6:
@@ -221,8 +221,11 @@ class AnimalTableImporter
             $sqlInsertGroup = "(nextval('animal_migration_table_id_seq'),".$vsmId.",".$uln.",".$stnImport.",".$ulnCountryCode.",".$ulnNumber.",".$animalOrderNumber.",".$pedigreeCountryCode.",".$pedigreeNumber.",".$nickName.",".$fatherVsmId.",".$motherVsmId.",".$genderInFile.",".$dateOfBirthString.",".$breedCode.",".$ubnOfBirth.",".$pedigreeRegisterId.",".$breedType.",".$scrapieGenotype.")";
 
             $insertBatchSet->appendValuesString($sqlInsertGroup);
-            $insertBatchSet->processAtBatchSize();
-            $this->sqlBatchProcessor->advanceProgressBar();
+
+            $this->sqlBatchProcessor
+                ->processAtBatchSize()
+                ->advanceProgressBar()
+            ;
         }
         $this->sqlBatchProcessor->end();
 
@@ -624,6 +627,113 @@ class AnimalTableImporter
         if ($totalUpdateCount > 0) {
             DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil);
         }
+    }
+
+
+    private function extractBreederNumbers()
+    {
+        $this->writeLn('=== Extracting breederNumbers from pedigreeNumbers and ubnOfBirths and update breeder_number table ===');
+
+        $sql = "SELECT m.ubn_of_birth,
+                  substr(stn_origin, 4, 5) as breeder_number,
+                  regexp_matches(stn_origin, '([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{5})')
+                FROM animal_migration_table m
+                  --LEFT JOIN breeder_number b ON b.breeder_number = substr(stn_origin, 4, 5)
+                WHERE m.ubn_of_birth NOTNULL";
+        $ungroupedResults = $this->conn->query($sql)->fetchAll();
+
+        $results = [];
+        foreach ($ungroupedResults as $result) {
+            $ubnOfBirth = $result['ubn_of_birth'];
+            $breederNumber = $result['breeder_number'];
+            if (!key_exists($breederNumber, $results)) {
+                $results[$breederNumber] = $ubnOfBirth;
+            }
+        }
+
+        $sql = "SELECT breeder_number, ubn_of_birth FROM breeder_number";
+        $currentUbnOfBirthByBreederNumbers = SqlUtil::groupSqlResultsOfKey1ByKey2(
+            'ubn_of_birth', 'breeder_number', $this->conn->query($sql)->fetchAll());
+
+        DoctrineUtil::updateTableSequence($this->conn, ['breeder_number']);
+
+        $this->sqlBatchProcessor
+            ->purgeAllSets()
+            ->createBatchSet(QueryType::INSERT)
+            ->createBatchSet(QueryType::UPDATE)
+        ;
+
+        $insertBatchSet = $this->sqlBatchProcessor->getSet(QueryType::INSERT);
+        $updateBatchSet = $this->sqlBatchProcessor->getSet(QueryType::UPDATE);
+
+        $insertBatchSet->setSqlQueryBase("INSERT INTO breeder_number (breeder_number, ubn_of_birth, source) VALUES ");
+
+        $updateSqlBaseStart = "UPDATE breeder_number 
+                                SET ubn_of_birth = v.ubn_of_birth, source = 'ANIMAL_MIGRATION_TABLE'
+                                FROM ( VALUES ";
+        $updateSqlBaseEnd = ") AS v(breeder_number, ubn_of_birth) 
+                               WHERE breeder_number.breeder_number = v.breeder_number
+                                AND breeder_number.ubn_of_birth <> v.ubn_of_birth";
+        $updateBatchSet->setSqlQueryBase($updateSqlBaseStart);
+        $updateBatchSet->setSqlQueryBaseEnd($updateSqlBaseEnd);
+
+        $this->sqlBatchProcessor->start(count($results));
+
+        $breederNumbersToBeInserted = [];
+        $breederNumbersToBeUpdated = [];
+
+        foreach ($results as $breederNumber => $ubnOfBirth) {
+
+            if (key_exists($breederNumber, $currentUbnOfBirthByBreederNumbers)) {
+                //Record already exists
+                if ($currentUbnOfBirthByBreederNumbers[$breederNumber] === $ubnOfBirth) {
+                    $insertBatchSet->incrementSkippedCount();
+                    $updateBatchSet->incrementSkippedCount();
+                    $this->sqlBatchProcessor->advanceProgressBar();
+                    continue;
+
+                } else {
+                    if (key_exists($breederNumber, $breederNumbersToBeUpdated)) {
+                        //BreedNumber is already in update batch
+                        $insertBatchSet->incrementSkippedCount();
+                        $updateBatchSet->incrementSkippedCount();
+                        $this->sqlBatchProcessor->advanceProgressBar();
+                        continue;
+                    } else {
+                        //Record values must be updated
+                        $updateBatchSet->appendValuesString("('".$breederNumber."','".$ubnOfBirth."')");
+                        $insertBatchSet->incrementSkippedCount();
+                        $updateBatchSet->incrementBatchCount();
+                        $breederNumbersToBeUpdated[$breederNumber] = $breederNumber;
+                    }
+                }
+
+            } else {
+                //BreedNumber is already in insert batch
+                if (key_exists($breederNumber, $breederNumbersToBeInserted)) {
+                    $insertBatchSet->incrementSkippedCount();
+                    $updateBatchSet->incrementSkippedCount();
+                    $this->sqlBatchProcessor->advanceProgressBar();
+                    continue;
+
+                } else {
+                    //BreedNumber record does not exist yet & is not in batch
+                    $insertBatchSet->appendValuesString("('".$breederNumber."','".$ubnOfBirth."','ANIMAL_MIGRATION_TABLE')");
+                    $insertBatchSet->incrementBatchCount();
+                    $updateBatchSet->incrementSkippedCount();
+                    $breederNumbersToBeInserted[$breederNumber] = $breederNumber;
+                }
+            }
+            $this->sqlBatchProcessor
+                ->processAtBatchSize()
+                ->advanceProgressBar()
+            ;
+        }
+        $breederNumbersToBeInserted = null;
+        $results = null;
+        $this->sqlBatchProcessor->end()->purgeAllSets();
+
+        DoctrineUtil::updateTableSequence($this->conn, ['breeder_number']);
     }
 
 
