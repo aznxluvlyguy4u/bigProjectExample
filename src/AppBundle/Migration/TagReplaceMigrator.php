@@ -41,8 +41,7 @@ class TagReplaceMigrator extends MigratorBase
     public function migrate()
     {
         DoctrineUtil::updateTableSequence($this->conn, ['declare_base', 'tag']);
-
-        $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
+        
         $animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
 
         $sql = "SELECT
