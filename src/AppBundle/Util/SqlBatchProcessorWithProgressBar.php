@@ -124,10 +124,19 @@ class SqlBatchProcessorWithProgressBar
         $prefix = '';
         $message = '';
 
-        /** @var SqlBatchSetData $set */
-        foreach ($this->sqlBatchSets as $set) {
-            $message = $message . $prefix . $set->getProgressBarMessage();
-            $prefix = ' ** ';
+        if (count($this->sqlBatchSets) > 2) {
+            /** @var SqlBatchSetData $set */
+            foreach ($this->sqlBatchSets as $set) {
+                $message = $message . $prefix . $set->getMinimalProgressBarMessage();
+                $prefix = '* ';
+            }
+
+        } else {
+            /** @var SqlBatchSetData $set */
+            foreach ($this->sqlBatchSets as $set) {
+                $message = $message . $prefix . $set->getProgressBarMessage();
+                $prefix = ' ** ';
+            }
         }
 
         return $message;

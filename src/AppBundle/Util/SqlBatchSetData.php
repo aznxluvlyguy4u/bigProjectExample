@@ -194,4 +194,13 @@ class SqlBatchSetData
         return $this->key.' skipped|already||inBatch|done:  '
             .$this->recordsSkipped.'|'.$this->recordsAlreadyDone.'||'.$this->sqlBatchCount.'|'.$this->recordsDoneCount;
     }
+
+
+    /**
+     * @return string
+     */
+    public function getMinimalProgressBarMessage()
+    {
+        return $this->key.'['.$this->recordsSkipped.'|'.$this->recordsAlreadyDone.'||'.$this->sqlBatchCount.'|'.$this->recordsDoneCount.'] ';
+    }
 }
