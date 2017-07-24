@@ -68,6 +68,9 @@ class JsonInputConstant
     const ACTION_BY = 'action_by';
     const IS_REMOVED_BY_USER = 'is_removed_by_user';
 
+    //Sync
+    const IS_RVO_LEADING = 'is_rvo_leading';
+
     //Arrival & Import
     const IS_IMPORT_ANIMAL = 'is_import_animal';
     const UBN_PREVIOUS_OWNER = 'ubn_previous_owner';
