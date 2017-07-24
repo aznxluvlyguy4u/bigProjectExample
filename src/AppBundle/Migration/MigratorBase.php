@@ -48,6 +48,8 @@ class MigratorBase
     protected $primaryVsmIdsBySecondaryVsmId;
     /** @var SqlBatchProcessorWithProgressBar */
     protected $sqlBatchProcessor;
+    /** @var int */
+    protected $developerId;
 
     /**
      * MigratorBase constructor.
@@ -56,8 +58,9 @@ class MigratorBase
      * @param OutputInterface $outputInterface
      * @param array $data
      * @param string $rootDir
+     * @param int $developerId
      */
-    public function __construct(CommandUtil $cmdUtil, ObjectManager $em, OutputInterface $outputInterface, array $data = [], $rootDir = null)
+    public function __construct(CommandUtil $cmdUtil, ObjectManager $em, OutputInterface $outputInterface, array $data = [], $rootDir = null, $developerId = null)
     {
         $this->cmdUtil = $cmdUtil;
         $this->em = $em;
@@ -77,6 +80,7 @@ class MigratorBase
         }
 
         $this->sqlBatchProcessor = new SqlBatchProcessorWithProgressBar($this->conn,$this->cmdUtil,self::BATCH_SIZE);
+        $this->developerId = $developerId;
     }
 
 

@@ -25,9 +25,6 @@ class TagReplaceMigrator extends MigratorBase
     const TAG_INSERT = 'TAG_INSERT';
     const ULN_HISTORY_INSERT = 'ULN_HISTORY_INSERT';
 
-    /** @var int */
-    private $developerId;
-
 
     /**
      * TagReplaceMigrator constructor.
@@ -38,8 +35,7 @@ class TagReplaceMigrator extends MigratorBase
      */
     public function __construct(CommandUtil $cmdUtil, ObjectManager $em, array $data, $developerId)
     {
-        parent::__construct($cmdUtil, $em, $cmdUtil->getOutputInterface(), $data);
-        $this->developerId = $developerId;
+        parent::__construct($cmdUtil, $em, $cmdUtil->getOutputInterface(), $data, null, $developerId);
     }
 
     public function migrate()
