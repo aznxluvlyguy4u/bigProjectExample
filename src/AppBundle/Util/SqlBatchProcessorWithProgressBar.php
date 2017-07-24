@@ -59,8 +59,8 @@ class SqlBatchProcessorWithProgressBar
      */
     public function purgeAllSets()
     {
-        foreach ($this->sqlBatchSets as $set) {
-            $this->sqlBatchSets[$set] = null;
+        foreach ($this->sqlBatchSets as $key => $set) {
+            $this->sqlBatchSets[$key] = null;
         }
         $this->sqlBatchSets = [];
         gc_collect_cycles();
@@ -133,6 +133,18 @@ class SqlBatchProcessorWithProgressBar
         return $message;
     }
 
+
+    /**
+     * @return SqlBatchProcessorWithProgressBar $this
+     */
+    public function processAtBatchSize()
+    {
+        /** @var SqlBatchSetData $set */
+        foreach ($this->sqlBatchSets as $set) {
+            $set->processAtBatchSize();
+        }
+        return $this;
+    }
 
 
 

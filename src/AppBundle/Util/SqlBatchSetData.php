@@ -23,6 +23,8 @@ class SqlBatchSetData
     /** @var string */
     private $sqlQueryBase;
     /** @var string */
+    private $sqlQueryBaseEnd;
+    /** @var string */
     private $valuesString;
     /** @var string */
     private $prefix;
@@ -48,6 +50,7 @@ class SqlBatchSetData
         $this->key = $key;
         $this->batchSize = $batchSize;
         $this->conn = $conn;
+        $this->sqlQueryBaseEnd = '';
         $this->resetOverallBatchCounters();
     }
 
@@ -125,6 +128,24 @@ class SqlBatchSetData
         return $this->sqlQueryBase;
     }
 
+    /**
+     * @return string
+     */
+    public function getSqlQueryBaseEnd()
+    {
+        return $this->sqlQueryBaseEnd;
+    }
+
+    /**
+     * @param string $sqlQueryBaseEnd
+     * @return SqlBatchSetData
+     */
+    public function setSqlQueryBaseEnd($sqlQueryBaseEnd)
+    {
+        $this->sqlQueryBaseEnd = $sqlQueryBaseEnd;
+        return $this;
+    }
+
 
     /**
      * @param $string
@@ -157,8 +178,8 @@ class SqlBatchSetData
      */
     public function processAnimalMigrationTableRecordsByBatch()
     {
-        if($this->valuesString === '') { return 0; }
-        $sql = $this->sqlQueryBase." ".$this->valuesString;
+        if(trim($this->valuesString) === '') { return 0; }
+        $sql = $this->sqlQueryBase." ".$this->valuesString." ".$this->sqlQueryBaseEnd;
         $sqlBatchCount = SqlUtil::updateWithCount($this->conn, $sql);
         $this->resetSqlBatchValues();
         return $sqlBatchCount;
