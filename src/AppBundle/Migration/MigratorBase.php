@@ -12,6 +12,7 @@ use AppBundle\Entity\VsmIdGroup;
 use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\SqlBatchProcessorWithProgressBar;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -21,39 +22,32 @@ class MigratorBase
 {
     const MIGRATION_OUTPUT_FOLDER = '/Resources/outputs/migration';
     const BLANK_DATE_FILLER = '1899-01-01';
+    const BATCH_SIZE = 10000;
 
     /** @var ObjectManager */
     protected $em;
-
     /** @var CommandUtil */
     protected $cmdUtil;
-
     /** @var OutputInterface */
     protected $output;
-
     /** @var array */
     protected $data;
-
     /** @var AnimalRepository */
     protected $animalRepository;
-
     /** @var DeclareTagReplaceRepository */
     protected $declareTagReplaceRepository;
-
     /** @var VsmIdGroupRepository */
     protected $vsmIdGroupRepository;
-
     /** @var string */
     protected $outputFolder;
-
     /** @var string */
     protected $rootDir;
-
     /** @var Connection $conn */
     protected $conn;
-
     /** @var array */
     protected $primaryVsmIdsBySecondaryVsmId;
+    /** @var SqlBatchProcessorWithProgressBar */
+    protected $sqlBatchProcessor;
 
     /**
      * MigratorBase constructor.
@@ -81,6 +75,8 @@ class MigratorBase
             $this->outputFolder = $rootDir.self::MIGRATION_OUTPUT_FOLDER;
             NullChecker::createFolderPathIfNull($this->outputFolder);
         }
+
+        $this->sqlBatchProcessor = new SqlBatchProcessorWithProgressBar($this->conn,$this->cmdUtil,self::BATCH_SIZE);
     }
 
 
@@ -94,7 +90,7 @@ class MigratorBase
 
 
     /**
-     * @return \DateTime
+     * @return string
      */
     public static function getBlankDateFillerDateString()
     {
