@@ -528,6 +528,12 @@ abstract class Animal
     protected $pedigreeRegister;
 
     /**
+     * @var ArrayCollection
+     * @ORM\OneToMany(targetEntity="WormResistance", mappedBy="animal", cascade={"persist"})
+     */
+    protected $wormResistances;
+
+    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -590,6 +596,7 @@ abstract class Animal
         $this->ulnHistory = new ArrayCollection();
         $this->genderHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
+        $this->wormResistances = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -2333,5 +2340,49 @@ abstract class Animal
      */
     public function setCollarNumber($collarNumber) {
         $this->collarNumber = $collarNumber;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getWormResistances()
+    {
+        return $this->wormResistances;
+    }
+
+    /**
+     * @param ArrayCollection $wormResistances
+     * @return Animal
+     */
+    public function setWormResistances($wormResistances)
+    {
+        $this->wormResistances = $wormResistances;
+        return $this;
+    }
+
+
+    /**
+     * @param WormResistance $wormResistance
+     *
+     * @return Animal
+     */
+    public function addWormResistance(WormResistance $wormResistance)
+    {
+        $this->wormResistances->add($wormResistance);
+
+        return $this;
+    }
+
+
+    /**
+     * @param WormResistance $wormResistance
+     *
+     * @return Animal
+     */
+    public function removeWormResistance(WormResistance $wormResistance)
+    {
+        $this->wormResistances->remove($wormResistance);
+
+        return $this;
     }
 }
