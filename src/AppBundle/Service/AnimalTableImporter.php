@@ -894,9 +894,49 @@ class AnimalTableImporter
              * met daarin het – teken. Dit blijkt er te zijn, bijv. NL 09084-36155.
              * Het stamboeknummer van NL 100125536154 moet dus zijn NL 09084-36154.
              */
-//            'Fix 6)' =>
-//                "",
+            'Fix 6, part 1: in animal_migration_table)' =>
+                "UPDATE animal_migration_table SET pedigree_country_code = new_pedigree_country_code, pedigree_number = new_pedigree_number, is_stn_updated = TRUE
+                FROM (
+                       SELECT amt.vsm_id, uln_country_code,
+                         --uln_number, amt.ubn_of_birth, g.breeder_number, substr(uln_number, length(uln_number)-4,5) as animal_order_number,
+                         CONCAT(g.breeder_number,'-',substr(uln_number, length(uln_number)-4,5)) as new_pedigree_number
+                       FROM animal_migration_table amt
+                         INNER JOIN (
+                                      --In case of multiple breeders per ubn, select the lowest breederNumber
+                                      SELECT b.ubn_of_birth, MIN(b.breeder_number) as breeder_number
+                                      FROM breeder_number b
+                                        INNER JOIN (
+                                                     --Prioritize data from animal migration table
+                                                     SELECT ubn_of_birth, MIN(source) as source
+                                                     FROM breeder_number
+                                                     GROUP BY ubn_of_birth
+                                                   )g ON g.ubn_of_birth = b.ubn_of_birth AND g.source = b.source
+                                      GROUP BY b.ubn_of_birth
+                                    )g ON g.ubn_of_birth = amt.ubn_of_birth
+                       WHERE pedigree_number ISNULL AND uln_number NOTNULL AND breed_code ='FL100'
+                ) AS v(vsm_id, new_pedigree_country_code, new_pedigree_number) WHERE animal_migration_table.vsm_id = v.vsm_id",
 
+            'Fix 6, part 2: in animal table)' =>
+                "UPDATE animal SET pedigree_country_code = new_pedigree_country_code, pedigree_number = new_pedigree_number
+                      FROM (
+                          SELECT a.id as animal_id, uln_country_code,
+                          --uln_number, a.ubn_of_birth, g.breeder_number, substr(uln_number, length(uln_number)-4,5) as animal_order_number,
+                          CONCAT(g.breeder_number,'-',substr(uln_number, length(uln_number)-4,5)) as new_pedigree_number
+                          FROM animal a
+                          INNER JOIN (
+                          --In case of multiple breeders per ubn, select the lowest breederNumber
+                          SELECT b.ubn_of_birth, MIN(b.breeder_number) as breeder_number
+                          FROM breeder_number b
+                          INNER JOIN (
+                          --Prioritize data from animal migration table
+                          SELECT ubn_of_birth, MIN(source) as source
+                          FROM breeder_number
+                          GROUP BY ubn_of_birth
+                          )g ON g.ubn_of_birth = b.ubn_of_birth AND g.source = b.source
+                          GROUP BY b.ubn_of_birth
+                          )g ON g.ubn_of_birth = a.ubn_of_birth
+                          WHERE pedigree_number ISNULL AND uln_number NOTNULL AND breed_code ='FL100'
+                      ) AS v(animal_id, new_pedigree_country_code, new_pedigree_number) WHERE animal.id = animal_id"
         ];
 
         foreach ($queries as $title => $sql) {
