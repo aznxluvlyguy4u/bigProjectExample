@@ -21,7 +21,6 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class TagReplaceMigrator extends MigratorBase
 {
-    const BATCH = 1000;
     const TAG_INSERT = 'TAG_INSERT';
     const ULN_HISTORY_INSERT = 'ULN_HISTORY_INSERT';
 
@@ -41,7 +40,7 @@ class TagReplaceMigrator extends MigratorBase
     public function migrate()
     {
         DoctrineUtil::updateTableSequence($this->conn, ['declare_base', 'tag']);
-        
+
         $animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
 
         $sql = "SELECT

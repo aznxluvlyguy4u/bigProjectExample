@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Migration\TagReplaceMigrator;
+use AppBundle\Migration\WormResistanceMigrator;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
 use AppBundle\Util\DoctrineUtil;
@@ -109,8 +110,8 @@ class VsmMigratorService
             '10: Migrate TagReplaces (WARNING make sure no other declareBases are inserted during this)', "\n",
 //            '4: Migrate AnimalTable data', "\n",
 //            '13: Migrate Performance Measurements', "\n",
-//            '----------------------------------------------------', "\n",
-//            '15: Export animal_migration_table to csv', "\n",
+            '----------------------------------------------------', "\n",
+            '20: Migrate WormResistance records', "\n",
 //            '16: Import animal_migration_table from exported csv', "\n",
 //            '17: Export vsm_id_group to csv', "\n",
 //            '18: Import vsm_id_group from exported csv', "\n",
@@ -173,6 +174,7 @@ class VsmMigratorService
 //                break;
 //            case 17:
 //                break;
+            case 20: $this->migrateWormResistanceRecords(); break;
             default: return;
         }
         $this->run($this->cmdUtil);
@@ -195,6 +197,14 @@ class VsmMigratorService
     {
         $data = $this->parseCSV(self::TAG_REPLACES);
         $migrator = new TagReplaceMigrator($this->cmdUtil, $this->em, $data,self::DEVELOPER_PRIMARY_KEY);
+        $migrator->migrate();
+    }
+
+
+    private function migrateWormResistanceRecords()
+    {
+        $data = $this->parseCSV(self::WORM_RESISTANCE);
+        $migrator = new WormResistanceMigrator($this->cmdUtil, $this->em, $data, self::DEVELOPER_PRIMARY_KEY);
         $migrator->migrate();
     }
 
