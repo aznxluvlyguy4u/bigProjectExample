@@ -8,6 +8,7 @@ namespace AppBundle\Enumerator;
  */
 class QueryType
 {
+    const BASE_INSERT = 'BASE_INSERT';
     const INSERT = 'INSERT';
     const UPDATE = 'UPDATE';
     const DELETE = 'DELETE';
