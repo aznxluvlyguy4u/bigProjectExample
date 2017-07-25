@@ -28,4 +28,10 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
     }
 
 
+    public function migrateNewAnimalsWithoutUln()
+    {
+
+    }
+
+
 }
