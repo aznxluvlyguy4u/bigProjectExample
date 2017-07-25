@@ -25,7 +25,7 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigratorService
 {
-    const BATCH_SIZE = 10000;
+    const BATCH_SIZE = 250000;
 
     //Search arrays
     private $pedigreeRegisterIdsByAbbreviation;
@@ -160,7 +160,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
             $fatherVsmId = $this->getParentVsmIdForSqlQuery($record[5]);
             $motherVsmId = $this->getParentVsmIdForSqlQuery($record[6]);
             $genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
-            $dateOfBirthString = StringUtil::getNullAsStringOrWrapInQuotes($record[8]);
+            $dateOfBirthString = $this->parseDateString($record[8]);
             $breedCode = StringUtil::getNullAsStringOrWrapInQuotes($record[9]);
             $ubnOfBirth = StringUtil::getNullAsStringOrWrapInQuotes($record[10]); //ubnOfBreeder
 

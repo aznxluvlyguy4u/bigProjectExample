@@ -15,6 +15,8 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class Migrator2017JunServiceBase extends MigratorServiceBase
 {
+    const BATCH_SIZE = 250000;
+
     //CsvOptions
     const IMPORT_SUB_FOLDER = 'vsm2017jun/';
 

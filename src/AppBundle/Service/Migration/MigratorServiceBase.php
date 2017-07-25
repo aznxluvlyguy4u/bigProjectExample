@@ -11,6 +11,7 @@ use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\SqlBatchProcessorWithProgressBar;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -149,4 +150,13 @@ abstract class MigratorServiceBase
     }
 
 
+    /**
+     * @param string $dateString
+     * @return null|string
+     */
+    protected function parseDateString($dateString)
+    {
+        $dateString = TimeUtil::getTimeStampForSqlFromAnyDateString($dateString);
+        return StringUtil::getNullAsStringOrWrapInQuotes($dateString);
+    }
 }
