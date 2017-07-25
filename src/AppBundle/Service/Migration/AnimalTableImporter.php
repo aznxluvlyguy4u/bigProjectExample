@@ -276,6 +276,34 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
     }
 
 
+    /*
+     * Example of a piecemeal batch query, in case the big query is too slow, due to lack of system resources or whatever.
+     */
+    private function updateValuesPiecemeal()
+    {
+        $querySets = [
+          'Update incongruent gender_in_database where animal_id = id in animal table (only run after animal_id update) ...' =>
+              [
+                  QueryType::SELECT => "SELECT CONCAT('(',animal_id,',''', gender,''')') as set
+                      FROM animal_migration_table m
+                      INNER JOIN animal a ON a.id = m.animal_id
+                      WHERE (m.gender_in_database <> a.gender OR m.gender_in_database ISNULL)",
+                  QueryType::UPDATE_BASE => "UPDATE animal_migration_table SET gender_in_database = v.gender_in_database FROM ( VALUES ",
+                  QueryType::UPDATE_END => ") AS v(animal_id, gender_in_database) WHERE animal_migration_table.animal_id = v.animal_id",
+              ],
+        ];
+
+        foreach ($querySets as $title => $querySet) {
+            $this->updateBySelectAndUpdateSql(
+                $querySet[QueryType::SELECT],
+                $querySet[QueryType::UPDATE_BASE],
+                $querySet[QueryType::UPDATE_END],
+                $title
+            );
+        }
+    }
+
+
     private function updateValues()
     {
         $this->writeLn('=== Update incongruent/empty values in animal_migration_table ===');
