@@ -47,7 +47,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             ' ', "\n",
             'Choose option: ', "\n",
             '1: AnimalTableImporter options ...', "\n",
-//            '2: ', "\n",
+            '2: Migrate Animals from animal_migration_table to animal table ...', "\n",
 //            '3: Migrate TagReplaces', "\n",
             '----------------------------------------------------', "\n",
             '10: Migrate TagReplaces (WARNING make sure no other declareBases are inserted during this)', "\n",
@@ -88,6 +88,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
 
         switch ($option) {
             case 1: $this->animalTableImporter->run($this->cmdUtil); break;
+            case 2: $this->animalTableMigrator->run($this->cmdUtil); break;
 //            case 3:
 //                break;
 //            case 4:
