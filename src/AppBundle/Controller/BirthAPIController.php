@@ -412,12 +412,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                     $manager->remove($muscleThickness);
                 }
 
-                //Remove breedset values
-                $breedValues = $child->getBreedValuesSets();
-                foreach ($breedValues as $breedValue) {
-                    $manager->remove($breedValue);
-                }
-
                 //Remove gender change history items
                 $genderHistories = $child->getGenderHistory();
                 foreach ($genderHistories as $genderHistory) {
