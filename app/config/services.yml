@@ -90,18 +90,39 @@ services:
           cacheDir: %kernel.cache_dir%
           logger: '@logger'
 
+
     app.migrator.vsm:
-        class: AppBundle\Service\VsmMigratorService
+        class: AppBundle\Service\Migration\AnimalTableImporter
         arguments:
           entityManager: '@doctrine.orm.entity_manager'
           cacheDir: %kernel.root_dir%
           animalTableImporter: '@app.migrator.importer.animaltable'
+          animalTableMigrator: '@app.migrator.animaltable'
+          tagReplaceMigrator: '@app.migrator.tagreplace'
+          wormResistanceMigrator: '@app.migrator.wormresistance'
+
+    app.migrator.base:
+        abstract: true
+        arguments:
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
+          - '@doctrine.orm.entity_manager'
+          - %kernel.root_dir%
 
     app.migrator.importer.animaltable:
-        class: AppBundle\Service\AnimalTableImporter
-        arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          cacheDir: %kernel.root_dir%
+        parent: app.migrator.base
+        class: AppBundle\Service\Migration\AnimalTableImporter
+
+    app.migrator.animaltable:
+        parent: app.migrator.base
+        class: AppBundle\Service\Migration\AnimalTableImporter
+
+    app.migrator.tagreplace:
+        parent: app.migrator.base
+        class: AppBundle\Service\Migration\AnimalTableImporter
+
+    app.migrator.wormresistance:
+        parent: app.migrator.base
+        class: AppBundle\Service\Migration\AnimalTableImporter
 
     app.breed.index:
         class: AppBundle\Service\BreedIndexService

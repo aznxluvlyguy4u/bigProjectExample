@@ -1,9 +1,8 @@
 <?php
 
 
-namespace AppBundle\Service;
+namespace AppBundle\Service\Migration;
 
-use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\QueryType;
@@ -12,85 +11,38 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
-use AppBundle\Util\FilesystemUtil;
-use AppBundle\Util\SqlBatchProcessorWithProgressBar;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
-use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
-use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\DBAL\Connection;
-use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Class AnimalTableImporter
+ *
+ * Importing 'DierTabel' csv file to animal_migration_table database table,
+ * implementing some fixes to the data in the animal_migration_table,
+ * and very minor fixes to the animal database table.
  */
-class AnimalTableImporter
+class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigratorService
 {
-    const DEFAULT_OPTION = 0;
-    const INSERT_BATCH_SIZE = 10000;
-
-    //CsvOptions
-    const IMPORT_SUB_FOLDER = 'vsm2017jun/';
-    const ANIMAL_TABLE_FILENAME = '20170411_1022_Diertabel.csv';
-    /** @var CsvOptions */
-    private $csvOptions;
-
-    /** @var EntityManagerInterface|ObjectManager */
-    private $em;
-    /** @var Connection */
-    private $conn;
-    /** @var CommandUtil */
-    private $cmdUtil;
-    /** @var string */
-    private $rootDir;
-    /** @var SqlBatchProcessorWithProgressBar */
-    private $sqlBatchProcessor;
-
-    /** @var array */
-    private $data;
+    const BATCH_SIZE = 10000;
 
     //Search arrays
     private $pedigreeRegisterIdsByAbbreviation;
 
 
-    /**
-     * VsmMigratorService constructor.
-     * @param ObjectManager $em
-     * @param string $rootDir
-     */
+    /** @inheritdoc */
     public function __construct(ObjectManager $em, $rootDir)
     {
-        $this->em = $em;
-        $this->conn = $this->em->getConnection();
-        $this->rootDir = $rootDir;
-
-        $this->data = [];
-
-        $this->csvOptions = (new CsvOptions())
-            ->appendDefaultInputFolder(self::IMPORT_SUB_FOLDER)
-            ->appendDefaultOutputFolder(self::IMPORT_SUB_FOLDER)
-            ->setFileName(self::ANIMAL_TABLE_FILENAME)
-            ->ignoreFirstLine()
-            ->setSemicolonSeparator()
-        ;
+        parent::__construct($em, $rootDir, self::BATCH_SIZE);
+        $this->getCsvOptions()->setFileName($this->filenames[self::ANIMAL_TABLE]);
     }
 
 
-    /**
-     * @param CommandUtil $cmdUtil
-     */
+    /** @inheritdoc */
     public function run(CommandUtil $cmdUtil)
     {
-        if($this->cmdUtil === null) { $this->cmdUtil = $cmdUtil; }
-        $this->cmdUtil->writeln(DoctrineUtil::getDatabaseHostAndNameString($this->em));
-        $this->cmdUtil->writeln('');
-
-        //Setup folders if missing
-        FilesystemUtil::createFolderPathsFromCsvOptionsIfNull($this->rootDir, $this->csvOptions);
-
-        $this->sqlBatchProcessor = new SqlBatchProcessorWithProgressBar($this->conn, $this->cmdUtil, self::INSERT_BATCH_SIZE);
+        parent::run($cmdUtil);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             ' ', "\n",
@@ -130,7 +82,7 @@ class AnimalTableImporter
     }
 
 
-    private function parseCsv()
+    private function parseAnimalTableCsv()
     {
         if (!is_array($this->data) || count($this->data) === 0) {
             $this->writeLn('Parsing animal table import file: '.$this->csvOptions->getInputFolder().$this->csvOptions->getFileName(). '...');
@@ -147,7 +99,7 @@ class AnimalTableImporter
     {
         $this->writeLn('=== Importing records from CSV File in to animal_migration_table ===');
 
-        $this->parseCsv();
+        $this->parseAnimalTableCsv();
 
         $this->writeLn('Initializing search arrays ...');
 
@@ -232,73 +184,6 @@ class AnimalTableImporter
         DoctrineUtil::updateTableSequence($this->conn, ['animal_migration_table']);
 
         $this->initializeStartValues();
-    }
-
-
-    /**
-     * @param $line
-     */
-    private function writeLn($line)
-    {
-        $line = is_string($line) ? TimeUtil::getTimeStampNow() . ': ' .$line : $line;
-        $this->cmdUtil->writeln($line);
-    }
-
-
-    /**
-     *
-     * @param string $ulnString
-     * @return array
-     */
-    public static function parseUln($ulnString)
-    {
-        if(Validator::verifyUlnFormat($ulnString, true)) {
-            $parts = explode(' ', $ulnString);
-            $parts[0] = str_replace('GB', 'UK', $parts[0]);
-        } else {
-            $parts = [null, null];
-        }
-
-        return [
-            JsonInputConstant::ULN_COUNTRY_CODE => $parts[0],
-            JsonInputConstant::ULN_NUMBER => $parts[1],
-        ];
-
-    }
-
-
-    /**
-     * @param string $gender
-     * @return string
-     */
-    public static function parseGender($gender)
-    {
-        //The only genders in the file are 'M' and 'V'
-        switch ($gender) {
-            case GenderType::M: return GenderType::MALE;
-            case GenderType::V: return GenderType::FEMALE;
-            default: return GenderType::NEUTER;
-        }
-    }
-
-
-    /**
-     * @param string $stnString
-     * @return array
-     */
-    public static function parseStn($stnString)
-    {
-        if(Validator::verifyPedigreeCountryCodeAndNumberFormat($stnString, true)) {
-            $parts = explode(' ', $stnString);
-            $parts[0] = str_replace('GB', 'UK', $parts[0]);
-        } else {
-            $parts = [null, null];
-        }
-
-        return [
-            JsonInputConstant::PEDIGREE_COUNTRY_CODE => $parts[0],
-            JsonInputConstant::PEDIGREE_NUMBER => $parts[1],
-        ];
     }
 
 
@@ -482,21 +367,6 @@ class AnimalTableImporter
         foreach ($queries as $title => $sql) {
             $this->updateBySql($title, $sql);
         }
-    }
-
-
-    /**
-     * @param string $title
-     * @param string $sql
-     * @return int count
-     */
-    private function updateBySql($title, $sql)
-    {
-        $this->writeLn($title);
-        $count = SqlUtil::updateWithCount($this->conn, $sql);
-        $prefix = $count === 0 ? 'No' : $count;
-        $this->writeLn($prefix . ' records updated');
-        return $count;
     }
 
 
@@ -956,7 +826,7 @@ class AnimalTableImporter
      */
     private function printPedigreeRegistersInCsvFile()
     {
-        $this->parseCsv();
+        $this->parseAnimalTableCsv();
         $this->writeLn('=== Print PedigreeRegisters in CSV file ===');
 
         $pedigreeRegistersInCsvFile = [];

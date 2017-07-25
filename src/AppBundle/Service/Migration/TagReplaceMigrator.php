@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Migration;
+namespace AppBundle\Service\Migration;
 
 
 use AppBundle\Component\MessageBuilderBase;
@@ -19,26 +19,22 @@ use Doctrine\Common\Persistence\ObjectManager;
 /**
  * Class TagReplaceMigrator
  */
-class TagReplaceMigrator extends MigratorBase
+class TagReplaceMigrator extends Migrator2017JunServiceBase implements IMigratorService
 {
     const TAG_INSERT = 'TAG_INSERT';
     const ULN_HISTORY_INSERT = 'ULN_HISTORY_INSERT';
 
-
-    /**
-     * TagReplaceMigrator constructor.
-     * @param CommandUtil $cmdUtil
-     * @param ObjectManager $em
-     * @param array $data
-     * @param int $developerId
-     */
-    public function __construct(CommandUtil $cmdUtil, ObjectManager $em, array $data, $developerId)
+    /** @inheritdoc */
+    public function __construct(ObjectManager $em, $rootDir)
     {
-        parent::__construct($cmdUtil, $em, $cmdUtil->getOutputInterface(), $data, null, $developerId);
+        parent::__construct($em, $rootDir);
     }
 
-    public function migrate()
+    /** @inheritDoc */
+    function run(CommandUtil $cmdUtil)
     {
+        parent::run($cmdUtil);
+
         DoctrineUtil::updateTableSequence($this->conn, ['declare_base', 'tag']);
 
         $animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
@@ -79,6 +75,7 @@ class TagReplaceMigrator extends MigratorBase
 
         $ulnHistoryBatchSet->setSqlQueryBase("INSERT INTO ulns_history (tag_id, animal_id) VALUES ");
 
+        $this->data = $this->parseCSV(self::TAG_REPLACES);
         $this->sqlBatchProcessor->start(count($this->data));
 
         $maxDeclareBaseId = SqlUtil::getMaxId($this->conn, 'declare_base');

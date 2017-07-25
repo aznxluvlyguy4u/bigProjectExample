@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Migration;
+namespace AppBundle\Service\Migration;
 
 use AppBundle\Enumerator\QueryType;
 use AppBundle\Util\CommandUtil;
@@ -12,24 +12,23 @@ use Doctrine\Common\Persistence\ObjectManager;
 /**
  * Class WormResistanceMigrator
  */
-class WormResistanceMigrator extends MigratorBase
+class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigratorService
 {
 
-    /**
-     * WormResistanceMigrator constructor.
-     * @param CommandUtil $cmdUtil
-     * @param ObjectManager $em
-     * @param array $data
-     * @param int $developerId
-     */
-    public function __construct(CommandUtil $cmdUtil, ObjectManager $em, array $data = [], $developerId)
+    /** @inheritdoc */
+    public function __construct(ObjectManager $em, $rootDir)
     {
-        parent::__construct($cmdUtil, $em, $cmdUtil->getOutputInterface(), $data, null, $developerId);
+        parent::__construct($em, $rootDir);
     }
 
 
-    public function migrate()
+    /**
+     * @inheritDoc
+     */
+    function run(CommandUtil $cmdUtil)
     {
+        parent::run($cmdUtil);
+
         DoctrineUtil::updateTableSequence($this->conn, ['worm_resistance']);
 
         $sql = "SELECT CONCAT(animal_id,'|',year) as key FROM worm_resistance";
@@ -43,10 +42,11 @@ class WormResistanceMigrator extends MigratorBase
             ->purgeAllSets()
             ->createBatchSet(QueryType::INSERT)
             ->getSet(QueryType::INSERT)
-            ;
+        ;
 
         $insertBatchSet->setSqlQueryBase("INSERT INTO worm_resistance (animal_id, log_date, year, treated_for_samples, epg, s_iga_glasgow, carla_iga_nz, sample_period) VALUES ");
 
+        $this->data = $this->parseCSV(self::WORM_RESISTANCE);
         $this->sqlBatchProcessor->start(count($this->data));
 
         foreach ($this->data as $record) {
