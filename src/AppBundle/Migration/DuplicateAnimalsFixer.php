@@ -95,18 +95,6 @@ class DuplicateAnimalsFixer
     }
 
 
-    public function fixDuplicateAnimalsWithIdenticalVsmIds()
-    {
-        $this->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth();
-    }
-
-
-    public function fixDuplicateSyncedVsMigratedAnimals()
-    {
-        $this->fixDuplicateAnimalsSyncedAndImportedPairs();
-    }
-
-
     /**
      * @return bool
      */
@@ -264,7 +252,7 @@ class DuplicateAnimalsFixer
     }
 
 
-    private function fixDuplicateAnimalsSyncedAndImportedPairs()
+    public function fixDuplicateAnimalsSyncedAndImportedPairs()
     {
         $sql = $this->createDuplicateSqlQuery(['uln_country_code', 'uln_number', 'date_of_birth'], false);
         $animalsGroupedByUln = $this->findGroupedDuplicateAnimals($sql);
@@ -765,16 +753,6 @@ class DuplicateAnimalsFixer
 
         return $unSuccessFulMergeCount == 0 ? true : false;
     }
-    
-
-    /**
-     * @param array $primaryAnimalResultArray
-     * @param array $secondaryAnimalResultArray
-     */
-    private function updateGender($primaryAnimalResultArray, $secondaryAnimalResultArray)
-    {
-        //TODO update gender AND type
-    }
 
 
 
@@ -813,67 +791,4 @@ class DuplicateAnimalsFixer
     }
 
 
-        public function mergeDuplicateAnimalsByVsmId()
-    {
-        $sql = "SELECT
-                  uln_number_replacement, p.uln_number, p.id as primary_animal_id,
-                  uln_number_to_replace, s.uln_number, s.id as secondary_animal_id
-                FROM declare_tag_replace t
-                  INNER JOIN declare_base b ON b.id = t.id
-                  INNER JOIN animal p ON p.uln_number = uln_number_replacement
-                  INNER JOIN animal s ON s.uln_number = uln_number_to_replace
-                WHERE request_state <> 'REVOKED' AND (
-                  uln_number_replacement IN (
-                    --uln_number of animals with duplicate vsmId/name
-                    SELECT uln_number
-                    FROM animal a
-                      INNER JOIN (
-                                   SELECT name
-                                   FROM animal
-                                   WHERE name NOTNULL
-                                   GROUP BY name HAVING COUNT(*) > 1
-                                 )g ON g.name = a.name
-                  )
-                  OR uln_number_to_replace IN (
-                    --uln_number of animals with duplicate vsmId/name
-                    SELECT uln_number
-                    FROM animal a
-                      INNER JOIN (
-                                   SELECT name
-                                   FROM animal
-                                   WHERE name NOTNULL
-                                   GROUP BY name HAVING COUNT(*) > 1
-                                 )g ON g.name = a.name
-                  )
-                )";
-
-        $duplicatePairs = $this->conn->query($sql)->fetchAll();
-        $duplicatePairsCount = count($duplicatePairs);
-
-        if ($duplicatePairsCount === 0) {
-            return;
-        }
-
-        $title = 'Merging Duplicate Animals by vsmId/name ...';
-        $this->cmdUtil->writeln($title);
-
-        $successfulMerges = 0;
-        $failedMerges = 0;
-
-        $this->cmdUtil->setStartTimeAndPrintIt($duplicatePairsCount, 1, $title);
-        foreach ($duplicatePairs as $duplicatePair) {
-            $primaryAnimalId = $duplicatePair['primary_animal_id'];
-            $secondaryAnimalId = $duplicatePair['secondary_animal_id'];
-            $isMerged = $this->mergeAnimalPairByIds($primaryAnimalId,$secondaryAnimalId);
-
-            if ($isMerged) {
-                $successfulMerges++;
-            } else {
-                $failedMerges++;
-            }
-            $this->cmdUtil->advanceProgressBar(1,
-                'Duplicate animal merges succeeded|failed: '.$successfulMerges.'|'.$failedMerges);
-        }
-        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
-    }
 }

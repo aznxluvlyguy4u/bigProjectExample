@@ -105,7 +105,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
 //            case 9:
 //                break;
             case 10: $this->tagReplaceMigrator->run($this->cmdUtil); break;
-            case 11: $this->animalTableMigrator->mergeDuplicateAnimalsByVsmId($this->cmdUtil); break;
+            case 11: $this->animalTableMigrator->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil); break;
 //            case 12:
 //                break;
 //            case 13:

@@ -71,14 +71,14 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
             
             case 1:
                 $duplicateAnimalsFixer = new DuplicateAnimalsFixer($em, $output, $this->cmdUtil);
-                $duplicateAnimalsFixer->fixDuplicateAnimalsWithIdenticalVsmIds();
+                $duplicateAnimalsFixer->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth();
                 $output->writeln('DONE');
                 break;
             
             case 2:
                 //TODO
                 $duplicateAnimalsFixer = new DuplicateAnimalsFixer($em, $output, $this->cmdUtil);
-                $duplicateAnimalsFixer->fixDuplicateSyncedVsMigratedAnimals();
+                $duplicateAnimalsFixer->fixDuplicateAnimalsSyncedAndImportedPairs();
                 $output->writeln('DONE');
                 break;
             
