@@ -34,6 +34,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->fixGenderOfNeutersByMigrationValues();
         $this->migrateNewAnimals();
         $this->updateIncongruentParentIdsInAnimalMigrationTable();
+        $this->updateParentIdsInAnimalTable();
     }
 
 
@@ -226,6 +227,28 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
 
     private function updateParentIdsInAnimalTable()
     {
-        //TODO
+        $queries = [
+            'Update parent_father_ids in animal table with the father_ids in animal_migration_table ...' =>
+                "UPDATE animal SET parent_father_id = v.father_id
+                    FROM (
+                           SELECT a.id, amt.father_id
+                           FROM animal a
+                             INNER JOIN animal_migration_table amt ON a.id = amt.animal_id
+                           WHERE parent_father_id ISNULL AND amt.father_id NOTNULL
+                         ) AS v(animal_id, father_id) WHERE animal.id = v.animal_id",
+
+            'Update parent_mother_ids in animal table with the mother_ids in animal_migration_table ...' =>
+                "UPDATE animal SET parent_mother_id = v.mother_id
+                    FROM (
+                           SELECT a.id, amt.mother_id
+                           FROM animal a
+                             INNER JOIN animal_migration_table amt ON a.id = amt.animal_id
+                           WHERE parent_mother_id ISNULL AND amt.mother_id NOTNULL
+                         ) AS v(animal_id, mother_id) WHERE animal.id = v.animal_id",
+        ];
+
+        foreach ($queries as $title => $query) {
+            $this->updateBySql($title, $query);
+        }
     }
 }
