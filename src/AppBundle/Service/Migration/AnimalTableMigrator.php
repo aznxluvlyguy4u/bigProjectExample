@@ -35,17 +35,19 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         parent::run($cmdUtil);
 
         $this->preparationFixes();
-        $this->mergeDuplicateAnimalsByVsmId();
+        $this->getDuplicateAnimalsFixer()->mergeDuplicateAnimalsByVsmId();
         $this->fixGenderOfNeutersByMigrationValues();
         $this->migrateNewAnimalsJoinedOnUlnAndDateOfBirth();
         $this->migrateNewAnimals();
         $this->updateIncongruentParentIdsInAnimalMigrationTable();
         $this->updateParentIdsInAnimalTable();
         $this->fillMissingValues();
+        $this->getDuplicateAnimalsFixer()->mergeDuplicateAnimalsByVsmId();
+        $this->removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln();
     }
 
 
-    public function preparationFixes()
+    private function preparationFixes()
     {
         $queries = [
             'Fill missing date_of_births in animal table ...' =>
@@ -65,6 +67,17 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
 
 
     /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function mergeDuplicateAnimalsByVsmId(CommandUtil $cmdUtil = null)
+    {
+        parent::run($cmdUtil);
+
+        $this->getDuplicateAnimalsFixer()->mergeDuplicateAnimalsByVsmId();
+    }
+
+
+    /**
      * @return DuplicateAnimalsFixer
      */
     private function getDuplicateAnimalsFixer()
@@ -77,72 +90,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
     }
 
 
-    private function mergeDuplicateAnimalsByVsmId()
-    {
-        $sql = "SELECT
-                  uln_number_replacement, p.uln_number, p.id as primary_animal_id,
-                  uln_number_to_replace, s.uln_number, s.id as secondary_animal_id
-                FROM declare_tag_replace t
-                  INNER JOIN declare_base b ON b.id = t.id
-                  INNER JOIN animal p ON p.uln_number = uln_number_replacement
-                  INNER JOIN animal s ON s.uln_number = uln_number_to_replace
-                WHERE request_state <> 'REVOKED' AND (
-                  uln_number_replacement IN (
-                    --uln_number of animals with duplicate vsmId/name
-                    SELECT uln_number
-                    FROM animal a
-                      INNER JOIN (
-                                   SELECT name
-                                   FROM animal
-                                   WHERE name NOTNULL
-                                   GROUP BY name HAVING COUNT(*) > 1
-                                 )g ON g.name = a.name
-                  )
-                  OR uln_number_to_replace IN (
-                    --uln_number of animals with duplicate vsmId/name
-                    SELECT uln_number
-                    FROM animal a
-                      INNER JOIN (
-                                   SELECT name
-                                   FROM animal
-                                   WHERE name NOTNULL
-                                   GROUP BY name HAVING COUNT(*) > 1
-                                 )g ON g.name = a.name
-                  )
-                )";
-
-        $duplicatePairs = $this->conn->query($sql)->fetchAll();
-        $duplicatePairsCount = count($duplicatePairs);
-
-        if ($duplicatePairsCount === 0) {
-            return;
-        }
-
-        $title = 'Merging Duplicate Animals by vsmId/name ...';
-        $this->writeLn($title);
-
-        $successfulMerges = 0;
-        $failedMerges = 0;
-
-        $this->cmdUtil->setStartTimeAndPrintIt($duplicatePairsCount, 1, $title);
-        foreach ($duplicatePairs as $duplicatePair) {
-            $primaryAnimalId = $duplicatePair['primary_animal_id'];
-            $secondaryAnimalId = $duplicatePair['secondary_animal_id'];
-            $isMerged = $this->getDuplicateAnimalsFixer()->mergeAnimalPairByIds($primaryAnimalId,$secondaryAnimalId);
-
-            if ($isMerged) {
-                $successfulMerges++;
-            } else {
-                $failedMerges++;
-            }
-            $this->cmdUtil->advanceProgressBar(1,
-                'Duplicate animal merges succeeded|failed: '.$successfulMerges.'|'.$failedMerges);
-        }
-        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
-    }
-
-
-    public function migrateNewAnimalsJoinedOnUlnAndDateOfBirth()
+    private function migrateNewAnimalsJoinedOnUlnAndDateOfBirth()
     {
         /* Query to check the data manually
         $sql = "SELECT amt.vsm_id, a.id as animal_id,
@@ -369,6 +317,65 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
 
             $title = 'Updating '.$columnVar.' values of animals with same uln and dateOfBirth but without vsmId';
             $this->updateBySql($title, $sql);
+        }
+    }
+
+
+
+    private function removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln()
+    {
+        $this->writeLn('=== Remove duplicate animals from animal_migration_table with a constructed uln ===');
+
+        $queries = [
+            //Run this query BEFORE editing the animal_migration_table records!
+          'Save the primary-&-secondary vsm_id pair ...' =>
+              "INSERT INTO vsm_id_group (primary_vsm_id, secondary_vsm_id) 
+                  SELECT
+                    main.vsm_id as primary_vsm_id,--main.is_uln_updated
+                    secondary.vsm_id as secondary_vsm_id--, secondary.is_uln_updated, g.animal_id,
+                  FROM animal_migration_table secondary
+                    INNER JOIN (
+                                 SELECT animal_id,
+                                   SUM(CAST(is_uln_updated AS INTEGER)) = 1 as has_one_uln_updated_animal_in_set
+                                 FROM animal_migration_table
+                                 WHERE animal_id NOTNULL
+                                 GROUP BY animal_id HAVING  COUNT(*) = 2
+                               )g ON g.animal_id = secondary.animal_id
+                    INNER JOIN animal_migration_table main ON main.animal_id = g.animal_id AND main.id <> secondary.id
+                    LEFT JOIN vsm_id_group v ON v.secondary_vsm_id = CAST(secondary.vsm_id AS TEXT)
+                  WHERE
+                    --The set has 2 animals of which one has a constructed uln.
+                    --Keep the one with the original uln as the primary animal.
+                    g.has_one_uln_updated_animal_in_set AND secondary.is_uln_updated
+                    --Only insert new vsm_id_group records if the secondary_vsm_id has no record yet
+                    AND v.id ISNULL",
+
+            'Remove uln_origin, stn_origin, uln and animal_id from duplicate animal 
+                and save the uln & stn in the deleted columns ...' =>
+                "UPDATE animal_migration_table
+                    SET
+                      deleted_uln_origin = uln_origin, deleted_stn_origin = stn_origin,
+                      uln_origin = NULL, stn_origin = NULL, uln_country_code = NULL, uln_number = NULL,
+                      animal_id = NULL
+                    WHERE id IN (
+                      SELECT id
+                      FROM animal_migration_table m
+                        INNER JOIN (
+                                     SELECT animal_id,
+                                       SUM(CAST(is_uln_updated AS INTEGER)) = 1 as has_one_uln_updated_animal_in_set
+                                     FROM animal_migration_table
+                                     WHERE animal_id NOTNULL
+                                     GROUP BY animal_id HAVING  COUNT(*) = 2
+                                   )g ON g.animal_id = m.animal_id
+                      WHERE
+                        --The set has 2 animals of which one has a constructed uln.
+                        --Keep the one with the original uln as the primary animal.
+                        g.has_one_uln_updated_animal_in_set AND is_uln_updated
+                    )",
+        ];
+
+        foreach ($queries as $title => $query) {
+            $this->updateBySql($title, $query);
         }
     }
 }
