@@ -321,40 +321,6 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
                              INNER JOIN animal a ON a.id = m.animal_id AND (m.gender_in_database <> a.gender OR m.gender_in_database ISNULL)
                          ) AS v(animal_id, gender_in_database) WHERE animal_migration_table.animal_id = v.animal_id",
 
-            'Update incongruent father_id where father_vsm_id = name in animal table ...' =>
-                "UPDATE animal_migration_table SET father_id = v.father_id
-                    FROM (
-                           SELECT father_vsm_id, dad.id
-                           FROM animal_migration_table m
-                             INNER JOIN animal dad ON CAST(dad.name AS INTEGER) = m.father_vsm_id
-                                                      AND (father_id ISNULL OR father_id <> dad.id)
-                                                      AND dad.type = 'Ewe'
-                           WHERE dad.name NOTNULL AND vsm_id NOT IN (
-                             --SKIP duplicate vsmIds in database
-                             SELECT CAST(name AS INTEGER)
-                             FROM animal
-                             WHERE name NOTNULL
-                             GROUP BY name HAVING COUNT(*) > 1
-                           )
-                         ) AS v(father_vsm_id, father_id) WHERE animal_migration_table.father_vsm_id = v.father_vsm_id",
-
-            'Update incongruent mother_id where mother_vsm_id = name in animal table ...' =>
-                "UPDATE animal_migration_table SET mother_id = v.mother_id
-                    FROM (
-                           SELECT mother_vsm_id, mom.id
-                           FROM animal_migration_table m
-                             INNER JOIN animal mom ON CAST(mom.name AS INTEGER) = m.mother_vsm_id
-                                                      AND (mother_id ISNULL OR mother_id <> mom.id)
-                                                      AND mom.type = 'Ewe'
-                           WHERE mom.name NOTNULL AND vsm_id NOT IN (
-                             --SKIP duplicate vsmIds in database
-                             SELECT CAST(name AS INTEGER)
-                             FROM animal
-                             WHERE name NOTNULL
-                             GROUP BY name HAVING COUNT(*) > 1
-                           )
-                         ) AS v(mother_vsm_id, mother_id) WHERE animal_migration_table.mother_vsm_id = v.mother_vsm_id",
-
             'Update incongruent location_of_birth_id where ubn_of_birth = ubn in location table ...' =>
             "UPDATE animal_migration_table SET location_of_birth_id = v.location_id
                 FROM (
@@ -395,6 +361,53 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
         foreach ($queries as $title => $sql) {
             $this->updateBySql($title, $sql);
         }
+
+        foreach (self::getQueriesToUpdateIncongreuentParentIdsInAnimalMigrationTable() as $title => $sql) {
+            $this->updateBySql($title, $sql);
+        }
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function getQueriesToUpdateIncongreuentParentIdsInAnimalMigrationTable()
+    {
+        return [
+            'Update incongruent father_id where father_vsm_id = name in animal table ...' =>
+                "UPDATE animal_migration_table SET father_id = v.father_id
+                    FROM (
+                           SELECT father_vsm_id, dad.id
+                           FROM animal_migration_table m
+                             INNER JOIN animal dad ON CAST(dad.name AS INTEGER) = m.father_vsm_id
+                                                      AND (father_id ISNULL OR father_id <> dad.id)
+                                                      AND dad.type = 'Ewe'
+                           WHERE dad.name NOTNULL AND vsm_id NOT IN (
+                             --SKIP duplicate vsmIds in database
+                             SELECT CAST(name AS INTEGER)
+                             FROM animal
+                             WHERE name NOTNULL
+                             GROUP BY name HAVING COUNT(*) > 1
+                           )
+                         ) AS v(father_vsm_id, father_id) WHERE animal_migration_table.father_vsm_id = v.father_vsm_id",
+
+            'Update incongruent mother_id where mother_vsm_id = name in animal table ...' =>
+                "UPDATE animal_migration_table SET mother_id = v.mother_id
+                    FROM (
+                           SELECT mother_vsm_id, mom.id
+                           FROM animal_migration_table m
+                             INNER JOIN animal mom ON CAST(mom.name AS INTEGER) = m.mother_vsm_id
+                                                      AND (mother_id ISNULL OR mother_id <> mom.id)
+                                                      AND mom.type = 'Ewe'
+                           WHERE mom.name NOTNULL AND vsm_id NOT IN (
+                             --SKIP duplicate vsmIds in database
+                             SELECT CAST(name AS INTEGER)
+                             FROM animal
+                             WHERE name NOTNULL
+                             GROUP BY name HAVING COUNT(*) > 1
+                           )
+                         ) AS v(mother_vsm_id, mother_id) WHERE animal_migration_table.mother_vsm_id = v.mother_vsm_id",
+        ];
     }
 
 
@@ -797,7 +810,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
              * met daarin het – teken. Dit blijkt er te zijn, bijv. NL 09084-36155.
              * Het stamboeknummer van NL 100125536154 moet dus zijn NL 09084-36154.
              */
-            'Fix 6, part 1: in animal_migration_table)' =>
+            'Fix 6, part 1: in animal_migration_table) Generate missing STNs for FL100 animals' =>
                 "UPDATE animal_migration_table SET pedigree_country_code = new_pedigree_country_code, pedigree_number = new_pedigree_number, is_stn_updated = TRUE
                 FROM (
                        SELECT amt.vsm_id, uln_country_code,
@@ -819,7 +832,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
                        WHERE pedigree_number ISNULL AND uln_number NOTNULL AND breed_code ='FL100'
                 ) AS v(vsm_id, new_pedigree_country_code, new_pedigree_number) WHERE animal_migration_table.vsm_id = v.vsm_id",
 
-            'Fix 6, part 2: in animal table)' =>
+            'Fix 6, part 2: in animal table) Generate missing STNs for FL100 animals' =>
                 "UPDATE animal SET pedigree_country_code = new_pedigree_country_code, pedigree_number = new_pedigree_number
                       FROM (
                           SELECT a.id as animal_id, uln_country_code,
