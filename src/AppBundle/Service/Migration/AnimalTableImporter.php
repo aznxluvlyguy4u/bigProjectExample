@@ -25,7 +25,7 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigratorService
 {
-    const BATCH_SIZE = 100000;
+    const BATCH_SIZE = 5000;
 
     //Search arrays
     private $pedigreeRegisterIdsByAbbreviation;
