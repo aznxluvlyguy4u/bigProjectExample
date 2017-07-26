@@ -6,6 +6,7 @@ namespace AppBundle\Service\Migration;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -30,9 +31,6 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
     const TAG_REPLACES = 'tag_replaces';
     const WORM_RESISTANCE = 'worm_resistance';
 
-    /** @var AnimalRepository */
-    protected $animalRepository;
-
     /**
      * Migrator2017JunServiceBase constructor.
      * @param ObjectManager $em
@@ -54,8 +52,6 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
             self::TAG_REPLACES => '20170411_1022_DierOmnummeringen.csv',
             self::WORM_RESISTANCE => 'Uitslagen_IgA_2014-2015-2016_def_edited.csv',
         );
-
-        $this->animalRepository = $this->em->getRepository(Animal::class);
     }
 
 

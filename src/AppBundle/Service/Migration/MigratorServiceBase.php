@@ -5,6 +5,10 @@ namespace AppBundle\Service\Migration;
 
 
 use AppBundle\Component\Builder\CsvOptions;
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\Employee;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\QueryType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
@@ -52,6 +56,13 @@ abstract class MigratorServiceBase
     /** @var array */
     protected $data;
 
+    /** @var Employee */
+    private $developer;
+
+    /** @var AnimalRepository */
+    protected $animalRepository;
+    /** @var Person */
+    protected $personRepository;
 
     /**
      * MigratorServiceBase constructor.
@@ -69,6 +80,9 @@ abstract class MigratorServiceBase
         $this->data = [];
         $this->rootDir = $rootDir;
         $this->importSubFolder = $importSubFolder;
+
+        $this->animalRepository = $this->em->getRepository(Animal::class);
+        $this->personRepository = $this->em->getRepository(Person::class);
 
         $this->setCsvOptions();
     }
@@ -198,5 +212,17 @@ abstract class MigratorServiceBase
             ;
         }
         $this->sqlBatchProcessor->end()->purgeAllSets();
+    }
+
+
+    /**
+     * @return Employee|Person
+     */
+    protected function getDeveloper()
+    {
+        if ($this->developer == null) {
+            $this->developer = $this->personRepository->find(self::DEVELOPER_PRIMARY_KEY);
+        }
+        return $this->developer;
     }
 }
