@@ -33,6 +33,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->preparationFixes();
         $this->fixGenderOfNeutersByMigrationValues();
         $this->migrateNewAnimals();
+        $this->updateIncongruentParentIdsInAnimalMigrationTable();
     }
 
 
@@ -200,7 +201,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->updateBySql('Migrating new animals from animal_migration_table to animal table ...', $sql);
 
         DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil);
-        
+
         DoctrineUtil::updateTableSequence($this->conn, ['animal']);
         $this->updateAnimalIdsInMigrationTable();
     }
@@ -212,5 +213,19 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
     private function updateAnimalIdsInMigrationTable()
     {
         return SqlUtil::updateWithCount($this->conn, AnimalTableImporter::getUpdateIncongruentAnimalIdsSqlQuery());
+    }
+
+
+    private function updateIncongruentParentIdsInAnimalMigrationTable()
+    {
+        foreach (AnimalTableImporter::getQueriesToUpdateIncongreuentParentIdsInAnimalMigrationTable() as $title => $sql) {
+            $this->updateBySql($title, $sql);
+        }
+    }
+
+
+    private function updateParentIdsInAnimalTable()
+    {
+        //TODO
     }
 }
