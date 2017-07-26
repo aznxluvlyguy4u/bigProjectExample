@@ -2,11 +2,18 @@
 
 namespace AppBundle\Service\Migration;
 
+use AppBundle\Component\MessageBuilderBase;
+use AppBundle\Entity\DeclareTagReplace;
+use AppBundle\Enumerator\ActionType;
+use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\RecoveryIndicatorType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -34,17 +41,28 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
     {
         parent::run($cmdUtil);
 
+        //PRE migration fixes
         $this->preparationFixes();
         $this->mergeDuplicateAnimalsByVsmIdAndTagReplaces();
         $this->fixGenderOfNeutersByMigrationValues();
+
+        //Migrate animals
         $this->migrateNewAnimalsJoinedOnUlnAndDateOfBirth();
         $this->migrateNewAnimals();
-        $this->updateIncongruentParentIdsInAnimalMigrationTable();
-        $this->updateParentIdsInAnimalTable();
-        $this->fillMissingValues();
+
+        //Fix animals
+        //NOTE the order is important!
         $this->mergeDuplicateAnimalsByVsmIdAndTagReplaces();
         $this->getDuplicateAnimalsFixer()->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth($this->cmdUtil);
+        $this->mergeTagReplacedAnimalsWithoutDeclareTagReplaces();
         $this->removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln();
+
+        //Set parents
+        $this->updateIncongruentParentIdsInAnimalMigrationTable();
+        $this->updateParentIdsInAnimalTable();
+
+        //Fill other desired values
+        $this->fillMissingValues();
     }
 
 
@@ -146,6 +164,95 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
             $this->duplicateAnimalsFixer = new DuplicateAnimalsFixer($this->em);
         }
         return $this->duplicateAnimalsFixer;
+    }
+
+
+    private function mergeTagReplacedAnimalsWithoutDeclareTagReplaces()
+    {
+        $sql = "SELECT
+                  amt.vsm_id, a.id as primary_animal_id, secondary.id as secondary_animal_id,
+                  a.uln_country_code as uln_country_code_replacement, a.uln_number as uln_number_replacement,
+                  secondary.uln_country_code as uln_country_code_to_replace, secondary.uln_number as uln_number_to_replace,
+                  uln_origin
+                FROM animal a
+                  INNER JOIN animal_migration_table amt ON amt.vsm_id = CAST(name AS INTEGER)
+                  INNER JOIN animal secondary ON secondary.name = a.name
+                  INNER JOIN (
+                               SELECT name
+                               FROM animal
+                               WHERE name NOTNULL
+                               GROUP BY name HAVING COUNT(*) = 2
+                             )g ON g.name = a.name
+                WHERE CONCAT(a.uln_country_code,' ',a.uln_number) = amt.uln_origin
+                  AND secondary.id <> a.id
+                ORDER BY a.name, a.id";
+        $results = $this->conn->query($sql)->fetchAll();
+        $totalCount = count($results);
+
+        if ($totalCount === 0) { return; }
+
+        $this->cmdUtil->writeln('=== Merging tag replaced animals without declare tag replaces');
+
+        $this->cmdUtil->writeln('A few animals ('.$totalCount.') have new ulns compared to the old import file.
+        The vsmId and dateOfBirth are similar, but the uln is different.
+        There are also no tagReplaces available.
+        We know the new ulns in the new import file are the correct ulns,
+        because they match the ulns of the neuter synced animals.');
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
+
+        $successfulMerges = 0;
+        $failedMerges = 0;
+
+        foreach ($results as $result) {
+            $primaryAnimalId = intval($result['primary_animal_id']);
+            $secondaryAnimalId = intval($result['secondary_animal_id']);
+
+            $requestId = MessageBuilderBase::getNewRequestId();
+
+
+            //1. Save as declare tag replace
+
+            $declareTagReplace = new DeclareTagReplace();
+            $declareTagReplace
+                ->setAnimal($this->animalRepository->find($primaryAnimalId))
+                ->setUlnCountryCodeToReplace($result['uln_country_code_to_replace'])
+                ->setUlnNumberToReplace($result['uln_number_to_replace'])
+                ->setUlnCountryCodeReplacement($result['uln_country_code_replacement'])
+                ->setUlnNumberReplacement($result['uln_number_replacement'])
+                ->setAnimalOrderNumberToReplace(StringUtil::getLast5CharactersFromString($result['uln_number_to_replace']))
+                ->setAnimalOrderNumberReplacement(StringUtil::getLast5CharactersFromString($result['uln_number_replacement']))
+                ->setAnimalType(AnimalType::sheep)
+                ->setReplaceDate(new \DateTime(self::BLANK_DATE_FILLER))
+                ->setRequestState(RequestStateType::IMPORTED)
+                ->setRelationNumberKeeper(RequestStateType::IMPORTED)
+                ->setUbn(RequestStateType::IMPORTED)
+                ->setRequestId($requestId)
+                ->setMessageId($requestId)
+                ->setAction(ActionType::V_MUTATE)
+                ->setRecoveryIndicator(RecoveryIndicatorType::N)
+                ->setActionBy($this->getDeveloper())
+                ;
+            $this->em->persist($declareTagReplace);
+            $this->em->flush();
+
+
+            //2. Merge animals
+
+            $isMerged = $this->getDuplicateAnimalsFixer()->mergeAnimalPairByIds($primaryAnimalId,$secondaryAnimalId);
+
+            if ($isMerged) {
+                $successfulMerges++;
+            } else {
+                $failedMerges++;
+            }
+
+            $this->cmdUtil->advanceProgressBar(1,
+                'Duplicate animal merges succeeded|failed: '.$successfulMerges.'|'.$failedMerges);
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        //Don't forget to update the parent data in both the animal_migration_table and animal table.
     }
 
 
