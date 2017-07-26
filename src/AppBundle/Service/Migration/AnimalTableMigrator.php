@@ -43,6 +43,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->updateParentIdsInAnimalTable();
         $this->fillMissingValues();
         $this->getDuplicateAnimalsFixer()->mergeDuplicateAnimalsByVsmId();
+        $this->getDuplicateAnimalsFixer()->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth();
         $this->removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln();
     }
 

@@ -355,9 +355,9 @@ class DuplicateAnimalsFixer
     
 
 
-    private function fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth()
+    public function fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth()
     {
-        $sql = $this->createDuplicateSqlQuery(['name', 'date_of_birth', 'uln_number', 'uln_country_code']);
+        $sql = $this->createDuplicateSqlQuery(['name', 'date_of_birth', 'uln_number', 'uln_country_code'], false);
         $animalsGroupedByUln = $this->findGroupedDuplicateAnimals($sql);
 
         $totalDuplicateSets = count($animalsGroupedByUln);
@@ -491,7 +491,7 @@ class DuplicateAnimalsFixer
 
     /**
      * @param string $sqlQuery
-     * @return ArrayCollection
+     * @return array
      */
     private function findGroupedDuplicateAnimals($sqlQuery)
     {
