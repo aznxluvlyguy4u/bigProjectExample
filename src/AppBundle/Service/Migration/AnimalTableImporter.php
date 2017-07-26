@@ -156,7 +156,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
                 $animalOrderNumber = StringUtil::getNullAsStringOrWrapInQuotes(StringUtil::padAnimalOrderNumberWithZeroes($record[2]));
             }
 
-            $nickName = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
+            $nickname = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
             $fatherVsmId = $this->getParentVsmIdForSqlQuery($record[5]);
             $motherVsmId = $this->getParentVsmIdForSqlQuery($record[6]);
             $genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
@@ -170,7 +170,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
 
             //Insert new record, process it as a batch
 
-            $sqlInsertGroup = "(nextval('animal_migration_table_id_seq'),".$vsmId.",".$uln.",".$stnImport.",".$ulnCountryCode.",".$ulnNumber.",".$animalOrderNumber.",".$pedigreeCountryCode.",".$pedigreeNumber.",".$nickName.",".$fatherVsmId.",".$motherVsmId.",".$genderInFile.",".$dateOfBirthString.",".$breedCode.",".$ubnOfBirth.",".$pedigreeRegisterId.",".$breedType.",".$scrapieGenotype.")";
+            $sqlInsertGroup = "(nextval('animal_migration_table_id_seq'),".$vsmId.",".$uln.",".$stnImport.",".$ulnCountryCode.",".$ulnNumber.",".$animalOrderNumber.",".$pedigreeCountryCode.",".$pedigreeNumber.",".$nickname.",".$fatherVsmId.",".$motherVsmId.",".$genderInFile.",".$dateOfBirthString.",".$breedCode.",".$ubnOfBirth.",".$pedigreeRegisterId.",".$breedType.",".$scrapieGenotype.")";
 
             $insertBatchSet->appendValuesString($sqlInsertGroup);
 
@@ -731,7 +731,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
              */
             'Fix 4 & 5: letter extraction) extracting the prefix letters in last part of STN' =>
                 "UPDATE animal_migration_table
-                    SET nick_name = v.stn_prefix_letters, stn_prefix_letters = v.stn_prefix_letters
+                    SET nickname = v.stn_prefix_letters, stn_prefix_letters = v.stn_prefix_letters
                     FROM (
                       -- length animalOrderNumber part of stn = 5, and has 1 leading letters
                       SELECT vsm_id, regexp_matches(stn_origin, '([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{5})'),
@@ -772,7 +772,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
                             AND breed_code = 'FL100'
                     ) AS v(vsm_id, regex1, stn_prefix_letters, regex2, trailing_check)
                     WHERE animal_migration_table.vsm_id = v.vsm_id
-                          AND (nick_name ISNULL OR nick_name <> v.stn_prefix_letters
+                          AND (nickname ISNULL OR nick_name <> v.stn_prefix_letters
                               OR animal_migration_table.stn_prefix_letters ISNULL
                               OR animal_migration_table.stn_prefix_letters <> v.stn_prefix_letters
                           )",

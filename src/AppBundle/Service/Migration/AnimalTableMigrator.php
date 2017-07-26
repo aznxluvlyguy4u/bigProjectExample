@@ -63,7 +63,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         /* Query to check the data manually
         $sql = "SELECT amt.vsm_id, a.id as animal_id,
                   a.gender as gender_old, amt.gender_in_file as gender_new,
-                  a.nickname as nickname_old, amt.nick_name as nickname_new,
+                  a.nickname as nickname_old, amt.nickname as nickname_new,
                   a.pedigree_number as pedigree_number_old, amt.pedigree_country_code, amt.pedigree_number as pedigree_number_new,
                   a.date_of_birth as date_of_birth_old, amt.date_of_birth as date_of_birth_new,
                   a.breed_code as breed_code_old, amt.breed_code as breed_code_new,
@@ -192,7 +192,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
                   scrapie_genotype, animal_category, animal_type, is_alive,
                   is_import_animal, is_export_animal, is_departed_animal)
                   SELECT CAST(vsm_id AS TEXT) as vsm_id, amt.uln_country_code, amt.uln_number, amt.pedigree_country_code, amt.pedigree_number,
-                    amt.animal_order_number, amt.nick_name, gender_in_file as gender, yy.type, amt.date_of_birth,
+                    amt.animal_order_number, amt.nickname, gender_in_file as gender, yy.type, amt.date_of_birth,
                     amt.breed_code, amt.ubn_of_birth, amt.location_of_birth_id, amt.pedigree_register_id, amt.breed_type,
                     amt.scrapie_genotype, 3 as animal_category, 3 as animal_type, false as is_alive,
                     false as is_import_animal, false as is_export_animal, false as is_departed_animal
