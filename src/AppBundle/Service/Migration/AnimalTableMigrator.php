@@ -4,6 +4,8 @@ namespace AppBundle\Service\Migration;
 
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
+use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -30,6 +32,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
 
         $this->preparationFixes();
         $this->fixGenderOfNeutersByMigrationValues();
+        $this->migrateNewAnimals();
     }
 
 
@@ -172,5 +175,42 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         if ($totalRecordsUpdated > 0) {
             DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil);
         }
+    }
+
+
+    private function migrateNewAnimals()
+    {
+        $this->updateAnimalIdsInMigrationTable();
+        DoctrineUtil::updateTableSequence($this->conn, ['animal']);
+
+        $sql = "INSERT INTO animal (name, uln_country_code, uln_number, pedigree_country_code, pedigree_number,
+                  animal_order_number, nickname, gender, type, date_of_birth,
+                  breed_code, ubn_of_birth, location_of_birth_id, pedigree_register_id, breed_type,
+                  scrapie_genotype, animal_category, animal_type, is_alive,
+                  is_import_animal, is_export_animal, is_departed_animal)
+                  SELECT CAST(vsm_id AS TEXT) as vsm_id, amt.uln_country_code, amt.uln_number, amt.pedigree_country_code, amt.pedigree_number,
+                    amt.animal_order_number, amt.nick_name, gender_in_file as gender, yy.type, amt.date_of_birth,
+                    amt.breed_code, amt.ubn_of_birth, amt.location_of_birth_id, amt.pedigree_register_id, amt.breed_type,
+                    amt.scrapie_genotype, 3 as animal_category, 3 as animal_type, false as is_alive,
+                    false as is_import_animal, false as is_export_animal, false as is_departed_animal
+                  FROM animal_migration_table amt
+                    LEFT JOIN animal a ON a.id =  amt.animal_id
+                    LEFT JOIN (VALUES ('MALE', 'Ram'),('FEMALE', 'Ewe'),('NEUTER','Neuter')) AS yy(gender, type) ON amt.gender_in_file = yy.gender
+                  WHERE a.id ISNULL AND amt.uln_number NOTNULL";
+        $this->updateBySql('Migrating new animals from animal_migration_table to animal table ...', $sql);
+
+        DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil);
+        
+        DoctrineUtil::updateTableSequence($this->conn, ['animal']);
+        $this->updateAnimalIdsInMigrationTable();
+    }
+
+
+    /**
+     * @return int
+     */
+    private function updateAnimalIdsInMigrationTable()
+    {
+        return SqlUtil::updateWithCount($this->conn, AnimalTableImporter::getUpdateIncongruentAnimalIdsSqlQuery());
     }
 }

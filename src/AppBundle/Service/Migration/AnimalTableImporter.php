@@ -230,7 +230,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
         $queries = [
 
             'Update incongruent animal_id where vsmId = name in animal table ...' =>
-                $this->getUpdateIncongruentAnimalIdsSqlQuery(),
+                self::getUpdateIncongruentAnimalIdsSqlQuery(),
 
             //Only run this query AFTER updating the animalId values!
             'Set is_new_import_animal = TRUE for newly imported animals without an animalId, secondary_vsm_id, NOR replaced uln ...' =>
@@ -255,7 +255,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
     /**
      * @return string
      */
-    private function getUpdateIncongruentAnimalIdsSqlQuery()
+    public static function getUpdateIncongruentAnimalIdsSqlQuery()
     {
         return "UPDATE animal_migration_table SET animal_id = v.animal_id
                     FROM (
@@ -311,7 +311,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
         $queries = [
 
             'Update incongruent animal_id where vsmId = name in animal table ...' =>
-                $this->getUpdateIncongruentAnimalIdsSqlQuery(),
+                self::getUpdateIncongruentAnimalIdsSqlQuery(),
 
             'Update incongruent gender_in_database where animal_id = id in animal table (only run after animal_id update) ...' =>
                 "UPDATE animal_migration_table SET gender_in_database = v.gender_in_database
