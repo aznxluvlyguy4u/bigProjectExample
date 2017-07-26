@@ -41,6 +41,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->migrateNewAnimals();
         $this->updateIncongruentParentIdsInAnimalMigrationTable();
         $this->updateParentIdsInAnimalTable();
+        $this->fillMissingValues();
     }
 
 
@@ -321,7 +322,8 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
                            SELECT a.id, amt.father_id
                            FROM animal a
                              INNER JOIN animal_migration_table amt ON a.id = amt.animal_id
-                           WHERE parent_father_id ISNULL AND amt.father_id NOTNULL AND amt.is_unreliable_parent = FALSE
+                             INNER JOIN animal dad ON dad.id = amt.father_id
+                           WHERE a.parent_father_id ISNULL AND amt.father_id NOTNULL AND dad.type = 'Ram'
                          ) AS v(animal_id, father_id) WHERE animal.id = v.animal_id",
 
             'Update parent_mother_ids in animal table with the mother_ids in animal_migration_table ...' =>
@@ -330,12 +332,43 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
                            SELECT a.id, amt.mother_id
                            FROM animal a
                              INNER JOIN animal_migration_table amt ON a.id = amt.animal_id
-                           WHERE parent_mother_id ISNULL AND amt.mother_id NOTNULL AND amt.is_unreliable_parent = FALSE
+                             INNER JOIN animal mom ON mom.id = amt.mother_id
+                           WHERE a.parent_mother_id ISNULL AND amt.mother_id NOTNULL AND mom.type = 'Ewe'
                          ) AS v(animal_id, mother_id) WHERE animal.id = v.animal_id",
         ];
 
         foreach ($queries as $title => $query) {
             $this->updateBySql($title, $query);
+        }
+    }
+
+
+    private function fillMissingValues()
+    {
+        $this->writeLn('=== Fill missing values in animal table by values in animal_migration_table ===');
+
+        $columnVars = ['nickname',
+//            'pedigree_country_code', 'pedigree_number', 'breed_code', 'breed_type',
+//            'ubn_of_birth', 'location_of_birth_id', 'pedigree_register_id', 'scrapie_genotype'
+        ];
+
+        foreach ($columnVars as $columnVar) {
+            $sql = "UPDATE animal SET $columnVar = v.new_$columnVar
+                    FROM(
+                          SELECT a.id as animal_id,
+                                 --a.$columnVar as old_$columnVar,
+                                 amt.$columnVar as new_$columnVar
+                          FROM animal_migration_table amt
+                            INNER JOIN animal a ON a.id = amt.animal_id
+                          WHERE amt.$columnVar NOTNULL AND a.$columnVar ISNULL
+                    ) AS v(
+                            animal_id,
+                            --old_$columnVar,
+                            new_$columnVar 
+                          ) WHERE animal.id = v.animal_id";
+
+            $title = 'Updating '.$columnVar.' values of animals with same uln and dateOfBirth but without vsmId';
+            $this->updateBySql($title, $sql);
         }
     }
 }
