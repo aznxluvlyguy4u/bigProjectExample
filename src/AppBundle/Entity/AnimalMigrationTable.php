@@ -9,7 +9,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class AnimalMigrationTable
- * @ORM\Table(name="animal_migration_table", indexes={@ORM\Index(name="migration_idx", columns={"vsm_id", "animal_id", "mother_id", "father_id"})})
+ * @ORM\Table(name="animal_migration_table", indexes={@ORM\Index(name="migration_idx", columns={"vsm_id", "animal_id", "mother_id", "father_id", "gender_in_database"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalMigrationTableRepository")
  * @package AppBundle\Entity
  */
@@ -92,7 +92,14 @@ class AnimalMigrationTable
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
-    private $nickName;
+    private $stnPrefixLetters;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $nickname;
 
     /**
      * @var integer
@@ -301,6 +308,20 @@ class AnimalMigrationTable
     private $logDate;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isNewImportAnimal;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isUnreliableParent;
+
+    /**
      * AnimalMigrationTable constructor.
      */
     public function __construct()
@@ -470,17 +491,35 @@ class AnimalMigrationTable
     /**
      * @return string
      */
-    public function getNickName()
+    public function getStnPrefixLetters()
     {
-        return $this->nickName;
+        return $this->stnPrefixLetters;
     }
 
     /**
-     * @param string $nickName
+     * @param string $stnPrefixLetters
+     * @return AnimalMigrationTable
      */
-    public function setNickName($nickName)
+    public function setStnPrefixLetters($stnPrefixLetters)
     {
-        $this->nickName = $nickName;
+        $this->stnPrefixLetters = $stnPrefixLetters;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNickname()
+    {
+        return $this->nickname;
+    }
+
+    /**
+     * @param string $nickname
+     */
+    public function setNickname($nickname)
+    {
+        $this->nickname = $nickname;
     }
 
     /**
@@ -931,6 +970,40 @@ class AnimalMigrationTable
         $this->logDate = $logDate;
     }
 
+    /**
+     * @return bool
+     */
+    public function isNewImportAnimal()
+    {
+        return $this->isNewImportAnimal;
+    }
 
+    /**
+     * @param bool $isNewImportAnimal
+     * @return AnimalMigrationTable
+     */
+    public function setIsNewImportAnimal($isNewImportAnimal)
+    {
+        $this->isNewImportAnimal = $isNewImportAnimal;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUnreliableParent()
+    {
+        return $this->isUnreliableParent;
+    }
+
+    /**
+     * @param bool $isUnreliableParent
+     * @return AnimalMigrationTable
+     */
+    public function setIsUnreliableParent($isUnreliableParent)
+    {
+        $this->isUnreliableParent = $isUnreliableParent;
+        return $this;
+    }
     
 }

@@ -97,7 +97,6 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             '11: Delete all duplicate breedValues', "\n",
             '12: Update result_table_breed_grades values and accuracies for all breedValue and breedIndex types', "\n",
             '13: Initialize lambMeatIndexCoefficients', "\n",
-            '14: Migrate breedValuesSet values to BreedIndex and BreedValue tables', "\n",
             '========================================================================', "\n",
             '30: Print separate csv files of latest breedValues for all ubns', "\n",
             '31: Print separate csv files of latest breedValues for chosen ubn', "\n",
@@ -144,9 +143,6 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
                 $lambMeatIndexMigrator->migrate();
                 break;
 
-            case 14:
-                BreedValuesSetMigrator::migrate($this->conn, $this->logger);
-                break;
 
             case 30:
                 $this->printBreedValuesAllUbns();

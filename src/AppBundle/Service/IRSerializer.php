@@ -1134,6 +1134,10 @@ class IRSerializer implements IRSerializerInterface
     function parseRetrieveAnimals(ArrayCollection $contentArray, Client $client, $isEditMessage) {
         $retrieveAnimals = new RetrieveAnimals();
 
+        if ($contentArray->get(JsonInputConstant::IS_RVO_LEADING) === true) {
+            $retrieveAnimals->setIsRvoLeading(true);
+        }
+
         return $retrieveAnimals;
     }
 
