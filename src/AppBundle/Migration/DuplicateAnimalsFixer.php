@@ -17,6 +17,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
@@ -46,21 +47,19 @@ class DuplicateAnimalsFixer
 
     /** @var ObjectManager $em */
     private $em;
-
     /** @var AnimalRepository $animalRepository */
     private $animalRepository;
-
     /** @var CommandUtil */
     private $cmdUtil;
-
     /** @var OutputInterface */
     private $output;
-
     /** @var GenderChanger */
     private $genderChanger;
-
     /** @var Connection */
     private $conn;
+
+    /** @var array */
+    private $tableNames;
 
 
     /**
@@ -81,6 +80,18 @@ class DuplicateAnimalsFixer
 
         /** @var AnimalRepository $animalRepository */
         $this->animalRepository = $this->em->getRepository(Animal::class);
+    }
+
+
+    /**
+     * @return array
+     */
+    private function getTableNames()
+    {
+        if ($this->tableNames === null || $this->tableNames === []) {
+           $this->tableNames = DoctrineUtil::getTableNames($this->conn);
+        }
+        return $this->tableNames;
     }
 
 
@@ -549,12 +560,20 @@ class DuplicateAnimalsFixer
         $sql = "DELETE FROM animal_cache WHERE animal_id = ".$secondaryAnimalId;
         $this->conn->exec($sql);
 
+        $sql = "DELETE FROM result_table_breed_grades WHERE animal_id = ".$secondaryAnimalId;
+        $this->conn->exec($sql);
+
         $sql = '';
         $counter = 0;
         foreach ($tableNamesByVariableType as $tableNameByVariableType) {
+
             $counter++;
             $tableName = $tableNameByVariableType[self::TABLE_NAME];
             $variableType = $tableNameByVariableType[self::VARIABLE_TYPE];
+
+            if(!in_array($tableName, $this->getTableNames(), true)) {
+                continue;
+            }
 
             $sql = $sql."SELECT ".$counter." as count, '".$tableName."' as ".self::TABLE_NAME.", '".$variableType.
                 "' as ".self::VARIABLE_TYPE." FROM ".$tableName." WHERE ".$variableType." = ".$secondaryAnimalId." UNION ";
@@ -679,20 +698,12 @@ class DuplicateAnimalsFixer
         }
 
 
-        //breedCode AND linked breedCodesId
-
+        //breedCode
         $breedCodeString1 = $primaryAnimalResultArray['breed_code'];
         $breedCodeString2 = $secondaryAnimalResultArray['breed_code'];
-        $breedCodesSetId1 = $primaryAnimalResultArray['breed_codes_id'];
-        $breedCodesSetId2 = $secondaryAnimalResultArray['breed_codes_id'];
 
         if($breedCodeString1 == null && $breedCodeString2 != null) {
             $animalSqlMiddle = $animalSqlMiddle." breed_code = '".$breedCodeString2."',";
-            if($breedCodesSetId1 == null && $breedCodesSetId2 != null) {
-                $animalSqlMiddle = $animalSqlMiddle.' breed_codes_id = '.$breedCodesSetId2.',';
-                $sql = "UPDATE breed_codes SET animal_id = ".$primaryAnimalId." WHERE id = ".$breedCodesSetId2;
-                $this->conn->exec($sql);
-            }
         }
         
         if($animalSqlMiddle != '') {
