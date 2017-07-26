@@ -55,7 +55,13 @@ class DoctrineUtil
         $port = $connection->getPort();
         $username = $connection->getUsername();
 
-        return 'Database: '.$databaseName.' on host:port '.$host.':'.$port.' | username: '.$username.' | driverName: '.$driverName;
+        $sqlCount = "SELECT COUNT(*) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$databaseName'";
+        $sqlTotalCount = "SELECT COUNT(*) FROM pg_stat_activity";
+        $databaseConnections = $connection->query($sqlCount)->fetch()['count'];
+        $totalDatabaseConnections = $connection->query($sqlTotalCount)->fetch()['count'];
+
+        return 'Database: '.$databaseName.' on host:port '.$host.':'.$port.' | username: '.$username
+            .' | driverName: '.$driverName.' | connections '.$databaseConnections.'/'.$totalDatabaseConnections;
     }
 
 

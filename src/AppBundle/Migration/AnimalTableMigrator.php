@@ -212,7 +212,7 @@ class AnimalTableMigrator extends MigratorBase
                 $animalOrderNumber = StringUtil::getNullAsStringOrWrapInQuotes(StringUtil::padAnimalOrderNumberWithZeroes($record[2]));
             }
 
-			$nickName = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
+			$nickname = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
             $fatherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[5], false);
             $motherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[6], false);
             $genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
@@ -237,9 +237,9 @@ class AnimalTableMigrator extends MigratorBase
 
 
 			$sql = "INSERT INTO animal_migration_table (id, vsm_id, animal_id, uln_origin, stn_origin, uln_country_code, uln_number, animal_order_number,
-						pedigree_country_code, pedigree_number, nick_name, father_vsm_id, father_id, mother_vsm_id, mother_id, gender_in_file,
+						pedigree_country_code, pedigree_number, nickname, father_vsm_id, father_id, mother_vsm_id, mother_id, gender_in_file,
 						gender_in_database,date_of_birth,breed_code,ubn_of_birth,location_of_birth_id,pedigree_register_id,breed_type,scrapie_genotype
-						)VALUES(nextval('measurement_id_seq'),".$vsmId.",".$animalId.",".$uln.",".$stnImport.",".$ulnCountryCode.",".$ulnNumber.",".$animalOrderNumber.",".$pedigreeCountryCode.",".$pedigreeNumber.",".$nickName.",".$fatherVsmId.",".$fatherId.",".$motherVsmId.",".$motherId.",".$genderInFile.",".$genderInDatabase.",".$dateOfBirthString.",".$breedCode.",".$ubnOfBirth.",".$locationOfBirth.",".$pedigreeRegisterId.",".$breedType.",".$scrapieGenotype.")";
+						)VALUES(nextval('measurement_id_seq'),".$vsmId.",".$animalId.",".$uln.",".$stnImport.",".$ulnCountryCode.",".$ulnNumber.",".$animalOrderNumber.",".$pedigreeCountryCode.",".$pedigreeNumber.",".$nickname.",".$fatherVsmId.",".$fatherId.",".$motherVsmId.",".$motherId.",".$genderInFile.",".$genderInDatabase.",".$dateOfBirthString.",".$breedCode.",".$ubnOfBirth.",".$locationOfBirth.",".$pedigreeRegisterId.",".$breedType.",".$scrapieGenotype.")";
 			$this->conn->exec($sql);
 
             $this->cmdUtil->advanceProgressBar(1);
@@ -429,7 +429,7 @@ class AnimalTableMigrator extends MigratorBase
 
 			//Only process animals where genders match will those in the database
 			$sql = "SELECT a.id, a.vsm_id, a.animal_id, a.uln_country_code, a.uln_number, a.animal_order_number, a.pedigree_country_code,
-				  a.pedigree_number, a.nick_name, a.father_vsm_id, a.father_id, a.mother_vsm_id, a.mother_id, a.gender_in_file,
+				  a.pedigree_number, a.nickname, a.father_vsm_id, a.father_id, a.mother_vsm_id, a.mother_id, a.gender_in_file,
 				  a.date_of_birth, a.breed_code, a.ubn_of_birth, a.location_of_birth_id, a.pedigree_register_id, a.breed_type, a.scrapie_genotype
 				FROM animal_migration_table a
 				--Exclude duplicate ulns
@@ -511,7 +511,7 @@ class AnimalTableMigrator extends MigratorBase
 				$animalOrderNumber = $result['animal_order_number'];
 				$pedigreeCountryCode = $result['pedigree_country_code'];
 				$pedigreeNumber = $result['pedigree_number'];
-				$nickName = $result['nick_name'];
+				$nickname = $result['nickname'];
 				$type = GenderChangerForMigrationOnly::getClassNameByGender($gender);
 
 				/*
@@ -552,7 +552,7 @@ class AnimalTableMigrator extends MigratorBase
 				$animalOrderNumberSql = SqlUtil::getNullCheckedValueForSqlQuery($animalOrderNumber, true);
 				$pedigreeCountryCodeSql = SqlUtil::getNullCheckedValueForSqlQuery($pedigreeCountryCode, true);
 				$pedigreeNumberSql =  SqlUtil::getNullCheckedValueForSqlQuery($pedigreeNumber, true);
-				$nickNameSql = SqlUtil::getNullCheckedValueForSqlQuery(utf8_encode(StringUtil::escapeSingleApostrophes($nickName)), true);
+				$nicknameSql = SqlUtil::getNullCheckedValueForSqlQuery(utf8_encode(StringUtil::escapeSingleApostrophes($nickname)), true);
 				$fatherIdSql = SqlUtil::getNullCheckedValueForSqlQuery($fatherId, false);
 				$motherIdSql = SqlUtil::getNullCheckedValueForSqlQuery($motherId, false);
 				$genderSql = SqlUtil::getNullCheckedValueForSqlQuery($gender, true);
@@ -576,7 +576,7 @@ class AnimalTableMigrator extends MigratorBase
 						$animalOrderNumber != $oldValues['animal_order_number'] ||
 						$pedigreeCountryCode != $oldValues['pedigree_country_code'] ||
 						$pedigreeNumber != $oldValues['pedigree_number'] ||
-						$nickName != $oldValues['nickname'] ||
+						$nickname != $oldValues['nickname'] ||
 						$fatherId != $oldValues['parent_father_id'] ||
 						$motherId != $oldValues['parent_mother_id'] ||
 						$gender != $oldValues['gender'] ||
@@ -595,7 +595,7 @@ class AnimalTableMigrator extends MigratorBase
 							animal_order_number = ".$animalOrderNumberSql.",
 						  	pedigree_country_code = ".$pedigreeCountryCodeSql.",
 						  	pedigree_number = ".$pedigreeNumberSql.",
-						  	nickname = ".$nickNameSql.",
+						  	nickname = ".$nicknameSql.",
 						  	parent_father_id = ".$fatherIdSql.", 
 						  	parent_mother_id = ".$motherIdSql.",
 						  	gender = ".$genderSql.",
@@ -639,7 +639,7 @@ class AnimalTableMigrator extends MigratorBase
 
 					$maxAnimalId++;
 					$insertString = $insertString."(".$maxAnimalId.",".$vsmIdSql.",".$ulnCountryCodeSql.",".$ulnNumberSql.",".$animalOrderNumberSql
-						.",".$pedigreeCountryCodeSql.",".$pedigreeNumberSql.",".$nickNameSql.",".$fatherIdSql
+						.",".$pedigreeCountryCodeSql.",".$pedigreeNumberSql.",".$nicknameSql.",".$fatherIdSql
 						.",".$motherIdSql.",".$genderSql.",".$dateOfBirthSql.",".$breedCodeSql.",".$ubnOfBirthSql
 						.",".$locationOfBirthIdSql.",".$pedigreeRegisterIdSql.",".$breedTypeSql.",".$scrapieGenotypeSql
 						.",3,3,TRUE,FALSE,FALSE,FALSE,'".$type."')";
@@ -1513,7 +1513,7 @@ class AnimalTableMigrator extends MigratorBase
 			$scrapieGenotype = null;
 			$locationOfBirthId = null;
 			$pedigreeRegisterId = null;
-			$nickName = null;
+			$nickname = null;
 
 			foreach ($ulnGroup as $animalRecord) {
 
@@ -1537,8 +1537,8 @@ class AnimalTableMigrator extends MigratorBase
 				if($animalRecord['location_of_birth_id'] != null) { $locationOfBirthId = $animalRecord['location_of_birth_id']; }
 				if($animalRecord['pedigree_register_id'] != null) { $pedigreeRegisterId = $animalRecord['pedigree_register_id']; }
 
-				if($animalRecord['nick_name'] != null) {
-					$nickName = strtr($animalRecord['nick_name'],
+				if($animalRecord['nickname'] != null) {
+					$nickname = strtr($animalRecord['nickname'],
 						['JT 14' => 'Oak Tree Lisa 17',
 							'8,26223E+14' => 'LAX 92/02',
 							'Oak Tree Jack' => '32 JT03 KHS (Oak Tree Jack)',
@@ -1599,7 +1599,7 @@ class AnimalTableMigrator extends MigratorBase
 					scrapie_genotype = ".SqlUtil::getNullCheckedValueForSqlQuery($scrapieGenotype, true).", 
 					location_of_birth_id = ".SqlUtil::getNullCheckedValueForSqlQuery($locationOfBirthId, false).", 
 					pedigree_register_id = ".SqlUtil::getNullCheckedValueForSqlQuery($pedigreeRegisterId, false).", 
-					nick_name = ".SqlUtil::getNullCheckedValueForSqlQuery($nickName, true)."
+					nickname = ".SqlUtil::getNullCheckedValueForSqlQuery($nickname, true)."
 				WHERE id = ".$firstId;
 			$this->conn->exec($sql);
 
@@ -1633,7 +1633,7 @@ class AnimalTableMigrator extends MigratorBase
 					a.id, a.uln_country_code, a.uln_number, a.animal_order_number, a.father_id, a.mother_id,
  					a.father_vsm_id, a.mother_vsm_id, a.gender_in_file, a.date_of_birth, a.ubn_of_birth,
  					a.breed_type, a.breed_code, a.is_ubn_updated, a.gender_in_database, a.location_of_birth_id, a.pedigree_register_id,
- 					a.nick_name, a.scrapie_genotype
+ 					a.nickname, a.scrapie_genotype
 				FROM animal_migration_table a
 				INNER JOIN (
 					SELECT stn_origin FROM animal_migration_table
@@ -1694,7 +1694,7 @@ class AnimalTableMigrator extends MigratorBase
 			$scrapieGenotype = null;
 			$locationOfBirthId = null;
 			$pedigreeRegisterId = null;
-			$nickName = null;
+			$nickname = null;
 
 			foreach($stnOriginGroup as $animalRecord) {
 
@@ -1716,7 +1716,7 @@ class AnimalTableMigrator extends MigratorBase
 				if($animalRecord['scrapie_genotype'] != null) { $scrapieGenotype = $animalRecord['scrapie_genotype']; }
 				if($animalRecord['location_of_birth_id'] != null) { $locationOfBirthId = $animalRecord['location_of_birth_id']; }
 				if($animalRecord['pedigree_register_id'] != null) { $pedigreeRegisterId = $animalRecord['pedigree_register_id']; }
-				if($animalRecord['nick_name'] != null) { $nickName = $animalRecord['nick_name']; }
+				if($animalRecord['nickname'] != null) { $nickname = $animalRecord['nickname']; }
 
 			}
 
@@ -1785,7 +1785,7 @@ class AnimalTableMigrator extends MigratorBase
  						scrapie_genotype = ".SqlUtil::getNullCheckedValueForSqlQuery($scrapieGenotype, true).", 
  						location_of_birth_id = ".SqlUtil::getNullCheckedValueForSqlQuery($locationOfBirthId, false).", 
  						pedigree_register_id = ".SqlUtil::getNullCheckedValueForSqlQuery($pedigreeRegisterId, false).", 
- 						nick_name = ".SqlUtil::getNullCheckedValueForSqlQuery($nickName, true)."
+ 						nickname = ".SqlUtil::getNullCheckedValueForSqlQuery($nickname, true)."
  					WHERE id = ".$firstId;
 			$this->conn->exec($sql);
 
@@ -2103,7 +2103,7 @@ class AnimalTableMigrator extends MigratorBase
 		$stnImportCollection = [];
 		$animalOrderNumberImportCollection = [];
 		$ulnImportCollection = [];
-		$nickNameCollection = [];
+		$nicknameCollection = [];
 		$vsmIdFatherCollection = [];
 		$vsmIdMotherCollection = [];
 		$genderCollection = [];
@@ -2121,7 +2121,7 @@ class AnimalTableMigrator extends MigratorBase
 			$stnImport = $record[1];
 			$animalOrderNumberImport = $record[2];
 			$ulnImport = $record[3];
-			$nickName = $record[4];
+			$nickname = $record[4];
 			$vsmIdFather = $record[5];
 			$vsmIdMother = $record[6];
 			$gender = $record[7];
@@ -2136,7 +2136,7 @@ class AnimalTableMigrator extends MigratorBase
 			$stnImportCollection[] = $stnImport;
 			$animalOrderNumberImportCollection[] = $animalOrderNumberImport;
 			$ulnImportCollection[] = $ulnImport;
-			$nickNameCollection[] = $nickName;
+			$nicknameCollection[] = $nickname;
 			$vsmIdFatherCollection[] = $vsmIdFather;
 			$vsmIdMotherCollection[] = $vsmIdMother;
 			$genderCollection[$gender] = $gender;
@@ -2198,11 +2198,11 @@ class AnimalTableMigrator extends MigratorBase
 			}
 		}
 
-		$nickNames = [];
-		foreach ($nickNameCollection as $nickName) {
-			if($nickName != null && $nickName != '') { $nickNames[] = $nickName; }
+		$nicknames = [];
+		foreach ($nicknameCollection as $nickname) {
+			if($nickname != null && $nickname != '') { $nicknames[] = $nickname; }
 		}
-		$this->output->writeln('nickNames: '.count($nickNames));
+		$this->output->writeln('nickNames: '.count($nicknames));
 
 		$vsmIdFathersIncorrect = [];
 		foreach ($vsmIdFatherCollection as $vsmIdFather) {
@@ -2788,7 +2788,7 @@ class AnimalTableMigrator extends MigratorBase
 
 	/**
      * Example
-    $this->writeCorrectedCsvRecord($vsmId . ';' . $animalId  . ';' .$uln. ';' .$stnImport. ';' . $ulnCountryCode . ';' . $ulnNumber . ';' . $animalOrderNumber . ';' . $pedigreeCountryCode.';'.$pedigreeNumber.';'.$nickName.';'.$fatherVsmId.';'.$fatherId.';'.$motherVsmId.';'.$motherId
+    $this->writeCorrectedCsvRecord($vsmId . ';' . $animalId  . ';' .$uln. ';' .$stnImport. ';' . $ulnCountryCode . ';' . $ulnNumber . ';' . $animalOrderNumber . ';' . $pedigreeCountryCode.';'.$pedigreeNumber.';'.$nickname.';'.$fatherVsmId.';'.$fatherId.';'.$motherVsmId.';'.$motherId
     .';'.$genderInFile.';'.$genderInDatabase.';'.$dateOfBirth.';'.$breedCode.';'.$ubnOfBirth.';'.$locationOfBirth
     .';'.$pedigreeRegisterId.';'.$breedType.';'.$scrapieGenotype);
      *
@@ -2966,7 +2966,7 @@ class AnimalTableMigrator extends MigratorBase
 			case "animal_order_number": return ColumnType::STRING;
 			case "pedigree_country_code": return ColumnType::STRING;
 			case "pedigree_number": return ColumnType::STRING;
-			case "nick_name": return ColumnType::STRING;
+			case "nickname": return ColumnType::STRING;
 			case "father_vsm_id": return ColumnType::INTEGER;
 			case "father_id": return ColumnType::INTEGER;
 			case "mother_vsm_id": return ColumnType::INTEGER;
