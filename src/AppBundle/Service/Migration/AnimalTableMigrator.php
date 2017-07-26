@@ -43,7 +43,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
 
         //PRE migration fixes
         $this->preparationFixes();
-        $this->mergeDuplicateAnimalsByVsmIdAndTagReplaces();
+        $this->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil);
         $this->fixGenderOfNeutersByMigrationValues();
 
         //Migrate animals
@@ -52,7 +52,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
 
         //Fix animals
         //NOTE the order is important!
-        $this->mergeDuplicateAnimalsByVsmIdAndTagReplaces();
+        $this->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil);
         $this->getDuplicateAnimalsFixer()->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth($this->cmdUtil);
         $this->mergeTagReplacedAnimalsWithoutDeclareTagReplaces();
         $this->removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln();
