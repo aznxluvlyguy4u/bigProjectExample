@@ -117,7 +117,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
         ;
 
         $sqlBase = "INSERT INTO animal_migration_table (id, vsm_id, uln_origin, stn_origin, uln_country_code, uln_number, animal_order_number,
-						pedigree_country_code, pedigree_number, nick_name, father_vsm_id, mother_vsm_id, gender_in_file, date_of_birth,breed_code,ubn_of_birth,pedigree_register_id,breed_type,scrapie_genotype
+						pedigree_country_code, pedigree_number, nickname, father_vsm_id, mother_vsm_id, gender_in_file, date_of_birth,breed_code,ubn_of_birth,pedigree_register_id,breed_type,scrapie_genotype
 						)VALUES ";
         $insertBatchSet->setSqlQueryBase($sqlBase);
 
@@ -772,7 +772,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
                             AND breed_code = 'FL100'
                     ) AS v(vsm_id, regex1, stn_prefix_letters, regex2, trailing_check)
                     WHERE animal_migration_table.vsm_id = v.vsm_id
-                          AND (nickname ISNULL OR nick_name <> v.stn_prefix_letters
+                          AND (nickname ISNULL OR nickname <> v.stn_prefix_letters
                               OR animal_migration_table.stn_prefix_letters ISNULL
                               OR animal_migration_table.stn_prefix_letters <> v.stn_prefix_letters
                           )",
