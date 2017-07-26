@@ -2,7 +2,7 @@
 
 namespace AppBundle\Service\Migration;
 
-use AppBundle\Migration\DuplicateAnimalsFixer;
+use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
@@ -43,7 +43,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->updateParentIdsInAnimalTable();
         $this->fillMissingValues();
         $this->mergeDuplicateAnimalsByVsmIdAndTagReplaces();
-        $this->getDuplicateAnimalsFixer()->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth();
+        $this->getDuplicateAnimalsFixer()->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth($this->cmdUtil);
         $this->removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln();
     }
 
@@ -143,8 +143,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
     private function getDuplicateAnimalsFixer()
     {
         if($this->duplicateAnimalsFixer === null) {
-            $this->duplicateAnimalsFixer = new DuplicateAnimalsFixer(
-                $this->em, $this->cmdUtil->getOutputInterface(), $this->cmdUtil);
+            $this->duplicateAnimalsFixer = new DuplicateAnimalsFixer($this->em);
         }
         return $this->duplicateAnimalsFixer;
     }

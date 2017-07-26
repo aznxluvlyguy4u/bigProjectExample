@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Migration;
+namespace AppBundle\Service\DataFix;
 
 
 use AppBundle\Component\Utils;
@@ -21,10 +21,8 @@ use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * The old legacy version used entities and did not into account some nuances.
@@ -51,8 +49,6 @@ class DuplicateAnimalsFixer
     private $animalRepository;
     /** @var CommandUtil */
     private $cmdUtil;
-    /** @var OutputInterface */
-    private $output;
     /** @var GenderChanger */
     private $genderChanger;
     /** @var Connection */
@@ -65,21 +61,28 @@ class DuplicateAnimalsFixer
     /**
      * DuplicateAnimalsFixer constructor.
      * @param ObjectManager $em
-     * @param OutputInterface $output
-     * @param CommandUtil $cmdUtil
      */
-    public function __construct(ObjectManager $em, OutputInterface $output, CommandUtil $cmdUtil)
+    public function __construct(ObjectManager $em)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
-        $this->output = $output;
-        $this->cmdUtil = $cmdUtil;
 
         /** @var GenderChanger genderChanger */
         $this->genderChanger = new GenderChanger($this->em);
 
         /** @var AnimalRepository $animalRepository */
         $this->animalRepository = $this->em->getRepository(Animal::class);
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    private function setCmdUtil(CommandUtil $cmdUtil)
+    {
+        if ($this->cmdUtil === null) {
+            $this->cmdUtil = $cmdUtil;   
+        }
     }
 
 
@@ -96,10 +99,13 @@ class DuplicateAnimalsFixer
 
 
     /**
+     * @param CommandUtil $cmdUtil
      * @return bool
      */
-    public function mergeAnimalPairs()
+    public function mergeAnimalPairs(CommandUtil $cmdUtil)
     {
+        $this->setCmdUtil($cmdUtil);
+
         do {
             $primaryAnimalId = intval($this->cmdUtil->generateQuestion('Insert animalId of (primary) animal to keep', 0));
         } while ($primaryAnimalId == 0);
@@ -108,7 +114,7 @@ class DuplicateAnimalsFixer
             $secondaryAnimalId = intval($this->cmdUtil->generateQuestion('Insert animalId of (secondary) animal to delete', 0));
         } while ($secondaryAnimalId == 0 || $primaryAnimalId == $secondaryAnimalId);
 
-        $this->displayAnimalValues([$primaryAnimalId, $secondaryAnimalId]);
+        $this->displayAnimalValues($cmdUtil, [$primaryAnimalId, $secondaryAnimalId]);
 
         $continue = $this->cmdUtil->generateConfirmationQuestion(['Your choice, '.
             'primaryAnimalId: '.$primaryAnimalId, '  secondaryAnimalId: '.$secondaryAnimalId, '. Is this correct? (y/n)']);
@@ -116,19 +122,22 @@ class DuplicateAnimalsFixer
         if($continue) {
             $isMergeSuccessFul = $this->mergeAnimalPairByIds($primaryAnimalId, $secondaryAnimalId);
             if($isMergeSuccessFul) { $printOutText = 'MERGE SUCCESSFUL'; } else { $printOutText = 'MERGE FAILED'; }
-            $this->output->writeln($printOutText);
+            $this->cmdUtil->writeln($printOutText);
             return true;
         }
-        $this->output->writeln('MERGE ABORTED');
+        $this->cmdUtil->writeln('MERGE ABORTED');
         return false;
     }
 
 
     /**
+     * @param CommandUtil $cmdUtil
      * @return bool
      */
-    public function mergeImportedAnimalsMissingLeadingZeroes()
+    public function mergeImportedAnimalsMissingLeadingZeroes(CommandUtil $cmdUtil)
     {
+        $this->setCmdUtil($cmdUtil);
+
         $ulnCountryCode = null;
         $ulnNumber = null;
 
@@ -170,7 +179,7 @@ class DuplicateAnimalsFixer
         $primaryAnimalId = array_shift($animalIds);
         $secondaryAnimalId = array_shift($animalIds);
 
-        $this->displayAnimalValues([$primaryAnimalId, $secondaryAnimalId]);
+        $this->displayAnimalValues($cmdUtil, [$primaryAnimalId, $secondaryAnimalId]);
 
         $continue = $this->cmdUtil->generateConfirmationQuestion(['Your choice, '.
             'primaryAnimalId: '.$primaryAnimalId, '  secondaryAnimalId: '.$secondaryAnimalId, ' but the ULN used will be of the secondaryAnimalId. Is this correct? (y/n)']);
@@ -187,10 +196,10 @@ class DuplicateAnimalsFixer
 
             $isMergeSuccessFul = $this->mergeAnimalPairByIds($primaryAnimalId, $secondaryAnimalId);
             if($isMergeSuccessFul) { $printOutText = 'MERGE SUCCESSFUL'; } else { $printOutText = 'MERGE FAILED'; }
-            $this->output->writeln($printOutText);
+            $this->cmdUtil->writeln($printOutText);
             return true;
         }
-        $this->output->writeln('MERGE ABORTED');
+        $this->cmdUtil->writeln('MERGE ABORTED');
         return false;
     }
 
@@ -252,8 +261,13 @@ class DuplicateAnimalsFixer
     }
 
 
-    public function fixDuplicateAnimalsSyncedAndImportedPairs()
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function fixDuplicateAnimalsSyncedAndImportedPairs(CommandUtil $cmdUtil)
     {
+        $this->setCmdUtil($cmdUtil);
+
         $sql = $this->createDuplicateSqlQuery(['uln_country_code', 'uln_number', 'date_of_birth'], false);
         $animalsGroupedByUln = $this->findGroupedDuplicateAnimals($sql);
 
@@ -340,11 +354,15 @@ class DuplicateAnimalsFixer
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
-    
 
 
-    public function fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth()
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth(CommandUtil $cmdUtil)
     {
+        $this->setCmdUtil($cmdUtil);
+
         $sql = $this->createDuplicateSqlQuery(['name', 'date_of_birth', 'uln_number', 'uln_country_code'], false);
         $animalsGroupedByUln = $this->findGroupedDuplicateAnimals($sql);
 
@@ -710,8 +728,10 @@ class DuplicateAnimalsFixer
      * @return bool
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function fixDuplicateDueToTagReplaceError()
+    public function fixDuplicateDueToTagReplaceError(CommandUtil $cmdUtil)
     {
+        $this->setCmdUtil($cmdUtil);
+
         $sql = "SELECT old.type as old_type, new.type as new_type, old.id as old_id, new.id as new_id, r.id as tag_replace_id,
                   replace_date, old.name as vsm_id_old, new.name as vsm_id_new, uln_number_to_replace, uln_number_replacement, uln_country_code_replacement
                 FROM declare_tag_replace r
@@ -727,7 +747,7 @@ class DuplicateAnimalsFixer
         
         $totalCount = count($results);
         if($totalCount == 0) {
-            $this->output->writeln('There are no duplicate animals due to tagReplace errors!');
+            $this->cmdUtil->writeln('There are no duplicate animals due to tagReplace errors!');
             return true;
         }
 
@@ -755,9 +775,14 @@ class DuplicateAnimalsFixer
     }
 
 
-
-    private function displayAnimalValues($animalIds)
+    /**
+     * @param CommandUtil $cmdUtil
+     * @param $animalIds
+     */
+    private function displayAnimalValues(CommandUtil $cmdUtil, $animalIds)
     {
+        $this->setCmdUtil($cmdUtil);
+
         if(is_int($animalIds) || ctype_digit($animalIds)) {
             $animalIdFilterString = ' a.id = '.$animalIds;
         } elseif (is_array($animalIds)) {
@@ -785,7 +810,7 @@ class DuplicateAnimalsFixer
             $scrapieGenoType = $result['scrapie_genotype'];
             $pedigree = $result['pedigree'];
 
-            $this->output->writeln('animalId: '.$animalId.' | '.$uln.' | '.$stn.' | '.$type.' | '.$dateOfBirth.' | '.$vsmId.' | '.$breedType.' | '.
+            $this->cmdUtil->writeln('animalId: '.$animalId.' | '.$uln.' | '.$stn.' | '.$type.' | '.$dateOfBirth.' | '.$vsmId.' | '.$breedType.' | '.
                 $breedCode.' | '.$scrapieGenoType.' | '.$pedigree.' | '.$ubn);
         }
     }

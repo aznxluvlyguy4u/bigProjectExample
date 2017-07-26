@@ -91,6 +91,11 @@ services:
           logger: '@logger'
 
 
+    app.datafix.animals.duplicate:
+        class: AppBundle\Service\DataFix\DuplicateAnimalsFixer
+        arguments:
+
+
     app.migrator.vsm:
         class: AppBundle\Service\Migration\VsmMigratorService
         arguments:
