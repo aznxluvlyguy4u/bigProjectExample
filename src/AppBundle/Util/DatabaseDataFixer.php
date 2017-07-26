@@ -189,7 +189,7 @@ class DatabaseDataFixer
      * @param CommandUtil|OutputInterface $cmdUtilOrOutput
      * @return int
      */
-    private static function fillMissingAnimalChildTableRecords(Connection $conn, $cmdUtilOrOutput)
+    public static function fillMissingAnimalChildTableRecords(Connection $conn, $cmdUtilOrOutput)
     {
         $totalUpdateCount = 0;
 

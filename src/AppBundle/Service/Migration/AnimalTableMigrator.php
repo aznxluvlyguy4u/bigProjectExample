@@ -32,6 +32,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
 
         $this->preparationFixes();
         $this->fixGenderOfNeutersByMigrationValues();
+        $this->migrateNewAnimalsJoinedOnUlnAndDateOfBirth();
         $this->migrateNewAnimals();
         $this->updateIncongruentParentIdsInAnimalMigrationTable();
         $this->updateParentIdsInAnimalTable();
@@ -201,7 +202,10 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
                   WHERE a.id ISNULL AND amt.uln_number NOTNULL";
         $this->updateBySql('Migrating new animals from animal_migration_table to animal table ...', $sql);
 
-        DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil);
+        //Just to make sure the queries don't overlap
+        sleep(2);
+
+        DatabaseDataFixer::fillMissingAnimalChildTableRecords($this->conn, $this->cmdUtil);
 
         DoctrineUtil::updateTableSequence($this->conn, ['animal']);
         $this->updateAnimalIdsInMigrationTable();
