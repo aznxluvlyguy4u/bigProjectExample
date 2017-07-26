@@ -116,6 +116,10 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\AnimalTableMigrator
 
+    app.migrator.litters:
+        parent: app.migrator.base
+        class: AppBundle\Service\Migration\LitterMigrator
+
     app.migrator.tagreplace:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\TagReplaceMigrator
