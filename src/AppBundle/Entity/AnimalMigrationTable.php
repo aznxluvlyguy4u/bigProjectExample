@@ -99,7 +99,7 @@ class AnimalMigrationTable
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
-    private $nickName;
+    private $nickname;
 
     /**
      * @var integer
@@ -509,17 +509,17 @@ class AnimalMigrationTable
     /**
      * @return string
      */
-    public function getNickName()
+    public function getNickname()
     {
-        return $this->nickName;
+        return $this->nickname;
     }
 
     /**
-     * @param string $nickName
+     * @param string $nickname
      */
-    public function setNickName($nickName)
+    public function setNickname($nickname)
     {
-        $this->nickName = $nickName;
+        $this->nickname = $nickname;
     }
 
     /**

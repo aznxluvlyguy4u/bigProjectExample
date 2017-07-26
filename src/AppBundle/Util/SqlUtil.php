@@ -203,7 +203,7 @@ class SqlUtil
         $cmdUtil->setStartTimeAndPrintIt(count($data), 1, $message);
 
         $idKey = array_search('id', $columnHeaders, true);
-        $nickNameKey = array_search('nick_name', $columnHeaders, true);
+        $nicknameKey = array_search('nickname', $columnHeaders, true);
 
         $keys = array_keys($columnHeaders);
         $skippedCount = 0;
@@ -226,7 +226,7 @@ class SqlUtil
                         default:                    $includeQuotes = true; break;
                     }
                     $value = $record[$key];
-                    if($key == $nickNameKey) {
+                    if($key == $nicknameKey) {
                         $value = utf8_encode(StringUtil::escapeSingleApostrophes($value));
                     }
 
