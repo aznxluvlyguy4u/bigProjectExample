@@ -18,7 +18,8 @@ use \DateTime;
  * @ORM\Table(name="animal",indexes={
  *     @ORM\Index(name="uln_idx", columns={"name", "uln_country_code", "uln_number"}),
  *     @ORM\Index(name="parents_idx", columns={"parent_mother_id", "parent_father_id"}),
- *     @ORM\Index(name="animal_location_idx", columns={"location_id"})
+ *     @ORM\Index(name="animal_location_idx", columns={"location_id"}),
+ *     @ORM\Index(name="animal_gender_idx", columns={"gender"})
  * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalRepository")
  * @ORM\InheritanceType("JOINED")
@@ -43,6 +44,14 @@ abstract class Animal
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","ANIMAL_DETAILS","BASIC","MIXBLUP"})
      */
     protected $id;
+
+    /**
+     * @var DateTime
+     * @ORM\Column(type="datetime", options={"default":"CURRENT_TIMESTAMP"}, nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    protected $creationDate;
 
     /**
      * @var string
@@ -150,28 +159,6 @@ abstract class Animal
      * @JMS\MaxDepth(depth=1)
      */
     protected $parentMother;
-
-    /**
-     * @var Animal
-     *
-     * @ORM\ManyToOne(targetEntity="Neuter", inversedBy="children", cascade={"persist"})
-     * @ORM\JoinColumn(name="parent_neuter_id", referencedColumnName="id", onDelete="set null")
-     * @JMS\Type("AppBundle\Entity\Animal")
-     */
-    protected $parentNeuter;
-
-    /**
-     *
-     * @var ArrayCollection
-     *
-     * @ORM\ManyToMany(targetEntity="Animal")
-     * @ORM\JoinTable(name="animal_parents",
-     *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="parents_id", referencedColumnName="id", unique=false)}
-     * )
-     * @JMS\Type("AppBundle\Entity\Animal")
-     */
-    protected $parents;
 
     /**
      * @var Animal
@@ -461,13 +448,6 @@ abstract class Animal
     protected $breedCode;
 
     /**
-     * @var boolean
-     * @ORM\Column(type="boolean", nullable=true)
-     * @JMS\Type("boolean")
-     */
-    protected $hasCompleteBreedCode;
-
-    /**
      * @var float
      * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
@@ -495,14 +475,6 @@ abstract class Animal
      * @JMS\Groups({"ANIMAL_DETAILS"})
      */
     protected $breeder;
-
-    /**
-     * @var BreedCodes
-     * @ORM\OneToOne(targetEntity="BreedCodes", inversedBy="animal", cascade={"persist"})
-     * @ORM\JoinColumn(name="breed_codes_id", referencedColumnName="id", nullable=true)
-     * @JMS\Type("AppBundle\Entity\BreedCodes")
-     */
-    protected $breedCodes;
 
     /**
      * @var string
@@ -582,6 +554,12 @@ abstract class Animal
     protected $pedigreeRegister;
 
     /**
+     * @var ArrayCollection
+     * @ORM\OneToMany(targetEntity="WormResistance", mappedBy="animal", cascade={"persist"})
+     */
+    protected $wormResistances;
+
+    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -596,15 +574,6 @@ abstract class Animal
      * @JMS\Groups({"ANIMAL_DETAILS"})
      */
     protected $lambar;
-
-    /**
-     * @var ArrayCollection
-     *
-     * @ORM\OneToMany(targetEntity="BreedValuesSet", mappedBy="animal", cascade={"persist"})
-     * @ORM\OrderBy({"generationDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\BreedValuesSet")
-     */
-    protected $breedValuesSets;
 
     /**
      * @var ResultTableBreedGrades
@@ -658,8 +627,7 @@ abstract class Animal
         $this->ulnHistory = new ArrayCollection();
         $this->genderHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
-        $this->parents = new ArrayCollection();
-        $this->breedValuesSets = new ArrayCollection();
+        $this->wormResistances = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -668,6 +636,7 @@ abstract class Animal
         $this->isExportAnimal = false;
         $this->isDepartedAnimal = false;
         $this->updatedGeneDiversity = false;
+        $this->creationDate = new \DateTime();
     }
 
     /**
@@ -678,6 +647,24 @@ abstract class Animal
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getCreationDate()
+    {
+        return $this->creationDate;
+    }
+
+    /**
+     * @param DateTime $creationDate
+     * @return Animal
+     */
+    public function setCreationDate($creationDate)
+    {
+        $this->creationDate = $creationDate;
+        return $this;
     }
 
     /**
@@ -1066,7 +1053,7 @@ abstract class Animal
      *
      * @param Ram
      *
-     * @return Ram
+     * @return Animal
      */
     public function setParentFather(Ram $parentFather = null)
     {
@@ -1118,7 +1105,7 @@ abstract class Animal
      *
      * @param Ewe $parentMother
      *
-     * @return Ewe
+     * @return Animal
      */
     public function setParentMother($parentMother = null)
     {
@@ -1971,24 +1958,6 @@ abstract class Animal
     }
 
     /**
-     * @return boolean|null
-     */
-    public function hasCompleteBreedCode()
-    {
-        return $this->hasCompleteBreedCode;
-    }
-
-    /**
-     * @param boolean|null $hasCompleteBreedCode
-     * @return Animal
-     */
-    public function setHasCompleteBreedCode($hasCompleteBreedCode)
-    {
-        $this->hasCompleteBreedCode = $hasCompleteBreedCode;
-        return $this;
-    }
-
-    /**
      * @return float
      */
     public function getHeterosis()
@@ -2212,79 +2181,6 @@ abstract class Animal
         $this->note = $note;
     }
 
-    /**
-     * Add parent
-     *
-     * @param \AppBundle\Entity\Animal $parent
-     *
-     * @return Animal
-     */
-    public function addParent(\AppBundle\Entity\Animal $parent)
-    {
-        $this->parents[] = $parent;
-
-        return $this;
-    }
-
-    /**
-     * Remove parent
-     *
-     * @param \AppBundle\Entity\Animal $parent
-     */
-    public function removeParent(\AppBundle\Entity\Animal $parent)
-    {
-        $this->parents->removeElement($parent);
-    }
-
-    /**
-     * Get parents
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getParents()
-    {
-        return $this->parents;
-    }
-
-    /**
-     * Set parentNeuter
-     *
-     * @param \AppBundle\Entity\Neuter $parentNeuter
-     *
-     * @return Animal
-     */
-    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
-    {
-        $this->parentNeuter = $parentNeuter;
-
-        return $this;
-    }
-
-    /**
-     * Get parentNeuter
-     *
-     * @return \AppBundle\Entity\Neuter
-     */
-    public function getParentNeuter()
-    {
-        return $this->parentNeuter;
-    }
-
-    /**
-     * @return BreedCodes
-     */
-    public function getBreedCodes()
-    {
-        return $this->breedCodes;
-    }
-
-    /**
-     * @param BreedCodes $breedCodes
-     */
-    public function setBreedCodes($breedCodes)
-    {
-        $this->breedCodes = $breedCodes;
-    }
 
     /**
      * @return string
@@ -2398,53 +2294,6 @@ abstract class Animal
 
 
     /**
-     * Add breedValues
-     *
-     * @param BreedValuesSet $breedValuesSet
-     *
-     * @return Animal
-     */
-    public function addBreedValuesSet(BreedValuesSet $breedValuesSet)
-    {
-        $this->breedValuesSets[] = $breedValuesSet;
-
-        return $this;
-    }
-
-    /**
-     * Remove breedValues
-     *
-     * @param BreedValuesSet $breedValuesSet
-     */
-    public function removeBreedValuesSet(BreedValuesSet $breedValuesSet)
-    {
-        $this->breedValuesSets->removeElement($breedValuesSet);
-    }
-
-    /**
-     * Get BreedValuesSets
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getBreedValuesSets()
-    {
-        return $this->breedValuesSets;
-    }
-
-
-    /**
-     * @return BreedValuesSet|null
-     */
-    public function getLastBreedValuesSet()
-    {
-        if(count($this->breedValuesSets) > 0) {
-            return $this->breedValuesSets->last();
-        } else {
-            return null;
-        }
-    }
-
-    /**
      * @return ResultTableBreedGrades
      */
     public function getLatestBreedGrades()
@@ -2522,5 +2371,49 @@ abstract class Animal
      */
     public function setCollarNumber($collarNumber) {
         $this->collarNumber = $collarNumber;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getWormResistances()
+    {
+        return $this->wormResistances;
+    }
+
+    /**
+     * @param ArrayCollection $wormResistances
+     * @return Animal
+     */
+    public function setWormResistances($wormResistances)
+    {
+        $this->wormResistances = $wormResistances;
+        return $this;
+    }
+
+
+    /**
+     * @param WormResistance $wormResistance
+     *
+     * @return Animal
+     */
+    public function addWormResistance(WormResistance $wormResistance)
+    {
+        $this->wormResistances->add($wormResistance);
+
+        return $this;
+    }
+
+
+    /**
+     * @param WormResistance $wormResistance
+     *
+     * @return Animal
+     */
+    public function removeWormResistance(WormResistance $wormResistance)
+    {
+        $this->wormResistances->remove($wormResistance);
+
+        return $this;
     }
 }

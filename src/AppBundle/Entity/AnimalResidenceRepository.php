@@ -90,4 +90,14 @@ class AnimalResidenceRepository extends BaseRepository {
 
         return $lastResidence;
     }
+
+
+    /**
+     * @param $animalIds
+     * @return int
+     */
+    public function deleteByAnimalIdsAndSql($animalIds)
+    {
+        return $this->deleteTableRecordsByTableNameAndAnimalIdsAndSql('animal_residence', $animalIds);
+    }
 }

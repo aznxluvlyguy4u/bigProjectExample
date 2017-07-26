@@ -19,12 +19,6 @@ use JMS\Serializer\Annotation\Expose;
 class Neuter extends Animal
 {
     /**
-     * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentNeuter")
-     * @JMS\Type("AppBundle\Entity\Neuter")
-     */
-    private $children;
-
-    /**
      * @var string
      *
      * @Assert\NotBlank
@@ -44,9 +38,6 @@ class Neuter extends Animal
         $this->objectType = "Neuter";
         $this->setAnimalType(AnimalType::sheep);
         $this->setAnimalCategory(3);
-
-        //Create children array
-        $this->children = new ArrayCollection();
     }
 
     /**
@@ -71,40 +62,6 @@ class Neuter extends Animal
     public function getObjectType()
     {
         return $this->objectType;
-    }
-
-    /**
-     * Add child
-     *
-     * @param \AppBundle\Entity\Animal $child
-     *
-     * @return Neuter
-     */
-    public function addChild(\AppBundle\Entity\Animal $child)
-    {
-        $this->children[] = $child;
-
-        return $this;
-    }
-
-    /**
-     * Remove child
-     *
-     * @param \AppBundle\Entity\Animal $child
-     */
-    public function removeChild(\AppBundle\Entity\Animal $child)
-    {
-        $this->children->removeElement($child);
-    }
-
-    /**
-     * Get children
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getChildren()
-    {
-        return $this->children;
     }
 
     /**
@@ -402,64 +359,6 @@ class Neuter extends Animal
     public function getExteriorMeasurements()
     {
         return $this->exteriorMeasurements;
-    }
-
-    /**
-     * Add parent
-     *
-     * @param \AppBundle\Entity\Animal $parent
-     *
-     * @return Neuter
-     */
-    public function addParent(\AppBundle\Entity\Animal $parent)
-    {
-        $this->parents[] = $parent;
-
-        return $this;
-    }
-
-    /**
-     * Remove parent
-     *
-     * @param \AppBundle\Entity\Animal $parent
-     */
-    public function removeParent(\AppBundle\Entity\Animal $parent)
-    {
-        $this->parents->removeElement($parent);
-    }
-
-    /**
-     * Get parents
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getParents()
-    {
-        return $this->parents;
-    }
-
-    /**
-     * Set parentNeuter
-     *
-     * @param \AppBundle\Entity\Neuter $parentNeuter
-     *
-     * @return Neuter
-     */
-    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
-    {
-        $this->parentNeuter = $parentNeuter;
-
-        return $this;
-    }
-
-    /**
-     * Get parentNeuter
-     *
-     * @return \AppBundle\Entity\Neuter
-     */
-    public function getParentNeuter()
-    {
-        return $this->parentNeuter;
     }
 
     public static function getClassName() {

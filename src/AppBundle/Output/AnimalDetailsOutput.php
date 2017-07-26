@@ -197,63 +197,7 @@ class AnimalDetailsOutput
     {
         $results = array();
 
-        /** @var BreedValuesSetRepository $breedValuesSetRepository */
-        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
-
-        /** @var GeneticBaseRepository $geneticBaseRepository */
-        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
-
-        $years = $geneticBaseRepository->getAllYears();
-
-        foreach ($years as $year) {
-            $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($year);
-
-            $correctedBreedValues = $breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animal->getId(), $year, $geneticBases);
-
-            $growthAccuracy = $correctedBreedValues[BreedValueLabel::GROWTH_ACCURACY];
-            if($growthAccuracy >= BreedFormat::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
-                $growth = $correctedBreedValues[BreedValueLabel::GROWTH];
-            } else {
-                $growth = 0;
-                $growthAccuracy = 0;
-            }
-
-            $fatAccuracy = $correctedBreedValues[BreedValueLabel::FAT_ACCURACY];
-            if($fatAccuracy >= BreedFormat::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
-                $fat = $correctedBreedValues[BreedValueLabel::FAT];
-            } else {
-                $fat = 0;
-                $fatAccuracy = 0;
-            }
-
-            $muscleThicknessAccuracy = $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS_ACCURACY];
-            if($muscleThicknessAccuracy >= BreedFormat::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
-                $muscleThickness = $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
-            } else {
-                $muscleThickness = 0;
-                $muscleThicknessAccuracy = 0;
-            }
-
-            $lambMeatIndexAccuracy = $correctedBreedValues[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY];
-            if($lambMeatIndexAccuracy >= BreedFormat::MIN_LAMB_MEAT_INDEX_ACCURACY) {
-                $lambMeatIndex = $correctedBreedValues[BreedValueLabel::LAMB_MEAT_INDEX];
-            } else {
-                $lambMeatIndex = 0;
-                $lambMeatIndexAccuracy = 0;
-            }
-
-            $results[] = [
-                'year' => $year,
-                'growth' => floatval($growth),
-                'muscle_thickness' => floatval($muscleThickness),
-                'fat' => floatval($fat),
-                'growth_accuracy' => floatval($growthAccuracy),
-                'muscle_thickness_accuracy' => floatval($muscleThicknessAccuracy),
-                'fat_accuracy' => floatval($fatAccuracy),
-                'lamb_meat_index' => floatval($lambMeatIndex),
-                'lamb_meat_index_accuracy' => floatval($lambMeatIndexAccuracy)
-            ];
-        }
+        //TODO include breedValues and breedIndices here
 
         return $results;
     }

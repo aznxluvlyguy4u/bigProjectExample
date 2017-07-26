@@ -14,14 +14,11 @@ use AppBundle\Entity\Address;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFatRepository;
-use AppBundle\Entity\BreedValuesSet;
-use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
-use AppBundle\Entity\GeneticBase;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Location;
@@ -802,35 +799,6 @@ class PedigreeCertificate
         } else {
             return self::MISSING_PEDIGREE_REGISTER;
         }
-    }
-
-
-
-    /**
-     * @param int $animalId
-     * @param int $breedValuesYear
-     * @param GeneticBase $geneticBases
-     * @param ObjectManager $em
-     * @return array
-     */
-    private static function getUnformattedBreedValues($em, $animalId, $breedValuesYear = null, $geneticBases = null)
-    {
-        /** @var BreedValuesSetRepository $breedValuesSetRepository */
-        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
-        return $breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animalId, $breedValuesYear, $geneticBases);
-    }
-
-
-    /**
-     * @param array $breedValuesArray
-     * @return string
-     */
-    private static function getFormattedLambMeatIndexWithAccuracy($breedValuesArray)
-    {
-        return BreedFormat::getJoinedLambMeatIndex(
-            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX],
-            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY]
-        );
     }
 
 
