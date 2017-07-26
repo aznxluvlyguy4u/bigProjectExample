@@ -115,7 +115,8 @@ class VsmIdGroupRepository extends BaseRepository {
         if( (!is_int($primaryVsmId) && !is_string($primaryVsmId))
             || (!is_int($secondaryVsmId) && !is_string($secondaryVsmId)))
         {
-            if (NullChecker::isNull($primaryVsmId) || NullChecker::isNull($secondaryVsmId)) {
+            if (NullChecker::isNull($primaryVsmId) || NullChecker::isNull($secondaryVsmId)
+            || $primaryVsmId === $secondaryVsmId) {
                 return false;
             }
         }
