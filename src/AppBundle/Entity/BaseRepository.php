@@ -7,6 +7,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\SqlUtil;
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -311,5 +312,23 @@ class BaseRepository extends EntityRepository
         } else {
             return $result;
         }
+    }
+
+
+    /**
+     * @param $tableName
+     * @param $animalIds
+     * @return int
+     */
+    protected function deleteTableRecordsByTableNameAndAnimalIdsAndSql($tableName, $animalIds)
+    {
+        $animalIdFilterString = SqlUtil::getFilterStringByIdsArray($animalIds, 'animal_id');
+
+        if($animalIdFilterString != '' && $animalIdFilterString != null) {
+
+            $sql = "DELETE FROM $tableName WHERE ".$animalIdFilterString;
+            return SqlUtil::updateWithCount($this->getConnection(), $sql);
+        }
+        return 0;
     }
 }

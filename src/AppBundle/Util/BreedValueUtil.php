@@ -6,19 +6,11 @@ namespace AppBundle\Util;
 use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
-use AppBundle\Constant\ReportFormat;
-use AppBundle\Constant\ReportLabel;
-use AppBundle\Entity\BreedValueCoefficient;
-use AppBundle\Entity\BreedValueCoefficientRepository;
-use AppBundle\Entity\BreedValuesSet;
-use AppBundle\Entity\BreedValuesSetRepository;
-use AppBundle\Entity\GeneticBase;
+use AppBundle\Entity\LambMeatBreedIndex;
+use AppBundle\Entity\LambMeatBreedIndexRepository;
 use AppBundle\Entity\NormalDistribution;
 use AppBundle\Entity\NormalDistributionRepository;
-use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Enumerator\BreedValueCoefficientType;
-use AppBundle\Report\PedigreeCertificate;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
 class BreedValueUtil
@@ -61,55 +53,6 @@ class BreedValueUtil
             return BreedFormat::formatAccuracyForDisplay($breedValueAccuracy);
         }
         return $breedValueAccuracy;
-    }
-
-
-    /**
-     * @param array $breedValues
-     * @return array
-     */
-    public static function getFormattedBreedValues($breedValues)
-    {
-        $traits = new ArrayCollection();
-        $traits->set(BreedValueLabel::GROWTH_ACCURACY, BreedValueLabel::GROWTH);
-        $traits->set(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, BreedValueLabel::MUSCLE_THICKNESS);
-        $traits->set(BreedValueLabel::FAT_ACCURACY, BreedValueLabel::FAT);
-        //Add new breedValues here
-
-        $decimalAccuracyLabels = new ArrayCollection();
-        $decimalAccuracyLabels->set(BreedValueLabel::GROWTH_ACCURACY, BreedFormat::GROWTH_DECIMAL_ACCURACY);
-        $decimalAccuracyLabels->set(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, BreedFormat::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
-        $decimalAccuracyLabels->set(BreedValueLabel::FAT_ACCURACY, BreedFormat::FAT_DECIMAL_ACCURACY);
-        //Add new decimal_accuracies here
-
-        $factors = new ArrayCollection();
-        $factors->set(BreedValueLabel::GROWTH_ACCURACY, ReportFormat::GROWTH_DISPLAY_FACTOR);
-        $factors->set(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, ReportFormat::MUSCLE_THICKNESS_DISPLAY_FACTOR);
-        $factors->set(BreedValueLabel::FAT_ACCURACY, ReportFormat::FAT_DISPLAY_FACTOR);
-        
-        $results = array();
-
-        $accuracyLabels = $traits->getKeys();
-        foreach ($accuracyLabels as $accuracyLabel) {
-            $traitLabel = $traits->get($accuracyLabel);
-            if($accuracyLabel == null) {
-                $displayedString = BreedFormat::EMPTY_BREED_VALUE;
-            } else {
-                $rawBreedValue = Utils::getNullCheckedArrayValue($traitLabel, $breedValues);
-                if($rawBreedValue == null || $breedValues[$accuracyLabel] < BreedFormat::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
-                    $displayedString = BreedFormat::EMPTY_BREED_VALUE;
-                } else {
-                    $breedValue = round($rawBreedValue*$factors->get($accuracyLabel), $decimalAccuracyLabels->get($accuracyLabel));
-                    $accuracy = BreedFormat::formatAccuracyForDisplay($breedValues[$accuracyLabel]);
-                    $displayedString = NumberUtil::getPlusSignIfNumberIsPositive($breedValue).$breedValue.'/'.$accuracy;
-                }
-            }
-            $results[$traitLabel] = $displayedString;
-        }
-
-        $traits = null; $decimalAccuracyLabels = null; $factors = null;
-        
-        return $results;
     }
 
 
@@ -186,135 +129,6 @@ class BreedValueUtil
 
 
     /**
-     * @param ObjectManager $em
-     * @param string $generationDate
-     * @param CommandUtil $cmdUtil
-     */
-    public static function generateAndPersistAllLambMeatIndicesAndTheirAccuracies(ObjectManager $em, $generationDate, $cmdUtil = null)
-    {
-        $year = TimeUtil::getYearFromDateTimeString($generationDate);
-        /** @var GeneticBase $geneticBase */
-        $geneticBase = $em->getRepository(GeneticBase::class)->findOneBy(['year' => $year]);
-        
-        /** @var BreedValueCoefficientRepository $breedValueCoefficientRepository */
-        $breedValueCoefficientRepository = $em->getRepository(BreedValueCoefficient::class);
-        
-        $lambMeatIndexCoefficients = $breedValueCoefficientRepository->getLambMeatIndexCoefficients();
-        $lambMeatIndexAccuracyCoefficients = $breedValueCoefficientRepository->getLambMeatIndexAccuracyCoefficients();
-
-        $sql = "SELECT * FROM breed_values_set WHERE generation_date = '".$generationDate."'";
-        $results = $em->getConnection()->query($sql)->fetchAll();
-        
-        if($cmdUtil != null ) { $cmdUtil->setStartTimeAndPrintIt(count($results), 1 , 'Generating lambMeatIndexValues'); }
-
-        $countNewValues = 0;
-        foreach ($results as $result) {
-            $id = $result['id'];
-            $muscleThickness = floatval($result['muscle_thickness']);
-            $muscleThicknessReliability = floatval($result['muscle_thickness_reliability']);
-            $growth = floatval($result['growth']);
-            $growthReliability = floatval($result['growth_reliability']);
-            $fat = floatval($result['fat']);
-            $fatReliability = floatval($result['fat_reliability']);
-//            $lambMeatIndex = floatval($result['lamb_meat_index']);
-//            $lambMeatIndexAccuracy = floatval($result['lamb_meat_index_accuracy']);
-//            $lambMeatIndex = floatval($result['lamb_meat_index_ranking']);
-
-            if(!self::areLamMeatIndexValuesProcessedYet($result)) {
-
-                $correctedBreedValues =
-                    [
-                        BreedValueLabel::MUSCLE_THICKNESS => $muscleThickness - $geneticBase->getMuscleThickness(),
-                        BreedValueLabel::MUSCLE_THICKNESS_RELIABILITY => $muscleThicknessReliability,
-                        BreedValueLabel::GROWTH => $growth - $geneticBase->getGrowth(),
-                        BreedValueLabel::GROWTH_RELIABILITY => $growthReliability,
-                        BreedValueLabel::FAT => $fat - $geneticBase->getFat(),
-                        BreedValueLabel::FAT_RELIABILITY => $fatReliability,
-                    ]
-                ;
-
-                $lambMeatIndex = self::getLambMeatIndex($correctedBreedValues, $lambMeatIndexCoefficients);
-                if($lambMeatIndex == null) { $lambMeatIndex = 0.0; }
-
-                $lambMeatIndexAccuracy = self::getLambMeatIndexAccuracy($correctedBreedValues, $lambMeatIndexAccuracyCoefficients);
-
-                if(NullChecker::floatIsNotZero($lambMeatIndexAccuracy)) {
-                    $sql = "UPDATE breed_values_set SET lamb_meat_index = ".$lambMeatIndex.", lamb_meat_index_accuracy = ".$lambMeatIndexAccuracy." WHERE id = ".$id;
-                    $em->getConnection()->exec($sql);
-                    $countNewValues++;
-                }
-            }
-            
-            if($cmdUtil != null ) { $cmdUtil->advanceProgressBar(1, 'Generating lambMeatIndexValues | records with new values: '.$countNewValues); }
-        }
-        if($cmdUtil != null ) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
-    }
-
-
-    /**
-     * @param ObjectManager $em
-     * @param string $generationDate
-     * @param CommandUtil $cmdUtil
-     * @param boolean $isIncludeOnlyAliveAnimals
-     */
-    public static function generateLamMeatIndexRanks(ObjectManager $em, $generationDate, $cmdUtil = null, $isIncludeOnlyAliveAnimals = true)
-    {
-        /** @var BreedValuesSetRepository $breedValuesSetRepository */
-        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
-        $breedValuesSetRepository->clearLambMeatIndexRanking();
-
-        if($isIncludeOnlyAliveAnimals) {
-            $sql = "SELECT b.* FROM breed_values_set b
-                    INNER JOIN animal a ON a.id = b.animal_id
-                    WHERE a.is_alive = TRUE
-                      AND b.lamb_meat_index_accuracy > 0
-                      AND b.generation_date = '".$generationDate."'
-                    ORDER BY b.lamb_meat_index DESC";
-        } else {
-            $sql = "SELECT * FROM breed_values_set WHERE lamb_meat_index_accuracy > 0 AND generation_date = '".$generationDate."' ORDER BY lamb_meat_index DESC";
-        }
-
-        $results = $em->getConnection()->query($sql)->fetchAll();
-
-        if($cmdUtil != null ) { $cmdUtil->setStartTimeAndPrintIt(count($results), 1 , 'Rank lambMeatIndexValues'); }
-
-        $rank = 1;
-        foreach ($results as $result) {
-            $sql = "UPDATE breed_values_set SET lamb_meat_index_ranking = ".$rank." WHERE id = ".$result['id'];
-            $em->getConnection()->exec($sql);
-
-            $rank++;
-            if($cmdUtil != null ) { $cmdUtil->advanceProgressBar(1); }
-        }
-        if($cmdUtil != null ) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
-    }
-
-
-
-    /**
-     * @param array $sqlResult
-     * @return bool
-     */
-    private static function areLamMeatIndexValuesProcessedYet($sqlResult)
-    {
-        $muscleThicknessReliability = $sqlResult['muscle_thickness_reliability'];
-        $growthReliability = $sqlResult['growth_reliability'];
-        $fatReliability = $sqlResult['fat_reliability'];
-        $lambMeatIndexAccuracy = $sqlResult['lamb_meat_index_accuracy'];
-
-        if(NumberUtil::isFloatZero($muscleThicknessReliability) ||
-           NumberUtil::isFloatZero($growthReliability) ||
-           NumberUtil::isFloatZero($fatReliability)) {
-
-            return true;
-
-        } else {
-            return NullChecker::floatIsNotZero($lambMeatIndexAccuracy);
-        }
-    }
-
-
-    /**
      * @param float $muscleThicknessAccuracy
      * @param float $growthAccuracy
      * @param float $fatAccuracy
@@ -377,15 +191,15 @@ class BreedValueUtil
         /** @var NormalDistributionRepository $normalDistributionRepository */
         $normalDistributionRepository = $em->getRepository(NormalDistribution::class);
 
-        /** @var BreedValuesSetRepository $breedValuesSetRepository */
-        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
+        /** @var LambMeatBreedIndexRepository $lambMeatBreedIndexRepository */
+        $lambMeatBreedIndexRepository = $em->getRepository(LambMeatBreedIndex::class);
 
         $year = TimeUtil::getYearFromDateTimeString($generationDate);
         $type = BreedValueCoefficientType::LAMB_MEAT_INDEX;
 
         foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
             
-            $lambMeatIndexValues = $breedValuesSetRepository->getLambMeatIndexValues($generationDate, $isIncludingOnlyAliveAnimals);
+            $lambMeatIndexValues = $lambMeatBreedIndexRepository->getLambMeatIndexValues($generationDate, $isIncludingOnlyAliveAnimals); //TODO function still needs to be implemented
 
             $mean = array_sum($lambMeatIndexValues) / count($lambMeatIndexValues);
             $standardDeviation = MathUtil::standardDeviation($lambMeatIndexValues, $mean);
