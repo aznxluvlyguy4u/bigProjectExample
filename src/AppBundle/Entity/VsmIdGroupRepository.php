@@ -120,7 +120,7 @@ class VsmIdGroupRepository extends BaseRepository {
             }
         }
         
-        $sql = "SELECT id, primary_vsm_id FROM vsm_id_group WHERE id = '".$secondaryVsmId."'";
+        $sql = "SELECT id, primary_vsm_id FROM vsm_id_group WHERE secondary_vsm_id = '".$secondaryVsmId."'";
         $result = $conn->query($sql)->fetch();
 
         if($result != null) {
