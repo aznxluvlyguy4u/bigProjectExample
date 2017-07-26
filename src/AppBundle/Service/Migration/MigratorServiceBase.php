@@ -29,7 +29,7 @@ abstract class MigratorServiceBase
 {
     const DEFAULT_OPTION = 0;
     const DEVELOPER_PRIMARY_KEY = 2151; //Used as the person that creates and edits imported data
-    const BATCH_SIZE = 10000;
+    const BATCH_SIZE = 5000;
     const IMPORT_SUB_FOLDER = '';
     const BLANK_DATE_FILLER = '1899-01-01';
 
