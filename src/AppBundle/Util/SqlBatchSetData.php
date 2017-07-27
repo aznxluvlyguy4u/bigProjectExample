@@ -11,6 +11,9 @@ use Doctrine\DBAL\Connection;
  */
 class SqlBatchSetData
 {
+    const LABELS = 'skipped|already||inBatch|done: ';
+    const LABELS_MINIMAL = 's|a||ib|done: ';
+
     /** @var String */
     private $key;
 
@@ -191,7 +194,7 @@ class SqlBatchSetData
      */
     public function getProgressBarMessage()
     {
-        return $this->key.' skipped|already||inBatch|done:  '
+        return $this->key.' '.self::LABELS.' '
             .$this->recordsSkipped.'|'.$this->recordsAlreadyDone.'||'.$this->sqlBatchCount.'|'.$this->recordsDoneCount;
     }
 
