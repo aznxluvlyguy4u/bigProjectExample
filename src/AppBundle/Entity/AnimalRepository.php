@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
@@ -740,37 +741,59 @@ class AnimalRepository extends BaseRepository
     return $this->executeSqlQuery($sql);
   }
 
-  /**
-   * @return ArrayCollection
-   */
-  public function getAnimalPrimaryKeysByVsmId()
-  {
-    $sql = "SELECT id, name FROM animal";
-    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
-    $array = new ArrayCollection();
-    foreach ($results as $result) {
-      $array->set($result['name'], intval($result['id']));
+    /**
+     * @param string $gender
+     * @return string
+     */
+    private function getGenderJoinFilter($gender)
+    {
+        switch ($gender) {
+            case GenderType::FEMALE: return ' INNER JOIN ewe ON ewe.id = a.id ';
+            case GenderType::MALE: return ' INNER JOIN ram ON ram.id = a.id ';
+            case GenderType::NEUTER: return ' INNER JOIN neuter ON neuter.id = a.id ';
+            default: return '';
+        }
     }
 
-    return $array;
-  }
 
+    /**
+     * @param string $gender
+     * @return ArrayCollection
+     */
+    public function getAnimalPrimaryKeysByVsmId($gender = null)
+    {
+        $sql = "SELECT a.id, a.name FROM animal a 
+                  ".$this->getGenderJoinFilter($gender)."
+                WHERE a.name IS NOT NULL";
+        $results = $this->getConnection()->query($sql)->fetchAll();
 
-  /**
-   * @return array
-   */
-  public function getAnimalPrimaryKeysByVsmIdArray()
-  {
-    $sql = "SELECT name as vsm_id, id FROM animal WHERE name IS NOT NULL";
-    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        $array = new ArrayCollection();
+        foreach ($results as $result) {
+            $array->set($result['name'], intval($result['id']));
+        }
 
-    $searchArray = array();
-    foreach ($results as $result) {
-      $searchArray[$result['vsm_id']] = $result['id'];
+        return $array;
     }
-    return $searchArray;
-  }
+
+
+    /**
+     * @param string $gender
+     * @return array
+     */
+    public function getAnimalPrimaryKeysByVsmIdArray($gender = null)
+    {
+        $sql = "SELECT a.name as vsm_id, a.id FROM animal a
+                  ".$this->getGenderJoinFilter($gender)."
+                WHERE a.name IS NOT NULL";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+
+        $searchArray = array();
+        foreach ($results as $result) {
+            $searchArray[$result['vsm_id']] = $result['id'];
+        }
+        return $searchArray;
+    }
 
 
   /**
