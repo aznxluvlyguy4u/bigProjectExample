@@ -32,6 +32,7 @@ abstract class MigratorServiceBase
     const BATCH_SIZE = 5000;
     const IMPORT_SUB_FOLDER = '';
     const BLANK_DATE_FILLER = '1899-01-01';
+    const DOUBLE_UNDERSCORE = '__';
 
     /** @var EntityManagerInterface|ObjectManager */
     protected $em;
