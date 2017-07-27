@@ -103,6 +103,7 @@ services:
           rootDir: %kernel.root_dir%
           animalTableImporter: '@app.migrator.importer.animaltable'
           animalTableMigrator: '@app.migrator.animaltable'
+          litterMigrator: '@app.migrator.litters'
           tagReplaceMigrator: '@app.migrator.tagreplace'
           wormResistanceMigrator: '@app.migrator.wormresistance'
 

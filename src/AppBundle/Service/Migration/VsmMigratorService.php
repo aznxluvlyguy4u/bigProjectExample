@@ -14,6 +14,8 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     private $animalTableImporter;
     /** @var AnimalTableMigrator */
     private $animalTableMigrator;
+    /** @var LitterMigrator */
+    private $litterMigrator;
     /** @var TagReplaceMigrator */
     private $tagReplaceMigrator;
     /** @var WormResistanceMigrator */
@@ -23,6 +25,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     public function __construct(ObjectManager $em, $rootDir,
                                 AnimalTableImporter $animalTableImporter,
                                 AnimalTableMigrator $animalTableMigrator,
+                                LitterMigrator $litterMigrator,
                                 TagReplaceMigrator $tagReplaceMigrator,
                                 WormResistanceMigrator $wormResistanceMigrator
     )
@@ -31,6 +34,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
 
         $this->animalTableImporter = $animalTableImporter;
         $this->animalTableMigrator = $animalTableMigrator;
+        $this->litterMigrator = $litterMigrator;
         $this->tagReplaceMigrator = $tagReplaceMigrator;
         $this->wormResistanceMigrator = $wormResistanceMigrator;
     }
@@ -52,7 +56,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             '----------------------------------------------------', "\n",
             '10: Migrate TagReplaces (WARNING make sure no other declareBases are inserted during this)', "\n",
             '11: Fix duplicate animals by ulnNumber, using tagReplaces', "\n",
-//            '4: Migrate AnimalTable data', "\n",
+            '12: Migrate Litter data', "\n",
 //            '13: Migrate Performance Measurements', "\n",
             '----------------------------------------------------', "\n",
             '20: Migrate WormResistance records', "\n",
@@ -106,8 +110,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
 //                break;
             case 10: $this->tagReplaceMigrator->run($this->cmdUtil); break;
             case 11: $this->animalTableMigrator->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil); break;
-//            case 12:
-//                break;
+            case 12: $this->litterMigrator->run($this->cmdUtil); break;
 //            case 13:
 //                break;
 //            case 14:
