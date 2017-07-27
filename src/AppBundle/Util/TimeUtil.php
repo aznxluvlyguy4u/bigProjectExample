@@ -240,13 +240,18 @@ class TimeUtil
 
     /**
      * @param string $dateString
+     * @param bool $includeTime
      * @return null|string
      */
-    public static function getTimeStampForSqlFromAnyDateString($dateString)
+    public static function getTimeStampForSqlFromAnyDateString($dateString, $includeTime = true)
     {
-        if(is_string($dateString)) {
-            if(DateUtil::isFormatYYYYMMDD($dateString) || DateUtil::isFormatDDMMYYYY($dateString)) {
-                return TimeUtil::getTimeStampForSql(new \DateTime($dateString));
+        if (is_string($dateString)) {
+            if (DateUtil::isFormatYYYYMMDD($dateString) || DateUtil::isFormatDDMMYYYY($dateString)) {
+                if ($includeTime) {
+                    return TimeUtil::getTimeStampForSql(new \DateTime($dateString));
+                } else {
+                    return TimeUtil::getTimeStampForSql(new \DateTime($dateString), 'Y-m-d');
+                }
             }
         }
         return null;
