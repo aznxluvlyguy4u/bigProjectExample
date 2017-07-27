@@ -496,4 +496,12 @@ class SqlUtil
     }
 
 
+    /**
+     * @param string $dateString
+     * @return string
+     */
+    public static function castAsTimeStamp($dateString)
+    {
+        return "CAST('".$dateString."' AS TIMESTAMP)";
+    }
 }
