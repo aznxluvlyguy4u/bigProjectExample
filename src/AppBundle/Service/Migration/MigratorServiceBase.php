@@ -135,8 +135,7 @@ abstract class MigratorServiceBase
      */
     protected function writeLn($line)
     {
-        $line = is_string($line) ? TimeUtil::getTimeStampNow() . ': ' .$line : $line;
-        $this->cmdUtil->writeln($line);
+        $this->cmdUtil->writelnWithTimestamp($line);
     }
 
 

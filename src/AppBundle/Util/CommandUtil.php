@@ -247,6 +247,16 @@ class CommandUtil
 
 
     /**
+     * @param $line
+     */
+    public function writelnWithTimestamp($line)
+    {
+        $line = is_string($line) ? TimeUtil::getTimeStampNow() . ': ' .$line : $line;
+        $this->writeln($line);
+    }
+
+
+    /**
      * @param $input
      * @param int $indentLevel
      */
