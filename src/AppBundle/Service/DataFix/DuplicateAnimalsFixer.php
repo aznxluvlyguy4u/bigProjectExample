@@ -6,8 +6,6 @@ namespace AppBundle\Service\DataFix;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Entity\VsmIdGroupRepository;
@@ -17,12 +15,10 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
-use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\DBAL\Connection;
 
 /**
  * The old legacy version used entities and did not into account some nuances.
@@ -33,30 +29,14 @@ use Doctrine\DBAL\Connection;
  * @ORM\Entity(repositoryClass="AppBundle\Migration")
  * @package AppBundle\Migration
  */
-class DuplicateAnimalsFixer
+class DuplicateAnimalsFixer extends DuplicateFixerBase
 {
-    const SEARCH_KEY = 'search_key';
     const ULN_DATE_OF_BIRTH_MOTHER = 'uln_date_of_birth_mother';
     const ULN_DATE_OF_BIRTH_FATHER = 'uln_date_of_birth_father';
-    const VARIABLE_TYPE = 'variable_type';
-    const TABLE_NAME = 'table_name';
     const ULN = 'uln';
-    const BATCH_SIZE = 1000;
 
-    /** @var ObjectManager $em */
-    private $em;
-    /** @var AnimalRepository $animalRepository */
-    private $animalRepository;
-    /** @var CommandUtil */
-    private $cmdUtil;
     /** @var GenderChanger */
     private $genderChanger;
-    /** @var Connection */
-    private $conn;
-
-    /** @var array */
-    private $tableNames;
-
 
     /**
      * DuplicateAnimalsFixer constructor.
@@ -64,37 +44,8 @@ class DuplicateAnimalsFixer
      */
     public function __construct(ObjectManager $em)
     {
-        $this->em = $em;
-        $this->conn = $em->getConnection();
-
-        /** @var GenderChanger genderChanger */
+        parent::__construct($em);
         $this->genderChanger = new GenderChanger($this->em);
-
-        /** @var AnimalRepository $animalRepository */
-        $this->animalRepository = $this->em->getRepository(Animal::class);
-    }
-
-
-    /**
-     * @param CommandUtil $cmdUtil
-     */
-    private function setCmdUtil(CommandUtil $cmdUtil)
-    {
-        if ($this->cmdUtil === null) {
-            $this->cmdUtil = $cmdUtil;   
-        }
-    }
-
-
-    /**
-     * @return array
-     */
-    private function getTableNames()
-    {
-        if ($this->tableNames === null || $this->tableNames === []) {
-           $this->tableNames = DoctrineUtil::getTableNames($this->conn);
-        }
-        return $this->tableNames;
     }
 
 
@@ -533,6 +484,10 @@ class DuplicateAnimalsFixer
         if((!is_int($primaryAnimalId) && !ctype_digit($primaryAnimalId)) ||
             (!is_int($secondaryAnimalId) && !ctype_digit($secondaryAnimalId))) { return false; }
 
+
+        //Delete records where in tables where only unique animalIds are allowed
+        $this->deleteRecords($secondaryAnimalId,'animal_id',['animal_cache', 'result_table_breed_grades']);
+
         //Check in which tables have the secondaryAnimalId
         $tableNamesByVariableType = [
             [ self::TABLE_NAME => 'breed_index',            self::VARIABLE_TYPE => 'animal_id' ],
@@ -563,64 +518,19 @@ class DuplicateAnimalsFixer
             [ self::TABLE_NAME => 'predicate',              self::VARIABLE_TYPE => 'animal_id' ],
         ];
 
-        $sql = "DELETE FROM animal_cache WHERE animal_id = ".$secondaryAnimalId;
-        $this->conn->exec($sql);
+        $mergeResults = $this->mergeColumnValuesInTables($primaryAnimalId, $secondaryAnimalId, $tableNamesByVariableType);
 
-        $sql = "DELETE FROM result_table_breed_grades WHERE animal_id = ".$secondaryAnimalId;
-        $this->conn->exec($sql);
+        if (is_array($mergeResults)) {
 
-        $sql = '';
-        $counter = 0;
-        foreach ($tableNamesByVariableType as $tableNameByVariableType) {
-
-            $counter++;
-            $tableName = $tableNameByVariableType[self::TABLE_NAME];
-            $variableType = $tableNameByVariableType[self::VARIABLE_TYPE];
-
-            if(!in_array($tableName, $this->getTableNames(), true)) {
-                continue;
+            if($mergeResults[self::ARE_MEASUREMENTS_UPDATED]) {
+                /** @var MeasurementRepository $measurementsRepository */
+                $measurementsRepository = $this->em->getRepository(Measurement::class);
+                $measurementsRepository->setAnimalIdAndDateValues();
             }
-
-            $sql = $sql."SELECT ".$counter." as count, '".$tableName."' as ".self::TABLE_NAME.", '".$variableType.
-                "' as ".self::VARIABLE_TYPE." FROM ".$tableName." WHERE ".$variableType." = ".$secondaryAnimalId." UNION ";
-        }
-        $sql = rtrim($sql, 'UNION ');
-        $results = $this->conn->query($sql)->fetchAll();
-
-        $secondaryAnimalIsInAnyTable = count($results) != 0;
-
-        $anyMeasurementsUpdated = false;
-
-        $sqlUpdateQueries = [];
-        if($secondaryAnimalIsInAnyTable) {
-            foreach ($results as $result) {
-                $tableName = $result[self::TABLE_NAME];
-                $variableType = $result[self::VARIABLE_TYPE];
-
-                $uniqueUpdateKey = $tableName.'-'.$variableType;
-                if(!array_key_exists($uniqueUpdateKey, $sqlUpdateQueries)) {
-                    $sql = "UPDATE ".$tableName." SET ".$variableType." = ".$primaryAnimalId." WHERE ".$variableType." = ".$secondaryAnimalId;
-                    $sqlUpdateQueries[$uniqueUpdateKey] = $sql;
-                }
-
-                if($tableName == 'exterior' || $tableName == 'body_fat' || $tableName == 'weight'
-                    || $tableName == 'muscle_thickness' || $tableName == 'tail_length') {
-                    $anyMeasurementsUpdated = true;
-                }
-            }
+            return $mergeResults[self::IS_MERGE_SUCCESSFUL];
         }
 
-        //Execute updates
-        foreach ($sqlUpdateQueries as $sqlUpdateQuery) {
-            $this->conn->exec($sqlUpdateQuery);
-        }
-
-        if($anyMeasurementsUpdated) {
-            /** @var MeasurementRepository $measurementsRepository */
-            $measurementsRepository = $this->em->getRepository(Measurement::class);
-            $measurementsRepository->setAnimalIdAndDateValues();
-        }
-        return true;
+        return false;
     }
 
 

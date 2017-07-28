@@ -91,9 +91,19 @@ services:
           logger: '@logger'
 
 
-    app.datafix.animals.duplicate:
-        class: AppBundle\Service\DataFix\DuplicateAnimalsFixer
+    app.datafix.base.duplicate:
+        abstract: true
         arguments:
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
+          - '@doctrine.orm.entity_manager'
+
+    app.datafix.animals.duplicate:
+        parent: app.datafix.base.duplicate
+        class: AppBundle\Service\DataFix\DuplicateAnimalsFixer
+
+    app.datafix.litter.duplicate:
+        parent: app.datafix.base.duplicate
+        class: AppBundle\Service\DataFix\DuplicateLitterFixer
 
 
     app.migrator.vsm:
