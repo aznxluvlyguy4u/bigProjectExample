@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service\Migration;
 
+use AppBundle\Service\DataFix\DuplicateLitterFixer;
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -21,13 +22,16 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     /** @var WormResistanceMigrator */
     private $wormResistanceMigrator;
 
+    /** @var DuplicateLitterFixer */
+    private $duplicateLitterFixer;
 
     public function __construct(ObjectManager $em, $rootDir,
                                 AnimalTableImporter $animalTableImporter,
                                 AnimalTableMigrator $animalTableMigrator,
                                 LitterMigrator $litterMigrator,
                                 TagReplaceMigrator $tagReplaceMigrator,
-                                WormResistanceMigrator $wormResistanceMigrator
+                                WormResistanceMigrator $wormResistanceMigrator,
+                                DuplicateLitterFixer $duplicateLitterFixer
     )
     {
         parent::__construct($em, $rootDir);
@@ -37,6 +41,8 @@ class VsmMigratorService extends Migrator2017JunServiceBase
         $this->litterMigrator = $litterMigrator;
         $this->tagReplaceMigrator = $tagReplaceMigrator;
         $this->wormResistanceMigrator = $wormResistanceMigrator;
+
+        $this->duplicateLitterFixer = $duplicateLitterFixer;
     }
 
 
@@ -56,8 +62,9 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             '----------------------------------------------------', "\n",
             '10: Migrate TagReplaces (WARNING make sure no other declareBases are inserted during this)', "\n",
             '11: Fix duplicate animals by ulnNumber, using tagReplaces', "\n",
-            '12: Migrate Litter data', "\n",
-//            '13: Migrate Performance Measurements', "\n",
+            '----------------------------------------------------', "\n",
+            '12: Merge duplicate imported litters', "\n",
+            '13: Migrate Litter data', "\n",
             '----------------------------------------------------', "\n",
             '20: Migrate WormResistance records', "\n",
 //            '16: Import animal_migration_table from exported csv', "\n",
@@ -110,7 +117,8 @@ class VsmMigratorService extends Migrator2017JunServiceBase
 //                break;
             case 10: $this->tagReplaceMigrator->run($this->cmdUtil); break;
             case 11: $this->animalTableMigrator->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil); break;
-            case 12: $this->litterMigrator->run($this->cmdUtil); break;
+            case 12: $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil); break;
+            case 13: $this->litterMigrator->run($this->cmdUtil); break;
 //            case 13:
 //                break;
 //            case 14:

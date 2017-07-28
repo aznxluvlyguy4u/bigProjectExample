@@ -53,7 +53,7 @@ class DuplicateFixerBase
      */
     public function setCmdUtil(CommandUtil $cmdUtil)
     {
-        if ($this->cmdUtil === null) {
+        if ($this->cmdUtil === null && $cmdUtil !== null) {
             $this->cmdUtil = $cmdUtil;
         }
     }
@@ -158,5 +158,38 @@ class DuplicateFixerBase
             self::IS_MERGE_SUCCESSFUL => true,
             self::ARE_MEASUREMENTS_UPDATED => $anyMeasurementsUpdated,
         ];
+    }
+
+
+    /**
+     * @param string|array $line
+     */
+    protected function writeLn($line)
+    {
+        if($this->cmdUtil !== null) { $this->cmdUtil->writelnWithTimestamp($line); }
+    }
+
+
+    /**
+     * @param int $count
+     */
+    protected function startProgressBar($count)
+    {
+        if($this->cmdUtil !== null) { $this->cmdUtil->setStartTimeAndPrintIt($count, 1); }
+    }
+
+
+    /**
+     * @param string $message
+     */
+    protected function advanceProgressBar($message)
+    {
+        if($this->cmdUtil !== null) { $this->cmdUtil->advanceProgressBar( 1, $message); }
+    }
+
+
+    protected function endProgressBar()
+    {
+        if($this->cmdUtil !== null) { $this->cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
 }

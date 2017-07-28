@@ -116,6 +116,7 @@ services:
           litterMigrator: '@app.migrator.litters'
           tagReplaceMigrator: '@app.migrator.tagreplace'
           wormResistanceMigrator: '@app.migrator.wormresistance'
+          duplicateLitterFixer: '@app.datafix.litter.duplicate'
 
     app.migrator.base:
         abstract: true
