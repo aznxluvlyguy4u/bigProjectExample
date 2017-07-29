@@ -229,6 +229,7 @@ class JsonInputConstant
     const EARLIEST_LITTER_DATE = 'earliest_litter_date';
     const LATEST_LITTER_DATE = 'latest_litter_date';
     const LITTER_DATE = 'litter_date';
+    const LITTER_ID = 'litter_id';
     const PRODUCTION = 'production';
     const GAVE_BIRTH_AS_ONE_YEAR_OLD = 'gave_birth_as_one_year_old';
 
