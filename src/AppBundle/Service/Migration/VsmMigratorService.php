@@ -63,7 +63,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             '10: Migrate TagReplaces (WARNING make sure no other declareBases are inserted during this)', "\n",
             '11: Fix duplicate animals by ulnNumber, using tagReplaces', "\n",
             '----------------------------------------------------', "\n",
-            '12: Merge duplicate imported litters', "\n",
+            '12: Merge duplicate imported litters and litters with only one stillborn', "\n",
             '13: Migrate Litter data', "\n",
             '----------------------------------------------------', "\n",
             '20: Migrate WormResistance records', "\n",
@@ -117,7 +117,8 @@ class VsmMigratorService extends Migrator2017JunServiceBase
 //                break;
             case 10: $this->tagReplaceMigrator->run($this->cmdUtil); break;
             case 11: $this->animalTableMigrator->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil); break;
-            case 12: $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil); break;
+            case 12: $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil);
+                     $this->duplicateLitterFixer->mergeDuplicateLittersWithOnlySingleStillborn($this->cmdUtil); break;
             case 13: $this->litterMigrator->run($this->cmdUtil); break;
 //            case 13:
 //                break;

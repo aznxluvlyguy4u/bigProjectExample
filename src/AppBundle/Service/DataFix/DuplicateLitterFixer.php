@@ -5,8 +5,9 @@ namespace AppBundle\Service\DataFix;
 
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
-use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\LitterUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -14,9 +15,13 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class DuplicateLitterFixer extends DuplicateFixerBase
 {
+    const MATCH_LITTERS_WITH_MATES_BATCH_LIMIT = 10;
 
     /** @var LitterRepository $litterRepository */
     private $litterRepository;
+
+    /** @var boolean */
+    private $litterIdsForWhichToMatchMates;
 
 
     /**
@@ -94,6 +99,7 @@ class DuplicateLitterFixer extends DuplicateFixerBase
     private function mergeEmptyLitterValues(Litter $primaryLitter, Litter $secondaryLitter)
     {
         $areAnyValuesUpdated = false;
+        $areAnySecondaryValuesUpdated = false;
 
         if ($primaryLitter->getActionBy() === null && $secondaryLitter->getActionBy() !== null) {
            $primaryLitter->setActionBy($secondaryLitter->getActionBy()); $areAnyValuesUpdated = true;
@@ -118,7 +124,10 @@ class DuplicateLitterFixer extends DuplicateFixerBase
         }
 
         if ($primaryLitter->getMate() === null && $secondaryLitter->getMate() !== null) {
-            $primaryLitter->setMate($secondaryLitter->getMate()); $areAnyValuesUpdated = true;
+            //Mates must be set after deleting the secondary litters, so the mate cannot be set on the primary litter here.
+            $this->litterIdsForWhichToMatchMates[] = $primaryLitter->getId();
+            $secondaryLitter->setMate(null);
+            $areAnySecondaryValuesUpdated = true;
         }
 
         if ($primaryLitter->getLitterOrdinal() === null && $secondaryLitter->getLitterOrdinal() !== null) {
@@ -168,11 +177,69 @@ class DuplicateLitterFixer extends DuplicateFixerBase
 
         if ($areAnyValuesUpdated) {
             $this->em->persist($primaryLitter);
-            //Flush only at the end of the successful merge.
+        }
+
+        if ($areAnySecondaryValuesUpdated) {
+            $this->em->persist($secondaryLitter);
+        }
+
+        //Flush only at the end of the successful merge.
+
+        return true;
+    }
+
+
+    /**
+     * @param array $results
+     * @return bool
+     */
+    private function processSelectResults(array $results)
+    {
+        if (count($results) === 0) {
+            $this->writeLn('No duplicates found!');
+            return true;
         }
 
 
-        return true;
+        $successFulMergeCount = 0;
+        $failedMergesCount = 0;
+        $this->litterIdsForWhichToMatchMates = [];
+
+        $this->startProgressBar(count($results));
+        foreach ($results as $result) {
+            $primaryLitterId = $result['primary_litter_id'];
+            $secondaryLitterId = $result['secondary_litter_id'];
+
+            $isMergeSuccessful = $this->mergePairsById($primaryLitterId, $secondaryLitterId);
+            if ($isMergeSuccessful) {
+
+                $recordToDeleteId = ArrayUtil::get('record_to_delete_id', $result);
+                $columnNameFromWhichToDelete = ArrayUtil::get('column_from_which_to_delete' , $result);
+                $tableFromWhichToDelete = ArrayUtil::get('table_from_which_to_delete', $result);
+
+                if ($recordToDeleteId !== null && is_string($tableFromWhichToDelete) && is_string($columnNameFromWhichToDelete)) {
+                   $this->deleteRecords($recordToDeleteId, $columnNameFromWhichToDelete, [$tableFromWhichToDelete]);
+                }
+
+                $successFulMergeCount++;
+            } else {
+                $failedMergesCount++;
+            }
+
+            $this->advanceProgressBar('Merges failed|done: '.$failedMergesCount.'|'.$successFulMergeCount);
+        }
+
+        if (count($this->litterIdsForWhichToMatchMates) <= self::MATCH_LITTERS_WITH_MATES_BATCH_LIMIT) {
+            foreach ($this->litterIdsForWhichToMatchMates as $primaryLitterId) {
+                LitterUtil::matchMatchingMates($this->conn,false, $primaryLitterId);
+            }
+        } else {
+            LitterUtil::matchMatchingMates($this->conn,false);
+        }
+
+        $this->endProgressBar();
+
+        return $failedMergesCount === 0;
     }
 
 
@@ -211,31 +278,55 @@ class DuplicateLitterFixer extends DuplicateFixerBase
                       INNER JOIN declare_nsfo_base bs ON bs.id = s.id
                     WHERE g.rank = 1 AND bm.request_state = 'IMPORTED' AND bs.request_state = 'IMPORTED' AND s.id <> main.id";
         $results = $this->conn->query($sql)->fetchAll();
-        if (count($results) === 0) {
-            $this->writeLn('No duplicates found!');
-            return true;
-        }
+
+        return $this->processSelectResults($results);
+    }
 
 
-        $successFulMergeCount = 0;
-        $failedMergesCount = 0;
+    /**
+     * @param CommandUtil|null $cmdUtil
+     * @return bool
+     */
+    public function mergeDuplicateLittersWithOnlySingleStillborn(CommandUtil $cmdUtil = null)
+    {
+        $this->setCmdUtil($cmdUtil);
 
-        $this->startProgressBar(count($results));
-        foreach ($results as $result) {
-            $primaryLitterId = $result['primary_litter_id'];
-            $secondaryLitterId = $result['secondary_litter_id'];
+        $this->writeLn('Merging duplicate litters with only single stillborns ...');
 
-            $isMergeSuccessful = $this->mergePairsById($primaryLitterId, $secondaryLitterId);
-            if ($isMergeSuccessful) {
-                $successFulMergeCount++;
-            } else {
-                $failedMergesCount++;
-            }
+        $sql = "SELECT main.id as primary_litter_id, s.id as secondary_litter_id,
+                       sbs.id as record_to_delete_id,
+                       'stillborn' as table_from_which_to_delete,
+                       'id' as column_from_which_to_delete --sbs.*, sbm.*
+                FROM litter main
+                  INNER JOIN (
+                      SELECT
+                        DENSE_RANK() OVER (PARTITION BY l.animal_mother_id, l.litter_date, l.stillborn_count, l.born_alive_count
+                          ORDER BY l.id ASC) AS rank,
+                        l.id, g.max_weight
+                      --l.litter_date, l.animal_mother_id, l.stillborn_count, l.born_alive_count, l.litter_ordinal, l.birth_interval
+                      FROM litter l
+                        INNER JOIN (
+                                     SELECT litter_date, animal_mother_id, MAX(sb.weight) as max_weight FROM litter
+                                       INNER JOIN declare_nsfo_base ON litter.id = declare_nsfo_base.id
+                                       INNER JOIN stillborn sb ON sb.litter_id = litter.id
+                                     WHERE request_state <> 'REVOKED' AND is_abortion = FALSE AND is_pseudo_pregnancy = FALSE
+                                       AND stillborn_count = 1 AND born_alive_count = 0
+                                     GROUP BY litter_date, animal_mother_id, stillborn_count, born_alive_count
+                                     HAVING COUNT(*) = 2
+                                   )g ON g.litter_date = l.litter_date AND g.animal_mother_id = l.animal_mother_id
+                      ORDER BY g.animal_mother_id, g.litter_date
+                      )g ON g.id = main.id
+                  INNER JOIN litter s
+                      ON s.animal_mother_id = main.animal_mother_id AND s.litter_date = main.litter_date
+                     AND s.stillborn_count = main.stillborn_count AND s.born_alive_count = main.born_alive_count
+                  INNER JOIN declare_nsfo_base bm ON bm.id = main.id
+                  INNER JOIN declare_nsfo_base bs ON bs.id = s.id
+                  INNER JOIN stillborn sbs ON sbs.litter_id = s.id
+                  INNER JOIN stillborn sbm ON sbm.litter_id = main.id
+                WHERE sbm.weight = g.max_weight --Prioritize stillborn litter with
+                      AND bm.request_state <> 'REVOKED' AND bs.request_state <> 'REVOKED' AND s.id <> main.id";
+        $results = $this->conn->query($sql)->fetchAll();
 
-            $this->advanceProgressBar('Merges failed|done: '.$failedMergesCount.'|'.$successFulMergeCount);
-        }
-        $this->endProgressBar();
-
-        return $failedMergesCount === 0;
+        return $this->processSelectResults($results);
     }
 }
