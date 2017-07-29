@@ -50,16 +50,23 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         $this->sqlBatchProcessor->start(count($this->data));
 
         foreach ($this->data as $record) {
-            //$vsmId = $record[0]; //string/int
-            //$stnOrUln = $record[1]; //string
-            //$uln = $record[2]; //string
-            $year = $record[3]; //int
-            $treatedForSamples = $this->getTreatedForSamples($record[4]); //nee/ja/null/''
-            $epg = SqlUtil::getNullCheckedValueForSqlQuery($record[5], true); //float/int
-            $sIgaGlasgow = SqlUtil::getNullCheckedValueForSqlQuery($record[6], true); //float
-            $carlaIgaNz = SqlUtil::getNullCheckedValueForSqlQuery($record[7], true); //float
-            $classCarlaIgaNz = SqlUtil::getNullCheckedValueForSqlQuery($record[8], true); //string
-            $samplePeriod = SqlUtil::getNullCheckedValueForSqlQuery($record[9], false); //int
+            $ubnDashAnimalOrderNumber = $record[0];
+            //$vsmId = $record[1]; //string/int
+            //$stnOrUln = $record[2]; //string
+            //$uln = $record[3]; //string
+            //$ulnCountryCode = $record[4]; //string
+            //$ulnNumber = $record[5]; //string
+            $sampleDateString = $record[6]; //int
+            $year = $record[7]; //int
+            $companyName = $record[8]; //int
+            $ubn = $record[9]; //int
+            $animalOrderNumber = $record[10]; //int
+            $treatedForSamples = $this->getTreatedForSamples($record[11]); //nee/ja/null/''
+            $epg = SqlUtil::getNullCheckedValueForSqlQuery($record[12], true); //int MAX 30000
+            $sIgaGlasgow = SqlUtil::getNullCheckedValueForSqlQuery($record[13], true); //float
+            $carlaIgaNz = SqlUtil::getNullCheckedValueForSqlQuery($record[14], true); //float
+            $classCarlaIgaNz = SqlUtil::getNullCheckedValueForSqlQuery($record[15], true); //string
+            $samplePeriod = SqlUtil::getNullCheckedValueForSqlQuery($record[16], false); //int
 
             $animalId = $this->getAnimalId($record);
 
@@ -111,9 +118,11 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
      */
     private function getAnimalId($record)
     {
-        $vsmId = $record[0]; //string/int
-        $stnOrUln = $record[1]; //string
-        $uln = $record[2]; //string
+        $vsmId = $record[1]; //string/int
+        $stnOrUln = $record[2]; //string
+        $uln = $record[3]; //string
+        $ulnCountryCode = $record[4]; //string
+        $ulnNumber = $record[5]; //string
 
         //TODO use animalIdBy vsmId/Uln/Stn
 
