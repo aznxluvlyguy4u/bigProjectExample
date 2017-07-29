@@ -50,7 +50,7 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
             self::PERFORMANCE_MEASUREMENTS => '20170411_1022_Dierprestatietabel.csv',
             self::RESIDENCE => '20170411_1022_Diermutatietabel.csv',
             self::TAG_REPLACES => '20170411_1022_DierOmnummeringen.csv',
-            self::WORM_RESISTANCE => 'Uitslagen_IgA_2014-2015-2016_def_edited.csv',
+            self::WORM_RESISTANCE => 'Uitslagen_IgA_2014-2015-2016-2017_def_edited.csv',
         );
     }
 
