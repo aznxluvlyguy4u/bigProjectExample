@@ -23,6 +23,8 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
     private $currentLittersByVsmIdAndLitterDate;
     /** @var array*/
     private $newLittersByVsmIdAndLitterDate;
+    /** @var array*/
+    private $littersToUpdateByVsmIdAndLitterDate;
     /** @var array */
     private $animalIdsByVsmId;
 
@@ -50,6 +52,8 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
 
         DoctrineUtil::updateTableSequence($this->conn, [DeclareNsfoBase::TABLE_NAME]);
 
+        $this->fixNullPseudoPregnancyAndAbortionValues();
+
         $this->animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray(GenderType::FEMALE);
 
         $this->writeln('Retrieving current litter data by vsmId and litterDate ...');
@@ -57,11 +61,16 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
         $doubleUnderscore = "'".self::DOUBLE_UNDERSCORE."'";
         $sql = "SELECT
                     CONCAT(mom.name,$doubleUnderscore,DATE(l.litter_date)) as key,
-                    mom.name AS vsm_id, DATE(l.litter_date) as litter_date, born_alive_count, stillborn_count, request_state
+                    l.id as litter_id,
+                    mom.name AS mother_id,
+                    DATE(l.litter_date) as litter_date,
+                    born_alive_count,
+                    stillborn_count,
+                    request_state
                 FROM litter l
                   INNER JOIN animal mom ON mom.id = l.animal_mother_id
                   INNER JOIN declare_nsfo_base b ON b.id = l.id
-                WHERE request_state <> '".RequestStateType::REVOKED."'";
+                WHERE is_pseudo_pregnancy = FALSE AND is_abortion = FALSE AND request_state <> '".RequestStateType::REVOKED."'";
         $this->currentLittersByVsmIdAndLitterDate = SqlUtil::createGroupedSearchArrayFromSqlResults($this->conn->query($sql)->fetchAll(),'key');
 
         /*
@@ -71,19 +80,26 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
             ->purgeAllSets()
             ->createBatchSet(QueryType::BASE_INSERT)
             ->createBatchSet(QueryType::INSERT)
-//            ->createBatchSet(QueryType::UPDATE)
+            ->createBatchSet(QueryType::UPDATE)
         ;
 
         $baseInsertBatchSet = $this->sqlBatchProcessor->getSet(QueryType::BASE_INSERT);
         $insertBatchSet = $this->sqlBatchProcessor->getSet(QueryType::INSERT);
-        //$updateBatchSet = $this->sqlBatchProcessor->getSet(QueryType::UPDATE);
+        $updateBatchSet = $this->sqlBatchProcessor->getSet(QueryType::UPDATE);
 
         $baseInsertBatchSet->setSqlQueryBase("INSERT INTO declare_nsfo_base (id, log_date, request_state, type) VALUES ");
 
         $insertBatchSet->setSqlQueryBase("INSERT INTO litter (id, animal_mother_id, litter_date,
                                             stillborn_count, born_alive_count, status, is_abortion, is_pseudo_pregnancy) VALUES ");
-//
-//        $updateBatchSet->setSqlQueryBase('INSERT INTO tag (id, animal_id, tag_status, animal_order_number, order_date, uln_country_code, uln_number) VALUES ');
+
+        $updateSqlBaseStart = "UPDATE litter 
+                                SET stillborn_count = v.stillborn_count, born_alive_count = v.born_alive_count,
+                                    is_pseudo_pregnancy = false, is_abortion = false
+                                FROM ( VALUES ";
+        $updateSqlBaseEnd = ") AS v(litter_id, stillborn_count, born_alive_count) 
+                               WHERE litter.id = v.litter_id";
+        $updateBatchSet->setSqlQueryBase($updateSqlBaseStart);
+        $updateBatchSet->setSqlQueryBaseEnd($updateSqlBaseEnd);
 
         $this->writeln('Importing new litterData from csv ...');
         $this->data = $this->parseCSV(self::LITTERS);
@@ -97,6 +113,7 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
         $this->missingMotherIdCount = 0;
         $this->duplicateLittersWithDifferentLitterCountsCount = 0;
         $this->newLittersByVsmIdAndLitterDate = [];
+        $this->littersToUpdateByVsmIdAndLitterDate = [];
         $this->duplicateLitters = [];
 
         try {
@@ -108,26 +125,35 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
                 if ($litterData === null) {
                     $baseInsertBatchSet->incrementSkippedCount();
                     $insertBatchSet->incrementSkippedCount();
+                    $updateBatchSet->incrementSkippedCount();
                 } else {
                     $motherId = $litterData[JsonInputConstant::MOTHER_ID];
                     $litterDate = $litterData[JsonInputConstant::LITTER_DATE];
                     $stillbornCount = $litterData[JsonInputConstant::STILLBORN_COUNT];
                     $bornAliveCount = $litterData[JsonInputConstant::BORN_ALIVE_COUNT];
                     $litterAlreadyExists = $litterData[JsonInputConstant::ENTITY_ALREADY_EXISTS];
+                    $litterId = $litterData[JsonInputConstant::LITTER_ID];
 
                     if ($litterAlreadyExists) {
                         //Update current litter if update criteria match
+                        if ($litterId !== null) {
+                            $updateBatchSet->appendValuesString('('.$litterId.','.$stillbornCount.','.$bornAliveCount.')');
+                            $updateBatchSet->incrementBatchCount();
+                        } else {
+                            $updateBatchSet->incrementSkippedCount();
+                        }
+
                         $baseInsertBatchSet->incrementAlreadyDoneCount();
                         $insertBatchSet->incrementAlreadyDoneCount();
 
                     } else {
                         //Insert new litter
-                        //$this->sqlBatchProcessor->advanceProgressBar();
                         $baseInsertBatchSet->appendValuesString("(".++$id.",'".$logDate."',$imported,'Litter')");
                         $insertBatchSet->appendValuesString("($id," .$motherId.",'".$litterDate."',"
                             .$stillbornCount.",".$bornAliveCount.",$imported,false,false)");
                         $baseInsertBatchSet->incrementBatchCount();
                         $insertBatchSet->incrementBatchCount();
+                        $updateBatchSet->incrementSkippedCount();
                     }
                 }
 
@@ -159,6 +185,14 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
     }
 
 
+    private function fixNullPseudoPregnancyAndAbortionValues()
+    {
+        $sql = "UPDATE litter SET is_pseudo_pregnancy = FALSE, is_abortion = FALSE
+                WHERE (is_pseudo_pregnancy ISNULL OR is_abortion ISNULL) AND (status = 'IMPORTED' OR status = 'REVOKED')";
+        $this->updateBySql('Fix NULL isPseudoPregnancy and isAbortion values ...', $sql);
+    }
+
+
     /**
      * @param array $record
      * @return array|null
@@ -178,7 +212,8 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
         $motherId = ArrayUtil::get($vsmId, $this->animalIdsByVsmId);
         $key = $vsmId.self::DOUBLE_UNDERSCORE.$litterDateString;
         $entityAlreadyExists = key_exists($key, $this->currentLittersByVsmIdAndLitterDate);
-        $entityAlreadyInBatch = key_exists($key, $this->newLittersByVsmIdAndLitterDate);
+        $entityAlreadyInInsertBatch = key_exists($key, $this->newLittersByVsmIdAndLitterDate);
+        $entityAlreadyInUpdateBatch = key_exists($key, $this->littersToUpdateByVsmIdAndLitterDate);
         $concattedCounts = $this->getConcatCounts($bornAliveCount, $stillbornCount);
 
         //Hard validation check
@@ -193,13 +228,43 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
         }
 
 
+        //Update check
+        $currentLitterId = null;
+        //Only use the first values found in the csv file to update the empty existing litterCount values
+        if ($entityAlreadyExists && !$entityAlreadyInUpdateBatch) {
+            //The litters are grouped by key, so select the first litterData in it, key = 0
+            //There should actually only be one in the set, because there should not be any duplicate litters.
+            $currentLitterData = $this->currentLittersByVsmIdAndLitterDate[$key][0];
+            $currentStillbornCount = $currentLitterData[JsonInputConstant::STILLBORN_COUNT];
+            $currentBornAliveCount = $currentLitterData[JsonInputConstant::BORN_ALIVE_COUNT];
+            $currentRequestState = $currentLitterData[JsonInputConstant::REQUEST_STATE];
+
+            if ($currentStillbornCount === 0 && $currentBornAliveCount === 0
+             && ($stillbornCount !== 0 || $bornAliveCount !== 0)
+                //NOTE Only update IMPORTED litters to be safe!
+                //Litters inserted by the new/current NSFO webapp are already validated.
+             && $currentRequestState === RequestStateType::IMPORTED
+            ) {
+                //Include litterId IF values need to be updated
+                $currentLitterId = $currentLitterData[JsonInputConstant::LITTER_ID];
+            }
+        }
+
+
         $values = [
             JsonInputConstant::MOTHER_ID => $motherId,
             JsonInputConstant::LITTER_DATE => $litterDateString,
             JsonInputConstant::STILLBORN_COUNT => intval($stillbornCount),
             JsonInputConstant::BORN_ALIVE_COUNT => intval($bornAliveCount),
-            JsonInputConstant::ENTITY_ALREADY_EXISTS => $entityAlreadyExists
+            JsonInputConstant::ENTITY_ALREADY_EXISTS => $entityAlreadyExists,
+            JsonInputConstant::LITTER_ID => $currentLitterId,
         ];
+
+
+        //if it is an update, add it to the update collection
+        if ($currentLitterId !== null) {
+            $this->littersToUpdateByVsmIdAndLitterDate[$key] = $values;
+        }
 
 
         //Soft validation check
@@ -211,14 +276,14 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
             $this->missingLitterDateCount++;
             return null;
 
-        } elseif ($entityAlreadyInBatch) {
+        } elseif ($entityAlreadyInInsertBatch) {
             $inBatchConcattedCounts = $this->getConcatCounts($this->newLittersByVsmIdAndLitterDate[$key]);
             if ($inBatchConcattedCounts === $concattedCounts) {
                 //Skip exact duplicates
                 return null;
             } else {
                 /*
-                TODO Decide on what to do with these, duplicate litters with a different count.
+                Duplicate litters with a different count.
                 Currently there are only 5 cases like this. So they are skipped to save time.
                 */
                 $this->duplicateLittersWithDifferentLitterCountsCount++;
