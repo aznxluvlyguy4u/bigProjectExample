@@ -852,7 +852,22 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
                           GROUP BY b.ubn_of_birth
                           )g ON g.ubn_of_birth = a.ubn_of_birth
                           WHERE pedigree_number ISNULL AND uln_number NOTNULL AND breed_code ='FL100'
-                      ) AS v(animal_id, new_pedigree_country_code, new_pedigree_number) WHERE animal.id = animal_id"
+                      ) AS v(animal_id, new_pedigree_country_code, new_pedigree_number) WHERE animal.id = animal_id",
+
+            'Fix 7: Fill missing animalOrderNumbers by correct pedigreeNumbers where last 5 chars are only digits' =>
+                "UPDATE animal_migration_table SET animal_order_number = v.animal_order_number
+                    FROM (
+                      SELECT
+                        --COUNT(*)
+                        m.vsm_id,
+                        pedigree_number,
+                        SUBSTR(pedigree_number, 7, 5) as animal_order_number,
+                        regexp_matches(pedigree_number, '([A-Z0-9]{5}[-][0-9]{5})')
+                      FROM animal_migration_table m
+                      WHERE pedigree_number NOTNULL AND animal_order_number ISNULL
+                    ) AS v(vsm_id, pedigree_number, animal_order_number, regex) WHERE v.vsm_id = animal_migration_table.vsm_id",
+
+
         ];
 
         foreach ($queries as $title => $sql) {
