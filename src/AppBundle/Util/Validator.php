@@ -93,6 +93,22 @@ class Validator
 
 
     /**
+     * @param $animalOrderNumber
+     * @return bool
+     */
+    public static function verifyAnimalOrderNumberFormat($animalOrderNumber)
+    {
+        if(!ctype_digit($animalOrderNumber) && !is_int($animalOrderNumber)) { return false; }
+        $animalOrderNumber = strval($animalOrderNumber);
+
+        $animalOrderNumberLength = 5;
+        $pregMatch = "/([0-9]{5})/";
+
+        return preg_match($pregMatch,$animalOrderNumber) && strlen($animalOrderNumber) == $animalOrderNumberLength;
+    }
+
+
+    /**
      * @param string $pedigreeNumber
      * @return bool
      */
