@@ -146,6 +146,7 @@ abstract class MigratorServiceBase
     protected function parseCSV($filename) {
 
         $this->csvOptions->setFileName($this->filenames[$filename]);
+        $this->writeLn('Parse $filename csv ...');
         return CsvParser::parse($this->csvOptions);
     }
 

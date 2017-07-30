@@ -101,7 +101,6 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
         $updateBatchSet->setSqlQueryBase($updateSqlBaseStart);
         $updateBatchSet->setSqlQueryBaseEnd($updateSqlBaseEnd);
 
-        $this->writeln('Importing new litterData from csv ...');
         $this->data = $this->parseCSV(self::LITTERS);
 
         $id = SqlUtil::getMaxId($this->conn, DeclareNsfoBase::TABLE_NAME);
