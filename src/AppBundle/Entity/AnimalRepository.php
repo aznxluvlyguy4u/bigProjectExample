@@ -796,6 +796,32 @@ class AnimalRepository extends BaseRepository
     }
 
 
+    /**
+     * @param string $gender
+     * @return array
+     */
+    public function getAnimalPrimaryKeysByUniqueStnArray($gender = null)
+    {
+        $sql = "SELECT a.id as animal_id, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn
+                FROM animal a
+                INNER JOIN (
+                    SELECT pedigree_country_code, pedigree_number
+                    FROM animal a
+                      ".$this->getGenderJoinFilter($gender)."
+                    WHERE a.pedigree_country_code NOTNULL AND a.pedigree_number NOTNULL
+                    --ignore duplicate stns
+                    GROUP BY pedigree_country_code, pedigree_number HAVING COUNT(*) = 1
+                    )g ON g.pedigree_country_code = a.pedigree_country_code AND g.pedigree_number = a.pedigree_number";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+
+        $searchArray = array();
+        foreach ($results as $result) {
+            $searchArray[$result['stn']] = $result['animal_id'];
+        }
+        return $searchArray;
+    }
+
+
   /**
    * @param int $animalId
    * @param  $measurementDateString
@@ -856,22 +882,30 @@ class AnimalRepository extends BaseRepository
   }
 
 
+    /**
+     * @param boolean $isCountryCodeSeparatedByString
+     * @return array
+     */
+  private function getAnimalPrimaryKeysByUlnStringResults($isCountryCodeSeparatedByString)
+  {
+      if($isCountryCodeSeparatedByString) {
+          $ulnFormat = "uln_country_code,' ',uln_number";
+      } else {
+          $ulnFormat = "uln_country_code,uln_number";
+      }
+      $sql = "SELECT CONCAT(".$ulnFormat.") as uln, id, type FROM animal";
+      return $this->getConnection()->query($sql)->fetchAll();
+  }
+
+
   /**
    * @return ArrayCollection
    */
   public function getAnimalPrimaryKeysByUlnString($isCountryCodeSeparatedByString = false)
   {
-    if($isCountryCodeSeparatedByString) {
-      $ulnFormat = "uln_country_code,' ',uln_number";
-    } else {
-      $ulnFormat = "uln_country_code,uln_number";
-    }
-    $sql = "SELECT CONCAT(".$ulnFormat.") as uln, id, type FROM animal";
-    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
-
     $array = new ArrayCollection();
-    foreach ($results as $result) {
-      if($array->containsKey($result['uln'])) {
+    foreach ($this->getAnimalPrimaryKeysByUlnStringResults($isCountryCodeSeparatedByString) as $result) {
+      if($array->containsKey($array['uln'])) {
         if($result['type'] != 'Neuter') {
           $array->set($result['uln'], $result['id']);
         }
@@ -882,6 +916,26 @@ class AnimalRepository extends BaseRepository
 
     return $array;
   }
+
+
+    /**
+     * @return array
+     */
+    public function getAnimalPrimaryKeysByUlnStringArray($isCountryCodeSeparatedByString = false)
+    {
+        $array = [];
+        foreach ($this->getAnimalPrimaryKeysByUlnStringResults($isCountryCodeSeparatedByString) as $result) {
+            if(key_exists('uln', $array)) {
+                if($result['type'] !== 'Neuter') {
+                    $array[$result['uln']] = $result['id'];
+                }
+            } else {
+                $array[$result['uln']] = $result['id'];
+            }
+        }
+
+        return $array;
+    }
 
 
   /**
