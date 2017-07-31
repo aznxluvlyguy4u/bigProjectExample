@@ -2,6 +2,8 @@
 
 namespace AppBundle\Service\Migration;
 
+use AppBundle\Cache\NLingCacher;
+use AppBundle\Cache\ProductionCacher;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Enumerator\GenderType;
@@ -10,6 +12,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\LitterUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -48,11 +51,22 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
     {
         parent::run($cmdUtil);
 
-        $this->writeln('=== Migrate litters ===');
-
-        DoctrineUtil::updateTableSequence($this->conn, [DeclareNsfoBase::TABLE_NAME]);
-
+        $this->writeLn('====== PRE migration fixes ======');
         $this->fixNullPseudoPregnancyAndAbortionValues();
+
+        $this->writeln('====== Migrate litters ======');
+        $this->migrateNewLittersAndUpdateOldBlankLitters();
+
+        $this->writeLn('====== POST migration updates ======');
+        $this->cmdUtil->writeln(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
+        $this->cmdUtil->writeln( ProductionCacher::updateAllProductionValues($this->conn) . ' production values updated');
+        $this->cmdUtil->writeln( NLingCacher::updateAllNLingValues($this->conn) . ' n-ling values updated');
+    }
+
+
+    private function migrateNewLittersAndUpdateOldBlankLitters()
+    {
+        DoctrineUtil::updateTableSequence($this->conn, [DeclareNsfoBase::TABLE_NAME]);
 
         $this->animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray(GenderType::FEMALE);
 
@@ -319,5 +333,71 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
         }
 
         return $bornAliveCount.self::DOUBLE_UNDERSCORE.$stillbornCount;
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function update(CommandUtil $cmdUtil)
+    {
+        parent::run($cmdUtil);
+
+        $this->writeLn('===== Update parent values in animal and litter tables =====');
+
+        $queries = [
+            'Match children with existing litters by mother and dateOfBirth = litterDate ...' =>
+                "UPDATE animal SET litter_id = v.litter_id
+                    FROM (
+                      SELECT a.id as animal_id, l.id as litter_id
+                      FROM animal a
+                        INNER JOIN litter l ON l.animal_mother_id = a.parent_mother_id AND DATE(date_of_birth) = DATE(litter_date)
+                      WHERE a.litter_id ISNULL
+                    ) AS v(animal_id, litter_id) WHERE animal.id = v.animal_id",
+
+            'Set missing (unique) father in litters ...' =>
+                "UPDATE litter SET animal_father_id = v.parent_father_id
+                    FROM (
+                      SELECT l.id as litter_id, parent_father_id
+                      FROM litter l
+                        INNER JOIN (
+                                     SELECT litter_id, parent_father_id,
+                                       DENSE_RANK() OVER (PARTITION BY litter_id ORDER BY parent_father_id ASC) AS rank
+                                     FROM animal
+                                     WHERE parent_father_id NOTNULL
+                                     GROUP BY litter_id, parent_father_id
+                                   )g ON g.litter_id = l.id
+                      WHERE
+                        g.rank = 1 -- Get only litters where all the children have the same father, or don't have a father
+                        AND l.animal_father_id ISNULL
+                    ) AS v(litter_id, parent_father_id) WHERE litter.id = v.litter_id",
+
+            'Set missing (unique) father in children of litters ...' =>
+                "UPDATE animal SET parent_father_id = v.parent_father_id
+                    FROM (
+                      SELECT
+                        a.id as animal_id, gg.parent_father_id--, a.litter_id
+                      FROM animal a
+                        INNER JOIN (
+                                     SELECT l.id as litter_id, parent_father_id
+                                     FROM litter l
+                                       INNER JOIN (
+                                                    SELECT litter_id, parent_father_id,
+                                                      DENSE_RANK() OVER (PARTITION BY litter_id ORDER BY parent_father_id ASC) AS rank
+                                                    FROM animal
+                                                    WHERE parent_father_id NOTNULL
+                                                    GROUP BY litter_id, parent_father_id
+                                                  )g ON g.litter_id = l.id AND l.animal_father_id = g.parent_father_id
+                                     --Father in the litter must match the unique father of the children
+                                     WHERE
+                                       g.rank = 1 -- Get only litters where all the children have the same father, or don't have a father
+                                   )gg ON gg.litter_id = a.litter_id
+                      WHERE a.parent_father_id ISNULL
+                    ) AS v(animal_id, parent_father_id) WHERE animal.id = v.animal_id",
+        ];
+
+        foreach ($queries as $title => $sql) {
+            $this->updateBySql($title, $sql);
+        }
     }
 }

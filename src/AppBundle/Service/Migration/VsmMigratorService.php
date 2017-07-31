@@ -63,9 +63,10 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             '4: Fix duplicate animals by ulnNumber, using tagReplaces', "\n",
             '5: Fix Migrated Animals in animal table ...', "\n",
             '----------------------------------------------------', "\n",
-            '12: Merge duplicate imported litters', "\n",
-            '13: Merge litters with only one stillborn', "\n",
-            '14: Migrate Litter data', "\n",
+            '6: Merge duplicate imported litters', "\n",
+            '7: Merge litters with only one stillborn', "\n",
+            '8: Migrate Litter data', "\n",
+            '9: Update parent values in animal and litter tables', "\n",
             '----------------------------------------------------', "\n",
             '20: Migrate WormResistance records', "\n",
 //            '16: Import animal_migration_table from exported csv', "\n",
@@ -108,9 +109,10 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             case 4: $this->animalTableMigrator->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil); break;
             case 5: $this->animalTableMigrator->fix($this->cmdUtil); break;
 
-            case 12: $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil); break;
-            case 13: $this->duplicateLitterFixer->mergeDuplicateLittersWithOnlySingleStillborn($this->cmdUtil); break;
-            case 14: $this->litterMigrator->run($this->cmdUtil); break;
+            case 6: $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil); break;
+            case 7: $this->duplicateLitterFixer->mergeDuplicateLittersWithOnlySingleStillborn($this->cmdUtil); break;
+            case 8: $this->litterMigrator->run($this->cmdUtil); break;
+            case 9: $this->litterMigrator->update($this->cmdUtil); break;
 //            case 13:
 //                break;
 //            case 14:
