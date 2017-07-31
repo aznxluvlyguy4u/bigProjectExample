@@ -51,6 +51,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
             '2: Update animal_migration_table empty animal table values', "\n",
             '3: Extract breederNumbers from pedigreeNumbers and ubnOfBirths', "\n",
             '4: Fix animal_migration_table values, including issues as requested by Reinard', "\n",
+            '5: Filling empty ulnCountryCode and ulnNumber in migration table, generated from ubn and animalOrderNumber ...', "\n",
             '----------------------------------------------------', "\n",
 //            '2: Export animal_migration_table to csv', "\n",
 //            '3: Import animal_migration_table from exported csv', "\n",
@@ -68,6 +69,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
             case 2: $this->updateValues(); break;
             case 3: $this->extractBreederNumbers(); break;
             case 4: $this->fixValues(); break;
+            case 5: $this->generateUlnFromUbnAndAnimalOrderNumber(); break;
 //            case 5:
 //                break;
 //            case 6:
@@ -873,6 +875,89 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
         foreach ($queries as $title => $sql) {
             $this->updateBySql($title, $sql);
         }
+    }
+
+
+    private function generateUlnFromUbnAndAnimalOrderNumber()
+    {
+        $this->writeLn('=== Filling empty ulnCountryCode and ulnNumber in migration table, generated from ubn and animalOrderNumber ===');
+
+        $this->writeLn('Generate ulnNumbers of animals born after 2009 (do not create new ulns similar to these ulns) ...');
+        $sql = "SELECT uln_number FROM animal WHERE DATE(date_of_birth) >= '2010-01-01'";
+        $ulnNumbersOfNewTypeUlns = SqlUtil::getSingleValueGroupedSqlResults('uln_number', $this->conn->query($sql)->fetchAll(), false,false);
+
+        $updateBatchSet = $this->sqlBatchProcessor
+            ->createBatchSet(QueryType::UPDATE)
+            ->getSet(QueryType::UPDATE)
+        ;
+
+        $updateBatchSet->setSqlQueryBase('UPDATE animal_migration_table 
+                                            SET uln_country_code = v.uln_country_code, uln_number = v.uln_number,
+                                                is_uln_updated = TRUE
+                                            FROM ( VALUES ');
+        $updateBatchSet->setSqlQueryBaseEnd(") AS v(vsm_id, uln_country_code, uln_number) 
+                               WHERE animal_migration_table.vsm_id= v.vsm_id");
+
+        $newUlnNumbers = [];
+
+        foreach (['1995-01-01', '1985-01-01', '1970-01-01'] as $minDateOfBirth) {
+
+            $updateBatchSet
+                ->resetOverallBatchCounters()
+                ->resetSqlBatchValues()
+            ;
+
+            $this->writeLn('Generate ulnNumbers of animals born BEFORE 2010-01-01 and AFTER '.$minDateOfBirth. ' ...');
+
+            $sql = "SELECT
+                  m.vsm_id, m.ubn_of_birth, m.animal_order_number,
+                  COALESCE(m.pedigree_country_code, substr(m.stn_origin, 1 ,2)) as uln_country_code,
+                  CONCAT(m.ubn_of_birth, m.animal_order_number) AS uln_number,
+                  DATE(m.date_of_birth) as date_of_birth
+                FROM animal_migration_table m
+                  LEFT JOIN animal_migration_table t ON t.uln_number = CONCAT(m.ubn_of_birth, m.animal_order_number)
+                WHERE
+                  COALESCE(m.pedigree_country_code, substr(m.stn_origin, 1 ,2)) = 'NL' AND
+                  --(m.pedigree_country_code = 'NL' OR substr(m.stn_origin, 1 ,2) = 'NL') AND
+                  m.date_of_birth NOTNULL AND DATE(m.date_of_birth) < '2010-01-01' AND
+                  m.ubn_of_birth NOTNULL AND m.animal_order_number NOTNULL
+                  AND (m.uln_number ISNULL OR m.uln_country_code ISNULL)
+                  AND t.id ISNULL --skip if uln_number already exists in animal_migration_table
+                  AND DATE(m.date_of_birth) >= '$minDateOfBirth'
+                ORDER BY m.date_of_birth DESC --Prioritize ulns for younger animals";
+            $results = $this->conn->query($sql)->fetchAll();
+
+            $totalCount = count($results);
+
+            if ($totalCount === 0) {
+                $this->writeLn('No new ulns could be generated.');
+                continue;
+            }
+
+            $this->writeLn('Start processing '.$totalCount.' possible new ulns ...');
+            $this->sqlBatchProcessor->start($totalCount);
+
+            foreach ($results as $result){
+                $vsmId = $result['vsm_id'];
+                $ulnCountryCode = $result['uln_country_code'];
+                $ulnNumber = $result['uln_number'];
+                $dateOfBirth = $result['date_of_birth'];
+
+                if (key_exists($ulnNumber, $ulnNumbersOfNewTypeUlns) || key_exists($ulnNumber, $newUlnNumbers)
+                    || !is_string($ulnCountryCode) || strlen($ulnCountryCode) !== 2
+                    || !is_string($ulnNumber) || strlen($ulnNumber) < 3 || strlen($ulnNumber) > 12) {
+                    $updateBatchSet->incrementSkippedCount();
+                    continue;
+                }
+
+                $newUlnNumbers[$ulnNumber] = $ulnNumber;
+                $updateBatchSet->appendValuesString("(".$vsmId.",'".$ulnCountryCode."','".$ulnNumber."')");
+                $updateBatchSet->incrementBatchCount();
+                $this->sqlBatchProcessor->processAtBatchSize();
+            }
+            $this->sqlBatchProcessor->end();
+        }
+
     }
 
 
