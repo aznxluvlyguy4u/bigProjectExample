@@ -57,14 +57,15 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             ' ', "\n",
             'Choose option: ', "\n",
             '1: AnimalTableImporter options ...', "\n",
+            '----------------------------------------------------', "\n",
             '2: Migrate Animals from animal_migration_table to animal table ...', "\n",
-//            '3: Migrate TagReplaces', "\n",
+            '3: Migrate TagReplaces (WARNING make sure no other declareBases are inserted during this)', "\n",
+            '4: Fix duplicate animals by ulnNumber, using tagReplaces', "\n",
+            '5: Fix Migrated Animals in animal table ...', "\n",
             '----------------------------------------------------', "\n",
-            '10: Migrate TagReplaces (WARNING make sure no other declareBases are inserted during this)', "\n",
-            '11: Fix duplicate animals by ulnNumber, using tagReplaces', "\n",
-            '----------------------------------------------------', "\n",
-            '12: Merge duplicate imported litters and litters with only one stillborn', "\n",
-            '13: Migrate Litter data', "\n",
+            '12: Merge duplicate imported litters', "\n",
+            '13: Merge litters with only one stillborn', "\n",
+            '14: Migrate Litter data', "\n",
             '----------------------------------------------------', "\n",
             '20: Migrate WormResistance records', "\n",
 //            '16: Import animal_migration_table from exported csv', "\n",
@@ -99,27 +100,17 @@ class VsmMigratorService extends Migrator2017JunServiceBase
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
+
             case 1: $this->animalTableImporter->run($this->cmdUtil); break;
+
             case 2: $this->animalTableMigrator->run($this->cmdUtil); break;
-//            case 3:
-//                break;
-//            case 4:
-//                break;
-//            case 5:
-//                break;
-//            case 6:
-//                break;
-//            case 7:
-//                break;
-//            case 8:
-//                break;
-//            case 9:
-//                break;
-            case 10: $this->tagReplaceMigrator->run($this->cmdUtil); break;
-            case 11: $this->animalTableMigrator->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil); break;
-            case 12: $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil);
-                     $this->duplicateLitterFixer->mergeDuplicateLittersWithOnlySingleStillborn($this->cmdUtil); break;
-            case 13: $this->litterMigrator->run($this->cmdUtil); break;
+            case 3: $this->tagReplaceMigrator->run($this->cmdUtil); break;
+            case 4: $this->animalTableMigrator->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil); break;
+            case 5: $this->animalTableMigrator->fix($this->cmdUtil); break;
+
+            case 12: $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil); break;
+            case 13: $this->duplicateLitterFixer->mergeDuplicateLittersWithOnlySingleStillborn($this->cmdUtil); break;
+            case 14: $this->litterMigrator->run($this->cmdUtil); break;
 //            case 13:
 //                break;
 //            case 14:

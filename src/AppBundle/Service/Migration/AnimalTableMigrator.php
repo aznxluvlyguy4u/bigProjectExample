@@ -41,27 +41,36 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
     {
         parent::run($cmdUtil);
 
-        //PRE migration fixes
+        $this->writeLn('====== PRE migration fixes ======');
         $this->preparationFixes();
         $this->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil);
         $this->fixGenderOfNeutersByMigrationValues();
 
-        //Migrate animals
+        $this->writeLn('====== Migrate animals ======');
         $this->migrateNewAnimalsJoinedOnUlnAndDateOfBirth();
         $this->migrateNewAnimals();
+    }
 
-        //Fix animals
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function fix(CommandUtil $cmdUtil)
+    {
+        parent::run($cmdUtil);
+
+        $this->writeLn('====== Fix animals ======');
         //NOTE the order is important!
         $this->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil);
         $this->getDuplicateAnimalsFixer()->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth($this->cmdUtil);
         $this->mergeTagReplacedAnimalsWithoutDeclareTagReplaces();
         $this->removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln();
 
-        //Set parents
+        $this->writeLn('====== Set parents ======');
         $this->updateIncongruentParentIdsInAnimalMigrationTable();
         $this->updateParentIdsInAnimalTable();
 
-        //Fill other desired values
+        $this->writeLn('====== Fill other desired values ======');
         $this->fillMissingValues();
     }
 
