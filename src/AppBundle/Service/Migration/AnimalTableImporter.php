@@ -975,6 +975,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
                     || !is_string($ulnCountryCode) || strlen($ulnCountryCode) !== 2
                     || !is_string($ulnNumber) || strlen($ulnNumber) < 3 || strlen($ulnNumber) > 12) {
                     $updateBatchSet->incrementSkippedCount();
+                    $this->sqlBatchProcessor->advanceProgressBar();
                     continue;
                 }
 
@@ -991,6 +992,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
 
                 if ($importAnimalAlreadyExists) {
                     $updateBatchSet->incrementSkippedCount();
+                    $this->sqlBatchProcessor->advanceProgressBar();
                     continue;
                 }
 
@@ -998,7 +1000,10 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
                 $newUlnNumbers[$ulnNumber] = $ulnNumber;
                 $updateBatchSet->appendValuesString("(".$vsmId.",'".$ulnCountryCode."','".$ulnNumber."')");
                 $updateBatchSet->incrementBatchCount();
-                $this->sqlBatchProcessor->processAtBatchSize();
+                $this->sqlBatchProcessor
+                    ->processAtBatchSize()
+                    ->advanceProgressBar()
+                ;
             }
             $this->sqlBatchProcessor->end();
         }
