@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service\Migration;
 
+use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
 use AppBundle\Service\DataFix\DuplicateLitterFixer;
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -22,6 +23,8 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     /** @var WormResistanceMigrator */
     private $wormResistanceMigrator;
 
+    /** @var DuplicateAnimalsFixer */
+    private $duplicateAnimalsFixer;
     /** @var DuplicateLitterFixer */
     private $duplicateLitterFixer;
 
@@ -31,6 +34,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
                                 LitterMigrator $litterMigrator,
                                 TagReplaceMigrator $tagReplaceMigrator,
                                 WormResistanceMigrator $wormResistanceMigrator,
+                                DuplicateAnimalsFixer $duplicateAnimalsFixer,
                                 DuplicateLitterFixer $duplicateLitterFixer
     )
     {
@@ -42,6 +46,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
         $this->tagReplaceMigrator = $tagReplaceMigrator;
         $this->wormResistanceMigrator = $wormResistanceMigrator;
 
+        $this->duplicateAnimalsFixer = $duplicateAnimalsFixer;
         $this->duplicateLitterFixer = $duplicateLitterFixer;
     }
 

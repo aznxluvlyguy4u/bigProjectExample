@@ -6,6 +6,7 @@ namespace AppBundle\Service\Migration;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\QueryType;
+use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
@@ -23,19 +24,27 @@ use Doctrine\Common\Persistence\ObjectManager;
  * implementing some fixes to the data in the animal_migration_table,
  * and very minor fixes to the animal database table.
  */
-class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigratorService
+class AnimalTableImporter extends Migrator2017JunServiceBase
 {
     const BATCH_SIZE = 5000;
 
     //Search arrays
     private $pedigreeRegisterIdsByAbbreviation;
+    /** @var DuplicateAnimalsFixer */
+    private $duplicateAnimalsFixer;
 
 
-    /** @inheritdoc */
-    public function __construct(ObjectManager $em, $rootDir)
+    /**
+     * AnimalTableImporter constructor.
+     * @param ObjectManager $em
+     * @param string $rootDir
+     * @param DuplicateAnimalsFixer $duplicateAnimalsFixer
+     */
+    public function __construct(ObjectManager $em, $rootDir, DuplicateAnimalsFixer $duplicateAnimalsFixer)
     {
         parent::__construct($em, $rootDir, self::BATCH_SIZE);
         $this->getCsvOptions()->setFileName($this->filenames[self::ANIMAL_TABLE]);
+        $this->duplicateAnimalsFixer = $duplicateAnimalsFixer;
     }
 
 
@@ -882,9 +891,26 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
     {
         $this->writeLn('=== Filling empty ulnCountryCode and ulnNumber in migration table, generated from ubn and animalOrderNumber ===');
 
-        $this->writeLn('Generate ulnNumbers of animals born after 2009 (do not create new ulns similar to these ulns) ...');
-        $sql = "SELECT uln_number FROM animal WHERE DATE(date_of_birth) >= '2010-01-01'";
-        $ulnNumbersOfNewTypeUlns = SqlUtil::getSingleValueGroupedSqlResults('uln_number', $this->conn->query($sql)->fetchAll(), false,false);
+        $this->writeLn('Generate ulnNumbers of synced animals without import animal with same uln ...');
+        $sql = "SELECT a.uln_number, a.date_of_birth
+                FROM animal a
+                  LEFT JOIN (
+                              SELECT id, uln_number, name, date_of_birth
+                              FROM animal WHERE name NOTNULL
+                            )b ON b.uln_number = a.uln_number
+                WHERE a.name ISNULL AND b.id ISNULL";
+        $results = $this->conn->query($sql)->fetchAll();
+        $syncedAnimalsWithoutImportAnimalDateOfBirthByUlnNumber = SqlUtil::groupSqlResultsOfKey1ByKey2('date_of_birth', 'uln_number', $results);
+
+        $this->writeLn('Get all ulnNumbers from animal table ...');
+        $sql = "SELECT uln_number FROM animal";
+        $results = $this->conn->query($sql)->fetchAll();
+        $ulnNumberInAnimalTable = SqlUtil::groupSqlResultsGroupedBySingleVariable('date_of_birth', $results);
+
+        $this->writeLn('Get all ulnNumbers from animal_migration_table ...');
+        $sql = "SELECT uln_number FROM animal_migration_table";
+        $results = $this->conn->query($sql)->fetchAll();
+        $ulnNumberInAnimalMigrationTable = SqlUtil::groupSqlResultsGroupedBySingleVariable('date_of_birth', $results);
 
         $updateBatchSet = $this->sqlBatchProcessor
             ->createBatchSet(QueryType::UPDATE)
@@ -899,6 +925,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
                                WHERE animal_migration_table.vsm_id= v.vsm_id");
 
         $newUlnNumbers = [];
+        $mergeSyncAndImportPair = false;
 
         foreach (['1995-01-01', '1985-01-01', '1970-01-01'] as $minDateOfBirth) {
 
@@ -943,12 +970,29 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
                 $ulnNumber = $result['uln_number'];
                 $dateOfBirth = $result['date_of_birth'];
 
-                if (key_exists($ulnNumber, $ulnNumbersOfNewTypeUlns) || key_exists($ulnNumber, $newUlnNumbers)
+                if (key_exists($ulnNumber, $ulnNumberInAnimalMigrationTable) || key_exists($ulnNumber, $newUlnNumbers)
                     || !is_string($ulnCountryCode) || strlen($ulnCountryCode) !== 2
                     || !is_string($ulnNumber) || strlen($ulnNumber) < 3 || strlen($ulnNumber) > 12) {
                     $updateBatchSet->incrementSkippedCount();
                     continue;
                 }
+
+                $importAnimalAlreadyExists = true;
+                if (key_exists($ulnNumber, $ulnNumberInAnimalTable)) {
+                    $currentDateOfBirthSyncedAnimal = ArrayUtil::get($ulnNumber, $syncedAnimalsWithoutImportAnimalDateOfBirthByUlnNumber);
+                    if ($currentDateOfBirthSyncedAnimal === $dateOfBirth) {
+                        $mergeSyncAndImportPair = true;
+                        $importAnimalAlreadyExists = false;
+                    }
+                } else {
+                    $importAnimalAlreadyExists = false;
+                }
+
+                if ($importAnimalAlreadyExists) {
+                    $updateBatchSet->incrementSkippedCount();
+                    continue;
+                }
+
 
                 $newUlnNumbers[$ulnNumber] = $ulnNumber;
                 $updateBatchSet->appendValuesString("(".$vsmId.",'".$ulnCountryCode."','".$ulnNumber."')");
@@ -958,6 +1002,9 @@ class AnimalTableImporter extends Migrator2017JunServiceBase implements IMigrato
             $this->sqlBatchProcessor->end();
         }
 
+        if ($mergeSyncAndImportPair) {
+            $this->duplicateAnimalsFixer->fixDuplicateAnimalsSyncedAndImportedPairs($this->cmdUtil);
+        }
     }
 
 
