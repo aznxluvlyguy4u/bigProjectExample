@@ -905,13 +905,14 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
         $this->writeLn('Get all ulnNumbers from animal table ...');
         $sql = "SELECT uln_number FROM animal";
         $results = $this->conn->query($sql)->fetchAll();
-        $ulnNumberInAnimalTable = SqlUtil::groupSqlResultsGroupedBySingleVariable('date_of_birth', $results);
+        $ulnNumberInAnimalTable = SqlUtil::getSingleValueGroupedSqlResults('uln_number', $results);
 
         $this->writeLn('Get all ulnNumbers from animal_migration_table ...');
         $sql = "SELECT uln_number FROM animal_migration_table";
         $results = $this->conn->query($sql)->fetchAll();
-        $ulnNumberInAnimalMigrationTable = SqlUtil::groupSqlResultsGroupedBySingleVariable('date_of_birth', $results);
+        $ulnNumberInAnimalMigrationTable = SqlUtil::getSingleValueGroupedSqlResults('uln_number', $results);
 
+        
         $updateBatchSet = $this->sqlBatchProcessor
             ->createBatchSet(QueryType::UPDATE)
             ->getSet(QueryType::UPDATE)
