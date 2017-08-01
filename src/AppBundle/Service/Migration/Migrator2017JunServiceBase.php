@@ -3,11 +3,11 @@
 
 namespace AppBundle\Service\Migration;
 
+use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\Person;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Util\CsvParser;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -30,6 +30,9 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
     const RESIDENCE = 'residence';
     const TAG_REPLACES = 'tag_replaces';
     const WORM_RESISTANCE = 'worm_resistance';
+
+    /** @var array */
+    protected $inspectorIdsInDbByFullName;
 
     /**
      * Migrator2017JunServiceBase constructor.
@@ -109,5 +112,41 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
             JsonInputConstant::PEDIGREE_COUNTRY_CODE => $parts[0],
             JsonInputConstant::PEDIGREE_NUMBER => $parts[1],
         ];
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getInspectorSearchArrayWithNameCorrections()
+    {
+        $csvOptions = (new CsvOptions())
+            ->setFileName('inspector_name_corrections.csv')
+            ->appendDefaultInputFolder('inspectors/')
+            ->setSemicolonSeparator()
+            ;
+
+        $nameCorrections = CsvParser::parse($csvOptions);
+
+        $sql = "SELECT id, TRIM(CONCAT(first_name,' ', last_name)) as full_name 
+                FROM person WHERE type = 'Inspector' ORDER BY first_name, last_name";
+        $inspectorIdsInDbByFullName = SqlUtil::groupSqlResultsOfKey1ByKey2('id', 'full_name', $this->conn->query($sql)->fetchAll());
+
+        foreach ($nameCorrections as $record)
+        {
+            $oldFullName = $record[0];
+            $newFirstName = $record[1];
+            $newLastName = $record[2];
+
+            $currentFullName = trim($newFirstName.' '.$newLastName);
+
+            if (key_exists($currentFullName, $inspectorIdsInDbByFullName)
+            && !key_exists($oldFullName, $inspectorIdsInDbByFullName)) {
+                $inspectorIdsInDbByFullName[$oldFullName] = $inspectorIdsInDbByFullName[$currentFullName];
+            }
+
+        }
+
+        return $inspectorIdsInDbByFullName;
     }
 }
