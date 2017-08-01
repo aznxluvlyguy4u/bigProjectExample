@@ -19,8 +19,6 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
     const MAX_EPG = 30000;
 
     /** @var array */
-    private $animalIdsByVsmId;
-    /** @var array */
     private $animalIdsByUln;
     /** @var array */
     private $animalIdsByUniqueStn;

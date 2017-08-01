@@ -28,8 +28,6 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
     private $newLittersByVsmIdAndLitterDate;
     /** @var array*/
     private $littersToUpdateByVsmIdAndLitterDate;
-    /** @var array */
-    private $animalIdsByVsmId;
 
     /** @var int */
     private $missingMotherIdCount;

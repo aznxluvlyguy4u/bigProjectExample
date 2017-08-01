@@ -32,6 +32,8 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
     const WORM_RESISTANCE = 'worm_resistance';
 
     /** @var array */
+    protected $animalIdsByVsmId;
+    /** @var array */
     protected $inspectorIdsInDbByFullName;
 
     /**
