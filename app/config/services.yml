@@ -113,6 +113,7 @@ services:
           rootDir: %kernel.root_dir%
           animalTableImporter: '@app.migrator.importer.animaltable'
           animalTableMigrator: '@app.migrator.animaltable'
+          birthMigrator: '@app.migrator.birth'
           exteriorMigrator: '@app.migrator.exteriors'
           litterMigrator: '@app.migrator.litters'
           tagReplaceMigrator: '@app.migrator.tagreplace'
@@ -137,6 +138,10 @@ services:
     app.migrator.animaltable:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\AnimalTableMigrator
+
+    app.migrator.birth:
+        parent: app.migrator.base
+        class: AppBundle\Service\Migration\BirthDataMigrator
 
     app.migrator.exteriors:
         parent: app.migrator.base

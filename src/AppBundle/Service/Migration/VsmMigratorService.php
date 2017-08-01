@@ -16,6 +16,8 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     private $animalTableImporter;
     /** @var AnimalTableMigrator */
     private $animalTableMigrator;
+    /** @var BirthDataMigrator */
+    private $birthDataMigrator;
     /** @var ExteriorMigrator */
     private $exteriorMigrator;
     /** @var LitterMigrator */
@@ -33,6 +35,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     public function __construct(ObjectManager $em, $rootDir,
                                 AnimalTableImporter $animalTableImporter,
                                 AnimalTableMigrator $animalTableMigrator,
+                                BirthDataMigrator $birthDataMigrator,
                                 ExteriorMigrator $exteriorMigrator,
                                 LitterMigrator $litterMigrator,
                                 TagReplaceMigrator $tagReplaceMigrator,
@@ -45,6 +48,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
 
         $this->animalTableImporter = $animalTableImporter;
         $this->animalTableMigrator = $animalTableMigrator;
+        $this->birthDataMigrator = $birthDataMigrator;
         $this->exteriorMigrator = $exteriorMigrator;
         $this->litterMigrator = $litterMigrator;
         $this->tagReplaceMigrator = $tagReplaceMigrator;
@@ -80,33 +84,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             '----------------------------------------------------', "\n",
             '20: Migrate WormResistance records', "\n",
             '21: Migrate Exterior records', "\n",
-//            '16: Import animal_migration_table from exported csv', "\n",
-//            '17: Export vsm_id_group to csv', "\n",
-//            '18: Import vsm_id_group from exported csv', "\n",
-//            '21: Export uln by animalId to csv', "\n",
-//            '22: Import uln by animalId to csv', "\n",
-//            '----------------------------------------------------', "\n",
-//            '23: Fix animal table after animalTable migration', "\n",
-//            '24: Fix missing ulns by data in declares and migrationTable', "\n",
-//            '25: Add missing animals to migrationTable', "\n",
-//            '26: Fix duplicateDeclareTagTransfers', "\n",
-//            '27: Fix vsmIds part1', "\n",
-//            '28: Fix vsmIds part2', "\n",
-//            '29: Migrate dateOfDeath & isAlive status', "\n",
-//            '----------------------------------------------------', "\n",
-//            '31: Migrate BirthWeights into weight and birthProgress into animal', "\n",
-//            '39: Fill missing british ulnNumbers in AnimalMigrationTable', "\n",
-//            '----------------------------------------------------', "\n",
-//            '40: Fill missing ulnNumbers in AnimalMigrationTable', "\n",
-//            '41: Fix animalIds in AnimalMigrationTable (likely incorrect due to duplicate fix)', "\n",
-//            '42: Fix genderInDatabase values in AnimalMigrationTable (likely incorrect due to genderChange)', "\n",
-//            '43: Fix parentId values in AnimalMigrationTable', "\n",
-//            '44: Fix inverted primary and secondary vsmIds in the vsmIdGroup table', "\n",
-//            '----------------------------------------------------', "\n",
-//            '45: Migrate AnimalTable data V2', "\n",
-//            '46: Migrate AnimalTable data: UPDATE Synced Animals', "\n",
-//            '47: Fix missing pedigreeNumbers', "\n",
-//            '48: Set missing parents on animal', "\n",
+            '22: Migrate BirthWeight, TailLength, BirthProgress records', "\n",
             '----------------------------------------------------', "\n",
             'other: Exit VsmMigrator', "\n"
         ], self::DEFAULT_OPTION);
@@ -125,18 +103,10 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             case 8: $this->litterMigrator->run($this->cmdUtil); break;
             case 9: $this->litterMigrator->update($this->cmdUtil); break;
             case 10: $this->duplicateAnimalsFixer->fixMultipleDuplicateAnimalsAfterMigration($this->cmdUtil); break;
-//            case 13:
-//                break;
-//            case 14:
-//                break;
-//            case 15:
-//                break;
-//            case 16:
-//                break;
-//            case 17:
-//                break;
+
             case 20: $this->wormResistanceMigrator->run($this->cmdUtil); break;
             case 21: $this->exteriorMigrator->run($this->cmdUtil); break;
+            case 22: $this->birthDataMigrator->run($this->cmdUtil); break;
             default: return;
         }
         $this->run($this->cmdUtil);
