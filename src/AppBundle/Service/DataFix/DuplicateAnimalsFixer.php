@@ -13,6 +13,7 @@ use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\GenderChanger;
@@ -34,6 +35,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
     const ULN_DATE_OF_BIRTH_MOTHER = 'uln_date_of_birth_mother';
     const ULN_DATE_OF_BIRTH_FATHER = 'uln_date_of_birth_father';
     const ULN = 'uln';
+    const BATCH_SIZE = 25;
 
     /** @var GenderChanger */
     private $genderChanger;
@@ -88,6 +90,8 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
     public function mergeImportedAnimalsMissingLeadingZeroes(CommandUtil $cmdUtil)
     {
         $this->setCmdUtil($cmdUtil);
+
+        $this->writeLn('====== Merge imported Animals missing leading zeroes ======');
 
         $ulnCountryCode = null;
         $ulnNumber = null;
@@ -219,6 +223,8 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
     {
         $this->setCmdUtil($cmdUtil);
 
+        $this->writeLn('====== Merge duplicate animals by synced and imported pairs ======');
+
         $sql = $this->createDuplicateSqlQuery(['uln_country_code', 'uln_number', 'date_of_birth'], false);
         $animalsGroupedByUln = $this->findGroupedDuplicateAnimals($sql);
 
@@ -297,7 +303,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
                 $duplicateAnimalsDeleted += $batchCounter;
                 $batchCounter = 0;
             }
-            $this->cmdUtil->advanceProgressBar(1, 'DuplicateAnimals fixed|inBatch|skipped: '.$duplicateAnimalsDeleted.'|'.$batchCounter.'|'.$skippedCounter);
+            $this->cmdUtil->advanceProgressBar(1, 'fixed|inBatch|skipped: '.$duplicateAnimalsDeleted.'|'.$batchCounter.'|'.$skippedCounter);
         }
 
         /* 5 Double check animalOrderNumbers */
@@ -313,6 +319,8 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
     public function fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth(CommandUtil $cmdUtil)
     {
         $this->setCmdUtil($cmdUtil);
+
+        $this->writeLn('====== Merge duplicate animals by vsmId, dateOfBirth & ULN ======');
 
         $sql = $this->createDuplicateSqlQuery(['name', 'date_of_birth', 'uln_number', 'uln_country_code'], false);
         $animalsGroupedByUln = $this->findGroupedDuplicateAnimals($sql);
@@ -384,7 +392,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
                 $duplicateAnimalsDeleted += $batchCounter;
                 $batchCounter = 0;
             }
-            $this->cmdUtil->advanceProgressBar(1, 'DuplicateAnimals fixed|inBatch|skipped: '.$duplicateAnimalsDeleted.'|'.$batchCounter.'|'.$skippedCounter);
+            $this->cmdUtil->advanceProgressBar(1, 'fixed|inBatch|skipped: '.$duplicateAnimalsDeleted.'|'.$batchCounter.'|'.$skippedCounter);
         }
 
         /* 5 Double check animalOrderNumbers */
@@ -398,9 +406,10 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
     /**
      * @param array $valuesToMatchOn
      * @param boolean $matchUlnOfParents
+     * @param boolean $includeMultiDuplicates
      * @return string
      */
-    private function createDuplicateSqlQuery(array $valuesToMatchOn, $matchUlnOfParents = true)
+    private function createDuplicateSqlQuery(array $valuesToMatchOn, $matchUlnOfParents = true, $includeMultiDuplicates = false)
     {
         if(!is_array($valuesToMatchOn)) { return null; }
         if(count($valuesToMatchOn) == 0) { return null; }
@@ -428,6 +437,8 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             $parentUlnFilter = ' ,m.uln_country_code,m.uln_number,f.uln_country_code,f.uln_number ';
         }
 
+        $countFilter = $includeMultiDuplicates ? ' > 1' : ' = 2';
+
         $sql = "SELECT ".$concatenatedSearchKey." as ".self::SEARCH_KEY.", a.*,
                     CONCAT(mother.uln_country_code, mother.uln_number, mother.date_of_birth) as ".self::ULN_DATE_OF_BIRTH_MOTHER.",
                     CONCAT(father.uln_country_code, father.uln_number, father.date_of_birth) as ".self::ULN_DATE_OF_BIRTH_FATHER."
@@ -438,7 +449,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
                     SELECT ".$innerSelectString." FROM animal n
                       LEFT JOIN animal m ON m.id = n.parent_mother_id
                       LEFT JOIN animal f ON f.id = n.parent_father_id
-                    GROUP BY ".$innerSelectString.$parentUlnFilter." HAVING COUNT(*) = 2 
+                    GROUP BY ".$innerSelectString.$parentUlnFilter." HAVING COUNT(*) ".$countFilter." 
                     -- NOTE THAT DUPLICATES ABOVE 2 PER SET MUST BE CHECKED MANUALLY!
                     )g ON ".$joinOnString;
 
@@ -516,6 +527,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             [ self::TABLE_NAME => 'ulns_history',           self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'blindness_factor',       self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'predicate',              self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'worm_resistance',              self::VARIABLE_TYPE => 'animal_id' ],
         ];
 
         $mergeResults = $this->mergeColumnValuesInTables($primaryAnimalId, $secondaryAnimalId, $tableNamesByVariableType);
@@ -723,6 +735,181 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             $this->cmdUtil->writeln('animalId: '.$animalId.' | '.$uln.' | '.$stn.' | '.$type.' | '.$dateOfBirth.' | '.$vsmId.' | '.$breedType.' | '.
                 $breedCode.' | '.$scrapieGenoType.' | '.$pedigree.' | '.$ubn);
         }
+    }
+
+
+    /**
+     * @param CommandUtil|null $cmdUtil
+     */
+    public function fixMultipleDuplicateAnimalsAfterMigration(CommandUtil $cmdUtil = null)
+    {
+        $this->setCmdUtil($cmdUtil);
+
+        $this->writeLn('====== Merge multi duplicate animals after migration ======');
+
+        $sql = $this->createDuplicateSqlQuery(['uln_country_code', 'uln_number'], false, true);
+        $animalsGroupedByUln = $this->findGroupedDuplicateAnimals($sql);
+
+        $totalDuplicateSets = count($animalsGroupedByUln);
+        if ($totalDuplicateSets === 0) { return; }
+
+        $loopCounter = 0;
+        $batchCounter = 0;
+        $skippedCounter = 0;
+        $duplicateAnimalsDeleted = 0;
+        $animalsToDeleteById = [];
+
+        $skippedDueToGender = 0;
+        $skippedDueBirthDate = 0;
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalDuplicateSets, 1);
+        foreach ($animalsGroupedByUln as $uln => $animalsGroup) {
+            $loopCounter++;
+
+            /* 1. Identify primary animal */
+            $keyPrimaryAnimal = $this->getKeyPrimaryAnimal($animalsGroup);
+            $primaryAnimalValues = $animalsGroup[$keyPrimaryAnimal];
+            $primaryAnimalId = $primaryAnimalValues['id'];
+            $genderPrimaryAnimal = $primaryAnimalValues['gender'];
+            $dateOfBirthPrimaryAnimal = $primaryAnimalValues['date_of_birth'];
+
+            foreach ($animalsGroup as $key => $secondaryAnimalValues) {
+                if ($key === $keyPrimaryAnimal) { continue; }
+
+                $secondaryAnimalId = $secondaryAnimalValues['id'];
+                $genderSecondaryAnimal = $secondaryAnimalValues['gender'];
+                $dateOfBirthSecondaryAnimal = $secondaryAnimalValues['date_of_birth'];
+
+                /* 2. Validation
+                    Skip if genders are mismatched
+                    or if dates of birth are both not null and mismatched
+                */
+                if ($genderPrimaryAnimal !== GenderType::NEUTER
+                && $genderSecondaryAnimal !== $genderPrimaryAnimal) {
+                    $skippedCounter++; $skippedDueToGender++;
+
+                } elseif ($dateOfBirthPrimaryAnimal !== $dateOfBirthSecondaryAnimal
+                && $dateOfBirthSecondaryAnimal !== null) {
+                    $skippedCounter++; $skippedDueBirthDate++;
+
+                } else {
+                    /* 3 Fix gender of  */
+
+                    /* 4. merge values */
+                    $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
+                    $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalValues, $secondaryAnimalValues);
+
+                    /* 5 Remove unnecessary duplicate */
+                    $animalsToDeleteById[] = $secondaryAnimalId;
+                    $batchCounter++;
+                }
+
+                if($batchCounter%self::BATCH_SIZE === 0 && $batchCounter !== 0) {
+                    $this->animalRepository->deleteAnimalsById($animalsToDeleteById);
+                    $duplicateAnimalsDeleted += $batchCounter;
+                    $batchCounter = 0;
+                    $animalsToDeleteById = [];
+                }
+            }
+
+            if($loopCounter === $totalDuplicateSets ||
+                ($batchCounter%self::BATCH_SIZE === 0 && $batchCounter !== 0)) {
+                $this->animalRepository->deleteAnimalsById($animalsToDeleteById);
+                $duplicateAnimalsDeleted += $batchCounter;
+                $batchCounter = 0;
+                $animalsToDeleteById = [];
+            }
+            $this->cmdUtil->advanceProgressBar(1, 'fixed|inBatch: '.$duplicateAnimalsDeleted.'|'.$batchCounter
+                .'  skipped birthDate|gender|total: '.$skippedDueBirthDate.'|'.$skippedDueToGender.'|'.$skippedCounter);
+        }
+        $this->animalRepository->deleteAnimalsById($animalsToDeleteById);
+
+        /* 5 Double check animalOrderNumbers */
+        DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, null);
+
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    /**
+     * @param array $animalsGroup
+     * @return int|string
+     * @throws \Exception
+     */
+    private function getKeyPrimaryAnimal($animalsGroup)
+    {
+        $validationCount = 7;
+        //Validations
+        $containsNoImportedAnimals = true;
+        $containsOnlyNeuters = true;
+        $containsNoDateOfBirth = true;
+        $containsNoDateOfDeath = true;
+        $containsNoValidBreedCode = true;
+        $containsNoBreedCode = true;
+        $containsNoLitterId = true;
+
+        $searchKey = $animalsGroup[0][self::SEARCH_KEY];
+        foreach ($animalsGroup as $key => $values) {
+            //Prioritize imported Animal over synced Animal
+            if ($containsNoImportedAnimals && $values['name'] !== null) {
+                $containsNoImportedAnimals = false;
+            }
+
+            if ($containsOnlyNeuters && $values['gender'] !== GenderType::NEUTER) {
+                $containsOnlyNeuters = false;
+            }
+
+            if ($containsNoDateOfBirth && $values['date_of_birth'] !== null) {
+                $containsNoDateOfBirth = false;
+            }
+
+            if ($containsNoDateOfDeath && $values['date_of_death'] !== null) {
+                $containsNoDateOfDeath = false;
+            }
+
+            if ($containsNoLitterId && $values['litter_id'] !== null) {
+                $containsNoLitterId = false;
+            }
+
+            $breedCode = $values['breed_code'];
+            if ($containsNoBreedCode && $breedCode !== null && $breedCode !== '') {
+                $containsNoBreedCode = false;
+            }
+
+            if ($containsNoValidBreedCode && BreedCodeUtil::isValidBreedCodeString($breedCode)) {
+                $containsNoValidBreedCode = false;
+            }
+
+
+            if (!$containsNoImportedAnimals && !$containsOnlyNeuters && !$containsNoDateOfBirth && !$containsNoValidBreedCode && !$containsNoBreedCode
+                && !$containsNoDateOfDeath && !$containsNoLitterId) {
+                break;
+            }
+        }
+
+        for ($i = 1; $i <= $validationCount; $i++) {
+            //First check if there is one animal that satisfies all conditions, if that is not the case recheck it with one validation less each loop.
+            foreach ($animalsGroup as $key => $values) {
+                $vsmId = $values['name'];
+                $gender = $values['gender'];
+                $dateOfBirth = $values['date_of_birth'];
+                $dateOfDeath = $values['date_of_death'];
+                $breedCode = $values['breed_code'];
+                $litterId = $values['litter_id'];
+                if (!$containsNoImportedAnimals && $vsmId === null && $i <= $validationCount - 0) { continue; }
+                if (!$containsOnlyNeuters && $gender === GenderType::NEUTER && $i <= $validationCount - 1) { continue; }
+                if (!$containsNoDateOfBirth && $dateOfBirth === null && $i <= $validationCount - 2) { continue; }
+                if (!$containsNoDateOfDeath && $dateOfDeath === null && $i <= $validationCount - 3) { continue; }
+                if (!$containsNoLitterId && $litterId === null && $i <= $validationCount - 4) { continue; }
+                if (!$containsNoBreedCode && ($breedCode === null || $breedCode === '') && $i <= $validationCount - 5) { continue; }
+                if (!$containsNoValidBreedCode && !BreedCodeUtil::isValidBreedCodeString($breedCode) && $i <= $validationCount - 6) { continue; }
+
+                //Return first key to pass these validations
+                return $key;
+            }
+        }
+
+        throw new \Exception('Something is incorrect in the getKeyPrimaryAnimal function of LitterMigrator, key: '.$searchKey);
     }
 
 
