@@ -16,6 +16,8 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     private $animalTableImporter;
     /** @var AnimalTableMigrator */
     private $animalTableMigrator;
+    /** @var ExteriorMigrator */
+    private $exteriorMigrator;
     /** @var LitterMigrator */
     private $litterMigrator;
     /** @var TagReplaceMigrator */
@@ -31,6 +33,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     public function __construct(ObjectManager $em, $rootDir,
                                 AnimalTableImporter $animalTableImporter,
                                 AnimalTableMigrator $animalTableMigrator,
+                                ExteriorMigrator $exteriorMigrator,
                                 LitterMigrator $litterMigrator,
                                 TagReplaceMigrator $tagReplaceMigrator,
                                 WormResistanceMigrator $wormResistanceMigrator,
@@ -42,6 +45,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
 
         $this->animalTableImporter = $animalTableImporter;
         $this->animalTableMigrator = $animalTableMigrator;
+        $this->exteriorMigrator = $exteriorMigrator;
         $this->litterMigrator = $litterMigrator;
         $this->tagReplaceMigrator = $tagReplaceMigrator;
         $this->wormResistanceMigrator = $wormResistanceMigrator;
@@ -75,6 +79,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             '10: Merge duplicate animals', "\n",
             '----------------------------------------------------', "\n",
             '20: Migrate WormResistance records', "\n",
+            '21: Migrate Exterior records', "\n",
 //            '16: Import animal_migration_table from exported csv', "\n",
 //            '17: Export vsm_id_group to csv', "\n",
 //            '18: Import vsm_id_group from exported csv', "\n",
@@ -131,6 +136,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
 //            case 17:
 //                break;
             case 20: $this->wormResistanceMigrator->run($this->cmdUtil); break;
+            case 21: $this->exteriorMigrator->run($this->cmdUtil); break;
             default: return;
         }
         $this->run($this->cmdUtil);
