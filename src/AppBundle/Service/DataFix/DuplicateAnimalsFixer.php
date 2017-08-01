@@ -35,7 +35,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
     const ULN_DATE_OF_BIRTH_MOTHER = 'uln_date_of_birth_mother';
     const ULN_DATE_OF_BIRTH_FATHER = 'uln_date_of_birth_father';
     const ULN = 'uln';
-    const BATCH_SIZE = 25;
+    const BATCH_SIZE = 100;
 
     /** @var GenderChanger */
     private $genderChanger;
@@ -762,6 +762,9 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         $skippedDueToGender = 0;
         $skippedDueBirthDate = 0;
 
+        $foreignKeyMissingCount = 0;
+        $exception = null;
+
         $this->cmdUtil->setStartTimeAndPrintIt($totalDuplicateSets, 1);
         foreach ($animalsGroupedByUln as $uln => $animalsGroup) {
             $loopCounter++;
@@ -793,15 +796,20 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
                     $skippedCounter++; $skippedDueBirthDate++;
 
                 } else {
-                    /* 3 Fix gender of  */
 
-                    /* 4. merge values */
-                    $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
-                    $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalValues, $secondaryAnimalValues);
+                    try {
+                        /* 3 Fix gender of  */
 
-                    /* 5 Remove unnecessary duplicate */
-                    $animalsToDeleteById[] = $secondaryAnimalId;
-                    $batchCounter++;
+                        /* 4. merge values */
+                        $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
+                        $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalValues, $secondaryAnimalValues);
+
+                        /* 5 Remove unnecessary duplicate */
+                        $animalsToDeleteById[] = $secondaryAnimalId;
+                        $batchCounter++;
+                    } catch (\Exception $exception) {
+                        $foreignKeyMissingCount++;
+                    }
                 }
 
                 if($batchCounter%self::BATCH_SIZE === 0 && $batchCounter !== 0) {
@@ -828,6 +836,12 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, null);
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        if ($foreignKeyMissingCount > 0) {
+            $this->writeLn($exception->getMessage());
+            $this->writeLn('Running fixMultipleDuplicateAnimalsAfterMigration again due to '.$foreignKeyMissingCount.' of these errors ...');
+            $this->fixMultipleDuplicateAnimalsAfterMigration($this->cmdUtil);
+        }
     }
 
 
