@@ -25,6 +25,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 abstract class Person implements UserInterface
 {
+    const TABLE_NAME = 'person';
+
   /**
    * @ORM\Column(type="integer")
    * @ORM\Id
