@@ -152,6 +152,17 @@ abstract class MigratorServiceBase
 
 
     /**
+     * @param string $filename
+     * @return array
+     */
+    protected function parseCSVHeaders($filename) {
+        $this->csvOptions->setFileName($this->filenames[$filename]);
+        $this->writeLn('Parse '.$filename.' csv ...');
+        return CsvParser::parseHeaders($this->csvOptions);
+    }
+
+
+    /**
      * @param string $title
      * @param string $sql
      * @return int count
