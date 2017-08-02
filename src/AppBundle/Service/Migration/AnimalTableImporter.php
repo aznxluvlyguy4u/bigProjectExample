@@ -62,13 +62,8 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
             '4: Fix animal_migration_table values, including issues as requested by Reinard', "\n",
             '5: Filling empty ulnCountryCode and ulnNumber in migration table, generated from ubn and animalOrderNumber ...', "\n",
             '----------------------------------------------------', "\n",
-//            '2: Export animal_migration_table to csv', "\n",
-//            '3: Import animal_migration_table from exported csv', "\n",
-//            '4: Export vsm_id_group to csv', "\n",
-//            '5: Import vsm_id_group from exported csv', "\n",
-//            '6: Export uln by animalId to csv', "\n",
-//            '7: Import uln by animalId to csv', "\n",
-            '----------------------------------------------------', "\n",
+            self::COMPLETE_OPTION.': All essential options', "\n",
+            '----------------------- Extra ----------------------', "\n",
             '20: Print pedigreeRegisters in csv file', "\n",
             'exit AnimalTableImporter (other)', "\n"
         ], self::DEFAULT_OPTION);
@@ -79,17 +74,29 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
             case 3: $this->extractBreederNumbers(); break;
             case 4: $this->fixValues(); break;
             case 5: $this->generateUlnFromUbnAndAnimalOrderNumber(); break;
-//            case 5:
-//                break;
-//            case 6:
-//                break;
-//            case 7:
-//                break;
+
+            case self::COMPLETE_OPTION: $this->complete($cmdUtil); break;
+
             case 20: $this->printPedigreeRegistersInCsvFile(); break;
                 break;
             default: $this->writeLn('Exited AnimalTableImporter'); return;
         }
         $this->run($this->cmdUtil);
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function complete(CommandUtil $cmdUtil)
+    {
+        parent::run($cmdUtil);
+
+        $this->importAnimalTableCsvFileIntoDatabase();
+        $this->updateValues();
+        $this->extractBreederNumbers();
+        $this->fixValues();
+        $this->generateUlnFromUbnAndAnimalOrderNumber();
     }
 
 

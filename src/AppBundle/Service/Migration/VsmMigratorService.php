@@ -91,6 +91,8 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             '22: Migrate BirthWeight, TailLength, BirthProgress records', "\n",
             '23: Migrate DateOfDeath from animalResidence records', "\n",
             '----------------------------------------------------', "\n",
+            self::COMPLETE_OPTION.': All essential options (excluding AnimalTableImporter options)', "\n",
+            '----------------------------------------------------', "\n",
             'other: Exit VsmMigrator', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -113,9 +115,39 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             case 21: $this->exteriorMigrator->run($this->cmdUtil); break;
             case 22: $this->birthDataMigrator->run($this->cmdUtil); break;
             case 23: $this->dateOfDeathMigrator->run($this->cmdUtil); break;
+
+            case self::COMPLETE_OPTION: $this->complete($this->cmdUtil); break;
+
             default: return;
         }
         $this->run($this->cmdUtil);
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function complete(CommandUtil $cmdUtil)
+    {
+        parent::run($cmdUtil);
+
+        // /*  1 */ $this->animalTableImporter->complete($this->cmdUtil);
+
+        /*  2 */ $this->animalTableMigrator->run($this->cmdUtil);
+        /*  3 */ $this->tagReplaceMigrator->run($this->cmdUtil);
+        /*  4 */ $this->animalTableMigrator->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil);
+        /*  5 */ $this->animalTableMigrator->fix($this->cmdUtil);
+
+        /*  6 */ $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil);
+        /*  7 */ $this->duplicateLitterFixer->mergeDuplicateLittersWithOnlySingleStillborn($this->cmdUtil);
+        /*  8 */ $this->litterMigrator->run($this->cmdUtil);
+        /*  9 */ $this->litterMigrator->update($this->cmdUtil);
+        /* 10 */ $this->duplicateAnimalsFixer->fixMultipleDuplicateAnimalsAfterMigration($this->cmdUtil);
+
+        /* 20 */ $this->wormResistanceMigrator->run($this->cmdUtil);
+        /* 21 */ $this->exteriorMigrator->run($this->cmdUtil);
+        /* 22 */ $this->birthDataMigrator->run($this->cmdUtil);
+        /* 23 */ $this->dateOfDeathMigrator->run($this->cmdUtil);
     }
 
 
