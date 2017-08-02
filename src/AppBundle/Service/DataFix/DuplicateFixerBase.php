@@ -17,6 +17,7 @@ class DuplicateFixerBase
 {
     const SEARCH_KEY = 'search_key';
     const BATCH_SIZE = 1000;
+    const DEFAULT_OPTION = 0;
     const VARIABLE_TYPE = 'variable_type';
     const TABLE_NAME = 'table_name';
     const IS_MERGE_SUCCESSFUL = 'is_merge_successful';

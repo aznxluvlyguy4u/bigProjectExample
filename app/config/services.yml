@@ -105,6 +105,10 @@ services:
         parent: app.datafix.base.duplicate
         class: AppBundle\Service\DataFix\DuplicateLitterFixer
 
+    app.datafix.animals.exterminator:
+        parent: app.datafix.base.duplicate
+        class: AppBundle\Service\DataFix\AnimalExterminator
+
 
     app.migrator.vsm:
         class: AppBundle\Service\Migration\VsmMigratorService

@@ -1,29 +1,33 @@
 <?php
 
 
-namespace AppBundle\Migration;
+namespace AppBundle\Service\DataFix;
 
 
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\DBAL\Connection;
-use Symfony\Component\Config\Definition\Exception\Exception;
 
-class AnimalExterminator
+class AnimalExterminator extends DuplicateFixerBase
 {
-    const VARIABLE_TYPE = 'variable_type';
-    const TABLE_NAME = 'table_name';
+    /**
+     * AnimalExterminator constructor.
+     * @param ObjectManager $em
+     */
+    public function __construct(ObjectManager $em)
+    {
+        parent::__construct($em);
+    }
 
-    const DEFAULT_OPTION = 0;
 
     /**
-     * @param ObjectManager $em
      * @param CommandUtil $cmdUtil
      * @return bool
      */
-    public static function deleteAnimalsByCliInput(ObjectManager $em, CommandUtil $cmdUtil)
+    public function deleteAnimalsByCliInput(CommandUtil $cmdUtil)
     {
-        $option = $cmdUtil->generateMultiLineQuestion([
+        $this->setCmdUtil($cmdUtil);
+        
+        $option = $this->cmdUtil->generateMultiLineQuestion([
             ' ', "\n",
             'Choose option: ', "\n",
             'Delete animal and all related records by...', "\n",
@@ -36,34 +40,32 @@ class AnimalExterminator
             case 1:
                 $animalId = 0;
                 while (!is_int($animalId) || $animalId ==0) {
-                    $animalId = $cmdUtil->generateMultiLineQuestion([
+                    $animalId = $this->cmdUtil->generateMultiLineQuestion([
                         ' ', "\n",
                         'insert animalId: ', "\n",
                     ], self::DEFAULT_OPTION);
                     if(ctype_digit($animalId)) { $animalId = intval($animalId); }
                 }
-                return self::deleteAnimalsAndAllRelatedRecordsByAnimalIds($em, [$animalId], $cmdUtil);
+                return $this->deleteAnimalsAndAllRelatedRecordsByAnimalIds([$animalId]);
             case 2:
                 $locationId = 0;
                 while (!is_int($locationId) || $locationId ==0) {
-                    $locationId = $cmdUtil->generateMultiLineQuestion([
+                    $locationId = $this->cmdUtil->generateMultiLineQuestion([
                         ' ', "\n",
                         'insert locationId: ', "\n",
                     ], self::DEFAULT_OPTION);
                     if(ctype_digit($locationId)) { $locationId = intval($locationId); }
                 }
-                return self::deleteAnimalsAndAllRelatedRecordsByLocationIds($em, [$locationId], $cmdUtil);
+                return $this->deleteAnimalsAndAllRelatedRecordsByLocationIds([$locationId]);
         }
     }
-    
-    
+
+
     /**
-     * @param ObjectManager $em
      * @param array $animalIds
-     * @param CommandUtil $cmdUtil
      * @return bool
      */
-    public static function deleteAnimalsAndAllRelatedRecordsByAnimalIds(ObjectManager $em, array $animalIds, CommandUtil $cmdUtil = null)
+    private function deleteAnimalsAndAllRelatedRecordsByAnimalIds(array $animalIds)
     {
         $totalNonAnimalRecordsDeleteCount = 0;
         $animalRecordsDeleteCount = 0;
@@ -71,15 +73,15 @@ class AnimalExterminator
 
         do{
 
-            if($cmdUtil) { $cmdUtil->setStartTimeAndPrintIt(count($animalIds), 1); }
+            if($this->cmdUtil) { $this->cmdUtil->setStartTimeAndPrintIt(count($animalIds), 1); }
             foreach ($animalIds as $animalId) {
-                $deleteCounts = self::deleteRecordsInALlTablesContainingSelectedAnimalIds($em, $animalId);
+                $deleteCounts = $this->deleteRecordsInALlTablesContainingSelectedAnimalIds($animalId);
                 $totalNonAnimalRecordsDeleteCount += $deleteCounts['non-animal'];
                 $animalRecordsDeleteCount += $deleteCounts['animal'];
                 $skippedCount += $deleteCounts['skipped'];
-                if($cmdUtil) { $cmdUtil->advanceProgressBar(1, 'Deleted records animal|other: '.$animalRecordsDeleteCount.'|'.$totalNonAnimalRecordsDeleteCount.'  skipped: '.$skippedCount); }
+                if($this->cmdUtil) { $this->cmdUtil->advanceProgressBar(1, 'Deleted records animal|other: '.$animalRecordsDeleteCount.'|'.$totalNonAnimalRecordsDeleteCount.'  skipped: '.$skippedCount); }
             }
-            if($cmdUtil) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+            if($this->cmdUtil) { $this->cmdUtil->setEndTimeAndPrintFinalOverview(); }
 
             //Reset values
             $totalNonAnimalRecordsDeleteCount = 0;
@@ -87,18 +89,16 @@ class AnimalExterminator
             $skippedCount = 0;
 
         } while($totalNonAnimalRecordsDeleteCount + $animalRecordsDeleteCount != 0);
-        
+
         return true;
     }
 
 
     /**
-     * @param ObjectManager $em
      * @param array $locationIds
-     * @param CommandUtil $cmdUtil
      * @return bool
      */
-    public static function deleteAnimalsAndAllRelatedRecordsByLocationIds(ObjectManager $em, array $locationIds, CommandUtil $cmdUtil= null)
+    private function deleteAnimalsAndAllRelatedRecordsByLocationIds(array $locationIds)
     {
         $totalNonAnimalRecordsDeleteCount = 0;
         $animalRecordsDeleteCount = 0;
@@ -106,15 +106,15 @@ class AnimalExterminator
 
         do{
 
-            if($cmdUtil) { $cmdUtil->setStartTimeAndPrintIt(count($locationIds), 1); }
+            if($this->cmdUtil) { $this->cmdUtil->setStartTimeAndPrintIt(count($locationIds), 1); }
             foreach ($locationIds as $locationId) {
-                $deleteCounts = self::deleteRecordsInALlTablesContainingSelectedAnimalIds($em, $locationId, true);
+                $deleteCounts = $this->deleteRecordsInALlTablesContainingSelectedAnimalIds($locationId, true);
                 $totalNonAnimalRecordsDeleteCount += $deleteCounts['non-animal'];
                 $animalRecordsDeleteCount += $deleteCounts['animal'];
                 $skippedCount += $deleteCounts['skipped'];
-                if($cmdUtil) { $cmdUtil->advanceProgressBar(1, 'Deleted records animal|other: '.$animalRecordsDeleteCount.'|'.$totalNonAnimalRecordsDeleteCount.'  skipped: '.$skippedCount); }
+                if($this->cmdUtil) { $this->cmdUtil->advanceProgressBar(1, 'Deleted records animal|other: '.$animalRecordsDeleteCount.'|'.$totalNonAnimalRecordsDeleteCount.'  skipped: '.$skippedCount); }
             }
-            if($cmdUtil) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+            if($this->cmdUtil) { $this->cmdUtil->setEndTimeAndPrintFinalOverview(); }
 
             //Reset values
             $totalNonAnimalRecordsDeleteCount = 0;
@@ -128,18 +128,14 @@ class AnimalExterminator
 
 
     /**
-     * @param ObjectManager $em
      * @param int $id
      * @param boolean $isLocationId
      * @throws \Doctrine\DBAL\DBALException
-     * @return boolean
+     * @return boolean|array
      *
      */
-    private static function deleteRecordsInALlTablesContainingSelectedAnimalIds(ObjectManager $em, $id, $isLocationId = false)
+    private function deleteRecordsInALlTablesContainingSelectedAnimalIds($id, $isLocationId = false)
     {
-        /** @var Connection $conn */
-        $conn = $em->getConnection();
-
         if(!is_int($id)) { return false; }
 
         //Check in which tables have the secondaryAnimalId
@@ -172,6 +168,7 @@ class AnimalExterminator
             [ self::TABLE_NAME => 'blindness_factor',       self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'predicate',              self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'result_table_breed_grades',  self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'worm_resistance',        self::VARIABLE_TYPE => 'animal_id' ],
 
             //This should be the last row!
             [ self::TABLE_NAME => 'animal',              self::VARIABLE_TYPE => 'id' ],
@@ -198,7 +195,7 @@ class AnimalExterminator
                     )
                     SELECT COUNT(*) AS count FROM rows;
                     ";
-                $deleteCount = $conn->query($sql)->fetch()['count'];
+                $deleteCount = $this->conn->query($sql)->fetch()['count'];
 
                 if($tableName == 'animal') {
                     $animalRecordsDeleteCount += $deleteCount;
@@ -211,7 +208,7 @@ class AnimalExterminator
                 if($isLocationId && $tableName == 'animal') {
                     //Delete animals one by one
                     $sql = "SELECT id FROM animal WHERE location_id = ".$id;
-                    $animalIdsResult = $conn->query($sql)->fetchAll();
+                    $animalIdsResult = $this->conn->query($sql)->fetchAll();
 
                     foreach ($animalIdsResult as $animalIdResult) {
                         $animalIdOnLocation = $animalIdResult['id'];
@@ -223,7 +220,7 @@ class AnimalExterminator
                                 )
                                 SELECT COUNT(*) AS count FROM rows;
                                 ";
-                            $deleteCount = $conn->query($sql)->fetch()['count'];
+                            $deleteCount = $this->conn->query($sql)->fetch()['count'];
                             $animalRecordsDeleteCount += $deleteCount;
 
                         } catch (\Exception $e) {
@@ -243,6 +240,5 @@ class AnimalExterminator
             'skipped' => $skippedCount,
         ];
     }
-
 
 }

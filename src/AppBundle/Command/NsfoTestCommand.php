@@ -92,7 +92,7 @@ class NsfoTestCommand extends ContainerAwareCommand
                 break;
             case 2:
                 if($this->isBlockedDatabase()) { $this->printDatabaseError(); break; }
-                AnimalExterminator::deleteAnimalsByCliInput($em, $this->cmdUtil);
+                $this->getContainer()->get('app.datafix.animals.exterminator')->deleteAnimalsByCliInput($this->cmdUtil);
                 break;
             default:
                 $this->customTest();
