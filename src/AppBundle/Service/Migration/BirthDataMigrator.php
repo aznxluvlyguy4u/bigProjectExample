@@ -36,7 +36,7 @@ class BirthDataMigrator extends Migrator2017JunServiceBase implements IMigratorS
 
         $this->writeLn('====== POST migration updates ======');
         $this->cmdUtil->writeln( TailLengthCacher::updateAll($this->conn) . ' tailLength cache records updated');
-        $this->cmdUtil->writeln( WeightCacher::updateAllWeights($this->conn) . ' weight cache records updated');
+        $this->cmdUtil->writeln( WeightCacher::updateAllBirthWeights($this->conn) . ' birth weight cache records updated');
     }
 
 
