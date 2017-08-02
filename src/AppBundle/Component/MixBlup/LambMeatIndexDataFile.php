@@ -4,6 +4,7 @@
 namespace AppBundle\Component\MixBlup;
 
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\MeasurementType;
@@ -184,7 +185,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                         m.type = '".MeasurementType::WEIGHT."'
                       )
                   AND ".self::N_LING_MIN." <= (l.born_alive_count + l.stillborn_count)
-                  AND (l.born_alive_count + l.stillborn_count) <= ".self::N_LING_MAX."
+                  AND (l.born_alive_count + l.stillborn_count) <= ".MeasurementConstant::N_LING_MAX."
                   ".self::getErrorLogAnimalPedigreeFilter('a.id');
     }
 
@@ -227,7 +228,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                   ".self::getSqlBaseFilter('date_of_birth', false)."
                   AND (
                           (c.tail_length NOTNULL 
-                            AND c.tail_length <= " . self::TAIL_LENGTH_MIN . " AND c.tail_length <= " . self::TAIL_LENGTH_MAX . "
+                            AND c.tail_length <= " . MeasurementConstant::TAIL_LENGTH_MIN . " AND c.tail_length <= " . MeasurementConstant::TAIL_LENGTH_MAX . "
                           ) OR c.birth_weight NOTNULL
                       )
                   ".self::getErrorLogAnimalPedigreeFilter('a.id');;
