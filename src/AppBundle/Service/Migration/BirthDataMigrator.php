@@ -177,7 +177,7 @@ class BirthDataMigrator extends Migrator2017JunServiceBase implements IMigratorS
             $this->sqlBatchProcessor->end();
 
         } catch (\Exception $exception) {
-            $sql = "DELETE FROM measurement WHERE type = 'Weight' AND DATE(log_date) = '$logDate')";
+            $sql = "DELETE FROM measurement WHERE type = 'Weight' AND DATE(log_date) = '$logDate'";
             $this->conn->exec($sql);
 
         } finally {
@@ -309,7 +309,7 @@ class BirthDataMigrator extends Migrator2017JunServiceBase implements IMigratorS
             $this->sqlBatchProcessor->end();
 
         } catch (\Exception $exception) {
-            $sql = "DELETE FROM measurement WHERE type = 'TailLength' AND DATE(log_date) = '$logDate')";
+            $sql = "DELETE FROM measurement WHERE type = 'TailLength' AND DATE(log_date) = '$logDate'";
             $this->conn->exec($sql);
 
         } finally {

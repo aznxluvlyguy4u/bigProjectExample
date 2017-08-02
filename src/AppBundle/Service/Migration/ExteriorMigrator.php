@@ -199,7 +199,7 @@ class ExteriorMigrator extends Migrator2017JunServiceBase implements IMigratorSe
             $this->sqlBatchProcessor->end();
 
         } catch (\Exception $exception) {
-            $sql = "DELETE FROM measurement WHERE type = 'Exterior' AND DATE(log_date) = '$logDate')";
+            $sql = "DELETE FROM measurement WHERE type = 'Exterior' AND DATE(log_date) = '$logDate'";
             $this->conn->exec($sql);
 
         } finally {
