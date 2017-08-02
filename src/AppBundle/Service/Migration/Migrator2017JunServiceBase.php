@@ -49,7 +49,7 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
 
         $this->filenames = array(
             self::ANIMAL_TABLE => '20170411_1022_Diertabel.csv',
-            self::BIRTH => '20161007_1156_Diergeboortetabel.csv',
+            self::BIRTH => '20170411_1022_Diergeboortetabel.csv',
             self::EXTERIORS => '20170411_1022_Stamboekinspectietabel.csv',
             self::LITTERS => '20170411_1022_Reproductietabel_alleen_worpen.csv',
             self::PERFORMANCE_MEASUREMENTS => '20170411_1022_Dierprestatietabel.csv',
