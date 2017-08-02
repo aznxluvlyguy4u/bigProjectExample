@@ -206,4 +206,39 @@ class SqlBatchSetData
     {
         return $this->key.'['.$this->recordsSkipped.'|'.$this->recordsAlreadyDone.'||'.$this->sqlBatchCount.'|'.$this->recordsDoneCount.'] ';
     }
+
+    /**
+     * @return int
+     */
+    public function getSqlBatchCount()
+    {
+        return $this->sqlBatchCount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRecordsDoneCount()
+    {
+        return $this->recordsDoneCount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRecordsSkipped()
+    {
+        return $this->recordsSkipped;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRecordsAlreadyDone()
+    {
+        return $this->recordsAlreadyDone;
+    }
+
+
+
 }
