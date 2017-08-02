@@ -2,6 +2,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Migration\BirthProgressMigrator;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
@@ -81,70 +82,26 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             '33: Remove duplicate animal residences with endDate isNull', "\n\n",
 
             '================== DECLARES ===================', "\n",
-            '50: Fill missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015', "\n",
-            'abort (other)', "\n"
+            '50: Fill missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015', "\n\n",
+
+            '================== INITIALIZE VALUES ===================', "\n",
+            '60: BirthProgress', "\n\n",
+            'abort (other)', "\n",
         ], self::DEFAULT_OPTION);
 
         $ascendantValidator = new AscendantValidator($this->em, $this->cmdUtil, $this->logger);
 
         switch ($option) {
-            case 1:
-                DatabaseDataFixer::updateMaxIdOfAllSequences($this->conn, $this->cmdUtil);
-                $output->writeln('Done!');
-                break;
+            case 1: DatabaseDataFixer::updateMaxIdOfAllSequences($this->conn, $this->cmdUtil); break;
+            case 2: DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil); break;
+            case 3: DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, $this->cmdUtil); break;
+            case 4: MeasurementsUtil::generateAnimalIdAndDateValues($this->conn, false, $this->cmdUtil); break;
+            case 5: $output->writeln(LitterUtil::deleteDuplicateLittersWithoutBornAlive($this->conn) . ' litters deleted'); break;
+            case 6: $ascendantValidator->run(); break;
+            case 7: $ascendantValidator->printOverview(); break;
+            case 8: DatabaseDataFixer::recursivelyFillMissingBreedCodesHavingBothParentBreedCodes($this->conn, $this->cmdUtil); break;
 
-            case 2:
-                DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil);
-                $output->writeln('Done!');
-                break;
-
-            case 3:
-                DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, $this->cmdUtil);
-                $output->writeln('Done!');
-                break;
-
-            case 4:
-                $updateCount = MeasurementsUtil::generateAnimalIdAndDateValues($this->conn, false);
-                if($updateCount > 0) {
-                    $output->writeln($updateCount.' animalIdAndDate values in measurement table updated');
-                } else {
-                    $output->writeln('No animalIdAndDate values in measurement table needed to be updated');
-                }
-                break;
-
-            case 5:
-                $littersDeleted = LitterUtil::deleteDuplicateLittersWithoutBornAlive($this->conn);
-                $output->writeln($littersDeleted . ' litters deleted');
-                $output->writeln('Done!');
-                break;
-
-            case 6:
-                $ascendantValidator->run();
-                $output->writeln('Done!');
-                break;
-
-            case 7:
-                $ascendantValidator->printOverview();
-                $output->writeln('Done!');
-                break;
-
-            case 8:
-                DatabaseDataFixer::recursivelyFillMissingBreedCodesHavingBothParentBreedCodes($this->conn, $this->cmdUtil);
-                break;    
-
-
-
-            case 20:
-                do {
-                    $locationId = $this->cmdUtil->generateQuestion('Insert locationId', null);
-                    if(ctype_digit($locationId)) {
-                        $locationId = intval($locationId);
-                    }
-                } while (!is_int($locationId));
-
-                $animalsDeleted = DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirths($this->conn, $locationId);
-                $output->writeln('Done! ' . $animalsDeleted . ' animals deleted');
-                break;
+            case 20: DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirthsWithOptionInput($this->conn, $this->cmdUtil); break;
 
             case 30: DatabaseDataFixer::removeAnimalsFromLocationAndAnimalResidence($this->conn, $this->cmdUtil); break;
             case 31: DatabaseDataFixer::killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss($this->conn, $this->cmdUtil); break;
@@ -153,10 +110,11 @@ class NsfoFixDbCommand extends ContainerAwareCommand
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
-            default:
-                $output->writeln('ABORTED');
-                break;
+            case 60: $migrator = new BirthProgressMigrator($this->cmdUtil, $this->em, $this->rootDir); $migrator->migrate(); break;
+
+            default: $output->writeln('ABORTED'); return;
         }
+        $output->writeln('Done!');
     }
     
 

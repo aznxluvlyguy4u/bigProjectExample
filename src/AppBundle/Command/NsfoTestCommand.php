@@ -14,6 +14,7 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -33,34 +34,21 @@ class NsfoTestCommand extends ContainerAwareCommand
 
     /** @var ObjectManager $em */
     private $em;
-
     /** @var Connection $conn */
     private $conn;
-
     /** @var OutputInterface */
     private $output;
-
     /** @var CommandUtil */
     private $cmdUtil;
-
     /** @var string */
     private $rootDir;
-
     /** @var LocationRepository */
     private $locationRepository;
-
     /** @var AnimalRepository */
     private $animalRepository;
-
     /** @var string */
     private $databaseName;
 
-    private $csvParsingOptions = array(
-        'finder_in' => 'app/Resources/imports/',
-        'finder_out' => 'app/Resources/outputs/',
-        'finder_name' => 'filename.csv',
-        'ignoreFirstLine' => true
-    );
 
     protected function configure()
     {
@@ -72,7 +60,7 @@ class NsfoTestCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
+        /** @var ObjectManager|EntityManagerInterface $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
         $this->output = $output;

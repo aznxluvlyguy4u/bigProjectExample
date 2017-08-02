@@ -214,6 +214,26 @@ class DatabaseDataFixer
 
     /**
      * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public static function deleteIncorrectNeutersFromRevokedBirthsWithOptionInput(Connection $conn, CommandUtil $cmdUtil)
+    {
+        do {
+            $locationId = $cmdUtil->generateQuestion('Insert locationId', null);
+            if(ctype_digit($locationId)) {
+                $locationId = intval($locationId);
+            }
+        } while (!is_int($locationId));
+
+        $animalsDeleted = DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirths($conn, $locationId);
+        $cmdUtil->writeln('Done! ' . $animalsDeleted . ' animals deleted');
+        return $animalsDeleted;
+    }
+
+
+    /**
+     * @param Connection $conn
      * @param int $locationId
      * @return int
      */
