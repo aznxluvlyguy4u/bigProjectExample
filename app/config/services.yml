@@ -118,6 +118,7 @@ services:
           animalTableImporter: '@app.migrator.importer.animaltable'
           animalTableMigrator: '@app.migrator.animaltable'
           birthMigrator: '@app.migrator.birth'
+          dateOfDeathMigrator: '@app.migrator.date_of_death'
           exteriorMigrator: '@app.migrator.exteriors'
           litterMigrator: '@app.migrator.litters'
           tagReplaceMigrator: '@app.migrator.tagreplace'
@@ -158,6 +159,10 @@ services:
           - '@doctrine.orm.entity_manager'
           - %kernel.root_dir%
           - '@security.password_encoder'
+
+    app.migrator.date_of_death:
+        parent: app.migrator.base
+        class: AppBundle\Service\Migration\DateOfDeathMigrator
 
     app.migrator.exteriors:
         parent: app.migrator.base

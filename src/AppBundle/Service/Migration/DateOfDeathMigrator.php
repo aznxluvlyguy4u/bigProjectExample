@@ -1,16 +1,15 @@
 <?php
 
 
-namespace AppBundle\Migration;
+namespace AppBundle\Service\Migration;
 
 
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\AnimalResidenceRepository;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\Console\Output\OutputInterface;
-
 
 /**
  * Class DateOfDeathMigrator
@@ -21,60 +20,46 @@ use Symfony\Component\Console\Output\OutputInterface;
  * needs a lot of work which will probably not be worth it.
  * Furthermore there is no guarantee that the generated animalResidences will actually be correct.
  * There is a high risk that the data will become corrupted.
- *
- * @ORM\Entity(repositoryClass="AppBundle\Migration")
- * @package AppBundle\Migration
  */
-class DateOfDeathMigrator extends MigratorBase
+class DateOfDeathMigrator extends Migrator2017JunServiceBase implements IMigratorService
 {
-    const DEFAULT_ANIMAL_ID = 1;
-    
-    const ANIMAL_ID = 'animal_id';
-    const PRIMARY_LOCATION_ID = 'primary_location_id';
-    const SECONDARY_LOCATION_ID = 'secondary_location_id';
-    const DATE_STRING = 'date_string';
-    const MUTATION_TYPE = 'mutation_type';
-
     const DEPART = 'Afvoer';
     const ARRIVAL = 'Aanvoer';
     const DEATH = 'Dood';
-
-    /** @var array */
-    private $animalIdsByVsmIds;
 
     /** @var AnimalResidenceRepository */
     private $animalResidenceRepository;
 
     /**
-     * AnimalResidenceMigrator constructor.
-     * @param CommandUtil $cmdUtil
+     * DateOfDeathMigrator constructor.
      * @param ObjectManager $em
-     * @param OutputInterface $output
-     * @param array $data
+     * @param string $rootDir
      */
-    public function __construct(CommandUtil $cmdUtil, ObjectManager $em, OutputInterface $output, array $data)
+    public function __construct(ObjectManager $em, $rootDir)
     {
-        parent::__construct($cmdUtil, $em, $output, $data);
+        parent::__construct($em, $rootDir, self::BATCH_SIZE, self::IMPORT_SUB_FOLDER);
         $this->animalResidenceRepository = $em->getRepository(AnimalResidence::class);
     }
 
-    public function migrate()
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function run(CommandUtil $cmdUtil)
     {
-        $this->output->writeln(['',
-                                'Generating searchArrays...']);
+        parent::run($cmdUtil);
+
+        $this->writeln(['',
+            'Generating searchArrays...']);
 
         $this->resetPrimaryVsmIdsBySecondaryVsmId();
 
-        $this->animalIdsByVsmIds = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
+        $this->animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
 
         $sql = 'SELECT id FROM animal WHERE date_of_death ISNULL OR is_alive = TRUE';
         $results = $this->conn->query($sql)->fetchAll();
+        $animalIdsOfAliveAnimals = SqlUtil::getSingleValueGroupedSqlResults('id', $results, true);
 
-        $animalIdsOfAliveAnimals = [];
-        foreach ($results as $result) {
-            $animalIdsOfAliveAnimals[$result['id']] = $result['id'];
-        }
-
+        $this->data = $this->parseCSV(self::RESIDENCE);
 
         $this->cmdUtil->setStartTimeAndPrintIt(count($this->data), 1);
 
@@ -89,7 +74,7 @@ class DateOfDeathMigrator extends MigratorBase
             $dateString = TimeUtil::fillDateStringWithLeadingZeroes($record[1]);
             $mutationType = $record[2];
             $primaryUbn = $record[3];
-            $secondaryUbn = $record[4];
+            //$secondaryUbn = $record[4];
 
             //First get the correct vsmId before getting the animalId
             if(array_key_exists($vsmId, $this->primaryVsmIdsBySecondaryVsmId)) {
@@ -97,8 +82,8 @@ class DateOfDeathMigrator extends MigratorBase
             }
 
             $animalId = null;
-            if(array_key_exists($vsmId, $this->animalIdsByVsmIds)) {
-                $animalId = intval($this->animalIdsByVsmIds[$vsmId]);
+            if(array_key_exists($vsmId, $this->animalIdsByVsmId)) {
+                $animalId = intval($this->animalIdsByVsmId[$vsmId]);
             }
 
             //NullCheck
@@ -128,7 +113,7 @@ class DateOfDeathMigrator extends MigratorBase
                 case self::DEPART:  $notDeath++; break;
                 case '':            $notDeath++; break; //Do not process records with missing mutationTypes
                 default;
-                    $this->output->writeln('Write code to process the following mutationType: '.$mutationType);
+                    $this->writeln('Write code to process the following mutationType: '.$mutationType);
                     die;
             }
 
@@ -137,6 +122,4 @@ class DateOfDeathMigrator extends MigratorBase
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
-
-
 }

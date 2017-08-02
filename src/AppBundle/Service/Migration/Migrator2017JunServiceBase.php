@@ -5,6 +5,8 @@ namespace AppBundle\Service\Migration;
 
 use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\VsmIdGroup;
+use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\CsvParser;
 use AppBundle\Util\SqlUtil;
@@ -31,10 +33,15 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
     const TAG_REPLACES = 'tag_replaces';
     const WORM_RESISTANCE = 'worm_resistance';
 
+    /** @var VsmIdGroupRepository */
+    protected $vsmIdGroupRepository;
+
     /** @var array */
     protected $animalIdsByVsmId;
     /** @var array */
     protected $inspectorIdsInDbByFullName;
+    /** @var array */
+    protected $primaryVsmIdsBySecondaryVsmId;
 
     /**
      * Migrator2017JunServiceBase constructor.
@@ -57,6 +64,8 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
             self::TAG_REPLACES => '20170411_1022_DierOmnummeringen.csv',
             self::WORM_RESISTANCE => 'Uitslagen_IgA_2014-2015-2016-2017_def_edited.csv',
         );
+
+        $this->vsmIdGroupRepository = $this->em->getRepository(VsmIdGroup::class);
     }
 
 
@@ -150,5 +159,10 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
         }
 
         return $inspectorIdsInDbByFullName;
+    }
+
+    protected function resetPrimaryVsmIdsBySecondaryVsmId()
+    {
+        $this->primaryVsmIdsBySecondaryVsmId = $this->vsmIdGroupRepository->getPrimaryVsmIdsBySecondaryVsmId();
     }
 }

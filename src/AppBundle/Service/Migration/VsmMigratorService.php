@@ -18,6 +18,8 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     private $animalTableMigrator;
     /** @var BirthDataMigrator */
     private $birthDataMigrator;
+    /** @var DateOfDeathMigrator */
+    private $dateOfDeathMigrator;
     /** @var ExteriorMigrator */
     private $exteriorMigrator;
     /** @var LitterMigrator */
@@ -36,6 +38,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
                                 AnimalTableImporter $animalTableImporter,
                                 AnimalTableMigrator $animalTableMigrator,
                                 BirthDataMigrator $birthDataMigrator,
+                                DateOfDeathMigrator $dateOfDeathMigrator,
                                 ExteriorMigrator $exteriorMigrator,
                                 LitterMigrator $litterMigrator,
                                 TagReplaceMigrator $tagReplaceMigrator,
@@ -49,6 +52,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
         $this->animalTableImporter = $animalTableImporter;
         $this->animalTableMigrator = $animalTableMigrator;
         $this->birthDataMigrator = $birthDataMigrator;
+        $this->dateOfDeathMigrator = $dateOfDeathMigrator;
         $this->exteriorMigrator = $exteriorMigrator;
         $this->litterMigrator = $litterMigrator;
         $this->tagReplaceMigrator = $tagReplaceMigrator;
@@ -85,6 +89,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             '20: Migrate WormResistance records', "\n",
             '21: Migrate Exterior records', "\n",
             '22: Migrate BirthWeight, TailLength, BirthProgress records', "\n",
+            '23: Migrate DateOfDeath from animalResidence records', "\n",
             '----------------------------------------------------', "\n",
             'other: Exit VsmMigrator', "\n"
         ], self::DEFAULT_OPTION);
@@ -107,6 +112,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             case 20: $this->wormResistanceMigrator->run($this->cmdUtil); break;
             case 21: $this->exteriorMigrator->run($this->cmdUtil); break;
             case 22: $this->birthDataMigrator->run($this->cmdUtil); break;
+            case 23: $this->dateOfDeathMigrator->run($this->cmdUtil); break;
             default: return;
         }
         $this->run($this->cmdUtil);
