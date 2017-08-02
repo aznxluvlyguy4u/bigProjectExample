@@ -184,7 +184,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                         m.type = '".MeasurementType::TAIL_LENGTH."' OR
                         m.type = '".MeasurementType::WEIGHT."'
                       )
-                  AND ".self::N_LING_MIN." <= (l.born_alive_count + l.stillborn_count)
+                  AND ".MeasurementConstant::N_LING_MIN." <= (l.born_alive_count + l.stillborn_count)
                   AND (l.born_alive_count + l.stillborn_count) <= ".MeasurementConstant::N_LING_MAX."
                   ".self::getErrorLogAnimalPedigreeFilter('a.id');
     }
