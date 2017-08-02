@@ -155,7 +155,6 @@ services:
     app.migrator.client:
         class: AppBundle\Service\Migration\ClientMigrator
         arguments:
-        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
           - %kernel.root_dir%
           - '@security.password_encoder'
@@ -167,6 +166,12 @@ services:
     app.migrator.exteriors:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\ExteriorMigrator
+
+    app.migrator.lamb_meat_index:
+        class: AppBundle\Service\Migration\LambMeatIndexMigrator
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.migrator.litters:
         parent: app.migrator.base

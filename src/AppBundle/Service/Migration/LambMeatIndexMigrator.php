@@ -1,7 +1,8 @@
 <?php
 
 
-namespace AppBundle\Migration;
+namespace AppBundle\Service\Migration;
+
 
 use AppBundle\Constant\BreedIndexTypeConstant;
 use AppBundle\Constant\BreedValueTypeConstant;
@@ -13,10 +14,6 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 
-/**
- * Class LambMeatIndexMigrator
- * @package AppBundle\Migration
- */
 class LambMeatIndexMigrator
 {
     /** @var ObjectManager */
@@ -65,7 +62,7 @@ class LambMeatIndexMigrator
             ->setC(200)
             ->setVar(0.0004839)
             ->setT(23.42076)
-            ;
+        ;
 
         $fatThicknessBreedIndexCoefficient = (new BreedIndexCoefficient())
             ->setBreedIndexType($lambMeatIndexType)

@@ -17,6 +17,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -68,7 +69,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
+        /** @var ObjectManager|EntityManagerInterface $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -109,19 +110,11 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
 
         switch ($option) {
 
-            case 1:
-                $this->mixBlupInputFilesService->run();
-                break;
-            case 2:
-                $this->mixBlupOutputFilesService->run();
-                break;
-            case 3:
-                $this->mixBlupInputFilesService->writeInstructionFiles();
-                break;
+            case 1: $this->mixBlupInputFilesService->run(); break;
+            case 2: $this->mixBlupOutputFilesService->run(); break;
+            case 3: $this->mixBlupInputFilesService->writeInstructionFiles(); break;
+            case 4: $this->breedValueService->initializeBlankGeneticBases(); break;
 
-            case 4:
-                $this->breedValueService->initializeBlankGeneticBases();
-                break;
 
             case 10:
                 $this->breedIndexService->initializeBreedIndexType();
@@ -138,23 +131,13 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
                 $breedValuesResultTableUpdater->update();
                 break;
 
-            case 13:
-                $lambMeatIndexMigrator = new LambMeatIndexMigrator($this->em, $this->logger);
-                $lambMeatIndexMigrator->migrate();
-                break;
+            case 13: $this->getContainer()->get('app.migrator.lamb_meat_index')->migrate(); break;
 
 
-            case 30:
-                $this->printBreedValuesAllUbns();
-                break;
-            case 31:
-                $this->printBreedValuesByUbn();
-                break;
+            case 30: $this->printBreedValuesAllUbns(); break;
+            case 31: $this->printBreedValuesByUbn(); break;
 
-
-            case 40:
-                $this->getContainer()->get(ServiceId::EXCEL_SERVICE)->clearCacheFolder();
-                break;
+            case 40: $this->getContainer()->get(ServiceId::EXCEL_SERVICE)->clearCacheFolder(); break;
             case 41:
                 $filepath = $this->getContainer()->get(ServiceId::PEDIGREE_REGISTER_REPORT)->generate(PedigreeAbbreviation::CF);
                 $this->logger->notice($filepath);
