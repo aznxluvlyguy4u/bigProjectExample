@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Migration;
+namespace AppBundle\Service\Migration;
 
 
 use AppBundle\Entity\BirthProgress;
@@ -12,31 +12,37 @@ use AppBundle\Util\CsvParser;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\MigrationUtil;
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\Console\Output\OutputInterface;
 
-
-class BirthProgressMigrator extends MigratorBase
+/**
+ * Class BirthProgressInitializer
+ */
+class BirthProgressInitializer extends MigratorServiceBase implements IMigratorService
 {
     const SEPERATOR = '||||';
     const DELETE_NEW_RECORDS = false;
-    
+
     /** @var BirthProgressRepository */
     private $repository;
 
+
     /**
-     * BirthProgressMigrator constructor.
-     * @param CommandUtil $cmdUtil
      * @param ObjectManager $em
      * @param string $rootDir
      */
-    public function __construct(CommandUtil $cmdUtil, ObjectManager $em, $rootDir)
-    {        
-        parent::__construct($cmdUtil, $em, $cmdUtil->getOutputInterface(), [], $rootDir);
+    public function __construct(ObjectManager $em, $rootDir)
+    {
+        parent::__construct($em, self::BATCH_SIZE, self::IMPORT_SUB_FOLDER, $rootDir);
         $this->repository = $em->getRepository(BirthProgress::class);
     }
 
-    public function migrate()
+    /**
+     * @param CommandUtil $cmdUtil
+     * @return bool
+     */
+    public function run(CommandUtil $cmdUtil)
     {
+        parent::run($cmdUtil);
+
         if(!$this->parse()) { return false; }
 
         $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
@@ -64,7 +70,7 @@ class BirthProgressMigrator extends MigratorBase
             $deleteKey = $description.self::SEPERATOR.$dutchDescription;
 
             if (!key_exists($description, $descriptionSearchArray)
-            && !key_exists($dutchDescription, $dutchDescriptionSearchArray)) {
+                && !key_exists($dutchDescription, $dutchDescriptionSearchArray)) {
                 $birthProgress = new BirthProgress($description, $dutchDescription, $mixBlupScore);
                 $this->em->persist($birthProgress);
                 $newCount++;

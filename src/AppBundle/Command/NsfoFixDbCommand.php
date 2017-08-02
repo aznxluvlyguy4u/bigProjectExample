@@ -110,7 +110,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
-            case 60: $migrator = new BirthProgressMigrator($this->cmdUtil, $this->em, $this->rootDir); $migrator->migrate(); break;
+            case 60: $this->getContainer()->get('app.initializer.birth_progress')->run($this->cmdUtil); break;
 
             default: $output->writeln('ABORTED'); return;
         }
