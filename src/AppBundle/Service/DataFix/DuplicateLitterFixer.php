@@ -358,7 +358,8 @@ class DuplicateLitterFixer extends DuplicateFixerBase
 
         $this->writeLn('Merging TRIPLE IMPORTED litters with identical mother, litterDate and primary values ...');
 
-        $sql = "SELECT main.id as primary_litter_id, s.id as secondary_litter_id, t.id as tertiary_litter_id
+        $sql = "--TRIPLE IDENTICAL IMPORTED LITTERS
+                SELECT main.id as primary_litter_id, s.id as secondary_litter_id, t.id as tertiary_litter_id
                 FROM litter main
                   INNER JOIN (
                                SELECT
@@ -385,10 +386,108 @@ class DuplicateLitterFixer extends DuplicateFixerBase
                   INNER JOIN declare_nsfo_base bm ON bm.id = main.id
                   INNER JOIN declare_nsfo_base bs ON bs.id = s.id
                   INNER JOIN declare_nsfo_base bt ON bt.id = t.id
-                WHERE g.rank = 1 AND bm.request_state = 'IMPORTED' AND bs.request_state = 'IMPORTED' 
+                WHERE g.rank = 1 AND bm.request_state = 'IMPORTED' AND bs.request_state = 'IMPORTED'
                       AND bt.request_state = 'IMPORTED'
                       AND s.id <> main.id AND t.id <> main.id
-                      AND s.id < t.id --Note that the rank is ascending by rank";
+                      AND s.id < t.id --Note that the rank is ascending by rank
+                UNION
+                --TRIPLE WITH 2 HIGHER BORN ALIVE COUNTS BEING EQUAL
+                SELECT main.id as primary_litter_id, s.id as secondary_litter_id, t.id as tertiary_litter_id
+                FROM litter main
+                  INNER JOIN (
+                               SELECT
+                                 DENSE_RANK() OVER (PARTITION BY l.animal_mother_id, l.litter_date, l.stillborn_count, l.born_alive_count
+                                   ORDER BY l.born_alive_count DESC ) AS rank,
+                                 l.id
+                               --l.litter_date, l.animal_mother_id, l.stillborn_count, l.born_alive_count, l.litter_ordinal, l.birth_interval
+                               FROM litter l
+                                 INNER JOIN (
+                                              SELECT litter_date, animal_mother_id FROM litter
+                                                INNER JOIN declare_nsfo_base ON litter.id = declare_nsfo_base.id
+                                              WHERE request_state = 'IMPORTED' AND is_abortion = FALSE AND is_pseudo_pregnancy = FALSE
+                                              GROUP BY litter_date, animal_mother_id
+                                              HAVING COUNT(*) = 3
+                                            )g ON g.litter_date = l.litter_date AND g.animal_mother_id = l.animal_mother_id
+                               ORDER BY g.animal_mother_id, g.litter_date
+                             )g ON g.id = main.id
+                  INNER JOIN litter s
+                    ON s.animal_mother_id = main.animal_mother_id AND s.litter_date = main.litter_date
+                      AND s.born_alive_count = main.born_alive_count
+                  INNER JOIN declare_nsfo_base bm ON bm.id = main.id
+                  INNER JOIN declare_nsfo_base bs ON bs.id = s.id
+                  INNER JOIN litter t
+                    ON t.animal_mother_id = main.animal_mother_id AND t.litter_date = main.litter_date
+                      AND t.born_alive_count < main.born_alive_count
+                  INNER JOIN declare_nsfo_base bt ON bt.id = t.id
+                WHERE g.rank = 1 AND bm.request_state = 'IMPORTED' AND bs.request_state = 'IMPORTED' AND bt.request_state = 'IMPORTED'
+                      AND s.id > main.id AND t.id <> main.id AND s.id <> t.id
+                      AND main.born_alive_count = s.born_alive_count
+                UNION
+                --TRIPLE WITH 2 LOWER BORN ALIVE COUNTS BEING EQUAL
+                SELECT main.id as primary_litter_id, s.id as secondary_litter_id, t.id as tertiary_litter_id
+                FROM litter main
+                  INNER JOIN (
+                               SELECT
+                                 DENSE_RANK() OVER (PARTITION BY l.animal_mother_id, l.litter_date, l.stillborn_count, l.born_alive_count
+                                   ORDER BY l.born_alive_count DESC ) AS rank,
+                                 l.id
+                               --l.litter_date, l.animal_mother_id, l.stillborn_count, l.born_alive_count, l.litter_ordinal, l.birth_interval
+                               FROM litter l
+                                 INNER JOIN (
+                                              SELECT litter_date, animal_mother_id FROM litter
+                                                INNER JOIN declare_nsfo_base ON litter.id = declare_nsfo_base.id
+                                              WHERE request_state = 'IMPORTED' AND is_abortion = FALSE AND is_pseudo_pregnancy = FALSE
+                                              GROUP BY litter_date, animal_mother_id
+                                              HAVING COUNT(*) = 3
+                                            )g ON g.litter_date = l.litter_date AND g.animal_mother_id = l.animal_mother_id
+                               ORDER BY g.animal_mother_id, g.litter_date
+                             )g ON g.id = main.id
+                  INNER JOIN litter s
+                    ON s.animal_mother_id = main.animal_mother_id AND s.litter_date = main.litter_date
+                       AND s.born_alive_count < main.born_alive_count
+                  INNER JOIN declare_nsfo_base bm ON bm.id = main.id
+                  INNER JOIN declare_nsfo_base bs ON bs.id = s.id
+                  INNER JOIN litter t
+                    ON t.animal_mother_id = main.animal_mother_id AND t.litter_date = main.litter_date
+                       AND t.born_alive_count = s.born_alive_count
+                  INNER JOIN declare_nsfo_base bt ON bt.id = t.id
+                WHERE g.rank = 1 AND bm.request_state = 'IMPORTED' AND bs.request_state = 'IMPORTED' AND bt.request_state = 'IMPORTED'
+                      AND s.id > main.id AND t.id <> main.id AND s.id <> t.id
+                      AND s.born_alive_count = t.born_alive_count
+                UNION
+                --TRIPLE WITH ALL DIFFERENT OR ALL EQUAL BORN ALIVE COUNT
+                SELECT main.id as primary_litter_id, s.id as secondary_litter_id, t.id as tertiary_litter_id
+                FROM litter main
+                  INNER JOIN (
+                               SELECT
+                                 DENSE_RANK() OVER (PARTITION BY l.animal_mother_id, l.litter_date, l.stillborn_count, l.born_alive_count
+                                   ORDER BY l.born_alive_count DESC, l.id ASC) AS rank,
+                                 l.id
+                               --l.litter_date, l.animal_mother_id, l.stillborn_count, l.born_alive_count, l.litter_ordinal, l.birth_interval
+                               FROM litter l
+                                 INNER JOIN (
+                                              SELECT litter_date, animal_mother_id FROM litter
+                                                INNER JOIN declare_nsfo_base ON litter.id = declare_nsfo_base.id
+                                              WHERE request_state = 'IMPORTED' AND is_abortion = FALSE AND is_pseudo_pregnancy = FALSE
+                                              GROUP BY litter_date, animal_mother_id
+                                              HAVING COUNT(*) = 3
+                                            )g ON g.litter_date = l.litter_date AND g.animal_mother_id = l.animal_mother_id
+                               ORDER BY g.animal_mother_id, g.litter_date
+                             )g ON g.id = main.id
+                  INNER JOIN litter s
+                    ON s.animal_mother_id = main.animal_mother_id AND s.litter_date = main.litter_date
+                  INNER JOIN declare_nsfo_base bm ON bm.id = main.id
+                  INNER JOIN declare_nsfo_base bs ON bs.id = s.id
+                  INNER JOIN litter t
+                    ON t.animal_mother_id = main.animal_mother_id AND t.litter_date = main.litter_date
+                  INNER JOIN declare_nsfo_base bt ON bt.id = t.id
+                WHERE g.rank = 1 AND bm.request_state = 'IMPORTED' AND bs.request_state = 'IMPORTED' AND bt.request_state = 'IMPORTED'
+                      AND s.id <> main.id AND t.id <> main.id AND s.id <> t.id
+                      --Note that the rank is ascending by born_alive_count
+                      AND ((main.born_alive_count > s.born_alive_count
+                            AND s.born_alive_count > t.born_alive_count)
+                        OR (main.born_alive_count = s.born_alive_count
+                            AND s.born_alive_count = t.born_alive_count))";
         $results = $this->conn->query($sql)->fetchAll();
 
 
