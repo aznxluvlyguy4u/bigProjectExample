@@ -251,7 +251,9 @@ class CliOptionsService
             '20: BatchUpdate all incongruent production values and n-ling values', "\n",
             '21: BatchUpdate all Incongruent exterior values', "\n",
             '22: BatchUpdate all Incongruent weight values', "\n",
-            '23: BatchUpdate all Incongruent tailLength values', "\n\n",
+            '23: BatchUpdate all Incongruent tailLength values', "\n",
+            '-------------------------', "\n",
+            '24: BatchInsert empty animal_cache records and BatchUpdate all Incongruent values', "\n\n",
             '', "\n",
             '--- Helper Commands ---', "\n",
             '99: Get locationId from UBN', "\n",
@@ -353,7 +355,7 @@ class CliOptionsService
 
                     $updateCount = ExteriorCacher::updateExteriors($this->conn, [$animalId]);
                 }
-                $cmdUtil->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
+                $cmdUtil->writeln([$updateCount.' exterior animalCache records updated' ,'DONE!']);
                 break;
 
 
@@ -369,7 +371,7 @@ class CliOptionsService
 
                     $updateCount = WeightCacher::updateWeights($this->conn, [$animalId]);
                 }
-                $cmdUtil->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
+                $cmdUtil->writeln([$updateCount.' weight animalCache records updated' ,'DONE!']);
                 break;
 
             case 23:
@@ -384,8 +386,10 @@ class CliOptionsService
 
                     $updateCount = TailLengthCacher::update($this->conn, [$animalId]);
                 }
-                $cmdUtil->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
+                $cmdUtil->writeln([$updateCount.' tailLength animalCache records updated' ,'DONE!']);
                 break;
+
+            case 24: AnimalCacher::cacheAllAnimalsBySqlBatchQueries($this->conn, $this->cmdUtil); break;
 
             case 99:
                 $this->printLocationIdFromGivenUbn();

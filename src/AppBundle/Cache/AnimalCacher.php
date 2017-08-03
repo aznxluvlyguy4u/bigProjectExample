@@ -49,6 +49,38 @@ class AnimalCacher
 
 
     /**
+     * @param Connection $conn
+     * @param CommandUtil|null $cmdUtil
+     */
+    public static function cacheAllAnimalsBySqlBatchQueries(Connection $conn, CommandUtil $cmdUtil = null)
+    {
+        DoctrineUtil::updateTableSequence($conn, ['animal_cache']);
+        $sql = "INSERT INTO animal_cache (animal_id)
+                  SELECT a.id FROM animal a
+                  LEFT JOIN animal_cache c ON c.animal_id = a.id
+                  WHERE c.id ISNULL";
+        $blankInsertCount = SqlUtil::updateWithCount($conn, $sql);
+        DoctrineUtil::updateTableSequence($conn, ['animal_cache']);
+        if ($cmdUtil !== null) { $cmdUtil->writeln($blankInsertCount . ' new blank animal_cache records inserted'); }
+
+        $updateCount = ProductionCacher::updateAllProductionValues($conn);
+        $cmdUtil->writeln($updateCount.' production values updated');
+
+        $updateCount = NLingCacher::updateAllNLingValues($conn);
+        $cmdUtil->writeln($updateCount.' n-ling values updated');
+
+        $updateCount = ExteriorCacher::updateAllExteriors($conn);
+        $cmdUtil->writeln($updateCount.' exterior animalCache records updated' );
+
+        $updateCount = WeightCacher::updateAllWeights($conn);
+        $cmdUtil->writeln($updateCount.' weight animalCache records updated' );
+
+        $updateCount = TailLengthCacher::updateAll($conn);
+        $cmdUtil->writeln($updateCount.' tailLength animalCache records updated' );
+    }
+
+
+    /**
      * @param ObjectManager $em
      * @param bool $ignoreAnimalsWithAnExistingCache
      * @param string $ignoreCacheBeforeDateString

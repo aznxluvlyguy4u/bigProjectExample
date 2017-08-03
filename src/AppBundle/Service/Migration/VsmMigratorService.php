@@ -2,10 +2,18 @@
 
 namespace AppBundle\Service\Migration;
 
+use AppBundle\Cache\AnimalCacher;
+use AppBundle\Cache\ExteriorCacher;
+use AppBundle\Cache\GeneDiversityUpdater;
+use AppBundle\Cache\NLingCacher;
+use AppBundle\Cache\ProductionCacher;
+use AppBundle\Cache\TailLengthCacher;
+use AppBundle\Cache\WeightCacher;
 use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
 use AppBundle\Service\DataFix\DuplicateLitterFixer;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\LitterUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -96,7 +104,10 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             '22: Migrate BirthWeight, TailLength, BirthProgress records', "\n",
             '23: Migrate DateOfDeath from animalResidence records', "\n",
             '----------------------------------------------------', "\n",
+            ' do not forget to generate AND fill the animal_cache values and necessary litter values! ', "\n",
+            '----------------------------------------------------', "\n",
             self::COMPLETE_OPTION.': All essential options (excluding AnimalTableImporter options)', "\n",
+            '                    including all animal_cache updates', "\n",
             '----------------------------------------------------', "\n",
             'other: Exit VsmMigrator', "\n"
         ], self::DEFAULT_OPTION);
@@ -154,6 +165,19 @@ class VsmMigratorService extends Migrator2017JunServiceBase
         /* 21 */ $this->exteriorMigrator->run($this->cmdUtil);
         /* 22 */ $this->birthDataMigrator->run($this->cmdUtil);
         /* 23 */ $this->dateOfDeathMigrator->run($this->cmdUtil);
+
+
+        /* UPDATE ANIMAL_CACHE VALUES */
+        AnimalCacher::cacheAllAnimalsBySqlBatchQueries($this->conn, $this->cmdUtil);
+
+
+        /* UPDATE LITTER VALUES */
+        //BatchUpdate heterosis and recombination values, non-updated only
+        GeneDiversityUpdater::updateAll($this->conn, false, $this->cmdUtil);
+        $this->writeLn(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
+        $this->writeLn(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated');
+        $this->writeLn(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated');
+
     }
 
 
