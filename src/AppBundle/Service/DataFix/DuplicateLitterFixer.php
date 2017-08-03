@@ -250,9 +250,13 @@ class DuplicateLitterFixer extends DuplicateFixerBase
     public function mergeDoubleAndTripleDuplicateImportedLitters(CommandUtil $cmdUtil = null)
     {
         $this->setCmdUtil($cmdUtil);
-        $mergeCount = $this->mergeDuplicateImportedLittersInSetOf2($cmdUtil);
-        $mergeCount += $this->mergeTripleDuplicateImportedLitters($cmdUtil);
-        return $mergeCount;
+
+        do {
+            $doubleMergeSucceeded = $this->mergeDuplicateImportedLittersInSetOf2($cmdUtil);
+            $tripleMergeSucceeded = $this->mergeTripleDuplicateImportedLitters($cmdUtil);
+        } while (!$doubleMergeSucceeded || !$tripleMergeSucceeded);
+
+        return $doubleMergeSucceeded && $tripleMergeSucceeded;
     }
 
 
