@@ -11,11 +11,19 @@ use AppBundle\Cache\TailLengthCacher;
 use AppBundle\Cache\WeightCacher;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\TagSyncErrorLog;
+use AppBundle\Entity\TagSyncErrorLogRepository;
+use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
+use AppBundle\Service\Migration\BirthProgressInitializer;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\ErrorLogUtil;
 use AppBundle\Util\LitterUtil;
+use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Validation\AscendantValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,9 +38,15 @@ class CliOptionsService
     const DEFAULT_LOCATION_ID = 262;
     const DEFAULT_UBN = 1674459;
 
+    const MAIN_TITLE = 'OVERVIEW OF ALL NSFO COMMANDS';
     const ANIMAL_CACHE_TITLE = 'UPDATE ANIMAL CACHE / RESULT TABLE VALUES';
     const LITTER_GENE_DIVERSITY_TITLE = 'UPDATE LITTER AND GENE DIVERSITY VALUES';
-    
+    const ERROR_LOG_TITLE = 'ERROR LOG COMMANDS';
+    const FIX_DUPLICATE_ANIMALS = 'FIX DUPLICATE ANIMALS';
+    const FIX_DATABASE_VALUES = 'FIX DATABASE VALUES';
+    const INITIALIZE_DATABASE_VALUES = 'INITIALIZE DATABASE VALUES';
+    const GENDER_CHANGE = 'GENDER CHANGE';
+
     /** @var ObjectManager */
     private $em;
     /** @var CommandUtil */
@@ -44,21 +58,38 @@ class CliOptionsService
     /** @var string */
     private $rootDir;
 
+    /** @var BirthProgressInitializer */
+    private $birthProgressInitializer;
+    /** @var DuplicateAnimalsFixer */
+    private $duplicateAnimalsFixer;
+
     /** @var AnimalRepository  */
     private $animalRepository;
+    /** @var TagSyncErrorLogRepository */
+    private $tagSyncErrorLogRepository;
 
     /**
      * CliOptionsService constructor.
-     * @param ObjectManager|EntityManagerInterface $em
+     * @param ObjectManager $em
+     * @param Logger $logger
+     * @param $rootDir
+     * @param DuplicateAnimalsFixer $duplicateAnimalsFixer
      */
-    public function __construct(ObjectManager $em, Logger $logger, $rootDir)
+    public function __construct(ObjectManager $em, Logger $logger, $rootDir,
+                                BirthProgressInitializer $birthProgressInitializer,
+                                DuplicateAnimalsFixer $duplicateAnimalsFixer
+    )
     {
         $this->em = $em;
         $this->logger = $logger;
         $this->rootDir = $rootDir;
 
+        $this->birthProgressInitializer = $birthProgressInitializer;
+        $this->duplicateAnimalsFixer = $duplicateAnimalsFixer;
+
         $this->conn = $em->getConnection();
         $this->animalRepository = $em->getRepository(Animal::class);
+        $this->tagSyncErrorLogRepository = $this->em->getRepository(TagSyncErrorLog::class);
     }
 
 
@@ -68,31 +99,50 @@ class CliOptionsService
         if ($this->cmdUtil === null) { $this->cmdUtil = $cmdUtil; }
     }
 
+    /**
+     * @param CommandUtil $cmdUtil
+     * @param string $title
+     */
+    private function initializeMenu(CommandUtil $cmdUtil, $title)
+    {
+        $this->setCmdUtil($cmdUtil);
+
+        $this->cmdUtil->printTitle($title);
+
+        $this->printDbInfo();
+    }
+
 
     /**
      * @param CommandUtil $cmdUtil
      */
     public function mainMenu(CommandUtil $cmdUtil)
     {
-        $this->setCmdUtil($cmdUtil);
-
-        $this->cmdUtil->printTitle('OVERVIEW OF ALL NSFO COMMANDS');
-
-        $this->printDbInfo();
+        $this->initializeMenu($cmdUtil, self::MAIN_TITLE);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
-            'Choose option: ', "\n",
+            '===============================================', "\n",
+            'SELECT SUBMENU: ', "\n",
             '===============================================', "\n",
             '1: '.strtolower(self::ANIMAL_CACHE_TITLE), "\n",
             '2: '.strtolower(self::LITTER_GENE_DIVERSITY_TITLE), "\n",
-
-
+            '3: '.strtolower(self::ERROR_LOG_TITLE), "\n",
+            '4: '.strtolower(self::FIX_DUPLICATE_ANIMALS), "\n",
+            '5: '.strtolower(self::FIX_DATABASE_VALUES), "\n",
+            '6: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
+            //'7: '.strtolower(self::GENDER_CHANGE), "\n",
+            '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1: $this->animalCacheOptions($this->cmdUtil); break;
             case 2: $this->litterAndGeneDiversityOptions($this->cmdUtil); break;
+            case 3: $this->errorLogOptions($this->cmdUtil); break;
+            case 4: $this->fixDuplicateAnimalsOptions($this->cmdUtil); break;
+            case 5: $this->fixDatabaseValuesOptions($this->cmdUtil); break;
+            case 6: $this->initializeDatabaseValuesOptions($this->cmdUtil); break;
+            //case 7: $this->genderChangeOptions($this->cmdUtil); break;
             default: return;
         }
         $this->mainMenu($this->cmdUtil);
@@ -104,11 +154,7 @@ class CliOptionsService
      */
     public function animalCacheOptions(CommandUtil $cmdUtil)
     {
-        $this->setCmdUtil($cmdUtil);
-
-        $this->cmdUtil->printTitle(self::ANIMAL_CACHE_TITLE);
-
-        $this->printDbInfo();
+        $this->initializeMenu($cmdUtil, self::ANIMAL_CACHE_TITLE);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
@@ -323,11 +369,7 @@ class CliOptionsService
      */
     public function litterAndGeneDiversityOptions(CommandUtil $cmdUtil)
     {
-        $this->setCmdUtil($cmdUtil);
-
-        $this->cmdUtil->printTitle(self::LITTER_GENE_DIVERSITY_TITLE);
-
-        $this->printDbInfo();
+        $this->initializeMenu($cmdUtil, self::LITTER_GENE_DIVERSITY_TITLE);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
@@ -365,6 +407,198 @@ class CliOptionsService
 
             default: $this->writeLn('Exit menu'); return;
         }
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function errorLogOptions(CommandUtil $cmdUtil)
+    {
+        $this->initializeMenu($cmdUtil, self::ERROR_LOG_TITLE);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '1: Update TagSyncErrorLog records isFixed status', "\n",
+            '2: List animalSyncs with tags blocked by existing animals', "\n",
+            '3: Get sql filter query by RetrieveAnimalId', "\n\n",
+
+            'other: exit submenu', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+            case 1:
+                $updateCount = ErrorLogUtil::updateTagSyncErrorLogIsFixedStatuses($this->conn);
+                $this->cmdUtil->writeln($updateCount. ' TagSyncErrorLog statuses updated');
+                break;
+
+            case 2:
+                $this->cmdUtil->writeln(['retrieveAnimalsId' => 'blockingAnimalsCount']);
+                $this->cmdUtil->writeln($this->tagSyncErrorLogRepository->listRetrieveAnimalIds());
+                break;
+
+            case 3:
+                $retrieveAnimalsId = $this->requestRetrieveAnimalsId();
+                $this->cmdUtil->writeln($this->tagSyncErrorLogRepository->getQueryFilterByRetrieveAnimalIds($retrieveAnimalsId));
+                break;
+
+            default: $this->writeLn('Exit menu'); return;
+        }
+    }
+
+
+    /**
+     * @return string
+     */
+    private function requestRetrieveAnimalsId()
+    {
+        $listRetrieveAnimalsId = $this->tagSyncErrorLogRepository->listRetrieveAnimalIds();
+        do {
+            $this->cmdUtil->writeln('Valid RetrieveAnimalsIds by blockingAnimalsCount:');
+            $this->cmdUtil->writeln($listRetrieveAnimalsId);
+            $this->cmdUtil->writeln('-------------');
+            $retrieveAnimalsId = $this->cmdUtil->generateQuestion('Insert RetrieveAnimalsId', 0);
+
+            $isInvalidRetrieveAnimalsId = !key_exists($retrieveAnimalsId, $listRetrieveAnimalsId);
+            if($isInvalidRetrieveAnimalsId) {
+                $this->cmdUtil->writeln('Inserted RetrieveAnimalsId is invalid!');
+            }
+
+        } while($isInvalidRetrieveAnimalsId);
+        return $retrieveAnimalsId;
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function fixDuplicateAnimalsOptions(CommandUtil $cmdUtil)
+    {
+        $this->initializeMenu($cmdUtil, self::FIX_DUPLICATE_ANIMALS);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            ' ', "\n",
+            'Choose option: ', "\n",
+            '1: Fix duplicate animals, near identical including duplicate vsmId', "\n",
+            '2: Fix duplicate animals, synced I&R vs migrated animals', "\n",
+            '3: Merge two animals by primaryKeys', "\n",
+            '4: Merge two animals where one is missing leading zeroes', "\n",
+            '5: Fix duplicate animals due to tagReplace error', "\n\n",
+            'other: exit submenu', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+            case 1: $this->duplicateAnimalsFixer->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth($this->cmdUtil); break;
+            case 2: $this->duplicateAnimalsFixer->fixDuplicateAnimalsSyncedAndImportedPairs($this->cmdUtil); break;
+            case 3: $this->duplicateAnimalsFixer->mergeAnimalPairs($this->cmdUtil); break;
+            case 4: $this->duplicateAnimalsFixer->mergeImportedAnimalsMissingLeadingZeroes($this->cmdUtil); break;
+            case 5: $this->duplicateAnimalsFixer->fixDuplicateDueToTagReplaceError($this->cmdUtil); break;
+            default: $this->writeLn('Exit menu'); return;
+        }
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function fixDatabaseValuesOptions(CommandUtil $cmdUtil)
+    {
+        $this->initializeMenu($cmdUtil, self::FIX_DATABASE_VALUES);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '=====================================', "\n",
+            '1: Update MaxId of all sequences', "\n",
+            '=====================================', "\n",
+            '2: Fix incongruent genders vs Ewe/Ram/Neuter records', "\n",
+            '3: Fix incongruent animalOrderNumbers', "\n",
+            '4: Fix incongruent animalIdAndDate values in measurement table', "\n",
+            '5: Fix duplicate litters only containing stillborns', "\n",
+            '6: Find animals with themselves being their own ascendant', "\n",
+            '7: Print from database, animals with themselves being their own ascendant', "\n",
+            '8: Fill missing breedCodes and set breedCode = breedCodeParents if both parents have the same pure (XX100) breedCode', "\n",
+            '=====================================', "\n",
+            '20: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n\n",
+            '================== ANIMAL LOCATION & RESIDENCE ===================', "\n",
+            '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
+            '31: Kill resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss', "\n",
+            '32: Kill alive animals with a date_of_death, even if they don\'t have a declare loss', "\n",
+            '33: Remove duplicate animal residences with endDate isNull', "\n\n",
+
+            '================== DECLARES ===================', "\n",
+            '50: Fill missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015', "\n\n",
+            'other: exit submenu', "\n"
+        ], self::DEFAULT_OPTION);
+
+        $ascendantValidator = new AscendantValidator($this->em, $this->cmdUtil, $this->logger);
+
+        switch ($option) {
+            case 1: DatabaseDataFixer::updateMaxIdOfAllSequences($this->conn, $this->cmdUtil); break;
+            case 2: DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil); break;
+            case 3: DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, $this->cmdUtil); break;
+            case 4: MeasurementsUtil::generateAnimalIdAndDateValues($this->conn, false, $this->cmdUtil); break;
+            case 5: $this->writeln(LitterUtil::deleteDuplicateLittersWithoutBornAlive($this->conn) . ' litters deleted'); break;
+            case 6: $ascendantValidator->run(); break;
+            case 7: $ascendantValidator->printOverview(); break;
+            case 8: DatabaseDataFixer::recursivelyFillMissingBreedCodesHavingBothParentBreedCodes($this->conn, $this->cmdUtil); break;
+
+            case 20: DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirthsWithOptionInput($this->conn, $this->cmdUtil); break;
+
+            case 30: DatabaseDataFixer::removeAnimalsFromLocationAndAnimalResidence($this->conn, $this->cmdUtil); break;
+            case 31: DatabaseDataFixer::killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss($this->conn, $this->cmdUtil); break;
+            case 32: DatabaseDataFixer::killAliveAnimalsWithADateOfDeath($this->conn, $this->cmdUtil); break;
+            case 33: DatabaseDataFixer::removeDuplicateAnimalResidencesWithEndDateIsNull($this->conn, $this->cmdUtil); break;
+
+            case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
+
+            default: $this->writeLn('Exit menu'); return;
+        }
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function initializeDatabaseValuesOptions(CommandUtil $cmdUtil)
+    {
+        $this->initializeMenu($cmdUtil, self::INITIALIZE_DATABASE_VALUES);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '=====================================', "\n",
+            '1: BirthProgress', "\n\n",
+            'other: exit submenu', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+            case 1: $this->birthProgressInitializer->run($this->cmdUtil); break;
+
+            default: $this->writeLn('Exit menu'); return;
+        }
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function genderChangeOptions(CommandUtil $cmdUtil)
+    {
+
+        //TODO
+//        $this->initializeMenu($cmdUtil, self::GENDER_CHANGE);
+//
+//        $option = $this->cmdUtil->generateMultiLineQuestion([
+//            'Choose option: ', "\n",
+//            '=====================================', "\n",
+//            '1: BirthProgress', "\n\n",
+//            'other: exit submenu', "\n"
+//        ], self::DEFAULT_OPTION);
+//
+//        switch ($option) {
+//            case 1: $this->birthProgressInitializer->run($this->cmdUtil); break;
+//
+//            default: $this->writeLn('Exit menu'); return;
+//        }
     }
 
 
