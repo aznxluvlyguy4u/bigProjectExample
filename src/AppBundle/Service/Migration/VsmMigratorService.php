@@ -83,6 +83,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             '6: Merge duplicate imported litters', "\n",
             '7: Merge litters with only one stillborn', "\n",
             '8: Migrate Litter data', "\n",
+            '6: Merge duplicate imported litters (again after import)', "\n",
             '9: Update parent values in animal and litter tables', "\n",
             '10: Merge duplicate animals', "\n",
             '----------------------------------------------------', "\n",
@@ -141,6 +142,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
         /*  6 */ $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil);
         /*  7 */ $this->duplicateLitterFixer->mergeDuplicateLittersWithOnlySingleStillborn($this->cmdUtil);
         /*  8 */ $this->litterMigrator->run($this->cmdUtil);
+        /*  6 */ $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil);
         /*  9 */ $this->litterMigrator->update($this->cmdUtil);
         /* 10 */ $this->duplicateAnimalsFixer->fixMultipleDuplicateAnimalsAfterMigration($this->cmdUtil);
 
