@@ -239,6 +239,10 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
         }
 
 
+        $bornAliveCount = intval($bornAliveCount);
+        $stillbornCount = intval($stillbornCount);
+
+
         //Update check
         $currentLitterId = null;
         //Only use the first values found in the csv file to update the empty existing litterCount values
@@ -250,8 +254,7 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
             $currentBornAliveCount = $currentLitterData[JsonInputConstant::BORN_ALIVE_COUNT];
             $currentRequestState = $currentLitterData[JsonInputConstant::REQUEST_STATE];
 
-            if ($currentStillbornCount === 0 && $currentBornAliveCount === 0
-             && ($stillbornCount !== 0 || $bornAliveCount !== 0)
+            if (($currentStillbornCount !== $stillbornCount || $currentBornAliveCount !== $bornAliveCount)
                 //NOTE Only update IMPORTED litters to be safe!
                 //Litters inserted by the new/current NSFO webapp are already validated.
              && $currentRequestState === RequestStateType::IMPORTED
@@ -265,8 +268,8 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
         $values = [
             JsonInputConstant::MOTHER_ID => $motherId,
             JsonInputConstant::LITTER_DATE => $litterDateString,
-            JsonInputConstant::STILLBORN_COUNT => intval($stillbornCount),
-            JsonInputConstant::BORN_ALIVE_COUNT => intval($bornAliveCount),
+            JsonInputConstant::STILLBORN_COUNT => $stillbornCount,
+            JsonInputConstant::BORN_ALIVE_COUNT => $bornAliveCount,
             JsonInputConstant::ENTITY_ALREADY_EXISTS => $entityAlreadyExists,
             JsonInputConstant::LITTER_ID => $currentLitterId,
         ];
