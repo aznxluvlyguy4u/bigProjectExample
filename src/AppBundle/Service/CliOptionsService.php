@@ -114,10 +114,48 @@ class CliOptionsService
 
 
     /**
+     * Generated using ascii generator: http://glassgiant.com/ascii/
+     *
+     * @param CommandUtil $cmdUtil
+     */
+    public function printAsciiArt(CommandUtil $cmdUtil)
+    {
+        $this->setCmdUtil($cmdUtil);
+
+        $this->cmdUtil->writeln("
+                                            III III                                     
+                                            IIIIIII                                     
+                                             IIIII                                      
+                                              III                                       
+                                    ,,,,,             88888                             
+                                  ,,,,,,,DDD       DDZ8888888                           
+                                DDD,88888             :::::8DDD                         
+              ,,,,,       ,,,,,,,,,,,88888           :::::88888888888$    0888888$      
+          ,,,,,,,,,,,,,,,,,,,,,,,,,,,,88888         :::::8888888888888888888888888888   
+         ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,             88888888888888888888888888888888  
+        ,,,,,,,,,,,,,,,,,,,,,,,,,,,,:,,,               88888888888888888888888888888888 
+        ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                 8888888888888888888888888888888 
+        ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                 8888888888888888888888888888888 
+         ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                 888888888888888888888888888888  
+         ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                   88888888888888888888888888888  
+         :,,,,,,,,,,,,,,,,, ,,,,,,,,,                     888888888D88888888888888888D  
+         ::,,,,,, ,,,,,,,,, ,,,,,::                         DD88888 888888888 888888DD  
+        :::,,,,              ,,,:=                           DD888              8888DDD 
+        :::,,                8 88                             :: :                88DDD 
+         ::,,                8 8                              :: :               888DD  
+         :: ,8              8 Z8                               : ::              :8 DD  
+          8  8I             88 8                               : ::             ::  :   
+                                                              == =              =   =   ");
+    }
+
+
+    /**
      * @param CommandUtil $cmdUtil
      */
     public function mainMenu(CommandUtil $cmdUtil)
     {
+        $this->printAsciiArt($cmdUtil);
+
         $this->initializeMenu($cmdUtil, self::MAIN_TITLE);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
