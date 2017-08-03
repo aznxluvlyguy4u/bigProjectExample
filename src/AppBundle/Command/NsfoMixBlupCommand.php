@@ -93,6 +93,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             '2: Download and process MixBlup output files (relani & solani)', "\n",
             '3: Generate MixBlup instruction files only', "\n",
             '4: Initialize blank genetic bases', "\n",
+            '5: Set minimum reliability for all breedValueTypes by accuracy option', "\n",
             '========================================================================', "\n",
             '10: Initialize BreedIndexType and BreedValueType', "\n",
             '11: Delete all duplicate breedValues', "\n",
@@ -114,6 +115,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             case 2: $this->mixBlupOutputFilesService->run(); break;
             case 3: $this->mixBlupInputFilesService->writeInstructionFiles(); break;
             case 4: $this->breedValueService->initializeBlankGeneticBases(); break;
+            case 5: $this->breedValueService->setMinReliabilityForAllBreedValueTypesByAccuracyOption($this->cmdUtil); break;
 
 
             case 10:

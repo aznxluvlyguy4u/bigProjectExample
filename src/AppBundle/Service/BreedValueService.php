@@ -13,6 +13,8 @@ use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\BreedValueTypeRepository;
 use AppBundle\Setting\BreedGradingSetting;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\CommandUtil;
+use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
@@ -121,6 +123,33 @@ class BreedValueService
         return $newCount > 0;
     }
 
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public function setMinReliabilityForAllBreedValueTypesByAccuracyOption(CommandUtil $cmdUtil)
+    {
+        $defaultAccuracy = sqrt(BreedGradingSetting::MIN_RELIABILITY_FOR_GENETIC_BASE) * 100;
+
+        do {
+            $accuracy = $cmdUtil->generateQuestion('Set the minimum accuracy (in %) for all breedValueTypes (default = '.$defaultAccuracy.'%)', $defaultAccuracy);
+        } while (!ctype_digit($accuracy) && !is_int($accuracy));
+
+        $reliability = pow($accuracy / 100, 2);
+        $cmdUtil->writelnWithTimestamp('Chosen accuracy: '.$accuracy.'% = Reliabilty: '.$reliability.' to be persisted');
+        if (!$cmdUtil->generateConfirmationQuestion('Is this correct? (y/n, default = n)') ) {
+            $cmdUtil->writelnWithTimestamp('Minimum reliability edit aborted');
+            return 0;
+        }
+
+        $sql = "UPDATE breed_value_type SET min_reliability = $reliability WHERE min_reliability <> $reliability OR min_reliability ISNULL";
+        $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+
+        $count = $updateCount === 0 ? 'No' : $updateCount;
+        $cmdUtil->writelnWithTimestamp($count. ' breedValueType records updated with min_reliability = '.$reliability.' (accuracy = '.$accuracy.'%)');
+        return $updateCount;
+    }
 
 
     /**
