@@ -29,6 +29,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 
+
 /**
  * Class CliOptionsService
  */
@@ -44,10 +45,11 @@ class CliOptionsService
     const ERROR_LOG_TITLE = 'ERROR LOG COMMANDS';
     const FIX_DUPLICATE_ANIMALS = 'FIX DUPLICATE ANIMALS';
     const FIX_DATABASE_VALUES = 'FIX DATABASE VALUES';
+    const INFO_SYSTEM_SETTINGS = 'NSFO SYSTEM SETTINGS';
     const INITIALIZE_DATABASE_VALUES = 'INITIALIZE DATABASE VALUES';
     const GENDER_CHANGE = 'GENDER CHANGE';
 
-    /** @var ObjectManager */
+    /** @var ObjectManager|EntityManagerInterface */
     private $em;
     /** @var CommandUtil */
     private $cmdUtil;
@@ -62,6 +64,8 @@ class CliOptionsService
     private $birthProgressInitializer;
     /** @var DuplicateAnimalsFixer */
     private $duplicateAnimalsFixer;
+    /** @var InfoService */
+    private $infoService;
 
     /** @var AnimalRepository  */
     private $animalRepository;
@@ -73,11 +77,14 @@ class CliOptionsService
      * @param ObjectManager $em
      * @param Logger $logger
      * @param $rootDir
+     * @param BirthProgressInitializer $birthProgressInitializer
      * @param DuplicateAnimalsFixer $duplicateAnimalsFixer
+     * @param InfoService $infoService
      */
     public function __construct(ObjectManager $em, Logger $logger, $rootDir,
                                 BirthProgressInitializer $birthProgressInitializer,
-                                DuplicateAnimalsFixer $duplicateAnimalsFixer
+                                DuplicateAnimalsFixer $duplicateAnimalsFixer,
+                                InfoService $infoService
     )
     {
         $this->em = $em;
@@ -86,8 +93,9 @@ class CliOptionsService
 
         $this->birthProgressInitializer = $birthProgressInitializer;
         $this->duplicateAnimalsFixer = $duplicateAnimalsFixer;
+        $this->infoService = $infoService;
 
-        $this->conn = $em->getConnection();
+        $this->conn = $this->em->getConnection();
         $this->animalRepository = $em->getRepository(Animal::class);
         $this->tagSyncErrorLogRepository = $this->em->getRepository(TagSyncErrorLog::class);
     }
@@ -162,24 +170,28 @@ class CliOptionsService
             '===============================================', "\n",
             'SELECT SUBMENU: ', "\n",
             '===============================================', "\n",
-            '1: '.strtolower(self::ANIMAL_CACHE_TITLE), "\n",
-            '2: '.strtolower(self::LITTER_GENE_DIVERSITY_TITLE), "\n",
-            '3: '.strtolower(self::ERROR_LOG_TITLE), "\n",
-            '4: '.strtolower(self::FIX_DUPLICATE_ANIMALS), "\n",
-            '5: '.strtolower(self::FIX_DATABASE_VALUES), "\n",
-            '6: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
+            '1: '.strtolower(self::INFO_SYSTEM_SETTINGS), "\n",
+            '-----------------------------------------------', "\n",
+            '2: '.strtolower(self::ANIMAL_CACHE_TITLE), "\n",
+            '3: '.strtolower(self::LITTER_GENE_DIVERSITY_TITLE), "\n",
+            '4: '.strtolower(self::ERROR_LOG_TITLE), "\n",
+            '5: '.strtolower(self::FIX_DUPLICATE_ANIMALS), "\n",
+            '6: '.strtolower(self::FIX_DATABASE_VALUES), "\n",
+            '7: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
             //'7: '.strtolower(self::GENDER_CHANGE), "\n",
             '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
-            case 1: $this->animalCacheOptions($this->cmdUtil); break;
-            case 2: $this->litterAndGeneDiversityOptions($this->cmdUtil); break;
-            case 3: $this->errorLogOptions($this->cmdUtil); break;
-            case 4: $this->fixDuplicateAnimalsOptions($this->cmdUtil); break;
-            case 5: $this->fixDatabaseValuesOptions($this->cmdUtil); break;
-            case 6: $this->initializeDatabaseValuesOptions($this->cmdUtil); break;
+            case 1: $this->infoService->printInfo(); break;
+
+            case 2: $this->animalCacheOptions($this->cmdUtil); break;
+            case 3: $this->litterAndGeneDiversityOptions($this->cmdUtil); break;
+            case 4: $this->errorLogOptions($this->cmdUtil); break;
+            case 5: $this->fixDuplicateAnimalsOptions($this->cmdUtil); break;
+            case 6: $this->fixDatabaseValuesOptions($this->cmdUtil); break;
+            case 7: $this->initializeDatabaseValuesOptions($this->cmdUtil); break;
             //case 7: $this->genderChangeOptions($this->cmdUtil); break;
             default: return;
         }

@@ -17,7 +17,23 @@ services:
           - '%kernel.root_dir%'
           - '@app.initializer.birth_progress'
           - '@app.datafix.animals.duplicate'
+          - '@app.info.parameters'
 
+    app.info.parameters:
+        class: AppBundle\Service\InfoService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '@app.aws.storageservice'
+          - '%kernel.environment%'
+          - '%environment%'
+          - '%kernel.root_dir%'
+          - '%kernel.cache_dir%'
+          - '%redis_host%'
+          - '@app.aws.queueservice.external'
+          - '@app.aws.queueservice.internal'
+          - '@app.aws.queueservice.mixblup_input'
+          - '@app.aws.queueservice.mixblup_output'
 
     app.aws.queueservice.workers_base:
         abstract: true
