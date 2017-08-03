@@ -71,7 +71,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->updateParentIdsInAnimalTable();
 
         $this->writeLn('====== Fill other desired values ======');
-        $this->fillMissingPedigreeCodeAndNumber();
+        $this->fillMissingStnData();
         $this->fillMissingSingleColumnValues();
     }
 
@@ -467,16 +467,32 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
     }
 
 
-    private function fillMissingPedigreeCodeAndNumber()
+    private function fillMissingStnData()
     {
-        $sql = "UPDATE animal SET pedigree_country_code = v.pedigree_country_code, pedigree_number = v.pedigree_number
+        $queries = [
+            'Fill missing pedigreeCountryCode and pedigreeNumbers ...' =>
+                "UPDATE animal SET pedigree_country_code = v.pedigree_country_code, pedigree_number = v.pedigree_number
                 FROM (
                   SELECT a.id, m.pedigree_country_code, m.pedigree_number
                   FROM animal a
                     INNER JOIN animal_migration_table m ON m.animal_id = a.id
                   WHERE a.pedigree_number ISNULL AND m.pedigree_number NOTNULL AND m.pedigree_country_code NOTNULL
-                ) AS v(animal_id, pedigree_country_code, pedigree_number) WHERE animal.id = v.animal_id";
-        $this->updateBySql('Fill missing pedigreeCountryCode and pedigreeNumbers ...', $sql);
+                ) AS v(animal_id, pedigree_country_code, pedigree_number) WHERE animal.id = v.animal_id",
+
+            'Fill incongruent first STN letters of FL100 as nickname ...' =>
+                "UPDATE animal SET nickname = v.nickname
+                FROM (
+                  SELECT a.id as animal_id, m.nickname, a.nickname, regexp_matches(m.nickname, '([A-Z]{1})')
+                  FROM animal a
+                    INNER JOIN animal_migration_table m ON m.animal_id = a.id
+                  WHERE (a.nickname ISNULL OR a.nickname <> m.nickname) AND m.nickname NOTNULL
+                        AND LENGTH(m.nickname) = 1 AND m.breed_code = 'FL100'
+                ) AS v(animal_id, nickname, old_nickname, regex_matches) WHERE animal.id = v.animal_id",
+        ];
+
+        foreach ($queries as $title => $query) {
+            $this->updateBySql($title, $query);
+        }
     }
 
 
