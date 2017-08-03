@@ -159,10 +159,13 @@ class CliOptionsService
 
     /**
      * @param CommandUtil $cmdUtil
+     * @param bool $isIntroScreen
      */
-    public function mainMenu(CommandUtil $cmdUtil)
+    public function mainMenu(CommandUtil $cmdUtil, $isIntroScreen = true)
     {
-        $this->printAsciiArt($cmdUtil);
+        if ($isIntroScreen) {
+            $this->printAsciiArt($cmdUtil);
+        }
 
         $this->initializeMenu($cmdUtil, self::MAIN_TITLE);
 
@@ -195,7 +198,7 @@ class CliOptionsService
             //case 7: $this->genderChangeOptions($this->cmdUtil); break;
             default: return;
         }
-        $this->mainMenu($this->cmdUtil);
+        $this->mainMenu($this->cmdUtil, false);
     }
 
 
