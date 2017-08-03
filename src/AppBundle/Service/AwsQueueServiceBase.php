@@ -18,25 +18,18 @@ abstract class AwsQueueServiceBase
 {
     /** @var string */
     protected $region;
-
     /** @var string */
     protected $version;
-
     /** @var string */
     protected $accessKeyId;
-
     /** @var string */
     protected $secretKey;
-
     /** @var SqsClient */
     protected $queueService;
-
     /** @var string */
     protected $queueUrl;
-
     /** @var Credentials */
     protected $awsCredentials;
-
     /** @var string */
     protected $queueId;
 
