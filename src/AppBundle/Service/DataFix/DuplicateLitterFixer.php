@@ -264,7 +264,7 @@ class DuplicateLitterFixer extends DuplicateFixerBase
     {
         $this->setCmdUtil($cmdUtil);
 
-        $this->writeLn('Merging duplicate IMPORTED litters with identical mother, litterDate and primary values ...');
+        $this->writeLn('Merging DOUBLE duplicate IMPORTED litters ...');
 
         $sql = "--EXACT DOUBLES
                 SELECT main.id as primary_litter_id, s.id as secondary_litter_id
@@ -356,7 +356,7 @@ class DuplicateLitterFixer extends DuplicateFixerBase
     {
         $this->setCmdUtil($cmdUtil);
 
-        $this->writeLn('Merging TRIPLE IMPORTED litters with identical mother, litterDate and primary values ...');
+        $this->writeLn('Merging TRIPLE duplicate IMPORTED litters ...');
 
         $sql = "--TRIPLE IDENTICAL IMPORTED LITTERS
                 SELECT main.id as primary_litter_id, s.id as secondary_litter_id, t.id as tertiary_litter_id
