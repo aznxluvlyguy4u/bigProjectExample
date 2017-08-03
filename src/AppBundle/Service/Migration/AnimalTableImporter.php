@@ -399,7 +399,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
                            FROM animal_migration_table m
                              INNER JOIN animal dad ON CAST(dad.name AS INTEGER) = m.father_vsm_id
                                                       AND (father_id ISNULL OR father_id <> dad.id)
-                                                      AND dad.type = 'Ewe'
+                                                      AND dad.type = 'Ram'
                            WHERE dad.name NOTNULL AND vsm_id NOT IN (
                              --SKIP duplicate vsmIds in database
                              SELECT CAST(name AS INTEGER)
