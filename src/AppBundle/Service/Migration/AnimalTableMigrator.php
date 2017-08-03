@@ -71,7 +71,8 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->updateParentIdsInAnimalTable();
 
         $this->writeLn('====== Fill other desired values ======');
-        $this->fillMissingValues();
+        $this->fillMissingPedigreeCodeAndNumber();
+        $this->fillMissingSingleColumnValues();
     }
 
 
@@ -466,12 +467,27 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
     }
 
 
-    private function fillMissingValues()
+    private function fillMissingPedigreeCodeAndNumber()
+    {
+        $sql = "UPDATE animal SET pedigree_country_code = v.pedigree_country_code, pedigree_number = v.pedigree_number
+                FROM (
+                  SELECT a.id, m.pedigree_country_code, m.pedigree_number
+                  FROM animal a
+                    INNER JOIN animal_migration_table m ON m.animal_id = a.id
+                  WHERE a.pedigree_number ISNULL AND m.pedigree_number NOTNULL AND m.pedigree_country_code NOTNULL
+                ) AS v(animal_id, pedigree_country_code, pedigree_number) WHERE animal.id = v.animal_id";
+        $this->updateBySql('Fill missing pedigreeCountryCode and pedigreeNumbers ...', $sql);
+    }
+
+
+    private function fillMissingSingleColumnValues()
     {
         $this->writeLn('=== Fill missing values in animal table by values in animal_migration_table ===');
 
+        //Note it is more efficient to update the pedigreeCountryCode and pedigreeNumbers as a pair.
+
         $columnVars = ['nickname',
-//            'pedigree_country_code', 'pedigree_number', 'breed_code', 'breed_type',
+//            'breed_code', 'breed_type',
 //            'ubn_of_birth', 'location_of_birth_id', 'pedigree_register_id', 'scrapie_genotype'
         ];
 
