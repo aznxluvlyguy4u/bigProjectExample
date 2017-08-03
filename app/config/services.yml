@@ -20,6 +20,7 @@ services:
           - '@app.cli.gender_changer'
           - '@app.info.parameters'
           - '@app.migrator.inspector'
+          - '@app.migrator.vsm'
 
     app.cli.gender_changer:
         class: AppBundle\Service\DataFix\GenderChangeCommandService

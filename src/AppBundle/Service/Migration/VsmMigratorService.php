@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service\Migration;
 
+use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
 use AppBundle\Service\DataFix\DuplicateLitterFixer;
 use AppBundle\Util\CommandUtil;
@@ -69,6 +70,9 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     public function run(CommandUtil $cmdUtil)
     {
         parent::run($cmdUtil);
+
+        //Print intro
+        $cmdUtil->writeln(CommandUtil::generateTitle(CommandTitle::DATA_MIGRATE_2017_AND_WORM));
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             ' ', "\n",

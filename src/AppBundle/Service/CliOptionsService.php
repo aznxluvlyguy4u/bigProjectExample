@@ -18,6 +18,7 @@ use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
 use AppBundle\Service\DataFix\GenderChangeCommandService;
 use AppBundle\Service\Migration\BirthProgressInitializer;
 use AppBundle\Service\Migration\InspectorMigrator;
+use AppBundle\Service\Migration\VsmMigratorService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
@@ -73,6 +74,8 @@ class CliOptionsService
     private $infoService;
     /** @var InspectorMigrator */
     private $inspectorMigrator;
+    /** @var VsmMigratorService */
+    private $vsmMigratorService;
 
     /** @var AnimalRepository  */
     private $animalRepository;
@@ -88,13 +91,16 @@ class CliOptionsService
      * @param DuplicateAnimalsFixer $duplicateAnimalsFixer
      * @param GenderChangeCommandService $genderChangeCommandService
      * @param InfoService $infoService
+     * @param InspectorMigrator $inspectorMigrator
+     * @param VsmMigratorService $vsmMigratorService
      */
     public function __construct(ObjectManager $em, Logger $logger, $rootDir,
                                 BirthProgressInitializer $birthProgressInitializer,
                                 DuplicateAnimalsFixer $duplicateAnimalsFixer,
                                 GenderChangeCommandService $genderChangeCommandService,
                                 InfoService $infoService,
-                                InspectorMigrator $inspectorMigrator
+                                InspectorMigrator $inspectorMigrator,
+                                VsmMigratorService $vsmMigratorService
     )
     {
         $this->em = $em;
@@ -106,6 +112,7 @@ class CliOptionsService
         $this->genderChangeCommandService = $genderChangeCommandService;
         $this->infoService = $infoService;
         $this->inspectorMigrator = $inspectorMigrator;
+        $this->vsmMigratorService = $vsmMigratorService;
 
         $this->conn = $this->em->getConnection();
         $this->animalRepository = $em->getRepository(Animal::class);
@@ -387,6 +394,7 @@ class CliOptionsService
 
             default: $this->writeLn('Exit menu'); return;
         }
+        $this->animalCacheOptions($this->cmdUtil);
     }
 
 
@@ -476,6 +484,7 @@ class CliOptionsService
 
             default: $this->writeLn('Exit menu'); return;
         }
+        $this->litterAndGeneDiversityOptions($this->cmdUtil);
     }
 
 
@@ -513,6 +522,7 @@ class CliOptionsService
 
             default: $this->writeLn('Exit menu'); return;
         }
+        $this->errorLogOptions($this->cmdUtil);
     }
 
 
@@ -564,6 +574,7 @@ class CliOptionsService
             case 5: $this->duplicateAnimalsFixer->fixDuplicateDueToTagReplaceError($this->cmdUtil); break;
             default: $this->writeLn('Exit menu'); return;
         }
+        $this->fixDuplicateAnimalsOptions($this->cmdUtil);
     }
 
 
@@ -622,6 +633,7 @@ class CliOptionsService
 
             default: $this->writeLn('Exit menu'); return;
         }
+        $this->fixDatabaseValuesOptions($this->cmdUtil);
     }
 
 
@@ -644,6 +656,7 @@ class CliOptionsService
 
             default: $this->writeLn('Exit menu'); return;
         }
+        $this->initializeDatabaseValuesOptions($this->cmdUtil);
     }
 
 
@@ -657,15 +670,18 @@ class CliOptionsService
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '=====================================', "\n",
-            '1: '.strtolower(CommandTitle::INSPECTOR), "\n\n",
+            '1: '.strtolower(CommandTitle::INSPECTOR), "\n",
+            '2: '.strtolower(CommandTitle::DATA_MIGRATE_2017_AND_WORM), "\n\n",
+
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1: $this->inspectorMigrator->run($this->cmdUtil); break;
-
+            case 2: $this->vsmMigratorService->run($cmdUtil); break;
             default: $this->writeLn('Exit menu'); return;
         }
+        $this->dataMigrationOptions($this->cmdUtil);
     }
 
 

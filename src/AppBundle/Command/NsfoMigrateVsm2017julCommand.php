@@ -30,13 +30,7 @@ class NsfoMigrateVsm2017julCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $helper = $this->getHelper('question');
-        $cmdUtil = new CommandUtil($input, $output, $helper);
-        $vsmMigratorService = $this->getContainer()->get('app.migrator.vsm');
-
-        //Print intro
-        $output->writeln(CommandUtil::generateTitle(self::TITLE));
-
-        $vsmMigratorService->run($cmdUtil);
+        $cmdUtil = new CommandUtil($input, $output, $this->getHelper('question'));
+        $this->getContainer()->get('app.migrator.vsm')->run($cmdUtil);
     }
 }
