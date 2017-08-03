@@ -470,7 +470,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
     private function fillMissingStnData()
     {
         $queries = [
-            'Fill missing pedigreeCountryCode and pedigreeNumbers ...' =>
+            'Fill missing pedigreeCountryCode and pedigreeNumbers ...' => //Do this BEFORE updating "stn letters"
                 "UPDATE animal SET pedigree_country_code = v.pedigree_country_code, pedigree_number = v.pedigree_number
                 FROM (
                   SELECT a.id, m.pedigree_country_code, m.pedigree_number
@@ -479,15 +479,35 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
                   WHERE a.pedigree_number ISNULL AND m.pedigree_number NOTNULL AND m.pedigree_country_code NOTNULL
                 ) AS v(animal_id, pedigree_country_code, pedigree_number) WHERE animal.id = v.animal_id",
 
-            'Fill incongruent first STN letters of FL100 as nickname ...' =>
-                "UPDATE animal SET nickname = v.nickname
+            'Fill first STN letters incongruent with pedigreeNumber in animal table of FL100 as nickname ...' =>
+                "UPDATE animal
+                SET nickname = v.stn_prefix_letters
                 FROM (
-                  SELECT a.id as animal_id, m.nickname, a.nickname, regexp_matches(m.nickname, '([A-Z]{1})')
-                  FROM animal a
-                    INNER JOIN animal_migration_table m ON m.animal_id = a.id
-                  WHERE (a.nickname ISNULL OR a.nickname <> m.nickname) AND m.nickname NOTNULL
-                        AND LENGTH(m.nickname) = 1 AND m.breed_code = 'FL100'
-                ) AS v(animal_id, nickname, old_nickname, regex_matches) WHERE animal.id = v.animal_id",
+                       -- length animalOrderNumber part of stn = 5, and has 1 leading letters
+                       SELECT id, --pedigree_number, nickname,
+                         substr(pedigree_number, 1,1) as stn_prefix_letters,
+                         regexp_matches(pedigree_number, '([A-Z0-9]{5}[-][a-zA-Z0-9]{5})'),
+                         regexp_matches(substr(pedigree_number, 1,1), '[A-Z]{1}'),
+                         regexp_matches(substr(pedigree_number, 2,1), '[0-9]{1}') as trailing_check
+                       FROM animal
+                       WHERE length(pedigree_number) = 11
+                             AND breed_code = 'FL100'
+                             AND (nickname <> substr(pedigree_number, 1,1) OR nickname ISNULL)
+                       UNION
+                       -- length animalOrderNumber part of stn = 5, and has 2 leading letters
+                       SELECT id, --pedigree_number, nickname,
+                         substr(pedigree_number, 1,2) as stn_prefix_letters,
+                         regexp_matches(pedigree_number, '([A-Z0-9]{5}[-][a-zA-Z0-9]{5})'),
+                         regexp_matches(substr(pedigree_number, 1,2), '[A-Z]{2}'),
+                         null as trailing_check
+                       FROM animal
+                       WHERE length(pedigree_number) = 11
+                             AND breed_code = 'FL100'
+                             AND (nickname <> substr(pedigree_number, 1,2) OR nickname ISNULL)
+                     ) AS v(animal_id, stn_prefix_letters, regex1, regex2, trailing_check)
+                WHERE animal.id = v.animal_id
+                      AND (nickname ISNULL OR nickname <> v.stn_prefix_letters
+                      )",
         ];
 
         foreach ($queries as $title => $query) {
