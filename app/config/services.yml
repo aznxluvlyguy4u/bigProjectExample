@@ -9,6 +9,14 @@ services:
         arguments: ['@validator', '@jms_serializer']
 
 
+    app.cli.options:
+        class: AppBundle\Service\CliOptionsService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '%kernel.root_dir%'
+
+
     app.aws.queueservice.workers_base:
         abstract: true
         arguments:
