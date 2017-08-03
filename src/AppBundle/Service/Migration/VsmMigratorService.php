@@ -106,7 +106,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             case 4: $this->animalTableMigrator->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil); break;
             case 5: $this->animalTableMigrator->fix($this->cmdUtil); break;
 
-            case 6: $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil); break;
+            case 6: $this->duplicateLitterFixer->mergeDoubleAndTripleDuplicateImportedLitters($this->cmdUtil); break;
             case 7: $this->duplicateLitterFixer->mergeDuplicateLittersWithOnlySingleStillborn($this->cmdUtil); break;
             case 8: $this->litterMigrator->run($this->cmdUtil); break;
             case 9: $this->litterMigrator->update($this->cmdUtil); break;
@@ -139,10 +139,10 @@ class VsmMigratorService extends Migrator2017JunServiceBase
         /*  4 */ $this->animalTableMigrator->mergeDuplicateAnimalsByVsmIdAndTagReplaces($this->cmdUtil);
         /*  5 */ $this->animalTableMigrator->fix($this->cmdUtil);
 
-        /*  6 */ $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil);
+        /*  6 */ $this->duplicateLitterFixer->mergeDoubleAndTripleDuplicateImportedLitters($this->cmdUtil);
         /*  7 */ $this->duplicateLitterFixer->mergeDuplicateLittersWithOnlySingleStillborn($this->cmdUtil);
         /*  8 */ $this->litterMigrator->run($this->cmdUtil);
-        /*  6 */ $this->duplicateLitterFixer->mergeDuplicateImportedLittersInSetOf2($this->cmdUtil);
+        /*  6 */ $this->duplicateLitterFixer->mergeDoubleAndTripleDuplicateImportedLitters($this->cmdUtil);
         /*  9 */ $this->litterMigrator->update($this->cmdUtil);
         /* 10 */ $this->duplicateAnimalsFixer->fixMultipleDuplicateAnimalsAfterMigration($this->cmdUtil);
 

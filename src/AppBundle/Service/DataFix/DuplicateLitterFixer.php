@@ -247,6 +247,19 @@ class DuplicateLitterFixer extends DuplicateFixerBase
      * @param CommandUtil|null $cmdUtil
      * @return bool
      */
+    public function mergeDoubleAndTripleDuplicateImportedLitters(CommandUtil $cmdUtil = null)
+    {
+        $this->setCmdUtil($cmdUtil);
+        $mergeCount = $this->mergeDuplicateImportedLittersInSetOf2($cmdUtil);
+        $mergeCount += $this->mergeTripleDuplicateImportedLitters($cmdUtil);
+        return $mergeCount;
+    }
+
+
+    /**
+     * @param CommandUtil|null $cmdUtil
+     * @return bool
+     */
     public function mergeDuplicateImportedLittersInSetOf2(CommandUtil $cmdUtil = null)
     {
         $this->setCmdUtil($cmdUtil);
@@ -280,6 +293,67 @@ class DuplicateLitterFixer extends DuplicateFixerBase
         $results = $this->conn->query($sql)->fetchAll();
 
         return $this->processSelectResults($results);
+    }
+
+
+    public function mergeTripleDuplicateImportedLitters(CommandUtil $cmdUtil = null)
+    {
+        $this->setCmdUtil($cmdUtil);
+
+        $this->writeLn('Merging TRIPLE IMPORTED litters with identical mother, litterDate and primary values ...');
+
+        $sql = "SELECT main.id as primary_litter_id, s.id as secondary_litter_id, t.id as tertiary_litter_id
+                FROM litter main
+                  INNER JOIN (
+                               SELECT
+                                 DENSE_RANK() OVER (PARTITION BY l.animal_mother_id, l.litter_date, l.stillborn_count, l.born_alive_count
+                                   ORDER BY l.id ASC) AS rank,
+                                 l.id
+                               --l.litter_date, l.animal_mother_id, l.stillborn_count, l.born_alive_count, l.litter_ordinal, l.birth_interval
+                               FROM litter l
+                                 INNER JOIN (
+                                              SELECT litter_date, animal_mother_id FROM litter
+                                                INNER JOIN declare_nsfo_base ON litter.id = declare_nsfo_base.id
+                                              WHERE request_state = 'IMPORTED' AND is_abortion = FALSE AND is_pseudo_pregnancy = FALSE
+                                              GROUP BY litter_date, animal_mother_id, stillborn_count, born_alive_count
+                                              HAVING COUNT(*) = 3
+                                            )g ON g.litter_date = l.litter_date AND g.animal_mother_id = l.animal_mother_id
+                               ORDER BY g.animal_mother_id, g.litter_date
+                             )g ON g.id = main.id
+                  INNER JOIN litter s
+                    ON s.animal_mother_id = main.animal_mother_id AND s.litter_date = main.litter_date
+                       AND s.stillborn_count = main.stillborn_count AND s.born_alive_count = main.born_alive_count
+                  INNER JOIN litter t
+                    ON t.animal_mother_id = main.animal_mother_id AND t.litter_date = main.litter_date
+                       AND t.stillborn_count = main.stillborn_count AND t.born_alive_count = main.born_alive_count
+                  INNER JOIN declare_nsfo_base bm ON bm.id = main.id
+                  INNER JOIN declare_nsfo_base bs ON bs.id = s.id
+                  INNER JOIN declare_nsfo_base bt ON bt.id = t.id
+                WHERE g.rank = 1 AND bm.request_state = 'IMPORTED' AND bs.request_state = 'IMPORTED'
+                      AND s.id <> main.id AND t.id <> main.id
+                      AND s.id < t.id --Note that the rank is ascending by rank";
+        $results = $this->conn->query($sql)->fetchAll();
+
+
+        //Split up the triple results into two sets of doubles
+        $formattedResults = [];
+        foreach ($results as $result) {
+            $primaryLitterId = $result['primary_litter_id'];
+            $secondaryLitterId = $result['secondary_litter_id'];
+            $tertiaryLitterId = $result['tertiary_litter_id'];
+
+            $formattedResults[] = [
+                'primary_litter_id' => $primaryLitterId,
+                'secondary_litter_id' => $secondaryLitterId,
+            ];
+
+            $formattedResults[] = [
+                'primary_litter_id' => $primaryLitterId,
+                'secondary_litter_id' => $tertiaryLitterId,
+            ];
+        }
+
+        return $this->processSelectResults($formattedResults);
     }
 
 
