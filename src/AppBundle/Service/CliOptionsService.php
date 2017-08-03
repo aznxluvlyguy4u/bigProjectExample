@@ -14,6 +14,7 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\TagSyncErrorLog;
 use AppBundle\Entity\TagSyncErrorLogRepository;
 use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
+use AppBundle\Service\DataFix\GenderChangeCommandService;
 use AppBundle\Service\Migration\BirthProgressInitializer;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
@@ -64,6 +65,8 @@ class CliOptionsService
     private $birthProgressInitializer;
     /** @var DuplicateAnimalsFixer */
     private $duplicateAnimalsFixer;
+    /** @var GenderChangeCommandService */
+    private $genderChangeCommandService;
     /** @var InfoService */
     private $infoService;
 
@@ -79,11 +82,13 @@ class CliOptionsService
      * @param $rootDir
      * @param BirthProgressInitializer $birthProgressInitializer
      * @param DuplicateAnimalsFixer $duplicateAnimalsFixer
+     * @param GenderChangeCommandService $genderChangeCommandService
      * @param InfoService $infoService
      */
     public function __construct(ObjectManager $em, Logger $logger, $rootDir,
                                 BirthProgressInitializer $birthProgressInitializer,
                                 DuplicateAnimalsFixer $duplicateAnimalsFixer,
+                                GenderChangeCommandService $genderChangeCommandService,
                                 InfoService $infoService
     )
     {
@@ -93,6 +98,7 @@ class CliOptionsService
 
         $this->birthProgressInitializer = $birthProgressInitializer;
         $this->duplicateAnimalsFixer = $duplicateAnimalsFixer;
+        $this->genderChangeCommandService = $genderChangeCommandService;
         $this->infoService = $infoService;
 
         $this->conn = $this->em->getConnection();
@@ -181,7 +187,7 @@ class CliOptionsService
             '5: '.strtolower(self::FIX_DUPLICATE_ANIMALS), "\n",
             '6: '.strtolower(self::FIX_DATABASE_VALUES), "\n",
             '7: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
-            //'7: '.strtolower(self::GENDER_CHANGE), "\n",
+            '8: '.strtolower(self::GENDER_CHANGE), "\n",
             '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
@@ -195,7 +201,7 @@ class CliOptionsService
             case 5: $this->fixDuplicateAnimalsOptions($this->cmdUtil); break;
             case 6: $this->fixDatabaseValuesOptions($this->cmdUtil); break;
             case 7: $this->initializeDatabaseValuesOptions($this->cmdUtil); break;
-            //case 7: $this->genderChangeOptions($this->cmdUtil); break;
+            case 8: $this->genderChangeCommandService->run($this->cmdUtil); break;
             default: return;
         }
         $this->mainMenu($this->cmdUtil, false);
@@ -628,30 +634,6 @@ class CliOptionsService
 
             default: $this->writeLn('Exit menu'); return;
         }
-    }
-
-
-    /**
-     * @param CommandUtil $cmdUtil
-     */
-    public function genderChangeOptions(CommandUtil $cmdUtil)
-    {
-
-        //TODO
-//        $this->initializeMenu($cmdUtil, self::GENDER_CHANGE);
-//
-//        $option = $this->cmdUtil->generateMultiLineQuestion([
-//            'Choose option: ', "\n",
-//            '=====================================', "\n",
-//            '1: BirthProgress', "\n\n",
-//            'other: exit submenu', "\n"
-//        ], self::DEFAULT_OPTION);
-//
-//        switch ($option) {
-//            case 1: $this->birthProgressInitializer->run($this->cmdUtil); break;
-//
-//            default: $this->writeLn('Exit menu'); return;
-//        }
     }
 
 
