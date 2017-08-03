@@ -13,9 +13,11 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\TagSyncErrorLog;
 use AppBundle\Entity\TagSyncErrorLogRepository;
+use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
 use AppBundle\Service\DataFix\GenderChangeCommandService;
 use AppBundle\Service\Migration\BirthProgressInitializer;
+use AppBundle\Service\Migration\InspectorMigrator;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
@@ -69,6 +71,8 @@ class CliOptionsService
     private $genderChangeCommandService;
     /** @var InfoService */
     private $infoService;
+    /** @var InspectorMigrator */
+    private $inspectorMigrator;
 
     /** @var AnimalRepository  */
     private $animalRepository;
@@ -89,7 +93,8 @@ class CliOptionsService
                                 BirthProgressInitializer $birthProgressInitializer,
                                 DuplicateAnimalsFixer $duplicateAnimalsFixer,
                                 GenderChangeCommandService $genderChangeCommandService,
-                                InfoService $infoService
+                                InfoService $infoService,
+                                InspectorMigrator $inspectorMigrator
     )
     {
         $this->em = $em;
@@ -100,6 +105,7 @@ class CliOptionsService
         $this->duplicateAnimalsFixer = $duplicateAnimalsFixer;
         $this->genderChangeCommandService = $genderChangeCommandService;
         $this->infoService = $infoService;
+        $this->inspectorMigrator = $inspectorMigrator;
 
         $this->conn = $this->em->getConnection();
         $this->animalRepository = $em->getRepository(Animal::class);
@@ -186,8 +192,10 @@ class CliOptionsService
             '4: '.strtolower(self::ERROR_LOG_TITLE), "\n",
             '5: '.strtolower(self::FIX_DUPLICATE_ANIMALS), "\n",
             '6: '.strtolower(self::FIX_DATABASE_VALUES), "\n",
-            '7: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
-            '8: '.strtolower(self::GENDER_CHANGE), "\n",
+            '7: '.strtolower(self::GENDER_CHANGE), "\n",
+            '8: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
+            '-----------------------------------------------', "\n",
+            '9: '.strtolower(CommandTitle::DATA_MIGRATION), "\n",
             '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
@@ -200,8 +208,10 @@ class CliOptionsService
             case 4: $this->errorLogOptions($this->cmdUtil); break;
             case 5: $this->fixDuplicateAnimalsOptions($this->cmdUtil); break;
             case 6: $this->fixDatabaseValuesOptions($this->cmdUtil); break;
-            case 7: $this->initializeDatabaseValuesOptions($this->cmdUtil); break;
-            case 8: $this->genderChangeCommandService->run($this->cmdUtil); break;
+            case 7: $this->genderChangeCommandService->run($this->cmdUtil); break;
+            case 8: $this->initializeDatabaseValuesOptions($this->cmdUtil); break;
+            case 9: $this->dataMigrationOptions($this->cmdUtil); break;
+
             default: return;
         }
         $this->mainMenu($this->cmdUtil, false);
@@ -631,6 +641,28 @@ class CliOptionsService
 
         switch ($option) {
             case 1: $this->birthProgressInitializer->run($this->cmdUtil); break;
+
+            default: $this->writeLn('Exit menu'); return;
+        }
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function dataMigrationOptions(CommandUtil $cmdUtil)
+    {
+        $this->initializeMenu($cmdUtil, CommandTitle::DATA_MIGRATION);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '=====================================', "\n",
+            '1: '.strtolower(CommandTitle::INSPECTOR), "\n\n",
+            'other: exit submenu', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+            case 1: $this->inspectorMigrator->run($this->cmdUtil); break;
 
             default: $this->writeLn('Exit menu'); return;
         }

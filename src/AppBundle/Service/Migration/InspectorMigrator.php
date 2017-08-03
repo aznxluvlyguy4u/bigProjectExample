@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Migration;
+namespace AppBundle\Service\Migration;
 
 
 use AppBundle\Constant\JsonInputConstant;
@@ -13,34 +13,114 @@ use AppBundle\Entity\InspectorAuthorizationRepository;
 use AppBundle\Entity\InspectorRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\PedigreeRegisterRepository;
+use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
-class InspectorMigrator
+/**
+ * Class InspectorMigrator
+ */
+class InspectorMigrator extends MigratorServiceBase implements IMigratorService
 {
+    const IMPORT_SUB_FOLDER = 'inspectors/';
+
     //Inspectors prefixes should be 4 chars length
     const NSFO_INSPECTOR_CODE_PREFIX = 'NSFO';
     const EXTERNAL_INSPECTOR_CODE_PREFIX = 'EXT0';
 
+    CONST NAME_CORRECTIONS = 'finder_name_corrections';
+    CONST NEW_NAMES = 'finder_name_new';
+    CONST AUTHORIZE_TEXELAAR = 'finder_authorize_texelaar';
+    CONST AUTHORIZE_BDM = 'finder_authorize_bdm';
+
+
+    /** @var InspectorRepository */
+    private $inspectorRepository;
+
+    public function __construct(ObjectManager $em, $rootDir)
+    {
+        parent::__construct($em, self::BATCH_SIZE, self::IMPORT_SUB_FOLDER, $rootDir);
+        $this->inspectorRepository = $this->em->getRepository(Inspector::class);
+
+        $this->filenames = array(
+            self::NAME_CORRECTIONS => 'inspector_name_corrections.csv',
+            self::NEW_NAMES => 'inspector_new_names.csv',
+            self::AUTHORIZE_TEXELAAR => 'authorize_inspectors_texelaar.csv',
+            self::AUTHORIZE_BDM => 'authorize_inspectors_bdm.csv',
+        );
+    }
+
+    public function run(CommandUtil $cmdUtil)
+    {
+        parent::run($cmdUtil);
+
+        $this->writeLn(CommandTitle::INSPECTOR);
+
+        $this->cmdUtil->writeln([DoctrineUtil::getDatabaseHostAndNameString($this->em),'']);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '1: Fix inspector names', "\n",
+            '2: Add missing inspectors', "\n",
+            '3: Fix duplicate inspectors', "\n",
+            '4: Authorize inspectors', "\n",
+            '5: Set and Remove isAuthorizedNsfoInspector status by NTS authorization', "\n",
+            '   (inspectors with updated isAuthorizedNsfoInspector will have inspectorCode set to NULL)', "\n",
+            '6: Generate inspectorCodes, if null', "\n",
+            'other: EXIT ', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+            case 1: $this->fixInspectorNames(); break;
+            case 2: $this->addMissingInspectors(); break;
+            case 3: $this->fixDuplicateInspectors(); break;
+            case 4: $this->authorizeTexelaarInspectors(); $this->authorizeBdmInspectors(); break;
+            case 5: $this->setIsAuthorizedNsfoInspectorByNTSAuthorization(); break;
+            case 6: $this->generateInspectorCodes(); break;
+            default: $this->writeln('EXIT'); return;
+        }
+        $this->run($cmdUtil);
+    }
+
+
+    private function authorizeTexelaarInspectors()
+    {
+        $csv = $this->parseCSV(self::AUTHORIZE_TEXELAAR);
+        $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
+
+        self::authorizeInspectorsForExteriorMeasurements($this->em, $this->cmdUtil, $csv, $admin, PedigreeAbbreviation::NTS);
+    }
+
+
+    private function authorizeBdmInspectors()
+    {
+        $csv = $this->parseCSV(self::AUTHORIZE_BDM);
+        $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
+
+        self::authorizeInspectorsForExteriorMeasurements($this->em, $this->cmdUtil, $csv, $admin, PedigreeAbbreviation::BdM);
+    }
+
+
     /**
-     * @param Connection $conn
-     * @param array $csv
      * @return int
      */
-    public static function fixInspectorNames(Connection $conn, $csv)
+    private function fixInspectorNames()
     {
+        $csv = $this->parseCSV(self::NAME_CORRECTIONS);
         $namesSearchArray = self::createCorrectedNamesSearchArray($csv);
 
         $sql = "SELECT i.id, last_name FROM inspector i
                   INNER JOIN person p ON i.id = p.id
                   WHERE first_name ISNULL OR first_name = '' OR first_name = ' '
                 ORDER BY last_name, first_name ASC ";
-        $results = $conn->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
 
         $totalCount = count($results);
         if($totalCount == 0) { return 0; }
@@ -53,7 +133,7 @@ class InspectorMigrator
 
             $newFirstName = null;
             $newLastName = null;
-            
+
             $newNamesArray = ArrayUtil::get($lastName, $namesSearchArray);
             if(is_array($namesSearchArray)) {
                 $newFirstName = $newNamesArray[JsonInputConstant::FIRST_NAME];
@@ -63,10 +143,13 @@ class InspectorMigrator
             if($newLastName != null && $newFirstName != null) {
                 $sql = "UPDATE person SET first_name = '".$newFirstName."', last_name = '".$newLastName."'
                         WHERE id = ".$id;
-                $conn->exec($sql);
+                $this->conn->exec($sql);
                 $updateCount++;
             }
         }
+
+        $result = $updateCount == 0 ? 'No inspectors names updated' : $updateCount.' inspector names updated!' ;
+        $this->writeln($result);
 
         return $updateCount;
     }
@@ -76,7 +159,7 @@ class InspectorMigrator
      * @param array $csv
      * @return array
      */
-    public static function createCorrectedNamesSearchArray($csv)
+    private static function createCorrectedNamesSearchArray($csv)
     {
         $searchArray = [];
         foreach ($csv as $row) {
@@ -84,8 +167,8 @@ class InspectorMigrator
             $firstName = $row[1];
             $lastName = $row[2];
             $searchArray[$fullname] = [
-              JsonInputConstant::FIRST_NAME => $firstName,
-              JsonInputConstant::LAST_NAME => $lastName,
+                JsonInputConstant::FIRST_NAME => $firstName,
+                JsonInputConstant::LAST_NAME => $lastName,
             ];
         }
         return $searchArray;
@@ -93,20 +176,22 @@ class InspectorMigrator
 
 
     /**
-     * @param Connection $conn
-     * @param InspectorRepository $inspectorRepository
-     * @param $csv
      * @return int
      */
-    public static function addMissingInspectors(Connection $conn, $inspectorRepository, $csv)
+    private function addMissingInspectors()
     {
         $newInspectorCount = 0;
+
+        $csv = $this->parseCSV(self::NEW_NAMES);
 
         foreach ($csv as $row) {
             $firstName = $row[0];
             $lastName = $row[1];
-            $newInspectorCount += self::addMissingInspector($conn, $inspectorRepository, $firstName, $lastName);
+            $newInspectorCount += self::addMissingInspector($this->conn, $this->inspectorRepository, $firstName, $lastName);
         }
+
+        $result = $newInspectorCount == 0 ? 'No new inspectors added' : $newInspectorCount.' new inspectors added!' ;
+        $this->writeln($result);
 
         return $newInspectorCount;
     }
@@ -137,12 +222,9 @@ class InspectorMigrator
 
 
     /**
-     * @param Connection $conn
-     * @param CommandUtil $cmdUtil
-     * @param InspectorRepository $inspectorRepository
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function fixDuplicateInspectors(Connection $conn, CommandUtil $cmdUtil, InspectorRepository $inspectorRepository)
+    private function fixDuplicateInspectors()
     {
         $sql = "SELECT x.id, x.first_name, x.last_name FROM person x
                 INNER JOIN (
@@ -151,7 +233,7 @@ class InspectorMigrator
                       WHERE p.type = 'Inspector'
                     GROUP BY p.first_name, p.last_name, p.type HAVING COUNT(*) > 1
                     )y ON y.first_name = x.first_name AND y.last_name = x.last_name AND y.type = x.type";
-        $results =$conn->query($sql)->fetchAll();
+        $results =$this->conn->query($sql)->fetchAll();
 
         $groupedSearchArray = [];
         foreach ($results as $result) {
@@ -172,11 +254,11 @@ class InspectorMigrator
 
         $totalDuplicateCount = count($groupedSearchArray);
         if($totalDuplicateCount == 0) {
-            $cmdUtil->writeln('No duplicate inspectors!');
+            $this->cmdUtil->writeln('No duplicate inspectors!');
             return;
         }
 
-        $cmdUtil->setStartTimeAndPrintIt($totalDuplicateCount, 1);
+        $this->cmdUtil->setStartTimeAndPrintIt($totalDuplicateCount, 1);
 
         foreach ($groupedSearchArray as $group) {
             $firstInspectorResult = $group[0];
@@ -185,41 +267,17 @@ class InspectorMigrator
                 $secondaryInspectorId = $result['id'];
                 if($primaryInspectorId != $secondaryInspectorId) {
                     $sql = "UPDATE measurement SET inspector_id = ".$primaryInspectorId." WHERE inspector_id = ".$secondaryInspectorId;
-                    $conn->exec($sql);
+                    $this->conn->exec($sql);
 
                     $sql = "INSERT INTO data_import_string_replacement (id, primary_string, secondary_string, type) VALUES (nextval('data_import_string_replacement_id_seq'),'" .$primaryInspectorId. "','" . $secondaryInspectorId . "','Inspector')";
-                    $conn->exec($sql);
+                    $this->conn->exec($sql);
 
-                    $inspectorRepository->deleteInspector($secondaryInspectorId);
+                    $this->inspectorRepository->deleteInspector($secondaryInspectorId);
                 }
             }
-            $cmdUtil->advanceProgressBar(1, 'Removing duplicate inspectors');
+            $this->cmdUtil->advanceProgressBar(1, 'Removing duplicate inspectors');
         }
-        $cmdUtil->setEndTimeAndPrintFinalOverview();
-    }
-
-
-    /**
-     * @param ObjectManager $em
-     * @param array $csv
-     * @param $admin
-     * @param CommandUtil $cmdUtil
-     */
-    public static function authorizeInspectorsForExteriorMeasurementsTexelaar(ObjectManager $em, CommandUtil $cmdUtil, array $csv, $admin)
-    {
-        self::authorizeInspectorsForExteriorMeasurements($em, $cmdUtil, $csv, $admin, PedigreeAbbreviation::NTS);
-    }
-
-
-    /**
-     * @param ObjectManager $em
-     * @param array $csv
-     * @param $admin
-     * @param CommandUtil $cmdUtil
-     */
-    public static function authorizeInspectorsForExteriorMeasurementsBdm(ObjectManager $em, CommandUtil $cmdUtil, array $csv, $admin)
-    {
-        self::authorizeInspectorsForExteriorMeasurements($em, $cmdUtil, $csv, $admin, PedigreeAbbreviation::BdM);
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
 
@@ -405,32 +463,33 @@ class InspectorMigrator
 
 
     /**
-     * @param Connection $conn
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function generateInspectorCodes(Connection $conn)
+    private function generateInspectorCodes()
     {
-        $updateCount = self::generateNsfoInspectorCodes($conn);
-        $updateCount += self::generateExternalInspectorCodes($conn);
+        $updateCount = self::generateNsfoInspectorCodes();
+        $updateCount += self::generateExternalInspectorCodes();
+
+        $result = $updateCount == 0 ? 'No new inspectorCodes added' : $updateCount.' new inspectorCodes added!' ;
+        $this->writeln($result);
 
         return $updateCount;
     }
 
 
     /**
-     * @param Connection $conn
      * @return int
      */
-    private static function generateNsfoInspectorCodes(Connection $conn)
+    private function generateNsfoInspectorCodes()
     {
         $sql = "SELECT id, RANK() OVER (ORDER BY id ASC) AS inspector_ordinal
                 FROM inspector WHERE is_authorized_nsfo_inspector AND (inspector_code ISNULL OR inspector_code = '')";
-        $inspectorRanksById = $conn->query($sql)->fetchAll();
+        $inspectorRanksById = $this->conn->query($sql)->fetchAll();
 
         if(count($inspectorRanksById) == 0) { return 0; }
 
-        $maxInspectorCode = self::findMaxNsfoInspectorCode($conn);
+        $maxInspectorCode = self::findMaxNsfoInspectorCode($this->conn);
 
         $updateString = '';
         $separator = '';
@@ -445,18 +504,17 @@ class InspectorMigrator
                 FROM (
                   VALUES ".$updateString."
                      ) AS v(id, inspector_code) WHERE inspector.id = v.id";
-        return SqlUtil::updateWithCount($conn, $sql);
+        return SqlUtil::updateWithCount($this->conn, $sql);
     }
 
 
     /**
      * NOTE! Only external inspectors for which the exterior measurements should be included in the MiXBLUP process,
      * should get an inspector code.
-     * 
-     * @param Connection $conn
+     *
      * @return int
      */
-    private static function generateExternalInspectorCodes(Connection $conn)
+    private function generateExternalInspectorCodes()
     {
         $sql = "SELECT i.id, RANK() OVER (ORDER BY i.id ASC) AS inspector_ordinal
                 FROM inspector i
@@ -464,11 +522,11 @@ class InspectorMigrator
                   INNER JOIN pedigree_register r ON r.id = auth.pedigree_register_id
                 WHERE i.is_authorized_nsfo_inspector = FALSE AND (i.inspector_code ISNULL OR i.inspector_code = '')
                   AND r.abbreviation = '".PedigreeAbbreviation::BdM."'";
-        $inspectorRanksById = $conn->query($sql)->fetchAll();
+        $inspectorRanksById = $this->conn->query($sql)->fetchAll();
 
         if(count($inspectorRanksById) == 0) { return 0; }
 
-        $maxInspectorCode = self::findMaxExternalInspectorCode($conn);
+        $maxInspectorCode = self::findMaxExternalInspectorCode($this->conn);
 
         $updateString = '';
         $separator = '';
@@ -483,7 +541,7 @@ class InspectorMigrator
                 FROM (
                   VALUES ".$updateString."
                      ) AS v(id, inspector_code) WHERE inspector.id = v.id";
-        return SqlUtil::updateWithCount($conn, $sql);
+        return SqlUtil::updateWithCount($this->conn, $sql);
     }
 
 
@@ -572,11 +630,9 @@ class InspectorMigrator
 
 
     /**
-     * @param Connection $conn
-     * @param CommandUtil $cmdUtil
      * @return int
      */
-    public static function setIsAuthorizedNsfoInspectorByNTSAuthorization(Connection $conn, CommandUtil $cmdUtil)
+    private function setIsAuthorizedNsfoInspectorByNTSAuthorization()
     {
         $nts = "'".PedigreeAbbreviation::NTS."'";
         $tsnh = "'".PedigreeAbbreviation::TSNH."'";
@@ -590,7 +646,7 @@ class InspectorMigrator
                     INNER JOIN pedigree_register r ON r.id = auth.pedigree_register_id
                   WHERE r.abbreviation = $nts AND i.is_authorized_nsfo_inspector = FALSE
                 )";
-        $newAuthorizationCount = SqlUtil::updateWithCount($conn, $sql);
+        $newAuthorizationCount = SqlUtil::updateWithCount($this->conn, $sql);
 
         $sql = "UPDATE inspector SET is_authorized_nsfo_inspector = FALSE, inspector_code = NULL
                 WHERE id IN (
@@ -603,9 +659,9 @@ class InspectorMigrator
                     ((r.abbreviation <> $nts AND r.abbreviation <> $tsnh) OR r.abbreviation ISNULL)
                     AND i.is_authorized_nsfo_inspector = TRUE
                 )";
-        $removedAuthorizationCount = SqlUtil::updateWithCount($conn, $sql);
+        $removedAuthorizationCount = SqlUtil::updateWithCount($this->conn, $sql);
 
-        $cmdUtil->writeln('InspectorAuthorizations new|removed: '.$newAuthorizationCount.'|'.$removedAuthorizationCount);
+        $this->cmdUtil->writeln('InspectorAuthorizations new|removed: '.$newAuthorizationCount.'|'.$removedAuthorizationCount);
 
         return $removedAuthorizationCount + $newAuthorizationCount;
     }

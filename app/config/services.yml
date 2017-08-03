@@ -19,6 +19,7 @@ services:
           - '@app.datafix.animals.duplicate'
           - '@app.cli.gender_changer'
           - '@app.info.parameters'
+          - '@app.migrator.inspector'
 
     app.cli.gender_changer:
         class: AppBundle\Service\DataFix\GenderChangeCommandService
@@ -198,6 +199,10 @@ services:
     app.migrator.exteriors:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\ExteriorMigrator
+
+    app.migrator.inspector:
+        parent: app.migrator.base
+        class: AppBundle\Service\Migration\InspectorMigrator
 
     app.migrator.lamb_meat_index:
         class: AppBundle\Service\Migration\LambMeatIndexMigrator
