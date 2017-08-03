@@ -124,6 +124,8 @@ class ExteriorMigrator extends Migrator2017JunServiceBase implements IMigratorSe
 
         $this->sqlBatchProcessor->start(count($this->data));
 
+        $newExteriors = [];
+
         $logDate = TimeUtil::getLogDateString();
 
         try {
@@ -158,7 +160,8 @@ class ExteriorMigrator extends Migrator2017JunServiceBase implements IMigratorSe
                     continue;
                 }
 
-                if (key_exists($animalIdAndDate, $exteriorMeasurementAnimalIdAndDates)) {
+                if (key_exists($animalIdAndDate, $exteriorMeasurementAnimalIdAndDates)
+                 || key_exists($animalIdAndDate, $newExteriors)) {
                     $baseInsertBatchSet->incrementAlreadyDoneCount();
                     $insertBatchSet->incrementAlreadyDoneCount();
                     $this->sqlBatchProcessor->advanceProgressBar();
@@ -189,6 +192,8 @@ class ExteriorMigrator extends Migrator2017JunServiceBase implements IMigratorSe
                     .$torsoLength."','"
                     .$kind."','"
                     .$progress."')");
+
+                $newExteriors[$animalIdAndDate] = $animalIdAndDate;
 
 
                 $this->sqlBatchProcessor
