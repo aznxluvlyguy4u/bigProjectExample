@@ -71,6 +71,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->updateParentIdsInAnimalTable();
 
         $this->writeLn('====== Fill other desired values ======');
+        $this->setMissingFL100ChildValues(); //Do this BEFORE fillMissingStnData()
         $this->fillMissingStnData();
         $this->fillMissingSingleColumnValues();
     }
@@ -467,6 +468,45 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
     }
 
 
+    private function setMissingFL100ChildValues()
+    {
+        $queries = [
+            'Set breedCode = FL100 if both parents are Fl100 ...' =>
+                "UPDATE animal SET breed_code = v.breed_code
+                FROM (
+                       SELECT a.id, 'FL100' as breed_code
+                       --, a.breed_code as old_breed_code, mom.breed_code, dad.breed_code
+                       FROM animal a
+                         INNER JOIN animal mom ON mom.id = a.parent_mother_id
+                         INNER JOIN animal dad ON dad.id = a.parent_father_id
+                       WHERE mom.breed_code = 'FL100' AND dad.breed_code = 'FL100' AND
+                             (a.breed_code <> 'FL100' OR a.breed_code ISNULL)
+                     ) AS v(animal_id, breed_code)
+                WHERE animal.id = v.animal_id
+                      AND (animal.breed_code ISNULL OR animal.breed_code <> 'FL100')",
+
+            'Set breedType = PURE_BRED if both parents are FL100 and breedType ISNULL ...' =>
+                "UPDATE animal SET breed_type = v.breed_type
+                FROM (
+                       SELECT a.id, 'PURE_BRED' as breed_type
+                       --, a.breed_code as old_breed_code, mom.breed_code, dad.breed_code
+                       FROM animal a
+                         INNER JOIN animal mom ON mom.id = a.parent_mother_id
+                         INNER JOIN animal dad ON dad.id = a.parent_father_id
+                       WHERE mom.breed_code = 'FL100' AND dad.breed_code = 'FL100' AND
+                             (a.breed_type ISNULL)
+                     ) AS v(animal_id, breed_type)
+                WHERE animal.id = v.animal_id
+                      AND (animal.breed_type ISNULL)",
+        ];
+
+        foreach ($queries as $title => $query) {
+            $this->updateBySql($title, $query);
+        }
+    }
+
+
+
     private function fillMissingStnData()
     {
         $queries = [
@@ -546,7 +586,6 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
             $this->updateBySql($title, $sql);
         }
     }
-
 
 
     private function removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln()
