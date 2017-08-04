@@ -195,8 +195,8 @@ class PedigreeRegisterOverviewReportService
                   LEFT JOIN company ON company.id = loc.company_id
                   LEFT JOIN address ON address.id = company.address_id
                   LEFT JOIN person o ON o.id = company.owner_id
-                  LEFT JOIN (VALUES ".self::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
-                  LEFT JOIN (VALUES ".self::breedTypeTranslationValues().") AS rastype(english, dutch) ON a.breed_type = rastype.english
+                  LEFT JOIN (VALUES ".SqlUtil::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
+                  LEFT JOIN (VALUES ".SqlUtil::breedTypeTranslationValues().") AS rastype(english, dutch) ON a.breed_type = rastype.english
                   LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk(bool_val, mark) ON c.gave_birth_as_one_year_old = production_asterisk.bool_val
                   LEFT JOIN (VALUES (true, '+'),(false, '')) AS total_born_plus_sign(is_positive, mark) ON (bg.total_born > 0) = total_born_plus_sign.is_positive
                   LEFT JOIN (VALUES (true, '+'),(false, '')) AS tail_length_plus_sign(is_positive, mark) ON (bg.tail_length > 0) = tail_length_plus_sign.is_positive
@@ -306,8 +306,8 @@ class PedigreeRegisterOverviewReportService
                   LEFT JOIN company c_breeder ON c_breeder.id = l_breeder.company_id
                   LEFT JOIN address address_breeder ON address_breeder.id = c_breeder.address_id
                   LEFT JOIN person breeder ON breeder.id = c_breeder.owner_id
-                  LEFT JOIN (VALUES ".self::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
-                  LEFT JOIN (VALUES ".self::breedTypeTranslationValues().") AS rastype(english, dutch) ON a.breed_type = rastype.english
+                  LEFT JOIN (VALUES ".SqlUtil::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
+                  LEFT JOIN (VALUES ".SqlUtil::breedTypeTranslationValues().") AS rastype(english, dutch) ON a.breed_type = rastype.english
                   LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk(bool_val, mark) ON c.gave_birth_as_one_year_old = production_asterisk.bool_val
                   LEFT JOIN (VALUES (true, '+'),(false, '')) AS total_born_plus_sign(is_positive, mark) ON (bg.total_born > 0) = total_born_plus_sign.is_positive
                   LEFT JOIN (VALUES (true, '+'),(false, '')) AS growth_plus_sign(is_positive, mark) ON (bg.growth > 0) = growth_plus_sign.is_positive
@@ -318,24 +318,6 @@ class PedigreeRegisterOverviewReportService
                   (p_mom.abbreviation = '$nts' OR p_mom.abbreviation = '$tsnh' OR p_mom.abbreviation = '$lax') OR
                   (p_dad.abbreviation = '$nts' OR p_dad.abbreviation = '$tsnh' OR p_dad.abbreviation = '$lax')";
         return $this->conn->query($sql)->fetchAll();
-    }
-
-
-    /**
-     * @return string
-     */
-    private function breedTypeTranslationValues()
-    {
-        return SqlUtil::createSqlValuesString(BreedTypeDutch::getConstants(), false, true);
-    }
-
-
-    /**
-     * @return string
-     */
-    private function genderTranslationValues()
-    {
-        return SqlUtil::createSqlValuesString(DutchGender::getConstants(), true, true);
     }
 
 

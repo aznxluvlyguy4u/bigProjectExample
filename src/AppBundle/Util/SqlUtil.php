@@ -5,7 +5,9 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
+use AppBundle\Enumerator\DutchGender;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -504,4 +506,23 @@ class SqlUtil
     {
         return "CAST('".$dateString."' AS TIMESTAMP)";
     }
+
+
+    /**
+     * @return string
+     */
+    public static function breedTypeTranslationValues()
+    {
+        return SqlUtil::createSqlValuesString(BreedTypeDutch::getConstants(), false, true);
+    }
+
+
+    /**
+     * @return string
+     */
+    public static function genderTranslationValues()
+    {
+        return SqlUtil::createSqlValuesString(DutchGender::getConstants(), true, true);
+    }
+
 }
