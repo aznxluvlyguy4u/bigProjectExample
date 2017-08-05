@@ -50,7 +50,7 @@ use AppBundle\Service\IRSerializer;
 use AppBundle\Service\Migration\ClientMigrator;
 use AppBundle\Service\MixBlupInputQueueService;
 use AppBundle\Service\MixBlupOutputQueueService;
-use AppBundle\Service\PedigreeRegisterOverviewReportService;
+use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;

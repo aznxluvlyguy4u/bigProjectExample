@@ -243,25 +243,7 @@ class ReportAPIController extends APIController {
      */
     public function getPedigreeRegisterOverview(Request $request)
     {
-        $filePath = $this->getPedigreeRegisterReportService()->request($request, $this->getAuthenticatedEmployee($request));
-        if($filePath instanceof JsonResponse) { return $filePath; }
-
-        $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, true);
-
-        if($uploadToS3) {
-            $s3Service = $this->getStorageService();
-            $url = $s3Service->uploadFromFilePath(
-                $filePath,
-                $this->getPedigreeRegisterReportService()->getS3Key(),
-                $this->getPedigreeRegisterReportService()->getContentType()
-            );
-
-            FilesystemUtil::purgeFolder($this->getPedigreeRegisterReportService()->getCacheSubFolder());
-            return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
-
-        }
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $filePath], 200);
+        return $this->getPedigreeRegisterReportService()->request($request, $this->getAuthenticatedEmployee($request));
     }
 
 

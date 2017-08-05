@@ -1,20 +1,24 @@
 <?php
 
 
-namespace AppBundle\Service;
+namespace AppBundle\Service\Report;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Enumerator\DutchGender;
+use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\BreedTypeDutch;
+use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Enumerator\QueryParameter;
+use AppBundle\Enumerator\QueryType;
+use AppBundle\Service\AWSSimpleStorageService;
+use AppBundle\Service\ExcelService;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -22,48 +26,31 @@ use Symfony\Component\HttpFoundation\Request;
  * Class ReportService
  * @package AppBundle\Service
  */
-class PedigreeRegisterOverviewReportService
+class PedigreeRegisterOverviewReportService extends ReportServiceBase
 {
-    const EXCEL_TYPE = 'Excel2007';
-    const CREATOR = 'NSFO';
     const TITLE_PREFIX = 'Overzicht dieren van ';
     const KEYWORDS = "nsfo fokwaarden dieren overzicht";
     const DESCRIPTION = "Overzicht van dieren van stamboek inclusief benodigde metingen en fokwaarden";
-
     const FOLDER = '/pedigree_register_reports/';
-
-    /** @var ObjectManager */
-    private $em;
-    /** @var Connection */
-    private $conn;
-    /** @var ExcelService */
-    private $excelService;
-    /** @var Logger */
-    private $logger;
-
-    /** @var array */
-    private $data;
-    /** @var string */
-    private $filename;
 
     /**
      * PedigreeRegisterOverviewReportService constructor.
-     * @param ObjectManager $em
+     * @param ObjectManager|EntityManagerInterface $em
      * @param ExcelService $excelService
      * @param Logger $logger
+     * @param AWSSimpleStorageService $storageService
      */
-    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger)
+    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
+                                AWSSimpleStorageService $storageService)
     {
+        parent::__construct($em, $excelService, $logger, $storageService, self::FOLDER);
+
         $this->em = $em;
         $this->conn = $em->getConnection();
         $this->logger = $logger;
 
-        $this->excelService = $excelService;
         $this->excelService
-            ->setFolderName(self::FOLDER)
-            ->setCreator(self::CREATOR)
             ->setKeywords(self::KEYWORDS)
-            ->setExcelFileType(self::EXCEL_TYPE)
             ->setDescription(self::DESCRIPTION)
             ;
     }
@@ -72,7 +59,7 @@ class PedigreeRegisterOverviewReportService
     /**
      * @param Request $request
      * @param $user
-     * @return JsonResponse|bool|string
+     * @return JsonResponse
      */
     public function request(Request $request, $user)
     {
@@ -81,13 +68,21 @@ class PedigreeRegisterOverviewReportService
         }
 
         $type = $request->query->get(QueryParameter::TYPE_QUERY);
-        return $this->generate($type);
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::XLS);
+        $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, true);
+
+        return $this->generateFileByType($type, $uploadToS3, $fileType);
     }
 
 
-    public function generate($type)
+    /**
+     * @param string $type
+     * @param boolean $uploadToS3
+     * @param string $fileType
+     * @return JsonResponse|string
+     */
+    public function generateFileByType($type, $uploadToS3, $fileType)
     {
-        $data = null;
         $today = TimeUtil::getTimeStampToday();
         $cfFilename = 'nsfo_cf_overzicht_'.$today.'.xls';
         $ntsTsnhLaxFilename = 'nsfo_nts_tsnh_lax_overzicht_'.$today.'.xls';
@@ -96,16 +91,16 @@ class PedigreeRegisterOverviewReportService
 
         switch ($type) {
             case PedigreeAbbreviation::CF:
-                $this->data = $this->cfData();
-                $this->filename = $cfFilename;
-                $this->excelService->setTitle(self::TITLE_PREFIX.'stamboek CF');
+                $data = $this->cfData();
+                $filename = $cfFilename;
+                $title = self::TITLE_PREFIX.'stamboek CF';
                 break;
             case PedigreeAbbreviation::NTS://go to case:LAX
             case PedigreeAbbreviation::TSNH://go to case:LAX
             case PedigreeAbbreviation::LAX:
-                $this->data = $this->ntsTsnhLaxData();
-                $this->filename = $ntsTsnhLaxFilename;
-                $this->excelService->setTitle(self::TITLE_PREFIX.'stamboek NTS, TSNH, LAX');
+                $data = $this->ntsTsnhLaxData();
+                $filename = $ntsTsnhLaxFilename;
+                $title = self::TITLE_PREFIX.'stamboek NTS, TSNH, LAX';
                 break;
             default:
                 $code = 428;
@@ -113,19 +108,7 @@ class PedigreeRegisterOverviewReportService
                 return new JsonResponse(['code' => $code, "message" => $message], $code);
         }
 
-        $recordCount = count($this->data);
-        if($recordCount <= 1) {
-            $code = 428;
-            $message = "Data is empty";
-            return new JsonResponse(['code' => $code, "message" => $message], $code);
-        }
-
-        $this->logger->notice('Retrieved '.$recordCount.' records');
-        $this->logger->notice('Generate data from sql results ... ');
-
-        $this->excelService->setFilename($this->filename);
-        $this->excelService->generateFromSqlResults($this->data);
-        return $this->excelService->getFullFilepathWithExtension();
+        return $this->generateFile($filename, $data, $title, $fileType, $uploadToS3);
     }
 
 
@@ -321,20 +304,5 @@ class PedigreeRegisterOverviewReportService
     }
 
 
-    public function getS3Key()
-    {
-        return 'reports'.self::FOLDER.$this->filename;
-    }
 
-
-    public function getContentType()
-    {
-        return $this->excelService->getContentMimeType();
-    }
-
-
-    public function getCacheSubFolder()
-    {
-        return $this->excelService->getCacheSubFolder();
-    }
 }

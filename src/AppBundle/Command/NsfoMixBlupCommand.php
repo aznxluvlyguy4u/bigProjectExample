@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Entity\BreedValue;
+use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Enumerator\ServiceId;
 use AppBundle\Migration\BreedValuesSetMigrator;
@@ -141,11 +142,11 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
 
             case 40: $this->getContainer()->get(ServiceId::EXCEL_SERVICE)->clearCacheFolder(); break;
             case 41:
-                $filepath = $this->getContainer()->get(ServiceId::PEDIGREE_REGISTER_REPORT)->generate(PedigreeAbbreviation::CF);
+                $filepath = $this->getContainer()->get(ServiceId::PEDIGREE_REGISTER_REPORT)->generateFileByType(PedigreeAbbreviation::CF, false, FileType::XLS);
                 $this->logger->notice($filepath);
                 break;
             case 42:
-                $filepath = $this->getContainer()->get(ServiceId::PEDIGREE_REGISTER_REPORT)->generate(PedigreeAbbreviation::NTS);
+                $filepath = $this->getContainer()->get(ServiceId::PEDIGREE_REGISTER_REPORT)->generateFileByType(PedigreeAbbreviation::NTS,false, FileType::XLS);
                 $this->logger->notice($filepath);
                 break;
 

@@ -266,8 +266,9 @@ services:
         public: false
 
     app.report.pedigree_register:
-        class: AppBundle\Service\PedigreeRegisterOverviewReportService
+        class: AppBundle\Service\Report\PedigreeRegisterOverviewReportService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          excelBundle: '@app.excel.service'
-          logger: '@logger'
+          - '@doctrine.orm.entity_manager'
+          - '@app.excel.service'
+          - '@logger'
+          - '@app.aws.storageservice'
