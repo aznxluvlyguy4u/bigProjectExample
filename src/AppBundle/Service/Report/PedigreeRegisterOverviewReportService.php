@@ -84,8 +84,8 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
     public function generateFileByType($type, $uploadToS3, $fileType)
     {
         $today = TimeUtil::getTimeStampToday();
-        $cfFilename = 'nsfo_cf_overzicht_'.$today.'.xls';
-        $ntsTsnhLaxFilename = 'nsfo_nts_tsnh_lax_overzicht_'.$today.'.xls';
+        $cfFilename = 'nsfo_cf_overzicht_'.$today;
+        $ntsTsnhLaxFilename = 'nsfo_nts_tsnh_lax_overzicht_'.$today;
 
         $this->logger->notice('Retrieve '.$type.' data ... ');
 

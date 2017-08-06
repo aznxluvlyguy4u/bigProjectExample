@@ -230,7 +230,7 @@ class ReportAPIController extends APIController {
      *       "name"="AccessToken",
      *       "dataType"="string",
      *       "requirement"="",
-     *       "description"="Generate pedigree register xls report by abbreviation in query parameter 'type'"
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
      *   resource = true,
@@ -239,11 +239,38 @@ class ReportAPIController extends APIController {
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/excel/pedigreeregister")
-     * @Method("POST")
+     * @Method("GET")
      */
     public function getPedigreeRegisterOverview(Request $request)
     {
         return $this->getPedigreeRegisterReportService()->request($request, $this->getAuthenticatedEmployee($request));
+    }
+
+
+    /**
+     * Generate breed index and breed value overview report by 'file_type' xls/csv.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate breed index and breed value overview report by 'file_type' xls/csv."
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/excel/breed-values-overview")
+     * @Method("GET")
+     */
+    public function getBreedValuesReportOverview(Request $request)
+    {
+        return $this->getBreedValuesOverviewReportService()->request($request, $this->getAuthenticatedEmployee($request));
     }
 
 

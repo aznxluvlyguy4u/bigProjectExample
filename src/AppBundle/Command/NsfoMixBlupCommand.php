@@ -107,6 +107,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             '40: Clear excel cache folder', "\n",
             '41: Print excel file for CF pedigree register', "\n",
             '42: Print excel file for NTS, TSNH, LAX pedigree registers', "\n",
+            '43: Print excel file Breedvalues overview all animals on a ubn', "\n",
             'DEFAULT: Abort', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -147,6 +148,9 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
                 break;
             case 42:
                 $filepath = $this->getContainer()->get(ServiceId::PEDIGREE_REGISTER_REPORT)->generateFileByType(PedigreeAbbreviation::NTS,false, FileType::XLS);
+                $this->logger->notice($filepath);
+                break;
+            case 43: $filepath = $this->getContainer()->get(ServiceId::BREED_VALUES_OVERVIEW_REPORT)->generate(FileType::XLS, false);
                 $this->logger->notice($filepath);
                 break;
 

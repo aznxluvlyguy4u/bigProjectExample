@@ -64,7 +64,8 @@ class ReportServiceBase
 
     public function getS3Key()
     {
-        return 'reports'.$this->excelService->getFolder().$this->excelService->getFilename();
+        return 'reports'.$this->excelService->getFolder()
+            .$this->excelService->getFilename().'.'.$this->excelService->getExtension();
     }
 
 
@@ -81,15 +82,15 @@ class ReportServiceBase
 
 
     /**
-     * @param string $filename
+     * @param string $filenameWithoutExtension
      * @param array $data
      * @param string $title
-     * @param string $fileType
+     * @param string $fileExtension
      * @param boolean $uploadToS3
      * @return JsonResponse
      * @throws \Exception
      */
-    protected function generateFile($filename, $data, $title, $fileType, $uploadToS3)
+    protected function generateFile($filenameWithoutExtension, $data, $title, $fileExtension, $uploadToS3)
     {
         $recordCount = count($data);
         if($recordCount <= 1) {
@@ -101,15 +102,16 @@ class ReportServiceBase
         $this->logger->notice('Retrieved '.$recordCount.' records');
         $this->logger->notice('Generate data from sql results ... ');
 
-        $this->excelService->setFilename($filename);
+        $this->excelService->setFilename($filenameWithoutExtension);
+        $this->excelService->setExtension($fileExtension);
         $this->excelService->setTitle($title);
 
 
-        switch ($fileType) {
+        switch ($fileExtension) {
 
             case FileType::XLS:
                 $this->excelService->generateFromSqlResults($data);
-                $localFilePath = $this->excelService->getFullFilepathWithExtension();
+                $localFilePath = $this->excelService->getFullFilepath();
                 break;
 
             case FileType::CSV:
