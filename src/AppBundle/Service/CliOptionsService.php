@@ -19,6 +19,7 @@ use AppBundle\Service\DataFix\GenderChangeCommandService;
 use AppBundle\Service\Migration\BirthProgressInitializer;
 use AppBundle\Service\Migration\InspectorMigrator;
 use AppBundle\Service\Migration\VsmMigratorService;
+use AppBundle\Service\Worker\DepartInternalWorkerCliOptions;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
@@ -74,6 +75,8 @@ class CliOptionsService
     private $infoService;
     /** @var InspectorMigrator */
     private $inspectorMigrator;
+    /** @var DepartInternalWorkerCliOptions */
+    private $departInternalWorkerCliOptions;
     /** @var MixBlupCliOptionsService */
     private $mixBlupCliOptionsService;
     /** @var VsmMigratorService */
@@ -94,6 +97,7 @@ class CliOptionsService
      * @param GenderChangeCommandService $genderChangeCommandService
      * @param InfoService $infoService
      * @param InspectorMigrator $inspectorMigrator
+     * @param DepartInternalWorkerCliOptions $departInternalWorkerCliOptions
      * @param MixBlupCliOptionsService $mixBlupCliOptionsService
      * @param VsmMigratorService $vsmMigratorService
      */
@@ -103,6 +107,7 @@ class CliOptionsService
                                 GenderChangeCommandService $genderChangeCommandService,
                                 InfoService $infoService,
                                 InspectorMigrator $inspectorMigrator,
+                                DepartInternalWorkerCliOptions $departInternalWorkerCliOptions,
                                 MixBlupCliOptionsService $mixBlupCliOptionsService,
                                 VsmMigratorService $vsmMigratorService
     )
@@ -116,6 +121,7 @@ class CliOptionsService
         $this->genderChangeCommandService = $genderChangeCommandService;
         $this->infoService = $infoService;
         $this->inspectorMigrator = $inspectorMigrator;
+        $this->departInternalWorkerCliOptions = $departInternalWorkerCliOptions;
         $this->mixBlupCliOptionsService = $mixBlupCliOptionsService;
         $this->vsmMigratorService = $vsmMigratorService;
 
@@ -210,6 +216,8 @@ class CliOptionsService
             '9: '.strtolower(CommandTitle::DATA_MIGRATION), "\n",
             '-----------------------------------------------', "\n",
             '10: '.strtolower(CommandTitle::MIXBLUP), "\n",
+            '-----------------------------------------------', "\n",
+            '11: '.strtolower(CommandTitle::DEPART_INTERNAL_WORKER), "\n",
             '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
@@ -226,6 +234,7 @@ class CliOptionsService
             case 8: $this->initializeDatabaseValuesOptions($this->cmdUtil); break;
             case 9: $this->dataMigrationOptions($this->cmdUtil); break;
             case 10: $this->mixBlupCliOptionsService->run($this->cmdUtil); break;
+            case 11: $this->departInternalWorkerCliOptions->run($this->cmdUtil); break;
 
             default: return;
         }

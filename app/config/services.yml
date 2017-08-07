@@ -20,11 +20,17 @@ services:
           - '@app.cli.gender_changer'
           - '@app.info.parameters'
           - '@app.migrator.inspector'
+          - '@app.cli.internal_worker.depart'
           - '@app.cli.mixblup'
           - '@app.migrator.vsm'
 
     app.cli.gender_changer:
         class: AppBundle\Service\DataFix\GenderChangeCommandService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+
+    app.cli.internal_worker.depart:
+        class: AppBundle\Service\Worker\DepartInternalWorkerCliOptions
         arguments:
           - '@doctrine.orm.entity_manager'
 

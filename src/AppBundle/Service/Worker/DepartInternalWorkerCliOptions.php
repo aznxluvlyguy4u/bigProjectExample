@@ -1,58 +1,64 @@
 <?php
 
-namespace AppBundle\Command;
+
+namespace AppBundle\Service\Worker;
+
 
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalResidence;
-use AppBundle\Entity\DeclareDepart;
-use AppBundle\Entity\DeclareDepartRepository;
-use AppBundle\Entity\DeclareDepartResponse;
-use AppBundle\Entity\DeclareDepartResponseRepository;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationRepository;
-use AppBundle\Enumerator\AnimalTransferStatus;
+use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Enumerator\InternalWorkerResponse;
-use AppBundle\Enumerator\RecoveryIndicatorType;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
-use AppBundle\Util\IRUtil;
-use AppBundle\Util\TimeUtil;
 use AppBundle\Worker\Logic\DeclareDepartAction;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
- * Class NsfoWorkerTxtDepartCommand
- * @package AppBundle\Command
+ * Class DepartInternalWorkerCliOptions
  */
-class NsfoWorkerTxtDepartCommand extends ContainerAwareCommand
+class DepartInternalWorkerCliOptions
 {
-    const TITLE = 'DEPART Internal worker workaround using a txt file of the json messages';
-
-    /** @var ObjectManager $em */
+    /** @var ObjectManager|EntityManagerInterface $em */
     private $em;
 
     private $txtFileOptions = array(
-        'finder_in' => 'app/Resources/imports/',
-        'finder_name' => 'NSFO_ProdErrorLog_2016-09-11_UBN304397.txt',
+        'finder_in' => 'app/Resources/imports/internal_worker',
+        'finder_name' => 'depart_queue_messages.json',
     );
 
 
+    /**
+     * DepartInternalWorkerCliOptions constructor.
+     * @param EntityManagerInterface $em
+     */
+    public function __construct(EntityManagerInterface $em)
+    {
+        $this->em = $em;
+    }
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function run(CommandUtil $cmdUtil)
+    {
+        //Print intro
+        $cmdUtil->writelnClean(CommandUtil::generateTitle(CommandTitle::DEPART_INTERNAL_WORKER));
+
+        $cmdUtil->writelnClean(DoctrineUtil::getDatabaseHostAndNameString($this->em));
+        if(!$cmdUtil->generateConfirmationQuestion('Apply changes to this database? (y/n)')) {
+            $cmdUtil->writeln('ABORTED');
+            return;
+        }
+
+        $instructionText = "
     /*
      * The source file should contain a nested json of one or more DeclareDepart messages
      * as copy-pasted from the AWS-SQS queue
      *
      * {
-     *  "departs":
+     *  \"departs\":
      *     [
      *       {
      *         *depart message as copy pasted from queue*
@@ -63,38 +69,17 @@ class NsfoWorkerTxtDepartCommand extends ContainerAwareCommand
      *     ]
      * }
      *
+     * The file should be named: ".$this->txtFileOptions['finder_name']."
+     * and be placed in folder: ".$this->txtFileOptions['finder_in']."
      */
+     ";
+        $cmdUtil->writelnClean($instructionText);
 
-
-    protected function configure()
-    {
-        $this
-            ->setName('nsfo:worker:txt:depart')
-            ->setDescription(self::TITLE);
-    }
-
-    protected function execute(InputInterface $input, OutputInterface $output)
-    {
-        /** @var ObjectManager $em */
-        $em = $this->getContainer()->get('doctrine')->getManager();
-        $this->em = $em;
-        $helper = $this->getHelper('question');
-        $cmdUtil = new CommandUtil($input, $output, $helper);
-
-
-        //Print intro
-        $output->writeln(CommandUtil::generateTitle(self::TITLE));
-
-        $output->writeln(DoctrineUtil::getDatabaseHostAndNameString($em));
-        if(!$cmdUtil->generateConfirmationQuestion('Apply changes to this database? (y/n)')) {
-            $output->writeln('ABORTED');
-            return;
-        }
 
         $isFlushAfterEachDepartAction = $cmdUtil->generateConfirmationQuestion('Flush after each individual message? (y/n)');
 
         $isSkipProcessedDeclares = true;
-        $declareDepartAction = new DeclareDepartAction($em, $isSkipProcessedDeclares);
+        $declareDepartAction = new DeclareDepartAction($this->em, $isSkipProcessedDeclares);
 
         $jsonText = $this->getTxtFileContent();
         $content = new ArrayCollection(json_decode($jsonText, true));
@@ -140,9 +125,9 @@ class NsfoWorkerTxtDepartCommand extends ContainerAwareCommand
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
         if(count($missingDeclares)>0) {
-            $output->writeln('Missing Declares: ');
+            $cmdUtil->writeln('Missing Declares: ');
             foreach ($missingDeclares as $declareRequestId) {
-                $output->write($declareRequestId.' ; ');
+                $cmdUtil->write($declareRequestId.' ; ');
             }
         }
     }
@@ -158,5 +143,4 @@ class NsfoWorkerTxtDepartCommand extends ContainerAwareCommand
             return file_get_contents($file);
         }
     }
-
 }
