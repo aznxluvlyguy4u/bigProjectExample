@@ -227,6 +227,12 @@ class DatabaseDataFixer
         } while (!is_int($locationId));
 
         $animalsDeleted = DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirths($conn, $locationId);
+        if ($animalsDeleted === null) {
+            $cmdUtil->writeln('Incorrect input! locationId must be an integer');
+            return 0;
+        }
+
+        $count = $animalsDeleted === 0 ? 'No' : $animalsDeleted;
         $cmdUtil->writeln('Done! ' . $animalsDeleted . ' animals deleted');
         return $animalsDeleted;
     }
@@ -239,7 +245,7 @@ class DatabaseDataFixer
      */
     public static function deleteIncorrectNeutersFromRevokedBirths(Connection $conn, $locationId)
     {
-        if(!is_int($locationId) || !ctype_digit($locationId)) { return null; }
+        if(!is_int($locationId) && !ctype_digit($locationId)) { return null; }
 
         foreach (['animal_residence', 'result_table_breed_grades'] as $tableName) {
             $sql = "DELETE FROM $tableName
