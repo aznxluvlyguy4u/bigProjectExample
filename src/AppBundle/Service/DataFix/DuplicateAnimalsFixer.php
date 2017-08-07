@@ -4,10 +4,14 @@
 namespace AppBundle\Service\DataFix;
 
 
+use AppBundle\Component\Builder\CsvOptions;
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MeasurementRepository;
+use AppBundle\Entity\Ram;
 use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
@@ -15,6 +19,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\CsvParser;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\NullChecker;
@@ -927,4 +932,127 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
     }
 
 
+    /**
+     * @param CommandUtil $cmdUtil
+     * @return int
+     * @throws \Exception
+     */
+    public function mergePrimaryUlnWithSecondaryPedigreeNumberFromCsvFile(CommandUtil $cmdUtil)
+    {
+        $this->setCmdUtil($cmdUtil);
+
+        $csvOptions = (new CsvOptions())
+            ->includeFirstLine()
+            ->setInputFolder('app/Resources/imports/corrections/')
+            ->setOutputFolder('app/Resources/output/corrections/')
+            ->setFileName('merge_duplicate_animals_by_primary_uln_and_secondary_pedigree_number.csv')
+            ->setPipeSeparator()
+        ;
+
+        $csv = CsvParser::parse($csvOptions);
+
+        $ulnCount = count($csv);
+        if($ulnCount === 0) { return 0; }
+
+        $alreadyDoneCount = 0;
+        $duplicatePedigreeNumberByUlns = [];
+        $missingPedigreeNumberByUlns = [];
+        $mergedPedigreeNumberByUlns = [];
+        $manualGenderFixNecessary = [];
+        $failedMergesByUlns = [];
+        $unmatchedDateOfBirthByUlns = [];
+
+        $cmdUtil->setStartTimeAndPrintIt(count($csv), 1);
+
+        foreach ($csv as $records) {
+            if (count($records) === 0) {
+                continue;
+            }
+
+            if (count($records) < 2) {
+                throw new \Exception('Invalid record :'.implode(',', $records));
+            }
+
+            $ulnString = strtr($records[0], [' ' => '']);
+
+            $primaryAnimal = $this->animalRepository->findAnimalByUlnString($ulnString);
+
+            $pedigreeNumber = $records[1];
+            $sql = "SELECT DATE(date_of_birth) as date_of_birth, id, gender, CONCAT(uln_country_code, uln_number) as uln
+                    FROM animal WHERE pedigree_number = '$pedigreeNumber'";
+            $secondaryAnimalData = $this->conn->query($sql)->fetchAll();
+
+            if (count($secondaryAnimalData) > 1) {
+                $duplicatePedigreeNumberByUlns[$ulnString] = $pedigreeNumber;
+
+            } elseif (count($secondaryAnimalData) === 0 || $primaryAnimal === null) {
+                $missingPedigreeNumberByUlns[$ulnString] = $pedigreeNumber;
+
+            } else {
+
+                //only one unique pedigree number exists in database
+                $secondaryAnimalId = $secondaryAnimalData[0]['id'];
+                $dateOfBirthSecondaryAnimal = $secondaryAnimalData[0]['date_of_birth'];
+                $genderSecondaryAnimal = $secondaryAnimalData[0]['gender'];
+                $ulnSecondaryAnimal = $secondaryAnimalData[0]['uln'];
+
+                if ($ulnString === $ulnSecondaryAnimal) {
+                    $alreadyDoneCount++;
+
+                } elseif ($dateOfBirthSecondaryAnimal !== $primaryAnimal->getDateOfBirthString()) {
+                    $unmatchedDateOfBirthByUlns[$ulnString] = $pedigreeNumber;
+
+                } else {
+
+                    $mergeAnimals = true;
+                    if($genderSecondaryAnimal !== $primaryAnimal->getGender()) {
+                        if($primaryAnimal->getGender() === GenderType::NEUTER) {
+
+                            $genderChangeResult = false;
+
+                            switch ($genderSecondaryAnimal) {
+                                case GenderType::MALE:
+                                    $genderChangeResult = $this->genderChanger->changeToGender($primaryAnimal, Ram::class);
+                                    break;
+                                case GenderType::FEMALE:
+                                    $genderChangeResult = $this->genderChanger->changeToGender($primaryAnimal, Ewe::class);
+                                    break;
+                                default:
+                                    $mergeAnimals = false;
+                                    break;
+                            }
+
+                            if($genderChangeResult instanceof JsonResponse) {
+                                $manualGenderFixNecessary[$ulnString] = $pedigreeNumber;
+                                $mergeAnimals = false;
+                            }
+
+                        } else {
+                            $manualGenderFixNecessary[$ulnString] = $pedigreeNumber;
+                            $mergeAnimals = false;
+                        }
+                    }
+
+                    if ($mergeAnimals) {
+                        $mergeResult = $this->mergeAnimalPairByIds($primaryAnimal->getId(), $secondaryAnimalId);
+
+                        if ($mergeResult) {
+                            $mergedPedigreeNumberByUlns[$ulnString] = $pedigreeNumber;
+                        } else {
+                            $failedMergesByUlns[$ulnString] = $pedigreeNumber;
+                        }
+                    }
+                }
+            }
+
+            $cmdUtil->advanceProgressBar(1, 'pedigreeNumber error missing|duplicate|dateOfBirth|gender: '
+                .count($duplicatePedigreeNumberByUlns).'|'.count($missingPedigreeNumberByUlns)
+                .'|'.count($unmatchedDateOfBirthByUlns).'|'.count($manualGenderFixNecessary)
+                    .'  merges already|succeeded|failed: '.$alreadyDoneCount.'|'.count($mergedPedigreeNumberByUlns).'|'.count($failedMergesByUlns));
+        }
+
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        return count($mergedPedigreeNumberByUlns);
+    }
 }

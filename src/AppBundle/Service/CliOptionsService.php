@@ -566,7 +566,8 @@ class CliOptionsService
             '2: Fix duplicate animals, synced I&R vs migrated animals', "\n",
             '3: Merge two animals by primaryKeys', "\n",
             '4: Merge two animals where one is missing leading zeroes', "\n",
-            '5: Fix duplicate animals due to tagReplace error', "\n\n",
+            '5: Fix duplicate animals due to tagReplace error', "\n",
+            '6: Merge two animals by uln (primary) and pedigreeNumber (secondary) csv correction file', "\n\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -576,6 +577,7 @@ class CliOptionsService
             case 3: $this->duplicateAnimalsFixer->mergeAnimalPairs($this->cmdUtil); break;
             case 4: $this->duplicateAnimalsFixer->mergeImportedAnimalsMissingLeadingZeroes($this->cmdUtil); break;
             case 5: $this->duplicateAnimalsFixer->fixDuplicateDueToTagReplaceError($this->cmdUtil); break;
+            case 6: $this->duplicateAnimalsFixer->mergePrimaryUlnWithSecondaryPedigreeNumberFromCsvFile($this->cmdUtil); break;
             default: $this->writeLn('Exit menu'); return;
         }
         $this->fixDuplicateAnimalsOptions($this->cmdUtil);
