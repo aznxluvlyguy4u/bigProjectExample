@@ -27,12 +27,21 @@ class WormResistance
     /**
      * @var \DateTime
      *
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", options={"default":"CURRENT_TIMESTAMP"}, nullable=false)
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
     private $logDate;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $samplingDate;
 
     /**
      * @var Person
@@ -135,6 +144,8 @@ class WormResistance
      */
     public function __construct()
     {
+        $this->logDate = new \DateTime();
+        $this->isActive = true;
     }
 
     /**
@@ -171,6 +182,22 @@ class WormResistance
     {
         $this->logDate = $logDate;
         return $this;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getSamplingDate()
+    {
+        return $this->samplingDate;
+    }
+
+    /**
+     * @param \DateTime $samplingDate
+     */
+    public function setSamplingDate($samplingDate)
+    {
+        $this->samplingDate = $samplingDate;
     }
 
     /**
@@ -353,6 +380,7 @@ class WormResistance
         return $this;
     }
 
+
     /**
      * @return bool
      */
@@ -370,8 +398,6 @@ class WormResistance
         $this->isActive = $isActive;
         return $this;
     }
-
-
 
 
 }

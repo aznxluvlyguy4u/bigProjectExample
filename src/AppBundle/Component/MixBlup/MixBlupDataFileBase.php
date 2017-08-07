@@ -4,6 +4,7 @@
 namespace AppBundle\Component\MixBlup;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MaxLength;
+use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
@@ -18,12 +19,6 @@ use Doctrine\DBAL\Connection;
  */
 class MixBlupDataFileBase
 {
-    //Value limits
-    const TAIL_LENGTH_MAX = 27;
-    const TAIL_LENGTH_MIN = 8;
-    const N_LING_MAX = 6;
-    const N_LING_MIN = 1;
-
     /**
      * @param string $animalIdKey
      * @return string
@@ -310,7 +305,7 @@ class MixBlupDataFileBase
     protected static function getFormattedTailLength($data, $key = JsonInputConstant::TAIL_LENGTH)
     {
         $tailLengthValue = $data[$key];
-        if($tailLengthValue < self::TAIL_LENGTH_MIN || self::TAIL_LENGTH_MAX < $tailLengthValue) {
+        if($tailLengthValue < MeasurementConstant::TAIL_LENGTH_MIN || MeasurementConstant::TAIL_LENGTH_MAX < $tailLengthValue) {
             $data[$key] = null;
         }
 
@@ -375,7 +370,7 @@ class MixBlupDataFileBase
     protected static function getFormattedNLing($data, $key = JsonInputConstant::N_LING)
     {
         $nLingValue = $data[$key];
-        if($nLingValue < self::N_LING_MIN || self::N_LING_MAX < $nLingValue) {
+        if($nLingValue < MeasurementConstant::N_LING_MIN || MeasurementConstant::N_LING_MAX < $nLingValue) {
             $data[$key] = null;
         }
 

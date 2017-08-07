@@ -35,6 +35,7 @@ use JMS\Serializer\Annotation\Expose;
  */
 abstract class DeclareNsfoBase
 {
+    const TABLE_NAME = 'declare_nsfo_base';
 
     /**
      * @var integer

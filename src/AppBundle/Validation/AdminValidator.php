@@ -12,6 +12,7 @@ use AppBundle\JsonFormat\ValidationResults;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Constant\Constant;
 use \Symfony\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\HttpFoundation\JsonResponse as AppBundleJsonResponse;
 
 /**
  * Class AdminValidator
@@ -133,7 +134,7 @@ class AdminValidator
 
 
     /**
-     * @return string
+     * @return JsonResponse|AppBundleJsonResponse
      */
     public static function getStandardErrorResponse()
     {

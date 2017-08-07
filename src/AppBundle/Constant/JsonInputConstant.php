@@ -231,8 +231,12 @@ class JsonInputConstant
     const LITTER_COUNT = 'litter_count';
     const TOTAL_BORN_ALIVE_COUNT = 'total_born_alive_count';
     const TOTAL_STILLBORN_COUNT = 'total_stillborn_count';
+    const BORN_ALIVE_COUNT = 'born_alive_count';
+    const STILLBORN_COUNT = 'stillborn_count';
     const EARLIEST_LITTER_DATE = 'earliest_litter_date';
     const LATEST_LITTER_DATE = 'latest_litter_date';
+    const LITTER_DATE = 'litter_date';
+    const LITTER_ID = 'litter_id';
     const PRODUCTION = 'production';
     const GAVE_BIRTH_AS_ONE_YEAR_OLD = 'gave_birth_as_one_year_old';
 
@@ -256,4 +260,6 @@ class JsonInputConstant
     const SOLANI_2 = 'solani_2';
     const SOLANI_3 = 'solani_3';
 
+    //DataImport
+    const ENTITY_ALREADY_EXISTS = 'entity_already_exists';
 }

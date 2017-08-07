@@ -5,6 +5,7 @@ namespace AppBundle\Component\MixBlup;
 
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MaxLength;
+use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
@@ -264,8 +265,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   --AND mom.breed_code NOTNULL --NULLABLE?
                   AND mom.date_of_birth NOTNULL
                   AND l.litter_date > mom.date_of_birth
-                  AND ".self::N_LING_MIN." <= (l.born_alive_count + l.stillborn_count)
-                  AND (l.born_alive_count + l.stillborn_count) <= ".self::N_LING_MAX."
+                  AND ".MeasurementConstant::N_LING_MIN." <= (l.born_alive_count + l.stillborn_count)
+                  AND (l.born_alive_count + l.stillborn_count) <= ".MeasurementConstant::N_LING_MAX."
                   AND mom.ubn_of_birth NOTNULL".self::getErrorLogAnimalPedigreeFilter('mom.id');
     }
 

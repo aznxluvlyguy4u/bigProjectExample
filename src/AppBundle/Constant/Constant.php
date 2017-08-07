@@ -58,6 +58,9 @@ class Constant
     const TYPE_NAMESPACE = 'type';
     const GHOST_TOKEN_NAMESPACE = 'ghost_token';
 
+    //cli
+    const ABORTED_NAMESPACE = 'aborted';
+
     //Animal identification
     const ULN_NAMESPACE = 'uln';
     const ULN_NUMBER_NAMESPACE = "uln_number";

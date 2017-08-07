@@ -49,7 +49,10 @@ class GenderChanger
      */
     public function hasDirectChildRelationshipCheck(Animal $animal)
     {
-        return $animal->getChildren()->count() > 0 ? true : false;
+        if ($animal instanceof Ram || $animal instanceof Ewe) {
+            return $animal->getChildren()->count() > 0 ? true : false;
+        }
+        return false;
     }
 
   /**
@@ -242,7 +245,7 @@ class GenderChanger
             //Allow gender change for animals beyond MAX_TIME_INTERVAL
             // if current gender is of type NEUTER
             if($animal instanceof Neuter) {
-               return $animal;
+                return $animal;
             }
 
             //Allow gender change for animals beyond MAX_TIME_INTERVAL
@@ -256,17 +259,17 @@ class GenderChanger
             }
 
             return new JsonResponse(
-              array (
-                Constant::RESULT_NAMESPACE => array (
-                  'code' => $statusCode,
+                array (
+                    Constant::RESULT_NAMESPACE => array (
+                        'code' => $statusCode,
 //                  "message" => $animal->getUln() . " has a registered birth that is longer then "
 //                    .self::MAX_MONTH_INTERVAL ." months ago, from now, therefore changing gender is not allowed.",
-                  "message" => $animal->getUln() . " heeft een geregistreerde geboortedatum dat langer dan "
-                    .self::MAX_MONTH_INTERVAL ." maanden geleden is, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen. Dit moet worden goedgekeurd door een administrator.",
-                )
-              ), $statusCode);
+                        "message" => $animal->getUln() . " heeft een geregistreerde geboortedatum dat langer dan "
+                            .self::MAX_MONTH_INTERVAL ." maanden geleden is, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen. Dit moet worden goedgekeurd door een administrator.",
+                    )
+                ), $statusCode);
         }
-        
+
         return $animal;
     }
 }

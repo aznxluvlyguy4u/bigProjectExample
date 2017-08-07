@@ -101,4 +101,56 @@ class LocationRepository extends BaseRepository
     return $locations;
   }
 
+
+  /**
+   * The location ids are returned by ubn.
+   * Active locations are prioritized
+   *
+   * @return array
+   */
+  public function getLocationIdsByUbn()
+  {
+    $sql = "SELECT ubn, is_active, id FROM location
+            ORDER BY ubn ASC , is_active DESC ";
+    //The active locations are returned first
+    $results = $this->getConnection()->query($sql)->fetchAll();
+
+    $locationIdsByUbn = [];
+
+    foreach ($results as $result) {
+      $ubn = $result['ubn'];
+      $id = $result['id'];
+      
+      if(!array_key_exists($ubn, $locationIdsByUbn)) {
+        $locationIdsByUbn[$ubn] = intval($id);
+      }
+    }
+    
+    return $locationIdsByUbn;
+  }
+
+
+  /**
+   * @param int $limit
+   * @return array
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function findLocationsWithHighestAnimalCount($limit = 10)
+  {
+    $sql = "SELECT l.id, l.ubn, c.company_name, z.count, t.access_token FROM location l
+                    INNER JOIN (
+                                   SELECT a.location_id, COUNT(*) as count FROM animal a
+                                   GROUP BY a.location_id
+                                   --HAVING COUNT(*) > 400
+                               )z ON z.location_id = l.id
+                    INNER JOIN company c ON c.id = l.company_id
+                    LEFT JOIN (
+                        SELECT MAX(tt.code) as access_token, owner_id FROM token tt
+                        WHERE tt.type = 'ACCESS'
+                        GROUP BY owner_id
+                    )t ON c.owner_id = t.owner_id
+                WHERE l.is_active = TRUE AND c.is_active = TRUE
+                ORDER BY count DESC LIMIT ".$limit;
+    return $this->getConnection()->query($sql)->fetchAll();
+  }
 }

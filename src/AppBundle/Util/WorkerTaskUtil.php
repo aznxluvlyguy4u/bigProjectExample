@@ -6,9 +6,13 @@ namespace AppBundle\Util;
 
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareBirthResponse;
 use AppBundle\Entity\Litter;
 use AppBundle\Enumerator\WorkerTaskScope;
+use AppBundle\Service\IRSerializer;
 use AppBundle\Worker\Task\WorkerMessageBodyLitter;
+use GuzzleHttp\Psr7\Request;
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 class WorkerTaskUtil
 {
@@ -100,5 +104,33 @@ class WorkerTaskUtil
         $messageBody->setOnlyProcessBlankRecords(false);
 
         return $messageBody;
+    }
+
+
+
+    /**
+     * @param SymfonyRequest $request
+     * @return DeclareBirthResponse
+     */
+    public static function deserializeMessageToDeclareBirthResponse(SymfonyRequest $request, IRSerializer $irSerializer)
+    {
+        $post = json_decode($request->getContent(), true);
+        $post['log_date'] = WorkerTaskUtil::convertJavaEpochToDate($post['log_date']);
+        $post['date_of_birth'] = WorkerTaskUtil::convertJavaEpochToDate($post['date_of_birth']);
+        /** @var DeclareBirthResponse $declareBirthResponse */
+        return $irSerializer->deserializeToObject(json_encode($post), 'DeclareBirthResponse');
+    }
+
+
+
+    /**
+     * @param $dateString
+     * @return string
+     */
+    public static function convertJavaEpochToDate($dateString)
+    {
+        $epoch = round(intval($dateString)/1000);
+        $dt = new \DateTime("@$epoch");
+        return $dt->format('Y-m-d\\TH:i:sO');
     }
 }
