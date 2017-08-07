@@ -49,7 +49,10 @@ class GenderChanger
      */
     public function hasDirectChildRelationshipCheck(Animal $animal)
     {
-        return $animal->getChildren()->count() > 0 ? true : false;
+        if ($animal instanceof Ram || $animal instanceof Ewe) {
+            return $animal->getChildren()->count() > 0 ? true : false;
+        }
+        return false;
     }
 
   /**
