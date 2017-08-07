@@ -44,11 +44,10 @@ class GenderChangerForMigrationOnly
      */
     public function hasDirectChildRelationshipCheck($animal)
     {
-        if($animal instanceof Ewe || $animal instanceof Ram || $animal instanceof Neuter) {
+        if($animal instanceof Ewe || $animal instanceof Ram) {
             return $animal->getChildren()->count() > 0;
-        } else {
-            return false;
         }
+        return false;
     }
 
 

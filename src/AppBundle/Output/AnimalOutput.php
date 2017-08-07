@@ -102,16 +102,19 @@ class AnimalOutput
     public static function createChildrenArray($animal)
     {
         $children = array();
-        foreach($animal->getChildren() as $child){
-            $data = array(
-                "id" => $child->getId(),
-                "uln_country_code" => $child->getUlnCountryCode(),
-                "uln_number" => $child->getUlnNumber(),
-                "pedigree_country_code" => $child->getPedigreeCountryCode(),
-                "pedigree_number" => $child->getPedigreeNumber(),
-                "gender" => $child->getGender()
-            );
-            $children[] = $data;
+
+        if ($animal instanceof Ram || $animal instanceof Ewe) {
+            foreach($animal->getChildren() as $child){
+                $data = array(
+                    "id" => $child->getId(),
+                    "uln_country_code" => $child->getUlnCountryCode(),
+                    "uln_number" => $child->getUlnNumber(),
+                    "pedigree_country_code" => $child->getPedigreeCountryCode(),
+                    "pedigree_number" => $child->getPedigreeNumber(),
+                    "gender" => $child->getGender()
+                );
+                $children[] = $data;
+            }
         }
 
         return $children;
