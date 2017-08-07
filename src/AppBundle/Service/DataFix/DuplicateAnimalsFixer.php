@@ -22,6 +22,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\GenderChanger;
+use AppBundle\Util\GenderChangerBySql;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -1008,21 +1009,9 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
                     if($genderSecondaryAnimal !== $primaryAnimal->getGender()) {
                         if($primaryAnimal->getGender() === GenderType::NEUTER) {
 
-                            $genderChangeResult = false;
+                            $genderChangeResult = GenderChangerBySql::changeGender($this->conn, $primaryAnimal->getId(), $genderSecondaryAnimal);
 
-                            switch ($genderSecondaryAnimal) {
-                                case GenderType::MALE:
-                                    $genderChangeResult = $this->genderChanger->changeToGender($primaryAnimal, Ram::class);
-                                    break;
-                                case GenderType::FEMALE:
-                                    $genderChangeResult = $this->genderChanger->changeToGender($primaryAnimal, Ewe::class);
-                                    break;
-                                default:
-                                    $mergeAnimals = false;
-                                    break;
-                            }
-
-                            if($genderChangeResult instanceof JsonResponse) {
+                            if(!$genderChangeResult) {
                                 $manualGenderFixNecessary[$ulnString] = $pedigreeNumber;
                                 $mergeAnimals = false;
                             }
