@@ -369,15 +369,8 @@ class AuthAPIController extends APIController {
   public function generatePasswordsForNewClients(Request $request)
   {
     return new JsonResponse(array("code" => 403, "message" => "Forbidden"), 403);
-
-    $doctrine = $this->getDoctrine();
-    $em = $doctrine->getManager();
-    $encoder = $this->get('security.password_encoder');
-    $content = $this->getContentAsArray($request);
-
-    $newClients = $doctrine->getRepository(Constant::CLIENT_REPOSITORY)->getClientsWithoutAPassword();
     
-    $migrationResults = ClientMigration::generateNewPasswordsAndEmailsForMigratedClients($newClients, $em, $encoder, $content);
+    $migrationResults = $this->getClientMigratorService()->generateNewPasswordsAndEmailsForMigratedClients($this->getContentAsArray($request));
 
     return new JsonResponse($migrationResults, 200);
   }

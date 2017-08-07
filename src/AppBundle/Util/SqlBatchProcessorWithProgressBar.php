@@ -124,7 +124,8 @@ class SqlBatchProcessorWithProgressBar
         $prefix = '';
         $message = '';
 
-        if (count($this->sqlBatchSets) > 2) {
+        if (count($this->sqlBatchSets) > 1) {
+            $message = SqlBatchSetData::LABELS_MINIMAL;
             /** @var SqlBatchSetData $set */
             foreach ($this->sqlBatchSets as $set) {
                 $message = $message . $prefix . $set->getMinimalProgressBarMessage();

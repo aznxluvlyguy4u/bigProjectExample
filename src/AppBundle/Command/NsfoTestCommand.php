@@ -6,21 +6,20 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
+use AppBundle\Migration\AnimalExterminator;
 use AppBundle\Util\CommandUtil;
 
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
-use AppBundle\Util\SqlUtil;
-use Doctrine\Common\Collections\ArrayCollection;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Finder\Finder;
 
 class NsfoTestCommand extends ContainerAwareCommand
 {
@@ -29,36 +28,27 @@ class NsfoTestCommand extends ContainerAwareCommand
     const OUTPUT_FOLDER_NAME = '/Resources/outputs/test';
     const FILENAME = 'test.csv';
     const DEFAULT_OPTION = 0;
+    const BLOCKED_DATABASE_NAME_PART = 'prod';
 
     const CREATE_TEST_FOLDER_IF_NULL = true;
 
     /** @var ObjectManager $em */
     private $em;
-
     /** @var Connection $conn */
     private $conn;
-
-    /** @var string */
-    private $rootDir;
-
-    /** @var LocationRepository */
-    private $locationRepository;
-
-    /** @var AnimalRepository */
-    private $animalRepository;
-
+    /** @var OutputInterface */
+    private $output;
     /** @var CommandUtil */
     private $cmdUtil;
-
+    /** @var string */
+    private $rootDir;
+    /** @var LocationRepository */
+    private $locationRepository;
+    /** @var AnimalRepository */
+    private $animalRepository;
     /** @var string */
     private $databaseName;
 
-    private $csvParsingOptions = array(
-        'finder_in' => 'app/Resources/imports/',
-        'finder_out' => 'app/Resources/outputs/',
-        'finder_name' => 'filename.csv',
-        'ignoreFirstLine' => true
-    );
 
     protected function configure()
     {
@@ -70,9 +60,10 @@ class NsfoTestCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
+        /** @var ObjectManager|EntityManagerInterface $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        $this->output = $output;
         $this->conn = $em->getConnection();
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
@@ -88,28 +79,28 @@ class NsfoTestCommand extends ContainerAwareCommand
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '1: Custom test', "\n",
-            '2: Custom test', "\n",
+            '1: Find locations with highest animal count', "\n",
+            '2: Delete animal and all related records', "\n",
             'DEFAULT: Custom test', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
 
             case 1:
-                //PLACEHOLDER
-                $this->customTest();
+                $results = $this->locationRepository->findLocationsWithHighestAnimalCount();
+                $this->cmdUtil->writeln($results);
                 break;
             case 2:
-                //PLACEHOLDER
-                $this->customTest();
+                if($this->isBlockedDatabase()) { $this->printDatabaseError(); break; }
+                $this->getContainer()->get('app.datafix.animals.exterminator')->deleteAnimalsByCliInput($this->cmdUtil);
                 break;
             default:
                 $this->customTest();
                 break;
         }
         $output->writeln('DONE');
-
-
+        
+        
     }
 
 
@@ -121,29 +112,18 @@ class NsfoTestCommand extends ContainerAwareCommand
     }
 
 
-    private function parseCSV() {
-        $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
-
-        $finder = new Finder();
-        $finder->files()
-            ->in($this->csvParsingOptions['finder_in'])
-            ->name($this->csvParsingOptions['finder_name'])
-        ;
-        foreach ($finder as $file) { $csv = $file; }
-
-        $rows = array();
-        if (($handle = fopen($csv->getRealPath(), "r")) !== FALSE) {
-            $i = 0;
-            while (($data = fgetcsv($handle, null, ";")) !== FALSE) {
-                $i++;
-                if ($ignoreFirstLine && $i == 1) { continue; }
-                $rows[] = $data;
-                gc_collect_cycles();
-            }
-            fclose($handle);
-        }
-
-        return $rows;
+    private function printDatabaseError()
+    {
+        $this->output->writeln('THIS COMMAND IS NOT ALLOWED FOR ANY DATABASE '.
+            "WHICH NAME CONTAINS '".self::BLOCKED_DATABASE_NAME_PART."'!");
     }
 
+
+    /**
+     * @return bool
+     */
+    private function isBlockedDatabase()
+    {
+        return StringUtil::isStringContains(strtolower($this->databaseName), self::BLOCKED_DATABASE_NAME_PART);
+    }
 }

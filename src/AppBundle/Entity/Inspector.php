@@ -13,6 +13,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class Inspector extends Person {
 
+    const TABLE_NAME = 'inspector';
+
     /**
      * @var string
      *
