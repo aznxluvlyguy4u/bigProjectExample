@@ -63,6 +63,16 @@ class NumberUtil
 
 
     /**
+     * @param float $float
+     * @return bool
+     */
+    public static function isFloatPositive($float)
+    {
+        return filter_var($float, FILTER_VALIDATE_FLOAT) && $float > 0;
+    }
+
+
+    /**
      * @param string $string
      * @return float
      */

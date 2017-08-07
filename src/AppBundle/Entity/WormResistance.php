@@ -380,6 +380,7 @@ class WormResistance
         return $this;
     }
 
+
     /**
      * @return bool
      */
@@ -397,8 +398,6 @@ class WormResistance
         $this->isActive = $isActive;
         return $this;
     }
-
-
 
 
 }

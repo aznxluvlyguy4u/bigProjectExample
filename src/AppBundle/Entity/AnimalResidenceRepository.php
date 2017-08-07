@@ -3,6 +3,8 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 
@@ -99,5 +101,23 @@ class AnimalResidenceRepository extends BaseRepository {
     public function deleteByAnimalIdsAndSql($animalIds)
     {
         return $this->deleteTableRecordsByTableNameAndAnimalIdsAndSql('animal_residence', $animalIds);
+    }
+
+
+    /**
+     * @param int $animalId
+     * @param int $locationId
+     * @param string|null $startDateString
+     * @param string|null $endDateString
+     * @param string $logDateString
+     * @param bool $isPending
+     * @param string $country
+     * @return string
+     */
+    public function getSqlInsertString($animalId, $locationId, $startDateString, $endDateString, $logDateString, $isPending = false, $country = 'NL')
+    {
+        return "INSERT INTO animal_residence (id, animal_id, log_date, start_date, end_date, is_pending, country, location_id
+							)VALUES(nextval('animal_residence_id_seq'),".$animalId.",'".$logDateString."',".
+        SqlUtil::getNullCheckedValueForSqlQuery($startDateString, true).",".SqlUtil::getNullCheckedValueForSqlQuery($endDateString, true).",".StringUtil::getBooleanAsString($isPending).",'".$country."',".$locationId.")";
     }
 }

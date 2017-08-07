@@ -47,9 +47,11 @@ use AppBundle\Service\EntityGetter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\HealthService;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Service\Migration\ClientMigrator;
 use AppBundle\Service\MixBlupInputQueueService;
 use AppBundle\Service\MixBlupOutputQueueService;
-use AppBundle\Service\PedigreeRegisterOverviewReportService;
+use AppBundle\Service\Report\BreedValuesOverviewReportService;
+use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
@@ -80,6 +82,8 @@ class APIController extends Controller implements APIControllerInterface
   /** @var array */
   private $services = [
       ServiceId::ANIMAL_LOCATION_HISTORY => null,
+      ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
+      ServiceId::CLIENT_MIGRATOR => null,
       ServiceId::ENTITY_GETTER => null,
       ServiceId::EXCEL_SERVICE => null,
       ServiceId::EXTERNAL_QUEUE_SERVICE => null,
@@ -116,6 +120,10 @@ class APIController extends Controller implements APIControllerInterface
 
   /** @return AnimalLocationHistoryService */
   protected function getAnimalLocationHistoryService(){ return $this->getService(ServiceId::ANIMAL_LOCATION_HISTORY); }
+  /** @return BreedValuesOverviewReportService */
+  protected function getBreedValuesOverviewReportService() { return $this->getService(ServiceId::BREED_VALUES_OVERVIEW_REPORT); }
+  /** @return ClientMigrator */
+  protected function getClientMigratorService(){ return $this->getService(ServiceId::CLIENT_MIGRATOR); }
   /** @return EntityGetter */
   protected function getEntityGetter() { return $this->getService(ServiceId::ENTITY_GETTER); }
   /** @return ExcelService */

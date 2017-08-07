@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
@@ -16,6 +17,7 @@ use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\DBAL\Connection;
 use Doctrine\Common\Cache\RedisCache;
 use Doctrine\ORM\Query\Expr\Join;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -418,6 +420,7 @@ class AnimalRepository extends BaseRepository
     $cacheId = AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID ;
     $cacheId = $cacheId . $location->getId(); //. sha1($location->getId());
     $idCurrentLocation = $location->getId();
+
     $em = $this->getEntityManager();
 
     $genderFilterExpression = null;
@@ -456,6 +459,7 @@ class AnimalRepository extends BaseRepository
           break;
         default:
           break;
+
       }
     }
 
@@ -737,37 +741,85 @@ class AnimalRepository extends BaseRepository
     return $this->executeSqlQuery($sql);
   }
 
-  /**
-   * @return ArrayCollection
-   */
-  public function getAnimalPrimaryKeysByVsmId()
-  {
-    $sql = "SELECT id, name FROM animal";
-    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
-    $array = new ArrayCollection();
-    foreach ($results as $result) {
-      $array->set($result['name'], intval($result['id']));
+    /**
+     * @param string $gender
+     * @return string
+     */
+    private function getGenderJoinFilter($gender)
+    {
+        switch ($gender) {
+            case GenderType::FEMALE: return ' INNER JOIN ewe ON ewe.id = a.id ';
+            case GenderType::MALE: return ' INNER JOIN ram ON ram.id = a.id ';
+            case GenderType::NEUTER: return ' INNER JOIN neuter ON neuter.id = a.id ';
+            default: return '';
+        }
     }
 
-    return $array;
-  }
 
+    /**
+     * @param string $gender
+     * @return ArrayCollection
+     */
+    public function getAnimalPrimaryKeysByVsmId($gender = null)
+    {
+        $sql = "SELECT a.id, a.name FROM animal a 
+                  ".$this->getGenderJoinFilter($gender)."
+                WHERE a.name IS NOT NULL";
+        $results = $this->getConnection()->query($sql)->fetchAll();
 
-  /**
-   * @return array
-   */
-  public function getAnimalPrimaryKeysByVsmIdArray()
-  {
-    $sql = "SELECT name as vsm_id, id FROM animal WHERE name IS NOT NULL";
-    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        $array = new ArrayCollection();
+        foreach ($results as $result) {
+            $array->set($result['name'], intval($result['id']));
+        }
 
-    $searchArray = array();
-    foreach ($results as $result) {
-      $searchArray[$result['vsm_id']] = $result['id'];
+        return $array;
     }
-    return $searchArray;
-  }
+
+
+    /**
+     * @param string $gender
+     * @return array
+     */
+    public function getAnimalPrimaryKeysByVsmIdArray($gender = null)
+    {
+        $sql = "SELECT a.name as vsm_id, a.id FROM animal a
+                  ".$this->getGenderJoinFilter($gender)."
+                WHERE a.name IS NOT NULL";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+
+        $searchArray = array();
+        foreach ($results as $result) {
+            $searchArray[$result['vsm_id']] = $result['id'];
+        }
+        return $searchArray;
+    }
+
+
+    /**
+     * @param string $gender
+     * @return array
+     */
+    public function getAnimalPrimaryKeysByUniqueStnArray($gender = null)
+    {
+        $sql = "SELECT a.id as animal_id, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn
+                FROM animal a
+                INNER JOIN (
+                    SELECT pedigree_country_code, pedigree_number
+                    FROM animal a
+                      ".$this->getGenderJoinFilter($gender)."
+                    WHERE a.pedigree_country_code NOTNULL AND a.pedigree_number NOTNULL
+                    --ignore duplicate stns
+                    GROUP BY pedigree_country_code, pedigree_number HAVING COUNT(*) = 1
+                    )g ON g.pedigree_country_code = a.pedigree_country_code AND g.pedigree_number = a.pedigree_number";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+
+        $searchArray = array();
+        foreach ($results as $result) {
+            $searchArray[$result['stn']] = $result['animal_id'];
+        }
+        return $searchArray;
+    }
 
 
   /**
@@ -830,22 +882,30 @@ class AnimalRepository extends BaseRepository
   }
 
 
+    /**
+     * @param boolean $isCountryCodeSeparatedByString
+     * @return array
+     */
+  private function getAnimalPrimaryKeysByUlnStringResults($isCountryCodeSeparatedByString)
+  {
+      if($isCountryCodeSeparatedByString) {
+          $ulnFormat = "uln_country_code,' ',uln_number";
+      } else {
+          $ulnFormat = "uln_country_code,uln_number";
+      }
+      $sql = "SELECT CONCAT(".$ulnFormat.") as uln, id, type FROM animal";
+      return $this->getConnection()->query($sql)->fetchAll();
+  }
+
+
   /**
    * @return ArrayCollection
    */
   public function getAnimalPrimaryKeysByUlnString($isCountryCodeSeparatedByString = false)
   {
-    if($isCountryCodeSeparatedByString) {
-      $ulnFormat = "uln_country_code,' ',uln_number";
-    } else {
-      $ulnFormat = "uln_country_code,uln_number";
-    }
-    $sql = "SELECT CONCAT(".$ulnFormat.") as uln, id, type FROM animal";
-    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
-
     $array = new ArrayCollection();
-    foreach ($results as $result) {
-      if($array->containsKey($result['uln'])) {
+    foreach ($this->getAnimalPrimaryKeysByUlnStringResults($isCountryCodeSeparatedByString) as $result) {
+      if($array->containsKey($array['uln'])) {
         if($result['type'] != 'Neuter') {
           $array->set($result['uln'], $result['id']);
         }
@@ -856,6 +916,26 @@ class AnimalRepository extends BaseRepository
 
     return $array;
   }
+
+
+    /**
+     * @return array
+     */
+    public function getAnimalPrimaryKeysByUlnStringArray($isCountryCodeSeparatedByString = false)
+    {
+        $array = [];
+        foreach ($this->getAnimalPrimaryKeysByUlnStringResults($isCountryCodeSeparatedByString) as $result) {
+            if(key_exists('uln', $array)) {
+                if($result['type'] !== 'Neuter') {
+                    $array[$result['uln']] = $result['id'];
+                }
+            } else {
+                $array[$result['uln']] = $result['id'];
+            }
+        }
+
+        return $array;
+    }
 
 
   /**
@@ -956,32 +1036,48 @@ class AnimalRepository extends BaseRepository
   /**
    * This information is necessary to show the most up to date information on the PedigreeCertificates
    *
+   * @param CommandUtil $cmdUtil
    * @return int
    * @throws \Doctrine\DBAL\DBALException
    */
-  public function updateAllLocationOfBirths()
+  public function updateAllLocationOfBirths(CommandUtil $cmdUtil = null)
   {
     $ubnsUpdated = 0;
-
+    $updatedWithActiveLocations = 0;
+    $updatedWithDeactivatedLocations = 0;
+    
     /*
      * 1. Set current active locations on missing locationOfBirth where possible
      * 2. Set deactivated locations on missing locationOfBirth where possible
      */
-    foreach ([TRUE, FALSE] as $isActive) {
+    foreach (['TRUE', 'FALSE'] as $isActive) {
       $sql = "SELECT a.ubn_of_birth, l.id as location_id, l.is_active FROM animal a
               LEFT JOIN location l ON a.ubn_of_birth = l.ubn
             WHERE a.location_of_birth_id ISNULL AND l.id NOTNULL AND a.ubn_of_birth NOTNULL AND l.is_active = ".$isActive."
             GROUP BY ubn_of_birth, l.id, l.is_active";
       $results = $this->getConnection()->query($sql)->fetchAll();
 
-      foreach ($results as $result) {
-        $ubnOfBirth = $result['ubn_of_birth'];
-        $locationId = $result['location_id'];
-        $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
-                AND location_of_birth_id <> ".$locationId;
-        $this->getConnection()->exec($sql);
-        $ubnsUpdated++;
+      $internalCount = count($results);
+      
+      if($internalCount > 0) {
+        if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($internalCount,1); }
+
+        foreach ($results as $result) {
+          $ubnOfBirth = $result['ubn_of_birth'];
+          $locationId = $result['location_id'];
+          $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
+                AND (location_of_birth_id <> ".$locationId." OR location_of_birth_id ISNULL)";
+          $this->getConnection()->exec($sql);
+          $ubnsUpdated++;
+
+          if($isActive == 'TRUE') { $updatedWithActiveLocations++; }
+          elseif($isActive == 'FALSE') { $updatedWithDeactivatedLocations++; }
+          if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'LocationIdOfBirths updated, active|non-active: '
+              .$updatedWithActiveLocations.'|'.$updatedWithDeactivatedLocations); }
+        }
+        if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
       }
+
     }
 
     /*
@@ -995,13 +1091,23 @@ class AnimalRepository extends BaseRepository
             GROUP BY ubn_of_birth, l.id";
     $results = $this->getConnection()->query($sql)->fetchAll();
 
-    foreach ($results as $result) {
-      $ubnOfBirth = $result['ubn_of_birth'];
-      $locationId = $result['location_id'];
-      $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
+    $internalCount = count($results);
+
+    if($internalCount > 0) {
+      if ($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($internalCount, 1); }
+
+      foreach ($results as $result) {
+        $ubnOfBirth = $result['ubn_of_birth'];
+        $locationId = $result['location_id'];
+        $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
               AND location_of_birth_id <> ".$locationId;
-      $this->getConnection()->exec($sql);
-      $ubnsUpdated++;
+        $this->getConnection()->exec($sql);
+        $ubnsUpdated++;
+        $updatedWithActiveLocations++;
+        if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'LocationIdOfBirths updated, active|non-active: '
+            .$updatedWithActiveLocations.'|'.$updatedWithDeactivatedLocations); }
+      }
+      if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
 
     return $ubnsUpdated;
@@ -1043,10 +1149,10 @@ class AnimalRepository extends BaseRepository
 
 
   /**
+   * @param Connection $conn
    * @return int
-   * @throws \Doctrine\DBAL\DBALException
    */
-  public function fixMissingAnimalTableExtentions()
+  public static function fixMissingAnimalTableExtentions(Connection $conn)
   {
     $sql = "SELECT a.id, 'Ewe' as type FROM animal a
             LEFT JOIN ewe e ON a.id = e.id
@@ -1059,7 +1165,7 @@ class AnimalRepository extends BaseRepository
             SELECT a.id, 'Neuter' as type FROM animal a
               LEFT JOIN neuter n ON a.id = n.id
             WHERE a.type = 'Neuter' AND n.id ISNULL";
-    $results = $this->getConnection()->query($sql)->fetchAll();
+    $results = $conn->query($sql)->fetchAll();
 
     $totalCount = count($results);
 
@@ -1078,16 +1184,21 @@ class AnimalRepository extends BaseRepository
           case 'Neuter': $neuterAnimalIds[$animalId] = $animalId; break;
         }
       }
-      $this->insertAnimalTableExtentions($eweAnimalIds, 'Ewe');
-      $this->insertAnimalTableExtentions($ramAnimalIds, 'Ram');
-      $this->insertAnimalTableExtentions($neuterAnimalIds, 'Neuter');
+      self::insertAnimalTableExtentions($conn, $eweAnimalIds, 'Ewe');
+      self::insertAnimalTableExtentions($conn, $ramAnimalIds, 'Ram');
+      self::insertAnimalTableExtentions($conn, $neuterAnimalIds, 'Neuter');
     }
 
     return $totalCount;
   }
 
-  
-  private function insertAnimalTableExtentions($animalIds, $type)
+
+  /**
+   * @param Connection $conn
+   * @param array $animalIds
+   * @param string $type
+   */
+  private static function insertAnimalTableExtentions(Connection $conn, $animalIds, $type)
   {
     $batchSize = 1000;
     $tableName = strtolower($type);
@@ -1103,7 +1214,7 @@ class AnimalRepository extends BaseRepository
 
       if($counter%$batchSize == 0) {
         $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
-        $this->getConnection()->exec($sql);
+        $conn->exec($sql);
         $valuesString = '';
 
       } elseif($counter != $totalCount) {
@@ -1112,7 +1223,7 @@ class AnimalRepository extends BaseRepository
     }
     if($valuesString != '') {
       $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
-      $this->getConnection()->exec($sql);
+      $conn->exec($sql);
     }
   }
 
@@ -1167,11 +1278,22 @@ class AnimalRepository extends BaseRepository
 
 
   /**
-   * @param array $animalIds
+   * @param array|int $animalIds
    */
   public function deleteAnimalsById($animalIds)
   {
-    if(!is_array($animalIds)) { return; }
+    if(!is_array($animalIds)) {
+
+      if(ctype_digit($animalIds)) {
+        $animalIds = intval($animalIds);
+      }
+
+      if(is_int($animalIds)) {
+        $animalIds = [$animalIds];
+      } else {
+        return; 
+      }
+    }
     if(count($animalIds) == 0) { return; }
 
     //Delete animalCache records
@@ -1189,10 +1311,18 @@ class AnimalRepository extends BaseRepository
     $animalResidenceRepository = $this->getManager()->getRepository(AnimalResidence::class);
     $animalResidenceRepository->deleteByAnimalIdsAndSql($animalIds);
 
+    /** @var GenderHistoryItemRepository $genderHistoryItemRepository */
+    $genderHistoryItemRepository = $this->getManager()->getRepository(GenderHistoryItem::class);
+    $genderHistoryItemRepository->deleteByAnimalsIds($animalIds);
+
+
     $animalIdFilterString = SqlUtil::getFilterStringByIdsArray($animalIds);
     if($animalIdFilterString != '') {
+      //Note that the child record in the ram/ewe/neuter table will automatically be deleted as well.
       $sql = "DELETE FROM animal WHERE ".$animalIdFilterString;
       $this->getConnection()->exec($sql);
     }
   }
+
+
 }

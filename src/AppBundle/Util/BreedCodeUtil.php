@@ -11,6 +11,18 @@ class BreedCodeUtil
 {
 
     /**
+     * @param string $breedCodeString
+     * @param bool $isBy8Parts
+     * @return bool
+     */
+    public static function isValidBreedCodeString($breedCodeString, $isBy8Parts = false)
+    {
+        $breedCodeParts = self::getBreedCodePartsFromBreedCodeString($breedCodeString, $isBy8Parts);
+        return $isBy8Parts ? self::verifySumOf8PartBreedCodeParts($breedCodeParts) : self::verifySumOf100PartBreedCodeParts($breedCodeParts);
+    }
+
+
+    /**
      * @param $breedCodeString
      * @return array
      */
