@@ -80,7 +80,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
         parent::run($cmdUtil);
 
         //Print intro
-        $cmdUtil->writeln(CommandUtil::generateTitle(CommandTitle::DATA_MIGRATE_2017_AND_WORM));
+        $cmdUtil->writelnClean(CommandUtil::generateTitle(CommandTitle::DATA_MIGRATE_2017_AND_WORM));
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             ' ', "\n",
@@ -132,7 +132,7 @@ class VsmMigratorService extends Migrator2017JunServiceBase
             case 22: $this->birthDataMigrator->run($this->cmdUtil); break;
             case 23: $this->dateOfDeathMigrator->run($this->cmdUtil); break;
 
-            case 24: $this->updateAnimalCacheAndLitterValues();
+            case 24: $this->updateAnimalCacheAndLitterValues(); break;
 
             case self::COMPLETE_OPTION: $this->complete($this->cmdUtil); break;
 

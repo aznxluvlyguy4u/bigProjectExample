@@ -37,9 +37,9 @@ class GenderChangeCommandService extends DuplicateFixerBase
         $this->setCmdUtil($cmdUtil);
 
         //Print intro
-        $cmdUtil->writeln(CommandUtil::generateTitle(CliOptionsService::GENDER_CHANGE));
+        $cmdUtil->writelnClean(CommandUtil::generateTitle(CliOptionsService::GENDER_CHANGE));
 
-        $cmdUtil->writeln([DoctrineUtil::getDatabaseHostAndNameString($this->em),'']);
+        $cmdUtil->writelnClean([DoctrineUtil::getDatabaseHostAndNameString($this->em),'']);
 
         $developer = null;
         do {

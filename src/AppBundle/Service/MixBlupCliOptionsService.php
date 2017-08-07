@@ -1,92 +1,98 @@
 <?php
 
-namespace AppBundle\Command;
+
+namespace AppBundle\Service;
+
 
 use AppBundle\Cache\BreedValuesResultTableUpdater;
-use AppBundle\Entity\BreedValue;
+use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
-use AppBundle\Enumerator\ServiceId;
-use AppBundle\Migration\BreedValuesSetMigrator;
-use AppBundle\Migration\LambMeatIndexMigrator;
-use AppBundle\Service\BreedIndexService;
-use AppBundle\Service\BreedValuePrinter;
-use AppBundle\Service\BreedValueService;
-use AppBundle\Service\MixBlupInputFilesService;
-use AppBundle\Service\MixBlupOutputFilesService;
+use AppBundle\Service\Migration\LambMeatIndexMigrator;
+use AppBundle\Service\Report\BreedValuesOverviewReportService;
+use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Helper\ProgressBar;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class NsfoMixBlupCommand
- * @package AppBundle\Command
+ * Class MixBlupCliOptionsService
  */
-class NsfoMixBlupCommand extends ContainerAwareCommand
+class MixBlupCliOptionsService
 {
-    const TITLE = 'MixBlup';
     const DEFAULT_OPTION = 0;
     const DEFAULT_UBN = 1674459;
     const DEFAULT_MIN_UBN = 0;
 
-    const CREATE_TEST_FOLDER_IF_NULL = true;
-
-    /** @var ObjectManager $em */
+    /** @var ObjectManager|EntityManagerInterface */
     private $em;
-    /** @var Connection $conn */
+    /** @var Connection */
     private $conn;
     /** @var CommandUtil */
     private $cmdUtil;
     /** @var Logger */
     private $logger;
 
+    /** @var BreedValuesOverviewReportService */
+    private $breedValuesOverviewReportService;
+    /** @var BreedValuePrinter */
+    private $breedValuePrinter;
+    /** @var BreedValueService */
+    private $breedValueService;
+    /** @var BreedIndexService */
+    private $breedIndexService;
+    /** @var ExcelService */
+    private $excelService;
+    /** @var LambMeatIndexMigrator */
+    private $lambMeatIndexMigrator;
     /** @var MixBlupInputFilesService */
     private $mixBlupInputFilesService;
     /** @var MixBlupOutputFilesService */
     private $mixBlupOutputFilesService;
-    /** @var BreedIndexService */
-    private $breedIndexService;
-    /** @var BreedValueService */
-    private $breedValueService;
-    /** @var BreedValuePrinter */
-    private $breedValuePrinter;
+    /** @var PedigreeRegisterOverviewReportService */
+    private $pedigreeRegisterOverviewReportService;
 
-    protected function configure()
-    {
-        $this
-            ->setName('nsfo:mixblup')
-            ->setDescription(self::TITLE)
-        ;
-    }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    public function __construct(EntityManagerInterface $em, Logger $logger,
+                                BreedValuesOverviewReportService $breedValuesOverviewReportService,
+                                BreedValuePrinter $breedValuePrinter,
+                                BreedValueService $breedValueService,
+                                BreedIndexService $breedIndexService,
+                                ExcelService $excelService,
+                                LambMeatIndexMigrator $lambMeatIndexMigrator,
+                                MixBlupInputFilesService $mixBlupInputFilesService,
+                                MixBlupOutputFilesService $mixBlupOutputFilesService,
+                                PedigreeRegisterOverviewReportService $pedigreeRegisterOverviewReportService)
     {
-        /** @var ObjectManager|EntityManagerInterface $em */
-        $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
         $this->conn = $em->getConnection();
-        $this->logger = $this->getContainer()->get('logger');
-        $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
-        $helper = $this->getHelper('question');
-        $this->cmdUtil = new CommandUtil($input, $output, $helper);
-        $this->mixBlupInputFilesService = $this->getContainer()->get('app.mixblup.input');
-        $this->mixBlupOutputFilesService = $this->getContainer()->get('app.mixblup.output');
-        $this->breedIndexService = $this->getContainer()->get('app.breed.index');
-        $this->breedValueService = $this->getContainer()->get('app.breed.value');
-        $this->breedValuePrinter = $this->getContainer()->get('app.breed.valueprinter');
+        $this->logger = $logger;
+
+        $this->breedValuesOverviewReportService = $breedValuesOverviewReportService;
+        $this->breedValuePrinter = $breedValuePrinter;
+        $this->breedValueService = $breedValueService;
+        $this->breedIndexService = $breedIndexService;
+        $this->excelService = $excelService;
+        $this->lambMeatIndexMigrator = $lambMeatIndexMigrator;
+        $this->mixBlupInputFilesService = $mixBlupInputFilesService;
+        $this->mixBlupOutputFilesService = $mixBlupOutputFilesService;
+        $this->pedigreeRegisterOverviewReportService = $pedigreeRegisterOverviewReportService;
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     */
+    public function run(CommandUtil $cmdUtil)
+    {
+        if ($this->cmdUtil === null) { $this->cmdUtil = $cmdUtil; }
 
         //Print intro
-        $output->writeln(CommandUtil::generateTitle(self::TITLE));
-        $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
+        $cmdUtil->writelnClean(CommandUtil::generateTitle(CommandTitle::MIXBLUP));
+        $cmdUtil->writelnClean([DoctrineUtil::getDatabaseHostAndNameString($this->em),'']);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
@@ -108,7 +114,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             '41: Print excel file for CF pedigree register', "\n",
             '42: Print excel file for NTS, TSNH, LAX pedigree registers', "\n",
             '43: Print excel file Breedvalues overview all animals on a ubn', "\n",
-            'DEFAULT: Abort', "\n"
+            'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
@@ -135,32 +141,28 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
                 $breedValuesResultTableUpdater->update();
                 break;
 
-            case 13: $this->getContainer()->get('app.migrator.lamb_meat_index')->migrate(); break;
+            case 13: $this->lambMeatIndexMigrator->migrate(); break;
 
 
             case 30: $this->printBreedValuesAllUbns(); break;
             case 31: $this->printBreedValuesByUbn(); break;
 
-            case 40: $this->getContainer()->get(ServiceId::EXCEL_SERVICE)->clearCacheFolder(); break;
+            case 40: $this->excelService->clearCacheFolder(); break;
             case 41:
-                $filepath = $this->getContainer()->get(ServiceId::PEDIGREE_REGISTER_REPORT)->generateFileByType(PedigreeAbbreviation::CF, false, FileType::XLS);
+                $filepath = $this->pedigreeRegisterOverviewReportService->generateFileByType(PedigreeAbbreviation::CF, false, FileType::XLS);
                 $this->logger->notice($filepath);
                 break;
             case 42:
-                $filepath = $this->getContainer()->get(ServiceId::PEDIGREE_REGISTER_REPORT)->generateFileByType(PedigreeAbbreviation::NTS,false, FileType::XLS);
+                $filepath = $this->pedigreeRegisterOverviewReportService->generateFileByType(PedigreeAbbreviation::NTS,false, FileType::XLS);
                 $this->logger->notice($filepath);
                 break;
-            case 43: $filepath = $this->getContainer()->get(ServiceId::BREED_VALUES_OVERVIEW_REPORT)->generate(FileType::XLS, false);
+            case 43: $filepath = $this->breedValuesOverviewReportService->generate(FileType::XLS, false);
                 $this->logger->notice($filepath);
                 break;
 
-            default:
-                $output->writeln('ABORTED');
-                break;
+            default: return;
         }
-        $output->writeln('DONE');
-
-
+        $this->run($this->cmdUtil);
     }
 
 
@@ -184,6 +186,4 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         $this->breedValuePrinter->printBreedValuesByUbn($ubn);
         $this->cmdUtil->writeln('BreedValues csv file generated for UBN: '.$ubn);
     }
-
-
 }

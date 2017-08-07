@@ -20,12 +20,28 @@ services:
           - '@app.cli.gender_changer'
           - '@app.info.parameters'
           - '@app.migrator.inspector'
+          - '@app.cli.mixblup'
           - '@app.migrator.vsm'
 
     app.cli.gender_changer:
         class: AppBundle\Service\DataFix\GenderChangeCommandService
         arguments:
           - '@doctrine.orm.entity_manager'
+
+    app.cli.mixblup:
+        class: AppBundle\Service\MixBlupCliOptionsService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '@app.report.breed_values_overview'
+          - '@app.breed.valueprinter'
+          - '@app.breed.value'
+          - '@app.breed.index'
+          - '@app.excel.service'
+          - '@app.migrator.lamb_meat_index'
+          - '@app.mixblup.input'
+          - '@app.mixblup.output'
+          - '@app.report.pedigree_register'
 
     app.info.parameters:
         class: AppBundle\Service\InfoService

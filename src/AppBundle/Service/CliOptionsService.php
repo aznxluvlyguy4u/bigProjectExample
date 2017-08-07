@@ -74,6 +74,8 @@ class CliOptionsService
     private $infoService;
     /** @var InspectorMigrator */
     private $inspectorMigrator;
+    /** @var MixBlupCliOptionsService */
+    private $mixBlupCliOptionsService;
     /** @var VsmMigratorService */
     private $vsmMigratorService;
 
@@ -92,6 +94,7 @@ class CliOptionsService
      * @param GenderChangeCommandService $genderChangeCommandService
      * @param InfoService $infoService
      * @param InspectorMigrator $inspectorMigrator
+     * @param MixBlupCliOptionsService $mixBlupCliOptionsService
      * @param VsmMigratorService $vsmMigratorService
      */
     public function __construct(ObjectManager $em, Logger $logger, $rootDir,
@@ -100,6 +103,7 @@ class CliOptionsService
                                 GenderChangeCommandService $genderChangeCommandService,
                                 InfoService $infoService,
                                 InspectorMigrator $inspectorMigrator,
+                                MixBlupCliOptionsService $mixBlupCliOptionsService,
                                 VsmMigratorService $vsmMigratorService
     )
     {
@@ -112,6 +116,7 @@ class CliOptionsService
         $this->genderChangeCommandService = $genderChangeCommandService;
         $this->infoService = $infoService;
         $this->inspectorMigrator = $inspectorMigrator;
+        $this->mixBlupCliOptionsService = $mixBlupCliOptionsService;
         $this->vsmMigratorService = $vsmMigratorService;
 
         $this->conn = $this->em->getConnection();
@@ -203,6 +208,8 @@ class CliOptionsService
             '8: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
             '-----------------------------------------------', "\n",
             '9: '.strtolower(CommandTitle::DATA_MIGRATION), "\n",
+            '-----------------------------------------------', "\n",
+            '10: '.strtolower(CommandTitle::MIXBLUP), "\n",
             '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
@@ -218,6 +225,7 @@ class CliOptionsService
             case 7: $this->genderChangeCommandService->run($this->cmdUtil); break;
             case 8: $this->initializeDatabaseValuesOptions($this->cmdUtil); break;
             case 9: $this->dataMigrationOptions($this->cmdUtil); break;
+            case 10: $this->mixBlupCliOptionsService->run($this->cmdUtil); break;
 
             default: return;
         }
