@@ -41,6 +41,27 @@ class Validator
         $roundedNumber = round($number,$maxNumberOfDecimals);
         return $roundedNumber == $number;
     }
+
+
+    /**
+     * @param $string
+     * @return bool
+     */
+    public static function isStringAFloat($string)
+    {
+        if($string == null || $string == '') { return false; }
+
+        //First convert comma decimals to point decimals
+        $string = StringUtil::replaceCommasWithDots($string);
+
+        $decimalCount = substr_count($string, '.');
+        if($decimalCount > 1) {
+            return false;
+        }
+
+        $string = str_replace('.', '', $string);
+        return ctype_digit($string);
+    }
     
 
     /**
@@ -68,6 +89,22 @@ class Validator
         $pregMatch = "/([0-9]{12})/";
 
         return preg_match($pregMatch,$ulnNumber) && strlen($ulnNumber) == $ulnLength;
+    }
+
+
+    /**
+     * @param $animalOrderNumber
+     * @return bool
+     */
+    public static function verifyAnimalOrderNumberFormat($animalOrderNumber)
+    {
+        if(!ctype_digit($animalOrderNumber) && !is_int($animalOrderNumber)) { return false; }
+        $animalOrderNumber = strval($animalOrderNumber);
+
+        $animalOrderNumberLength = 5;
+        $pregMatch = "/([0-9]{5})/";
+
+        return preg_match($pregMatch,$animalOrderNumber) && strlen($animalOrderNumber) == $animalOrderNumberLength;
     }
 
 

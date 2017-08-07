@@ -18,25 +18,18 @@ abstract class AwsQueueServiceBase
 {
     /** @var string */
     protected $region;
-
     /** @var string */
     protected $version;
-
     /** @var string */
     protected $accessKeyId;
-
     /** @var string */
     protected $secretKey;
-
     /** @var SqsClient */
     protected $queueService;
-
     /** @var string */
     protected $queueUrl;
-
     /** @var Credentials */
     protected $awsCredentials;
-
     /** @var string */
     protected $queueId;
 
@@ -115,25 +108,56 @@ abstract class AwsQueueServiceBase
 
 
     /**
+     * Send a request message to given Queue.
+     *
+     * @param string $requestId
+     * @param string $messageBody
+     * @param string $requestType
+     * @return array|null
+     */
+    public function sendDeclareResponse($messageBody, $requestType, $requestId)
+    {
+        if($requestId == null && $messageBody == null){
+            return null;
+        }
+
+        $message = $this->createMessage($this->queueUrl, $messageBody, $requestType, $requestId);
+        $response = $this->queueService->sendMessage($message);
+
+        return $this->responseHandler($response);
+    }
+
+
+    /**
      * @param string $queueUrl
      * @param string $messageBody
      * @param string $requestType
-     * @param string $dataType
+     * @param string $requestId
      * @return array
      */
-    protected function createMessage($queueUrl, $messageBody, $requestType, $dataType = 'String')
+    protected function createMessage($queueUrl, $messageBody, $requestType, $requestId = null)
     {
+        $stringType = 'String';
+        $messageAttributes = [
+            'TaskType' =>
+                [
+                    'StringValue' => $requestType,
+                    'DataType' => $stringType,
+                ],
+        ];
+
+        if($requestId) {
+            $messageAttributes['MessageId'] =
+                [
+                    'StringValue' => $requestId,
+                    'DataType' => $stringType,
+                ];
+        }
+
         return [
             'QueueUrl' => $queueUrl,
             'MessageBody' => $messageBody,
-            'MessageAttributes' =>
-                [
-                    'TaskType' =>
-                        [
-                            'StringValue' => $requestType,
-                            'DataType' => $dataType,
-                        ],
-                ],
+            'MessageAttributes' => $messageAttributes
         ];
     }
 

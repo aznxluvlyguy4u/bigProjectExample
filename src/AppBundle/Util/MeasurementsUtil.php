@@ -18,10 +18,13 @@ class MeasurementsUtil
     /**
      * @param Connection $conn
      * @param bool $isRegenerateFilledValues
+     * @param CommandUtil $cmdUtil
      * @return int
      */
-    public static function generateAnimalIdAndDateValues(Connection $conn, $isRegenerateFilledValues = false)
+    public static function generateAnimalIdAndDateValues(Connection $conn, $isRegenerateFilledValues = false, $cmdUtil = null)
     {
+        if ($cmdUtil) { $cmdUtil->writelnWithTimestamp('Updating animalIdAndDate values in measurement table ...'); }
+
         $sqlFilter = $isRegenerateFilledValues ? '' : "WHERE m.animal_id_and_date ISNULL OR m.animal_id_and_date <> CONCAT(t.animal_id,'_',DATE(measurement_date))";
 
         $tableNames = ['muscle_thickness', 'weight', 'tail_length', 'exterior', 'body_fat'];
@@ -50,7 +53,12 @@ class MeasurementsUtil
                 )
                 SELECT COUNT(*) AS count FROM rows";
 
-        return $results = $conn->query($sql)->fetch()['count'];
+        $updateCount = $conn->query($sql)->fetch()['count'];
+        $updateCountM = $updateCount === 0 ? 'No' : $updateCount;
+
+        if ($cmdUtil) { $cmdUtil->writelnWithTimestamp($updateCountM . ' animalIdAndDate values were updated'); }
+
+        return $updateCount;
     }
 
 

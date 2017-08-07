@@ -39,5 +39,11 @@ class MeasurementConstant
 
     const EXTERIOR_MAX_VALUE_LIMIT = 100.0;
 
+    const TAIL_LENGTH_MAX = 27;
+    const TAIL_LENGTH_MIN = 8;
+
+    const N_LING_MAX = 6;
+    const N_LING_MIN = 1;
+
     /* End Mixblup values */
 }

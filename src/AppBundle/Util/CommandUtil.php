@@ -84,7 +84,7 @@ class CommandUtil
     {
         return $this->generateMultiLineQuestion([  ' ',
             $question,
-            ':   '], $defaultAnswer);
+            ':   '], $defaultAnswer, $isCleanupString);
     }
 
 
@@ -247,10 +247,30 @@ class CommandUtil
 
 
     /**
+     * @param $line
+     */
+    public function writelnWithTimestamp($line)
+    {
+        $line = is_string($line) ? TimeUtil::getTimeStampNow() . ': ' .$line : $line;
+        $this->writeln($line);
+    }
+
+
+    /**
+     * @param $input
+     */
+    public function writelnClean($input)
+    {
+        $this->writeln($input, 0, false);
+    }
+
+
+    /**
      * @param $input
      * @param int $indentLevel
+     * @param boolean $printKeys
      */
-    public function writeln($input, $indentLevel = 0)
+    public function writeln($input, $indentLevel = 0, $printKeys = true)
     {
         if(!is_array($input)) {
             $this->outputInterface->writeln($input);
@@ -260,13 +280,25 @@ class CommandUtil
                 $this->indent($indentLevel);
 
                 if(is_array($value)) {
-                    $this->writeln($key.' : {', $indentLevel);
-                    $this->indent($indentLevel);
-                    $this->writeln($value, $indentLevel+1);
-                    $this->indent($indentLevel);
-                    $this->writeln('   }', $indentLevel);
+                    if ($printKeys) {
+                        $this->writeln($key.' : {', $indentLevel, $printKeys);
+                        $this->indent($indentLevel);
+                        $this->writeln($value, $indentLevel+1, $printKeys);
+                        $this->indent($indentLevel);
+                        $this->writeln('   }', $indentLevel, $printKeys);
+                    } else {
+                        $this->writeln('{', $indentLevel, $printKeys);
+                        $this->indent($indentLevel);
+                        $this->writeln($value, $indentLevel+1, $printKeys);
+                        $this->indent($indentLevel);
+                        $this->writeln('}', $indentLevel, $printKeys);
+                    }
                 } else {
-                    $this->writeln($key.' : '.$value, $indentLevel);
+                    if ($printKeys) {
+                        $this->writeln($key.' : '.$value, $indentLevel, $printKeys);
+                    } else {
+                        $this->writeln($value, $indentLevel, $printKeys);
+                    }
                 }
             }
         }

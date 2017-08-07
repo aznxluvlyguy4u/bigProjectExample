@@ -28,6 +28,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 abstract class Measurement {
 
+    const TABLE_NAME = 'measurement';
+
     /**
      * @var integer
      *

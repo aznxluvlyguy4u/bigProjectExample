@@ -216,18 +216,10 @@ class ExcelService
         return $this->cacheDir . $this->folder;
     }
 
-    /**
-     * @return string
-     */
+
     public function getFullFilepath()
     {
         return $this->fullFilepath;
-    }
-
-
-    public function getFullFilepathWithExtension()
-    {
-        return $this->fullFilepath . '.' . $this->extension;
     }
 
 
@@ -310,7 +302,7 @@ class ExcelService
      */
     public function setExtension($extension)
     {
-        $this->extension = $extension;
+        $this->extension = ltrim($extension, '.');
         $this->setFilePathWithExtension();
         return $this;
     }
@@ -337,7 +329,7 @@ class ExcelService
 
     private function setFilePathWithExtension()
     {
-        $this->fullFilepath = $this->getCacheSubFolder().$this->filename;
+        $this->fullFilepath = $this->getCacheSubFolder().$this->filename.'.'.$this->extension;
     }
 
 

@@ -117,6 +117,16 @@ class WeightCacher
 
     /**
      * @param Connection $conn
+     * @return int
+     */
+    public static function updateAllBirthWeights(Connection $conn)
+    {
+        return self::updateBirthWeights($conn, null);
+    }
+
+
+    /**
+     * @param Connection $conn
      * @param array $animalIds
      * @return int
      * @throws \Doctrine\DBAL\DBALException
