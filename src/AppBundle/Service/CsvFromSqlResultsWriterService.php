@@ -178,4 +178,11 @@ class CsvFromSqlResultsWriterService
     }
 
 
+    /**
+     * @param $filename
+     */
+    public function removeFile($filename)
+    {
+        $this->fs->remove($filename);
+    }
 }
