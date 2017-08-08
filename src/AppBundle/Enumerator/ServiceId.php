@@ -24,4 +24,5 @@ class ServiceId
     const REDIS_CLIENT = 'snc_redis.sncredis';
     const SERIALIZER = 'app.serializer.ir';
     const STORAGE_SERVICE = 'app.aws.storageservice';
+    const USER_SERVICE = 'app.user';
 }

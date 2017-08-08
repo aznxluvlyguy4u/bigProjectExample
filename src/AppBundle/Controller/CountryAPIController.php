@@ -82,7 +82,7 @@ class CountryAPIController extends APIController implements CountryAPIController
   {
     //Get content to array
     $content = $this->getContentAsArray($request);
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database

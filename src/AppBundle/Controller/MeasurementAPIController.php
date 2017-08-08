@@ -65,7 +65,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function createExteriorMeasurement(Request $request, $ulnString)
     {
-        $loggedInUser = $this->getLoggedInUser($request);
+        $loggedInUser = $this->getUser();
         $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
         $isAdmin = $adminValidator->getIsAccessGranted();
         $em = $this->getDoctrine()->getManager();
@@ -164,7 +164,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function editExteriorMeasurement(Request $request, $ulnString, $measurementDateString)
     {
-        $loggedInUser = $this->getLoggedInUser($request);
+        $loggedInUser = $this->getUser();
         $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
         $isAdmin = $adminValidator->getIsAccessGranted();
         $em = $this->getDoctrine()->getManager();
@@ -293,7 +293,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function getAllowedExteriorKinds(Request $request, $ulnString)
     {
-        $loggedInUser = $this->getLoggedInUser($request);
+        $loggedInUser = $this->getUser();
         $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
         $isAdmin = $adminValidator->getIsAccessGranted();
         $em = $this->getDoctrine()->getManager();
@@ -344,7 +344,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function getAllowedExteriorKindsForEdit(Request $request, $ulnString, $measurementDateString)
     {
-        $loggedInUser = $this->getLoggedInUser($request);
+        $loggedInUser = $this->getUser();
         $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
         $isAdmin = $adminValidator->getIsAccessGranted();
         $em = $this->getDoctrine()->getManager();
@@ -408,7 +408,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
     {
         $em = $this->getDoctrine()->getManager();
 
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
         if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
             return $adminValidator->createJsonErrorResponse();

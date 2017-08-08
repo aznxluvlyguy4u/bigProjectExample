@@ -53,6 +53,7 @@ use AppBundle\Service\MixBlupInputQueueService;
 use AppBundle\Service\MixBlupOutputQueueService;
 use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
+use AppBundle\Service\UserService;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
@@ -96,6 +97,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::REDIS_CLIENT => null,
       ServiceId::SERIALIZER => null,
       ServiceId::STORAGE_SERVICE => null,
+      ServiceId::USER_SERVICE => null,
   ];
 
   /** @var RequestMessageBuilder */
@@ -148,7 +150,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getSerializer() { return $this->getService(ServiceId::SERIALIZER);  }
   /** @return AWSSimpleStorageService */
   protected function getStorageService(){ return $this->getService(ServiceId::STORAGE_SERVICE); }
-
+  /** @return UserService */
+  protected function getUserService(){ return $this->getService(ServiceId::USER_SERVICE); }
 
   /**
    * @return RequestMessageBuilder
@@ -395,95 +398,20 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * @param Request $request
-   * @param string $tokenCode
    * @return Client|null
    */
-  public function getAuthenticatedUser(Request $request= null, $tokenCode = null)
+  public function getAccountOwner(Request $request = null)
   {
-    $loggedInUser = $this->getLoggedInUser($request, $tokenCode);
-
-    /* Clients */
-    if($loggedInUser instanceof Client) {
-        return $loggedInUser;
-
-      /* Admins with a GhostToken */
-    } else if ($loggedInUser instanceof Employee) {
-
-      if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode == null) {
-        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
-        $ghostToken = $this->getDoctrine()->getManager()->getRepository(Token::class)
-            ->findOneBy(array("code" => $ghostTokenCode));
-
-        if($ghostToken != null) {
-          if($ghostToken->getIsVerified()) {
-            return $ghostToken->getOwner(); //client
-          }
-        }
-        //Admins without a GhostToken
-        return null;
-      }
-      
-    } else {
-        return null;
-        /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
-         are validated in the TokenAuthenticator Prehook.
-         At this point only Clients and Employees can login to the system. Not Inspectors.
-        */
-    }
-  }
-
-  /**
-   * @param Request $request
-   * @param string $tokenCode
-   * @return Client|Employee
-   */
-  public function getLoggedInUser(Request $request= null, $tokenCode = null)
-  {
-    $em = $this->getDoctrine()->getManager();
-
-    if($tokenCode == null) {
-      $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
-    }
-
-    $token = $em->getRepository(Token::class)->findOneBy(array("code" => $tokenCode));
-    if($token != null) {
-      return $token->getOwner();
-    } else {
-      return null;
-      /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
-        are validated in the TokenAuthenticator Prehook.
-      */
-    }
-
+      return $this->getUserService()->getAccountOwner($request);
   }
 
 
   /**
-   * @param Request $request
-   * @param string $tokenCode
    * @return Employee|null
    */
-  public function getAuthenticatedEmployee(Request $request = null, $tokenCode = null)
+  public function getEmployee()
   {
-    $em = $this->getDoctrine()->getManager();
-
-    if($tokenCode == null) {
-      $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
-    }
-
-    $token = $em->getRepository(Token::class)->findOneBy(array("code" => $tokenCode));
-    if($token != null) {
-      $owner = $token->getOwner();
-      if($owner instanceof Employee) {
-        return $owner;
-      }
-    }
-    
-    return null;
-    /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
-      are validated in the TokenAuthenticator Prehook.
-    */
-
+      return $this->getUserService()->getEmployee();
   }
 
   public function isUlnOrPedigreeCodeValid(Request $request, $ulnCode = null)
@@ -902,7 +830,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getSelectedLocation(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $headerValidation = null;
 
     if($client) {
@@ -933,7 +861,7 @@ class APIController extends Controller implements APIControllerInterface
   public function getSelectedUbn(Request $request)
   {
 
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
 
     if($headerValidation->isInputValid()) {

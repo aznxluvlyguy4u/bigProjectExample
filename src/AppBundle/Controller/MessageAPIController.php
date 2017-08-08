@@ -22,7 +22,7 @@ class MessageAPIController extends APIController
      * @return jsonResponse
      */
     public function getMessages(Request $request) {
-        $client = $this->getAuthenticatedUser($request);
+        $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
         $em = $this->getDoctrine()->getManager();
 
@@ -74,7 +74,7 @@ class MessageAPIController extends APIController
      * @return jsonResponse
      */
     public function changeReadStatus(Request $request, $messageId) {
-        $client = $this->getAuthenticatedUser($request);
+        $client = $this->getAccountOwner($request);
 
         /** @var Message $message */
         $repository = $this->getDoctrine()->getRepository(Message::class);
@@ -96,7 +96,7 @@ class MessageAPIController extends APIController
      * @return jsonResponse
      */
     public function hideMessage(Request $request, $messageId) {
-        $client = $this->getAuthenticatedUser($request);
+        $client = $this->getAccountOwner($request);
 
         /** @var Message $message */
         $repository = $this->getDoctrine()->getRepository(Message::class);
