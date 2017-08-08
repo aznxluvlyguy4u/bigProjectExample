@@ -7,6 +7,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Service\AWSSimpleStorageService;
+use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
@@ -15,6 +16,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -34,8 +36,17 @@ class ReportServiceBase
     protected $excelService;
     /** @var AWSSimpleStorageService */
     protected $storageService;
+    /** @var CsvWriter */
+    protected $csvWriter;
     /** @var Logger */
     protected $logger;
+    /** @var Filesystem */
+    protected $fs;
+
+    /** @var string */
+    protected $folderPath;
+    /** @var string */
+    protected $filename;
 
     /**
      * PedigreeRegisterOverviewReportService constructor.
@@ -43,15 +54,17 @@ class ReportServiceBase
      * @param ExcelService $excelService
      * @param Logger $logger
      * @param AWSSimpleStorageService $storageService
+     * @param CsvWriter $csvWriter
      * @param String $folderName
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, $folderName)
+                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter, $folderName)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
         $this->logger = $logger;
         $this->storageService = $storageService;
+        $this->csvWriter = $csvWriter;
 
         $this->excelService = $excelService;
         $this->excelService
@@ -59,6 +72,8 @@ class ReportServiceBase
             ->setCreator(self::CREATOR)
             ->setExcelFileType(self::EXCEL_TYPE)
         ;
+
+        $this->fs = new Filesystem();
     }
 
 
@@ -102,10 +117,10 @@ class ReportServiceBase
         $this->logger->notice('Retrieved '.$recordCount.' records');
         $this->logger->notice('Generate data from sql results ... ');
 
+        //These values are also used for the filename on the S3 bucket
         $this->excelService->setFilename($filenameWithoutExtension);
         $this->excelService->setExtension($fileExtension);
         $this->excelService->setTitle($title);
-
 
         switch ($fileExtension) {
 
@@ -115,8 +130,7 @@ class ReportServiceBase
                 break;
 
             case FileType::CSV:
-                //TODO
-                throw new \Exception('CSV File generation still to be implemented');
+                $localFilePath = $this->csvWriter->write($data,$filenameWithoutExtension .'.'.$fileExtension);
                 break;
 
             default:
@@ -146,7 +160,8 @@ class ReportServiceBase
             $this->getContentType()
         );
 
-        FilesystemUtil::purgeFolder($this->getCacheSubFolder());
+        FilesystemUtil::purgeFolder($this->getCacheSubFolder(), $this->fs);
+        $this->fs->remove($filePath);
         return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
     }
 

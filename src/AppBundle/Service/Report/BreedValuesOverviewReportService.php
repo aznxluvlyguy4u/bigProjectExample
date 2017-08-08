@@ -9,6 +9,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
+use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
@@ -33,11 +34,12 @@ class BreedValuesOverviewReportService extends ReportServiceBase
      * @param ExcelService $excelService
      * @param Logger $logger
      * @param AWSSimpleStorageService $storageService
+     * @param CsvWriter $csvWriter
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService)
+                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter)
     {
-        parent::__construct($em, $excelService, $logger, $storageService, self::FOLDER);
+        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter,self::FOLDER);
 
         $this->em = $em;
         $this->conn = $em->getConnection();

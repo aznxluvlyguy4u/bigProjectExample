@@ -295,6 +295,7 @@ services:
           - '@app.excel.service'
           - '@logger'
           - '@app.aws.storageservice'
+          - '@app.writer.csv_from_sql_results'
 
     app.report.pedigree_register:
         parent: app.report.base

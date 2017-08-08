@@ -12,6 +12,7 @@ use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\QueryType;
 use AppBundle\Service\AWSSimpleStorageService;
+use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
@@ -39,11 +40,12 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
      * @param ExcelService $excelService
      * @param Logger $logger
      * @param AWSSimpleStorageService $storageService
+     * @param CsvWriter $csvWriter
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService)
+                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter)
     {
-        parent::__construct($em, $excelService, $logger, $storageService, self::FOLDER);
+        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter,self::FOLDER);
 
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -68,7 +70,7 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
         }
 
         $type = $request->query->get(QueryParameter::TYPE_QUERY);
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::XLS);
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
         $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, true);
 
         return $this->generateFileByType($type, $uploadToS3, $fileType);
