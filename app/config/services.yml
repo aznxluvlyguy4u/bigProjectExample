@@ -303,3 +303,9 @@ services:
     app.report.breed_values_overview:
         parent: app.report.base
         class: AppBundle\Service\Report\BreedValuesOverviewReportService
+
+    app.writer.csv_from_sql_results:
+        class: AppBundle\Service\CsvFromSqlResultsWriterService
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '%kernel.cache_dir%'
