@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer\Annotation\ExclusionPolicy;
@@ -87,6 +88,14 @@ class ActionLog
      */
     private $isUserEnvironment;
 
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
+     * @JMS\Type("boolean")
+     */
+    private $isRvoMessage;
+
     public function __construct($userAccount, $actionBy, $userActionType, $isCompleted = false, $description = null, $isUserEnvironment = true)
     {
         $this->logDate = new \DateTime();
@@ -96,6 +105,7 @@ class ActionLog
         $this->userActionType = $userActionType;
         $this->isCompleted = $isCompleted;
         $this->description = $description;
+        $this->isRvoMessage = ActionLog::isRvoMessageByUserActionType($userActionType);
     }
 
     /**
@@ -218,7 +228,30 @@ class ActionLog
         $this->isUserEnvironment = $isUserEnvironment;
     }
 
+    /**
+     * @return bool
+     */
+    public function isRvoMessage()
+    {
+        return $this->isRvoMessage;
+    }
+
+    /**
+     * @param bool $isRvoMessage
+     */
+    public function setIsRvoMessage($isRvoMessage)
+    {
+        $this->isRvoMessage = $isRvoMessage;
+    }
 
 
+    /**
+     * @param $userActionType
+     * @return boolean
+     */
+    public static function isRvoMessageByUserActionType($userActionType)
+    {
+        return array_search($userActionType, RequestType::getConstants()) !== false;
+    }
 
 }
