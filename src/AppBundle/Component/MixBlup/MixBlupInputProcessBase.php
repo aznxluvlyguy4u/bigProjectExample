@@ -4,6 +4,7 @@
 namespace AppBundle\Component\MixBlup;
 
 use AppBundle\Setting\MixBlupFolder;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -106,10 +107,7 @@ class MixBlupInputProcessBase
         //purge current file content
         file_put_contents($filePath, "");
 
-        end($records); //Move pointer to last element
-        $lastKey = key($records);
-        //reset($records); //Move pointer to first element;
-        //$firstKey = key($records);
+        $lastKey = ArrayUtil::lastKey($records);
 
         $newLine = "\n";
         foreach ($records as $key => $record) {

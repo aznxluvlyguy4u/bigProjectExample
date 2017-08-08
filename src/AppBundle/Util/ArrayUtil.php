@@ -98,4 +98,24 @@ class ArrayUtil
 
         return array_keys($array)[0];
     }
+
+
+    /**
+     * @param array $array
+     * @param bool $resetPointer
+     * @return mixed|null
+     */
+    public static function lastKey(array $array, $resetPointer = true)
+    {
+        if (count($array) === 0) { return null; }
+
+        end($array); //Move pointer to last element
+        $lastKey = key($array);
+
+        if ($resetPointer) {
+            reset($array); //Move pointer to first element
+        }
+
+        return $lastKey;
+    }
 }
