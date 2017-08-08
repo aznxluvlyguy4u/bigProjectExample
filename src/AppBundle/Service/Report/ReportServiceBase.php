@@ -160,7 +160,6 @@ class ReportServiceBase
             $this->getContentType()
         );
 
-        FilesystemUtil::purgeFolder($this->getCacheSubFolder(), $this->fs);
         $this->fs->remove($filePath);
         return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
     }

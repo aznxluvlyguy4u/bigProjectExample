@@ -77,7 +77,7 @@ class BreedValuesOverviewReportService extends ReportServiceBase
      */
     public function generate($fileType, $uploadToS3)
     {
-        $filename = self::FILENAME.'_'.TimeUtil::getTimeStampToday();
+        $filename = self::FILENAME.'_'.TimeUtil::getTimeStampNowForFiles();
         return $this->generateFile($filename, $this->getData(), self::TITLE, $fileType, $uploadToS3);
     }
 
