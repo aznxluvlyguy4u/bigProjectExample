@@ -39,6 +39,7 @@ use AppBundle\Enumerator\ServiceId;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\RequestMessageOutputBuilder;
+use AppBundle\Service\ActionLogService;
 use AppBundle\Service\AnimalLocationHistoryService;
 use AppBundle\Service\AwsExternalQueueService;
 use AppBundle\Service\AwsInternalQueueService;
@@ -79,6 +80,7 @@ class APIController extends Controller implements APIControllerInterface
 {
   /** @var array */
   private $services = [
+      ServiceId::ACTION_LOG => null,
       ServiceId::ANIMAL_LOCATION_HISTORY => null,
       ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
       ServiceId::CLIENT_MIGRATOR => null,
@@ -114,6 +116,8 @@ class APIController extends Controller implements APIControllerInterface
   }
 
 
+  /** @return ActionLogService */
+  protected function getActionLogService() { return $this->getService(ServiceId::ACTION_LOG); }
   /** @return AnimalLocationHistoryService */
   protected function getAnimalLocationHistoryService(){ return $this->getService(ServiceId::ANIMAL_LOCATION_HISTORY); }
   /** @return BreedValuesOverviewReportService */

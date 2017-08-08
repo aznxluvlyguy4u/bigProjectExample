@@ -8,6 +8,9 @@ services:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
 
+    api.action_log:
+        class: AppBundle\Service\ActionLogService
+        arguments: ['@doctrine.orm.entity_manager']
 
     app.cli.options:
         class: AppBundle\Service\CliOptionsService
