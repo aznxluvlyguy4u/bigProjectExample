@@ -71,14 +71,21 @@ class ActionLogService
     public function getActionLogs(Request $request)
     {
         $user = $this->userService->getUser();
+        $accountOwner = $this->userService->getAccountOwner($request);
 
         $startDate = RequestUtil::getDateQuery($request, QueryParameter::START_DATE);
         $endDate = RequestUtil::getDateQuery($request, QueryParameter::END_DATE);
         $userActionType = $request->query->get(QueryParameter::USER_ACTION_TYPE);
 
         if(AdminValidator::isAdmin($user, AccessLevelType::ADMIN)) {
-            $userAccountId = RequestUtil::getIntegerQuery($request,QueryParameter::USER_ACCOUNT_ID);
-            $jmsGroup = JmsGroup::ACTION_LOG_ADMIN;
+            if ($accountOwner) { //GhostLogin
+                $userAccountId = $accountOwner->getId();
+                $jmsGroup = JmsGroup::ACTION_LOG_USER;
+
+            } else { //Admin in Admin environment
+                $userAccountId = RequestUtil::getIntegerQuery($request,QueryParameter::USER_ACCOUNT_ID);
+                $jmsGroup = JmsGroup::ACTION_LOG_ADMIN;
+            }
         } else {
             //Regular Clients are only allowed to see their own log
             $userAccountId = $user->getId();
