@@ -8,6 +8,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
+use AppBundle\Entity\PersonRepository;
 use AppBundle\Entity\Token;
 use AppBundle\Entity\TokenRepository;
 use AppBundle\Enumerator\AccessLevelType;
@@ -20,6 +21,8 @@ class UserService
 {
     /** @var EntityManagerInterface */
     private $em;
+    /** @var PersonRepository */
+    private $personRepository;
     /** @var TokenRepository */
     private $tokenRepository;
     /** @var TokenStorageInterface */
@@ -28,6 +31,7 @@ class UserService
     public function __construct(EntityManagerInterface $em, TokenStorageInterface $tokenStorage)
     {
         $this->em = $em;
+        $this->personRepository = $em->getRepository(Person::class);
         $this->tokenRepository = $em->getRepository(Token::class);
         $this->tokenStorage = $tokenStorage;
     }
@@ -46,14 +50,20 @@ class UserService
     /**
      * Get a user from the Security Token Storage.
      *
+     * @param string|null $tokenCode
+     *
      * @return Person|Employee|Client
      *
      * @throws \LogicException If SecurityBundle is not available
      *
      * @see TokenInterface::getUser()
      */
-    public function getUser()
+    public function getUser($tokenCode = null)
     {
+        if ($tokenCode) {
+            return $this->personRepository->findOneByAccessTokenCode($tokenCode);
+        }
+
         if (!$this->tokenStorage) {
             throw new \LogicException('The SecurityBundle is not registered in your application.');
         }
@@ -73,11 +83,12 @@ class UserService
 
     /**
      * @param Request $request
+     * @param string|null $tokenCode
      * @return Client|null
      */
-    public function getAccountOwner(Request $request = null)
+    public function getAccountOwner(Request $request = null, $tokenCode = null)
     {
-        $loggedInUser = $this->getUser();
+        $loggedInUser = $this->getUser($tokenCode);
 
         /* Clients */
         if($loggedInUser instanceof Client) {
@@ -86,7 +97,7 @@ class UserService
             /* Admins with a GhostToken */
         } else if ($loggedInUser instanceof Employee) {
 
-            if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE)) {
+            if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode === null) {
                 $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
                 $ghostToken = $this->tokenRepository->findOneBy(array("code" => $ghostTokenCode));
 
@@ -110,12 +121,15 @@ class UserService
 
 
     /**
-     * @return Employee|null
+     * @param string|null $tokenCode
+     * @return Client|Employee|Person|null
      */
-    public function getEmployee()
+    public function getEmployee($tokenCode = null)
     {
-        if ($this->getUser() instanceof Employee) {
-            return $this->getUser();
+        $user = $this->getUser($tokenCode);
+
+        if ($user instanceof Employee) {
+            return $user;
         }
 
         return null;

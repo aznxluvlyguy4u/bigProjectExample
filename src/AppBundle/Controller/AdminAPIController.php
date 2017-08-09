@@ -327,11 +327,12 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
     //User must have a valid accessToken
     $tokenValidation = $this->isAccessTokenValid($request);
     if($tokenValidation->getStatusCode() != 200) {
-      return $tokenValidation;
+        return $tokenValidation;
     }
+    $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
 
     //User must be an Employee and not a Client
-    $employee = $this->getEmployee();
+    $employee = $this->getEmployee($tokenCode);
     $employeeValidation = new EmployeeValidator($employee);
     if(!$employeeValidation->getIsValid()) {
       return $employeeValidation->createJsonErrorResponse();

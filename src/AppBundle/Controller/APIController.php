@@ -373,11 +373,12 @@ class APIController extends Controller implements APIControllerInterface
 
 
   /**
+   * @param $tokenCode
    * @return Employee|null
    */
-  public function getEmployee()
+  public function getEmployee($tokenCode = null)
   {
-      return $this->getUserService()->getEmployee();
+      return $this->getUserService()->getEmployee($tokenCode);
   }
 
   public function isUlnOrPedigreeCodeValid(Request $request, $ulnCode = null)
