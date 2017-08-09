@@ -10,7 +10,7 @@ services:
 
     api.action_log:
         class: AppBundle\Service\ActionLogService
-        arguments: ['@doctrine.orm.entity_manager', '@app.user']
+        arguments: ['@doctrine.orm.entity_manager', '@app.serializer.ir','@app.user']
 
     app.cli.options:
         class: AppBundle\Service\CliOptionsService

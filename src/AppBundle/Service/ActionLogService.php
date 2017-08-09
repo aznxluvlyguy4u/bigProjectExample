@@ -1,13 +1,12 @@
 <?php
 
-
 namespace AppBundle\Service;
 
 
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\ActionLogRepository;
-use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -15,11 +14,15 @@ use AppBundle\Validation\AdminValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-
+/**
+ * Class ActionLogService
+ */
 class ActionLogService
 {
     /** @var EntityManagerInterface */
     private $em;
+    /** @var IRSerializer */
+    private $serializer;
     /** @var UserService */
     private $userService;
 
@@ -29,10 +32,13 @@ class ActionLogService
     /**
      * ActionLogService constructor.
      * @param EntityManagerInterface $em
+     * @param IRSerializer $serializer
+     * @param UserService $userService
      */
-    public function __construct(EntityManagerInterface $em, UserService $userService)
+    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, UserService $userService)
     {
         $this->em = $em;
+        $this->serializer = $serializer;
         $this->userService = $userService;
 
         $this->actionLogRepository = $em->getRepository(ActionLog::class);
@@ -49,8 +55,6 @@ class ActionLogService
 
 
     /**
-     * TODO
-     *
      * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
@@ -64,13 +68,15 @@ class ActionLogService
 
         if(AdminValidator::isAdmin($user, AccessLevelType::ADMIN)) {
             $userAccountId = RequestUtil::getIntegerQuery($request,QueryParameter::USER_ACCOUNT_ID);
+            $jmsGroup = JmsGroup::ACTION_LOG_ADMIN;
         } else {
             //Regular Clients are only allowed to see their own log
             $userAccountId = $user->getId();
+            $jmsGroup = JmsGroup::ACTION_LOG_USER;
         }
 
         $actionLogs = $this->actionLogRepository->findByDateTypeAndUserId($startDate, $endDate, $userActionType, $userAccountId);
-        return ResultUtil::successResult($actionLogs);
+        return ResultUtil::successResult($this->serializer->getDecodedJson($actionLogs, $jmsGroup));
     }
 
 
