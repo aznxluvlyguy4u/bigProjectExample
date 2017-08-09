@@ -52,9 +52,15 @@ class ActionLogService
     public function getUserActionTypes(Request $request)
     {
         $user = $this->userService->getUser();
+        $accountOwner = $this->userService->getAccountOwner($request);
 
         if(AdminValidator::isAdmin($user, AccessLevelType::ADMIN)) {
-            $userAccountId = RequestUtil::getIntegerQuery($request,QueryParameter::USER_ACCOUNT_ID);
+            if ($accountOwner) { //GhostLogin
+                $userAccountId = $accountOwner->getId();
+
+            } else { //Admin in Admin environment
+                $userAccountId = RequestUtil::getIntegerQuery($request,QueryParameter::USER_ACCOUNT_ID);
+            }
         } else {
             //Regular Clients are only allowed to see their own log
             $userAccountId = $user->getId();
