@@ -14,6 +14,7 @@ class UserActionType extends RequestType
     const CONTACT_EMAIL = 'CONTACT_EMAIL';
 
     const ANIMAL_DETAILS_EDIT = 'ANIMAL_DETAILS_EDIT';
+    const GENDER_CHANGE = 'GENDER_CHANGE';
     
     const HEALTH_STATUS_UPDATE = 'HEALTH_STATUS_UPDATE';
 

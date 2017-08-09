@@ -438,6 +438,28 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param string $oldGender
+     * @param string $newGender
+     * @param boolean $isCompleted
+     * @return ActionLog
+     */
+    public static function editGender(ObjectManager $om, $client, $loggedInUser, $oldGender, $newGender, $isCompleted = true)
+    {
+        $userActionType = UserActionType::GENDER_CHANGE;
+
+        $description = Translation::getGenderInDutch($oldGender) . ' => ' . Translation::getGenderInDutch($newGender);
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, $isCompleted, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
      * @param $admin
      * @param $content
      * @return ActionLog
