@@ -414,30 +414,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Method("PUT")
    */
   function updateAnimalDetails(Request $request, $ulnString) {
-    //Get content to array
-    $content = $this->getContentAsArray($request);
-    $em = $this->getDoctrine()->getManager();
-    $repository = $this->getDoctrine()
-      ->getRepository(Constant::ANIMAL_REPOSITORY);
-
-    /** @var Animal $animal */
-    $animal = $repository->findOneBy(array ("ulnCountryCode" => substr($ulnString, 0, 2), "ulnNumber" => substr($ulnString, 2)));
-
-    if($animal == null) {
-      return new JsonResponse(array('code'=> 204,
-                                    "message" => "For this account, no animal was found with uln: " . $content['uln_country_code'] . $content['uln_number']), 204);
-    }
-
-    AnimalDetailsUpdater::update($em, $animal, $content);
-
-    $location = $this->getSelectedLocation($request);
-
-    //Clear cache for this location, to reflect changes on the livestock
-    $this->clearLivestockCacheForLocation($location);
-    
-    $output = AnimalDetailsOutput::create($em, $animal, $animal->getLocation());
-
-    return new JsonResponse($output, 200);
+      return $this->getAnimalDetailsUpdaterService()->update($request, $ulnString);
   }
 
   /**

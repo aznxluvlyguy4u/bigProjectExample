@@ -420,6 +420,24 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param string $description
+     * @param boolean $isCompleted
+     * @return ActionLog
+     */
+    public static function editAnimalDetails(ObjectManager $om, $client, $loggedInUser, $description, $isCompleted = true)
+    {
+        $userActionType = UserActionType::ANIMAL_DETAILS_EDIT;
+        $log = new ActionLog($client, $loggedInUser, $userActionType, $isCompleted, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
      * @param $admin
      * @param $content
      * @return ActionLog

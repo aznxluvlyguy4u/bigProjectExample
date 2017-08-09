@@ -40,10 +40,12 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\ActionLogService;
+use AppBundle\Service\AnimalDetailsUpdaterService;
 use AppBundle\Service\AnimalLocationHistoryService;
 use AppBundle\Service\AwsExternalQueueService;
 use AppBundle\Service\AwsInternalQueueService;
 use AppBundle\Service\AWSSimpleStorageService;
+use AppBundle\Service\CacheService;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\HealthService;
@@ -79,8 +81,10 @@ class APIController extends Controller implements APIControllerInterface
   /** @var array */
   private $services = [
       ServiceId::ACTION_LOG => null,
+      ServiceId::ANIMAL_DETAILS_UPDATER => null,
       ServiceId::ANIMAL_LOCATION_HISTORY => null,
       ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
+      ServiceId::CACHE => null,
       ServiceId::CLIENT_MIGRATOR => null,
       ServiceId::ENTITY_GETTER => null,
       ServiceId::EXCEL_SERVICE => null,
@@ -117,10 +121,14 @@ class APIController extends Controller implements APIControllerInterface
 
   /** @return ActionLogService */
   protected function getActionLogService() { return $this->getService(ServiceId::ACTION_LOG); }
+  /** @return AnimalDetailsUpdaterService */
+  protected function getAnimalDetailsUpdaterService() { return $this->getService(ServiceId::ANIMAL_DETAILS_UPDATER); }
   /** @return AnimalLocationHistoryService */
   protected function getAnimalLocationHistoryService(){ return $this->getService(ServiceId::ANIMAL_LOCATION_HISTORY); }
   /** @return BreedValuesOverviewReportService */
   protected function getBreedValuesOverviewReportService() { return $this->getService(ServiceId::BREED_VALUES_OVERVIEW_REPORT); }
+  /** @return CacheService */
+  protected function getCacheService(){ return $this->getService(ServiceId::CACHE); }
   /** @return ClientMigrator */
   protected function getClientMigratorService(){ return $this->getService(ServiceId::CLIENT_MIGRATOR); }
   /** @return EntityGetter */
@@ -141,7 +149,7 @@ class APIController extends Controller implements APIControllerInterface
   protected function getMixBlupOutputQueueService() { return $this->getService(ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE); }
   /** @return PedigreeRegisterOverviewReportService */
   protected function getPedigreeRegisterReportService() { return $this->getService(ServiceId::PEDIGREE_REGISTER_REPORT); }
-  /** @return \Redis */
+  /** @return \Predis\Client|\Redis */
   protected function getRedisClient() { return $this->getService(ServiceId::REDIS_CLIENT); }
   /** @return IRSerializer */
   protected function getSerializer() { return $this->getService(ServiceId::SERIALIZER);  }
@@ -797,28 +805,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getSelectedLocation(Request $request)
   {
-    $client = $this->getAccountOwner($request);
-    $headerValidation = null;
-
-    if($client) {
-      $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
-    }
-
-    if($headerValidation) {
-      if($headerValidation->isInputValid()) {
-        return $headerValidation->getLocation();
-      } else {
-        $locations = Finder::findLocationsOfClient($client);
-        if($locations->count() > 0) {
-          //pick the first available Location as default
-          return $locations->get(0);
-        } else {
-          return null;
-        }
-      }
-    }
-
-    return null;
+      return $this->getUserService()->getSelectedLocation($request);
   }
 
   /**
@@ -946,18 +933,6 @@ class APIController extends Controller implements APIControllerInterface
    * @param Animal | Ewe | Ram | Neuter $animal
    */
   protected function clearLivestockCacheForLocation(Location $location = null, $animal = null) {
-    if(!$location) {
-      /** @var Location $location */
-      $location = $animal->getLocation();
-    }
-    
-    if($location) {
-      $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
-      
-      $lastIndex = 10;
-      for($i = 1; $i <= $lastIndex; $i++) {
-        $this->getRedisClient()->del('[' .$cacheId .']['.$i.']');
-      }
-    }
+      $this->getCacheService()->clearLivestockCacheForLocation($location, $animal);
   }
 }

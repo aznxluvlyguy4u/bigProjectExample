@@ -119,6 +119,13 @@ services:
         class: AppBundle\Component\Modifier\AnimalRemover
         arguments: ['@doctrine.orm.entity_manager']
 
+    app.animal.details.updater:
+        class: AppBundle\Service\AnimalDetailsUpdaterService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.cache'
+          - '@app.user'
+
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
         arguments: ['@doctrine.orm.entity_manager']
@@ -289,6 +296,11 @@ services:
           httpUtil: '@security.http_utils'
           unauthedPaths: ['/api/v1/doc', '/api/v1/auth/register', '/api/v1/auth/authorize']
         public: false
+
+    app.cache:
+        class: AppBundle\Service\CacheService
+        arguments:
+          - '@snc_redis.sncredis'
 
     app.user:
         class: AppBundle\Service\UserService

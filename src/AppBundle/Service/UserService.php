@@ -7,12 +7,15 @@ namespace AppBundle\Service;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\PersonRepository;
 use AppBundle\Entity\Token;
 use AppBundle\Entity\TokenRepository;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Util\Finder;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Validation\HeaderValidation;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -85,6 +88,7 @@ class UserService
      * @param Request $request
      * @param string|null $tokenCode
      * @return Client|null
+     * @throws \Exception
      */
     public function getAccountOwner(Request $request = null, $tokenCode = null)
     {
@@ -96,6 +100,10 @@ class UserService
 
             /* Admins with a GhostToken */
         } else if ($loggedInUser instanceof Employee) {
+
+            if ($request === null) {
+                throw new \Exception('Request cannot be empty for getAccountOwner if (loggedIn)User is not a Client');
+            }
 
             if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode === null) {
                 $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
@@ -138,4 +146,36 @@ class UserService
         */
 
     }
+
+
+    /**
+     * @param Request $request
+     * @return Location|null
+     */
+    public function getSelectedLocation(Request $request)
+    {
+        $client = $this->getAccountOwner($request);
+        $headerValidation = null;
+
+        if($client) {
+            $headerValidation = new HeaderValidation($this->em, $request, $client);
+        }
+
+        if($headerValidation) {
+            if($headerValidation->isInputValid()) {
+                return $headerValidation->getLocation();
+            } else {
+                $locations = Finder::findLocationsOfClient($client);
+                if($locations->count() > 0) {
+                    //pick the first available Location as default
+                    return $locations->get(0);
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
 }
