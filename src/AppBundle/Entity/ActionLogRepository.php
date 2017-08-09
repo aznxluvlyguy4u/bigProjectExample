@@ -13,11 +13,13 @@ class ActionLogRepository extends BaseRepository
 {
 
     /**
+     * @param int $userAccountId
      * @return array
      */
-    public function getUserActionTypes()
+    public function getUserActionTypes($userAccountId)
     {
-        $sql = "SELECT user_action_type FROM action_log GROUP BY user_action_type ORDER BY user_action_type";
+        $filter = is_int($userAccountId) || ctype_digit($userAccountId) ? 'WHERE user_account_id = '.$userAccountId : '';
+        $sql = "SELECT user_action_type FROM action_log $filter GROUP BY user_action_type ORDER BY user_action_type";
         $results = $this->getConnection()->query($sql)->fetchAll();
         return array_keys(SqlUtil::getSingleValueGroupedSqlResults('user_action_type', $results));
     }

@@ -46,11 +46,21 @@ class ActionLogService
 
 
     /**
+     * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
-    public function getUserActionTypes()
+    public function getUserActionTypes(Request $request)
     {
-        return ResultUtil::successResult($this->actionLogRepository->getUserActionTypes());
+        $user = $this->userService->getUser();
+
+        if(AdminValidator::isAdmin($user, AccessLevelType::ADMIN)) {
+            $userAccountId = RequestUtil::getIntegerQuery($request,QueryParameter::USER_ACCOUNT_ID);
+        } else {
+            //Regular Clients are only allowed to see their own log
+            $userAccountId = $user->getId();
+        }
+
+        return ResultUtil::successResult($this->actionLogRepository->getUserActionTypes($userAccountId));
     }
 
 

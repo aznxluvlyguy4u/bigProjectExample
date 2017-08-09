@@ -31,6 +31,15 @@ class ActionLogController extends APIController
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="user_account_id",
+     *        "dataType"="integer",
+     *        "required"=false,
+     *        "description"="id of location owner to retrieve userActionTypes for",
+     *        "format"="?user_account_id=99999"
+     *      },
+     *   },
      *   resource = true,
      *   description = "Retrieve all userActionTypes of current actionLogs"
      * )
@@ -41,7 +50,7 @@ class ActionLogController extends APIController
      */
     public function getUserActionTypes(Request $request)
     {
-        return $this->getActionLogService()->getUserActionTypes();
+        return $this->getActionLogService()->getUserActionTypes($request);
     }
 
 
