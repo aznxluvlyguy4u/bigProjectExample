@@ -8,7 +8,6 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\ClientRepository;
 use AppBundle\Entity\Employee;
@@ -57,6 +56,7 @@ use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\Finder;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Worker\Task\WorkerMessageBody;
@@ -64,8 +64,6 @@ use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -195,13 +193,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   protected function getContentAsArray(Request $request)
   {
-    $content = $request->getContent();
-
-    if(empty($content)){
-      throw new BadRequestHttpException("Content is empty");
-    }
-
-    return new ArrayCollection(json_decode($content, true));
+      return RequestUtil::getContentAsArray($request);
   }
 
   /**
@@ -389,75 +381,6 @@ class APIController extends Controller implements APIControllerInterface
       return $this->getUserService()->getEmployee($tokenCode);
   }
 
-  public function isUlnOrPedigreeCodeValid(Request $request, $ulnCode = null)
-  {
-    $verifySurrogates = false;
-
-    if($ulnCode != null) {
-      return $this->verifyAnimalByUln($ulnCode);
-
-    } else {
-      $contentArray = $this->getContentAsArray($request);
-      $array = $contentArray->toArray();
-
-      //For Father (DeclareBirth) only verify pedigree. ULN not checked in API since father can be from external farm.
-      if($contentArray->containsKey(Constant::FATHER_NAMESPACE)) {
-        $father = $array[Constant::FATHER_NAMESPACE];
-
-        $isVerified = $this->verifyOnlyPedigreeCodeInAnimal($father)->get('isValid');
-
-        if (!$isVerified) {
-          return array("animalKind" => Constant::FATHER_NAMESPACE,
-              "keyType" => Constant::PEDIGREE_NAMESPACE,
-              "isValid" => false,
-              "result" => $this->createValidityCheckMessage(false, Constant::ULN_NAMESPACE), Constant::FATHER_NAMESPACE);
-        }
-      }
-
-      $objectsToBeVerified = array();
-      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE, Constant::MOTHER_NAMESPACE);
-      
-      //All objects containing a uln or pedigree code must have that code verified
-      foreach ($objectsToBeVerified as $objectToBeVerified) {
-        if (array_key_exists($objectToBeVerified, $array)) {
-          $animalContentArray = $contentArray->get($objectToBeVerified);
-
-          $verification = $this->verifyUlnOrPedigreeCodeInAnimal($animalContentArray, $objectToBeVerified);
-
-          if($verification["isValid"] == false) { return $verification; }
-        }
-      }
-
-      //Animals in a Children array need to be retrieved differently
-      if($contentArray->containsKey(Constant::CHILDREN_NAMESPACE)){
-        $children = $array[Constant::CHILDREN_NAMESPACE];
-
-        foreach($children as $child) {
-
-          //NOTE Children are created with new uln from unassigned tags, so they cannot be in the system!
-
-          if($verifySurrogates) {
-            //Also verify the surrogate of a child
-            if(array_key_exists(Constant::SURROGATE_NAMESPACE, $child)){
-              $verification = $this->verifyUlnOrPedigreeCodeInAnimal($child[Constant::SURROGATE_NAMESPACE], Constant::SURROGATE_NAMESPACE);
-
-              if($verification["isValid"] == false) { return $verification; }
-            }
-          }
-
-        }
-      }
-
-      $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
-
-      //When all animals have passed the verification return this:
-      return array("animalKind" => "All objects",
-            "keyType" => $keyType,
-            "isValid" => true,
-            "result" => $this->createValidityCheckMessage(true));
-    }
-
-  }
 
   /**
    * @param array $animalArray
@@ -485,106 +408,6 @@ class APIController extends Controller implements APIControllerInterface
     return $array;
   }
 
-  /**
-   * @param boolean $isValid
-   * @param string $keyType
-   * @param string $animalKind
-   * @return array
-   */
-  private function createValidityCheckMessage($isValid, $keyType = null, $animalKind = null)
-  {
-    if($isValid && $keyType == null && $animalKind == null) {
-      $message = "The uln and/or pedigree values for all objects are valid.";
-      $code = 200;
-    } else if ($keyType == null) {
-      $message = "The uln or pedigree" . ' of ' . $animalKind . ' not found.';
-      $code = 400;
-    } else if ($animalKind == null) {
-      $message = "No animal found";
-      $code = 400;
-    } else if (!$isValid) { //and has keyType and animalKind
-      $message = $keyType . ' of ' . $animalKind . ' not found.';
-      $code = 428;
-    } else { //isValid == true, and has keyType and animalKind
-      $message = "The " . $keyType . " of " . $animalKind . " is valid.";
-      $code = 200;
-    }
-
-    return array('code'=>$code, "message" => $message);
-  }
-
-  private function verifyUlnOrPedigreeCodeInAnimal($animalContentArray, $objectToBeVerified)
-  {
-    $ulnCountryCode = null;
-    $pedigreeCountryCode = null;
-    $ulnCode = null;
-    $pedigreeCode = null;
-    $animal = null;
-
-    //This repository class is used to verify if a pedigree code is valid
-    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-
-    if (array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalContentArray)) {
-      $ulnCode = $animalContentArray[Constant::ULN_NUMBER_NAMESPACE];
-      $ulnCountryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
-
-      $animal = $animalRepository->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnCode);
-
-      if ($animal == null) {
-        return array("animalKind" => $objectToBeVerified,
-            "keyType" => Constant::ULN_NAMESPACE,
-            "isValid" => false,
-            "result" => $this->createValidityCheckMessage(false, Constant::ULN_NAMESPACE), $objectToBeVerified);
-      }
-    }
-    else {
-      if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalContentArray)) {
-        $pedigreeCode = $animalContentArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
-        $pedigreeCountryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
-      }
-
-      $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeCode);
-
-      if($animal == null){
-        $keyType = Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
-        return array("animalKind" => $objectToBeVerified,
-            "keyType" => $keyType,
-            "isValid" => false,
-            "result" => $this->createValidityCheckMessage(false, $keyType, $objectToBeVerified));
-      }
-    }
-    $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
-
-    return array("animalKind" => $objectToBeVerified,
-        "keyType" => $keyType,
-        "isValid" => true,
-        "result" => $this->createValidityCheckMessage(true));
-  }
-
-  private function verifyAnimalByUln($ulnString)
-  {
-    $isValid = false;
-    $keyType = Constant::ULN_NAMESPACE;
-
-    //validate if Id is of format: AZ123456789
-    if(!preg_match("([A-Z]{2}\d+)",$ulnString)){
-      //Directly return isValid = false result
-
-    } else {
-
-      $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-      $animal = $animalRepository->findByUlnOrPedigree($ulnString, true);
-
-      if ($animal != null) {
-        $isValid = true;
-      }
-    }
-
-    return array("animalKind" => "Id",
-        "keyType" => $keyType,
-        "isValid" => $isValid,
-        "result" => $this->createValidityCheckMessage($isValid, $keyType, $ulnString));
-  }
 
   public function isTagUnassigned($ulnCountryCode, $ulnNumber)
   {
