@@ -29,7 +29,7 @@ class ContactAPIController extends APIController implements ContactAPIController
 
     $content = $this->getContentAsArray($request);
     $user = $this->getAccountOwner($request);
-    $ubn = $this->getSelectedUbn($request);
+    $ubn = $this->getUserService()->getSelectedUbn($request);
     $loggedInUser = $this->getUser();
 
     if($ubn == null) {

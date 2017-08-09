@@ -178,4 +178,30 @@ class UserService
         return null;
     }
 
+
+    /**
+     * @param Request $request
+     * @return null|string
+     */
+    public function getSelectedUbn(Request $request)
+    {
+        $client = $this->getAccountOwner($request);
+        $headerValidation = new HeaderValidation($this->em, $request, $client);
+
+        if($headerValidation->isInputValid()) {
+            return $headerValidation->getUbn();
+
+        } else {
+
+            $locations = Finder::findLocationsOfClient($client);
+            if($locations->count() > 0) {
+                //pick the first available Location as default
+                return $locations->get(0)->getUbn();
+
+            } else {
+                return null;
+            }
+        }
+    }
+
 }
