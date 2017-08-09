@@ -257,6 +257,20 @@ class ActionLogWriter
         return $log;
     }
 
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $admin
+     * @return ActionLog
+     */
+    public static function passwordChangeAdminInProfile(ObjectManager $om, $admin)
+    {
+        $log = new ActionLog($admin, $admin, UserActionType::ADMIN_PASSWORD_CHANGE, false,null, false);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
     
     /**
      * @param ObjectManager $om
@@ -598,6 +612,49 @@ class ActionLogWriter
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
+    }
+
+
+    /**
+     * Note password change is saved in a separate log
+     *
+     * @param ObjectManager $om
+     * @param Employee $actionBy
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function editOwnAdminProfile(ObjectManager $om, $actionBy, $content)
+    {
+        $oldFirstName = $content->get(JsonInputConstant::FIRST_NAME);
+        $oldLastName = $content->get(JsonInputConstant::LAST_NAME);
+        $oldEmailAddress = $content->get(JsonInputConstant::EMAIL_ADDRESS);
+
+        $message = '';
+
+        $changes = [
+            //old value                   new value
+            $actionBy->getFirstName() => $content->get(JsonInputConstant::FIRST_NAME),
+            $actionBy->getLastName() => $content->get(JsonInputConstant::LAST_NAME),
+            $actionBy->getEmailAddress() => $content->get(JsonInputConstant::EMAIL_ADDRESS),
+        ];
+
+        $anyChanges = false;
+        $prefix = '';
+        foreach ($changes as $oldValue => $newValue) {
+            if ($oldValue !== $newValue) {
+                $anyChanges = true;
+                $message = $message . $prefix. $oldValue . ' => ' .$newValue;
+                $prefix = ', ';
+            }
+        }
+
+        if ($anyChanges) {
+            $log = new ActionLog($actionBy, $actionBy, UserActionType::EDIT_ADMIN, false, $message, false);
+            DoctrineUtil::persistAndFlush($om, $log);
+            return $log;
+        }
+
+        return null;
     }
 
 

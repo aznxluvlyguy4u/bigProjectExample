@@ -8,6 +8,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\AdminProfile;
 use AppBundle\Output\AdminOverviewOutput;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\EditAdminProfileValidator;
 use AppBundle\Validation\PasswordValidator;
@@ -72,7 +73,7 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
     $encoder = $this->get('security.password_encoder');
     $content = $this->getContentAsArray($request);
 
-    $em = $this->getDoctrine()->getManager();
+    $em = $this->getManager();
     
     //Validate input
     $inputValidator = new EditAdminProfileValidator($em, $content, $admin);
@@ -82,6 +83,7 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
     
     //If password is changed: validate and encrypt it
     $newPassword = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::NEW_PASSWORD, $content);
+    $passwordChangeLog = null;
     if($newPassword != null) {
       $newPassword = base64_decode($newPassword);
 
@@ -92,12 +94,20 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
       }
       $encodedNewPassword = $encoder->encodePassword($admin, $newPassword);
       $content->set(JsonInputConstant::NEW_PASSWORD, $encodedNewPassword);
+      $passwordChangeLog = ActionLogWriter::passwordChangeAdminInProfile($em, $admin);
     }
+
+    $valuesLog = ActionLogWriter::editOwnAdminProfile($em, $admin, $content);
 
     //Persist updated changes and return the updated values
     $client = AdminProfile::update($admin, $content);
     $this->getDoctrine()->getManager()->persist($admin);
     $this->getDoctrine()->getManager()->flush();
+
+    ActionLogWriter::completeActionLog($em, $valuesLog);
+    if ($passwordChangeLog) {
+        ActionLogWriter::completeActionLog($em, $passwordChangeLog);
+    }
 
     $outputArray = AdminOverviewOutput::createAdminOverview($admin);
 
