@@ -167,6 +167,6 @@ class AnimalDetailsUpdaterService
     private function saveActionLogMessage()
     {
         ActionLogWriter::editAnimalDetails($this->em, $this->userService->getAccountOwner($this->request),
-                                           $this->userService->getEmployee(), $this->actionLogMessage,true);
+                                           $this->userService->getUser(), $this->actionLogMessage,true);
     }
 }
