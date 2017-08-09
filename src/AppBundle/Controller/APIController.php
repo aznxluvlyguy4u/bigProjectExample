@@ -60,6 +60,7 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Worker\Task\WorkerMessageBody;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -171,6 +172,9 @@ class APIController extends Controller implements APIControllerInterface
     return $this->requestMessageBuilder;
   }
 
+
+  /** @return \Doctrine\Common\Persistence\ObjectManager|object|EntityManagerInterface */
+  protected function getManager() { return $this->getDoctrine()->getManager(); }
 
   /** @return string */
   protected function getCurrentEnvironment() { return $this->get('kernel')->getEnvironment(); }

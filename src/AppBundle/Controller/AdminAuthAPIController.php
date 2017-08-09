@@ -81,8 +81,12 @@ class AdminAuthAPIController extends APIController {
             ]
         ];
 
+        ActionLogWriter::loginAdmin($this->getManager(), $admin, $admin, true);
+
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
       }
+
+      ActionLogWriter::loginAdmin($this->getManager(), $admin, null, false);
     }
 
     return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);

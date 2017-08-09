@@ -213,6 +213,50 @@ class ActionLogWriter
         return $log;
     }
 
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $accountOwner
+     * @param Employee $actionBy
+     * @param boolean $isSuccessfulLogin
+     * @return ActionLog
+     */
+    public static function loginAdmin(ObjectManager $om, $accountOwner, $actionBy, $isSuccessfulLogin)
+    {
+        return self::login($om, $accountOwner, $actionBy, $isSuccessfulLogin, UserActionType::ADMIN_LOGIN, false);
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $accountOwner
+     * @param Client|Employee $actionBy
+     * @param boolean $isSuccessfulLogin
+     * @return ActionLog
+     */
+    public static function loginUser(ObjectManager $om, $accountOwner, $actionBy, $isSuccessfulLogin)
+    {
+        return self::login($om, $accountOwner, $actionBy, $isSuccessfulLogin, UserActionType::USER_LOGIN, true);
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $accountOwner
+     * @param Person $actionBy
+     * @param boolean $isSuccessfulLogin
+     * @param string $userActionType
+     * @param boolean $isUserEnvironment
+     * @return ActionLog
+     */
+    private static function login(ObjectManager $om, $accountOwner, $actionBy, $isSuccessfulLogin, $userActionType, $isUserEnvironment)
+    {
+        $log = new ActionLog($accountOwner, $actionBy, $userActionType, $isSuccessfulLogin, null, $isUserEnvironment);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
     
     /**
      * @param ObjectManager $om
