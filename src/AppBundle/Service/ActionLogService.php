@@ -10,6 +10,7 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -103,5 +104,15 @@ class ActionLogService
     }
 
 
+    /**
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function getAccountOwnerIds()
+    {
+        if(!AdminValidator::isAdmin($this->userService->getUser(), AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
 
+        return ResultUtil::successResult($this->actionLogRepository->getUserAccountIds());
+    }
 }

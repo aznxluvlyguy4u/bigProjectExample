@@ -109,4 +109,31 @@ class ActionLogController extends APIController
     {
         return $this->getActionLogService()->getActionLogs($request);
     }
+
+
+    /**
+     * Retrieve all accountOwnerIds in the actionLogs.
+     *
+     * @ApiDoc(
+     *   section = "Log",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve all accountOwnerIds in the actionLogs"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-account-owners")
+     * @Method("GET")
+     */
+    public function getAccountOwnerIds(Request $request)
+    {
+        return $this->getActionLogService()->getAccountOwnerIds();
+    }
 }

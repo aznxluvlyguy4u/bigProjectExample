@@ -59,4 +59,20 @@ class ActionLogRepository extends BaseRepository
         return $query->getResult();
     }
 
+
+    /**
+     * @return array
+     */
+    public function getUserAccountIds()
+    {
+        $sql = "SELECT p.id, p.first_name, p.last_name
+                FROM person p
+                INNER JOIN (
+                    SELECT user_account_id FROM action_log
+                    WHERE user_account_id NOTNULL
+                    GROUP BY user_account_id
+                    )l ON p.id = l.user_account_id
+                ORDER BY p.last_name";
+        return $this->getConnection()->query($sql)->fetchAll();
+    }
 }
