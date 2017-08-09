@@ -196,12 +196,15 @@ class AuthAPIController extends APIController {
             "user" => MenuBarOutput::create($client)
         ];
 
+        ActionLogWriter::loginUser($this->getManager(), $client, $client, true);
+
         return new JsonResponse(array("access_token"=>$client->getAccessToken(),
                          Constant::RESULT_NAMESPACE => $result), 200);
 
         //TODO If Frontend is updated use the following JsonResponse
         //return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
-      }
+        }
+        ActionLogWriter::loginUser($this->getManager(), $client, null, false);
     }
 
     return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
