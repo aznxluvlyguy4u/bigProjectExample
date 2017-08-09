@@ -94,8 +94,8 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    * @Method("POST")
    */
     public function createAdmin(Request $request) {
-        $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+        $actionBy = $this->getEmployee();
+        $adminValidator = new AdminValidator($actionBy, AccessLevelType::SUPER_ADMIN);
         if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
             return $adminValidator->createJsonErrorResponse();
         }
@@ -103,7 +103,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         $em = $this->getDoctrine()->getManager();
         $content = $this->getContentAsArray($request);
 
-        $log = ActionLogWriter::createAdmin($em, $admin, $content);
+        $log = ActionLogWriter::createAdmin($em, $actionBy, $content);
 
         // Validate content
         $firstName = $content->get('first_name');
@@ -133,14 +133,14 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         $em->flush();
 
         $repository = $this->getDoctrine()->getRepository(Employee::class);
-        $admin = $repository->findOneBy(array(
+        $actionBy = $repository->findOneBy(array(
             'emailAddress' => $newAdmin->getEmailAddress(),
             'isActive' => $newAdmin->getIsActive()
             ));
 
-        $result = AdminOverviewOutput::createAdminOverview($admin);
+        $result = AdminOverviewOutput::createAdminOverview($actionBy);
 
-        $log = ActionLogWriter::completeActionLog($em, $log);
+        $log = ActionLogWriter::completeAdminCreateOrEditActionLog($em, $log, $newAdmin);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
   }
@@ -169,15 +169,15 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    * @Method("PUT")
    */
     public function editAdmin(Request $request) {
-        $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+        $actionBy = $this->getEmployee();
+        $adminValidator = new AdminValidator($actionBy, AccessLevelType::SUPER_ADMIN);
         if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
             return $adminValidator->createJsonErrorResponse();
         }
-        
+
         $em = $this->getDoctrine()->getManager();
         $content = $this->getContentAsArray($request);
-        $log = ActionLogWriter::editAdmin($em, $admin, $content);
+        $log = ActionLogWriter::editAdmin($em, $actionBy, $content);
 
         // Validate content
         $personId = $content->get('person_id');
@@ -208,7 +208,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         ));
         $result = AdminOverviewOutput::createAdminOverview($newAdmin);
 
-        $log = ActionLogWriter::completeActionLog($em, $log);
+        $log = ActionLogWriter::completeAdminCreateOrEditActionLog($em, $log, $admin);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
   }
@@ -237,8 +237,8 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function deactivateAdmin(Request $request)
   {
-    $admin = $this->getEmployee();
-    $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+    $actionBy = $this->getEmployee();
+    $adminValidator = new AdminValidator($actionBy, AccessLevelType::SUPER_ADMIN);
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
       return $adminValidator->createJsonErrorResponse();
     }
@@ -251,7 +251,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
     $personId = $content->get('person_id');
     /** @var Employee $adminToDeactivate */
     $adminToDeactivate = $repository->findOneBy(['personId' => $personId]);
-    $log = ActionLogWriter::deactivateAdmin($em, $admin, $adminToDeactivate);
+    $log = ActionLogWriter::deactivateAdmin($em, $actionBy, $adminToDeactivate);
 
     //Validate input
     if($adminToDeactivate == null) {
@@ -262,6 +262,8 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
     $adminToDeactivate->setIsActive(false);
     $em->persist($adminToDeactivate);
     $em->flush();
+
+      $log = ActionLogWriter::completeActionLog($em, $log);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
   }

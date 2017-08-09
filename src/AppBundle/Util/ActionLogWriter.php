@@ -473,7 +473,7 @@ class ActionLogWriter
 
         $message = $accessLevel.'| '.$emailAddress.' : '.$firstName.' '.$lastName;
 
-        $log = new ActionLog($actionBy, $actionBy, UserActionType::CREATE_ADMIN, false, $message, false);
+        $log = new ActionLog(null, $actionBy, UserActionType::CREATE_ADMIN, false, $message, false);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -496,6 +496,7 @@ class ActionLogWriter
         $oldEmailAddress = '';
         $oldAccessLevel = '';
 
+        $admin = null;
         if ($personId) {
             $admin = $om->getRepository(Employee::class)->findOneBy(['personId' => $personId]);
             if ($admin) {
@@ -525,8 +526,7 @@ class ActionLogWriter
         }
 
         if ($anyChanges) {
-            $message = $message . ' (personId: '.$personId.')';
-            $log = new ActionLog($actionBy, $actionBy, UserActionType::EDIT_ADMIN, false, $message, false);
+            $log = new ActionLog($admin, $actionBy, UserActionType::EDIT_ADMIN, false, $message, false);
             DoctrineUtil::persistAndFlush($om, $log);
             return $log;
         }
@@ -537,11 +537,11 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
-     * @param Employee $admin
+     * @param Employee $actionBy
      * @param Employee $adminToDeactivate
      * @return ActionLog
      */
-    public static function deactivateAdmin(ObjectManager $om, $admin, $adminToDeactivate)
+    public static function deactivateAdmin(ObjectManager $om, $actionBy, $adminToDeactivate)
     {
         $userActionType = UserActionType::DEACTIVATE_ADMIN;
         if($adminToDeactivate instanceof Employee) {
@@ -550,7 +550,7 @@ class ActionLogWriter
             $message = 'No admin to deactivate found';   
         }
 
-        $log = new ActionLog($admin, $admin, $userActionType, false, $message, false);
+        $log = new ActionLog($adminToDeactivate, $actionBy, $userActionType, false, $message, false);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -565,6 +565,24 @@ class ActionLogWriter
     public static function completeActionLog(ObjectManager $om, ActionLog $log)
     {
         if ($log !== null) {
+            $log->setIsCompleted(true);
+            DoctrineUtil::persistAndFlush($om, $log);
+        }
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param ActionLog $log
+     * @param Employee $admin
+     * @return ActionLog
+     */
+    public static function completeAdminCreateOrEditActionLog(ObjectManager $om, ActionLog $log, $admin)
+    {
+        if ($log !== null) {
+            $log->setUserAccount($admin);
             $log->setIsCompleted(true);
             DoctrineUtil::persistAndFlush($om, $log);
         }
