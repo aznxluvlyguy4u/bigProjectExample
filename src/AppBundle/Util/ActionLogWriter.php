@@ -460,48 +460,78 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
-     * @param $admin
-     * @param $content
-     * @return ActionLog
-     */
-    public static function createAdmin(ObjectManager $om, $admin, $content)
-    {
-        return self::modifyAdmin($om, $admin, $content, UserActionType::CREATE_ADMIN);
-    }
-
-
-    /**
-     * @param ObjectManager $om
-     * @param $admin
-     * @param $content
-     * @return ActionLog
-     */
-    public static function editAdmin(ObjectManager $om, $admin, $content)
-    {
-        return self::modifyAdmin($om, $admin, $content, UserActionType::EDIT_ADMIN);
-    }
-
-
-    /**
-     * @param ObjectManager $om
-     * @param Employee $admin
+     * @param Employee $actionBy
      * @param ArrayCollection $content
-     * @param String $userActionType
      * @return ActionLog
      */
-    private static function modifyAdmin(ObjectManager $om, $admin, $content, $userActionType)
+    public static function createAdmin(ObjectManager $om, $actionBy, $content)
     {
-        $firstName = Utils::getNullCheckedArrayCollectionValue('first_name', $content);
-        $lastName = Utils::getNullCheckedArrayCollectionValue('last_name', $content);
-        $emailAddress = Utils::getNullCheckedArrayCollectionValue('email_address', $content);
-        $accessLevel = Utils::getNullCheckedArrayCollectionValue('access_level', $content);
+        $firstName = $content->get('first_name');
+        $lastName = $content->get('last_name');
+        $emailAddress = $content->get('email_address');
+        $accessLevel = $content->get('access_level');
 
         $message = $accessLevel.'| '.$emailAddress.' : '.$firstName.' '.$lastName;
 
-        $log = new ActionLog($admin, $admin, $userActionType, false, $message, false);
+        $log = new ActionLog($actionBy, $actionBy, UserActionType::CREATE_ADMIN, false, $message, false);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $actionBy
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function editAdmin(ObjectManager $om, $actionBy, $content)
+    {
+        $personId = $content->get('person_id');
+
+        $message = '';
+        $oldFirstName = '';
+        $oldLastName = '';
+        $oldEmailAddress = '';
+        $oldAccessLevel = '';
+
+        if ($personId) {
+            $admin = $om->getRepository(Employee::class)->findOneBy(['personId' => $personId]);
+            if ($admin) {
+                $oldFirstName = $admin->getFirstName();
+                $oldLastName = $admin->getLastName();
+                $oldEmailAddress = $admin->getEmailAddress();
+                $oldAccessLevel = $admin->getAccessLevel();
+            }
+        }
+
+        $changes = [
+            //old value       new value
+            $oldFirstName => $content->get('first_name'),
+            $oldLastName => $content->get('last_name'),
+            $oldEmailAddress => $content->get('email_address'),
+            $oldAccessLevel => $content->get('access_level'),
+        ];
+
+        $anyChanges = false;
+        $prefix = '';
+        foreach ($changes as $oldValue => $newValue) {
+            if ($oldValue !== $newValue) {
+                $anyChanges = true;
+                $message = $message . $prefix. $oldValue . ' => ' .$newValue;
+                $prefix = ', ';
+            }
+        }
+
+        if ($anyChanges) {
+            $message = $message . ' (personId: '.$personId.')';
+            $log = new ActionLog($actionBy, $actionBy, UserActionType::EDIT_ADMIN, false, $message, false);
+            DoctrineUtil::persistAndFlush($om, $log);
+            return $log;
+        }
+
+        return null;
     }
 
 
@@ -534,8 +564,10 @@ class ActionLogWriter
      */
     public static function completeActionLog(ObjectManager $om, ActionLog $log)
     {
-        $log->setIsCompleted(true);
-        DoctrineUtil::persistAndFlush($om, $log);
+        if ($log !== null) {
+            $log->setIsCompleted(true);
+            DoctrineUtil::persistAndFlush($om, $log);
+        }
 
         return $log;
     }
