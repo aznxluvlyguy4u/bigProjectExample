@@ -209,7 +209,7 @@ class ActionLogWriter
         /** @var DeclareBirth $requestMessage */
         foreach ($requestMessages as $requestMessage) {
 
-            $dateOfBirth = TimeUtil::getTimeStampToday($requestMessage->getDateOfBirth());
+            $dateOfBirth = $requestMessage->getDateOfBirth()->format('Y-m-d');
             $gender = Translation::getGenderInDutch($requestMessage->getGender());
             $uln = $requestMessage->getUlnCountryCode().$requestMessage->getUlnNumber();
             $ulnMother = $requestMessage->getUlnCountryCodeMother().$requestMessage->getUlnMother();
@@ -218,7 +218,7 @@ class ActionLogWriter
             $litterData = '';
             $litter = $requestMessage->getLitter();
             if ($litter) {
-                $litterData = ', Worp: nLing '. $litter->getSize() .' (levend ' .$litter->getBornAliveCount() . ', dood ' . $litter->getStillbornCount();
+                $litterData = ', Worp: nLing '. $litter->getSize() .' (levend ' .$litter->getBornAliveCount() . ', dood ' . $litter->getStillbornCount().')';
             }
 
             $description = $gender.' '.$uln.' GebDatum '.$dateOfBirth.', moeder: '.$ulnMother. ', vader: '.$ulnFather.$litterData;
@@ -249,7 +249,7 @@ class ActionLogWriter
      */
     public static function revokeLitter(ObjectManager $em, Litter $litter, Person $actionBy, Client $client)
     {
-        $dateOfBirth = TimeUtil::getTimeStampToday($litter->getLitterDate());
+        $dateOfBirth = $litter->getLitterDate()->format('Y-m-d');
 
         $description = 'Intrekking Worp: WorpDatum '.$dateOfBirth;
 
@@ -261,7 +261,7 @@ class ActionLogWriter
             $description = $description .', vader: '.$litter->getAnimalFather()->getUln();
         }
 
-        $description = $description . ', Worp: nLing '. $litter->getSize() .' (levend ' .$litter->getBornAliveCount() . ', dood ' . $litter->getStillbornCount();
+        $description = $description . ', Worp: nLing '. $litter->getSize() .' (levend ' .$litter->getBornAliveCount() . ', dood ' . $litter->getStillbornCount().')';
 
 
         $log = new ActionLog($client, $actionBy, UserActionType::BIRTH_REVOKE, true, $description);
