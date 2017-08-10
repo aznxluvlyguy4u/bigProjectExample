@@ -164,7 +164,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
-        $log = ActionLogWriter::declareDepartOrExportPost($em, $client, $loggedInUser, $location, $content);
+        $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($em, $client, $loggedInUser, $location, $content);
+        $arrivalLog = null;
 
         //Client can only depart/export own animals
         $animal = $content->get(Constant::ANIMAL_NAMESPACE);
@@ -211,6 +212,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
                 $this->persist($arrivalMessageObject);
 
                 $this->sendMessageObjectToQueue($arrivalMessageObject);
+
+                $arrivalLog = ActionLogWriter::declareArrival($arrival, $arrivalOwner, true);
             }
         }
 
@@ -238,7 +241,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
         $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
 
-        ActionLogWriter::completeActionLog($em, $log);
+        if ($arrivalLog) { $this->persist($arrivalLog); }
+        ActionLogWriter::completeActionLog($em, $departOrExportLog);
 
         $this->clearLivestockCacheForLocation($location);
 

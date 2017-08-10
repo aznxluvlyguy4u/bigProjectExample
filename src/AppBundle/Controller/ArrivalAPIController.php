@@ -179,7 +179,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
 
-        $log = ActionLogWriter::declareArrivalOrImportPost($em, $client, $loggedInUser, $location, $content);
+        $arrivalOrImportLog = ActionLogWriter::declareArrivalOrImportPost($em, $client, $loggedInUser, $location, $content);
+        $departLog = null;
 
         $content = $this->capitalizePedigreeNumberInPostArray($content);
 
@@ -238,11 +239,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
                 $this->persist($departMessageObject);
 
                 $this->sendMessageObjectToQueue($departMessageObject);
+
+                $departLog = ActionLogWriter::declareDepart($depart, $departOwner, true);
             }
         }
 
         //Send it to the queue and persist/update any changed state to the database
-        $this->sendMessageObjectToQueue($messageObject);
+        //$this->sendMessageObjectToQueue($messageObject);
         $messageObject->setAnimal(null);
 
         //Persist message without animal. That is done after a successful response
@@ -266,7 +269,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
         //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
         $this->getHealthService()->updateLocationHealth($messageObject);
 
-        ActionLogWriter::completeActionLog($em, $log);
+        if ($departLog) { $this->persist($departLog); }
+        ActionLogWriter::completeActionLog($em, $arrivalOrImportLog);
 
         $this->clearLivestockCacheForLocation($location);
 

@@ -8,6 +8,8 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
@@ -52,6 +54,22 @@ class ActionLogWriter
 
 
     /**
+     * @param DeclareArrival $arrival
+     * @param Client $arrivalOwner
+     * @param bool $isCompleted
+     * @return ActionLog
+     */
+    public static function declareArrival(DeclareArrival $arrival, Client $arrivalOwner, $isCompleted = true)
+    {
+        $origin = 'ubn previous owner: '.$arrival->getUbnPreviousOwner();
+        $uln = $arrival->getUlnCountryCode().$arrival->getUlnNumber();
+        $description = 'ubn destination: '.$arrival->getUbn().'. '.$origin.'. uln: '.$uln;
+
+        return new ActionLog($arrivalOwner, $arrival->getActionBy(), UserActionType::DECLARE_ARRIVAL, $isCompleted, $description);
+    }
+
+
+    /**
      * @param ObjectManager $om
      * @param Client $client
      * @param Person $loggedInUser
@@ -79,6 +97,23 @@ class ActionLogWriter
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
+    }
+
+
+    /**
+     * @param DeclareDepart $declareDepart
+     * @param Client $departOwner
+     * @param bool $isCompleted
+     * @return ActionLog
+     */
+    public static function declareDepart(DeclareDepart $declareDepart, Client $departOwner, $isCompleted = true)
+    {
+        $destination = 'ubn new owner: '.$declareDepart->getUbnNewOwner();
+        $uln = $declareDepart->getUlnCountryCode().$declareDepart->getUlnNumber();
+
+        $description = 'ubn: '.$declareDepart->getUbn().'. '.$destination.'. uln: '.$uln;
+
+        return new ActionLog($departOwner, $declareDepart->getActionBy(), UserActionType::DECLARE_DEPART, $isCompleted, $description);
     }
 
 
