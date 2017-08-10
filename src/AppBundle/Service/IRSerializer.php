@@ -158,26 +158,6 @@ class IRSerializer implements IRSerializerInterface
      */
     public function serializeToJSON($object, $type = null, $enableMaxDepthChecks = true)
     {
-        if($object instanceof ArrayCollection || is_array($object) || $object instanceof LazyCriteriaCollection) {
-            $results = [];
-            foreach ($object as $item) {
-                $results[] = $this->serializeSingleObjectToJson($item, $type, $enableMaxDepthChecks);
-            }
-            return $results;
-        }
-
-        return $this->serializeSingleObjectToJson($object, $type, $enableMaxDepthChecks);
-    }
-
-
-    /**
-     * @param $object
-     * @param string $type
-     * @param bool $enableMaxDepthChecks
-     * @return mixed|string
-     */
-    private function serializeSingleObjectToJson($object, $type = null, $enableMaxDepthChecks = true)
-    {
         if($type == '' || $type == null) {
             if($enableMaxDepthChecks) {
                 $serializationContext = SerializationContext::create()->enableMaxDepthChecks();
