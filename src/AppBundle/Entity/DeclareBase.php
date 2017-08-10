@@ -35,14 +35,14 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @JMS\Discriminator(field = "type", disabled=false, map = {
  *                          "DeclarationDetail" : "AppBundle\Entity\DeclarationDetail",
  *                          "DeclareAnimalFlag" : "AppBundle\Entity\DeclareAnimalFlag",
- *                             "DeclareArrival" : "AppBundle\Entity\DeclareArrival"},
- *                               "DeclareBirth" : "AppBundle\Entity\DeclareBirth"},
- *                              "DeclareDepart" : "AppBundle\Entity\DeclareDepart"},
- *                              "DeclareExport" : "AppBundle\Entity\DeclareExport"},
- *                              "DeclareImport" : "AppBundle\Entity\DeclareImport"},
- *                                "DeclareLoss" : "AppBundle\Entity\DeclareLoss"},
- *                        "DeclareTagsTransfer" : "AppBundle\Entity\DeclareTagsTransfer"},
- *                          "DeclareTagReplace" : "AppBundle\Entity\DeclareTagReplace"},
+ *                             "DeclareArrival" : "AppBundle\Entity\DeclareArrival",
+ *                               "DeclareBirth" : "AppBundle\Entity\DeclareBirth",
+ *                              "DeclareDepart" : "AppBundle\Entity\DeclareDepart",
+ *                              "DeclareExport" : "AppBundle\Entity\DeclareExport",
+ *                              "DeclareImport" : "AppBundle\Entity\DeclareImport",
+ *                                "DeclareLoss" : "AppBundle\Entity\DeclareLoss",
+ *                        "DeclareTagsTransfer" : "AppBundle\Entity\DeclareTagsTransfer",
+ *                          "DeclareTagReplace" : "AppBundle\Entity\DeclareTagReplace",
  *                          "RevokeDeclaration" : "AppBundle\Entity\RevokeDeclaration"},
  *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
  */
