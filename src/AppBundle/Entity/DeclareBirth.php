@@ -728,7 +728,7 @@ class DeclareBirth extends DeclareBase
     }
 
     /**
-     * @return mixed
+     * @return Litter|null
      */
     public function getLitter()
     {
