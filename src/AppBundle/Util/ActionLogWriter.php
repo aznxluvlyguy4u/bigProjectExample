@@ -9,9 +9,11 @@ use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RevokeDeclaration;
@@ -188,6 +190,88 @@ class ActionLogWriter
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param array $requestMessages
+     * @param Client $client
+     * @return array
+     * @throws \Exception
+     */
+    public static function createBirth(ObjectManager $em, $requestMessages, Client $client = null)
+    {
+        $logs = [];
+
+        if (count($requestMessages) === 0) { return $logs; }
+
+        /** @var DeclareBirth $requestMessage */
+        foreach ($requestMessages as $requestMessage) {
+
+            $dateOfBirth = TimeUtil::getTimeStampToday($requestMessage->getDateOfBirth());
+            $gender = Translation::getGenderInDutch($requestMessage->getGender());
+            $uln = $requestMessage->getUlnCountryCode().$requestMessage->getUlnNumber();
+            $ulnMother = $requestMessage->getUlnCountryCodeMother().$requestMessage->getUlnMother();
+            $ulnFather = $requestMessage->getUlnCountryCodeFather().$requestMessage->getUlnFather();
+
+            $litterData = '';
+            $litter = $requestMessage->getLitter();
+            if ($litter) {
+                $litterData = ', Worp: nLing '. $litter->getSize() .' (levend ' .$litter->getBornAliveCount() . ', dood ' . $litter->getStillbornCount();
+            }
+
+            $description = $gender.' '.$uln.' GebDatum '.$dateOfBirth.', moeder: '.$ulnMother. ', vader: '.$ulnFather.$litterData;
+
+            $clientOfDeclare = $client;
+            if ($client === null) {
+                if ($requestMessage->getLocation()) {
+                    $clientOfDeclare = $requestMessage->getLocation()->getOwner();
+                }
+            }
+
+            $log = new ActionLog($clientOfDeclare, $requestMessage->getActionBy(), UserActionType::DECLARE_BIRTH, false, $description);
+            $em->persist($log);
+            $logs[] = $log;
+        }
+        $em->flush();
+
+        return $logs;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Litter $litter
+     * @param Person $actionBy
+     * @param Client $client
+     * @return ActionLog
+     */
+    public static function revokeLitter(ObjectManager $em, Litter $litter, Person $actionBy, Client $client)
+    {
+        $dateOfBirth = TimeUtil::getTimeStampToday($litter->getLitterDate());
+
+        $description = 'Intrekking Worp: WorpDatum '.$dateOfBirth;
+
+        if ($litter->getAnimalMother()) {
+            $description = $description .', moeder: '.$litter->getAnimalMother()->getUln();
+        }
+
+        if ($litter->getAnimalFather()) {
+            $description = $description .', vader: '.$litter->getAnimalFather()->getUln();
+        }
+
+        $description = $description . ', Worp: nLing '. $litter->getSize() .' (levend ' .$litter->getBornAliveCount() . ', dood ' . $litter->getStillbornCount();
+
+
+        $log = new ActionLog($client, $actionBy, UserActionType::BIRTH_REVOKE, true, $description);
+        if ($litter->getBornAliveCount() > 0) {
+            $log->setIsRvoMessage(true);
+        }
+
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return  $log;
     }
 
 
@@ -427,24 +511,6 @@ class ActionLogWriter
         return $log;
     }
 
-    /**
-     * @param ObjectManager $om
-     * @param Client $client
-     * @param Person $loggedInUser
-     * @param Ewe $mother
-     * @return ActionLog
-     */
-    public static function createBirth(ObjectManager $om, $client, $loggedInUser, Ewe $mother)
-    {
-        $userActionType = UserActionType::BIRTH_CREATE;
-
-        $description = 'Litter created for Ewe: '. $mother->getUlnCountryCode() . $mother->getUlnNumber();
-
-        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        DoctrineUtil::persistAndFlush($om, $log);
-
-        return $log;
-    }
 
     /**
      * @param ObjectManager $om
@@ -695,14 +761,36 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
+     * @param ActionLog|array $log
+     * @return ActionLog|array
+     */
+    public static function completeActionLog(ObjectManager $om, $log)
+    {
+        if (is_array($log)) {
+            foreach ($log as $item) {
+                self::completeSingleActionLog($om, $item, false);
+            }
+            $om->flush();
+            return $log;
+        }
+
+        return self::completeSingleActionLog($om, $log);
+    }
+
+
+    /**
+     * @param ObjectManager $om
      * @param ActionLog $log
+     * @param bool $flush
      * @return ActionLog
      */
-    public static function completeActionLog(ObjectManager $om, ActionLog $log)
+    private static function completeSingleActionLog(ObjectManager $om, ActionLog $log, $flush = true)
     {
         if ($log !== null) {
             $log->setIsCompleted(true);
-            DoctrineUtil::persistAndFlush($om, $log);
+            $om->persist($log);
+
+            if($flush) { $om->flush(); }
         }
 
         return $log;

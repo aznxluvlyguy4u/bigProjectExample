@@ -24,6 +24,7 @@ class UserActionType extends RequestType
     const MATE_EDIT = 'MATE_EDIT';
 
     const BIRTH_CREATE = 'BIRTH_CREATE';
+    const BIRTH_REVOKE = 'BIRTH_REVOKE';
     const FALSE_BIRTH_CREATE = 'FALSE_BIRTH_CREATE';
 
     const DECLARE_WEIGHT_CREATE = 'DECLARE_WEIGHT_CREATE';

@@ -211,6 +211,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             return $requestMessages;
         } 
 
+        $logs = ActionLogWriter::createBirth($this->getManager(), $requestMessages, $client);
+
         //Creating request succeeded, send to Queue
         foreach ($requestMessages as $requestMessage) {
             //First persist requestmessage, before sending it to the queue
@@ -226,6 +228,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         //Clear cache for this location, to reflect changes on the livestock
         $this->clearLivestockCacheForLocation($location);
+
+        ActionLogWriter::completeActionLog($this->getManager(), $logs);
 
 
         return new JsonResponse($result, 200);
@@ -266,15 +270,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $openCount = count($requestMessages);
         $resentCount = 0;
 
-        //Creating request succeeded, send to Queue
-        /** @var DeclareBirth $requestMessage */
-        foreach ($requestMessages as $requestMessage) {
+        if ($openCount > 0) {
+            $logs = ActionLogWriter::createBirth($this->getManager(), $requestMessages);
 
-            if($requestMessage->getResponses()->count() === 0) {
-                //Resend it to the queue and persist/update any changed state to the database
-                $result[] = $this->sendMessageObjectToQueue($requestMessage);
-                $resentCount++;
+            //Creating request succeeded, send to Queue
+            /** @var DeclareBirth $requestMessage */
+            foreach ($requestMessages as $requestMessage) {
+
+                if($requestMessage->getResponses()->count() === 0) {
+                    //Resend it to the queue and persist/update any changed state to the database
+                    $result[] = $this->sendMessageObjectToQueue($requestMessage);
+                    $resentCount++;
+                }
             }
+
+            ActionLogWriter::completeActionLog($this->getManager(), $logs);
         }
 
         return new JsonResponse(['DeclareBirth' => ['found open declares' => $openCount, 'open declares resent' => $resentCount]], 200);
@@ -632,6 +642,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 $message = 'The litter does not contain any declareBirths';
                 $statusCode = 428;
             }
+
+            ActionLogWriter::revokeLitter($this->getManager(), $litter, $loggedInUser, $client);
 
             return new JsonResponse(array(Constant::RESULT_NAMESPACE => [
                 'code' => $statusCode,
