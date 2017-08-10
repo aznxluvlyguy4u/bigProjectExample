@@ -24,12 +24,11 @@ use JMS\Serializer\Annotation\Expose;
  * @ExclusionPolicy("all")
  * @JMS\Discriminator(field = "type", disabled=false, map = {
  *                          "Client" : "AppBundle\Entity\Client",
-*                         "Employee" : "AppBundle\Entity\Employee",
+ *                        "Employee" : "AppBundle\Entity\Employee",
  *                       "Inspector" : "AppBundle\Entity\Inspector"},
  *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
  */
-abstract class
-Person implements UserInterface
+abstract class Person implements UserInterface
 {
     const TABLE_NAME = 'person';
 
