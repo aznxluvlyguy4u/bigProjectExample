@@ -10,6 +10,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\ClientRepository;
+use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -287,7 +288,7 @@ class APIController extends Controller implements APIControllerInterface
 
 
   /**
-   * @param $messageObject
+   * @param DeclareBase $messageObject
    * @param bool $isUpdate
    * @return array
    */
