@@ -592,6 +592,8 @@ class AnimalRepository extends BaseRepository
   {
     $result = null;
 
+    if (!is_array($content)) { return $result; }
+
     if(key_exists('uln_country_code', $content) && key_exists('uln_number', $content)) {
       if ($content['uln_country_code'] != '' && $content['uln_number'] != '') {
         $result = $this->findOneBy([
