@@ -620,6 +620,7 @@ class CliOptionsService
             '6: Find animals with themselves being their own ascendant', "\n",
             '7: Print from database, animals with themselves being their own ascendant', "\n",
             '8: Fill missing breedCodes and set breedCode = breedCodeParents if both parents have the same pure (XX100) breedCode', "\n",
+            '9: Replace non-alphanumeric symbols in uln_number of animal table (based on symbols found in migration file)', "\n",
             '=====================================', "\n",
             '20: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n\n",
             '================== ANIMAL LOCATION & RESIDENCE ===================', "\n",
@@ -644,6 +645,7 @@ class CliOptionsService
             case 6: $ascendantValidator->run(); break;
             case 7: $ascendantValidator->printOverview(); break;
             case 8: DatabaseDataFixer::recursivelyFillMissingBreedCodesHavingBothParentBreedCodes($this->conn, $this->cmdUtil); break;
+            case 9: $this->vsmMigratorService->getAnimalTableMigrator()->removeNonAlphaNumericSymbolsFromUlnNumberInAnimalTable(); break;
 
             case 20: DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirthsWithOptionInput($this->conn, $this->cmdUtil); break;
 
