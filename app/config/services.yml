@@ -22,6 +22,7 @@ services:
           - '@app.migrator.inspector'
           - '@app.cli.internal_worker.depart'
           - '@app.cli.mixblup'
+          - '@app.datafix.ubn'
           - '@app.migrator.vsm'
 
     app.cli.gender_changer:
@@ -165,6 +166,10 @@ services:
         parent: app.datafix.base.duplicate
         class: AppBundle\Service\DataFix\AnimalExterminator
 
+    app.datafix.ubn:
+        parent: app.datafix.base.duplicate
+        class: AppBundle\Service\DataFix\UbnFixer
+
 
     app.migrator.vsm:
         class: AppBundle\Service\Migration\VsmMigratorService
@@ -195,10 +200,14 @@ services:
           - '@doctrine.orm.entity_manager'
           - %kernel.root_dir%
           - '@app.datafix.animals.duplicate'
+          - '@app.datafix.ubn'
 
     app.migrator.animaltable:
-        parent: app.migrator.base
         class: AppBundle\Service\Migration\AnimalTableMigrator
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - %kernel.root_dir%
+          - '@app.datafix.ubn'
 
     app.migrator.birth:
         parent: app.migrator.base

@@ -10,6 +10,7 @@ use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
+use AppBundle\Service\DataFix\UbnFixer;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
@@ -23,17 +24,25 @@ use Doctrine\Common\Persistence\ObjectManager;
  *
  * Migrating the data from the animal_migration_table to animal table.
  */
-class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigratorService
+class AnimalTableMigrator extends Migrator2017JunServiceBase
 {
     const BATCH_SIZE = 10000;
 
     /** @var DuplicateAnimalsFixer */
     private $duplicateAnimalsFixer;
+    /** @var UbnFixer */
+    private $ubnFixer;
 
-    /** @inheritdoc */
-    public function __construct(ObjectManager $em, $rootDir)
+    /**
+     * AnimalTableMigrator constructor.
+     * @param ObjectManager $em
+     * @param string $rootDir
+     * @param UbnFixer $ubnFixer
+     */
+    public function __construct(ObjectManager $em, $rootDir, UbnFixer $ubnFixer)
     {
         parent::__construct($em, $rootDir, self::BATCH_SIZE);
+        $this->ubnFixer = $ubnFixer;
     }
 
 
@@ -67,6 +76,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->mergeTagReplacedAnimalsWithoutDeclareTagReplaces();
         $this->removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln();
         $this->removeNonAlphaNumericSymbolsFromUlnNumberInAnimalTable();
+        $this->ubnFixer->removeNonDigitsFromUbnOfBirthInAnimalTable($this->cmdUtil);
 
         $this->writeLn('====== Set parents ======');
         $this->updateIncongruentParentIdsInAnimalMigrationTable();

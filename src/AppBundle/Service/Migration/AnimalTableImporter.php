@@ -7,6 +7,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\QueryType;
 use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
+use AppBundle\Service\DataFix\UbnFixer;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
@@ -32,19 +33,22 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
     private $pedigreeRegisterIdsByAbbreviation;
     /** @var DuplicateAnimalsFixer */
     private $duplicateAnimalsFixer;
-
+    /** @var UbnFixer */
+    private $ubnFixer;
 
     /**
      * AnimalTableImporter constructor.
      * @param ObjectManager $em
      * @param string $rootDir
      * @param DuplicateAnimalsFixer $duplicateAnimalsFixer
+     * @param UbnFixer $ubnFixer
      */
-    public function __construct(ObjectManager $em, $rootDir, DuplicateAnimalsFixer $duplicateAnimalsFixer)
+    public function __construct(ObjectManager $em, $rootDir, DuplicateAnimalsFixer $duplicateAnimalsFixer, UbnFixer $ubnFixer)
     {
         parent::__construct($em, $rootDir, self::BATCH_SIZE);
         $this->getCsvOptions()->setFileName($this->filenames[self::ANIMAL_TABLE]);
         $this->duplicateAnimalsFixer = $duplicateAnimalsFixer;
+        $this->ubnFixer = $ubnFixer;
     }
 
 
@@ -435,6 +439,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
         $this->fixGenderOfNeutersByMigrationValues();
         $this->fixValuesByInstructionsOfReinard();
         $this->removeNonAlphaNumericSymbolsFromUlnNumberInAnimalMigrationTable();
+        $this->ubnFixer->removeNonDigitsFromUbnOfBirthInAnimalMigrationTable($this->cmdUtil);
     }
 
 
