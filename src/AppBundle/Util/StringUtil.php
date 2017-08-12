@@ -447,10 +447,12 @@ class StringUtil
 
     /**
      * @param $string
-     * @return mixed
+     * @param null $nullReplacement
+     * @return null|string
      */
-    public static function removeNonNumeric($string)
+    public static function stripNonNumericCharsAndConvertToInteger($string, $nullReplacement = null)
     {
-        return preg_replace("/[^0-9]/", "", $string);
+        $int = ltrim(preg_replace("/[^0-9]/", "", $string),'0');
+        return $int === '' ? null : $int;
     }
 }

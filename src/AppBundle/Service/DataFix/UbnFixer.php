@@ -78,9 +78,9 @@ class UbnFixer extends DuplicateFixerBase
             $id = $result['id'];
             $oldUbnOfBirth = $result['ubn_of_birth'];
 
-            $ubnOfBirth = StringUtil::removeNonNumeric($oldUbnOfBirth);
+            $ubnOfBirth = StringUtil::stripNonNumericCharsAndConvertToInteger($oldUbnOfBirth);
 
-            $ubnOfBirthForSql = $ubnOfBirth === '' ? 'NULL' : "'".$ubnOfBirth."'";
+            $ubnOfBirthForSql = $ubnOfBirth === null ? 'NULL' : "'".$ubnOfBirth."'";
 
             $updateBatchSet->appendValuesString("(".$id.",".$ubnOfBirthForSql.",'".$oldUbnOfBirth."')");
             $updateBatchSet->incrementBatchCount();
