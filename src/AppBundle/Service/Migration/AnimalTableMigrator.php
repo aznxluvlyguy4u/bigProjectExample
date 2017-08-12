@@ -3,6 +3,7 @@
 namespace AppBundle\Service\Migration;
 
 use AppBundle\Component\MessageBuilderBase;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\AnimalType;
@@ -65,6 +66,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         $this->getDuplicateAnimalsFixer()->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth($this->cmdUtil);
         $this->mergeTagReplacedAnimalsWithoutDeclareTagReplaces();
         $this->removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln();
+        $this->removeNonAlphaNumericSymbolsFromUlnNumberInAnimalTable();
 
         $this->writeLn('====== Set parents ======');
         $this->updateIncongruentParentIdsInAnimalMigrationTable();
@@ -654,5 +656,12 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase implements IMigrato
         foreach ($queries as $title => $query) {
             $this->updateBySql($title, $query);
         }
+    }
+
+
+    public function removeNonAlphaNumericSymbolsFromUlnNumberInAnimalTable()
+    {
+        $sql = AnimalTableImporter::removeNonAlphaNumericSymbolsFromUlnNumberSqlQuery('animal');
+        $this->updateBySql('Remove non-alphanumeric symbols from ulnNumbers in animal table ...', $sql);
     }
 }

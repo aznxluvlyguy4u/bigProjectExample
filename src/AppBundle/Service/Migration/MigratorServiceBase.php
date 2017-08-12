@@ -21,6 +21,7 @@ use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 /**
  * Class MigratorServiceBase
@@ -66,6 +67,9 @@ abstract class MigratorServiceBase
     /** @var Person */
     protected $personRepository;
 
+    /** @var ConsoleOutput */
+    private $consoleOutput;
+
     /**
      * MigratorServiceBase constructor.
      * @param ObjectManager $em
@@ -98,6 +102,18 @@ abstract class MigratorServiceBase
             ->ignoreFirstLine()
             ->setSemicolonSeparator()
         ;
+    }
+
+
+    /**
+     * @return ConsoleOutput
+     */
+    protected function getConsoleOutput()
+    {
+        if ($this->consoleOutput === null) {
+            $this->consoleOutput = new ConsoleOutput();
+        }
+        return $this->consoleOutput;
     }
 
 
@@ -136,7 +152,11 @@ abstract class MigratorServiceBase
      */
     protected function writeLn($line)
     {
-        $this->cmdUtil->writelnWithTimestamp($line);
+        if ($this->cmdUtil) {
+            $this->cmdUtil->writelnWithTimestamp($line);
+        } else {
+            $this->getConsoleOutput()->writeln($line);
+        }
     }
 
 
