@@ -396,7 +396,9 @@ class MixBlupDataFileBase
      */
     public static function getUbnOfBirthAsLastColumnValue($data, $key = JsonInputConstant::UBN_OF_BIRTH)
     {
-        return ArrayUtil::get($key, $data, MixBlupInstructionFileBase::MISSING_BLOCK_REPLACEMENT);
+        $ubnOfBirth = ArrayUtil::get($key, $data);
+
+        return !filter_var($ubnOfBirth, FILTER_VALIDATE_INT) ? MixBlupInstructionFileBase::MISSING_BLOCK_REPLACEMENT : $ubnOfBirth;
     }
 
 
