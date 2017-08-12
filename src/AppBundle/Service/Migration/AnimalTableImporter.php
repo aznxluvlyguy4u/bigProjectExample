@@ -440,6 +440,7 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
         $this->fixValuesByInstructionsOfReinard();
         $this->removeNonAlphaNumericSymbolsFromUlnNumberInAnimalMigrationTable();
         $this->ubnFixer->removeNonDigitsFromUbnOfBirthInAnimalMigrationTable($this->cmdUtil);
+        $this->ubnFixer->removeLeadingZeroesFromUbnOfBirthInAnimalMigrationTable($this->cmdUtil);
     }
 
 

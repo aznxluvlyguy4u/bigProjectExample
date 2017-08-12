@@ -5,6 +5,7 @@ namespace AppBundle\Service\DataFix;
 
 use AppBundle\Enumerator\QueryType;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -94,6 +95,56 @@ class UbnFixer extends DuplicateFixerBase
         $this->deleteSqlBatchProcessor();
 
         return $totalCount;
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @return int|string
+     */
+    public function removeLeadingZeroesFromUbnOfBirthInAnimalTable(CommandUtil $cmdUtil)
+    {
+        return $this->removeLeadingZeroesFromUbnOfBirth('animal', $cmdUtil);
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @return int|string
+     */
+    public function removeLeadingZeroesFromUbnOfBirthInAnimalMigrationTable(CommandUtil $cmdUtil)
+    {
+        return $this->removeLeadingZeroesFromUbnOfBirth('animal_migration_table', $cmdUtil);
+    }
+
+
+    /**
+     * @param $tableName
+     * @param CommandUtil $cmdUtil
+     * @return int|string
+     */
+    private function removeLeadingZeroesFromUbnOfBirth($tableName, CommandUtil $cmdUtil)
+    {
+        $this->setCmdUtil($cmdUtil);
+
+        $this->writeLn('Remove leading zeroes from ubn_of_birth in animal table ...');
+
+        $sql = "UPDATE animal SET ubn_of_birth = v.corrected_ubn_of_birth
+                FROM (
+                       SELECT
+                         id,
+                         ubn_of_birth as old_ubn_of_birth,
+                         ltrim(ubn_of_birth, '0') as corrected_ubn_of_birth
+                       FROM animal
+                       WHERE substr(ubn_of_birth, 1, 1) = '0'
+                     ) AS v(id, old_ubn_of_birth, corrected_ubn_of_birth)
+                WHERE animal.id = v.id AND animal.ubn_of_birth = v.old_ubn_of_birth";
+        $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+
+        $updateCount = $updateCount === 0 ? 'No' : $updateCount;
+        $this->writeLn($updateCount . ' records updated');
+
+        return $updateCount;
     }
 
 

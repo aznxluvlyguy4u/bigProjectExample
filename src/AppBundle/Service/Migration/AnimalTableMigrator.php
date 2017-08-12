@@ -77,6 +77,7 @@ class AnimalTableMigrator extends Migrator2017JunServiceBase
         $this->removeUlnAndAnimalIdForDuplicateAnimalsWithConstructedUln();
         $this->removeNonAlphaNumericSymbolsFromUlnNumberInAnimalTable();
         $this->ubnFixer->removeNonDigitsFromUbnOfBirthInAnimalTable($this->cmdUtil);
+        $this->ubnFixer->removeLeadingZeroesFromUbnOfBirthInAnimalTable($this->cmdUtil);
 
         $this->writeLn('====== Set parents ======');
         $this->updateIncongruentParentIdsInAnimalMigrationTable();
