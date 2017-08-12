@@ -443,4 +443,14 @@ class StringUtil
     {
         return strtr($string, [',' => '.'] );
     }
+
+
+    /**
+     * @param $string
+     * @return mixed
+     */
+    public static function removeNonNumeric($string)
+    {
+        return preg_replace("/[^0-9]/", "", $string);
+    }
 }
