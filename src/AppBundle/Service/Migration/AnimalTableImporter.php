@@ -7,6 +7,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\QueryType;
 use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
+use AppBundle\Service\DataFix\UbnFixer;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
@@ -32,19 +33,22 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
     private $pedigreeRegisterIdsByAbbreviation;
     /** @var DuplicateAnimalsFixer */
     private $duplicateAnimalsFixer;
-
+    /** @var UbnFixer */
+    private $ubnFixer;
 
     /**
      * AnimalTableImporter constructor.
      * @param ObjectManager $em
      * @param string $rootDir
      * @param DuplicateAnimalsFixer $duplicateAnimalsFixer
+     * @param UbnFixer $ubnFixer
      */
-    public function __construct(ObjectManager $em, $rootDir, DuplicateAnimalsFixer $duplicateAnimalsFixer)
+    public function __construct(ObjectManager $em, $rootDir, DuplicateAnimalsFixer $duplicateAnimalsFixer, UbnFixer $ubnFixer)
     {
         parent::__construct($em, $rootDir, self::BATCH_SIZE);
         $this->getCsvOptions()->setFileName($this->filenames[self::ANIMAL_TABLE]);
         $this->duplicateAnimalsFixer = $duplicateAnimalsFixer;
+        $this->ubnFixer = $ubnFixer;
     }
 
 
@@ -434,6 +438,36 @@ class AnimalTableImporter extends Migrator2017JunServiceBase
         $this->markUnreliableParents();
         $this->fixGenderOfNeutersByMigrationValues();
         $this->fixValuesByInstructionsOfReinard();
+        $this->removeNonAlphaNumericSymbolsFromUlnNumberInAnimalMigrationTable();
+        $this->ubnFixer->removeNonDigitsFromUbnOfBirthInAnimalMigrationTable($this->cmdUtil);
+        $this->ubnFixer->removeLeadingZeroesFromUbnOfBirthInAnimalMigrationTable($this->cmdUtil);
+    }
+
+
+    /**
+     * @param $table
+     * @return string
+     */
+    public static function removeNonAlphaNumericSymbolsFromUlnNumberSqlQuery($table)
+    {
+        $sql = "UPDATE $table SET uln_number = replace(replace(replace(replace(replace(uln_number, ' ', ''),'-',''),'?',''),'/',''),'.','')
+                FROM (
+                       SELECT
+                         id,
+                         uln_number,
+                         regexp_matches(uln_number, '[^A-Za-z0-9]'), --not alphanumeric
+                         regexp_matches(substr(uln_number, 6, 1), '[^-]'), --filterout pedigree number like ulns
+                         replace(replace(replace(replace(replace(uln_number, ' ', ''),'-',''),'?',''),'/',''),'.','')
+                       FROM $table
+                     ) AS v(id, original_uln_number, regex1, regex2, corrected_uln_number) WHERE $table.id = v.id";
+        return $sql;
+    }
+
+
+    private function removeNonAlphaNumericSymbolsFromUlnNumberInAnimalMigrationTable()
+    {
+        $sql = self::removeNonAlphaNumericSymbolsFromUlnNumberSqlQuery('animal_migration_table');
+        $this->updateBySql('Remove non-alphanumeric symbols from ulnNumbers in animal_migration_table ...', $sql);
     }
 
 
