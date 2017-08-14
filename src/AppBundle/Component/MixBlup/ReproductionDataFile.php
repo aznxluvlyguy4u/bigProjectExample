@@ -167,6 +167,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                     AS early_fertility(bool_val, int_val) ON c.gave_birth_as_one_year_old = early_fertility.bool_val
                 WHERE
                   mom.ubn_of_birth NOTNULL
+                  AND mom.date_of_birth NOTNULL
                   ".self::getErrorLogAnimalPedigreeFilter('mom.id');
     }
     
