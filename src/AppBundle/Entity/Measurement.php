@@ -72,6 +72,8 @@ abstract class Measurement {
 
 
     /**
+     * @var Inspector
+     *
      * @ORM\ManyToOne(targetEntity="Inspector")
      * @ORM\JoinColumn(name="inspector_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Inspector")
@@ -334,6 +336,14 @@ abstract class Measurement {
     }
 
 
+    /**
+     * @param null $nullReplacement
+     * @return null|string
+     */
+    public function getInspectorFullName($nullReplacement = null)
+    {
+        return $this->inspector !== null ? $this->inspector->getFullName() : $nullReplacement;
+    }
 
 
 }

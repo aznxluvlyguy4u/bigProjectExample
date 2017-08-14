@@ -6,7 +6,9 @@ namespace AppBundle\Util;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Exterior;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\UserActionType;
@@ -239,6 +241,194 @@ class AdminActionLogWriter
             $log->setIsCompleted(true);
             DoctrineUtil::persistAndFlush($om, $log);
         }
+
+        return $log;
+    }
+
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Employee $actionBy
+     * @param Exterior $exterior
+     * @return ActionLog
+     * @throws \Exception
+     */
+    public static function createExterior(ObjectManager $om, $client, $actionBy, $exterior)
+    {
+        if ($exterior->getAnimal() === null) { throw new \Exception('Exterior must have an Animal. Exterior id: ',$exterior->getId()); }
+
+        $inspectorName = $exterior->getInspector() !== null ? ', Inspecteur: ' . $exterior->getInspector()->getFullName() : '';
+
+        $description = $exterior->getAnimal()->getUln() . ' '. $exterior->getMeasurementDate()->format('Y-m-d') . ' '
+            . $exterior->getKind()
+            . ', KOP ' . $exterior->getSkull()
+            . ', ONT ' . $exterior->getProgress()
+            . ', BES ' . $exterior->getMuscularity()
+            . ', EVE ' . $exterior->getProportion()
+            . ', TYP ' . $exterior->getExteriorType()
+            . ', BEE ' . $exterior->getLegWork()
+            . ', VAC ' . $exterior->getFur()
+            . ', ALG ' . $exterior->getGeneralAppearance()
+            . ', SHT ' . $exterior->getHeight()
+            . ', LGT ' . $exterior->getTorsoLength()
+            . ', BDP ' . $exterior->getBreastDepth()
+            . ', MRK ' . $exterior->getMarkings()
+            . $inspectorName
+        ;
+
+        $log = new ActionLog($client, $actionBy, UserActionType::CREATE_EXTERIOR, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Employee $actionBy
+     * @param Exterior $newExterior
+     * @param Exterior $oldExterior
+     * @return ActionLog
+     * @throws \Exception
+     */
+    public static function updateExterior(ObjectManager $om, $client, $actionBy, $newExterior, $oldExterior)
+    {
+        if ($newExterior->getAnimal() === null) { throw new \Exception('Exterior must have an Animal. Exterior id: ',$newExterior->getId()); }
+
+        $inspectorName = $newExterior->getInspector() !== null ? ', Inspecteur: ' . $newExterior->getInspector()->getFullName() : '';
+
+        $description = '';
+        $prefix = '';
+
+        if ($newExterior->getAnimal()->getUln() !== $oldExterior->getAnimal()->getUln()) {
+            $description = $description . $prefix . $oldExterior->getAnimal()->getUln() . ' => '.$newExterior->getAnimal()->getUln();
+            $prefix = ', ';
+        } else {
+            $description = $description . $prefix . $newExterior->getAnimal()->getUln().': ';
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getMeasurementDate() !== $oldExterior->getMeasurementDate()) {
+            $description = $description . $prefix . $oldExterior->getMeasurementDate()->format('Y-m-d')
+                . ' => '.$newExterior->getMeasurementDate()->format('Y-m-d');
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getKind() !== $oldExterior->getKind()) {
+            $description = $description . $prefix . $oldExterior->getKind() . ' => '.$newExterior->getKind();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getSkull() !== $oldExterior->getSkull()) {
+            $description = $description . $prefix . 'KOP ' .$oldExterior->getKind() . ' => '.$newExterior->getKind();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getProgress() !== $oldExterior->getProgress()) {
+            $description = $description . $prefix . $oldExterior->getProgress() . ' => '.$newExterior->getProgress();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getMuscularity() !== $oldExterior->getMuscularity()) {
+            $description = $description . $prefix . $oldExterior->getMuscularity() . ' => '.$newExterior->getMuscularity();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getProportion() !== $oldExterior->getProportion()) {
+            $description = $description . $prefix . $oldExterior->getProportion() . ' => '.$newExterior->getProportion();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getExteriorType() !== $oldExterior->getExteriorType()) {
+            $description = $description . $prefix . $oldExterior->getExteriorType() . ' => '.$newExterior->getExteriorType();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getLegWork() !== $oldExterior->getLegWork()) {
+            $description = $description . $prefix . $oldExterior->getLegWork() . ' => '.$newExterior->getLegWork();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getFur() !== $oldExterior->getFur()) {
+            $description = $description . $prefix . $oldExterior->getFur() . ' => '.$newExterior->getFur();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getGeneralAppearance() !== $oldExterior->getGeneralAppearance()) {
+            $description = $description . $prefix . $oldExterior->getGeneralAppearance() . ' => '.$newExterior->getGeneralAppearance();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getHeight() !== $oldExterior->getHeight()) {
+            $description = $description . $prefix . $oldExterior->getHeight() . ' => '.$newExterior->getHeight();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getTorsoLength() !== $oldExterior->getTorsoLength()) {
+            $description = $description . $prefix . $oldExterior->getTorsoLength() . ' => '.$newExterior->getTorsoLength();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getBreastDepth() !== $oldExterior->getBreastDepth()) {
+            $description = $description . $prefix . $oldExterior->getBreastDepth() . ' => '.$newExterior->getBreastDepth();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getMarkings() !== $oldExterior->getMarkings()) {
+            $description = $description . $prefix . $oldExterior->getMarkings() . ' => '.$newExterior->getMarkings();
+            $prefix = ', ';
+        }
+
+        if ($newExterior->getInspectorFullName() !== $oldExterior->getInspectorFullName()) {
+            $description = $description . $prefix . $oldExterior->getInspectorFullName('*leeg*') . ' => '.$newExterior->getInspectorFullName('*leeg*');
+            $prefix = ', ';
+        }
+
+
+        $log = new ActionLog($client, $actionBy, UserActionType::EDIT_EXTERIOR, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Employee $actionBy
+     * @param Exterior $exterior
+     * @return ActionLog
+     * @throws \Exception
+     */
+    public static function deactivateExterior(ObjectManager $om, $client, $actionBy, $exterior)
+    {
+        if ($exterior->getAnimal() === null) { throw new \Exception('Exterior must have an Animal. Exterior id: ',$exterior->getId()); }
+
+        $inspectorName = $exterior->getInspector() !== null ? ', Inspecteur: ' . $exterior->getInspector()->getFullName() : '';
+
+        $description = $exterior->getAnimal()->getUln() . ' '. $exterior->getMeasurementDate()->format('Y-m-d') . ' '
+            . $exterior->getKind()
+            . ', KOP ' . $exterior->getSkull()
+            . ', ONT ' . $exterior->getProgress()
+            . ', BES ' . $exterior->getMuscularity()
+            . ', EVE ' . $exterior->getProportion()
+            . ', TYP ' . $exterior->getExteriorType()
+            . ', BEE ' . $exterior->getLegWork()
+            . ', VAC ' . $exterior->getFur()
+            . ', ALG ' . $exterior->getGeneralAppearance()
+            . ', SHT ' . $exterior->getHeight()
+            . ', LGT ' . $exterior->getTorsoLength()
+            . ', BDP ' . $exterior->getBreastDepth()
+            . ', MRK ' . $exterior->getMarkings()
+            . $inspectorName
+        ;
+
+        $log = new ActionLog($client, $actionBy, UserActionType::DEACTIVATE_EXTERIOR, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }

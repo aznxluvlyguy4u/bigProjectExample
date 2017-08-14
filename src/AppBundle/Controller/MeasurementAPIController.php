@@ -17,6 +17,7 @@ use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
@@ -127,6 +128,9 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             $em->persist($exterior);
             $em->flush();
 
+            AdminActionLogWriter::createExterior($this->getManager(), $this->getUserService()->getAccountOwner($request),
+                $loggedInUser, $exterior);
+
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
@@ -201,6 +205,8 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             $em->persist($exterior);
             $em->flush();
 
+            AdminActionLogWriter::deactivateExterior($this->getManager(), $this->getUserService()->getAccountOwner($request), $loggedInUser, $exterior);
+
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
@@ -233,6 +239,8 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             }
             $inspector = $exteriorValidator->getInspector();
 
+            $oldExterior = clone $exterior;
+
             $exterior->setActionBy($loggedInUser);
             $exterior->setEditDate(new \DateTime());
             $exterior->setAnimal($animal);
@@ -256,11 +264,16 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             $em->persist($exterior);
             $em->flush();
 
+            AdminActionLogWriter::updateExterior($this->getManager(), $this->getUserService()->getAccountOwner($request),
+                $loggedInUser, $exterior, $oldExterior);
+
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
             $output = $this->getSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
             $code = 200;
+
+            $oldExterior = null;
 
         }
 
