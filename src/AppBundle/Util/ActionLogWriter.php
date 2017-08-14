@@ -51,6 +51,7 @@ class ActionLogWriter
         $description = 'ubn destination: '.$ubn.'. '.$origin.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -69,7 +70,9 @@ class ActionLogWriter
         $uln = $arrival->getUlnCountryCode().$arrival->getUlnNumber();
         $description = 'ubn destination: '.$arrival->getUbn().'. '.$origin.'. uln: '.$uln;
 
-        return new ActionLog($arrivalOwner, $arrival->getActionBy(), UserActionType::DECLARE_ARRIVAL, $isCompleted, $description);
+        $log = new ActionLog($arrivalOwner, $arrival->getActionBy(), UserActionType::DECLARE_ARRIVAL, $isCompleted, $description);
+        $log->setIsRvoMessage(true);
+        return $log;
     }
 
 
@@ -98,6 +101,7 @@ class ActionLogWriter
         $description = 'ubn: '.$ubn.'. '.$destination.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -117,7 +121,9 @@ class ActionLogWriter
 
         $description = 'ubn: '.$declareDepart->getUbn().'. '.$destination.'. uln: '.$uln;
 
-        return new ActionLog($departOwner, $declareDepart->getActionBy(), UserActionType::DECLARE_DEPART, $isCompleted, $description);
+        $log = new ActionLog($departOwner, $declareDepart->getActionBy(), UserActionType::DECLARE_DEPART, $isCompleted, $description);
+        $log->setIsRvoMessage(true);
+        return $log;
     }
 
 
@@ -140,6 +146,7 @@ class ActionLogWriter
         $description = 'ubn: '.$ubn.'. ubn processor: '.$ubnProcessor.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -165,6 +172,7 @@ class ActionLogWriter
         $description = 'rel.nr.acceptant: '.$relationNumberAcceptant.'. ubn new owner: '.$ubnNewOwner.'. tagsCount: '.$tagsCount;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -189,6 +197,7 @@ class ActionLogWriter
         $description = 'uln of animal: '.$ulnAnimal.'. uln of tag: '.$ulnTag.'.';
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -233,6 +242,7 @@ class ActionLogWriter
             }
 
             $log = new ActionLog($clientOfDeclare, $requestMessage->getActionBy(), UserActionType::DECLARE_BIRTH, false, $description);
+            $log->setIsRvoMessage(true);
             $em->persist($log);
             $logs[] = $log;
         }
@@ -267,6 +277,7 @@ class ActionLogWriter
 
 
         $log = new ActionLog($client, $actionBy, UserActionType::BIRTH_REVOKE, true, $description);
+        $log->setIsRvoMessage(true);
         if ($litter->getBornAliveCount() > 0) {
             $log->setIsRvoMessage(true);
         }
@@ -406,6 +417,7 @@ class ActionLogWriter
         $description = 'revoking: '.$requestTypeToRevoke.' with messageNumber: '.$messageNumber.'.';
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
