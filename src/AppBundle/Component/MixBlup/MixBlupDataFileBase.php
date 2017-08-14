@@ -397,8 +397,7 @@ class MixBlupDataFileBase
     public static function getFormattedUbnOfBirthWithoutPadding($data, $key = JsonInputConstant::UBN_OF_BIRTH)
     {
         $ubnOfBirth = ArrayUtil::get($key, $data);
-
-        return !filter_var($ubnOfBirth, FILTER_VALIDATE_INT) ? MixBlupInstructionFileBase::MISSING_BLOCK_REPLACEMENT : $ubnOfBirth;
+        return MixBlupInputFileValidator::getValidatedUbnOfBirth($ubnOfBirth);
     }
 
 

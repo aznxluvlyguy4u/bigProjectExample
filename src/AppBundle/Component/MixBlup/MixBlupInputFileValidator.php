@@ -79,6 +79,8 @@ class MixBlupInputFileValidator
 
         $this->cmdUtil->setStartTimeAndPrintIt(count($this->data), 1);
 
+        $nullReplacement = MixBlupInstructionFileBase::MISSING_BLOCK_REPLACEMENT;
+
         $errors = [];
         $errorCount = 0;
         $this->cmdUtil->getProgressBar()->clear();
@@ -87,7 +89,7 @@ class MixBlupInputFileValidator
             $animalId = $result[0];
             $ubn = $result[$ubnColumnIndex];
 
-            if (!ctype_digit($ubn) || substr($ubn, 0 ,1) === '0') {
+            if (!self::isValidUbnOfBirth($ubn)) {
                 $error = ['row' => $key, 'animalId' => $animalId, 'ubn' => $ubn];
                 $errorCount++;
                 $errors[] = $error;
@@ -105,5 +107,42 @@ class MixBlupInputFileValidator
             $this->cmdUtil->writeln($errorCount . ' errors where found');
         }
         return $errorCount;
+    }
+
+
+    /**
+     * The max integer value in MiXBLUP
+     *
+     * @return number
+     */
+    public static function maxIntVal()
+    {
+        return pow(2,31) - 1;
+    }
+
+
+    /**
+     * @param $ubnOfBirth
+     * @return int
+     */
+    public static function isValidUbnOfBirth($ubnOfBirth)
+    {
+        if (filter_var($ubnOfBirth, FILTER_VALIDATE_INT)) {
+            $ubnOfBirth = intval($ubnOfBirth);
+            return $ubnOfBirth <= self::maxIntVal() //max limit
+                && $ubnOfBirth === abs($ubnOfBirth); //must be positive
+        }
+        return false;
+    }
+
+
+    /**
+     * @param $ubnOfBirth
+     * @param int $nullReplacement
+     * @return int
+     */
+    public static function getValidatedUbnOfBirth($ubnOfBirth, $nullReplacement = MixBlupInstructionFileBase::MISSING_BLOCK_REPLACEMENT)
+    {
+        return self::isValidUbnOfBirth($ubnOfBirth) ? intval($ubnOfBirth) : $nullReplacement;
     }
 }
