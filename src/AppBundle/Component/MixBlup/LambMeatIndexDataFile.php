@@ -131,7 +131,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                     $formattedSuckleCount;
 
                 $recordEnding =
-                    self::getUbnOfBirthAsLastColumnValue($data);
+                    self::getFormattedUbnOfBirthWithoutPadding($data);
 
                 $results[$data[JsonInputConstant::ANIMAL_ID]] = [
                     ReportLabel::START => $recordBase,

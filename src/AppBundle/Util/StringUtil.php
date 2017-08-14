@@ -443,4 +443,16 @@ class StringUtil
     {
         return strtr($string, [',' => '.'] );
     }
+
+
+    /**
+     * @param $string
+     * @param null $nullReplacement
+     * @return null|string
+     */
+    public static function stripNonNumericCharsAndConvertToInteger($string, $nullReplacement = null)
+    {
+        $int = ltrim(preg_replace("/[^0-9]/", "", $string),'0');
+        return $int === '' ? null : $int;
+    }
 }
