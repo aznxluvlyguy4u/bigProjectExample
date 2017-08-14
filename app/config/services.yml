@@ -47,6 +47,7 @@ services:
           - '@app.excel.service'
           - '@app.migrator.lamb_meat_index'
           - '@app.mixblup.input'
+          - '@app.mixblup.input.validate'
           - '@app.mixblup.output'
           - '@app.report.pedigree_register'
 
@@ -146,6 +147,11 @@ services:
           currentEnv: %environment%
           cacheDir: %kernel.cache_dir%
           logger: '@logger'
+
+    app.mixblup.input.validate:
+        class: AppBundle\Component\MixBlup\MixBlupInputFileValidator
+        arguments: ['%kernel.cache_dir%']
+
 
 
     app.datafix.base.duplicate:

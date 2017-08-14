@@ -71,8 +71,8 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $this->workingFolder = $cacheDir.'/'.MixBlupFolder::ROOT;
 
         $this->mixBlupProcesses = [];
-        $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorInputProcess($em, $this->workingFolder, $this->logger);
-        $this->mixBlupProcesses[MixBlupType::LAMB_MEAT_INDEX] = new LambMeatIndexInputProcess($em, $this->workingFolder, $this->logger);
+//        $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorInputProcess($em, $this->workingFolder, $this->logger);
+//        $this->mixBlupProcesses[MixBlupType::LAMB_MEAT_INDEX] = new LambMeatIndexInputProcess($em, $this->workingFolder, $this->logger);
         $this->mixBlupProcesses[MixBlupType::FERTILITY] = new ReproductionInputProcess($em, $this->workingFolder, $this->logger);
 
         $this->setCachePurgeSettingByEnvironment();

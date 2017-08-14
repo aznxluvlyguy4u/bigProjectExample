@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Cache\BreedValuesResultTableUpdater;
+use AppBundle\Component\MixBlup\MixBlupInputFileValidator;
 use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
@@ -50,6 +51,8 @@ class MixBlupCliOptionsService
     private $lambMeatIndexMigrator;
     /** @var MixBlupInputFilesService */
     private $mixBlupInputFilesService;
+    /** @var MixBlupInputFileValidator */
+    private $mixBlupInputFileValidator;
     /** @var MixBlupOutputFilesService */
     private $mixBlupOutputFilesService;
     /** @var PedigreeRegisterOverviewReportService */
@@ -64,6 +67,7 @@ class MixBlupCliOptionsService
                                 ExcelService $excelService,
                                 LambMeatIndexMigrator $lambMeatIndexMigrator,
                                 MixBlupInputFilesService $mixBlupInputFilesService,
+                                MixBlupInputFileValidator $mixBlupInputFileValidator,
                                 MixBlupOutputFilesService $mixBlupOutputFilesService,
                                 PedigreeRegisterOverviewReportService $pedigreeRegisterOverviewReportService)
     {
@@ -78,6 +82,7 @@ class MixBlupCliOptionsService
         $this->excelService = $excelService;
         $this->lambMeatIndexMigrator = $lambMeatIndexMigrator;
         $this->mixBlupInputFilesService = $mixBlupInputFilesService;
+        $this->mixBlupInputFileValidator = $mixBlupInputFileValidator;
         $this->mixBlupOutputFilesService = $mixBlupOutputFilesService;
         $this->pedigreeRegisterOverviewReportService = $pedigreeRegisterOverviewReportService;
     }
@@ -106,6 +111,9 @@ class MixBlupCliOptionsService
             '11: Delete all duplicate breedValues', "\n",
             '12: Update result_table_breed_grades values and accuracies for all breedValue and breedIndex types', "\n",
             '13: Initialize lambMeatIndexCoefficients', "\n",
+            '========================================================================', "\n",
+            '20: Validate ubnOfBirth format as !BLOCK in DataVruchtb.txt in mixblup cache folder', "\n",
+            '21: Validate ubnOfBirth format as !BLOCK in PedVruchtb.txt in mixblup cache folder', "\n",
             '========================================================================', "\n",
             '30: Print separate csv files of latest breedValues for all ubns', "\n",
             '31: Print separate csv files of latest breedValues for chosen ubn', "\n",
@@ -143,6 +151,8 @@ class MixBlupCliOptionsService
 
             case 13: $this->lambMeatIndexMigrator->migrate(); break;
 
+            case 20: $this->mixBlupInputFileValidator->validateUbnOfBirthInDataFile($this->cmdUtil); break;
+            case 21: $this->mixBlupInputFileValidator->validateUbnOfBirthInPedigreeFile($this->cmdUtil); break;
 
             case 30: $this->printBreedValuesAllUbns(); break;
             case 31: $this->printBreedValuesByUbn(); break;
