@@ -166,7 +166,7 @@ class MixBlupCliOptionsService
                 $filepath = $this->pedigreeRegisterOverviewReportService->generateFileByType(PedigreeAbbreviation::NTS,false, FileType::CSV);
                 $this->logger->notice($filepath);
                 break;
-            case 43: $filepath = $this->breedValuesOverviewReportService->generate(FileType::CSV, false);
+            case 43: $filepath = $this->breedValuesOverviewReportService->generate(FileType::CSV, false, false);
                 $this->logger->notice($filepath);
                 break;
 

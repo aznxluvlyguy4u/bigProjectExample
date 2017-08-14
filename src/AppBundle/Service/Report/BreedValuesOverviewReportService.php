@@ -27,6 +27,7 @@ class BreedValuesOverviewReportService extends ReportServiceBase
     const KEYWORDS = "nsfo fokwaarden dieren overzicht";
     const DESCRIPTION = "Fokwaardenoverzicht van alle dieren op huidige stallijsten met minstens 1 fokwaarde";
     const FOLDER = '/pedigree_register_reports/';
+    const ACCURACY_TABLE_LABEL_SUFFIX = '_acc';
 
     /**
      * PedigreeRegisterOverviewReportService constructor.
@@ -65,27 +66,30 @@ class BreedValuesOverviewReportService extends ReportServiceBase
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::XLS);
         $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, true);
+        $concatBreedValuesAndAccuracies = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
 
-        return $this->generate($fileType, $uploadToS3);
+        return $this->generate($fileType, $concatBreedValuesAndAccuracies, $uploadToS3);
     }
 
 
     /**
      * @param string $fileType
+     * @param boolean $concatBreedValuesAndAccuracies
      * @param boolean $uploadToS3
      * @return JsonResponse
      */
-    public function generate($fileType, $uploadToS3)
+    public function generate($fileType, $concatBreedValuesAndAccuracies, $uploadToS3)
     {
         $filename = self::FILENAME.'_'.TimeUtil::getTimeStampNowForFiles();
-        return $this->generateFile($filename, $this->getData(), self::TITLE, $fileType, $uploadToS3);
+        return $this->generateFile($filename, $this->getData($concatBreedValuesAndAccuracies), self::TITLE, $fileType, $uploadToS3);
     }
 
 
     /**
+     * @param bool $concatBreedValuesAndAccuracies
      * @return array
      */
-    private function getData()
+    private function getData($concatBreedValuesAndAccuracies = true)
     {
         //Create breed index batch query parts
 
@@ -130,30 +134,60 @@ class BreedValuesOverviewReportService extends ReportServiceBase
         $valuesPrefix = '';
         $filterPrefix = '';
 
-        foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
+        if ($concatBreedValuesAndAccuracies) {
 
-            foreach ($columnValuesSets as $columnValueSet) {
-                $breedValueLabel = $columnValueSet['nl'];
-                $resultTableValueVar = $columnValueSet['result_table_value_variable'];
-                $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
+            foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
 
-                $breedValues = $breedValues . $valuesPrefix . "NULLIF(CONCAT(
+                foreach ($columnValuesSets as $columnValueSet) {
+                    $breedValueLabel = $columnValueSet['nl'];
+                    $resultTableValueVar = $columnValueSet['result_table_value_variable'];
+                    $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
+
+                    $breedValues = $breedValues . $valuesPrefix . "NULLIF(CONCAT(
                          ".$resultTableValueVar."_plus_sign.mark,
                          COALESCE(CAST(ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), 2) AS TEXT),''),'/',
                          COALESCE(CAST(ROUND(bg.".$resultTableAccuracyVar."*100) AS TEXT),'')
                      ),'/') as ".$breedValueLabel;
 
-                $valuesPrefix = ",
-                ";
+                    $valuesPrefix = ",
+                        ";
 
-                $breedValuesPlusSigns = $breedValuesPlusSigns . "LEFT JOIN (VALUES (true, '+'),(false, '')) AS ".$resultTableValueVar."_plus_sign(is_positive, mark) ON (bg.".$resultTableValueVar." > 0) = ".$resultTableValueVar."_plus_sign.is_positive
-            ";
+                    $breedValuesPlusSigns = $breedValuesPlusSigns . "LEFT JOIN (VALUES (true, '+'),(false, '')) AS ".$resultTableValueVar."_plus_sign(is_positive, mark) ON (bg.".$resultTableValueVar." > 0) = ".$resultTableValueVar."_plus_sign.is_positive
+                    ";
 
-                $breedValuesNullFilter = $breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
-            ";
+                    $breedValuesNullFilter = $breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
+                    ";
 
-                $filterPrefix = ' OR ';
+                    $filterPrefix = ' OR ';
+                }
             }
+
+        } else {
+            //Do NOT concat breed value and accuracies
+
+            foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
+
+                foreach ($columnValuesSets as $columnValueSet) {
+                    $breedValueLabel = $columnValueSet['nl'];
+                    $resultTableValueVar = $columnValueSet['result_table_value_variable'];
+                    $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
+
+                    $breedValues = $breedValues . $valuesPrefix
+                        . " ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), 2) as ".$breedValueLabel .",
+                        ROUND(bg.".$resultTableAccuracyVar."*100) as ". $breedValueLabel. self::ACCURACY_TABLE_LABEL_SUFFIX;
+
+                    $valuesPrefix = ",
+                        ";
+
+                    //keep  $breedValuesNullFilter blank
+
+                    $breedValuesNullFilter = $breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
+                    ";
+
+                    $filterPrefix = ' OR ';
+                }
+            }
+            
         }
 
         $sql = "
