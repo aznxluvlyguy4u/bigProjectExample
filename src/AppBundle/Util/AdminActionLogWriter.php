@@ -68,4 +68,178 @@ class AdminActionLogWriter
 
         return $log;
     }
+
+
+    /**
+     * Note password change is saved in a separate log
+     *
+     * @param ObjectManager $om
+     * @param Employee $actionBy
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function editOwnAdminProfile(ObjectManager $om, $actionBy, $content)
+    {
+        $oldFirstName = $content->get(JsonInputConstant::FIRST_NAME);
+        $oldLastName = $content->get(JsonInputConstant::LAST_NAME);
+        $oldEmailAddress = $content->get(JsonInputConstant::EMAIL_ADDRESS);
+
+        $message = '';
+
+        $changes = [
+            //old value                   new value
+            $actionBy->getFirstName() => $content->get(JsonInputConstant::FIRST_NAME),
+            $actionBy->getLastName() => $content->get(JsonInputConstant::LAST_NAME),
+            $actionBy->getEmailAddress() => $content->get(JsonInputConstant::EMAIL_ADDRESS),
+        ];
+
+        $anyChanges = false;
+        $prefix = '';
+        foreach ($changes as $oldValue => $newValue) {
+            if ($oldValue !== $newValue) {
+                $anyChanges = true;
+                $message = $message . $prefix. $oldValue . ' => ' .$newValue;
+                $prefix = ', ';
+            }
+        }
+
+        if ($anyChanges) {
+            $log = new ActionLog($actionBy, $actionBy, UserActionType::EDIT_ADMIN, false, $message, self::IS_USER_ENVIRONMENT);
+            DoctrineUtil::persistAndFlush($om, $log);
+            return $log;
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $admin
+     * @return ActionLog
+     */
+    public static function passwordChangeAdminInProfile(ObjectManager $om, $admin)
+    {
+        $log = new ActionLog($admin, $admin, UserActionType::ADMIN_PASSWORD_CHANGE, false,null, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $actionBy
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function createAdmin(ObjectManager $om, $actionBy, $content)
+    {
+        $firstName = $content->get('first_name');
+        $lastName = $content->get('last_name');
+        $emailAddress = $content->get('email_address');
+        $accessLevel = $content->get('access_level');
+
+        $message = $accessLevel.'| '.$emailAddress.' : '.$firstName.' '.$lastName;
+
+        $log = new ActionLog(null, $actionBy, UserActionType::CREATE_ADMIN, false, $message, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $actionBy
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function editAdmin(ObjectManager $om, $actionBy, $content)
+    {
+        $personId = $content->get('person_id');
+
+        $message = '';
+        $oldFirstName = '';
+        $oldLastName = '';
+        $oldEmailAddress = '';
+        $oldAccessLevel = '';
+
+        $admin = null;
+        if ($personId) {
+            $admin = $om->getRepository(Employee::class)->findOneBy(['personId' => $personId]);
+            if ($admin) {
+                $oldFirstName = $admin->getFirstName();
+                $oldLastName = $admin->getLastName();
+                $oldEmailAddress = $admin->getEmailAddress();
+                $oldAccessLevel = $admin->getAccessLevel();
+            }
+        }
+
+        $changes = [
+            //old value       new value
+            $oldFirstName => $content->get('first_name'),
+            $oldLastName => $content->get('last_name'),
+            $oldEmailAddress => $content->get('email_address'),
+            $oldAccessLevel => $content->get('access_level'),
+        ];
+
+        $anyChanges = false;
+        $prefix = '';
+        foreach ($changes as $oldValue => $newValue) {
+            if ($oldValue !== $newValue) {
+                $anyChanges = true;
+                $message = $message . $prefix. $oldValue . ' => ' .$newValue;
+                $prefix = ', ';
+            }
+        }
+
+        if ($anyChanges) {
+            $log = new ActionLog($admin, $actionBy, UserActionType::EDIT_ADMIN, false, $message, self::IS_USER_ENVIRONMENT);
+            DoctrineUtil::persistAndFlush($om, $log);
+            return $log;
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $actionBy
+     * @param Employee $adminToDeactivate
+     * @return ActionLog
+     */
+    public static function deactivateAdmin(ObjectManager $om, $actionBy, $adminToDeactivate)
+    {
+        $userActionType = UserActionType::DEACTIVATE_ADMIN;
+        if($adminToDeactivate instanceof Employee) {
+            $message = $adminToDeactivate->getEmailAddress().' | '.$adminToDeactivate->getFullName();
+        } else {
+            $message = 'No admin to deactivate found';
+        }
+
+        $log = new ActionLog($adminToDeactivate, $actionBy, $userActionType, false, $message, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param ActionLog $log
+     * @param Employee $admin
+     * @return ActionLog
+     */
+    public static function completeAdminCreateOrEditActionLog(ObjectManager $om, ActionLog $log, $admin)
+    {
+        if ($log !== null) {
+            $log->setUserAccount($admin);
+            $log->setIsCompleted(true);
+            DoctrineUtil::persistAndFlush($om, $log);
+        }
+
+        return $log;
+    }
 }

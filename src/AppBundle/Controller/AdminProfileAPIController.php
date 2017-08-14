@@ -9,6 +9,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\AdminProfile;
 use AppBundle\Output\AdminOverviewOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\EditAdminProfileValidator;
 use AppBundle\Validation\PasswordValidator;
@@ -94,10 +95,10 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
       }
       $encodedNewPassword = $encoder->encodePassword($admin, $newPassword);
       $content->set(JsonInputConstant::NEW_PASSWORD, $encodedNewPassword);
-      $passwordChangeLog = ActionLogWriter::passwordChangeAdminInProfile($em, $admin);
+      $passwordChangeLog = AdminActionLogWriter::passwordChangeAdminInProfile($em, $admin);
     }
 
-    $valuesLog = ActionLogWriter::editOwnAdminProfile($em, $admin, $content);
+    $valuesLog = AdminActionLogWriter::editOwnAdminProfile($em, $admin, $content);
 
     //Persist updated changes and return the updated values
     $client = AdminProfile::update($admin, $content);

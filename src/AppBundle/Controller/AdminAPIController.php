@@ -15,6 +15,7 @@ use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Output\AdminOverviewOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CreateAdminValidator;
 use AppBundle\Validation\EditAdminValidator;
@@ -103,7 +104,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         $em = $this->getDoctrine()->getManager();
         $content = $this->getContentAsArray($request);
 
-        $log = ActionLogWriter::createAdmin($em, $actionBy, $content);
+        $log = AdminActionLogWriter::createAdmin($em, $actionBy, $content);
 
         // Validate content
         $firstName = $content->get('first_name');
@@ -140,7 +141,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
 
         $result = AdminOverviewOutput::createAdminOverview($actionBy);
 
-        $log = ActionLogWriter::completeAdminCreateOrEditActionLog($em, $log, $newAdmin);
+        $log = AdminActionLogWriter::completeAdminCreateOrEditActionLog($em, $log, $newAdmin);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
   }
@@ -177,7 +178,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
 
         $em = $this->getDoctrine()->getManager();
         $content = $this->getContentAsArray($request);
-        $log = ActionLogWriter::editAdmin($em, $actionBy, $content);
+        $log = AdminActionLogWriter::editAdmin($em, $actionBy, $content);
 
         // Validate content
         $personId = $content->get('person_id');
@@ -208,7 +209,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         ));
         $result = AdminOverviewOutput::createAdminOverview($newAdmin);
 
-        $log = ActionLogWriter::completeAdminCreateOrEditActionLog($em, $log, $admin);
+        $log = AdminActionLogWriter::completeAdminCreateOrEditActionLog($em, $log, $admin);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
   }
@@ -251,7 +252,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
     $personId = $content->get('person_id');
     /** @var Employee $adminToDeactivate */
     $adminToDeactivate = $repository->findOneBy(['personId' => $personId]);
-    $log = ActionLogWriter::deactivateAdmin($em, $actionBy, $adminToDeactivate);
+    $log = AdminActionLogWriter::deactivateAdmin($em, $actionBy, $adminToDeactivate);
 
     //Validate input
     if($adminToDeactivate == null) {
