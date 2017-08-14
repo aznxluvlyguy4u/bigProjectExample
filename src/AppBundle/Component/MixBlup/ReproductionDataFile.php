@@ -73,7 +73,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                 self::getFormattedBirthProgress($data).
                 self::getFormattedGestationPeriod($data).
                 self::getFormattedBirthInterval($data).
-                self::getUbnOfBirthAsLastColumnValue($data);
+                self::getFormattedUbnOfBirthWithoutPadding($data);
 
             $records[] = $record;
         }

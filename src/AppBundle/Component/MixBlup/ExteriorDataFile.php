@@ -62,7 +62,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
             self::formatMaleVGExteriorValues($data).
             self::formatDFExteriorValues($data).
             self::formatLinearExteriorValues().
-            self::getUbnOfBirthAsLastColumnValue($data);
+            self::getFormattedUbnOfBirthWithoutPadding($data);
 
             $records[] = $record;
         }

@@ -394,7 +394,7 @@ class MixBlupDataFileBase
      * @param string $key
      * @return mixed|null
      */
-    public static function getUbnOfBirthAsLastColumnValue($data, $key = JsonInputConstant::UBN_OF_BIRTH)
+    public static function getFormattedUbnOfBirthWithoutPadding($data, $key = JsonInputConstant::UBN_OF_BIRTH)
     {
         $ubnOfBirth = ArrayUtil::get($key, $data);
 
