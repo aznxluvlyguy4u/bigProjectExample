@@ -39,4 +39,5 @@ class UserActionType extends RequestType
     const CREATE_COMPANY = 'CREATE_COMPANY';
     const EDIT_COMPANY = 'EDIT_COMPANY';
     const DEACTIVATE_COMPANY = 'DEACTIVATE_COMPANY';
+    const ACTIVATE_COMPANY = 'ACTIVATE_COMPANY';
 }

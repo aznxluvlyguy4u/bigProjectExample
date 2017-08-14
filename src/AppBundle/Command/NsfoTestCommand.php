@@ -73,6 +73,9 @@ class NsfoTestCommand extends ContainerAwareCommand
         $this->animalRepository = $em->getRepository(Animal::class);
         $this->databaseName = $this->conn->getDatabase();
 
+        dump(trim('sdf') === '');die;
+
+
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);

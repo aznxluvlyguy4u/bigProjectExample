@@ -277,15 +277,21 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
-     * @param Client $companyOwner
+     * @param Company $company
      * @param Person $loggedInUser
-     * @param string $jsonInputBody
      * @return ActionLog
      */
-    public static function createCompany(ObjectManager $om, Client $companyOwner, $loggedInUser, $jsonInputBody)
+    public static function createCompany(ObjectManager $om, Company $company, $loggedInUser)
     {
-        $log = new ActionLog($companyOwner, $loggedInUser, UserActionType::CREATE_COMPANY, true, $jsonInputBody);
-        DoctrineUtil::persistAndFlush($om, $log);
+        try {
+            $description = self::getCompanyDescription($company);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::CREATE_COMPANY, true, $description);
+            DoctrineUtil::persistAndFlush($om, $log);
+        } catch (\Exception $exception) {
+            $description = $company->getCompanyName();
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::CREATE_COMPANY, true, $description);
+            DoctrineUtil::persistAndFlush($om, $log);
+        }
 
         return $log;
     }
@@ -293,17 +299,67 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
-     * @param Client $companyOwner
+     * @param Company $company
      * @param Person $loggedInUser
-     * @param string $jsonInputBody
      * @return ActionLog
      */
-    public static function editCompany(ObjectManager $om, Client $companyOwner, $loggedInUser, $jsonInputBody)
+    public static function editCompany(ObjectManager $om, Company $company, $loggedInUser)
     {
-        $log = new ActionLog($companyOwner, $loggedInUser, UserActionType::EDIT_COMPANY, true, $jsonInputBody);
-        DoctrineUtil::persistAndFlush($om, $log);
+        try {
+            $description = self::getCompanyDescription($company);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::EDIT_COMPANY, true, $description);
+            DoctrineUtil::persistAndFlush($om, $log);
+        } catch (\Exception $exception) {
+            $description = $company->getCompanyName();
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::EDIT_COMPANY, true, $description);
+            DoctrineUtil::persistAndFlush($om, $log);
+        }
 
         return $log;
+    }
+
+
+    /**
+     * @param Company $company
+     * @return string
+     */
+    private static function getCompanyDescription(Company $company)
+    {
+        $description = '';
+        $prefix = '';
+
+        if ($company) {
+            if ($company->getCompanyName() !== null && trim($company->getCompanyName()) !== '' ) {
+                $companyName = $company->getCompanyName();
+            } else {
+                $companyName = $company->getCompanyId();
+            }
+
+            $description = $description . $prefix . 'Bedrijf: '. $companyName;
+            $prefix = ', ';
+
+            if ($company->getOwner()) {
+                $description = $description . $prefix . 'eigenaar: '. $company->getOwner()->getFullName();
+                $prefix = ', ';
+            }
+
+            if (count($company->getLocations()) > 0) {
+                $description = $description . $prefix . 'ubns: ';
+                $prefix = ', ';
+
+                $ubnPrefix = '';
+                /** @var Location $location */
+                foreach ($company->getLocations() as $location)
+                {
+                    if ($location->getIsActive()) {
+                        $description = $description . $ubnPrefix . $location->getUbn();
+                        $ubnPrefix = ', ';
+                    }
+                }
+            }
+        }
+
+        return $description;
     }
 
 
@@ -316,12 +372,17 @@ class ActionLogWriter
      */
     public static function activeStatusCompany(ObjectManager $om, $isActive, Company $company, $loggedInUser)
     {
-        $activationDescription = $isActive ? 'GEACTIVEERD' : 'GEDEACTIVEERD';
+        $userActionType = $isActive ? UserActionType::ACTIVATE_COMPANY : UserActionType::DEACTIVATE_COMPANY;
 
-        $description = 'Bedrijf '.$company->getCompanyName(). ' is '.$activationDescription.' van eigenaar met relatienummerhouder: '.$company->getOwnersRelationNumberKeeper('*leeg*'). ', bedrijfId = '.$company->getCompanyId();
-
-        $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::DEACTIVATE_COMPANY, true, $description);
-        DoctrineUtil::persistAndFlush($om, $log);
+        try {
+            $description = self::getCompanyDescription($company);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, $userActionType, true, $description);
+            DoctrineUtil::persistAndFlush($om, $log);
+        } catch (\Exception $exception) {
+            $description = $company->getCompanyName();
+            $log = new ActionLog($company->getOwner(), $loggedInUser, $userActionType, true, $description);
+            DoctrineUtil::persistAndFlush($om, $log);
+        }
 
         return $log;
     }

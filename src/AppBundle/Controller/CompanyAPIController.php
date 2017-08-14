@@ -231,7 +231,7 @@ class CompanyAPIController extends APIController
         $this->getDoctrine()->getManager()->persist($company);
         $this->getDoctrine()->getManager()->flush();
 
-        $log = ActionLogWriter::createCompany($this->getManager(), $owner, $admin, $request->getContent());
+        $log = ActionLogWriter::createCompany($this->getManager(), $company, $admin);
 
         // Send Email with passwords to Owner & Users
         $password = $this->persistNewPassword($company->getOwner());
@@ -568,7 +568,7 @@ class CompanyAPIController extends APIController
             $this->emailNewPasswordToPerson($user, $password, false, true);
         }
 
-        $log = ActionLogWriter::editCompany($this->getManager(), $owner, $admin, $request->getContent());
+        $log = ActionLogWriter::editCompany($this->getManager(), $company, $admin);
 
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Animal::class);
