@@ -714,4 +714,19 @@ class Company
     }
 
 
+    /**
+     * @param null $nullReplacement
+     * @return null|string
+     */
+    public function getOwnersRelationNumberKeeper($nullReplacement = null)
+    {
+        $relationNumberKeeper = $nullReplacement;
+        if ($this->getOwner()) {
+            $relationNumberKeeper = $this->getOwner()->getRelationNumberKeeper();
+            if ($relationNumberKeeper === null || trim($relationNumberKeeper) === '') {
+                $relationNumberKeeper = $nullReplacement;
+            }
+        }
+        return $relationNumberKeeper;
+    }
 }

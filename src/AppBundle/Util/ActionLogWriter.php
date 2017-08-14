@@ -277,6 +277,58 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
+     * @param Client $companyOwner
+     * @param Person $loggedInUser
+     * @param string $jsonInputBody
+     * @return ActionLog
+     */
+    public static function createCompany(ObjectManager $om, Client $companyOwner, $loggedInUser, $jsonInputBody)
+    {
+        $log = new ActionLog($companyOwner, $loggedInUser, UserActionType::CREATE_COMPANY, true, $jsonInputBody);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $companyOwner
+     * @param Person $loggedInUser
+     * @param string $jsonInputBody
+     * @return ActionLog
+     */
+    public static function editCompany(ObjectManager $om, Client $companyOwner, $loggedInUser, $jsonInputBody)
+    {
+        $log = new ActionLog($companyOwner, $loggedInUser, UserActionType::EDIT_COMPANY, true, $jsonInputBody);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $loggedInUser
+     * @param bool $isActive
+     * @param Company $company
+     * @return ActionLog
+     */
+    public static function activeStatusCompany(ObjectManager $om, $isActive, Company $company, $loggedInUser)
+    {
+        $activationDescription = $isActive ? 'GEACTIVEERD' : 'GEDEACTIVEERD';
+
+        $description = 'Bedrijf '.$company->getCompanyName(). ' is '.$activationDescription.' van eigenaar met relatienummerhouder: '.$company->getOwnersRelationNumberKeeper('*leeg*'). ', bedrijfId = '.$company->getCompanyId();
+
+        $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::DEACTIVATE_COMPANY, true, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
      * @param Client $client
      * @param Person $loggedInUser
      * @param RevokeDeclaration $revokeDeclaration

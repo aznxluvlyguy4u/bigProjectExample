@@ -11,10 +11,12 @@ use AppBundle\Entity\Company;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\CompanyNote;
 use AppBundle\Entity\BillingAddress;
+use AppBundle\Entity\CompanyRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
@@ -228,6 +230,8 @@ class CompanyAPIController extends APIController
         // Save to Database
         $this->getDoctrine()->getManager()->persist($company);
         $this->getDoctrine()->getManager()->flush();
+
+        $log = ActionLogWriter::createCompany($this->getManager(), $owner, $admin, $request->getContent());
 
         // Send Email with passwords to Owner & Users
         $password = $this->persistNewPassword($company->getOwner());
@@ -564,6 +568,8 @@ class CompanyAPIController extends APIController
             $this->emailNewPasswordToPerson($user, $password, false, true);
         }
 
+        $log = ActionLogWriter::editCompany($this->getManager(), $owner, $admin, $request->getContent());
+
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Animal::class);
         $animalRepository->updateLocationOfBirthByCompany($company);
@@ -597,13 +603,16 @@ class CompanyAPIController extends APIController
         $isActive = $content->get('is_active');
 
         // Get Company
-        $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
+        $repository = $this->getDoctrine()->getRepository(Company::class);
+        /** @var Company $company */
         $company = $repository->findOneByCompanyId($companyId);
 
         // Set Company inactive
         $company->setIsActive($isActive);
         $this->getDoctrine()->getManager()->persist($company);
         $this->getDoctrine()->getManager()->flush();
+
+        $log = ActionLogWriter::activeStatusCompany($this->getManager(), $isActive, $company, $admin);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }

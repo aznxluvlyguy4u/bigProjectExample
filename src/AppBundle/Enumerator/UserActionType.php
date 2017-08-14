@@ -35,4 +35,8 @@ class UserActionType extends RequestType
     const CREATE_ADMIN = 'CREATE_ADMIN';
     const EDIT_ADMIN = 'EDIT_ADMIN';
     const DEACTIVATE_ADMIN = 'DEACTIVATE_ADMIN';
+
+    const CREATE_COMPANY = 'CREATE_COMPANY';
+    const EDIT_COMPANY = 'EDIT_COMPANY';
+    const DEACTIVATE_COMPANY = 'DEACTIVATE_COMPANY';
 }
