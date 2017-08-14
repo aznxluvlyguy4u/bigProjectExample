@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Message;
+use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -75,6 +76,7 @@ class MessageAPIController extends APIController
      */
     public function changeReadStatus(Request $request, $messageId) {
         $client = $this->getAccountOwner($request);
+        $user = $this->getUserService()->getUser();
 
         /** @var Message $message */
         $repository = $this->getDoctrine()->getRepository(Message::class);
@@ -83,6 +85,8 @@ class MessageAPIController extends APIController
 
         $this->getDoctrine()->getManager()->persist($message);
         $this->getDoctrine()->getManager()->flush();
+
+        ActionLogWriter::changeMessageReadStatus($this->getManager(), $client, $user, $message);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }
@@ -97,6 +101,7 @@ class MessageAPIController extends APIController
      */
     public function hideMessage(Request $request, $messageId) {
         $client = $this->getAccountOwner($request);
+        $user = $this->getUserService()->getUser();
 
         /** @var Message $message */
         $repository = $this->getDoctrine()->getRepository(Message::class);
@@ -105,6 +110,8 @@ class MessageAPIController extends APIController
 
         $this->getDoctrine()->getManager()->persist($message);
         $this->getDoctrine()->getManager()->flush();
+
+        ActionLogWriter::changeMessageHideStatus($this->getManager(), $client, $user, $message);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }

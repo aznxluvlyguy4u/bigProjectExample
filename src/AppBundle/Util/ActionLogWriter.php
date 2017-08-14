@@ -9,12 +9,14 @@ use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Message;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\UserActionType;
@@ -710,6 +712,44 @@ class ActionLogWriter
         $description = Translation::getGenderInDutch($oldGender) . ' => ' . Translation::getGenderInDutch($newGender);
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, $isCompleted, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $accountOwner
+     * @param Person $actionBy
+     * @param Message $message
+     * @return ActionLog
+     */
+    public static function changeMessageReadStatus(ObjectManager $om, $accountOwner, $actionBy, $message)
+    {
+        $read = $message->isRead() ? 'READ': 'UNREAD';
+        $description = $read . ' ' . $message->getType().' '.$message->getData();
+
+        $log = new ActionLog($accountOwner, $actionBy, UserActionType::CHANGE_READ_MESSAGE_STATUS, true, $description, true);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $accountOwner
+     * @param Person $actionBy
+     * @param Message $message
+     * @return ActionLog
+     */
+    public static function changeMessageHideStatus(ObjectManager $om, $accountOwner, $actionBy, $message)
+    {
+        $hide = $message->isHidden() ? 'HIDE': 'UNHIDE';
+        $description = $hide . ' ' . $message->getType().' '.$message->getData();
+
+        $log = new ActionLog($accountOwner, $actionBy, UserActionType::CHANGE_HIDE_MESSAGE_STATUS, true, $description, true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
