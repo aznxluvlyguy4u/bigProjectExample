@@ -11,6 +11,8 @@ use AppBundle\Entity\ContentRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Output\ContentOutput;
+use AppBundle\Util\AdminActionLogWriter;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -65,22 +67,38 @@ class ContentManagementAPIController extends APIController implements ContentMan
     {
         
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-             return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::SUPER_ADMIN)) { //validate if user is at least an ADMIN
+             return AdminValidator::getStandardErrorResponse();
         }
         $content = $this->getContentAsArray($request);
-        $em = $this->getDoctrine()->getManager();
+
         /** @var Content $cms */
-        $cms = $em->getRepository(Content::class)->getCMS();
+        $cms = $this->getManager()->getRepository(Content::class)->getCMS();
 
         //Set values
-        $dashboardText = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::DASHBOARD, $content);
-        $contactInfo = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::CONTACT_INFO, $content);
-        $cms->setDashBoardIntroductionText($dashboardText);
-        $cms->setNsfoContactInformation($contactInfo);
-        $em->persist($cms);
-        $em->flush();
+        $dashboardText = $content->get(JsonInputConstant::DASHBOARD);
+        $contactInfo = $content->get(JsonInputConstant::CONTACT_INFO);
+
+        $updatedDashboardText = false;
+        if ($cms->getDashBoardIntroductionText() !== $dashboardText) {
+            $cms->setDashBoardIntroductionText($dashboardText);
+            $updatedDashboardText = true;
+        }
+
+        $updatedContactInfo = false;
+        if ($cms->getNsfoContactInformation() !== $contactInfo) {
+            $cms->setNsfoContactInformation($contactInfo);
+            $updatedContactInfo = true;
+        }
+
+        if ($updatedDashboardText || $updatedContactInfo) {
+            $this->getManager()->persist($cms);
+            $this->getManager()->flush();
+        }
+
+
+        if ($updatedDashboardText) { AdminActionLogWriter::updateDashBoardIntro($this->getManager(), $admin, $dashboardText); }
+        if ($updatedContactInfo) { AdminActionLogWriter::updateContactInfo($this->getManager(), $admin, $contactInfo); }
 
         $outputArray = $outputArray = ContentOutput::create($cms);
     

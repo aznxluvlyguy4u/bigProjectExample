@@ -38,4 +38,34 @@ class AdminActionLogWriter
 
         return $log;
     }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $loggedInAdmin
+     * @param string $description
+     * @return ActionLog
+     */
+    public static function updateDashBoardIntro(ObjectManager $om, $loggedInAdmin, $description)
+    {
+        $log = new ActionLog(null, $loggedInAdmin, UserActionType::DASHBOARD_INTRO_TEXT_UPDATE, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $loggedInAdmin
+     * @param string $description
+     * @return ActionLog
+     */
+    public static function updateContactInfo(ObjectManager $om, $loggedInAdmin, $description)
+    {
+        $log = new ActionLog(null, $loggedInAdmin, UserActionType::CONTACT_INFO_UPDATE, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
 }
