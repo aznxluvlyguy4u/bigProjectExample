@@ -285,11 +285,11 @@ class ActionLogWriter
     {
         try {
             $description = self::getCompanyDescription($company);
-            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::CREATE_COMPANY, true, $description);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::CREATE_COMPANY, true, $description, false);
             DoctrineUtil::persistAndFlush($om, $log);
         } catch (\Exception $exception) {
             $description = $company->getCompanyName();
-            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::CREATE_COMPANY, true, $description);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::CREATE_COMPANY, true, $description, false);
             DoctrineUtil::persistAndFlush($om, $log);
         }
 
@@ -307,11 +307,11 @@ class ActionLogWriter
     {
         try {
             $description = self::getCompanyDescription($company);
-            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::EDIT_COMPANY, true, $description);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::EDIT_COMPANY, true, $description, false);
             DoctrineUtil::persistAndFlush($om, $log);
         } catch (\Exception $exception) {
             $description = $company->getCompanyName();
-            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::EDIT_COMPANY, true, $description);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::EDIT_COMPANY, true, $description, false);
             DoctrineUtil::persistAndFlush($om, $log);
         }
 
@@ -376,11 +376,11 @@ class ActionLogWriter
 
         try {
             $description = self::getCompanyDescription($company);
-            $log = new ActionLog($company->getOwner(), $loggedInUser, $userActionType, true, $description);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, $userActionType, true, $description, false);
             DoctrineUtil::persistAndFlush($om, $log);
         } catch (\Exception $exception) {
             $description = $company->getCompanyName();
-            $log = new ActionLog($company->getOwner(), $loggedInUser, $userActionType, true, $description);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, $userActionType, true, $description, false);
             DoctrineUtil::persistAndFlush($om, $log);
         }
 
