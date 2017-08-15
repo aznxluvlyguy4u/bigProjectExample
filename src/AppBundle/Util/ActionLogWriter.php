@@ -277,7 +277,7 @@ class ActionLogWriter
 
 
         $log = new ActionLog($client, $actionBy, UserActionType::BIRTH_REVOKE, true, $description);
-        $log->setIsRvoMessage(true);
+        $log->setIsRvoMessage(false);
         if ($litter->getBornAliveCount() > 0) {
             $log->setIsRvoMessage(true);
         }
