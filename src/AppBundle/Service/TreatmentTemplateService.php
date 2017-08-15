@@ -4,7 +4,13 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\TreatmentTemplateAPIControllerInterface;
+use AppBundle\Entity\TreatmentTemplate;
+use AppBundle\Entity\TreatmentTemplateRepository;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\TreatmentTypeOption;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\Validator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -14,11 +20,15 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class TreatmentTemplateService extends ControllerServiceBase implements TreatmentTemplateAPIControllerInterface
 {
+    /** @var TreatmentTemplateRepository */
+    private $treatmentTemplateRepository;
 
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
                                 CacheService $cacheService, UserService $userService)
     {
         parent::__construct($em, $serializer, $cacheService, $userService);
+
+        $this->treatmentTemplateRepository = $this->em->getRepository(TreatmentTemplate::class);
     }
 
     /**
@@ -27,9 +37,10 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function getIndividualDefaultTemplates(Request $request)
     {
-        // TODO: Implement getIndividualDefaultTemplates() method.
+        $templates = $this->treatmentTemplateRepository->findActiveIndividualTypeByLocation(null);
+        $output = $this->serializer->getDecodedJson($templates, [JmsGroup::TREATMENT_TEMPLATE]);
 
-        return ResultUtil::successResult('ok');
+        return ResultUtil::successResult($output);
     }
 
     /**
@@ -39,10 +50,33 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function getIndividualSpecificTemplates(Request $request, $ubn)
     {
-        // TODO: Implement getIndividualSpecificTemplates() method.
+        $location = $this->getLocationByUbn($ubn);
+        if ($location instanceof JsonResponse) { return $location; }
 
-        return ResultUtil::successResult('ok');
+        $templates = $this->treatmentTemplateRepository->findActiveIndividualTypeByLocation($location);
+        $output = $this->serializer->getDecodedJson($templates, [JmsGroup::TREATMENT_TEMPLATE]);
+
+        return ResultUtil::successResult($output);
     }
+
+
+    /**
+     * @param string|int $ubn
+     * @return JsonResponse|\AppBundle\Entity\Location|null
+     */
+    private function getLocationByUbn($ubn)
+    {
+        if (!ctype_digit($ubn) && !is_int($ubn)) {
+            return Validator::createJsonResponse('UBN must be a number', 428);
+        }
+
+        $location = $this->locationRepository->findOneByActiveUbn($ubn);
+        if ($location === null) {
+            return Validator::createJsonResponse('No active location found for given UBN', 428);
+        }
+        return $location;
+    }
+
 
     /**
      * @param Request $request
@@ -50,9 +84,10 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function getLocationDefaultTemplates(Request $request)
     {
-        // TODO: Implement getLocationDefaultTemplates() method.
+        $templates = $this->treatmentTemplateRepository->findActiveLocationTypeByLocation(null);
+        $output = $this->serializer->getDecodedJson($templates, [JmsGroup::TREATMENT_TEMPLATE]);
 
-        return ResultUtil::successResult('ok');
+        return ResultUtil::successResult($output);
     }
 
     /**
@@ -62,9 +97,13 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function getLocationSpecificTemplates(Request $request, $ubn)
     {
-        // TODO: Implement getLocationSpecificTemplates() method.
+        $location = $this->getLocationByUbn($ubn);
+        if ($location instanceof JsonResponse) { return $location; }
 
-        return ResultUtil::successResult('ok');
+        $templates = $this->treatmentTemplateRepository->findActiveLocationTypeByLocation($location);
+        $output = $this->serializer->getDecodedJson($templates, [JmsGroup::TREATMENT_TEMPLATE]);
+
+        return ResultUtil::successResult($output);
     }
 
     /**
@@ -73,9 +112,26 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function createIndividualTemplate(Request $request)
     {
-        // TODO: Implement createIndividualTemplate() method.
+        /** @var TreatmentTemplate $template */
+        $template = $this->serializer->deserializeToObject($request->getContent(), TreatmentTemplate::class);
 
-        return ResultUtil::successResult('ok');
+        $locationRequested = $template->getLocation();
+        $location = null;
+        if ($locationRequested) {
+            $location = $this->getLocationByUbn($locationRequested->getUbn());
+        }
+
+        $treatmentType = $template->getTreatmentType();
+        if ($treatmentType === null) {
+            return Validator::createJsonResponse('TreatmentType is missing', 428);
+        }
+
+        //TODO process POST
+        //$treatmentType->getDescription();
+
+        $output = $this->serializer->getDecodedJson($template, [JmsGroup::TREATMENT_TEMPLATE]);
+
+        return ResultUtil::successResult($output);
     }
 
     /**
