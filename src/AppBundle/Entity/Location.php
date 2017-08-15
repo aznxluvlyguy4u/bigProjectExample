@@ -224,6 +224,14 @@ class Location
     private $treatmentTemplates;
 
     /**
+     * @var ArrayCollection
+     * @ORM\OrderBy({"description" = "ASC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentLocation", mappedBy="location", cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentLocation>")
+     */
+    private $treatments;
+
+    /**
      * @var boolean
      *
      * @ORM\Column(type="boolean", options={"default":true})
@@ -253,6 +261,7 @@ class Location
     $this->animalResidenceHistory = new ArrayCollection();
     $this->tags = new ArrayCollection();
     $this->treatmentTemplates = new ArrayCollection();
+    $this->treatments = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 
@@ -976,6 +985,48 @@ class Location
         $this->treatmentTemplates->removeElement($treatmentTemplate);
         return $this;
     }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getTreatments()
+    {
+        return $this->treatments;
+    }
+
+    /**
+     * @param ArrayCollection $treatments
+     * @return Location
+     */
+    public function setTreatments($treatments)
+    {
+        $this->treatments = $treatments;
+        return $this;
+    }
+
+    /**
+     * Add treatment
+     * @param TreatmentLocation $treatment
+     * @return Location
+     */
+    public function addTreatment(TreatmentLocation $treatment)
+    {
+        $this->treatments->add($treatment);
+        return $this;
+    }
+
+    /**
+     * Remove treatment
+     * @param TreatmentLocation $treatment
+     * @return Location
+     */
+    public function removeTreatment(TreatmentLocation $treatment)
+    {
+        $this->treatments->removeElement($treatment);
+        return $this;
+    }
+
 
 
     /**
