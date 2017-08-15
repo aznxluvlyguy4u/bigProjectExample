@@ -3,6 +3,8 @@
 
 namespace AppBundle\Util;
 
+use Doctrine\Common\Collections\ArrayCollection;
+
 
 /**
  * Class ArrayUtil
@@ -12,6 +14,8 @@ namespace AppBundle\Util;
  */
 class ArrayUtil
 {
+    const KEY_VALUE_SEPARATOR = ' => ';
+
     /**
      * Get null checked value value from an array
      * 
@@ -117,5 +121,34 @@ class ArrayUtil
         }
 
         return $lastKey;
+    }
+
+
+    /**
+     * @param array|ArrayCollection $array
+     * @param string $keyValueSeparator
+     * @return string
+     */
+    public static function implode($array, $keyValueSeparator = self::KEY_VALUE_SEPARATOR)
+    {
+        if ($array instanceof ArrayCollection) {
+            $array = $array->toArray();
+        }
+
+        if (is_string($array)) { return $array; }
+
+        $string = '[';
+        $prefix = '';
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $value = self::implode($value, $keyValueSeparator);
+            }
+
+            $string = $string . $prefix . $key . $keyValueSeparator . $value;
+            $prefix = ', ';
+        }
+        $string = $string . ']';
+
+        return $string;
     }
 }
