@@ -409,7 +409,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
     {
         $em = $this->getDoctrine()->getManager();
 
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
         if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
             return $adminValidator->createJsonErrorResponse();

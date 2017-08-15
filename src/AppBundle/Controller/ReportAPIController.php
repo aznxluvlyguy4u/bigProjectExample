@@ -67,7 +67,7 @@ class ReportAPIController extends APIController {
    */
   public function getPedigreeCertificates(Request $request) {
 
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
     $isAdmin = $adminValidator->getIsAccessGranted();
 
@@ -243,7 +243,7 @@ class ReportAPIController extends APIController {
      */
     public function getPedigreeRegisterOverview(Request $request)
     {
-        return $this->getPedigreeRegisterReportService()->request($request, $this->getAuthenticatedEmployee($request));
+        return $this->getPedigreeRegisterReportService()->request($request, $this->getEmployee());
     }
 
 
@@ -270,7 +270,7 @@ class ReportAPIController extends APIController {
      */
     public function getBreedValuesReportOverview(Request $request)
     {
-        return $this->getBreedValuesOverviewReportService()->request($request, $this->getAuthenticatedEmployee($request));
+        return $this->getBreedValuesOverviewReportService()->request($request, $this->getEmployee());
     }
 
 

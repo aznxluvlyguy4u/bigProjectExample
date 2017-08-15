@@ -464,7 +464,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getAnimalDetailsByUln(Request $request, $ulnString) {
 
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
     $isAdmin = $adminValidator->getIsAccessGranted();
     $em = $this->getDoctrine()->getManager();
