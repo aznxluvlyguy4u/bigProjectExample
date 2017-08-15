@@ -123,8 +123,8 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
   {
     //Get content to array
     $content = $this->getContentAsArray($request);
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $client = $this->getAccountOwner($request);
+    $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);
 
     if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }

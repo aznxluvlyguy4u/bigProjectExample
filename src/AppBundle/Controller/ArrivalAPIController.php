@@ -175,9 +175,9 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
         $em = $this->getDoctrine()->getManager();
 
         $content = $this->getContentAsArray($request);
-        $client = $this->getAuthenticatedUser($request);
+        $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
-        $loggedInUser = $this->getLoggedInUser($request);
+        $loggedInUser = $this->getUser();
 
         $log = ActionLogWriter::declareArrivalOrImportPost($em, $client, $loggedInUser, $location, $content);
 
@@ -301,9 +301,9 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $requestId = $Id;
     $content->set("request_id", $requestId);
 
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $loggedInUser = $this->getUser();
     $content->set(Constant::LOCATION_NAMESPACE, $location);
 
     //verify requestId for arrivals

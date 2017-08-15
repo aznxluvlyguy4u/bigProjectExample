@@ -359,22 +359,11 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * @param Request $request
-   * @param string $tokenCode
    * @return Client|null
    */
-  public function getAuthenticatedUser(Request $request= null, $tokenCode = null)
+  public function getAccountOwner(Request $request = null)
   {
-    return $this->getUserService()->getAccountOwner($request, $tokenCode);
-  }
-
-  /**
-   * @param Request $request
-   * @param string $tokenCode
-   * @return Client|Employee
-   */
-  public function getLoggedInUser(Request $request= null, $tokenCode = null)
-  {
-    return $this->getUserService()->getUser($tokenCode);
+    return $this->getUserService()->getAccountOwner($request);
   }
 
 

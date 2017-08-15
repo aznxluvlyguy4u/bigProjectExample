@@ -28,9 +28,9 @@ class ContactAPIController extends APIController implements ContactAPIController
     $om = $this->getDoctrine()->getManager();
 
     $content = $this->getContentAsArray($request);
-    $user = $this->getAuthenticatedUser($request);
+    $user = $this->getAccountOwner($request);
     $ubn = $this->getSelectedUbn($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $loggedInUser = $this->getUser();
 
     if($ubn == null) {
         $ubn = 'geen';
