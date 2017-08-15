@@ -119,9 +119,10 @@ class MixBlupCliOptionsService
             '31: Print separate csv files of latest breedValues for chosen ubn', "\n",
             '========================================================================', "\n",
             '40: Clear excel cache folder', "\n",
-            '41: Print excel file for CF pedigree register', "\n",
-            '42: Print excel file for NTS, TSNH, LAX pedigree registers', "\n",
-            '43: Print excel file Breedvalues overview all animals on a ubn', "\n",
+            '41: Print CSV file for CF pedigree register', "\n",
+            '42: Print CSV file for NTS, TSNH, LAX pedigree registers', "\n",
+            '43: Print CSV file Breedvalues overview all animals on a ubn, with atleast one breedValue', "\n",
+            '44: Print CSV file Breedvalues overview all animals on a ubn, even those without a breedValue', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -159,14 +160,17 @@ class MixBlupCliOptionsService
 
             case 40: $this->excelService->clearCacheFolder(); break;
             case 41:
-                $filepath = $this->pedigreeRegisterOverviewReportService->generateFileByType(PedigreeAbbreviation::CF, false, FileType::XLS);
+                $filepath = $this->pedigreeRegisterOverviewReportService->generateFileByType(PedigreeAbbreviation::CF, false, FileType::CSV);
                 $this->logger->notice($filepath);
                 break;
             case 42:
-                $filepath = $this->pedigreeRegisterOverviewReportService->generateFileByType(PedigreeAbbreviation::NTS,false, FileType::XLS);
+                $filepath = $this->pedigreeRegisterOverviewReportService->generateFileByType(PedigreeAbbreviation::NTS,false, FileType::CSV);
                 $this->logger->notice($filepath);
                 break;
-            case 43: $filepath = $this->breedValuesOverviewReportService->generate(FileType::XLS, false);
+            case 43: $filepath = $this->breedValuesOverviewReportService->generate(FileType::CSV, false, false, false);
+                $this->logger->notice($filepath);
+                break;
+            case 44: $filepath = $this->breedValuesOverviewReportService->generate(FileType::CSV, false, true, false);
                 $this->logger->notice($filepath);
                 break;
 

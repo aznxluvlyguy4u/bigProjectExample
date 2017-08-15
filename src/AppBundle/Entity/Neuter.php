@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\GenderType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -38,6 +39,7 @@ class Neuter extends Animal
         $this->objectType = "Neuter";
         $this->setAnimalType(AnimalType::sheep);
         $this->setAnimalCategory(3);
+        $this->setGender(GenderType::NEUTER);
     }
 
     /**

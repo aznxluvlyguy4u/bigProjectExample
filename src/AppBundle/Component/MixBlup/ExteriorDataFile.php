@@ -10,7 +10,7 @@ use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TexelaarPedigreeRegisterAbbreviation;
 use AppBundle\Setting\MixBlupSetting;
-use AppBundle\Util\CsvWriterUtil;
+use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Validation\ExteriorValidator;
 use Doctrine\DBAL\Connection;
@@ -293,7 +293,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
     private static function formatExteriorValue($array, $key, $maxLength = MaxLength::EXTERIOR_VALUE)
     {
         $filledExteriorValue = Utils::fillZero($array[$key], ExteriorInstructionFiles::MISSING_REPLACEMENT);
-        return CsvWriterUtil::pad($filledExteriorValue, $maxLength);
+        return DsvWriterUtil::pad($filledExteriorValue, $maxLength);
     }
 
 
@@ -303,7 +303,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
      */
     private static function formattedNullExteriorValue($maxLength = MaxLength::EXTERIOR_VALUE)
     {
-        return CsvWriterUtil::pad(ExteriorInstructionFiles::MISSING_REPLACEMENT, $maxLength);
+        return DsvWriterUtil::pad(ExteriorInstructionFiles::MISSING_REPLACEMENT, $maxLength);
     }
 
 

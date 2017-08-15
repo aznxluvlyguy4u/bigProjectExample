@@ -7,7 +7,7 @@ namespace AppBundle\Util;
 use AppBundle\Setting\MixBlupSetting;
 use Doctrine\DBAL\Connection;
 
-class CsvWriterUtil
+class DsvWriterUtil
 {
     /**
      * @param Connection $conn
@@ -73,6 +73,6 @@ class CsvWriterUtil
     public static function getFormattedValueFromArray($data, $columnWidth, $key, $useColumnPadding = true, $nullReplacement = null)
     {
         $value = ArrayUtil::get($key, $data, $nullReplacement);
-        return CsvWriterUtil::pad($value, $columnWidth, $useColumnPadding);
+        return DsvWriterUtil::pad($value, $columnWidth, $useColumnPadding);
     }
 }
