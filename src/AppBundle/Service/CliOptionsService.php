@@ -21,6 +21,7 @@ use AppBundle\Service\Migration\BirthProgressInitializer;
 use AppBundle\Service\Migration\InspectorMigrator;
 use AppBundle\Service\Migration\VsmMigratorService;
 use AppBundle\Service\Worker\DepartInternalWorkerCliOptions;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
@@ -682,12 +683,14 @@ class CliOptionsService
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '=====================================', "\n",
-            '1: BirthProgress', "\n\n",
+            '1: BirthProgress', "\n",
+            '2: is_rvo_message boolean in action_log', "\n\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1: $this->birthProgressInitializer->run($this->cmdUtil); break;
+            case 2: ActionLogWriter::initializeIsRvoMessageValues($this->conn, $this->cmdUtil); break;
 
             default: $this->writeLn('Exit menu'); return;
         }

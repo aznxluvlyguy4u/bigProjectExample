@@ -22,6 +22,7 @@ use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 
 class ActionLogWriter
 {
@@ -807,5 +808,33 @@ class ActionLogWriter
         return $log;
     }
 
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public static function initializeIsRvoMessageValues(Connection $conn, $cmdUtil = null)
+    {
+        if ($cmdUtil) { $cmdUtil->writeln('Initializing is_rvo_message boolean in action_log table ...'); }
+
+        $actionTypeFilter = '';
+        $prefix = '';
+        foreach (UserActionType::getRvoMessageActionTypes() as $requestType)
+        {
+            $actionTypeFilter = $actionTypeFilter . $prefix . "'".$requestType."'";
+            $prefix = ',';
+        }
+
+        $sql = "UPDATE action_log SET is_rvo_message = TRUE
+                WHERE user_action_type IN ($actionTypeFilter)
+                AND is_rvo_message = FALSE";
+        $updateCount = SqlUtil::updateWithCount($conn, $sql);
+
+        $countString = $updateCount === 0 ? 'No': $updateCount;
+
+        if ($cmdUtil) { $cmdUtil->writeln($countString . ' records updated'); }
+        return $updateCount;
+    }
 
 }
