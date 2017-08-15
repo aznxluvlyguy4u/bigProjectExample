@@ -48,6 +48,15 @@ class TreatmentTemplate
     private $treatmentType;
 
     /**
+     * @var string
+     * @JMS\Type("string")
+     * @Assert\NotBlank
+     * @ORM\Column(type="string", unique=true)
+     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     */
+    private $description;
+
+    /**
      * @var ArrayCollection
      * @ORM\OrderBy({"description" = "ASC"})
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\MedicationOption", mappedBy="treatmentTemplate", cascade={"persist", "remove"})
@@ -179,6 +188,24 @@ class TreatmentTemplate
         return $this;
     }
 
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string $description
+     * @return TreatmentTemplate
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+        return $this;
+    }
+    
     /**
      * @return ArrayCollection
      */
