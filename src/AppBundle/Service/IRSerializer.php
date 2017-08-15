@@ -65,6 +65,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\LazyCriteriaCollection;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\DependencyInjection\Tests\A;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -128,6 +129,40 @@ class IRSerializer implements IRSerializerInterface
     {
         return $this->entityManager;
     }
+
+
+    /**
+     * @param $object
+     * @param array|string $type
+     * @param bool $enableMaxDepthChecks
+     * @return mixed
+     */
+    public function getDecodedJson($object, $type = null, $enableMaxDepthChecks = true)
+    {
+        if($object instanceof ArrayCollection || is_array($object) || $object instanceof LazyCriteriaCollection) {
+            $results = [];
+            foreach ($object as $item) {
+                $results[] = $this->getDecodedJsonSingleObject($item, $type, $enableMaxDepthChecks);
+            }
+            return $results;
+        }
+
+        return $this->getDecodedJsonSingleObject($object, $type, $enableMaxDepthChecks);
+    }
+
+
+    /**
+     * @param $object
+     * @param array $type
+     * @param boolean $enableMaxDepthChecks
+     * @return mixed|array
+     */
+    private function getDecodedJsonSingleObject($object, $type = null, $enableMaxDepthChecks = true)
+    {
+        $jsonMessage = $this->serializeToJSON($object, $type, $enableMaxDepthChecks);
+        return json_decode($jsonMessage, true);
+    }
+
 
     /**
      * @param $object

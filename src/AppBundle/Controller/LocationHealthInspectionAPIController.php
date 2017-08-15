@@ -45,7 +45,7 @@ class LocationHealthInspectionAPIController extends APIController
     public function getHealthInspections(Request $request)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -152,7 +152,7 @@ class LocationHealthInspectionAPIController extends APIController
      */
     public function createInspection(Request $request) {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -261,7 +261,7 @@ class LocationHealthInspectionAPIController extends APIController
      */
     public function changeInspection(Request $request) {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -352,7 +352,7 @@ class LocationHealthInspectionAPIController extends APIController
      */
     public function createBarcodes(Request $request) {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
         $dateTimeNow = new \DateTime();
 
@@ -444,7 +444,7 @@ class LocationHealthInspectionAPIController extends APIController
     public function createLetter(Request $request)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -586,7 +586,7 @@ class LocationHealthInspectionAPIController extends APIController
      */
     public function getInspectionResults(Request $request, $inspectionId) {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -656,7 +656,7 @@ class LocationHealthInspectionAPIController extends APIController
      */
     public function getFailedInspectionResults(Request $request) {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -677,7 +677,7 @@ class LocationHealthInspectionAPIController extends APIController
      */
     public function changeFailedInspectionResults(Request $request) {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {

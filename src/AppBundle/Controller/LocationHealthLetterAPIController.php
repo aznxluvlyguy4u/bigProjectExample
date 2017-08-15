@@ -30,7 +30,7 @@ class LocationHealthLetterAPIController extends APIController
     public function getLocationHealthLetter(Request $request, $illness, $letter_type)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -68,7 +68,7 @@ class LocationHealthLetterAPIController extends APIController
     public function createLocationHealthLetter(Request $request)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {

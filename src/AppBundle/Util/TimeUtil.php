@@ -228,6 +228,16 @@ class TimeUtil
 
 
     /**
+     * @param string $format
+     * @return string
+     */
+    public static function getTimeStampNowForFiles($format = 'Y-m-d_H\ui\ms\s')
+    {
+        return (new \DateTime())->format($format);
+    }
+
+
+    /**
      * @param \DateTime $dateTime
      * @param string $format
      * @return string

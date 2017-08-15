@@ -8,9 +8,9 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\ClientRepository;
+use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -45,6 +45,7 @@ use AppBundle\Service\AnimalLocationHistoryService;
 use AppBundle\Service\AwsExternalQueueService;
 use AppBundle\Service\AwsInternalQueueService;
 use AppBundle\Service\AWSSimpleStorageService;
+use AppBundle\Service\CacheService;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\HealthService;
@@ -54,6 +55,7 @@ use AppBundle\Service\MixBlupInputQueueService;
 use AppBundle\Service\MixBlupOutputQueueService;
 use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
+use AppBundle\Service\UserService;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
 use AppBundle\Util\RequestUtil;
@@ -67,8 +69,6 @@ use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -85,6 +85,7 @@ class APIController extends Controller implements APIControllerInterface
   private $services = [
       ServiceId::ANIMAL_LOCATION_HISTORY => null,
       ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
+      ServiceId::CACHE => null,
       ServiceId::CLIENT_MIGRATOR => null,
       ServiceId::ENTITY_GETTER => null,
       ServiceId::EXCEL_SERVICE => null,
@@ -98,6 +99,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::REDIS_CLIENT => null,
       ServiceId::SERIALIZER => null,
       ServiceId::STORAGE_SERVICE => null,
+      ServiceId::USER_SERVICE => null,
   ];
 
   /** @var RequestMessageBuilder */
@@ -124,6 +126,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getAnimalLocationHistoryService(){ return $this->getService(ServiceId::ANIMAL_LOCATION_HISTORY); }
   /** @return BreedValuesOverviewReportService */
   protected function getBreedValuesOverviewReportService() { return $this->getService(ServiceId::BREED_VALUES_OVERVIEW_REPORT); }
+  /** @return CacheService */
+  protected function getCacheService(){ return $this->getService(ServiceId::CACHE); }
   /** @return ClientMigrator */
   protected function getClientMigratorService(){ return $this->getService(ServiceId::CLIENT_MIGRATOR); }
   /** @return EntityGetter */
@@ -150,7 +154,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getSerializer() { return $this->getService(ServiceId::SERIALIZER);  }
   /** @return AWSSimpleStorageService */
   protected function getStorageService(){ return $this->getService(ServiceId::STORAGE_SERVICE); }
-
+  /** @return UserService */
+  protected function getUserService(){ return $this->getService(ServiceId::USER_SERVICE); }
 
   /**
    * @return RequestMessageBuilder
@@ -174,37 +179,7 @@ class APIController extends Controller implements APIControllerInterface
         return $this->manager;
     }
 
-  /**
-   * @param $object
-   * @param array $type
-   * @param boolean $enableMaxDepthChecks
-   * @return mixed|array
-   */
-  public function getDecodedJson($object, $type = null, $enableMaxDepthChecks = true)
-  {
-    if($object instanceof ArrayCollection || is_array($object) || $object instanceof LazyCriteriaCollection) {
-      $results = [];
-      foreach ($object as $item) {
-        $results[] = $this->getDecodedJsonSingleObject($item, $type, $enableMaxDepthChecks);
-      }
-      return $results;
-    }
 
-    return $this->getDecodedJsonSingleObject($object, $type, $enableMaxDepthChecks);
-  }
-
-  /**
-   * @param $object
-   * @param array $type
-   * @param boolean $enableMaxDepthChecks
-   * @return mixed|array
-   */
-  private function getDecodedJsonSingleObject($object, $type = null, $enableMaxDepthChecks = true)
-  {
-    $jsonMessage = $this->getSerializer()->serializeToJSON($object, $type, $enableMaxDepthChecks);
-    return json_decode($jsonMessage, true);
-  }
-  
 
   /**
    * @param Collection $content
@@ -238,7 +213,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   protected function getContentAsArray(Request $request)
   {
-    return RequestUtil::getContentAsArray($request);
+      return RequestUtil::getContentAsArray($request);
   }
 
   /**
@@ -328,7 +303,7 @@ class APIController extends Controller implements APIControllerInterface
 
 
   /**
-   * @param $messageObject
+   * @param DeclareBase $messageObject
    * @param bool $isUpdate
    * @return array
    */
@@ -409,166 +384,23 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * @param Request $request
-   * @param string $tokenCode
    * @return Client|null
    */
-  public function getAuthenticatedUser(Request $request= null, $tokenCode = null)
+  public function getAccountOwner(Request $request = null)
   {
-    $loggedInUser = $this->getLoggedInUser($request, $tokenCode);
-
-    /* Clients */
-    if($loggedInUser instanceof Client) {
-        return $loggedInUser;
-
-      /* Admins with a GhostToken */
-    } else if ($loggedInUser instanceof Employee) {
-
-      if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode == null) {
-        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
-        $ghostToken = $this->getDoctrine()->getManager()->getRepository(Token::class)
-            ->findOneBy(array("code" => $ghostTokenCode));
-
-        if($ghostToken != null) {
-          if($ghostToken->getIsVerified()) {
-            return $ghostToken->getOwner(); //client
-          }
-        }
-        //Admins without a GhostToken
-        return null;
-      }
-      
-    } else {
-        return null;
-        /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
-         are validated in the TokenAuthenticator Prehook.
-         At this point only Clients and Employees can login to the system. Not Inspectors.
-        */
-    }
-  }
-
-  /**
-   * @param Request $request
-   * @param string $tokenCode
-   * @return Client|Employee
-   */
-  public function getLoggedInUser(Request $request= null, $tokenCode = null)
-  {
-    $em = $this->getDoctrine()->getManager();
-
-    if($tokenCode == null) {
-      $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
-    }
-
-    $token = $em->getRepository(Token::class)->findOneBy(array("code" => $tokenCode));
-    if($token != null) {
-      return $token->getOwner();
-    } else {
-      return null;
-      /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
-        are validated in the TokenAuthenticator Prehook.
-      */
-    }
-
+    return $this->getUserService()->getAccountOwner($request);
   }
 
 
   /**
-   * @param Request $request
    * @param string $tokenCode
    * @return Employee|null
    */
-  public function getAuthenticatedEmployee(Request $request = null, $tokenCode = null)
+  public function getEmployee($tokenCode = null)
   {
-    $em = $this->getDoctrine()->getManager();
-
-    if($tokenCode == null) {
-      $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
-    }
-
-    $token = $em->getRepository(Token::class)->findOneBy(array("code" => $tokenCode));
-    if($token != null) {
-      $owner = $token->getOwner();
-      if($owner instanceof Employee) {
-        return $owner;
-      }
-    }
-    
-    return null;
-    /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
-      are validated in the TokenAuthenticator Prehook.
-    */
-
+    return $this->getUserService()->getEmployee($tokenCode);
   }
 
-  public function isUlnOrPedigreeCodeValid(Request $request, $ulnCode = null)
-  {
-    $verifySurrogates = false;
-
-    if($ulnCode != null) {
-      return $this->verifyAnimalByUln($ulnCode);
-
-    } else {
-      $contentArray = $this->getContentAsArray($request);
-      $array = $contentArray->toArray();
-
-      //For Father (DeclareBirth) only verify pedigree. ULN not checked in API since father can be from external farm.
-      if($contentArray->containsKey(Constant::FATHER_NAMESPACE)) {
-        $father = $array[Constant::FATHER_NAMESPACE];
-
-        $isVerified = $this->verifyOnlyPedigreeCodeInAnimal($father)->get('isValid');
-
-        if (!$isVerified) {
-          return array("animalKind" => Constant::FATHER_NAMESPACE,
-              "keyType" => Constant::PEDIGREE_NAMESPACE,
-              "isValid" => false,
-              "result" => $this->createValidityCheckMessage(false, Constant::ULN_NAMESPACE), Constant::FATHER_NAMESPACE);
-        }
-      }
-
-      $objectsToBeVerified = array();
-      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE, Constant::MOTHER_NAMESPACE);
-      
-      //All objects containing a uln or pedigree code must have that code verified
-      foreach ($objectsToBeVerified as $objectToBeVerified) {
-        if (array_key_exists($objectToBeVerified, $array)) {
-          $animalContentArray = $contentArray->get($objectToBeVerified);
-
-          $verification = $this->verifyUlnOrPedigreeCodeInAnimal($animalContentArray, $objectToBeVerified);
-
-          if($verification["isValid"] == false) { return $verification; }
-        }
-      }
-
-      //Animals in a Children array need to be retrieved differently
-      if($contentArray->containsKey(Constant::CHILDREN_NAMESPACE)){
-        $children = $array[Constant::CHILDREN_NAMESPACE];
-
-        foreach($children as $child) {
-
-          //NOTE Children are created with new uln from unassigned tags, so they cannot be in the system!
-
-          if($verifySurrogates) {
-            //Also verify the surrogate of a child
-            if(array_key_exists(Constant::SURROGATE_NAMESPACE, $child)){
-              $verification = $this->verifyUlnOrPedigreeCodeInAnimal($child[Constant::SURROGATE_NAMESPACE], Constant::SURROGATE_NAMESPACE);
-
-              if($verification["isValid"] == false) { return $verification; }
-            }
-          }
-
-        }
-      }
-
-      $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
-
-      //When all animals have passed the verification return this:
-      return array("animalKind" => "All objects",
-            "keyType" => $keyType,
-            "isValid" => true,
-            "result" => $this->createValidityCheckMessage(true));
-    }
-
-  }
 
   /**
    * @param array $animalArray
@@ -596,106 +428,6 @@ class APIController extends Controller implements APIControllerInterface
     return $array;
   }
 
-  /**
-   * @param boolean $isValid
-   * @param string $keyType
-   * @param string $animalKind
-   * @return array
-   */
-  private function createValidityCheckMessage($isValid, $keyType = null, $animalKind = null)
-  {
-    if($isValid && $keyType == null && $animalKind == null) {
-      $message = "The uln and/or pedigree values for all objects are valid.";
-      $code = 200;
-    } else if ($keyType == null) {
-      $message = "The uln or pedigree" . ' of ' . $animalKind . ' not found.';
-      $code = 400;
-    } else if ($animalKind == null) {
-      $message = "No animal found";
-      $code = 400;
-    } else if (!$isValid) { //and has keyType and animalKind
-      $message = $keyType . ' of ' . $animalKind . ' not found.';
-      $code = 428;
-    } else { //isValid == true, and has keyType and animalKind
-      $message = "The " . $keyType . " of " . $animalKind . " is valid.";
-      $code = 200;
-    }
-
-    return array('code'=>$code, "message" => $message);
-  }
-
-  private function verifyUlnOrPedigreeCodeInAnimal($animalContentArray, $objectToBeVerified)
-  {
-    $ulnCountryCode = null;
-    $pedigreeCountryCode = null;
-    $ulnCode = null;
-    $pedigreeCode = null;
-    $animal = null;
-
-    //This repository class is used to verify if a pedigree code is valid
-    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-
-    if (array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalContentArray)) {
-      $ulnCode = $animalContentArray[Constant::ULN_NUMBER_NAMESPACE];
-      $ulnCountryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
-
-      $animal = $animalRepository->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnCode);
-
-      if ($animal == null) {
-        return array("animalKind" => $objectToBeVerified,
-            "keyType" => Constant::ULN_NAMESPACE,
-            "isValid" => false,
-            "result" => $this->createValidityCheckMessage(false, Constant::ULN_NAMESPACE), $objectToBeVerified);
-      }
-    }
-    else {
-      if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalContentArray)) {
-        $pedigreeCode = $animalContentArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
-        $pedigreeCountryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
-      }
-
-      $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeCode);
-
-      if($animal == null){
-        $keyType = Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
-        return array("animalKind" => $objectToBeVerified,
-            "keyType" => $keyType,
-            "isValid" => false,
-            "result" => $this->createValidityCheckMessage(false, $keyType, $objectToBeVerified));
-      }
-    }
-    $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
-
-    return array("animalKind" => $objectToBeVerified,
-        "keyType" => $keyType,
-        "isValid" => true,
-        "result" => $this->createValidityCheckMessage(true));
-  }
-
-  private function verifyAnimalByUln($ulnString)
-  {
-    $isValid = false;
-    $keyType = Constant::ULN_NAMESPACE;
-
-    //validate if Id is of format: AZ123456789
-    if(!preg_match("([A-Z]{2}\d+)",$ulnString)){
-      //Directly return isValid = false result
-
-    } else {
-
-      $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-      $animal = $animalRepository->findByUlnOrPedigree($ulnString, true);
-
-      if ($animal != null) {
-        $isValid = true;
-      }
-    }
-
-    return array("animalKind" => "Id",
-        "keyType" => $keyType,
-        "isValid" => $isValid,
-        "result" => $this->createValidityCheckMessage($isValid, $keyType, $ulnString));
-  }
 
   public function isTagUnassigned($ulnCountryCode, $ulnNumber)
   {
@@ -916,28 +648,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getSelectedLocation(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
-    $headerValidation = null;
-
-    if($client) {
-      $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
-    }
-
-    if($headerValidation) {
-      if($headerValidation->isInputValid()) {
-        return $headerValidation->getLocation();
-      } else {
-        $locations = Finder::findLocationsOfClient($client);
-        if($locations->count() > 0) {
-          //pick the first available Location as default
-          return $locations->get(0);
-        } else {
-          return null;
-        }
-      }
-    }
-
-    return null;
+      return $this->getUserService()->getSelectedLocation($request);
   }
 
   /**
@@ -946,24 +657,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getSelectedUbn(Request $request)
   {
-
-    $client = $this->getAuthenticatedUser($request);
-    $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
-
-    if($headerValidation->isInputValid()) {
-      return $headerValidation->getUbn();
-
-    } else {
-
-      $locations = Finder::findLocationsOfClient($client);
-      if($locations->count() > 0) {
-        //pick the first available Location as default
-        return $locations->get(0)->getUbn();
-
-      } else {
-        return null;
-      }
-    }
+      return $this->getUserService()->getSelectedUbn($request);
   }
 
   public function syncAnimalsForAllLocations($loggedInUser)
@@ -1065,19 +759,7 @@ class APIController extends Controller implements APIControllerInterface
    * @param Animal | Ewe | Ram | Neuter $animal
    */
   protected function clearLivestockCacheForLocation(Location $location = null, $animal = null) {
-    if(!$location) {
-      /** @var Location $location */
-      $location = $animal->getLocation();
-    }
-    
-    if($location) {
-      $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
-      
-      $lastIndex = 10;
-      for($i = 1; $i <= $lastIndex; $i++) {
-        $this->getRedisClient()->del('[' .$cacheId .']['.$i.']');
-      }
-    }
+      $this->getCacheService()->clearLivestockCacheForLocation($location, $animal);
   }
 
 

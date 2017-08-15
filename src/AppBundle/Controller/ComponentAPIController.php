@@ -43,7 +43,7 @@ class ComponentAPIController extends APIController {
    * @Method("GET")
    */
     public function getMenuBar(Request $request) {
-        $client = $this->getAuthenticatedUser($request);
+        $client = $this->getAccountOwner($request);
         if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }
         $outputArray = MenuBarOutput::create($client);
 

@@ -52,7 +52,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    */
   public function getHealthByLocation(Request $request, $ubn) {
 
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
       return $adminValidator->createJsonErrorResponse();
@@ -85,7 +85,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
     $om = $this->getDoctrine()->getManager();
 
     //Admin validation
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
       return $adminValidator->createJsonErrorResponse();
@@ -126,7 +126,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
      */
     public function getHealthByCompany(Request $request, $companyId) {
 
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
         if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
             return $adminValidator->createJsonErrorResponse();

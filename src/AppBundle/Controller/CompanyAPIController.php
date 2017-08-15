@@ -43,7 +43,7 @@ class CompanyAPIController extends APIController
     public function getCompanies(Request $request)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -80,7 +80,7 @@ class CompanyAPIController extends APIController
     public function createCompany(Request $request)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -258,7 +258,7 @@ class CompanyAPIController extends APIController
     public function getCompany(Request $request, $companyId)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -286,7 +286,7 @@ class CompanyAPIController extends APIController
     public function UpdateCompany(Request $request, $companyId)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -582,7 +582,7 @@ class CompanyAPIController extends APIController
     public function setCompanyInactive(Request $request, $companyId)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -619,7 +619,7 @@ class CompanyAPIController extends APIController
     public function GetCompanyDetails(Request $request, $companyId)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -647,7 +647,7 @@ class CompanyAPIController extends APIController
     public function GetCompanyNotes(Request $request, $companyId)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
@@ -678,7 +678,7 @@ class CompanyAPIController extends APIController
     public function CreateCompanyNotes(Request $request, $companyId)
     {
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {

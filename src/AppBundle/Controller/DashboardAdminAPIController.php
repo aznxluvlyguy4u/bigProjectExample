@@ -26,7 +26,7 @@ class DashboardAdminAPIController extends APIController
     public function getAdminDashBoard(Request $request) {
 
         // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {

@@ -148,8 +148,8 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     $om = $this->getDoctrine()->getManager();
 
     $content = $this->getContentAsArray($request);
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $client = $this->getAccountOwner($request);
+    $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);
 
     $log = ActionLogWriter::declareLossPost($om, $client, $loggedInUser, $location, $content);
@@ -205,8 +205,8 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   public function editLoss(Request $request, $Id)
   {
     $content = $this->getContentAsArray($request);
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $client = $this->getAccountOwner($request);
+    $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);
 
     //Client can only report a loss of own animals

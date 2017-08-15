@@ -101,7 +101,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     //TODO Phase 2 Admin must be able to search all animals for which he is authorized.
 
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
 
     $animals = $animalRepository->findOfClientByAnimalTypeAndIsAlive($client, $animalType, $isAlive);
     $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getManager());
@@ -300,8 +300,8 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     {
       //Get content to array
       $content = $this->getContentAsArray($request);
-      $client = $this->getAuthenticatedUser($request);
-      $loggedInUser = $this->getLoggedInUser($request);
+      $client = $this->getAccountOwner($request);
+      $loggedInUser = $this->getUser();
       $location = $this->getSelectedLocation($request);
 
       if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }
@@ -346,7 +346,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::SUPER_ADMIN);
       if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
 
-      $loggedInUser = $this->getLoggedInUser($request);
+      $loggedInUser = $this->getUser();
       
       //Any logged in user can sync all animals
       $message = $this->syncAnimalsForAllLocations($loggedInUser)[Constant::MESSAGE_NAMESPACE];
@@ -379,8 +379,8 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   function createAnimalDetails(Request $request) {
     //Get content to array
     $content = $this->getContentAsArray($request);
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $client = $this->getAccountOwner($request);
+    $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database

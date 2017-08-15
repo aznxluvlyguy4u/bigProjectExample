@@ -58,7 +58,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
               "errorMessage" => "Given tagId format is invalid, supply tagId in the following format: AZ123456789"), 428);
     }
 
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $tag = $tagRepository->findOneByString($client, $Id);
 
     if($tag == null) {
@@ -108,7 +108,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    */
   public function getTags(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
     /** @var TagRepository $tagRepository */
     $tagRepository = $this->getDoctrine()->getRepository(Tag::class);

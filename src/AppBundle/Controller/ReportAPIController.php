@@ -67,14 +67,14 @@ class ReportAPIController extends APIController {
    */
   public function getPedigreeCertificates(Request $request) {
 
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
     $isAdmin = $adminValidator->getIsAccessGranted();
 
     $client = null;
     $location = null;
     if(!$isAdmin) {
-      $client = $this->getAuthenticatedUser($request);
+      $client = $this->getAccountOwner($request);
       $location = $this->getSelectedLocation($request);
     }
     $content = $this->getContentAsArray($request);
@@ -135,7 +135,7 @@ class ReportAPIController extends APIController {
    */
   public function getInbreedingCoefficientsReport(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $content = $this->getContentAsArray($request);
     $em = $this->getDoctrine()->getManager();
 
@@ -188,7 +188,7 @@ class ReportAPIController extends APIController {
    */
   public function getLiveStockReport(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
     //TODO read options from the content it the Array. Deactivated, so the front-end doesn't even need to send an empty array
 //    $content = $this->getContentAsArray($request);
@@ -243,7 +243,7 @@ class ReportAPIController extends APIController {
      */
     public function getPedigreeRegisterOverview(Request $request)
     {
-        return $this->getPedigreeRegisterReportService()->request($request, $this->getAuthenticatedEmployee($request));
+        return $this->getPedigreeRegisterReportService()->request($request, $this->getEmployee());
     }
 
 
@@ -270,7 +270,7 @@ class ReportAPIController extends APIController {
      */
     public function getBreedValuesReportOverview(Request $request)
     {
-        return $this->getBreedValuesOverviewReportService()->request($request, $this->getAuthenticatedEmployee($request));
+        return $this->getBreedValuesOverviewReportService()->request($request, $this->getEmployee());
     }
 
 
