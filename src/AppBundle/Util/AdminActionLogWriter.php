@@ -10,6 +10,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -127,6 +128,57 @@ class AdminActionLogWriter
 
         return $log;
     }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $actionBy
+     * @param LocationHealthInspection $inspection
+     * @return ActionLog
+     */
+    public static function createInspection(ObjectManager $om, $actionBy, $inspection)
+    {
+        $ubn = $inspection->getLocation() !== null ? 'ubn: ' . $inspection->getLocation()->getUbn().', '  : '';
+
+        $description = $ubn
+            . $inspection->getInspectionSubject()
+            . $inspection->getOrderNumber()
+            . $inspection->getRequestDate()->format('Y-m-d')
+            . $inspection->getStatus()
+        ;
+
+        $log = new ActionLog(null, $actionBy, UserActionType::CREATE_INSPECTION, true, $description, self::IS_USER_ENVIRONMENT);
+
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $actionBy
+     * @param LocationHealthInspection $inspection
+     * @return ActionLog
+     */
+    public static function changeInspectionStatus(ObjectManager $om, $actionBy, $inspection)
+    {
+        $ubn = $inspection->getLocation() !== null ? 'ubn: ' . $inspection->getLocation()->getUbn().', '  : '';
+
+        $description = $ubn
+            . $inspection->getInspectionSubject()
+            . $inspection->getOrderNumber()
+            . $inspection->getRequestDate()->format('Y-m-d')
+            . $inspection->getStatus()
+        ;
+
+        $log = new ActionLog(null, $actionBy, UserActionType::CHANGE_INSPECTION_STATUS, true, $description, self::IS_USER_ENVIRONMENT);
+
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
 
 
     /**
