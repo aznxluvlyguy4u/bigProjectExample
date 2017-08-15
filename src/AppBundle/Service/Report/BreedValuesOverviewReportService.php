@@ -67,29 +67,32 @@ class BreedValuesOverviewReportService extends ReportServiceBase
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::XLS);
         $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, true);
         $concatBreedValuesAndAccuracies = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
+        $includeAllLiveStockAnimals = RequestUtil::getBooleanQuery($request,QueryParameter::INCLUDE_ALL_LIVESTOCK_ANIMALS, false);
 
-        return $this->generate($fileType, $concatBreedValuesAndAccuracies, $uploadToS3);
+        return $this->generate($fileType, $concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals, $uploadToS3);
     }
 
 
     /**
      * @param string $fileType
      * @param boolean $concatBreedValuesAndAccuracies
+     * @param boolean $includeAllLiveStockAnimals
      * @param boolean $uploadToS3
      * @return JsonResponse
      */
-    public function generate($fileType, $concatBreedValuesAndAccuracies, $uploadToS3)
+    public function generate($fileType, $concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals, $uploadToS3)
     {
         $filename = self::FILENAME.'_'.TimeUtil::getTimeStampNowForFiles();
-        return $this->generateFile($filename, $this->getData($concatBreedValuesAndAccuracies), self::TITLE, $fileType, $uploadToS3);
+        return $this->generateFile($filename, $this->getData($concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals), self::TITLE, $fileType, $uploadToS3);
     }
 
 
     /**
      * @param bool $concatBreedValuesAndAccuracies
+     * @param bool $includeAllLiveStockAnimals
      * @return array
      */
-    private function getData($concatBreedValuesAndAccuracies = true)
+    private function getData($concatBreedValuesAndAccuracies = true, $includeAllLiveStockAnimals = false)
     {
         //Create breed index batch query parts
 
@@ -189,6 +192,14 @@ class BreedValuesOverviewReportService extends ReportServiceBase
             }
             
         }
+
+        $animalsFilter = '';
+        if (!$includeAllLiveStockAnimals) {
+            $animalsFilter = "AND (
+                        $breedValuesNullFilter
+                )";
+        }
+
 
         $sql = "
             SELECT
@@ -314,9 +325,7 @@ class BreedValuesOverviewReportService extends ReportServiceBase
                 ".$breedValuesPlusSigns."
             WHERE
                 a.location_id NOTNULL
-                AND (
-                        $breedValuesNullFilter
-                )";
+                $animalsFilter";
         return $this->conn->query($sql)->fetchAll();
     }
 }
