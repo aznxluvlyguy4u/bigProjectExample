@@ -54,6 +54,7 @@ use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\Finder;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Worker\Task\WorkerMessageBody;
@@ -163,7 +164,7 @@ class APIController extends Controller implements APIControllerInterface
 
     return $this->requestMessageBuilder;
   }
-  
+
 
   /** @return string */
   protected function getCurrentEnvironment() { return $this->get('kernel')->getEnvironment(); }
@@ -186,13 +187,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   protected function getContentAsArray(Request $request)
   {
-    $content = $request->getContent();
-
-    if(empty($content)){
-      throw new BadRequestHttpException("Content is empty");
-    }
-
-    return new ArrayCollection(json_decode($content, true));
+      return RequestUtil::getContentAsArray($request);
   }
 
   /**
