@@ -168,7 +168,8 @@ class MixblupPedigreeFileGenerator
      */
     private static function getFormattedUbnOfBirthFromRecord($recordArray)
     {
-        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::UBN, JsonInputConstant::UBN_OF_BIRTH, true, MixBlupInstructionFileBase::MISSING_BLOCK_REPLACEMENT);
+        $value = MixBlupDataFileBase::getFormattedUbnOfBirthWithoutPadding($recordArray);
+        return CsvWriterUtil::pad($value, MaxLength::UBN, true);
     }
 
 

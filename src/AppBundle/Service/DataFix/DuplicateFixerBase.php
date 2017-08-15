@@ -6,6 +6,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\SqlBatchProcessorWithProgressBar;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -35,6 +36,8 @@ class DuplicateFixerBase
 
     /** @var array */
     protected $tableNames;
+    /** @var SqlBatchProcessorWithProgressBar */
+    private $sqlBatchProcessor;
 
     /**
      * DuplicateAnimalsFixer constructor.
@@ -57,6 +60,29 @@ class DuplicateFixerBase
         if ($this->cmdUtil === null && $cmdUtil !== null) {
             $this->cmdUtil = $cmdUtil;
         }
+    }
+
+
+    /**
+     * @return SqlBatchProcessorWithProgressBar
+     * @throws \Exception
+     */
+    protected function getSqlBatchProcessor()
+    {
+        if ($this->sqlBatchProcessor === null) {
+            if ($this->cmdUtil === null) {
+                throw new \Exception('Set CommandUtil first before using getSqlBatchProcessor');
+            }
+
+            $this->sqlBatchProcessor = new SqlBatchProcessorWithProgressBar($this->conn, $this->cmdUtil,self::BATCH_SIZE);
+        }
+        return $this->sqlBatchProcessor;
+    }
+
+
+    protected function deleteSqlBatchProcessor()
+    {
+        $this->sqlBatchProcessor = null;
     }
 
 
