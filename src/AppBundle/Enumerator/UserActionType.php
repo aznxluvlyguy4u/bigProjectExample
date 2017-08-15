@@ -52,4 +52,24 @@ class UserActionType extends RequestType
 
     const CREATE_INSPECTION = 'CREATE_INSPECTION';
     const CHANGE_INSPECTION_STATUS = 'CHANGE_INSPECTION_STATUS';
+
+
+    /**
+     * @return array
+     */
+    public static function getRvoMessageActionTypes()
+    {
+        $types = parent::getConstants();
+
+        $nonRequestTypeRvoMessageTypes =
+            [
+                self::BIRTH_CREATE,
+                self::BIRTH_REVOKE
+            ];
+
+        foreach ($nonRequestTypeRvoMessageTypes as $value) {
+            $types[$value] = $value;
+        }
+        return $types;
+    }
 }

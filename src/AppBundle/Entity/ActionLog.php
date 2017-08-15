@@ -259,7 +259,7 @@ class ActionLog
      */
     public static function isRvoMessageByUserActionType($userActionType)
     {
-        return array_search($userActionType, RequestType::getConstants()) !== false;
+        return array_search($userActionType, UserActionType::getRvoMessageActionTypes()) !== false;
     }
 
 }
