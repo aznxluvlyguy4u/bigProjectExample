@@ -14,6 +14,7 @@ use AppBundle\Entity\InspectorAuthorizationRepository;
 use AppBundle\Entity\InspectorRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\InspectorMeasurementType;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\MeasurementsUtil;
@@ -37,8 +38,8 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 {
 
     const ALLOW_BLANK_INSPECTOR = true;
-    const MEASUREMENT_JMS_GROUP = 'USER_MEASUREMENT';
 
+    
     /**
      *
      * Update an exterior measurement for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
@@ -65,7 +66,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function createExteriorMeasurement(Request $request, $ulnString)
     {
-        $loggedInUser = $this->getLoggedInUser($request);
+        $loggedInUser = $this->getUser();
         $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
         $isAdmin = $adminValidator->getIsAccessGranted();
         $em = $this->getDoctrine()->getManager();
@@ -129,7 +130,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-            $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
+            $output = $this->getSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
             $code = 200;
         }
 
@@ -164,7 +165,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function editExteriorMeasurement(Request $request, $ulnString, $measurementDateString)
     {
-        $loggedInUser = $this->getLoggedInUser($request);
+        $loggedInUser = $this->getUser();
         $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
         $isAdmin = $adminValidator->getIsAccessGranted();
         $em = $this->getDoctrine()->getManager();
@@ -203,7 +204,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-            $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
+            $output = $this->getSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
             $code = 200;
 
         } else {
@@ -258,7 +259,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-            $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
+            $output = $this->getSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
             $code = 200;
 
         }
@@ -293,7 +294,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function getAllowedExteriorKinds(Request $request, $ulnString)
     {
-        $loggedInUser = $this->getLoggedInUser($request);
+        $loggedInUser = $this->getUser();
         $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
         $isAdmin = $adminValidator->getIsAccessGranted();
         $em = $this->getDoctrine()->getManager();
@@ -344,7 +345,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function getAllowedExteriorKindsForEdit(Request $request, $ulnString, $measurementDateString)
     {
-        $loggedInUser = $this->getLoggedInUser($request);
+        $loggedInUser = $this->getUser();
         $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
         $isAdmin = $adminValidator->getIsAccessGranted();
         $em = $this->getDoctrine()->getManager();
@@ -408,7 +409,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
     {
         $em = $this->getDoctrine()->getManager();
 
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
         if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
             return $adminValidator->createJsonErrorResponse();

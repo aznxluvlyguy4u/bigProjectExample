@@ -22,6 +22,21 @@ class FilesystemUtil
         return self::filesExist($rootFolder.ltrim($csvOptions->getInputFolder(),'app'), [$csvOptions->getFileName()]);
     }
 
+
+    /**
+     * Get the pathname from concatenated directory and filename,
+     * regardless whether the directory has a trailing forward slash or not.
+     *
+     * @param string $dir
+     * @param string $filename
+     * @return string
+     */
+    public static function concatDirAndFilename($dir, $filename)
+    {
+        return rtrim($dir,'/').'/'. $filename;
+    }
+
+
     /**
      * @param string $rootFolder
      * @param array|string $fileNames
@@ -33,11 +48,11 @@ class FilesystemUtil
         $fullPathFileNames = [];
         if(is_array($fileNames)) {
             foreach ($fileNames as $fileName) {
-                $fullPathFileNames[] = rtrim($rootFolder,'/').'/'.$fileName;
+                $fullPathFileNames[] = self::concatDirAndFilename($rootFolder,$fileName);
             }
 
         } elseif (is_string($fileNames)) {
-            $fullPathFileNames[] = rtrim($rootFolder,'/').'/'.$fileNames;
+            $fullPathFileNames[] = self::concatDirAndFilename($rootFolder,$fileName);
 
         } else {
             return false;

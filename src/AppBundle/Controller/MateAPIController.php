@@ -51,9 +51,9 @@ class MateAPIController extends APIController {
     $manager = $this->getDoctrine()->getManager();
 
     $content = $this->getContentAsArray($request);
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $loggedInUser = $this->getUser();
 
     $log = ActionLogWriter::createMate($manager, $client, $loggedInUser, $location, $content);
 
@@ -102,8 +102,8 @@ class MateAPIController extends APIController {
   public function editMate(Request $request, $messageId)
   {
     $manager = $this->getDoctrine()->getManager();
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $client = $this->getAccountOwner($request);
+    $loggedInUser = $this->getUser();
     $content = $this->getContentAsArray($request);
     $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
     $location = $this->getSelectedLocation($request);

@@ -12,7 +12,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
-use AppBundle\Util\CsvWriterUtil;
+use AppBundle\Util\DsvWriterUtil;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -318,7 +318,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
         $isValidBreedCode = BreedCodeUtil::verifySumOf8PartBreedCodeParts($breedCodeParts);
 
         if(!$isValidBreedCode) {
-            CsvWriterUtil::pad(MixBlupInstructionFileBase::MISSING_REPLACEMENT, MaxLength::BREED_CODE_PART_BY_8_PARTS, true);;
+            DsvWriterUtil::pad(MixBlupInstructionFileBase::MISSING_REPLACEMENT, MaxLength::BREED_CODE_PART_BY_8_PARTS, true);;
         }
 
         return self::formatBreedCodePart(BreedCodeType::TE, $breedCodeParts);
@@ -356,7 +356,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     protected static function getFormattedNullableMotherId($data)
     {
         $motherId = ArrayUtil::get(JsonInputConstant::MOTHER_ID, $data, self::IDM_NULL_REPLACEMENT);
-        return CsvWriterUtil::pad($motherId, MaxLength::ANIMAL_ID, true);
+        return DsvWriterUtil::pad($motherId, MaxLength::ANIMAL_ID, true);
     }
 
 
@@ -367,7 +367,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     protected static function getFormattedStillbornCount($data)
     {
         $stillBornCount = ArrayUtil::get(JsonInputConstant::TOTAL_STILLBORN_COUNT, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
-        return CsvWriterUtil::pad($stillBornCount, MaxLength::N_LING, true);
+        return DsvWriterUtil::pad($stillBornCount, MaxLength::N_LING, true);
     }
 
 
@@ -385,7 +385,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
             $gaveBirthAsOneYearOld = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
         }
 
-        return CsvWriterUtil::pad($gaveBirthAsOneYearOld, MaxLength::BOOL_AS_INT, true);
+        return DsvWriterUtil::pad($gaveBirthAsOneYearOld, MaxLength::BOOL_AS_INT, true);
     }
 
 
@@ -396,7 +396,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     protected static function getFormattedBirthProgress($data)
     {
         $birthProgressInt = ArrayUtil::get(JsonInputConstant::BIRTH_PROGRESS, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
-        return CsvWriterUtil::pad($birthProgressInt, MaxLength::BIRTH_PROGRESS, true);
+        return DsvWriterUtil::pad($birthProgressInt, MaxLength::BIRTH_PROGRESS, true);
     }
 
 
@@ -407,7 +407,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     protected static function getFormattedGestationPeriod($data)
     {
         $gestationPeriod = ArrayUtil::get(JsonInputConstant::GESTATION_PERIOD, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
-        return CsvWriterUtil::pad($gestationPeriod, MaxLength::GESTATION_PERIOD, true);
+        return DsvWriterUtil::pad($gestationPeriod, MaxLength::GESTATION_PERIOD, true);
     }
 
 
@@ -418,6 +418,6 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     protected static function getFormattedBirthInterval($data)
     {
         $birthInterval = ArrayUtil::get(JsonInputConstant::BIRTH_INTERVAL, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
-        return CsvWriterUtil::pad($birthInterval, MaxLength::BIRTH_INTERVAL, true);
+        return DsvWriterUtil::pad($birthInterval, MaxLength::BIRTH_INTERVAL, true);
     }
 }

@@ -43,8 +43,8 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
     {
       //Get content to array
       $content = $this->getContentAsArray($request);
-      $client = $this->getAuthenticatedUser($request);
-      $loggedInUser = $this->getLoggedInUser($request);
+      $client = $this->getAccountOwner($request);
+      $loggedInUser = $this->getUser();
       $location = $this->getSelectedLocation($request);
 
       //Convert the array into an object and add the mandatory values retrieved from the database

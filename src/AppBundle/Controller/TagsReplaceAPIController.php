@@ -51,8 +51,8 @@ class TagsReplaceAPIController extends APIController {
   {
     $om = $this->getDoctrine()->getManager();
     $content = $this->getContentAsArray($request);
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $client = $this->getAccountOwner($request);
+    $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);
 
     if(!$client) {
@@ -121,7 +121,7 @@ class TagsReplaceAPIController extends APIController {
     */
     public function getTagReplaceHistory(Request $request)
     {
-        $this->getAuthenticatedUser($request);
+        $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
 
         $em = $this->getDoctrine()->getManager();
@@ -161,7 +161,7 @@ class TagsReplaceAPIController extends APIController {
      */
     public function getTagReplaceErrors(Request $request)
     {
-        $this->getAuthenticatedUser($request);
+        $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
 
         $em = $this->getDoctrine()->getManager();

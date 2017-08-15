@@ -32,7 +32,7 @@ class DashboardAPIController extends APIController {
    * @Method("GET")
    */
   public function getDashBoard(Request $request) {
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
 
     if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }

@@ -53,7 +53,7 @@ class ClientAPIController extends APIController {
    */
   public function getClients(Request $request)
   {
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin);
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is an admin
       return $adminValidator->createJsonErrorResponse();
@@ -86,7 +86,7 @@ class ClientAPIController extends APIController {
    * @Method("POST")
    */
   public function createClient(Request $request) {
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin);
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is an admin
       return $adminValidator->createJsonErrorResponse();
