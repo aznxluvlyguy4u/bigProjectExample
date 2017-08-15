@@ -290,14 +290,15 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
+     * @param ArrayCollection $content
      * @param Company $company
      * @param Person $loggedInUser
      * @return ActionLog
      */
-    public static function createCompany(ObjectManager $om, Company $company, $loggedInUser)
+    public static function createCompany(ObjectManager $om, ArrayCollection $content, Company $company, $loggedInUser)
     {
         try {
-            $description = self::getCompanyDescription($company);
+            $description = self::getCompanyDescription($company).', user input : '.ArrayUtil::implode($content);
             $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::CREATE_COMPANY, true, $description, false);
             DoctrineUtil::persistAndFlush($om, $log);
         } catch (\Exception $exception) {
@@ -312,14 +313,15 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
+     * @param ArrayCollection $content
      * @param Company $company
      * @param Person $loggedInUser
      * @return ActionLog
      */
-    public static function editCompany(ObjectManager $om, Company $company, $loggedInUser)
+    public static function editCompany(ObjectManager $om, ArrayCollection $content, Company $company, $loggedInUser)
     {
         try {
-            $description = self::getCompanyDescription($company);
+            $description = self::getCompanyDescription($company).', user input : '.ArrayUtil::implode($content);
             $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::EDIT_COMPANY, true, $description, false);
             DoctrineUtil::persistAndFlush($om, $log);
         } catch (\Exception $exception) {

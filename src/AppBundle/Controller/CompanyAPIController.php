@@ -18,6 +18,7 @@ use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -231,7 +232,7 @@ class CompanyAPIController extends APIController
         $this->getDoctrine()->getManager()->persist($company);
         $this->getDoctrine()->getManager()->flush();
 
-        $log = ActionLogWriter::createCompany($this->getManager(), $company, $admin);
+        $log = ActionLogWriter::createCompany($this->getManager(), $content, $company, $admin);
 
         // Send Email with passwords to Owner & Users
         $password = $this->persistNewPassword($company->getOwner());
@@ -568,7 +569,7 @@ class CompanyAPIController extends APIController
             $this->emailNewPasswordToPerson($user, $password, false, true);
         }
 
-        $log = ActionLogWriter::editCompany($this->getManager(), $company, $admin);
+        $log = ActionLogWriter::editCompany($this->getManager(), $content, $company, $admin);
 
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Animal::class);
