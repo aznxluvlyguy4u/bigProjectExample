@@ -180,11 +180,13 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @param $json
      * @param $messageClassNameSpace
+     * @param $basePath
      * @return array|\JMS\Serializer\scalar|mixed|object|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
      */
     public function deserializeToObject($json, $messageClassNameSpace, $basePath = "AppBundle\\Entity\\")
     {
-        $messageClassPathNameSpace = $basePath . $messageClassNameSpace;
+        $messageClassPathNameSpace = strtr($basePath . $messageClassNameSpace,
+            ["AppBundle\\Entity\\AppBundle\\Entity\\" => "AppBundle\\Entity\\"]);
 
         $messageObject = $this->serializer->deserialize($json, $messageClassPathNameSpace, Constant::jsonNamespace);
 
