@@ -33,6 +33,7 @@ class TreatmentType
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @ORM\Column(type="string", unique=true)
+     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
      */
     private $description;
 
@@ -41,6 +42,7 @@ class TreatmentType
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @ORM\Column(type="string")
+     * @JMS\Groups({"TREATMENT_TEMPLATE"})
      */
     private $type;
 
