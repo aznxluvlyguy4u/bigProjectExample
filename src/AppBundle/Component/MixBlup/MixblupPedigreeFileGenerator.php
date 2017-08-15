@@ -8,7 +8,7 @@ use AppBundle\Constant\MaxLength;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
-use AppBundle\Util\CsvWriterUtil;
+use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\MixBlupPedigreeUtil;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
@@ -158,7 +158,7 @@ class MixblupPedigreeFileGenerator
      */
     private static function getFormattedIdFromRecord($key, $recordArray)
     {
-        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::ANIMAL_ID, $key, true, MixBlupInstructionFileBase::CONSTANT_MISSING_PARENT_REPLACEMENT);
+        return DsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::ANIMAL_ID, $key, true, MixBlupInstructionFileBase::CONSTANT_MISSING_PARENT_REPLACEMENT);
     }
 
 
@@ -168,7 +168,8 @@ class MixblupPedigreeFileGenerator
      */
     private static function getFormattedUbnOfBirthFromRecord($recordArray)
     {
-        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::UBN, JsonInputConstant::UBN_OF_BIRTH, true, MixBlupInstructionFileBase::MISSING_BLOCK_REPLACEMENT);
+        $value = MixBlupDataFileBase::getFormattedUbnOfBirthWithoutPadding($recordArray);
+        return DsvWriterUtil::pad($value, MaxLength::UBN, true);
     }
 
 
@@ -183,7 +184,7 @@ class MixblupPedigreeFileGenerator
     protected static function getFormattedGenderFromType($data, $key = JsonInputConstant::TYPE, $useColumnPadding = true)
     {
         $gender = MixBlupDataFileBase::translateGender($data[$key]);
-        return CsvWriterUtil::pad($gender, MaxLength::VALID_GENDER, $useColumnPadding);
+        return DsvWriterUtil::pad($gender, MaxLength::VALID_GENDER, $useColumnPadding);
     }
 
 
@@ -194,7 +195,7 @@ class MixblupPedigreeFileGenerator
      */
     private static function getFormattedDateOfBirthFromRecord($recordArray)
     {
-        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::DATE, JsonInputConstant::DATE_OF_BIRTH, true, MixBlupInstructionFileBase::PEDIGREE_FILE_DATE_OF_BIRTH_NULL_REPLACEMENT);
+        return DsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::DATE, JsonInputConstant::DATE_OF_BIRTH, true, MixBlupInstructionFileBase::PEDIGREE_FILE_DATE_OF_BIRTH_NULL_REPLACEMENT);
     }
 
 
@@ -204,7 +205,7 @@ class MixblupPedigreeFileGenerator
      */
     private static function getFormattedUlnFromRecord($recordArray)
     {
-        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::ULN, JsonInputConstant::ULN, true);
+        return DsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::ULN, JsonInputConstant::ULN, true);
     }
 
 }

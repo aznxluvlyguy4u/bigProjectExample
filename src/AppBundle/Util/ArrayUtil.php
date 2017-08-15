@@ -63,4 +63,59 @@ class ArrayUtil
     {
         return array_search($key, array_keys($array));
     }
+
+
+    /**
+     * @param array $array
+     * @param bool $allowResetingPointer
+     * @return mixed|null
+     */
+    public static function firstValue(array $array, $allowResetingPointer = true)
+    {
+        if (count($array) === 0) { return null; }
+
+        if ($allowResetingPointer) {
+            return reset($array);
+        }
+
+        return array_values($array)[0];
+    }
+
+
+    /**
+     * @param array $array
+     * @param bool $allowResetingPointer
+     * @return mixed|null
+     */
+    public static function firstKey(array $array, $allowResetingPointer = true)
+    {
+        if (count($array) === 0) { return null; }
+
+        if ($allowResetingPointer) {
+            reset($array);
+            return key($array);
+        }
+
+        return array_keys($array)[0];
+    }
+
+
+    /**
+     * @param array $array
+     * @param bool $resetPointer
+     * @return mixed|null
+     */
+    public static function lastKey(array $array, $resetPointer = true)
+    {
+        if (count($array) === 0) { return null; }
+
+        end($array); //Move pointer to last element
+        $lastKey = key($array);
+
+        if ($resetPointer) {
+            reset($array); //Move pointer to first element
+        }
+
+        return $lastKey;
+    }
 }

@@ -10,7 +10,7 @@ use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TexelaarPedigreeRegisterAbbreviation;
 use AppBundle\Setting\MixBlupSetting;
-use AppBundle\Util\CsvWriterUtil;
+use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Validation\ExteriorValidator;
 use Doctrine\DBAL\Connection;
@@ -62,7 +62,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
             self::formatMaleVGExteriorValues($data).
             self::formatDFExteriorValues($data).
             self::formatLinearExteriorValues().
-            self::getUbnOfBirthAsLastColumnValue($data);
+            self::getFormattedUbnOfBirthWithoutPadding($data);
 
             $records[] = $record;
         }
@@ -231,6 +231,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                   AND a.breed_code NOTNULL AND m.measurement_date NOTNULL
                   --AND a.heterosis NOTNULL AND a.recombination NOTNULL --CHECK IF NULLCHECK NECESSARY OR NOT
                   AND m.measurement_date <= NOW()
+                  AND i.inspector_code NOTNULL
                   AND NOT(
                           (skull < ".$minVal." OR skull > ".$maxVal.") AND
                           (progress < ".$minVal." OR progress > ".$maxVal.") AND
@@ -292,7 +293,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
     private static function formatExteriorValue($array, $key, $maxLength = MaxLength::EXTERIOR_VALUE)
     {
         $filledExteriorValue = Utils::fillZero($array[$key], ExteriorInstructionFiles::MISSING_REPLACEMENT);
-        return CsvWriterUtil::pad($filledExteriorValue, $maxLength);
+        return DsvWriterUtil::pad($filledExteriorValue, $maxLength);
     }
 
 
@@ -302,7 +303,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
      */
     private static function formattedNullExteriorValue($maxLength = MaxLength::EXTERIOR_VALUE)
     {
-        return CsvWriterUtil::pad(ExteriorInstructionFiles::MISSING_REPLACEMENT, $maxLength);
+        return DsvWriterUtil::pad(ExteriorInstructionFiles::MISSING_REPLACEMENT, $maxLength);
     }
 
 

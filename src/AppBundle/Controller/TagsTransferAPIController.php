@@ -52,8 +52,8 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     $om = $this->getDoctrine()->getManager();
     
     $content = $this->getContentAsArray($request);
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $client = $this->getAccountOwner($request);
+    $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);
 
     $log = ActionLogWriter::declareTagTransferPost($om, $client, $loggedInUser, $content);
@@ -117,7 +117,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    */
   public function getTagTransferItemErrors(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
 
     /** @var TagTransferItemResponseRepository $repository */
@@ -154,7 +154,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    */
   public function getTagTransferItemHistory(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
 
     /** @var TagTransferItemResponseRepository $repository */

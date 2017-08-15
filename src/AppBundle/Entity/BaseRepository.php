@@ -12,6 +12,7 @@ use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 
 /**
@@ -21,7 +22,7 @@ use Doctrine\ORM\EntityRepository;
 class BaseRepository extends EntityRepository
 {
     /**
-     * @return ObjectManager
+     * @return ObjectManager|EntityManagerInterface
      */
     protected function getManager()
     {

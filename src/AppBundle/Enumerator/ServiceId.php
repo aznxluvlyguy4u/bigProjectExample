@@ -10,6 +10,7 @@ class ServiceId
 {
     const ANIMAL_LOCATION_HISTORY = 'app.animallocation.history';
     const BREED_VALUES_OVERVIEW_REPORT = 'app.report.breed_values_overview';
+    const CACHE = 'app.cache';
     const CLIENT_MIGRATOR = 'app.migrator.client';
     const ENTITY_GETTER = 'app.doctrine.entitygetter';
     const EXTERNAL_QUEUE_SERVICE = 'app.aws.queueservice.external';
@@ -23,4 +24,5 @@ class ServiceId
     const REDIS_CLIENT = 'snc_redis.sncredis';
     const SERIALIZER = 'app.serializer.ir';
     const STORAGE_SERVICE = 'app.aws.storageservice';
+    const USER_SERVICE = 'app.user';
 }

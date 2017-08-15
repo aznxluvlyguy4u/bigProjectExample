@@ -33,7 +33,7 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
    */
   public function getAdminProfile(Request $request) {
 
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
     if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
       return $adminValidator->createJsonErrorResponse();
@@ -64,7 +64,7 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
    */
   public function editAdminProfile(Request $request) {
 
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
     if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
       return $adminValidator->createJsonErrorResponse();

@@ -64,4 +64,25 @@ class RequestUtil
         }
         return new \DateTime($queryValue);
     }
+
+
+    /**
+     * @param Request $request
+     * @param string $queryParameter
+     * @param null|mixed $nullResult
+     * @return int|null
+     */
+    public static function getIntegerQuery(Request $request, $queryParameter, $nullResult = null)
+    {
+        $queryValue = $request->query->get($queryParameter);
+
+        if($queryValue == null) {
+            return $nullResult;
+
+        } elseif(is_int($queryValue) || ctype_digit($queryValue)) {
+            return intval($queryValue);
+        }
+        return $nullResult;
+    }
+
 }

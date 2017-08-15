@@ -16,6 +16,7 @@ use AppBundle\Entity\TagSyncErrorLogRepository;
 use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
 use AppBundle\Service\DataFix\GenderChangeCommandService;
+use AppBundle\Service\DataFix\UbnFixer;
 use AppBundle\Service\Migration\BirthProgressInitializer;
 use AppBundle\Service\Migration\InspectorMigrator;
 use AppBundle\Service\Migration\VsmMigratorService;
@@ -79,6 +80,8 @@ class CliOptionsService
     private $departInternalWorkerCliOptions;
     /** @var MixBlupCliOptionsService */
     private $mixBlupCliOptionsService;
+    /** @var UbnFixer */
+    private $ubnFixer;
     /** @var VsmMigratorService */
     private $vsmMigratorService;
 
@@ -99,6 +102,7 @@ class CliOptionsService
      * @param InspectorMigrator $inspectorMigrator
      * @param DepartInternalWorkerCliOptions $departInternalWorkerCliOptions
      * @param MixBlupCliOptionsService $mixBlupCliOptionsService
+     * @param UbnFixer $ubnFixer
      * @param VsmMigratorService $vsmMigratorService
      */
     public function __construct(ObjectManager $em, Logger $logger, $rootDir,
@@ -109,6 +113,7 @@ class CliOptionsService
                                 InspectorMigrator $inspectorMigrator,
                                 DepartInternalWorkerCliOptions $departInternalWorkerCliOptions,
                                 MixBlupCliOptionsService $mixBlupCliOptionsService,
+                                UbnFixer $ubnFixer,
                                 VsmMigratorService $vsmMigratorService
     )
     {
@@ -123,6 +128,7 @@ class CliOptionsService
         $this->inspectorMigrator = $inspectorMigrator;
         $this->departInternalWorkerCliOptions = $departInternalWorkerCliOptions;
         $this->mixBlupCliOptionsService = $mixBlupCliOptionsService;
+        $this->ubnFixer = $ubnFixer;
         $this->vsmMigratorService = $vsmMigratorService;
 
         $this->conn = $this->em->getConnection();
@@ -620,6 +626,9 @@ class CliOptionsService
             '6: Find animals with themselves being their own ascendant', "\n",
             '7: Print from database, animals with themselves being their own ascendant', "\n",
             '8: Fill missing breedCodes and set breedCode = breedCodeParents if both parents have the same pure (XX100) breedCode', "\n",
+            '9: Replace non-alphanumeric symbols in uln_number of animal table (based on symbols found in migration file)', "\n",
+            '10: Replace non-digit symbols in ubn_of_birth of animal table ', "\n",
+            '11: Replace non-digit symbols in ubn_of_birth of animal_migration_table', "\n",
             '=====================================', "\n",
             '20: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n\n",
             '================== ANIMAL LOCATION & RESIDENCE ===================', "\n",
@@ -644,6 +653,9 @@ class CliOptionsService
             case 6: $ascendantValidator->run(); break;
             case 7: $ascendantValidator->printOverview(); break;
             case 8: DatabaseDataFixer::recursivelyFillMissingBreedCodesHavingBothParentBreedCodes($this->conn, $this->cmdUtil); break;
+            case 9: $this->vsmMigratorService->getAnimalTableMigrator()->removeNonAlphaNumericSymbolsFromUlnNumberInAnimalTable(); break;
+            case 10: $this->ubnFixer->removeNonDigitsFromUbnOfBirthInAnimalTable($this->cmdUtil); break;
+            case 11: $this->ubnFixer->removeNonDigitsFromUbnOfBirthInAnimalMigrationTable($this->cmdUtil); break;
 
             case 20: DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirthsWithOptionInput($this->conn, $this->cmdUtil); break;
 
