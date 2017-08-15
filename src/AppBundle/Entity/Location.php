@@ -214,7 +214,15 @@ class Location
      * @JMS\Type("array")
      */
     private $tags;
-  
+
+    /**
+     * @var ArrayCollection
+     * @ORM\OrderBy({"description" = "ASC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentTemplate", mappedBy="location", cascade={"persist"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentTemplate>")
+     */
+    private $treatmentTemplates;
+
     /**
      * @var boolean
      *
@@ -244,6 +252,7 @@ class Location
     $this->healthMessages = new ArrayCollection();
     $this->animalResidenceHistory = new ArrayCollection();
     $this->tags = new ArrayCollection();
+    $this->treatmentTemplates = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 
@@ -928,7 +937,48 @@ class Location
     }
 
 
-  /**
+    /**
+     * @return ArrayCollection
+     */
+    public function getTreatmentTemplates()
+    {
+        return $this->treatmentTemplates;
+    }
+
+    /**
+     * @param ArrayCollection $treatmentTemplates
+     * @return Location
+     */
+    public function setTreatmentTemplates($treatmentTemplates)
+    {
+        $this->treatmentTemplates = $treatmentTemplates;
+        return $this;
+    }
+
+    /**
+     * Add treatmentTemplate
+     * @param TreatmentTemplate $treatmentTemplate
+     * @return Location
+     */
+    public function addTreatmentTemplate(TreatmentTemplate $treatmentTemplate)
+    {
+        $this->treatmentTemplates->add($treatmentTemplate);
+        return $this;
+    }
+
+    /**
+     * Remove treatmentTemplate
+     * @param TreatmentTemplate $treatmentTemplate
+     * @return Location
+     */
+    public function removeTreatmentTemplate(TreatmentTemplate $treatmentTemplate)
+    {
+        $this->treatmentTemplates->removeElement($treatmentTemplate);
+        return $this;
+    }
+
+
+    /**
      * @return mixed
      */
     public function getIsActive()
