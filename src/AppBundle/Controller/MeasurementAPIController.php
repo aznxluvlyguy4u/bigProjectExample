@@ -130,7 +130,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-            $output = $this->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
+            $output = $this->getSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
             $code = 200;
         }
 
@@ -204,7 +204,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-            $output = $this->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
+            $output = $this->getSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
             $code = 200;
 
         } else {
@@ -259,7 +259,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-            $output = $this->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
+            $output = $this->getSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
             $code = 200;
 
         }

@@ -163,38 +163,7 @@ class APIController extends Controller implements APIControllerInterface
 
     return $this->requestMessageBuilder;
   }
-
-
-  /**
-   * @param $object
-   * @param array $type
-   * @param boolean $enableMaxDepthChecks
-   * @return mixed|array
-   */
-  public function getDecodedJson($object, $type = null, $enableMaxDepthChecks = true)
-  {
-    if($object instanceof ArrayCollection || is_array($object) || $object instanceof LazyCriteriaCollection) {
-      $results = [];
-      foreach ($object as $item) {
-        $results[] = $this->getDecodedJsonSingleObject($item, $type, $enableMaxDepthChecks);
-      }
-      return $results;
-    }
-
-    return $this->getDecodedJsonSingleObject($object, $type, $enableMaxDepthChecks);
-  }
-
-  /**
-   * @param $object
-   * @param array $type
-   * @param boolean $enableMaxDepthChecks
-   * @return mixed|array
-   */
-  private function getDecodedJsonSingleObject($object, $type = null, $enableMaxDepthChecks = true)
-  {
-    $jsonMessage = $this->getSerializer()->serializeToJSON($object, $type, $enableMaxDepthChecks);
-    return json_decode($jsonMessage, true);
-  }
+  
 
   /** @return string */
   protected function getCurrentEnvironment() { return $this->get('kernel')->getEnvironment(); }
