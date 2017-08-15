@@ -82,6 +82,7 @@ class APIController extends Controller implements APIControllerInterface
   private $services = [
       ServiceId::ANIMAL_LOCATION_HISTORY => null,
       ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
+      ServiceId::CACHE => null,
       ServiceId::CLIENT_MIGRATOR => null,
       ServiceId::ENTITY_GETTER => null,
       ServiceId::EXCEL_SERVICE => null,
