@@ -43,7 +43,7 @@ class TreatmentTemplate
      * @var TreatmentType
      * @ORM\ManyToOne(targetEntity="TreatmentType")
      * @JMS\Type("AppBundle\Entity\TreatmentType")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     * @JMS\Groups({"TREATMENT_TEMPLATE"})
      */
     private $treatmentType;
 

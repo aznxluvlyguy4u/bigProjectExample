@@ -19,6 +19,8 @@ use \DateTime;
  */
 class TreatmentType
 {
+    const OPEN_OPTION_DESCRIPTION = 'Overig';
+
     /**
      * @var integer
      *

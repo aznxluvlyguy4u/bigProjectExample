@@ -4,9 +4,13 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\TreatmentTemplateAPIControllerInterface;
+use AppBundle\Entity\MedicationOption;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Entity\TreatmentTemplateRepository;
+use AppBundle\Entity\TreatmentType;
+use AppBundle\Entity\TreatmentTypeRepository;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -23,12 +27,16 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
     /** @var TreatmentTemplateRepository */
     private $treatmentTemplateRepository;
 
+    /** @var TreatmentTypeRepository */
+    private $treatmentTypeRepository;
+
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
                                 CacheService $cacheService, UserService $userService)
     {
         parent::__construct($em, $serializer, $cacheService, $userService);
 
         $this->treatmentTemplateRepository = $this->em->getRepository(TreatmentTemplate::class);
+        $this->treatmentTypeRepository = $this->em->getRepository(TreatmentType::class);
     }
 
     /**
@@ -112,27 +120,83 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function createIndividualTemplate(Request $request)
     {
+        return $this->createTemplate($request, TreatmentTypeOption::INDIVIDUAL);
+    }
+
+
+    /**
+     * @param Request $request
+     * @param $type
+     * @return JsonResponse
+     */
+    private function createTemplate(Request $request, $type)
+    {
         /** @var TreatmentTemplate $template */
         $template = $this->serializer->deserializeToObject($request->getContent(), TreatmentTemplate::class);
+        if (!($template instanceof TreatmentTemplate)) {
+            return Validator::createJsonResponse('Json body must have the TreatmentTemplate structure', 428);
+        }
+        $template->setType($type);
 
+        //Validation
         $locationRequested = $template->getLocation();
         $location = null;
         if ($locationRequested) {
             $location = $this->getLocationByUbn($locationRequested->getUbn());
+            if ($location instanceof JsonResponse) { return $location; }
+        } else {
+            return Validator::createJsonResponse('Empty location', 428);
         }
 
-        $treatmentType = $template->getTreatmentType();
-        if ($treatmentType === null) {
-            return Validator::createJsonResponse('TreatmentType is missing', 428);
+        $description = $template->getDescription();
+        if ($description === null) {
+            return Validator::createJsonResponse('Description is missing', 428);
         }
 
-        //TODO process POST
-        //$treatmentType->getDescription();
+        $type = TreatmentTypeService::getValidateType($template->getType());
+        if ($type instanceof JsonResponse) { return $type; }
 
-        $output = $this->serializer->getDecodedJson($template, [JmsGroup::TREATMENT_TEMPLATE]);
+
+        $treatmentType = $this->treatmentTypeRepository->findActiveOneByTypeAndDescription($type, $description);
+
+        if (!$treatmentType) {
+            if ($type === TreatmentTypeOption::INDIVIDUAL) {
+                $treatmentType = $this->treatmentTypeRepository->findOpenDescriptionType();
+            } else {
+                //TreatmentTypeOption::LOCATION
+                return Validator::createJsonResponse(
+                    'Treatment description does not exist in database for active TreatmentType with type = LOCATION', 428);
+            }
+        }
+
+        /** @var MedicationOption $medication */
+        foreach ($template->getMedications() as $medication)
+        {
+            $medication->setTreatmentTemplate($template);
+        }
+
+        $template->__construct();
+        $template
+            ->setLocation($location)
+            ->setTreatmentType($treatmentType)
+            ->setCreationBy($this->userService->getUser())
+        ;
+
+        $this->em->persist($template);
+        $this->em->flush();
+
+        //TODO ActionLog
+
+        $jmsGroup = JmsGroup::TREATMENT_TEMPLATE;
+        if(RequestUtil::getBooleanQuery($request,QueryParameter::MINIMAL_OUTPUT,true)) {
+            $jmsGroup = JmsGroup::TREATMENT_TEMPLATE_MIN;
+        }
+
+        $output = $this->serializer->getDecodedJson($template, [$jmsGroup]);
 
         return ResultUtil::successResult($output);
     }
+
 
     /**
      * @param Request $request
@@ -140,9 +204,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function createLocationTemplate(Request $request)
     {
-        // TODO: Implement createLocationTemplate() method.
-
-        return ResultUtil::successResult('ok');
+        return $this->createTemplate($request, TreatmentTypeOption::LOCATION);
     }
 
     /**

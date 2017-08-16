@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Service\TreatmentTypeService;
 
 class TreatmentTypeRepository extends BaseRepository
@@ -51,5 +52,27 @@ class TreatmentTypeRepository extends BaseRepository
         }
 
         return $this->findOneBy($criteria);
+    }
+
+
+    /**
+     * @return null|object|TreatmentType
+     * @throws \Exception
+     */
+    public function findOpenDescriptionType()
+    {
+        $treatmentType = $this->findOneBy(
+            [
+                'isActive' => true,
+                'type' => TreatmentTypeOption::INDIVIDUAL,
+                'description' => TreatmentType::OPEN_OPTION_DESCRIPTION,
+            ]);
+
+        if ($treatmentType === null) {
+            throw new \Exception('There should be at least one ACTIVE TreatmentType in the database with '
+            .' type = '.TreatmentTypeOption::INDIVIDUAL.' and description = '.TreatmentType::OPEN_OPTION_DESCRIPTION, 428);
+        }
+
+        return $treatmentType;
     }
 }
