@@ -66,7 +66,7 @@ class ActionLog
     /**
      * @var string
      *
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      * @JMS\Type("string")
      */
     private $description;
