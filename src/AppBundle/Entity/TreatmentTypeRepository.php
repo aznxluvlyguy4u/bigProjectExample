@@ -29,4 +29,27 @@ class TreatmentTypeRepository extends BaseRepository
         return $this->findBy($criteria,  ['type' => 'ASC','description' => 'ASC']);
     }
 
+
+    /**
+     * @param string $type
+     * @param string $description
+     * @return null|TreatmentType|object
+     * @throws \Exception
+     */
+    public function findActiveOneByTypeAndDescription($type, $description)
+    {
+        $criteria = [
+            'isActive' => true,
+            'description' => $description,
+        ];
+
+        if ($type !== null) {
+            $validatedType = TreatmentTypeService::getValidateType($type);
+            if ($validatedType instanceof JsonResponse) { throw new \Exception($validatedType->getContent()); }
+
+            $criteria['type'] = $validatedType;
+        }
+
+        return $this->findOneBy($criteria);
+    }
 }
