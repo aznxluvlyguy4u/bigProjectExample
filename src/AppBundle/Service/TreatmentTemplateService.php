@@ -137,6 +137,14 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         return $this->createTemplate($request, TreatmentTypeOption::INDIVIDUAL);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    function createLocationTemplate(Request $request)
+    {
+        return $this->createTemplate($request, TreatmentTypeOption::LOCATION);
+    }
 
     /**
      * @param Request $request
@@ -207,15 +215,6 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
 
     /**
      * @param Request $request
-     * @return JsonResponse
-     */
-    function createLocationTemplate(Request $request)
-    {
-        return $this->createTemplate($request, TreatmentTypeOption::LOCATION);
-    }
-
-    /**
-     * @param Request $request
      * @param $templateId
      * @return JsonResponse
      */
@@ -245,9 +244,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function deleteIndividualTemplate(Request $request, $templateId)
     {
-        // TODO: Implement deleteIndividualTemplate() method.
-
-        return ResultUtil::successResult('ok');
+        return $this->deleteTemplate($request, $templateId,TreatmentTypeOption::INDIVIDUAL);
     }
 
     /**
@@ -257,10 +254,41 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function deleteLocationTemplate(Request $request, $templateId)
     {
-        // TODO: Implement deleteLocationTemplate() method.
-
-        return ResultUtil::successResult('ok');
+        return $this->deleteTemplate($request, $templateId, TreatmentTypeOption::LOCATION);
     }
 
+    /**
+     * @param Request $request
+     * @param int $templateId
+     * @param string $type
+     * @return JsonResponse
+     */
+    private function deleteTemplate($request, $templateId, $type)
+    {
+        if (!ctype_digit($templateId) && !is_int($templateId)) {
+            return Validator::createJsonResponse('TemplateId must be an integer', 428);
+        }
 
+        $type = TreatmentTypeService::getValidateType($type);
+        if ($type instanceof JsonResponse) { return $type; }
+
+        $template = $this->treatmentTemplateRepository->findOneBy(['type' => $type, 'id' => $templateId]);
+        if ($template === null) {
+            return Validator::createJsonResponse('No template of type '.$type
+                .' found for id '.$templateId, 428);
+        }
+
+        if ($template->isActive() === false) {
+            return Validator::createJsonResponse('Template has already been deactivated', 428);
+        }
+
+        $template->setIsActive(false);
+        $this->em->persist($template);
+        $this->em->flush();
+
+        //TODO ActionLog
+
+        $output = $this->serializer->getDecodedJson($template, $this->getJmsGroupByQuery($request));
+        return ResultUtil::successResult($output);
+    }
 }
