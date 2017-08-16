@@ -158,8 +158,6 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         if ($locationRequested) {
             $location = $this->getLocationByUbn($locationRequested->getUbn());
             if ($location instanceof JsonResponse) { return $location; }
-        } else {
-            return Validator::createJsonResponse('Empty location', 428);
         }
 
         $description = $template->getDescription();
