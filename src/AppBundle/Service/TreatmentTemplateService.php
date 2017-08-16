@@ -13,7 +13,6 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\AdminActionLogWriter;
-use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
@@ -525,7 +524,6 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         $this->em->persist($template);
         $this->em->flush();
 
-        //TODO ActionLog
         AdminActionLogWriter::deleteTreatmentTemplate($this->em, $template->getLocationOwner(), $admin, $template);
 
         $output = $this->serializer->getDecodedJson($template, $this->getJmsGroupByQuery($request));
