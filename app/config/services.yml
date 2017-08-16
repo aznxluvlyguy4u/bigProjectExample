@@ -23,6 +23,7 @@ services:
           - '@app.cli.internal_worker.depart'
           - '@app.cli.mixblup'
           - '@app.datafix.ubn'
+          - '@app.initializer.treatment_type'
           - '@app.migrator.vsm'
 
     app.cli.gender_changer:
@@ -222,6 +223,10 @@ services:
     app.initializer.birth_progress:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\BirthProgressInitializer
+
+    app.initializer.treatment_type:
+        parent: app.migrator.base
+        class: AppBundle\Service\Migration\TreatmentTypeInitializer
 
     app.migrator.client:
         class: AppBundle\Service\Migration\ClientMigrator
