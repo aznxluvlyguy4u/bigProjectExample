@@ -352,5 +352,28 @@ class TreatmentTemplate
         return $this;
     }
 
-    
+
+    /**
+     * @return Client|null
+     */
+    public function getLocationOwner()
+    {
+        if ($this->location) {
+            return $this->location->getOwner();
+        }
+        return null;
+    }
+
+
+    /**
+     * @param string $nullReplacement
+     * @return null|string
+     */
+    public function getUbn($nullReplacement = null)
+    {
+        if ($this->location) {
+            return $this->location->getUbn();
+        }
+        return $nullReplacement;
+    }
 }

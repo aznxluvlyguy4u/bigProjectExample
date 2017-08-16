@@ -12,6 +12,7 @@ use AppBundle\Entity\TreatmentTypeRepository;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\TreatmentTypeOption;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -28,9 +29,11 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
 {
     /** @var TreatmentTemplateRepository */
     private $treatmentTemplateRepository;
-
     /** @var TreatmentTypeRepository */
     private $treatmentTypeRepository;
+
+    /** @var string */
+    private $description;
 
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
                                 CacheService $cacheService, UserService $userService)
@@ -159,7 +162,8 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     private function createTemplate(Request $request, $type)
     {
-        if($this->userService->getEmployee() === null) { return AdminValidator::getStandardErrorResponse(); }
+        $admin = $this->userService->getEmployee();
+        if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
         /** @var TreatmentTemplate $template */
         $template = $this->serializer->deserializeToObject($request->getContent(), TreatmentTemplate::class);
@@ -184,7 +188,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         $this->em->persist($template);
         $this->em->flush();
 
-        //TODO ActionLog
+        AdminActionLogWriter::createTreatmentTemplate($this->em, $admin, $request, $template);
 
         $output = $this->serializer->getDecodedJson($template, $this->getJmsGroupByQuery($request));
 
@@ -320,7 +324,8 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     private function editTemplate(Request $request, $templateId, $type)
     {
-        if($this->userService->getEmployee() === null) { return AdminValidator::getStandardErrorResponse(); }
+        $admin = $this->userService->getEmployee();
+        if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
         $templateInDatabase = $this->getTemplateByIdAndType($templateId, $type);
         if ($templateInDatabase instanceof JsonResponse) { return $templateInDatabase; }
@@ -347,6 +352,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         /* Update */
 
         $isAnyValueUpdated = false;
+        $this->description = '';
 
         //Update Location
         $currentLocation = $templateInDatabase->getLocation();
@@ -355,12 +361,16 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         $updateLocation = false;
         if ($currentLocation !== null && $location !== null) {
             if ($currentLocation->getId() !== $location->getId()) {
+                $this->appendUpdateDescription($currentLocation->getUbn(), $location->getUbn());
                 $updateLocation = true;
             }
-        } elseif (
-            $currentLocation === null && $location !== null ||
-            $currentLocation !== null && $location === null
-        ) {
+
+        } elseif ($currentLocation === null && $location !== null) {
+            $this->appendUpdateDescription('', $location->getUbn());
+            $updateLocation = true;
+
+        } elseif ($currentLocation !== null && $location === null) {
+            $this->appendUpdateDescription($currentLocation->getUbn(), '');
             $updateLocation = true;
         }
 
@@ -378,6 +388,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
 
         //Update description
         if ($templateInDatabase->getDescription() !== $template->getDescription()) {
+            $this->appendUpdateDescription($templateInDatabase->getDescription(), $template->getDescription());
             $templateInDatabase->setDescription($template->getDescription());
             $isAnyValueUpdated = true;
         }
@@ -399,11 +410,13 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
                 $newMedicationDosage = $newMedicationDosagesByDescription[$medication->getDescription()];
                 if ($medication->getDosage() !== $newMedicationDosage) {
                     //Update dosage
+                    $this->appendDescription($medication->getDescription(). ' dosage => '.$newMedicationDosage);
                     $medication->setDosage($newMedicationDosage);
                     $isAnyValueUpdated = true;
                 }
             } else {
                 //Remove medication
+                $this->appendDescription('remove '.$medication->getDescription());
                 $templateInDatabase->removeMedication($medication);
                 $this->em->remove($medication);
                 $isAnyValueUpdated = true;
@@ -416,6 +429,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
             if (!key_exists($newMedication->getDescription(), $currentMedicationByDescription)) {
                 $templateInDatabase->addMedication($newMedication);
                 $newMedication->setTreatmentTemplate($templateInDatabase);
+                $this->appendDescription('add '.$newMedication->getDescription().'['.$newMedication->getDosage().']');
                 $isAnyValueUpdated = true;
             }
         }
@@ -429,12 +443,47 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
             $this->em->persist($templateInDatabase);
             $this->em->flush();
 
-            //TODO ActionLog
+            AdminActionLogWriter::editTreatmentTemplate($this->em, $template->getLocationOwner(), $admin, $this->description);
         }
 
         $output = $this->serializer->getDecodedJson($templateInDatabase, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
+    }
+
+
+    /**
+     * @param string|int|float $oldValue
+     * @param string|int|float $newValue
+     * @return string
+     */
+    private function appendUpdateDescription($oldValue, $newValue)
+    {
+        $oldValue = $oldValue === null ? '' : $oldValue;
+        $newValue = $newValue === null ? '' : $newValue;
+
+        return $this->appendDescription($oldValue . ' => ' . $newValue);
+    }
+
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    private function appendDescription($string)
+    {
+        if ($this->description === null) {
+            $this->description = '';
+        }
+
+        $prefix = '';
+        if ($this->description !== '') {
+            $prefix = ', ';
+        }
+
+        $this->description = $this->description . $prefix . $string;
+
+        return $this->description;
     }
 
 
@@ -466,7 +515,8 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     private function deleteTemplate($request, $templateId, $type)
     {
-        if($this->userService->getEmployee() === null) { return AdminValidator::getStandardErrorResponse(); }
+        $admin = $this->userService->getEmployee();
+        if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
         $template = $this->getTemplateByIdAndType($templateId, $type);
         if ($template instanceof JsonResponse) { return $template; }
@@ -476,6 +526,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         $this->em->flush();
 
         //TODO ActionLog
+        AdminActionLogWriter::deleteTreatmentTemplate($this->em, $template->getLocationOwner(), $admin, $template);
 
         $output = $this->serializer->getDecodedJson($template, $this->getJmsGroupByQuery($request));
         return ResultUtil::successResult($output);
