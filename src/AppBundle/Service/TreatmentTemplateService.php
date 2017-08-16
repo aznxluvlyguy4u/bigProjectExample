@@ -4,6 +4,8 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\TreatmentTemplateAPIControllerInterface;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\MedicationOption;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Entity\TreatmentTemplateRepository;
@@ -76,10 +78,11 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function getIndividualSpecificTemplates(Request $request, $ubn)
     {
-        //TODO add validation that clients can only see their own template lists. Employees are still allowed to see all.
-
         $location = $this->getLocationByUbn($ubn);
         if ($location instanceof JsonResponse) { return $location; }
+
+        $clientValidation = $this->validateIfLocationBelongsToClient($location);
+        if ($clientValidation instanceof JsonResponse) { return $clientValidation; }
 
         $templates = $this->treatmentTemplateRepository->findActiveIndividualTypeByLocation($location);
         $output = $this->serializer->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
@@ -107,6 +110,25 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
 
 
     /**
+     * @param Location $location
+     * @return JsonResponse|bool
+     */
+    private function validateIfLocationBelongsToClient($location)
+    {
+        $user = $this->userService->getUser();
+        if ($user instanceof Client) {
+            //A client is only allowed to see own templates
+            if ($location->getOwner()) {
+                if ($location->getOwner()->getId() !== $user->getId()) {
+                    return Validator::createJsonResponse('UNAUTHORIZED', 401);
+                }
+            }
+        }
+        return true;
+    }
+
+
+    /**
      * @param Request $request
      * @return JsonResponse
      */
@@ -125,10 +147,11 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function getLocationSpecificTemplates(Request $request, $ubn)
     {
-        //TODO add validation that clients can only see their own template lists. Employees are still allowed to see all.
-
         $location = $this->getLocationByUbn($ubn);
         if ($location instanceof JsonResponse) { return $location; }
+
+        $clientValidation = $this->validateIfLocationBelongsToClient($location);
+        if ($clientValidation instanceof JsonResponse) { return $clientValidation; }
 
         $templates = $this->treatmentTemplateRepository->findActiveLocationTypeByLocation($location);
         $output = $this->serializer->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
