@@ -196,6 +196,11 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
             }
         }
 
+        $medicationValidation = $this->hasDuplicateMedicationDescriptions($template->getMedications());
+        if ($medicationValidation instanceof JsonResponse) { return $medicationValidation; }
+        
+
+
         /** @var MedicationOption $medication */
         foreach ($template->getMedications() as $medication)
         {
@@ -217,6 +222,32 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         $output = $this->serializer->getDecodedJson($template, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
+    }
+
+
+    /**
+     * @param $medications
+     * @return JsonResponse|bool
+     */
+    private function hasDuplicateMedicationDescriptions($medications)
+    {
+        $descriptions = [];
+        $duplicateDescriptions = [];
+        /** @var MedicationOption $medication */
+        foreach ($medications as $medication)
+        {
+            $description = $medication->getDescription();
+            if (in_array($description, $descriptions)) {
+                $duplicateDescriptions[] = $description;
+            } else {
+                $descriptions[] = $description;
+            }
+        }
+
+        if (count($duplicateDescriptions) > 0) {
+            return Validator::createJsonResponse('Een medicijn mag alleen 1x in de medicijnen lijst voorkomen', 428);
+        }
+        return false;
     }
 
 
