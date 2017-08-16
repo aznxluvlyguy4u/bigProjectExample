@@ -36,7 +36,6 @@ class Location
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
      * @Expose
      */
     private $locationId;

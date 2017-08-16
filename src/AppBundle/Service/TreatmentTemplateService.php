@@ -39,6 +39,20 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         $this->treatmentTypeRepository = $this->em->getRepository(TreatmentType::class);
     }
 
+
+    /**
+     * @param Request $request
+     * @return array
+     */
+    private function getJmsGroupByQuery(Request $request)
+    {
+        if(RequestUtil::getBooleanQuery($request,QueryParameter::MINIMAL_OUTPUT,true)) {
+            return [JmsGroup::TREATMENT_TEMPLATE_MIN];
+        }
+        return [JmsGroup::TREATMENT_TEMPLATE];
+    }
+
+
     /**
      * @param Request $request
      * @return JsonResponse
@@ -46,7 +60,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
     function getIndividualDefaultTemplates(Request $request)
     {
         $templates = $this->treatmentTemplateRepository->findActiveIndividualTypeByLocation(null);
-        $output = $this->serializer->getDecodedJson($templates, [JmsGroup::TREATMENT_TEMPLATE]);
+        $output = $this->serializer->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
@@ -62,7 +76,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         if ($location instanceof JsonResponse) { return $location; }
 
         $templates = $this->treatmentTemplateRepository->findActiveIndividualTypeByLocation($location);
-        $output = $this->serializer->getDecodedJson($templates, [JmsGroup::TREATMENT_TEMPLATE]);
+        $output = $this->serializer->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
@@ -93,7 +107,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
     function getLocationDefaultTemplates(Request $request)
     {
         $templates = $this->treatmentTemplateRepository->findActiveLocationTypeByLocation(null);
-        $output = $this->serializer->getDecodedJson($templates, [JmsGroup::TREATMENT_TEMPLATE]);
+        $output = $this->serializer->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
@@ -109,7 +123,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         if ($location instanceof JsonResponse) { return $location; }
 
         $templates = $this->treatmentTemplateRepository->findActiveLocationTypeByLocation($location);
-        $output = $this->serializer->getDecodedJson($templates, [JmsGroup::TREATMENT_TEMPLATE]);
+        $output = $this->serializer->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
@@ -187,12 +201,7 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
 
         //TODO ActionLog
 
-        $jmsGroup = JmsGroup::TREATMENT_TEMPLATE;
-        if(RequestUtil::getBooleanQuery($request,QueryParameter::MINIMAL_OUTPUT,true)) {
-            $jmsGroup = JmsGroup::TREATMENT_TEMPLATE_MIN;
-        }
-
-        $output = $this->serializer->getDecodedJson($template, [$jmsGroup]);
+        $output = $this->serializer->getDecodedJson($template, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
