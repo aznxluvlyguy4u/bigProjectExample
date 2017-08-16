@@ -18,7 +18,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      * Get default individual treatment templates
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Template",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -44,7 +44,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      * Get individual treatment templates for a specific ubn
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Template",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -71,7 +71,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      * Get default location treatment templates
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Template",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -97,7 +97,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      * Get location treatment templates for a specific ubn
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Template",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -124,7 +124,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      * Create individual treatment templates for a specific ubn
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Template",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -150,7 +150,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      * Create location treatment templates for a specific ubn
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Template",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -176,7 +176,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      * Edit individual treatment templates
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Template",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -203,7 +203,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      * Edit location treatment templates
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Template",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -230,7 +230,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      * Deactivate individual treatment templates
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Template",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -257,7 +257,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      * Deactivate location treatment templates
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Template",
      *   requirements={
      *     {
      *       "name"="AccessToken",
