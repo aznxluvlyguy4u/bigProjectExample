@@ -11,7 +11,7 @@ class TreatmentTemplateRepository extends BaseRepository
      * @param Location $location
      * @return array
      */
-    public function findActiveIndividualTypeByLocation(Location $location)
+    public function findActiveIndividualTypeByLocation($location)
     {
         return $this->findActiveByLocation($location, TreatmentTypeOption::INDIVIDUAL);
     }
@@ -21,13 +21,13 @@ class TreatmentTemplateRepository extends BaseRepository
      * @param Location $location
      * @return array
      */
-    public function findActiveLocationTypeByLocation(Location $location)
+    public function findActiveLocationTypeByLocation($location)
     {
         return $this->findActiveByLocation($location, TreatmentTypeOption::LOCATION);
     }
 
 
-    public function findActiveByLocation(Location $location, $type)
+    public function findActiveByLocation($location, $type)
     {
         return $this->findBy(
             [
