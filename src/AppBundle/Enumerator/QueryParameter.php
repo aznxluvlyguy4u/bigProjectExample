@@ -6,6 +6,7 @@ namespace AppBundle\Enumerator;
 
 class QueryParameter
 {
+    const ACTIVE_ONLY = 'active_only';
     const S3_UPLOAD = 's3_upload';
     const TYPE_QUERY = 'type';
     const FILE_TYPE_QUERY = 'file_type';

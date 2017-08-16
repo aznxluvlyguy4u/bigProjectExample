@@ -26,5 +26,6 @@ class ServiceId
     const STORAGE_SERVICE = 'app.aws.storageservice';
     const TREATMENT_SERVICE = 'app.treatment';
     const TREATMENT_TEMPLATE_SERVICE = 'app.treatment.template';
+    const TREATMENT_TYPE_SERVICE = 'app.treatment.type';
     const USER_SERVICE = 'app.user';
 }

@@ -55,6 +55,7 @@ use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Service\TreatmentService;
 use AppBundle\Service\TreatmentTemplateService;
+use AppBundle\Service\TreatmentTypeService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\Finder;
 use AppBundle\Util\RequestUtil;
@@ -100,6 +101,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::STORAGE_SERVICE => null,
       ServiceId::TREATMENT_SERVICE => null,
       ServiceId::TREATMENT_TEMPLATE_SERVICE => null,
+      ServiceId::TREATMENT_TYPE_SERVICE => null,
       ServiceId::USER_SERVICE => null,
   ];
 
@@ -157,6 +159,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getTreatmentService(){ return $this->getService(ServiceId::TREATMENT_SERVICE); }
   /** @return TreatmentTemplateService */
   protected function getTreatmentTemplateService(){ return $this->getService(ServiceId::TREATMENT_TEMPLATE_SERVICE); }
+  /** @return TreatmentTypeService */
+  protected function getTreatmentTypeService(){ return $this->getService(ServiceId::TREATMENT_TYPE_SERVICE); }
   /** @return UserService */
   protected function getUserService(){ return $this->getService(ServiceId::USER_SERVICE); }
 

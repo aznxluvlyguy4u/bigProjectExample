@@ -352,10 +352,14 @@ services:
           - '@app.cache'
           - '@app.user'
 
+    app.treatment:
+        parent: app.controller.base
+        class: AppBundle\Service\TreatmentService
+
     app.treatment.template:
         parent: app.controller.base
         class: AppBundle\Service\TreatmentTemplateService
 
-    app.treatment:
+    app.treatment.type:
         parent: app.controller.base
-        class: AppBundle\Service\TreatmentService
+        class: AppBundle\Service\TreatmentTypeService
