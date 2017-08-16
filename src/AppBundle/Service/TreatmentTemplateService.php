@@ -15,6 +15,7 @@ use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
+use AppBundle\Validation\AdminValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -72,6 +73,8 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function getIndividualSpecificTemplates(Request $request, $ubn)
     {
+        //TODO add validation that clients can only see their own template lists. Employees are still allowed to see all.
+
         $location = $this->getLocationByUbn($ubn);
         if ($location instanceof JsonResponse) { return $location; }
 
@@ -119,6 +122,8 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     function getLocationSpecificTemplates(Request $request, $ubn)
     {
+        //TODO add validation that clients can only see their own template lists. Employees are still allowed to see all.
+
         $location = $this->getLocationByUbn($ubn);
         if ($location instanceof JsonResponse) { return $location; }
 
@@ -153,6 +158,8 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     private function createTemplate(Request $request, $type)
     {
+        if($this->userService->getEmployee() === null) { return AdminValidator::getStandardErrorResponse(); }
+
         /** @var TreatmentTemplate $template */
         $template = $this->serializer->deserializeToObject($request->getContent(), TreatmentTemplate::class);
         if (!($template instanceof TreatmentTemplate)) {
@@ -265,6 +272,8 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
      */
     private function deleteTemplate($request, $templateId, $type)
     {
+        if($this->userService->getEmployee() === null) { return AdminValidator::getStandardErrorResponse(); }
+
         if (!ctype_digit($templateId) && !is_int($templateId)) {
             return Validator::createJsonResponse('TemplateId must be an integer', 428);
         }
