@@ -39,7 +39,7 @@ class TreatmentServiceBase extends ControllerServiceBase
     protected $treatmentTypeRepository;
 
     /** @var string */
-    protected $description;
+    protected $actionLogDescription;
 
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
                                 CacheService $cacheService, UserService $userService)
@@ -176,17 +176,17 @@ class TreatmentServiceBase extends ControllerServiceBase
      */
     protected function appendDescription($string)
     {
-        if ($this->description === null) {
-            $this->description = '';
+        if ($this->actionLogDescription === null) {
+            $this->actionLogDescription = '';
         }
 
         $prefix = '';
-        if ($this->description !== '') {
+        if ($this->actionLogDescription !== '') {
             $prefix = ', ';
         }
 
-        $this->description = $this->description . $prefix . $string;
+        $this->actionLogDescription = $this->actionLogDescription . $prefix . $string;
 
-        return $this->description;
+        return $this->actionLogDescription;
     }
 }

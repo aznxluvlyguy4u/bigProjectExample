@@ -13,4 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 interface TreatmentTypeAPIControllerInterface
 {
     function getByQuery(Request $request);
+    function create(Request $request);
+    function edit(Request $request, $treatmentTypeId);
+    function delete(Request $request, $treatmentTypeId);
 }

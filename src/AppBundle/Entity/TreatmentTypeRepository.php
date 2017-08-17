@@ -56,6 +56,29 @@ class TreatmentTypeRepository extends BaseRepository
 
 
     /**
+     * @param string $type
+     * @param string $description
+     * @return null|TreatmentType|object
+     * @throws \Exception
+     */
+    public function findOneByTypeAndDescription($type, $description)
+    {
+        $criteria = [
+            'description' => $description,
+        ];
+
+        if ($type !== null) {
+            $validatedType = TreatmentTypeService::getValidateType($type);
+            if ($validatedType instanceof JsonResponse) { throw new \Exception($validatedType->getContent()); }
+
+            $criteria['type'] = $validatedType;
+        }
+
+        return $this->findOneBy($criteria);
+    }
+
+
+    /**
      * @return null|object|TreatmentType
      * @throws \Exception
      */

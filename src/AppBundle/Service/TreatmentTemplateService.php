@@ -260,7 +260,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         /* Update */
 
         $isAnyValueUpdated = false;
-        $this->description = '';
+        $this->actionLogDescription = '';
 
         //Update Location
         $currentLocation = $templateInDatabase->getLocation();
@@ -351,7 +351,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
             $this->em->persist($templateInDatabase);
             $this->em->flush();
 
-            AdminActionLogWriter::editTreatmentTemplate($this->em, $template->getLocationOwner(), $admin, $this->description);
+            AdminActionLogWriter::editTreatmentTemplate($this->em, $template->getLocationOwner(), $admin, $this->actionLogDescription);
         }
 
         $output = $this->serializer->getDecodedJson($templateInDatabase, $this->getJmsGroupByQuery($request));

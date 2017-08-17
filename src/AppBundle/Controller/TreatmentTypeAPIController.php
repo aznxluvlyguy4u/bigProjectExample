@@ -18,7 +18,7 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
      * Get all active treatment types by query
      *
      * @ApiDoc(
-     *   section = "Treatment",
+     *   section = "Treatment Type",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -55,5 +55,89 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
     {
         return $this->getTreatmentTypeService()->getByQuery($request);
     }
+
+
+    /**
+     * Post treatment type
+     *
+     * @ApiDoc(
+     *   section = "Treatment Type",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Post treatment type"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("")
+     * @Method("POST")
+     */
+    function create(Request $request)
+    {
+        return $this->getTreatmentTypeService()->create($request);
+    }
+
+
+    /**
+     * Edit treatment type
+     *
+     * @ApiDoc(
+     *   section = "Treatment Type",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Edit treatment type"
+     * )
+     * @param Request $request the request object
+     * @param int $treatmentTypeId
+     * @return JsonResponse
+     * @Route("/{treatmentTypeId}")
+     * @Method("PUT")
+     */
+    function edit(Request $request, $treatmentTypeId)
+    {
+        return $this->getTreatmentTypeService()->edit($request, $treatmentTypeId);
+    }
+
+
+    /**
+     * Delete treatment type
+     *
+     * @ApiDoc(
+     *   section = "Treatment Type",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Delete treatment type"
+     * )
+     * @param Request $request the request object
+     * @param int $treatmentTypeId
+     * @return JsonResponse
+     * @Route("/{treatmentTypeId}")
+     * @Method("DELETE")
+     */
+    function delete(Request $request, $treatmentTypeId)
+    {
+        return $this->getTreatmentTypeService()->delete($request, $treatmentTypeId);
+    }
+
 
 }
