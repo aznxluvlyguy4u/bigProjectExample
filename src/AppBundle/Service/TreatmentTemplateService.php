@@ -137,6 +137,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $template = $this->baseValidateDeserializedTreatmentTemplate($template);
         if ($template instanceof JsonResponse) { return $template; }
 
+        //TODO check for duplicates
+
         /** @var MedicationOption $medication */
         foreach ($template->getMedications() as $medication)
         {
@@ -256,6 +258,9 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $template = $this->baseValidateDeserializedTreatmentTemplate($template);
         if ($template instanceof JsonResponse) { return $template; }
 
+
+        //TODO check for duplicates
+        
 
         /* Update */
 
