@@ -17,18 +17,57 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     /**
      * Get default individual treatment templates
      *
+     * ### Request body ###
+     *
+     *  none
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": [
+     *          {
+     *              "dutchType": "Individueel",
+     *              "id": 8,
+     *              "description": "Hersenverschijnselen",
+     *              "medications": [
+     *                  {
+     *                      "description": "ebolastop 900%",
+     *                      "dosage": 559
+     *                  },
+     *                  {
+     *                      "description": "elixer 695%",
+     *                      "dosage": 52.755
+     *                  }
+     *              ],
+     *              "is_active": true,
+     *          }
+     *      ]
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Template",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"="true",
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
      *   resource = true,
-     *   description = "Get default individual treatment templates"
+     *   description = "Get default individual treatment templates",
+     *   statusCodes={200="Returned when successful"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @return JsonResponse
@@ -43,18 +82,61 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     /**
      * Get individual treatment templates for a specific ubn
      *
+     * ### Request body ###
+     *
+     *  none
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": [
+     *          {
+     *              "dutchType": "Individueel",
+     *              "id": 8,
+     *              "location": {
+     *                  "ubn": "1674459"
+     *              },
+     *              "description": "Hersenverschijnselen",
+     *              "medications": [
+     *                  {
+     *                      "description": "ebolastop 900%",
+     *                      "dosage": 559
+     *                  },
+     *                  {
+     *                      "description": "elixer 695%",
+     *                      "dosage": 52.755
+     *                  }
+     *              ],
+     *              "is_active": true,
+     *              "type": "INDIVIDUAL"
+     *          }
+     *      ]
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Template",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"="true",
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
      *   resource = true,
-     *   description = "Get individual treatment templates for a specific ubn"
+     *   description = "Get individual treatment templates for a specific ubn",
+     *   statusCodes={200="Returned when successful",401="unauthorized"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @param $ubn
@@ -70,18 +152,58 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     /**
      * Get default location treatment templates
      *
+     * ### Request body ###
+     *
+     *  none
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": [
+     *          {
+     *              "dutchType": "UBN",
+     *              "id": 8,
+     *              "description": "Myiasisbehandeling",
+     *              "medications": [
+     *                  {
+     *                      "description": "Neogenic recombinator 666%",
+     *                      "dosage": 10000000
+     *                  },
+     *                  {
+     *                      "description": "sledgehammer",
+     *                      "dosage": 0.0001
+     *                  }
+     *              ],
+     *              "is_active": true,
+     *              "type": "LOCATION"
+     *          }
+     *      ]
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Template",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"="true",
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
      *   resource = true,
-     *   description = "Get default location treatment templates"
+     *   description = "Get default location treatment templates",
+     *   statusCodes={200="Returned when successful"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @return JsonResponse
@@ -96,18 +218,61 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     /**
      * Get location treatment templates for a specific ubn
      *
+     * ### Request body ###
+     *
+     *  none
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": [
+     *          {
+     *              "dutchType": "UBN",
+     *              "id": 8,
+     *              "location": {
+     *                  "ubn": "1674459"
+     *              },
+     *              "description": "Diarrhea",
+     *              "medications": [
+     *                  {
+     *                      "description": "purple elixer",
+     *                      "dosage": 999
+     *                  },
+     *                  {
+     *                      "description": "sledgehammer",
+     *                      "dosage": 0.0001
+     *                  }
+     *              ],
+     *              "is_active": true,
+     *              "type": "LOCATION"
+     *          }
+     *      ]
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Template",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"="true",
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
      *   resource = true,
-     *   description = "Get location treatment templates for a specific ubn"
+     *   description = "Get location treatment templates for a specific ubn",
+     *   statusCodes={200="Returned when successful",401="unauthorized"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @param $ubn
@@ -123,18 +288,73 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     /**
      * Create individual treatment templates for a specific ubn
      *
+     * ### Request body ###
+     *
+     *  {
+     *      "location": {
+     *          "ubn": "1674459"
+     *      },
+     *    "description" : "Uierontsteking",
+     *    "medications":
+     *      [
+     *          {
+     *              "description": "ubuntuproven 100%",
+     *              "dosage": 16.4
+     *          },
+     *          {
+     *              "description": "genetic recombinator 666%",
+     *              "dosage": 10000000
+     *          }
+     *      ]
+     *  }
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "Individueel",
+     *          "id": 8,
+     *          "description": "Uierontsteking",
+     *          "medications":
+     *          [
+     *              {
+     *                  "description": "ubuntuproven 100%",
+     *                  "dosage": 16.4
+     *              },
+     *              {
+     *                  "description": "genetic recombinator 666%",
+     *                  "dosage": 10000000
+     *              }
+     *          ],
+     *          "is_active": true,
+     *          "type": "INDIVIDUAL"
+     *      }
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Template",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"="true",
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
      *   resource = true,
-     *   description = "Create individual treatment templates for a specific ubn"
+     *   description = "Create individual treatment templates for a specific ubn",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @return JsonResponse
@@ -149,18 +369,73 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     /**
      * Create location treatment templates for a specific ubn
      *
+     * ### Request body ###
+     *
+     *  {
+     *      "location": {
+     *          "ubn": "1674459"
+     *      },
+     *    "description" : "Myiasisbehandeling",
+     *    "medications":
+     *      [
+     *          {
+     *              "description": "ubuntuproven 100%",
+     *              "dosage": 16.4
+     *          },
+     *          {
+     *              "description": "genetic recombinator 666%",
+     *              "dosage": 10000000
+     *          }
+     *      ]
+     *  }
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "UBN",
+     *          "id": 8,
+     *          "description": "Myiasisbehandeling",
+     *          "medications":
+     *          [
+     *              {
+     *                  "description": "ubuntuproven 100%",
+     *                  "dosage": 16.4
+     *              },
+     *              {
+     *                  "description": "genetic recombinator 666%",
+     *                  "dosage": 10000000
+     *              }
+     *          ],
+     *          "is_active": true,
+     *          "type": "LOCATION"
+     *      }
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Template",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"="true",
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
      *   resource = true,
-     *   description = "Create location treatment templates for a specific ubn"
+     *   description = "Create location treatment templates for a specific ubn",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @return JsonResponse
@@ -175,18 +450,73 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     /**
      * Edit individual treatment templates
      *
+     * ### Request body ###
+     *
+     *  {
+     *      "location": {
+     *          "ubn": "1674459"
+     *      },
+     *    "description" : "Uierontsteking",
+     *    "medications":
+     *      [
+     *          {
+     *              "description": "ubuntuproven 100%",
+     *              "dosage": 16.4
+     *          },
+     *          {
+     *              "description": "genetic recombinator 666%",
+     *              "dosage": 10000000
+     *          }
+     *      ]
+     *  }
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "Individueel",
+     *          "id": 8,
+     *          "description": "Uierontsteking",
+     *          "medications":
+     *          [
+     *              {
+     *                  "description": "ubuntuproven 100%",
+     *                  "dosage": 16.4
+     *              },
+     *              {
+     *                  "description": "genetic recombinator 666%",
+     *                  "dosage": 10000000
+     *              }
+     *          ],
+     *          "is_active": true,
+     *          "type": "INDIVIDUAL"
+     *      }
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Template",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"="true",
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
      *   resource = true,
-     *   description = "Edit individual treatment templates"
+     *   description = "Edit individual treatment templates",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @param int $templateId
@@ -202,18 +532,73 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     /**
      * Edit location treatment templates
      *
+     * ### Request body ###
+     *
+     *  {
+     *      "location": {
+     *          "ubn": "1674459"
+     *      },
+     *    "description" : "Myiasisbehandeling",
+     *    "medications":
+     *      [
+     *          {
+     *              "description": "ubuntuproven 100%",
+     *              "dosage": 16.4
+     *          },
+     *          {
+     *              "description": "genetic recombinator 666%",
+     *              "dosage": 10000000
+     *          }
+     *      ]
+     *  }
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "UBN",
+     *          "id": 8,
+     *          "description": "Myiasisbehandeling",
+     *          "medications":
+     *          [
+     *              {
+     *                  "description": "ubuntuproven 100%",
+     *                  "dosage": 16.4
+     *              },
+     *              {
+     *                  "description": "genetic recombinator 666%",
+     *                  "dosage": 10000000
+     *              }
+     *          ],
+     *          "is_active": true,
+     *          "type": "LOCATION"
+     *      }
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Template",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"="true",
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
      *   resource = true,
-     *   description = "Edit location treatment templates"
+     *   description = "Edit location treatment templates",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @param int $templateId
@@ -229,18 +614,57 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     /**
      * Deactivate individual treatment templates
      *
+     * ### Request body ###
+     *
+     *  none
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "Individueel",
+     *          "id": 8,
+     *          "description": "Uierontsteking",
+     *          "medications":
+     *          [
+     *              {
+     *                  "description": "ubuntuproven 100%",
+     *                  "dosage": 16.4
+     *              },
+     *              {
+     *                  "description": "genetic recombinator 666%",
+     *                  "dosage": 10000000
+     *              }
+     *          ],
+     *          "is_active": false,
+     *          "type": "INDIVIDUAL"
+     *      }
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Template",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"="true",
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
      *   resource = true,
-     *   description = "Deactivate individual treatment templates"
+     *   description = "Deactivate individual treatment templates",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @param int $templateId
@@ -256,18 +680,57 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     /**
      * Deactivate location treatment templates
      *
+     * ### Request body ###
+     *
+     *  none
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "UBN",
+     *          "id": 8,
+     *          "description": "Myiasisbehandeling",
+     *          "medications":
+     *          [
+     *              {
+     *                  "description": "ubuntuproven 100%",
+     *                  "dosage": 16.4
+     *              },
+     *              {
+     *                  "description": "genetic recombinator 666%",
+     *                  "dosage": 10000000
+     *              }
+     *          ],
+     *          "is_active": false,
+     *          "type": "LOCATION"
+     *      }
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Template",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"="true",
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
      *   resource = true,
-     *   description = "Deactivate location treatment templates"
+     *   description = "Deactivate location treatment templates",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @param int $templateId
