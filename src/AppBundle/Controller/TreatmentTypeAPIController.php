@@ -17,13 +17,38 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
     /**
      * Get all active treatment types by query
      *
+     * ### Request body ###
+     *
+     *  none
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": [
+     *          {
+     *              "dutchType": "Individueel",
+     *              "id": 14,
+     *              "description": "Darminfectie",
+     *              "type": "INDIVIDUAL",
+     *              "is_active": true
+     *          },
+     *          {
+     *              "dutchType": "Individueel",
+     *              "id": 13,
+     *              "description": "Gewrichtsontsteking",
+     *              "type": "INDIVIDUAL",
+     *              "is_active": true
+     *          }
+     *      ]
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Type",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
@@ -44,7 +69,11 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
      *      },
      *   },
      *   resource = true,
-     *   description = "Get all active treatment types"
+     *   description = "Get all active treatment types",
+     *   statusCodes={200="Returned when successful"},
+     *   input="json",
+     *   output="json"
+     *
      * )
      * @param Request $request the request object
      * @return JsonResponse
@@ -60,18 +89,40 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
     /**
      * Post treatment type
      *
+     * ### Request body ###
+     *
+     *  {
+     *      "description": "Ebola Aids",
+     *      "type": "LOCATION"
+     *  }
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "UBN",
+     *          "id": 19,
+     *          "description": "Ebola Aids",
+     *          "type": "LOCATION",
+     *          "is_active": false
+     *      }
+     *  }
+     *
      * @ApiDoc(
      *   section = "Treatment Type",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
      *   resource = true,
-     *   description = "Post treatment type"
+     *   description = "Post treatment type",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @return JsonResponse
@@ -85,20 +136,52 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
 
 
     /**
-     * Edit treatment type
+     * Edit treatment type description
+     *
+     * ### Request body ###
+     *
+     *  {
+     *      "description": "Ebola Aids"
+     *  }
+     *
+     * ### Request body (optional), only description will be edited and type should be null or not be changed ###
+     *
+     *  {
+     *      "dutchType": "UBN",
+     *      "id": 19,
+     *      "description": "Ebola Aids",
+     *      "type": "LOCATION",
+     *      "is_active": false
+     *  }
+     *
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "UBN",
+     *          "id": 19,
+     *          "description": "Ebola Aids",
+     *          "type": "LOCATION",
+     *          "is_active": false
+     *      }
+     *  }
      *
      * @ApiDoc(
      *   section = "Treatment Type",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
      *   resource = true,
-     *   description = "Edit treatment type"
+     *   description = "Edit treatment type description",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @param int $treatmentTypeId
@@ -113,20 +196,41 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
 
 
     /**
-     * Delete treatment type
+     * Delete treatment type.
+     *
+     * ### Request body ###
+     *
+     *     none
+     *
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "UBN",
+     *          "id": 19,
+     *          "description": "Ebola Aids",
+     *          "type": "LOCATION",
+     *          "is_active": false
+     *      }
+     *  }
+     *
      *
      * @ApiDoc(
      *   section = "Treatment Type",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "requirement"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
      *   resource = true,
-     *   description = "Delete treatment type"
+     *   description = "Delete treatment type",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
      * )
      * @param Request $request the request object
      * @param int $treatmentTypeId
