@@ -50,7 +50,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="true",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
@@ -119,7 +119,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="true",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
@@ -186,7 +186,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="true",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
@@ -255,7 +255,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="true",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
@@ -337,7 +337,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="true",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
@@ -418,7 +418,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="true",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
@@ -499,7 +499,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="true",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
@@ -581,7 +581,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="true",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
@@ -647,7 +647,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="true",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
@@ -713,7 +713,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="true",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
