@@ -16,7 +16,7 @@ use JMS\Serializer\SerializationContext;
 /**
  * @Route("/api/v1/log/action")
  */
-class ActionLogController extends APIController
+class ActionLogAPIController extends APIController
 {
     /**
      * Retrieve all userActionTypes of current actionLogs.
