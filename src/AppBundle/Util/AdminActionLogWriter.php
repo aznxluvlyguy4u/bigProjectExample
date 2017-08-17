@@ -11,6 +11,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\TreatmentTemplate;
+use AppBundle\Entity\TreatmentType;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -71,7 +72,20 @@ class AdminActionLogWriter
      */
     public static function editTreatmentTemplate(ObjectManager $em, $accountOwner, $admin, $description)
     {
-        $log = new ActionLog($accountOwner, $admin, UserActionType::TREATMENT_TEMPLATE_EDIT, true, $description, self::IS_USER_ENVIRONMENT);
+        return self::editTreatmentBase($em, $accountOwner, $admin, $description, UserActionType::TREATMENT_TEMPLATE_EDIT);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Client $accountOwner
+     * @param Employee $admin
+     * @param string $description
+     * @return ActionLog
+     */
+    private static function editTreatmentBase(ObjectManager $em, $accountOwner, $admin, $description, $userActionType)
+    {
+        $log = new ActionLog($accountOwner, $admin, $userActionType, true, $description, self::IS_USER_ENVIRONMENT);
         DoctrineUtil::persistAndFlush($em, $log);
 
         return $log;
@@ -95,6 +109,57 @@ class AdminActionLogWriter
         ;
 
         $log = new ActionLog($accountOwner, $admin, UserActionType::TREATMENT_TEMPLATE_DELETE, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Employee $admin
+     * @param Request $request
+     * @param TreatmentType $treatmentType
+     * @return ActionLog
+     */
+    public static function createTreatmentType(ObjectManager $em, $admin, $request, $treatmentType)
+    {
+        $description = $treatmentType->getDutchType().'('.$treatmentType->getType().'): '.$treatmentType->getDescription();
+
+        $log = new ActionLog(null, $admin, UserActionType::TREATMENT_TYPE_CREATE, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Employee $admin
+     * @param string $description
+     * @return ActionLog
+     */
+    public static function editTreatmentType(ObjectManager $em, $admin, $description)
+    {
+        return self::editTreatmentBase($em, null, $admin, $description, UserActionType::TREATMENT_TYPE_EDIT);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Employee $admin
+     * @param TreatmentType $treatmentType
+     * @return ActionLog
+     */
+    public static function deleteTreatmentType(ObjectManager $em, $admin, $treatmentType)
+    {
+        $description =
+            'id: '.$treatmentType->getId()
+            .', type: '.$treatmentType->getDutchType()
+            .', beschrijving: '.$treatmentType->getDescription()
+        ;
+
+        $log = new ActionLog(null, $admin, UserActionType::TREATMENT_TYPE_DELETE, true, $description, self::IS_USER_ENVIRONMENT);
         DoctrineUtil::persistAndFlush($em, $log);
 
         return $log;
