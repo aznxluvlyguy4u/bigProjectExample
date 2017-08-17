@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Class TreatmentTemplateService
  * @package AppBundle\Service
  */
-class TreatmentService extends ControllerServiceBase implements TreatmentAPIControllerInterface
+class TreatmentService extends TreatmentServiceBase implements TreatmentAPIControllerInterface
 {
 
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer,

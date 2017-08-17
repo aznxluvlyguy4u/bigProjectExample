@@ -26,36 +26,13 @@ use Symfony\Component\HttpFoundation\Request;
  * Class TreatmentTemplateService
  * @package AppBundle\Service
  */
-class TreatmentTemplateService extends ControllerServiceBase implements TreatmentTemplateAPIControllerInterface
+class TreatmentTemplateService extends TreatmentServiceBase implements TreatmentTemplateAPIControllerInterface
 {
-    /** @var TreatmentTemplateRepository */
-    private $treatmentTemplateRepository;
-    /** @var TreatmentTypeRepository */
-    private $treatmentTypeRepository;
-
-    /** @var string */
-    private $description;
 
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
                                 CacheService $cacheService, UserService $userService)
     {
         parent::__construct($em, $serializer, $cacheService, $userService);
-
-        $this->treatmentTemplateRepository = $this->em->getRepository(TreatmentTemplate::class);
-        $this->treatmentTypeRepository = $this->em->getRepository(TreatmentType::class);
-    }
-
-
-    /**
-     * @param Request $request
-     * @return array
-     */
-    private function getJmsGroupByQuery(Request $request)
-    {
-        if(RequestUtil::getBooleanQuery($request,QueryParameter::MINIMAL_OUTPUT,true)) {
-            return [JmsGroup::TREATMENT_TEMPLATE_MIN];
-        }
-        return [JmsGroup::TREATMENT_TEMPLATE];
     }
 
 
@@ -89,44 +66,6 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
 
         return ResultUtil::successResult($output);
     }
-
-
-    /**
-     * @param string|int $ubn
-     * @return JsonResponse|\AppBundle\Entity\Location|null
-     */
-    private function getLocationByUbn($ubn)
-    {
-        if (!ctype_digit($ubn) && !is_int($ubn)) {
-            return Validator::createJsonResponse('UBN must be a number', 428);
-        }
-
-        $location = $this->locationRepository->findOneByActiveUbn($ubn);
-        if ($location === null) {
-            return Validator::createJsonResponse('No active location found for given UBN', 428);
-        }
-        return $location;
-    }
-
-
-    /**
-     * @param Location $location
-     * @return JsonResponse|bool
-     */
-    private function validateIfLocationBelongsToClient($location)
-    {
-        $user = $this->userService->getUser();
-        if ($user instanceof Client) {
-            //A client is only allowed to see own templates
-            if ($location->getOwner()) {
-                if ($location->getOwner()->getId() !== $user->getId()) {
-                    return Validator::createJsonResponse('UNAUTHORIZED', 401);
-                }
-            }
-        }
-        return true;
-    }
-
 
     /**
      * @param Request $request
@@ -265,32 +204,6 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
 
 
     /**
-     * @param $medications
-     * @return JsonResponse|bool
-     */
-    private function hasDuplicateMedicationDescriptions($medications)
-    {
-        $descriptions = [];
-        $duplicateDescriptions = [];
-        /** @var MedicationOption $medication */
-        foreach ($medications as $medication)
-        {
-            $description = $medication->getDescription();
-            if (in_array($description, $descriptions)) {
-                $duplicateDescriptions[] = $description;
-            } else {
-                $descriptions[] = $description;
-            }
-        }
-
-        if (count($duplicateDescriptions) > 0) {
-            return Validator::createJsonResponse('Een medicijn mag alleen 1x in de medicijnen lijst voorkomen', 428);
-        }
-        return false;
-    }
-
-
-    /**
      * @param Request $request
      * @param $templateId
      * @return JsonResponse
@@ -308,33 +221,6 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
     function editLocationTemplate(Request $request, $templateId)
     {
         return $this->editTemplate($request, $templateId, TreatmentTypeOption::LOCATION);
-    }
-
-
-    /**
-     * @param int $templateId
-     * @param string $type
-     * @return JsonResponse|TreatmentTemplate|null|object|string
-     */
-    private function getTemplateByIdAndType($templateId, $type)
-    {
-        if (!ctype_digit($templateId) && !is_int($templateId)) {
-            return Validator::createJsonResponse('TemplateId must be an integer', 428);
-        }
-
-        $type = TreatmentTypeService::getValidateType($type);
-        if ($type instanceof JsonResponse) { return $type; }
-
-        $template = $this->treatmentTemplateRepository->findOneBy(['type' => $type, 'id' => $templateId]);
-        if ($template === null) {
-            return Validator::createJsonResponse('No template of type '.$type
-                .' found for id '.$templateId, 428);
-        }
-
-        if ($template->isActive() === false) {
-            return Validator::createJsonResponse('Template has already been deactivated', 428);
-        }
-        return $template;
     }
 
 
@@ -471,41 +357,6 @@ class TreatmentTemplateService extends ControllerServiceBase implements Treatmen
         $output = $this->serializer->getDecodedJson($templateInDatabase, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
-    }
-
-
-    /**
-     * @param string|int|float $oldValue
-     * @param string|int|float $newValue
-     * @return string
-     */
-    private function appendUpdateDescription($oldValue, $newValue)
-    {
-        $oldValue = $oldValue === null ? '' : $oldValue;
-        $newValue = $newValue === null ? '' : $newValue;
-
-        return $this->appendDescription($oldValue . ' => ' . $newValue);
-    }
-
-
-    /**
-     * @param string $string
-     * @return string
-     */
-    private function appendDescription($string)
-    {
-        if ($this->description === null) {
-            $this->description = '';
-        }
-
-        $prefix = '';
-        if ($this->description !== '') {
-            $prefix = ', ';
-        }
-
-        $this->description = $this->description . $prefix . $string;
-
-        return $this->description;
     }
 
 

@@ -19,17 +19,12 @@ use Symfony\Component\HttpFoundation\Request;
  * Class TreatmentTemplateService
  * @package AppBundle\Service
  */
-class TreatmentTypeService extends ControllerServiceBase implements TreatmentTypeAPIControllerInterface
+class TreatmentTypeService extends TreatmentServiceBase implements TreatmentTypeAPIControllerInterface
 {
-    /** @var TreatmentTypeRepository */
-    private $treatmentTypeRepository;
-
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
                                 CacheService $cacheService, UserService $userService)
     {
         parent::__construct($em, $serializer, $cacheService, $userService);
-
-        $this->treatmentTypeRepository = $this->em->getRepository(TreatmentType::class);
     }
 
     /**
