@@ -260,7 +260,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
 
         //TODO check for duplicates
-        
+
 
         /* Update */
 
