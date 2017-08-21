@@ -24,7 +24,7 @@ class ReportBase
      * @param Client $client
      * @param string $fileNameType
      */
-    public function __construct(ObjectManager $em, $client, $fileNameType)
+    public function __construct(ObjectManager $em, $client = null, $fileNameType)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();

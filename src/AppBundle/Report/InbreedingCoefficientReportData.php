@@ -37,7 +37,7 @@ class InbreedingCoefficientReportData extends ReportBase
      * @param ArrayCollection $content
      * @param Client $client
      */
-    public function __construct(ObjectManager $em, ArrayCollection $content, Client $client)
+    public function __construct(ObjectManager $em, ArrayCollection $content, Client $client = null)
     {
         parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
         

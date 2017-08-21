@@ -136,10 +136,11 @@ class ReportAPIController extends APIController {
   public function getInbreedingCoefficientsReport(Request $request)
   {
     $client = $this->getAccountOwner($request);
+    $isAdmin = $this->getUserService()->getEmployee() !== null;
     $content = $this->getContentAsArray($request);
     $em = $this->getDoctrine()->getManager();
 
-    $inbreedingCoefficientInputValidator = new InbreedingCoefficientInputValidator($em, $content, $client);
+    $inbreedingCoefficientInputValidator = new InbreedingCoefficientInputValidator($em, $content, $client, $isAdmin);
     if(!$inbreedingCoefficientInputValidator->getIsInputValid()) {
       return $inbreedingCoefficientInputValidator->createJsonResponse();
     }
