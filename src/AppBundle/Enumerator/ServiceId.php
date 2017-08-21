@@ -16,6 +16,7 @@ class ServiceId
     const EXTERNAL_QUEUE_SERVICE = 'app.aws.queueservice.external';
     const EXCEL_SERVICE = 'app.excel.service';
     const HEALTH_SERVICE = 'app.health.updater';
+    const INBREEDING_COEFFICIENT_REPORT_SERVICE = 'app.report.inbreeding_coefficient';
     const INTERNAL_QUEUE_SERVICE = 'app.aws.queueservice.internal';
     const LOGGER = 'logger';
     const MIXBLUP_INPUT_QUEUE_SERVICE = 'app.aws.queueservice.mixblub_input';

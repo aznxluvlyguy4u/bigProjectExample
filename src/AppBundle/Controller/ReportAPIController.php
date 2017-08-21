@@ -135,34 +135,7 @@ class ReportAPIController extends APIController {
    */
   public function getInbreedingCoefficientsReport(Request $request)
   {
-    $client = $this->getAccountOwner($request);
-    $isAdmin = $this->getUserService()->getEmployee() !== null;
-    $content = $this->getContentAsArray($request);
-    $em = $this->getDoctrine()->getManager();
-
-    $inbreedingCoefficientInputValidator = new InbreedingCoefficientInputValidator($em, $content, $client, $isAdmin);
-    if(!$inbreedingCoefficientInputValidator->getIsInputValid()) {
-      return $inbreedingCoefficientInputValidator->createJsonResponse();
-    }
-
-    $reportResults = new InbreedingCoefficientReportData($em, $content, $client);
-    $reportData = $reportResults->getData();
-    $reportData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
-
-    $twigFile = 'Report/inbreeding_coefficient_report.html.twig';
-    $html = $this->renderView($twigFile, ['variables' => $reportData]);
-
-    if(self::IS_LOCAL_TESTING) {
-      //Save pdf in local cache
-      return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($reportResults, $html, TwigOutputUtil::pdfPortraitOptions())], 200);
-    }
-
-    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,TwigOutputUtil::pdfPortraitOptions());
-    
-    $s3Service = $this->getStorageService();
-    $url = $s3Service->uploadPdf($pdfOutput, $reportResults->getS3Key());
-
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+      return $this->getInbreedingCoefficientReportService()->getReport($request);
   }
 
 

@@ -336,6 +336,10 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\BreedValuesOverviewReportService
 
+    app.report.inbreeding_coefficient:
+        parent: app.report.base
+        class: AppBundle\Service\Report\InbreedingCoefficientReportService
+
     app.writer.csv_from_sql_results:
         class: AppBundle\Service\CsvFromSqlResultsWriterService
         arguments:

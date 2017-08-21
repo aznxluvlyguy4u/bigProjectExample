@@ -1,0 +1,72 @@
+<?php
+
+namespace AppBundle\Service\Report;
+
+
+use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Constant\Constant;
+use AppBundle\Constant\ReportLabel;
+use AppBundle\Controller\ReportAPIController;
+use AppBundle\Report\InbreedingCoefficientReportData;
+use AppBundle\Service\AWSSimpleStorageService;
+use AppBundle\Service\CsvFromSqlResultsWriterService;
+use AppBundle\Service\ExcelService;
+use AppBundle\Service\UserService;
+use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\RequestUtil;
+use AppBundle\Util\TwigOutputUtil;
+use AppBundle\Validation\InbreedingCoefficientInputValidator;
+use Doctrine\Common\Persistence\ObjectManager;
+use Knp\Snappy\GeneratorInterface;
+use Symfony\Bridge\Monolog\Logger;
+use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
+use Symfony\Component\HttpFoundation\Request;
+
+class InbreedingCoefficientReportService extends ReportServiceBase
+{
+    const FOLDER = 'inbreeding_coefficient_report';
+    const TWIG_FILE = 'Report/inbreeding_coefficient_report.html.twig';
+
+    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
+                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+    {
+        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
+            $knpGenerator, $cacheDir, $rootDir, self::FOLDER);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getReport(Request $request)
+    {
+        $client = $this->userService->getAccountOwner($request);
+        $isAdmin = $this->userService->getEmployee() !== null;
+        $content = RequestUtil::getContentAsArray($request);
+
+        $inbreedingCoefficientInputValidator = new InbreedingCoefficientInputValidator($this->em, $content, $client, $isAdmin);
+        if(!$inbreedingCoefficientInputValidator->getIsInputValid()) {
+            return $inbreedingCoefficientInputValidator->createJsonResponse();
+        }
+
+        $reportResults = new InbreedingCoefficientReportData($this->em, $content, $client);
+        $reportData = $reportResults->getData();
+        $reportData[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
+
+        $html = $this->renderView(self::TWIG_FILE, ['variables' => $reportData]);
+
+        if(ReportAPIController::IS_LOCAL_TESTING) {
+            //Save pdf in local cache
+            return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($reportResults->getFilePath($this->cacheDir), $html, TwigOutputUtil::pdfPortraitOptions())], 200);
+        }
+
+        $pdfOutput = $this->knpGenerator->getOutputFromHtml($html,TwigOutputUtil::pdfPortraitOptions());
+
+        $url = $this->storageService->uploadPdf($pdfOutput, $reportResults->getS3Key());
+
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+    }
+
+
+}
