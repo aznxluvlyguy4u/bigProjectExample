@@ -22,6 +22,7 @@ services:
           - '@app.migrator.inspector'
           - '@app.cli.internal_worker.depart'
           - '@app.cli.mixblup'
+          - '@app.initializer.stored_procedure'
           - '@app.datafix.ubn'
           - '@app.migrator.vsm'
 
@@ -222,6 +223,12 @@ services:
     app.initializer.birth_progress:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\BirthProgressInitializer
+
+    app.initializer.stored_procedure:
+        class: AppBundle\Service\Migration\StoredProcedureInitializer
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.migrator.client:
         class: AppBundle\Service\Migration\ClientMigrator

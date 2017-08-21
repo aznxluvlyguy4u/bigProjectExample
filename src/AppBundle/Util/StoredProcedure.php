@@ -11,6 +11,14 @@ class StoredProcedure
     const GET_LIVESTOCK_REPORT = 'get_livestock_report';
 
     /**
+     * @return array
+     */
+    public static function getConstants() {
+        $oClass = new \ReflectionClass(__CLASS__);
+        return $oClass->getConstants();
+    }
+
+    /**
      * @param Connection $conn
      * @param string $functionName
      * @param array $parameters
@@ -37,7 +45,7 @@ class StoredProcedure
      * @param string $query
      * @param array $parameters parameters by their type
      */
-    public static function createOrUpdateProcedure(Connection $conn, $functionName, $query, array $parameters)
+    private static function createOrUpdateProcedureBase(Connection $conn, $functionName, $query, array $parameters)
     {
         $parameterString = '';
         $prefix = '';
@@ -56,6 +64,19 @@ class StoredProcedure
                 END;
                 $$ LANGUAGE plpgsql";
         $conn->query($sql)->execute();
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param $functionName
+     */
+    public static function createOrUpdateProcedure(Connection $conn, $functionName)
+    {
+        switch ($functionName) {
+            case self::GET_LIVESTOCK_REPORT: self::createLiveStockReport($conn); break;
+            default: break;
+        }
     }
 
 
@@ -116,7 +137,7 @@ class StoredProcedure
           'locationId' => 'INTEGER',
         ];
 
-        self::createOrUpdateProcedure($conn, self::GET_LIVESTOCK_REPORT, $sql, $parameters);
+        self::createOrUpdateProcedureBase($conn, self::GET_LIVESTOCK_REPORT, $sql, $parameters);
     }
 
 }
