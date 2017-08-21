@@ -70,12 +70,11 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
 
     /**
      * @param Request $request
-     * @param $user
      * @return JsonResponse
      */
-    public function request(Request $request, $user)
+    public function request(Request $request)
     {
-        if(!AdminValidator::isAdmin($user, AccessLevelType::SUPER_ADMIN)) { //validate if user is at least a SUPER_ADMIN
+        if(!AdminValidator::isAdmin($this->userService->getUser(), AccessLevelType::SUPER_ADMIN)) { //validate if user is at least a SUPER_ADMIN
             return AdminValidator::getStandardErrorResponse();
         }
 
@@ -104,14 +103,14 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
         switch ($type) {
             case PedigreeAbbreviation::CF:
                 $data = $this->cfData();
-                $filename = $cfFilename;
+                $this->filename = $cfFilename;
                 $title = self::TITLE_PREFIX.'stamboek CF';
                 break;
             case PedigreeAbbreviation::NTS://go to case:LAX
             case PedigreeAbbreviation::TSNH://go to case:LAX
             case PedigreeAbbreviation::LAX:
                 $data = $this->ntsTsnhLaxData();
-                $filename = $ntsTsnhLaxFilename;
+                $this->filename = $ntsTsnhLaxFilename;
                 $title = self::TITLE_PREFIX.'stamboek NTS, TSNH, LAX';
                 break;
             default:
@@ -120,7 +119,7 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
                 return new JsonResponse(['code' => $code, "message" => $message], $code);
         }
 
-        return $this->generateFile($filename, $data, $title, $fileType, $uploadToS3);
+        return $this->generateFile($this->filename, $data, $title, $fileType, $uploadToS3);
     }
 
 

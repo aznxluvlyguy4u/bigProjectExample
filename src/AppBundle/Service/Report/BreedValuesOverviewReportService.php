@@ -14,7 +14,6 @@ use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
-use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -48,7 +47,7 @@ class BreedValuesOverviewReportService extends ReportServiceBase
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
-            $knpGenerator,$cacheDir, $rootDir, self::FOLDER);
+            $knpGenerator,$cacheDir, $rootDir, self::FOLDER, self::FILENAME);
 
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -90,8 +89,7 @@ class BreedValuesOverviewReportService extends ReportServiceBase
      */
     public function generate($fileType, $concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals, $uploadToS3)
     {
-        $filename = self::FILENAME.'_'.TimeUtil::getTimeStampNowForFiles();
-        return $this->generateFile($filename, $this->getData($concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals), self::TITLE, $fileType, $uploadToS3);
+        return $this->generateFile($this->getFilenameWithoutExtension(), $this->getData($concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals), self::TITLE, $fileType, $uploadToS3);
     }
 
 

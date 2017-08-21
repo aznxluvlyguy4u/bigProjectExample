@@ -53,6 +53,7 @@ use AppBundle\Service\MixBlupInputQueueService;
 use AppBundle\Service\MixBlupOutputQueueService;
 use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
+use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Service\UserService;
@@ -92,6 +93,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::HEALTH_SERVICE => null,
       ServiceId::INBREEDING_COEFFICIENT_REPORT_SERVICE => null,
       ServiceId::INTERNAL_QUEUE_SERVICE => null,
+      ServiceId::LIVESTOCK_REPORT => null,
       ServiceId::LOGGER => null,
       ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE => null,
       ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE => null,
@@ -141,6 +143,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getInbreedingCoefficientReportService() { return $this->getService(ServiceId::INBREEDING_COEFFICIENT_REPORT_SERVICE); }
   /** @return AwsInternalQueueService */
   protected function getInternalQueueService() { return $this->getService(ServiceId::INTERNAL_QUEUE_SERVICE); }
+  /** @return LiveStockReportService */
+  protected function getLiveStockReportService() { return $this->getService(ServiceId::LIVESTOCK_REPORT); }
   /** @return Logger */
   protected function getLogger() { return $this->getService(ServiceId::LOGGER); }
   /** @return MixBlupInputQueueService */

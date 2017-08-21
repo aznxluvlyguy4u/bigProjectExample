@@ -36,7 +36,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
                                 AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
-            $knpGenerator, $cacheDir, $rootDir, self::TITLE);
+            $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
     }
 
 
@@ -78,7 +78,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
 
         if(ReportAPIController::IS_LOCAL_TESTING) {
             //Save pdf in local cache
-            return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($this->reportResults->getFilePath($this->cacheDir), $html, TwigOutputUtil::pdfPortraitOptions())], 200);
+            return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($this->getCacheDirFilename(), $html, TwigOutputUtil::pdfPortraitOptions())], 200);
         }
 
         $pdfOutput = $this->knpGenerator->getOutputFromHtml($html,TwigOutputUtil::pdfPortraitOptions());
@@ -94,7 +94,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
      */
     private function getCsvReport()
     {
-        return $this->generateFile($this->reportResults->getFileName(),
+        return $this->generateFile($this->filename,
             $this->reportResults->getCsvData(),self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
         );
     }

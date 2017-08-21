@@ -38,7 +38,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
                                 AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
-            $knpGenerator, $cacheDir, $rootDir, self::TITLE);
+            $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
     }
 
 
@@ -125,7 +125,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
         ];
         $csvData = $this->convertNestedArraySetsToSqlResultFormat($this->reportResults->getReports(), $keysToIgnore);
 
-        return $this->generateFile($this->reportResults->getFileName(),
+        return $this->generateFile($this->filename,
             $csvData,self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
         );
     }

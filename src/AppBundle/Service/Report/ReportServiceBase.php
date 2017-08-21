@@ -4,6 +4,7 @@
 namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Client;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Report\ReportBase;
@@ -13,6 +14,7 @@ use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -31,6 +33,8 @@ class ReportServiceBase
 {
     const EXCEL_TYPE = 'Excel2007';
     const CREATOR = 'NSFO';
+    const DEFAULT_EXTENSION = FileType::PDF;
+    const DEFAULT_FILENAME = 'NFSO_Report';
 
     /** @var ObjectManager|EntityManagerInterface */
     protected $em;
@@ -61,6 +65,10 @@ class ReportServiceBase
     protected $folderPath;
     /** @var string */
     protected $filename;
+    /** @var string */
+    protected $folderName;
+    /** @var string */
+    protected $extension;
 
     /** @var array */
     protected $convertedResult;
@@ -77,11 +85,12 @@ class ReportServiceBase
      * @param GeneratorInterface $knpGenerator
      * @param String $folderName
      * @param String $rootDir
+     * @param String $filename
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
                                 UserService $userService, EngineInterface $templating,
-                                GeneratorInterface $knpGenerator, $cacheDir, $rootDir, $folderName)
+                                GeneratorInterface $knpGenerator, $cacheDir, $rootDir, $folderName, $filename = self::DEFAULT_FILENAME)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -101,14 +110,18 @@ class ReportServiceBase
             ->setExcelFileType(self::EXCEL_TYPE)
         ;
 
+        $this->extension = self::DEFAULT_EXTENSION;
+        $this->folderPath = $folderName;
+        $this->filename = $filename;
+
         $this->fs = new Filesystem();
     }
 
 
     public function getS3Key()
     {
-        return 'reports'.$this->excelService->getFolder()
-            .$this->excelService->getFilename().'.'.$this->excelService->getExtension();
+        $path = FilesystemUtil::concatDirAndFilename('reports', $this->folderName);
+        return FilesystemUtil::concatDirAndFilename($path, $this->getFilename());
     }
 
 
@@ -120,7 +133,7 @@ class ReportServiceBase
 
     public function getCacheSubFolder()
     {
-        return $this->excelService->getCacheSubFolder();
+        return FilesystemUtil::concatDirAndFilename($this->cacheDir, $this->folderName);
     }
 
 
@@ -146,8 +159,11 @@ class ReportServiceBase
         $this->logger->notice('Generate data from sql results ... ');
 
         //These values are also used for the filename on the S3 bucket
-        $this->excelService->setFilename($filenameWithoutExtension);
-        $this->excelService->setExtension($fileExtension);
+        $this->filename = $filenameWithoutExtension;
+        $this->extension = $fileExtension;
+
+        $this->excelService->setFilename($this->filename);
+        $this->excelService->setExtension($this->extension);
         $this->excelService->setTitle($title);
 
         switch ($fileExtension) {
@@ -158,7 +174,7 @@ class ReportServiceBase
                 break;
 
             case FileType::CSV:
-                $localFilePath = $this->csvWriter->write($data,$filenameWithoutExtension .'.'.$fileExtension);
+                $localFilePath = $this->csvWriter->write($data,$this->getFilename());
                 break;
 
             default:
@@ -238,6 +254,24 @@ class ReportServiceBase
     }
 
 
+    /**
+     * @param array $data
+     * @param array $keysToIgnore
+     * @return mixed
+     */
+    protected function unsetNestedKeys(array $data, array $keysToIgnore = [])
+    {
+        $rows = array_keys($data);
+        foreach ($rows as $row) {
+            foreach ($keysToIgnore as $keyToIgnore)
+            {
+                unset($data[$row][$keyToIgnore]);
+            }
+        }
+        return $data;
+    }
+
+
 
     /**
      * @param array $array
@@ -282,6 +316,31 @@ class ReportServiceBase
     protected function purgeConvertedResult()
     {
         $this->convertedResult = [];
+    }
+
+
+    /**
+     * @return string
+     */
+    protected function getCacheDirFilename()
+    {
+        $path = FilesystemUtil::concatDirAndFilename($this->cacheDir, $this->folderName);
+        return FilesystemUtil::concatDirAndFilename($path, $this->getFilename());
+    }
+
+
+    /**
+     * @return string
+     */
+    protected function getFilename()
+    {
+        return $this->getFilenameWithoutExtension().'.'.$this->extension;
+    }
+
+
+    protected function getFilenameWithoutExtension()
+    {
+        return $this->filename.'_'.TimeUtil::getTimeStampNowForFiles();
     }
 
 

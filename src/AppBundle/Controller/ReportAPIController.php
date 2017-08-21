@@ -121,35 +121,7 @@ class ReportAPIController extends APIController {
    */
   public function getLiveStockReport(Request $request)
   {
-    $client = $this->getAccountOwner($request);
-    $location = $this->getSelectedLocation($request);
-    //TODO read options from the content it the Array. Deactivated, so the front-end doesn't even need to send an empty array
-//    $content = $this->getContentAsArray($request);
-    $content = new ArrayCollection(); //Just a placeholder for the array holding the options
-    
-    /** @var ObjectManager $em */
-    $em = $this->getDoctrine()->getManager();
-
-    //TODO add validation for options, when adding the options
-
-    $reportResults = new LivestockReportData($em, $content, $client, $location);
-    $reportData = $reportResults->getData();
-    $reportData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
-
-    $twigFile = 'Report/livestock_report.html.twig';
-    $html = $this->renderView($twigFile, ['variables' => $reportData]);
-
-    if(self::IS_LOCAL_TESTING) {
-      //Save pdf in local cache
-      return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($reportResults, $html, TwigOutputUtil::pdfLandscapeOptions())], 200);
-    }
-
-    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,TwigOutputUtil::pdfLandscapeOptions());
-
-    $s3Service = $this->getStorageService();
-    $url = $s3Service->uploadPdf($pdfOutput, $reportResults->getS3Key());
-
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+      return $this->getLiveStockReportService()->getReport($request);
   }
 
 
@@ -176,7 +148,7 @@ class ReportAPIController extends APIController {
      */
     public function getPedigreeRegisterOverview(Request $request)
     {
-        return $this->getPedigreeRegisterReportService()->request($request, $this->getEmployee());
+        return $this->getPedigreeRegisterReportService()->request($request);
     }
 
 
@@ -207,49 +179,4 @@ class ReportAPIController extends APIController {
     }
 
 
-  /**
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("/testdata")
-   * @Method("POST")
-   */
-  public function test(Request $request)
-  {
-
-  }
-
-
-  /**
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("-result-table")
-   * @Method("POST")
-   */
-  public function generateResultTable(Request $request) {
-    $workerMessageBody = new WorkerMessageBody();
-    $workerMessageBody->setTaskType(WorkerTaskType::GENERATE_RESULT_TABLE_RECORDS);
-    $result = $this->sendTaskToQueue($workerMessageBody);
-
-    if(!$result) {
-      return Output::createStandardJsonErrorResponse('Failed to send task to queue', 428);
-    }
-
-    return Output::createStandardJsonSuccessResponse();
-  }
-  
-  
-
-  /**
-   * @param ReportBase $report
-   * @param $html
-   * @param array $pdfOptions
-   * @return string
-   */
-  private function saveFileLocally(ReportBase $report, $html, $pdfOptions = null)
-  {
-    $folderPath = $this->getParameter('kernel.cache_dir');
-    $generatedPdfPath = $report->getFilePath($folderPath);
-    $this->get('knp_snappy.pdf')->generateFromHtml($html, $generatedPdfPath, $pdfOptions);
-    return $generatedPdfPath;
-  }
 }

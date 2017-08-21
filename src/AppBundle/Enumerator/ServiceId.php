@@ -18,6 +18,7 @@ class ServiceId
     const HEALTH_SERVICE = 'app.health.updater';
     const INBREEDING_COEFFICIENT_REPORT_SERVICE = 'app.report.inbreeding_coefficient';
     const INTERNAL_QUEUE_SERVICE = 'app.aws.queueservice.internal';
+    const LIVESTOCK_REPORT = 'app.report.livestock';
     const LOGGER = 'logger';
     const MIXBLUP_INPUT_QUEUE_SERVICE = 'app.aws.queueservice.mixblub_input';
     const MIXBLUP_OUTPUT_QUEUE_SERVICE = 'app.aws.queueservice.mixblub_output';

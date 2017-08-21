@@ -7,12 +7,13 @@ use AppBundle\Entity\Client;
 use AppBundle\Enumerator\FileType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 
 class ReportBase
 {
     const DEFAULT_FILE_TYPE = FileType::PDF;
 
-    /** @var ObjectManager */
+    /** @var ObjectManager|EntityManagerInterface */
     protected $em;
     /** @var Connection */
     protected $conn;
