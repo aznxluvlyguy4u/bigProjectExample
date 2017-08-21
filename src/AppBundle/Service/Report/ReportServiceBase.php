@@ -62,6 +62,9 @@ class ReportServiceBase
     /** @var string */
     protected $filename;
 
+    /** @var array */
+    protected $convertedResult;
+
     /**
      * PedigreeRegisterOverviewReportService constructor.
      * @param ObjectManager|EntityManagerInterface $em
@@ -215,5 +218,71 @@ class ReportServiceBase
         $this->knpGenerator->generateFromHtml($html, $generatedPdfPath, $pdfOptions);
         return $generatedPdfPath;
     }
+
+
+    /**
+     * @param array $arraySets
+     * @param string $keyPrefix
+     * @param array $keysToIgnore
+     * @return array
+     */
+    protected function convertNestedArraySetsToSqlResultFormat(array $arraySets, $keysToIgnore = [], $keyPrefix = '')
+    {
+        $result = [];
+        foreach ($arraySets as $arraySet) {
+            $result[] = $this->convertNestedArrayToSqlResultFormat($arraySet, $keysToIgnore, $keyPrefix);
+        }
+        $this->purgeConvertedResult();
+
+        return $result;
+    }
+
+
+
+    /**
+     * @param array $array
+     * @param string $keyPrefix
+     * @param array $keysToIgnore
+     * @param string $semiColonReplacement
+     * @param boolean $purgeResult
+     * @return array
+     * @throws \Exception
+     */
+    protected function convertNestedArrayToSqlResultFormat(array $array, $keysToIgnore = [], $keyPrefix = '', $semiColonReplacement = ',', $purgeResult = true)
+    {
+        $keySeparator = '_';
+
+        if ($purgeResult) { $this->purgeConvertedResult(); }
+
+        foreach ($array as $key => $item) {
+
+            if (in_array($key, $keysToIgnore)) {
+                continue;
+            }
+
+            $keyForResult = $keyPrefix !== '' ? $keyPrefix.$keySeparator.$key : $key;
+
+            if (is_array($item)) {
+                self::convertNestedArrayToSqlResultFormat($item, $keysToIgnore, $keyForResult, $semiColonReplacement,false);
+
+            } elseif (is_string($item)) {
+
+                if (key_exists($keyForResult, $this->convertedResult)) {
+                    throw new \Exception('Duplicate key: '.$keyForResult);
+                }
+                $this->convertedResult[$keyForResult] = str_replace(';', $semiColonReplacement, $item);
+            }
+        }
+
+        return $this->convertedResult;
+    }
+
+
+
+    protected function purgeConvertedResult()
+    {
+        $this->convertedResult = [];
+    }
+
 
 }

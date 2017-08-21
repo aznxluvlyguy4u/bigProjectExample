@@ -21,6 +21,7 @@ class ServiceId
     const LOGGER = 'logger';
     const MIXBLUP_INPUT_QUEUE_SERVICE = 'app.aws.queueservice.mixblub_input';
     const MIXBLUP_OUTPUT_QUEUE_SERVICE = 'app.aws.queueservice.mixblub_output';
+    const PEDIGREE_CERTIFICATES_REPORT = 'app.report.pedigree_certificates';
     const PEDIGREE_REGISTER_REPORT = 'app.report.pedigree_register';
     const REDIS_CLIENT = 'snc_redis.sncredis';
     const SERIALIZER = 'app.serializer.ir';

@@ -53,6 +53,7 @@ use AppBundle\Service\MixBlupInputQueueService;
 use AppBundle\Service\MixBlupOutputQueueService;
 use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
+use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\Finder;
@@ -94,6 +95,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::LOGGER => null,
       ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE => null,
       ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE => null,
+      ServiceId::PEDIGREE_CERTIFICATES_REPORT => null,
       ServiceId::PEDIGREE_REGISTER_REPORT => null,
       ServiceId::REDIS_CLIENT => null,
       ServiceId::SERIALIZER => null,
@@ -145,6 +147,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getMixBlupInputQueueService() { return $this->getService(ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE); }
   /** @return MixBlupOutputQueueService */
   protected function getMixBlupOutputQueueService() { return $this->getService(ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE); }
+  /** @return PedigreeCertificateReportService */
+  protected function getPedigreeCertificateReportService() { return $this->getService(ServiceId::PEDIGREE_CERTIFICATES_REPORT); }
   /** @return PedigreeRegisterOverviewReportService */
   protected function getPedigreeRegisterReportService() { return $this->getService(ServiceId::PEDIGREE_REGISTER_REPORT); }
   /** @return \Redis */

@@ -65,50 +65,9 @@ class ReportAPIController extends APIController {
    * @Route("/pedigree-certificates")
    * @Method("POST")
    */
-  public function getPedigreeCertificates(Request $request) {
-
-    $admin = $this->getEmployee();
-    $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-    $isAdmin = $adminValidator->getIsAccessGranted();
-
-    $client = null;
-    $location = null;
-    if(!$isAdmin) {
-      $client = $this->getAccountOwner($request);
-      $location = $this->getSelectedLocation($request);
-    }
-    $content = $this->getContentAsArray($request);
-    $em = $this->getDoctrine()->getManager();
-
-    //Validate if given ULNs are correct AND there should at least be one ULN given
-    $ulnValidator = new UlnValidator($em, $content, true, null, $location);
-    if(!$ulnValidator->getIsUlnSetValid()) {
-      return $ulnValidator->createArrivalJsonErrorResponse();
-    }
-
-    //Or use... $this->getCurrentEnvironment() == Environment::PROD;
-    if(self::IS_USE_PROD_VERSION_OUTPUT) {
-      $twigFile = 'Report/pedigree_certificates.html.twig';
-    } else {
-      //containing extra unfinished features
-      $twigFile = 'Report/pedigree_certificates_beta.html.twig';
-    }
-
-    $pedigreeCertificateData = new PedigreeCertificates($em, $content, $client, $location);
-    $variables = $pedigreeCertificateData->getReports();
-    $html = $this->renderView($twigFile, ['variables' => $variables]);
-
-    if(self::IS_LOCAL_TESTING) {
-      //Save pdf in local cache
-      return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($pedigreeCertificateData, $html, TwigOutputUtil::pdfLandscapeOptions())], 200);
-    }
-
-    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,TwigOutputUtil::pdfLandscapeOptions());
-
-    $s3Service = $this->getStorageService();
-    $url = $s3Service->uploadPdf($pdfOutput, $pedigreeCertificateData->getS3Key());
-
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+  public function getPedigreeCertificates(Request $request)
+  {
+    return $this->getPedigreeCertificateReportService()->getReport($request);
   }
 
 

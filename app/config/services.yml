@@ -328,6 +328,10 @@ services:
           - '%kernel.cache_dir%'
           - '%kernel.root_dir%'
 
+    app.report.pedigree_certificates:
+        parent: app.report.base
+        class: AppBundle\Service\Report\PedigreeCertificateReportService
+
     app.report.pedigree_register:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeRegisterOverviewReportService
