@@ -49,12 +49,21 @@ class ReportAPIController extends APIController {
    *
    * @ApiDoc(
    *   section = "Reports",
-   *   requirements={
+   *   headers={
    *     {
    *       "name"="AccessToken",
    *       "dataType"="string",
-   *       "requirement"="",
+   *       "required"=true,
    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   parameters={
+   *     {
+   *        "name"="file_type",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
+   *        "format"="?file_type=csv"
    *     }
    *   },
    *   resource = true,
@@ -76,12 +85,21 @@ class ReportAPIController extends APIController {
    *
    * @ApiDoc(
    *   section = "Reports",
-   *   requirements={
+   *   headers={
    *     {
    *       "name"="AccessToken",
    *       "dataType"="string",
-   *       "requirement"="",
+   *       "required"=true,
    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   parameters={
+   *     {
+   *        "name"="file_type",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
+   *        "format"="?file_type=csv"
    *     }
    *   },
    *   resource = true,
@@ -103,12 +121,21 @@ class ReportAPIController extends APIController {
    *
    * @ApiDoc(
    *   section = "Reports",
-   *   requirements={
+   *   headers={
    *     {
    *       "name"="AccessToken",
    *       "dataType"="string",
-   *       "requirement"="",
+   *       "required"=true,
    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   parameters={
+   *     {
+   *        "name"="file_type",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
+   *        "format"="?file_type=csv"
    *     }
    *   },
    *   resource = true,
@@ -130,12 +157,21 @@ class ReportAPIController extends APIController {
      *
      * @ApiDoc(
      *   section = "Reports",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="file_type",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
+     *        "format"="?file_type=csv"
      *     }
      *   },
      *   resource = true,
@@ -157,12 +193,21 @@ class ReportAPIController extends APIController {
      *
      * @ApiDoc(
      *   section = "Reports",
-     *   requirements={
+     *   headers={
      *     {
      *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="",
+     *       "required"=true,
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="file_type",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
+     *        "format"="?file_type=csv"
      *     }
      *   },
      *   resource = true,
