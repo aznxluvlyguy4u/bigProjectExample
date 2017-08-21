@@ -55,6 +55,7 @@ class ReportLabel
     const ULN_COUNTRY_CODE = 'ulnCountryCode';
     const ULN_NUMBER = 'ulnNumber';
     const ULN = 'uln';
+    const STN = 'stn';
     const PEDIGREE_COUNTRY_CODE = 'pedigreeCountryCode';
     const PEDIGREE_NUMBER = 'pedigreeNumber';
     const PEDIGREE = 'pedigree';
