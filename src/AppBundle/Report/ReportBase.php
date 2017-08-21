@@ -4,11 +4,14 @@ namespace AppBundle\Report;
 
 
 use AppBundle\Entity\Client;
+use AppBundle\Enumerator\FileType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
 class ReportBase
 {
+    const DEFAULT_FILE_TYPE = FileType::PDF;
+
     /** @var ObjectManager */
     protected $em;
     /** @var Connection */
@@ -17,6 +20,10 @@ class ReportBase
     protected $client;
     /** @var String */
     protected $fileNameType;
+    /** @var string */
+    protected $fileNameWithoutExtension;
+    /** @var string */
+    protected $extension;
 
     /**
      * ReportBase constructor.
@@ -30,6 +37,7 @@ class ReportBase
         $this->conn = $em->getConnection();
         $this->client = $client;
         $this->fileNameType = $fileNameType;
+        $this->extension = self::DEFAULT_FILE_TYPE;
     }
 
 
@@ -42,18 +50,52 @@ class ReportBase
         return $mainDirectory.'/'.$this->getS3Key();
     }
 
+
+    /**
+     * @return string
+     */
     public function getFileName()
     {
-        $dateTimeNow = new \DateTime();
-        $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';
+        if ($this->fileNameWithoutExtension === null) {
+            $dateTimeNow = new \DateTime();
+            $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';
 
-        return $this->fileNameType.'-'.$datePrint.'.pdf';
+            $this->fileNameWithoutExtension = $this->fileNameType.'-'.$datePrint;
+        }
+
+        return $this->fileNameWithoutExtension;
     }
 
+
+    /**
+     * @return string
+     */
     public function getS3Key()
     {
         $folderName = $this->client != null ? $this->client->getPersonId() : 'admin';
-        return 'reports/'.$folderName.'/'.$this->getFileName();
+        return 'reports/'.$folderName.'/'.$this->getFileName().'.'.$this->extension;
     }
+
+
+    /**
+     * @return string
+     */
+    public function getExtension()
+    {
+        return $this->extension;
+    }
+
+    /**
+     * @param string $extension
+     * @return ReportBase
+     */
+    public function setExtension($extension)
+    {
+        $this->extension = $extension;
+        return $this;
+    }
+
+
+
 
 }
