@@ -6,16 +6,20 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Report\ReportBase;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
+use AppBundle\Service\UserService;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -38,10 +42,20 @@ class ReportServiceBase
     protected $storageService;
     /** @var CsvWriter */
     protected $csvWriter;
+    /** @var UserService */
+    protected $userService;
+    /** @var EngineInterface */
+    protected $templating;
+    /** @var GeneratorInterface */
+    protected $knpGenerator;
     /** @var Logger */
     protected $logger;
     /** @var Filesystem */
     protected $fs;
+    /** @var string */
+    protected $cacheDir;
+    /** @var string */
+    protected $rootDir;
 
     /** @var string */
     protected $folderPath;
@@ -55,16 +69,27 @@ class ReportServiceBase
      * @param Logger $logger
      * @param AWSSimpleStorageService $storageService
      * @param CsvWriter $csvWriter
+     * @param UserService $userService
+     * @param EngineInterface $templating
+     * @param GeneratorInterface $knpGenerator
      * @param String $folderName
+     * @param String $rootDir
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter, $folderName)
+                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
+                                UserService $userService, EngineInterface $templating,
+                                GeneratorInterface $knpGenerator, $cacheDir, $rootDir, $folderName)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
         $this->logger = $logger;
         $this->storageService = $storageService;
         $this->csvWriter = $csvWriter;
+        $this->userService = $userService;
+        $this->templating = $templating;
+        $this->knpGenerator = $knpGenerator;
+        $this->cacheDir = $cacheDir;
+        $this->rootDir = $rootDir;
 
         $this->excelService = $excelService;
         $this->excelService
@@ -164,5 +189,31 @@ class ReportServiceBase
         return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
     }
 
+
+    /**
+     * Returns a rendered view.
+     *
+     * @param string $view       The view name
+     * @param array  $parameters An array of parameters to pass to the view
+     *
+     * @return string The rendered view
+     */
+    protected function renderView($view, array $parameters = array())
+    {
+        return $this->templating->render($view, $parameters);
+    }
+
+
+    /**
+     * @param string $generatedPdfPath
+     * @param $html
+     * @param array $pdfOptions
+     * @return string
+     */
+    protected function saveFileLocally($generatedPdfPath, $html, $pdfOptions = null)
+    {
+        $this->knpGenerator->generateFromHtml($html, $generatedPdfPath, $pdfOptions);
+        return $generatedPdfPath;
+    }
 
 }

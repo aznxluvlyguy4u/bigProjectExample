@@ -322,6 +322,11 @@ services:
           - '@logger'
           - '@app.aws.storageservice'
           - '@app.writer.csv_from_sql_results'
+          - '@app.user'
+          - '@templating'
+          - '@knp_snappy.pdf'
+          - '%kernel.cache_dir%'
+          - '%kernel.root_dir%'
 
     app.report.pedigree_register:
         parent: app.report.base
