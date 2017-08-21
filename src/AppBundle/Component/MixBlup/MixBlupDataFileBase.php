@@ -76,7 +76,7 @@ class MixBlupDataFileBase
         if(!$isValidBreedCode) { return false; }
 
         return
-            self::formatBreedCodePart(BreedCodeType::TE, $breedCodeParts).
+            self::format_TE_DT_DK_breedCodePart($breedCodeParts).
             self::formatBreedCodePart(BreedCodeType::CF, $breedCodeParts).
             self::formatBreedCodePart(BreedCodeType::BM, $breedCodeParts).
             self::formatBreedCodePart(BreedCodeType::SW, $breedCodeParts).
@@ -119,6 +119,23 @@ class MixBlupDataFileBase
     }
 
 
+
+
+    /**
+     * @param $breedCodeParts
+     * @return string
+     */
+    protected static function format_TE_DT_DK_breedCodePart($breedCodeParts)
+    {
+        $breedCodeValueToWrite =
+            ArrayUtil::get(BreedCodeType::TE, $breedCodeParts, 0) +
+            ArrayUtil::get(BreedCodeType::BT, $breedCodeParts, 0) +
+            ArrayUtil::get(BreedCodeType::DK, $breedCodeParts, 0)
+        ;
+        return DsvWriterUtil::pad($breedCodeValueToWrite, MaxLength::BREED_CODE_PART_BY_8_PARTS);
+    }
+
+
     /**
      * @param array $breedCodeParts
      * @return int
@@ -130,6 +147,8 @@ class MixBlupDataFileBase
         {
             if(
                 $breedCodeType != BreedCodeType::TE &&
+                $breedCodeType != BreedCodeType::BT && //treated as TE
+                $breedCodeType != BreedCodeType::DK && //treated as TE
                 $breedCodeType != BreedCodeType::CF &&
                 $breedCodeType != BreedCodeType::BM &&
                 $breedCodeType != BreedCodeType::SW &&

@@ -19,6 +19,7 @@ use AppBundle\Service\DataFix\GenderChangeCommandService;
 use AppBundle\Service\DataFix\UbnFixer;
 use AppBundle\Service\Migration\BirthProgressInitializer;
 use AppBundle\Service\Migration\InspectorMigrator;
+use AppBundle\Service\Migration\StoredProcedureInitializer;
 use AppBundle\Service\Migration\VsmMigratorService;
 use AppBundle\Service\Worker\DepartInternalWorkerCliOptions;
 use AppBundle\Util\ArrayUtil;
@@ -80,6 +81,8 @@ class CliOptionsService
     private $departInternalWorkerCliOptions;
     /** @var MixBlupCliOptionsService */
     private $mixBlupCliOptionsService;
+    /** @var StoredProcedureInitializer */
+    private $storedProcedureInitializer;
     /** @var UbnFixer */
     private $ubnFixer;
     /** @var VsmMigratorService */
@@ -102,6 +105,7 @@ class CliOptionsService
      * @param InspectorMigrator $inspectorMigrator
      * @param DepartInternalWorkerCliOptions $departInternalWorkerCliOptions
      * @param MixBlupCliOptionsService $mixBlupCliOptionsService
+     * @param StoredProcedureInitializer $storedProcedureInitializer
      * @param UbnFixer $ubnFixer
      * @param VsmMigratorService $vsmMigratorService
      */
@@ -113,6 +117,7 @@ class CliOptionsService
                                 InspectorMigrator $inspectorMigrator,
                                 DepartInternalWorkerCliOptions $departInternalWorkerCliOptions,
                                 MixBlupCliOptionsService $mixBlupCliOptionsService,
+                                StoredProcedureInitializer $storedProcedureInitializer,
                                 UbnFixer $ubnFixer,
                                 VsmMigratorService $vsmMigratorService
     )
@@ -128,6 +133,7 @@ class CliOptionsService
         $this->inspectorMigrator = $inspectorMigrator;
         $this->departInternalWorkerCliOptions = $departInternalWorkerCliOptions;
         $this->mixBlupCliOptionsService = $mixBlupCliOptionsService;
+        $this->storedProcedureInitializer = $storedProcedureInitializer;
         $this->ubnFixer = $ubnFixer;
         $this->vsmMigratorService = $vsmMigratorService;
 
@@ -682,12 +688,15 @@ class CliOptionsService
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '=====================================', "\n",
-            '1: BirthProgress', "\n\n",
+            '1: BirthProgress', "\n",
+            '4: StoredProcedures', "\n\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1: $this->birthProgressInitializer->run($this->cmdUtil); break;
+
+            case 4: $this->storedProcedureInitializer->initialize(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }

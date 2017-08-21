@@ -14,13 +14,16 @@ use AppBundle\Enumerator\QueryType;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
+use AppBundle\Service\UserService;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -41,11 +44,18 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
      * @param Logger $logger
      * @param AWSSimpleStorageService $storageService
      * @param CsvWriter $csvWriter
+     * @param UserService $userService
+     * @param EngineInterface $templating
+     * @param GeneratorInterface $knpGenerator
+     * @param string $cacheDir
+     * @param string $rootDir
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter)
+                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
+                                UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter,self::FOLDER);
+        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService,
+            $templating, $knpGenerator, $cacheDir, $rootDir, self::FOLDER);
 
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -60,12 +70,11 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
 
     /**
      * @param Request $request
-     * @param $user
      * @return JsonResponse
      */
-    public function request(Request $request, $user)
+    public function request(Request $request)
     {
-        if(!AdminValidator::isAdmin($user, AccessLevelType::SUPER_ADMIN)) { //validate if user is at least a SUPER_ADMIN
+        if(!AdminValidator::isAdmin($this->userService->getUser(), AccessLevelType::SUPER_ADMIN)) { //validate if user is at least a SUPER_ADMIN
             return AdminValidator::getStandardErrorResponse();
         }
 
@@ -94,14 +103,14 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
         switch ($type) {
             case PedigreeAbbreviation::CF:
                 $data = $this->cfData();
-                $filename = $cfFilename;
+                $this->filename = $cfFilename;
                 $title = self::TITLE_PREFIX.'stamboek CF';
                 break;
             case PedigreeAbbreviation::NTS://go to case:LAX
             case PedigreeAbbreviation::TSNH://go to case:LAX
             case PedigreeAbbreviation::LAX:
                 $data = $this->ntsTsnhLaxData();
-                $filename = $ntsTsnhLaxFilename;
+                $this->filename = $ntsTsnhLaxFilename;
                 $title = self::TITLE_PREFIX.'stamboek NTS, TSNH, LAX';
                 break;
             default:
@@ -110,7 +119,7 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
                 return new JsonResponse(['code' => $code, "message" => $message], $code);
         }
 
-        return $this->generateFile($filename, $data, $title, $fileType, $uploadToS3);
+        return $this->generateFile($this->filename, $data, $title, $fileType, $uploadToS3);
     }
 
 
