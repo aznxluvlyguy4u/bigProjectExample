@@ -48,14 +48,17 @@ class InbreedingCoefficientInputValidator extends BaseValidator
     
     /** @var boolean */
     private $validateEweGender;
+    /** @var boolean */
+    private $isAdmin;
 
-    public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client, $validateEweGender = true)
+    public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client = null, $isAdmin = false, $validateEweGender = true)
     {
         parent::__construct($manager, $content);
         $this->animalRepository = $this->manager->getRepository(Animal::class);
         $this->eweRepository = $this->manager->getRepository(Ewe::class);
         $this->ramRepository = $this->manager->getRepository(Ram::class);
         $this->client = $client;
+        $this->isAdmin = $isAdmin;
         $this->validateEweGender = $validateEweGender;
 
         $this->validatePost($content);
@@ -198,6 +201,13 @@ class InbreedingCoefficientInputValidator extends BaseValidator
                 $this->errors[] = self::EWE_FOUND_BUT_NOT_EWE;
                 return false;
             }
+        }
+
+
+        //Check ownership
+
+        if ($this->isAdmin) {
+            return true;
         }
 
         $isOwnedByClient = Validator::isAnimalOfClient($foundAnimal, $this->client);

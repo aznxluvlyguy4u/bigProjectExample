@@ -20,6 +20,7 @@ use AppBundle\Service\DataFix\UbnFixer;
 use AppBundle\Service\Migration\BirthProgressInitializer;
 use AppBundle\Service\Migration\InspectorMigrator;
 use AppBundle\Service\Migration\TreatmentTypeInitializer;
+use AppBundle\Service\Migration\StoredProcedureInitializer;
 use AppBundle\Service\Migration\VsmMigratorService;
 use AppBundle\Service\Worker\DepartInternalWorkerCliOptions;
 use AppBundle\Util\ArrayUtil;
@@ -81,6 +82,8 @@ class CliOptionsService
     private $departInternalWorkerCliOptions;
     /** @var MixBlupCliOptionsService */
     private $mixBlupCliOptionsService;
+    /** @var StoredProcedureInitializer */
+    private $storedProcedureInitializer;
     /** @var UbnFixer */
     private $ubnFixer;
     /** @var TreatmentTypeInitializer */
@@ -105,6 +108,7 @@ class CliOptionsService
      * @param InspectorMigrator $inspectorMigrator
      * @param DepartInternalWorkerCliOptions $departInternalWorkerCliOptions
      * @param MixBlupCliOptionsService $mixBlupCliOptionsService
+     * @param StoredProcedureInitializer $storedProcedureInitializer
      * @param UbnFixer $ubnFixer
      * @param TreatmentTypeInitializer $treatmentTypeInitializer
      * @param VsmMigratorService $vsmMigratorService
@@ -117,6 +121,7 @@ class CliOptionsService
                                 InspectorMigrator $inspectorMigrator,
                                 DepartInternalWorkerCliOptions $departInternalWorkerCliOptions,
                                 MixBlupCliOptionsService $mixBlupCliOptionsService,
+                                StoredProcedureInitializer $storedProcedureInitializer,
                                 UbnFixer $ubnFixer,
                                 TreatmentTypeInitializer $treatmentTypeInitializer,
                                 VsmMigratorService $vsmMigratorService
@@ -133,6 +138,7 @@ class CliOptionsService
         $this->inspectorMigrator = $inspectorMigrator;
         $this->departInternalWorkerCliOptions = $departInternalWorkerCliOptions;
         $this->mixBlupCliOptionsService = $mixBlupCliOptionsService;
+        $this->storedProcedureInitializer = $storedProcedureInitializer;
         $this->ubnFixer = $ubnFixer;
         $this->treatmentTypeInitializer = $treatmentTypeInitializer;
         $this->vsmMigratorService = $vsmMigratorService;
@@ -690,7 +696,9 @@ class CliOptionsService
             '=====================================', "\n",
             '1: BirthProgress', "\n",
 
-            '3: TreatmentType', "\n\n",
+            '3: TreatmentType', "\n",
+            '4: StoredProcedures', "\n\n",
+
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -698,6 +706,7 @@ class CliOptionsService
             case 1: $this->birthProgressInitializer->run($this->cmdUtil); break;
 
             case 3: $this->treatmentTypeInitializer->run($this->cmdUtil); break;
+            case 4: $this->storedProcedureInitializer->initialize(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }
