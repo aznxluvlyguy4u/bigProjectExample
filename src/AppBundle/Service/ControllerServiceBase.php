@@ -6,6 +6,12 @@ namespace AppBundle\Service;
 
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBaseRepository;
+use AppBundle\Entity\DeclareBaseResponse;
+use AppBundle\Entity\DeclareBaseResponseRepository;
+use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Entity\DeclareNsfoBaseRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\Tag;
@@ -33,6 +39,12 @@ class ControllerServiceBase
 
     /** @var AnimalRepository */
     protected $animalRepository;
+    /** @var DeclareBaseRepository */
+    protected $declareBaseRepository;
+    /** @var DeclareBaseResponseRepository */
+    protected $declareBaseResponseRepository;
+    /** @var DeclareNsfoBaseRepository */
+    protected $declareNsfoBaseRepository;
     /** @var LocationRepository */
     protected $locationRepository;
     /** @var TagRepository */
@@ -49,6 +61,9 @@ class ControllerServiceBase
         $this->conn = $this->em->getConnection();
 
         $this->animalRepository = $this->em->getRepository(Animal::class);
+        $this->declareBaseRepository = $this->em->getRepository(DeclareBase::class);
+        $this->declareBaseResponseRepository = $this->em->getRepository(DeclareBaseResponse::class);
+        $this->declareNsfoBaseRepository = $this->em->getRepository(DeclareNsfoBase::class);
         $this->locationRepository = $this->em->getRepository(Location::class);
         $this->tagRepository = $this->em->getRepository(Tag::class);
     }
