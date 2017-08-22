@@ -55,7 +55,7 @@ class AuthAPIController extends APIController {
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/register")
+   * @Route("/signup")
    * @Method("POST")
    */
   public function registerUser(Request $request)
@@ -239,8 +239,8 @@ class AuthAPIController extends APIController {
     $encoder = $this->get('security.password_encoder');
 
     $om = $this->getDoctrine()->getManager();
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $client = $this->getAccountOwner($request);
+    $loggedInUser = $this->getUser();
     $content = $this->getContentAsArray($request);
     $log = ActionLogWriter::passwordChange($om, $client, $loggedInUser);
 
@@ -266,7 +266,7 @@ class AuthAPIController extends APIController {
     $this->getDoctrine()->getManager()->flush();
 
     //Validate password change
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $encodedPasswordInDatabase = $client->getPassword();
 
     if($encodedPasswordInDatabase == $encodedNewPassword) {
@@ -399,7 +399,7 @@ class AuthAPIController extends APIController {
    */
   public function validateUbnInHeader(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
 
     if($headerValidation->isInputValid()) {
@@ -412,7 +412,7 @@ class AuthAPIController extends APIController {
 
   public function generatePersonIds(Request $request)
   {
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
     if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
       return $adminValidator->createJsonErrorResponse();

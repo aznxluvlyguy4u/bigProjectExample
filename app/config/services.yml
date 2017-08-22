@@ -22,6 +22,8 @@ services:
           - '@app.migrator.inspector'
           - '@app.cli.internal_worker.depart'
           - '@app.cli.mixblup'
+          - '@app.initializer.stored_procedure'
+          - '@app.datafix.ubn'
           - '@app.migrator.vsm'
 
     app.cli.gender_changer:
@@ -46,6 +48,7 @@ services:
           - '@app.excel.service'
           - '@app.migrator.lamb_meat_index'
           - '@app.mixblup.input'
+          - '@app.mixblup.input.validate'
           - '@app.mixblup.output'
           - '@app.report.pedigree_register'
 
@@ -146,6 +149,11 @@ services:
           cacheDir: %kernel.cache_dir%
           logger: '@logger'
 
+    app.mixblup.input.validate:
+        class: AppBundle\Component\MixBlup\MixBlupInputFileValidator
+        arguments: ['%kernel.cache_dir%']
+
+
 
     app.datafix.base.duplicate:
         abstract: true
@@ -164,6 +172,10 @@ services:
     app.datafix.animals.exterminator:
         parent: app.datafix.base.duplicate
         class: AppBundle\Service\DataFix\AnimalExterminator
+
+    app.datafix.ubn:
+        parent: app.datafix.base.duplicate
+        class: AppBundle\Service\DataFix\UbnFixer
 
 
     app.migrator.vsm:
@@ -195,10 +207,14 @@ services:
           - '@doctrine.orm.entity_manager'
           - %kernel.root_dir%
           - '@app.datafix.animals.duplicate'
+          - '@app.datafix.ubn'
 
     app.migrator.animaltable:
-        parent: app.migrator.base
         class: AppBundle\Service\Migration\AnimalTableMigrator
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - %kernel.root_dir%
+          - '@app.datafix.ubn'
 
     app.migrator.birth:
         parent: app.migrator.base
@@ -207,6 +223,12 @@ services:
     app.initializer.birth_progress:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\BirthProgressInitializer
+
+    app.initializer.stored_procedure:
+        class: AppBundle\Service\Migration\StoredProcedureInitializer
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.migrator.client:
         class: AppBundle\Service\Migration\ClientMigrator
@@ -287,6 +309,17 @@ services:
           unauthedPaths: ['/api/v1/doc', '/api/v1/auth/register', '/api/v1/auth/authorize']
         public: false
 
+    app.cache:
+        class: AppBundle\Service\CacheService
+        arguments:
+          - '@snc_redis.sncredis'
+
+    app.user:
+        class: AppBundle\Service\UserService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@security.token_storage'
+
     app.report.base:
         abstract: true
         arguments:
@@ -295,6 +328,20 @@ services:
           - '@app.excel.service'
           - '@logger'
           - '@app.aws.storageservice'
+          - '@app.writer.csv_from_sql_results'
+          - '@app.user'
+          - '@templating'
+          - '@knp_snappy.pdf'
+          - '%kernel.cache_dir%'
+          - '%kernel.root_dir%'
+
+    app.report.livestock:
+        parent: app.report.base
+        class: AppBundle\Service\Report\LiveStockReportService
+
+    app.report.pedigree_certificates:
+        parent: app.report.base
+        class: AppBundle\Service\Report\PedigreeCertificateReportService
 
     app.report.pedigree_register:
         parent: app.report.base
@@ -303,3 +350,13 @@ services:
     app.report.breed_values_overview:
         parent: app.report.base
         class: AppBundle\Service\Report\BreedValuesOverviewReportService
+
+    app.report.inbreeding_coefficient:
+        parent: app.report.base
+        class: AppBundle\Service\Report\InbreedingCoefficientReportService
+
+    app.writer.csv_from_sql_results:
+        class: AppBundle\Service\CsvFromSqlResultsWriterService
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '%kernel.cache_dir%'

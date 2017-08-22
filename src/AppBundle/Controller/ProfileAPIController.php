@@ -30,7 +30,7 @@ class ProfileAPIController extends APIController implements ProfileAPIController
    * @return jsonResponse
    */
   public function getCompanyProfile(Request $request) {
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
 
     //TODO Phase 2: Give back a specific company and location of that company. The CompanyProfileOutput already can process a ($client, $company, $location) method signature.
@@ -51,7 +51,7 @@ class ProfileAPIController extends APIController implements ProfileAPIController
    * @return jsonResponse
    */
   public function getLoginData(Request $request) {
-    $client = $this->getAuthenticatedUser($request);
+    $client = $this->getAccountOwner($request);
 
     $outputArray = LoginOutput::create($client);
 
@@ -70,8 +70,8 @@ class ProfileAPIController extends APIController implements ProfileAPIController
   public function editCompanyProfile(Request $request) {
     $om = $this->getDoctrine()->getManager();
     
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $client = $this->getAccountOwner($request);
+    $loggedInUser = $this->getUser();
     $content = $this->getContentAsArray($request);
     $location = $this->getSelectedLocation($request);
 

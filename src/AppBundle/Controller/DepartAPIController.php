@@ -160,8 +160,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
         $em = $this->getDoctrine()->getManager();
 
         $content = $this->getContentAsArray($request);
-        $client = $this->getAuthenticatedUser($request);
-        $loggedInUser = $this->getLoggedInUser($request);
+        $client = $this->getAccountOwner($request);
+        $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
         $log = ActionLogWriter::declareDepartOrExportPost($em, $client, $loggedInUser, $location, $content);
@@ -274,8 +274,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     $content = $this->getContentAsArray($request);
 
     //Client can only depart/export own animals
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
+    $client = $this->getAccountOwner($request);
+    $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);
 
     //NOTE!!! Don't try to verify any animals directly. Because they will have the isDeparted=true state.

@@ -12,6 +12,7 @@ use AppBundle\Entity\EweRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\RamRepository;
 use AppBundle\Util\AnimalArrayReader;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\InbreedingCoefficientOffspring;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -24,6 +25,8 @@ class InbreedingCoefficientReportData extends ReportBase
 
     /** @var array */
     private $data;
+    /** @var array */
+    private $csvData;
     /** @var Ram */
     private $ram;
     /** @var EweRepository */
@@ -37,11 +40,12 @@ class InbreedingCoefficientReportData extends ReportBase
      * @param ArrayCollection $content
      * @param Client $client
      */
-    public function __construct(ObjectManager $em, ArrayCollection $content, Client $client)
+    public function __construct(ObjectManager $em, ArrayCollection $content, Client $client = null)
     {
         parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
         
-        $this->data = array();
+        $this->data = [];
+        $this->csvData = [];
 
         /** @var RamRepository $ramRepository */
         $this->ramRepository = $this->em->getRepository(Ram::class);
@@ -72,6 +76,60 @@ class InbreedingCoefficientReportData extends ReportBase
     {
         return $this->data;
     }
+
+
+    /**
+     * @return array
+     */
+    public function getCsvData()
+    {
+        if (count($this->csvData) !== 0) { return $this->csvData; }
+
+        $nullReplacement = null;
+
+        $ramData = ArrayUtil::get(ReportLabel::RAM, $this->data);
+        $ramUln = $nullReplacement;
+        $ramStn = $nullReplacement;
+        if ($ramData) {
+            $ramUln = ArrayUtil::get(ReportLabel::ULN, $ramData, $ramUln);
+            $ramStn = ArrayUtil::get(ReportLabel::PEDIGREE, $ramData, $ramStn);
+        }
+
+        $csvOutput = [];
+        foreach (ArrayUtil::get(ReportLabel::EWES, $this->data, []) as $eweUln => $eweData) {
+            $eweStn = ArrayUtil::get(ReportLabel::PEDIGREE, $eweData, $nullReplacement);
+            $inbreedingCoefficient = ArrayUtil::get(ReportLabel::INBREEDING_COEFFICIENT, $eweData, $nullReplacement);
+
+            $csvOutput[] = [
+                $this->getCsvKey(ReportLabel::RAM.ReportLabel::ULN) => $ramUln,
+                $this->getCsvKey(ReportLabel::RAM.ReportLabel::STN) => $ramStn,
+                $this->getCsvKey(ReportLabel::EWE.ReportLabel::ULN) => $eweUln,
+                $this->getCsvKey(ReportLabel::EWE.ReportLabel::STN) => $eweStn,
+                $this->getCsvKey(ReportLabel::INBREEDING_COEFFICIENT) => $inbreedingCoefficient,
+            ];
+        }
+        return $csvOutput;
+    }
+
+
+    /**
+     * @param string $reportLabel
+     * @return string
+     */
+    private function getCsvKey($reportLabel)
+    {
+        $dutchLabels = [
+            ReportLabel::RAM.ReportLabel::ULN => ReportLabel::RAM.'_'.ReportLabel::ULN,
+            ReportLabel::RAM.ReportLabel::STN => ReportLabel::RAM.'_'.ReportLabel::STN,
+            ReportLabel::EWE.ReportLabel::ULN => ReportLabel::EWE.'_'.ReportLabel::ULN,
+            ReportLabel::EWE.ReportLabel::STN => ReportLabel::EWE.'_'.ReportLabel::STN,
+            ReportLabel::INBREEDING_COEFFICIENT => 'inteeltcoëfficiënt',
+        ];
+
+        return $dutchLabels[$reportLabel];
+    }
+
+
 
 
     /**

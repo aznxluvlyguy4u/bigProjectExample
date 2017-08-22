@@ -89,7 +89,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function getBirth(Request $request, $litterId)
     {
-        $this->getAuthenticatedUser($request);
+        $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
 
         if(!$location) {
@@ -135,7 +135,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     */
     public function getHistoryBirths(Request $request)
     {
-        $this->getAuthenticatedUser($request);
+        $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
 
         $em = $this->getDoctrine()->getManager();
@@ -192,8 +192,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     public function createBirth(Request $request)
     {
         $content = $this->getContentAsArray($request);
-        $client = $this->getAuthenticatedUser($request);
-        $loggedInUser = $this->getLoggedInUser($request);
+        $client = $this->getAccountOwner($request);
+        $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
         $requestMessages = $this->getRequestMessageBuilder()
@@ -256,7 +256,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function resendCreateBirth(Request $request)
     {
-        $loggedInUser = $this->getLoggedInUser($request);
+        $loggedInUser = $this->getUser();
         $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::DEVELOPER);
         if(!$isAdmin) { return AdminValidator::getStandardErrorResponse(); }
 
@@ -308,8 +308,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $location = $this->getSelectedLocation($request);
         $content = $this->getContentAsArray($request);
-        $client = $this->getAuthenticatedUser($request);
-        $loggedInUser = $this->getLoggedInUser($request);
+        $client = $this->getAccountOwner($request);
+        $loggedInUser = $this->getUser();
         $statusCode = 428;
         $litterId = null;
 

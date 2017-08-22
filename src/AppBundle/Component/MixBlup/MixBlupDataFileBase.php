@@ -9,7 +9,7 @@ use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
-use AppBundle\Util\CsvWriterUtil;
+use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\Translation;
 use Doctrine\DBAL\Connection;
 
@@ -76,7 +76,7 @@ class MixBlupDataFileBase
         if(!$isValidBreedCode) { return false; }
 
         return
-            self::formatBreedCodePart(BreedCodeType::TE, $breedCodeParts).
+            self::format_TE_DT_DK_breedCodePart($breedCodeParts).
             self::formatBreedCodePart(BreedCodeType::CF, $breedCodeParts).
             self::formatBreedCodePart(BreedCodeType::BM, $breedCodeParts).
             self::formatBreedCodePart(BreedCodeType::SW, $breedCodeParts).
@@ -92,8 +92,8 @@ class MixBlupDataFileBase
      */
     protected static function getBlankBreedCodes()
     {
-        $fullBreedCodeBy8Parts = CsvWriterUtil::pad(8, MaxLength::BREED_CODE_PART_BY_8_PARTS);
-        $blankBreedCode = CsvWriterUtil::pad(0, MaxLength::BREED_CODE_PART_BY_8_PARTS);
+        $fullBreedCodeBy8Parts = DsvWriterUtil::pad(8, MaxLength::BREED_CODE_PART_BY_8_PARTS);
+        $blankBreedCode = DsvWriterUtil::pad(0, MaxLength::BREED_CODE_PART_BY_8_PARTS);
 
         return
             $blankBreedCode. //TE
@@ -115,7 +115,24 @@ class MixBlupDataFileBase
     protected static function formatBreedCodePart($breedCodeType, $breedCodeParts)
     {
         $breedCodeValueToWrite = ArrayUtil::get($breedCodeType, $breedCodeParts, 0);
-        return CsvWriterUtil::pad($breedCodeValueToWrite, MaxLength::BREED_CODE_PART_BY_8_PARTS);
+        return DsvWriterUtil::pad($breedCodeValueToWrite, MaxLength::BREED_CODE_PART_BY_8_PARTS);
+    }
+
+
+
+
+    /**
+     * @param $breedCodeParts
+     * @return string
+     */
+    protected static function format_TE_DT_DK_breedCodePart($breedCodeParts)
+    {
+        $breedCodeValueToWrite =
+            ArrayUtil::get(BreedCodeType::TE, $breedCodeParts, 0) +
+            ArrayUtil::get(BreedCodeType::BT, $breedCodeParts, 0) +
+            ArrayUtil::get(BreedCodeType::DK, $breedCodeParts, 0)
+        ;
+        return DsvWriterUtil::pad($breedCodeValueToWrite, MaxLength::BREED_CODE_PART_BY_8_PARTS);
     }
 
 
@@ -130,6 +147,8 @@ class MixBlupDataFileBase
         {
             if(
                 $breedCodeType != BreedCodeType::TE &&
+                $breedCodeType != BreedCodeType::BT && //treated as TE
+                $breedCodeType != BreedCodeType::DK && //treated as TE
                 $breedCodeType != BreedCodeType::CF &&
                 $breedCodeType != BreedCodeType::BM &&
                 $breedCodeType != BreedCodeType::SW &&
@@ -140,7 +159,7 @@ class MixBlupDataFileBase
                 $sumOfValues += $breedCodeValue;
             }
         }
-        return CsvWriterUtil::pad($sumOfValues, MaxLength::BREED_CODE_PART_BY_8_PARTS);
+        return DsvWriterUtil::pad($sumOfValues, MaxLength::BREED_CODE_PART_BY_8_PARTS);
     }
 
 
@@ -154,7 +173,7 @@ class MixBlupDataFileBase
      */
     protected static function getFormattedValueFromData($data, $columnWidth, $key, $useColumnPadding = true, $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT)
     {
-        return CsvWriterUtil::getFormattedValueFromArray($data, $columnWidth, $key, $useColumnPadding, $nullReplacement);
+        return DsvWriterUtil::getFormattedValueFromArray($data, $columnWidth, $key, $useColumnPadding, $nullReplacement);
     }
 
 
@@ -347,7 +366,7 @@ class MixBlupDataFileBase
     public static function getFormattedGenderFromType($data, $key = JsonInputConstant::TYPE, $useColumnPadding = true)
     {
         $gender = self::translateGender($data[$key]);
-        return CsvWriterUtil::pad($gender, MaxLength::VALID_GENDER, $useColumnPadding);
+        return DsvWriterUtil::pad($gender, MaxLength::VALID_GENDER, $useColumnPadding);
     }
 
 
@@ -394,9 +413,10 @@ class MixBlupDataFileBase
      * @param string $key
      * @return mixed|null
      */
-    public static function getUbnOfBirthAsLastColumnValue($data, $key = JsonInputConstant::UBN_OF_BIRTH)
+    public static function getFormattedUbnOfBirthWithoutPadding($data, $key = JsonInputConstant::UBN_OF_BIRTH)
     {
-        return ArrayUtil::get($key, $data, MixBlupInstructionFileBase::MISSING_BLOCK_REPLACEMENT);
+        $ubnOfBirth = ArrayUtil::get($key, $data);
+        return MixBlupInputFileValidator::getValidatedUbnOfBirth($ubnOfBirth);
     }
 
 
@@ -414,7 +434,7 @@ class MixBlupDataFileBase
         if($value != $nullReplacement) {
             $value = round($value, MixBlupSetting::HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY);
         }
-        return CsvWriterUtil::pad($value, $columnWidth, $useColumnPadding);
+        return DsvWriterUtil::pad($value, $columnWidth, $useColumnPadding);
     }
 
 
@@ -445,7 +465,7 @@ class MixBlupDataFileBase
     protected static function formatMixBlupBoolean($value)
     {
         $formattedValue = $value ? MixBlupSetting::TRUE_RECORD_VALUE : MixBlupSetting::FALSE_RECORD_VALUE;
-        return CsvWriterUtil::pad($formattedValue, MaxLength::BOOL_AS_INT, true);
+        return DsvWriterUtil::pad($formattedValue, MaxLength::BOOL_AS_INT, true);
     }
 
 
@@ -459,7 +479,7 @@ class MixBlupDataFileBase
             'ubn' => 'location',
         ];
 
-        $maxColumnWidths = CsvWriterUtil::maxStringLenghts($conn, $columns);
+        $maxColumnWidths = DsvWriterUtil::maxStringLenghts($conn, $columns);
 
         return [
             "year_and_ubn_of_birth" => MaxLength::YEAR+strlen('_')+$maxColumnWidths['ubn'],

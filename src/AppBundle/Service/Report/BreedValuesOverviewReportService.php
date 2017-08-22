@@ -9,14 +9,17 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
+use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
+use AppBundle\Service\UserService;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
-use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class BreedValuesOverviewReportService extends ReportServiceBase
@@ -26,6 +29,7 @@ class BreedValuesOverviewReportService extends ReportServiceBase
     const KEYWORDS = "nsfo fokwaarden dieren overzicht";
     const DESCRIPTION = "Fokwaardenoverzicht van alle dieren op huidige stallijsten met minstens 1 fokwaarde";
     const FOLDER = '/pedigree_register_reports/';
+    const ACCURACY_TABLE_LABEL_SUFFIX = '_acc';
 
     /**
      * PedigreeRegisterOverviewReportService constructor.
@@ -33,11 +37,17 @@ class BreedValuesOverviewReportService extends ReportServiceBase
      * @param ExcelService $excelService
      * @param Logger $logger
      * @param AWSSimpleStorageService $storageService
+     * @param CsvWriter $csvWriter
+     * @param UserService $userService
+     * @param GeneratorInterface $knpGenerator
+     * @param string $cacheDir
+     * @param string $rootDir
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService)
+                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
-        parent::__construct($em, $excelService, $logger, $storageService, self::FOLDER);
+        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
+            $knpGenerator,$cacheDir, $rootDir, self::FOLDER, self::FILENAME);
 
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -63,27 +73,32 @@ class BreedValuesOverviewReportService extends ReportServiceBase
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::XLS);
         $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, true);
+        $concatBreedValuesAndAccuracies = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
+        $includeAllLiveStockAnimals = RequestUtil::getBooleanQuery($request,QueryParameter::INCLUDE_ALL_LIVESTOCK_ANIMALS, false);
 
-        return $this->generate($fileType, $uploadToS3);
+        return $this->generate($fileType, $concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals, $uploadToS3);
     }
 
 
     /**
      * @param string $fileType
+     * @param boolean $concatBreedValuesAndAccuracies
+     * @param boolean $includeAllLiveStockAnimals
      * @param boolean $uploadToS3
      * @return JsonResponse
      */
-    public function generate($fileType, $uploadToS3)
+    public function generate($fileType, $concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals, $uploadToS3)
     {
-        $filename = self::FILENAME.'_'.TimeUtil::getTimeStampToday();
-        return $this->generateFile($filename, $this->getData(), self::TITLE, $fileType, $uploadToS3);
+        return $this->generateFile($this->getFilenameWithoutExtension(), $this->getData($concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals), self::TITLE, $fileType, $uploadToS3);
     }
 
 
     /**
+     * @param bool $concatBreedValuesAndAccuracies
+     * @param bool $includeAllLiveStockAnimals
      * @return array
      */
-    private function getData()
+    private function getData($concatBreedValuesAndAccuracies = true, $includeAllLiveStockAnimals = false)
     {
         //Create breed index batch query parts
 
@@ -128,31 +143,69 @@ class BreedValuesOverviewReportService extends ReportServiceBase
         $valuesPrefix = '';
         $filterPrefix = '';
 
-        foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
+        if ($concatBreedValuesAndAccuracies) {
 
-            foreach ($columnValuesSets as $columnValueSet) {
-                $breedValueLabel = $columnValueSet['nl'];
-                $resultTableValueVar = $columnValueSet['result_table_value_variable'];
-                $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
+            foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
 
-                $breedValues = $breedValues . $valuesPrefix . "NULLIF(CONCAT(
+                foreach ($columnValuesSets as $columnValueSet) {
+                    $breedValueLabel = $columnValueSet['nl'];
+                    $resultTableValueVar = $columnValueSet['result_table_value_variable'];
+                    $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
+
+                    $breedValues = $breedValues . $valuesPrefix . "NULLIF(CONCAT(
                          ".$resultTableValueVar."_plus_sign.mark,
                          COALESCE(CAST(ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), 2) AS TEXT),''),'/',
                          COALESCE(CAST(ROUND(bg.".$resultTableAccuracyVar."*100) AS TEXT),'')
                      ),'/') as ".$breedValueLabel;
 
-                $valuesPrefix = ",
-                ";
+                    $valuesPrefix = ",
+                        ";
 
-                $breedValuesPlusSigns = $breedValuesPlusSigns . "LEFT JOIN (VALUES (true, '+'),(false, '')) AS ".$resultTableValueVar."_plus_sign(is_positive, mark) ON (bg.".$resultTableValueVar." > 0) = ".$resultTableValueVar."_plus_sign.is_positive
-            ";
+                    $breedValuesPlusSigns = $breedValuesPlusSigns . "LEFT JOIN (VALUES (true, '+'),(false, '')) AS ".$resultTableValueVar."_plus_sign(is_positive, mark) ON (bg.".$resultTableValueVar." > 0) = ".$resultTableValueVar."_plus_sign.is_positive
+                    ";
 
-                $breedValuesNullFilter = $breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
-            ";
+                    $breedValuesNullFilter = $breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
+                    ";
 
-                $filterPrefix = ' OR ';
+                    $filterPrefix = ' OR ';
+                }
             }
+
+        } else {
+            //Do NOT concat breed value and accuracies
+
+            foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
+
+                foreach ($columnValuesSets as $columnValueSet) {
+                    $breedValueLabel = $columnValueSet['nl'];
+                    $resultTableValueVar = $columnValueSet['result_table_value_variable'];
+                    $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
+
+                    $breedValues = $breedValues . $valuesPrefix
+                        . " ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), 2) as ".$breedValueLabel .",
+                        ROUND(bg.".$resultTableAccuracyVar."*100) as ". $breedValueLabel. self::ACCURACY_TABLE_LABEL_SUFFIX;
+
+                    $valuesPrefix = ",
+                        ";
+
+                    //keep  $breedValuesNullFilter blank
+
+                    $breedValuesNullFilter = $breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
+                    ";
+
+                    $filterPrefix = ' OR ';
+                }
+            }
+            
         }
+
+        $animalsFilter = '';
+        if (!$includeAllLiveStockAnimals) {
+            $animalsFilter = "AND (
+                        $breedValuesNullFilter
+                )";
+        }
+
 
         $sql = "
             SELECT
@@ -278,9 +331,7 @@ class BreedValuesOverviewReportService extends ReportServiceBase
                 ".$breedValuesPlusSigns."
             WHERE
                 a.location_id NOTNULL
-                AND (
-                        $breedValuesNullFilter
-                )";
+                $animalsFilter";
         return $this->conn->query($sql)->fetchAll();
     }
 }

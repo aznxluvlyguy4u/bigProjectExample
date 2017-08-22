@@ -29,7 +29,7 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editReasonsOfLoss(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
         if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
             return $adminValidator->createJsonErrorResponse();
@@ -51,7 +51,7 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editReasonsOfDepart(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
         if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
             return $adminValidator->createJsonErrorResponse();
@@ -73,7 +73,7 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editTreatmentOptions(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
         if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
             return $adminValidator->createJsonErrorResponse();
@@ -95,7 +95,7 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editContactFormOptions(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
         if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
             return $adminValidator->createJsonErrorResponse();

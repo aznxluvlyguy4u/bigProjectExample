@@ -56,8 +56,8 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         $om = $this->getDoctrine()->getManager();
 
         $content = $this->getContentAsArray($request);
-        $client = $this->getAuthenticatedUser($request);
-        $loggedInUser = $this->getLoggedInUser($request);
+        $client = $this->getAccountOwner($request);
+        $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
         //Validate if there is a message_number. It is mandatory for IenR
@@ -112,8 +112,8 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
     public function revokeNsfoDeclaration(Request $request, $messageId)
     {
         $manager = $this->getDoctrine()->getManager();
-        $client = $this->getAuthenticatedUser($request);
-        $loggedInUser = $this->getLoggedInUser($request);
+        $client = $this->getAccountOwner($request);
+        $loggedInUser = $this->getUser();
 
         $log = ActionLogWriter::revokeNsfoDeclaration($manager, $client, $loggedInUser, $messageId);
 

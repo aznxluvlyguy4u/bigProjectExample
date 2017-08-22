@@ -188,4 +188,11 @@ class VsmMigratorService extends Migrator2017JunServiceBase
     }
 
 
+    /**
+     * @return AnimalTableMigrator
+     */
+    public function getAnimalTableMigrator()
+    {
+        return $this->animalTableMigrator;
+    }
 }

@@ -56,7 +56,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function getAdmins(Request $request)
   {
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
         return $adminValidator->createJsonErrorResponse();
@@ -94,7 +94,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    * @Method("POST")
    */
     public function createAdmin(Request $request) {
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
         if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
             return $adminValidator->createJsonErrorResponse();
@@ -169,7 +169,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    * @Method("PUT")
    */
     public function editAdmin(Request $request) {
-        $admin = $this->getAuthenticatedEmployee($request);
+        $admin = $this->getEmployee();
         $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
         if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
             return $adminValidator->createJsonErrorResponse();
@@ -237,7 +237,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function deactivateAdmin(Request $request)
   {
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
       return $adminValidator->createJsonErrorResponse();
@@ -277,7 +277,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
   public function getTemporaryGhostToken(Request $request) {
 
     //User must be an Employee and not a Client
-    $employee = $this->getAuthenticatedEmployee($request);
+    $employee = $this->getEmployee();
     $employeeValidation = new EmployeeValidator($employee);
     if(!$employeeValidation->getIsValid()) {
       return $employeeValidation->createJsonErrorResponse();
@@ -329,9 +329,10 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
     if($tokenValidation->getStatusCode() != 200) {
       return $tokenValidation;
     }
+    $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
 
     //User must be an Employee and not a Client
-    $employee = $this->getAuthenticatedEmployee($request);
+    $employee = $this->getEmployee($tokenCode);
     $employeeValidation = new EmployeeValidator($employee);
     if(!$employeeValidation->getIsValid()) {
       return $employeeValidation->createJsonErrorResponse();
@@ -423,7 +424,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function getAccessLevelTypes(Request $request)
   {
-    $admin = $this->getAuthenticatedEmployee($request);
+    $admin = $this->getEmployee();
     $adminValidator = new AdminValidator($admin);
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
       return $adminValidator->createJsonErrorResponse();

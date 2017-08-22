@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\PersonType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
@@ -20,18 +21,27 @@ class PersonRepository extends BaseRepository
 {
   const DEFAULT_BLANK_PASSWORD = 'BLANK';
 
-  public function findOneByAccessToken($accessToken)
+  public function findOneByAccessTokenCode($accessTokenCode)
   {
-    $queryBuilder = $this->getManager()->createQueryBuilder();
+      $queryBuilder = $this->getEntityManager()->createQueryBuilder();
 
-    $queryBuilder
+      $queryBuilder
+          ->select('token')
+          ->from(Token::class, 'token')
+          ->where('token.code = :tokenCode')
+          ->setParameter('tokenCode', $accessTokenCode)
+          ->getFirstResult()
+      ;
 
-    ->from('AppBundle:Person', 'person')
-      ->select('person')
-      ->andWhere('person.accessToken = :accessToken')
-      ->setParameter('accessToken',$accessToken);
+      $result = $queryBuilder->getQuery()->getResult();
 
-    return $queryBuilder->getQuery()->getResult();
+      if ($result) {
+          /** @var Token $token */
+          $token = ArrayUtil::firstValue($result);
+          return $token->getOwner();
+      }
+
+      return null;
   }
 
 
