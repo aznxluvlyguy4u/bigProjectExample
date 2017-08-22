@@ -48,6 +48,7 @@ abstract class DeclareBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $logDate;
 
@@ -56,6 +57,7 @@ abstract class DeclareBase
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $requestId;
 
@@ -71,6 +73,7 @@ abstract class DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $requestState;
 
@@ -97,6 +100,7 @@ abstract class DeclareBase
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $relationNumberKeeper;
 
@@ -107,6 +111,7 @@ abstract class DeclareBase
      * @Assert\NotBlank
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $ubn;
 
@@ -114,6 +119,7 @@ abstract class DeclareBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $messageNumberToRecover;
 
@@ -123,6 +129,7 @@ abstract class DeclareBase
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $actionBy;
 
@@ -131,6 +138,7 @@ abstract class DeclareBase
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $hideFailedMessage;
 
@@ -139,6 +147,7 @@ abstract class DeclareBase
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $hideForAdmin;
 

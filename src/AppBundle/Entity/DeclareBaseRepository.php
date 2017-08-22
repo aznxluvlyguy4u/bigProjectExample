@@ -3,9 +3,12 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 
 /**
  * Class DeclareBaseRepository
@@ -113,4 +116,38 @@ class DeclareBaseRepository extends BaseRepository
     {
         return StoredProcedure::getErrorMessages($this->getConnection(), $showHiddenForAdmin);
     }
+
+
+    public function getErrorDetails($messageId)
+    {
+        /** @var DeclareBase $declare */
+        $declare = $this->findOneByRequestId($messageId);
+
+        if ($declare === null) {
+            return Validator::createJsonResponse('No declare found for given messageId: '.$messageId, 428);
+        }
+
+        if ($declare->getRequestState() !== RequestStateType::FAILED) {
+            return Validator::createJsonResponse('Declare does NOT have FAILED requestState, but: '.$declare->getRequestState(), 428);
+        }
+
+        if (
+            $declare instanceof DeclareArrival ||
+            $declare instanceof DeclareImport ||
+            $declare instanceof DeclareDepart ||
+            $declare instanceof DeclareExport ||
+            $declare instanceof DeclareLoss ||
+            $declare instanceof DeclareTagReplace ||
+            $declare instanceof DeclareTagsTransfer ||
+            $declare instanceof RevokeDeclaration
+        ) {
+            return $declare;
+
+        } elseif ($declare instanceof DeclareBirth) {
+            //TODO return the entire litter
+            return $declare;
+
+        }
+    }
+
 }

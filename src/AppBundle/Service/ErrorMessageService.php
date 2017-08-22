@@ -9,6 +9,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\ErrorMessageAPIControllerInterface;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -63,7 +64,11 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
             return AdminValidator::getStandardErrorResponse();
         }
 
-        return ResultUtil::successResult('ok');
+        $declare = $this->declareBaseRepository->getErrorDetails($messageId);
+        if ($declare instanceof JsonInputConstant) { return $declare; }
+
+        $output = $this->serializer->getDecodedJson($declare, [JmsGroup::ERROR_DETAILS]);
+        return ResultUtil::successResult($output);
     }
 
 

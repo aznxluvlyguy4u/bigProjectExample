@@ -51,7 +51,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"USER_MEASUREMENT"})
+   * @JMS\Groups({"USER_MEASUREMENT","ERROR_DETAILS"})
    * @Expose
    */
   protected $firstName;
@@ -62,7 +62,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"USER_MEASUREMENT"})
+   * @JMS\Groups({"USER_MEASUREMENT","ERROR_DETAILS"})
    * @Expose
    */
   protected $lastName;

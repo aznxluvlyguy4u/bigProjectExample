@@ -30,6 +30,7 @@ class DeclareExport extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $ulnCountryCode;
@@ -38,6 +39,7 @@ class DeclareExport extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $ulnNumber;
@@ -46,6 +48,7 @@ class DeclareExport extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $pedigreeCountryCode;
@@ -54,6 +57,7 @@ class DeclareExport extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $pedigreeNumber;
@@ -62,6 +66,7 @@ class DeclareExport extends DeclareBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $isExportAnimal;
@@ -72,6 +77,7 @@ class DeclareExport extends DeclareBase
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $animalType;
@@ -93,6 +99,7 @@ class DeclareExport extends DeclareBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $exportDate;
@@ -100,6 +107,7 @@ class DeclareExport extends DeclareBase
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $reasonOfExport;
@@ -116,6 +124,7 @@ class DeclareExport extends DeclareBase
      * @ORM\OneToMany(targetEntity="DeclareExportResponse", mappedBy="declareExportRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_export_request_message_id", referencedColumnName="id")
      * @ORM\OrderBy({"logDate" = "ASC"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @JMS\Type("array")
      */
     private $responses;

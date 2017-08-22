@@ -33,6 +33,7 @@ class DeclareArrival extends DeclareBase {
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $ulnCountryCode;
@@ -41,6 +42,7 @@ class DeclareArrival extends DeclareBase {
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $ulnNumber;
@@ -67,6 +69,7 @@ class DeclareArrival extends DeclareBase {
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $animalType;
@@ -88,6 +91,7 @@ class DeclareArrival extends DeclareBase {
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $arrivalDate;
@@ -96,6 +100,7 @@ class DeclareArrival extends DeclareBase {
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 10)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $ubnPreviousOwner;
@@ -112,6 +117,7 @@ class DeclareArrival extends DeclareBase {
     /**
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $isImportAnimal;
@@ -128,6 +134,7 @@ class DeclareArrival extends DeclareBase {
      * @ORM\JoinColumn(name="declare_arrival_request_message_id", referencedColumnName="id")
      * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $responses;
