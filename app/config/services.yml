@@ -360,3 +360,12 @@ services:
         arguments:
             - '@doctrine.orm.entity_manager'
             - '%kernel.cache_dir%'
+
+    app.controller.base:
+        abstract: true
+        arguments:
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.cache'
+          - '@app.user'            
