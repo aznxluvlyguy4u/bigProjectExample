@@ -25,6 +25,12 @@ use JMS\Serializer\Annotation\Expose;
  *      "Litter" = "Litter"
  *   }
  * )
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "Mate" : "AppBundle\Entity\Mate",
+ *               "DeclareWeight" : "AppBundle\Entity\DeclareWeight",
+ *                      "Litter" : "AppBundle\Entity\Litter"},
+ *     groups = {"ERROR_DETAILS"})
+ *
  * @package AppBundle\Entity\DeclareNsfoBase
  */
 abstract class DeclareNsfoBase
@@ -36,6 +42,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $id;
 
@@ -44,6 +51,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="datetime")
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $logDate;
 
@@ -52,6 +60,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string", unique=true, nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $messageId;
 
@@ -60,6 +69,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $requestState;
 
@@ -68,6 +78,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $relationNumberKeeper;
 
@@ -77,6 +88,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $ubn;
 
@@ -85,6 +97,7 @@ abstract class DeclareNsfoBase
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id", nullable=true)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $actionBy;
 
@@ -111,6 +124,7 @@ abstract class DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $isHidden;
 
@@ -122,6 +136,7 @@ abstract class DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $isOverwrittenVersion;
 

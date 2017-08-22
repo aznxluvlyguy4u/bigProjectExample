@@ -118,6 +118,10 @@ class DeclareBaseRepository extends BaseRepository
     }
 
 
+    /**
+     * @param $messageId
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse|DeclareBase|DeclareArrival|DeclareImport|DeclareDepart|DeclareExport|DeclareLoss|DeclareTagReplace|DeclareTagsTransfer|RevokeDeclaration|DeclareBirth|Litter
+     */
     public function getErrorDetails($messageId)
     {
         /** @var DeclareBase $declare */
@@ -144,8 +148,7 @@ class DeclareBaseRepository extends BaseRepository
             return $declare;
 
         } elseif ($declare instanceof DeclareBirth) {
-            //TODO return the entire litter
-            return $declare;
+            return $declare->getLitter();
 
         }
     }

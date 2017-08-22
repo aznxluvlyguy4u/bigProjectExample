@@ -35,7 +35,7 @@ abstract class Animal
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP","ERROR_DETAILS"})
      */
     protected $id;
 
@@ -60,6 +60,7 @@ abstract class Animal
      * @Assert\Length(max = 2)
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $pedigreeCountryCode;
 
@@ -72,6 +73,7 @@ abstract class Animal
      * @Assert\Length(max = 11)
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $pedigreeNumber;
 
@@ -91,6 +93,7 @@ abstract class Animal
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $ubnOfBirth;
 
@@ -109,6 +112,7 @@ abstract class Animal
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({"DECLARE","MIXBLUP"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $dateOfBirth;
 
@@ -128,6 +132,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $gender;
 
@@ -165,6 +170,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @JMS\Type("integer")
      * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $animalType;
 
@@ -280,6 +286,7 @@ abstract class Animal
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $isAlive;
 
@@ -289,6 +296,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $ulnNumber;
 
@@ -300,6 +308,7 @@ abstract class Animal
      * @Assert\Length(max = 2)
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $ulnCountryCode;
 
@@ -418,6 +427,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $breedType;
 
@@ -426,6 +436,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $breedCode;
 
