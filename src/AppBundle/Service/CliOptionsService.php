@@ -689,7 +689,8 @@ class CliOptionsService
             'Choose option: ', "\n",
             '=====================================', "\n",
             '1: BirthProgress', "\n",
-            '4: StoredProcedures', "\n\n",
+            '4: StoredProcedures', "\n",
+            '5: StoredProcedures: overwrite all', "\n\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -697,6 +698,7 @@ class CliOptionsService
             case 1: $this->birthProgressInitializer->run($this->cmdUtil); break;
 
             case 4: $this->storedProcedureInitializer->initialize(); break;
+            case 5: $this->storedProcedureInitializer->update(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }
