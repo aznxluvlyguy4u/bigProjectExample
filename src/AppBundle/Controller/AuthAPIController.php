@@ -55,7 +55,7 @@ class AuthAPIController extends APIController {
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/register")
+   * @Route("/signup")
    * @Method("POST")
    */
   public function registerUser(Request $request)

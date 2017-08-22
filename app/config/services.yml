@@ -25,6 +25,7 @@ services:
           - '@app.migrator.inspector'
           - '@app.cli.internal_worker.depart'
           - '@app.cli.mixblup'
+          - '@app.initializer.stored_procedure'
           - '@app.datafix.ubn'
           - '@app.migrator.vsm'
 
@@ -233,6 +234,12 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\BirthProgressInitializer
 
+    app.initializer.stored_procedure:
+        class: AppBundle\Service\Migration\StoredProcedureInitializer
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+
     app.migrator.client:
         class: AppBundle\Service\Migration\ClientMigrator
         arguments:
@@ -332,6 +339,19 @@ services:
           - '@logger'
           - '@app.aws.storageservice'
           - '@app.writer.csv_from_sql_results'
+          - '@app.user'
+          - '@templating'
+          - '@knp_snappy.pdf'
+          - '%kernel.cache_dir%'
+          - '%kernel.root_dir%'
+
+    app.report.livestock:
+        parent: app.report.base
+        class: AppBundle\Service\Report\LiveStockReportService
+
+    app.report.pedigree_certificates:
+        parent: app.report.base
+        class: AppBundle\Service\Report\PedigreeCertificateReportService
 
     app.report.pedigree_register:
         parent: app.report.base
@@ -340,6 +360,10 @@ services:
     app.report.breed_values_overview:
         parent: app.report.base
         class: AppBundle\Service\Report\BreedValuesOverviewReportService
+
+    app.report.inbreeding_coefficient:
+        parent: app.report.base
+        class: AppBundle\Service\Report\InbreedingCoefficientReportService
 
     app.writer.csv_from_sql_results:
         class: AppBundle\Service\CsvFromSqlResultsWriterService
