@@ -3,6 +3,8 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\TimeUtil;
 
 /**
@@ -100,5 +102,15 @@ class DeclareBaseRepository extends BaseRepository
         }
 
         return $results;
+    }
+
+
+    /**
+     * @param bool $showHiddenForAdmin
+     * @return array
+     */
+    public function getErrorsOverview($showHiddenForAdmin = false)
+    {
+        return StoredProcedure::getErrorMessages($this->getConnection(), $showHiddenForAdmin);
     }
 }

@@ -8,9 +8,12 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\ErrorMessageAPIControllerInterface;
 use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Validation\AdminValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -40,7 +43,12 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
      */
     public function getErrors(Request $request)
     {
-        return ResultUtil::successResult('ok');
+        if(!AdminValidator::isAdmin($this->userService->getEmployee(),AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $showHiddenForAdmin = RequestUtil::getBooleanQuery($request,QueryParameter::SHOW_HIDDEN,false);
+        return ResultUtil::successResult($this->declareBaseRepository->getErrorsOverview($showHiddenForAdmin));
     }
 
 
@@ -51,6 +59,10 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
      */
     public function getErrorDetails(Request $request, $messageId)
     {
+        if(!AdminValidator::isAdmin($this->userService->getEmployee(),AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
+
         return ResultUtil::successResult('ok');
     }
 

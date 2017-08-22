@@ -30,6 +30,15 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="show_hidden",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="show error messages hidden for admin, default = false",
+     *        "format"="?show_hidden=true"
+     *      }
+     *   },
      *   resource = true,
      *   description = "Get ErrorMessages"
      * )
