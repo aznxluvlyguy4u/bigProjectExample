@@ -52,6 +52,9 @@ use AppBundle\Service\Migration\ClientMigrator;
 use AppBundle\Service\MixBlupInputQueueService;
 use AppBundle\Service\MixBlupOutputQueueService;
 use AppBundle\Service\Report\BreedValuesOverviewReportService;
+use AppBundle\Service\Report\InbreedingCoefficientReportService;
+use AppBundle\Service\Report\LiveStockReportService;
+use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\Finder;
@@ -90,10 +93,13 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::EXCEL_SERVICE => null,
       ServiceId::EXTERNAL_QUEUE_SERVICE => null,
       ServiceId::HEALTH_SERVICE => null,
+      ServiceId::INBREEDING_COEFFICIENT_REPORT_SERVICE => null,
       ServiceId::INTERNAL_QUEUE_SERVICE => null,
+      ServiceId::LIVESTOCK_REPORT => null,
       ServiceId::LOGGER => null,
       ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE => null,
       ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE => null,
+      ServiceId::PEDIGREE_CERTIFICATES_REPORT => null,
       ServiceId::PEDIGREE_REGISTER_REPORT => null,
       ServiceId::REDIS_CLIENT => null,
       ServiceId::SERIALIZER => null,
@@ -137,14 +143,20 @@ class APIController extends Controller implements APIControllerInterface
   protected function getExternalQueueService(){ return $this->getService(ServiceId::EXTERNAL_QUEUE_SERVICE); }
   /** @return HealthService */
   protected function getHealthService(){ return $this->getService(ServiceId::HEALTH_SERVICE); }
+  /** @return InbreedingCoefficientReportService */
+  protected function getInbreedingCoefficientReportService() { return $this->getService(ServiceId::INBREEDING_COEFFICIENT_REPORT_SERVICE); }
   /** @return AwsInternalQueueService */
   protected function getInternalQueueService() { return $this->getService(ServiceId::INTERNAL_QUEUE_SERVICE); }
+  /** @return LiveStockReportService */
+  protected function getLiveStockReportService() { return $this->getService(ServiceId::LIVESTOCK_REPORT); }
   /** @return Logger */
   protected function getLogger() { return $this->getService(ServiceId::LOGGER); }
   /** @return MixBlupInputQueueService */
   protected function getMixBlupInputQueueService() { return $this->getService(ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE); }
   /** @return MixBlupOutputQueueService */
   protected function getMixBlupOutputQueueService() { return $this->getService(ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE); }
+  /** @return PedigreeCertificateReportService */
+  protected function getPedigreeCertificateReportService() { return $this->getService(ServiceId::PEDIGREE_CERTIFICATES_REPORT); }
   /** @return PedigreeRegisterOverviewReportService */
   protected function getPedigreeRegisterReportService() { return $this->getService(ServiceId::PEDIGREE_REGISTER_REPORT); }
   /** @return \Redis */
