@@ -98,6 +98,7 @@ class DeclareLoss extends DeclareBase
     /**
      * @ORM\OneToMany(targetEntity="DeclareLossResponse", mappedBy="declareLossRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_loss_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
      * @Expose
      */

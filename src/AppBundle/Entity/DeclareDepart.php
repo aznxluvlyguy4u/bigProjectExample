@@ -135,6 +135,7 @@ class DeclareDepart extends DeclareBase
     /**
      * @ORM\OneToMany(targetEntity="DeclareDepartResponse", mappedBy="declareDepartRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_depart_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
      */
     private $responses;

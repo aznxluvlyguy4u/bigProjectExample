@@ -115,6 +115,7 @@ class DeclareExport extends DeclareBase
     /**
      * @ORM\OneToMany(targetEntity="DeclareExportResponse", mappedBy="declareExportRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_export_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
      */
     private $responses;

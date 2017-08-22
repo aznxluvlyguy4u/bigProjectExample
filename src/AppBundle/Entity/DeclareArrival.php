@@ -126,6 +126,7 @@ class DeclareArrival extends DeclareBase {
     /**
      * @ORM\OneToMany(targetEntity="DeclareArrivalResponse", mappedBy="declareArrivalRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_arrival_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
      * @Expose
      */

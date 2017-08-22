@@ -67,6 +67,7 @@ class DeclareTagsTransfer extends DeclareBase
      *
      * @ORM\OneToMany(targetEntity="DeclareTagsTransferResponse", mappedBy="declareTagsTransferRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_tag_transfer_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
      */
     private $responses;

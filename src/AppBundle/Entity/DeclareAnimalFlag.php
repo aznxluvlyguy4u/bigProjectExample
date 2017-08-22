@@ -61,6 +61,7 @@ class DeclareAnimalFlag extends DeclareBase
     /**
      * @ORM\OneToMany(targetEntity="DeclareAnimalFlagResponse", mappedBy="declareAnimalFlagRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_animal_flag_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
      */
     private $responses;

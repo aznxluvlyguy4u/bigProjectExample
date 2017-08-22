@@ -36,6 +36,7 @@ class DeclarationDetail extends DeclarationBase
     /**
      * @ORM\OneToMany(targetEntity="DeclarationDetailResponse", mappedBy="declarationDetailRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declaration_detail_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
      */
     private $responses;
