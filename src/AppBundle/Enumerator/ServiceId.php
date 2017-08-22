@@ -13,6 +13,7 @@ class ServiceId
     const CACHE = 'app.cache';
     const CLIENT_MIGRATOR = 'app.migrator.client';
     const ENTITY_GETTER = 'app.doctrine.entitygetter';
+    const ERROR_MESSAGE_SERVICE = 'app.declare.error_message';
     const EXTERNAL_QUEUE_SERVICE = 'app.aws.queueservice.external';
     const EXCEL_SERVICE = 'app.excel.service';
     const HEALTH_SERVICE = 'app.health.updater';

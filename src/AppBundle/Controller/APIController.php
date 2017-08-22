@@ -45,6 +45,7 @@ use AppBundle\Service\AwsInternalQueueService;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CacheService;
 use AppBundle\Service\EntityGetter;
+use AppBundle\Service\ErrorMessageService;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\HealthService;
 use AppBundle\Service\IRSerializer;
@@ -88,6 +89,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::CACHE => null,
       ServiceId::CLIENT_MIGRATOR => null,
       ServiceId::ENTITY_GETTER => null,
+      ServiceId::ERROR_MESSAGE_SERVICE => null,
       ServiceId::EXCEL_SERVICE => null,
       ServiceId::EXTERNAL_QUEUE_SERVICE => null,
       ServiceId::HEALTH_SERVICE => null,
@@ -133,6 +135,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getClientMigratorService(){ return $this->getService(ServiceId::CLIENT_MIGRATOR); }
   /** @return EntityGetter */
   protected function getEntityGetter() { return $this->getService(ServiceId::ENTITY_GETTER); }
+  /** @return ErrorMessageService */
+  protected function getErrorMessageService() { return $this->getService(ServiceId::ERROR_MESSAGE_SERVICE); }
   /** @return ExcelService */
   protected function getExcelService() { return $this->getService(ServiceId::EXCEL_SERVICE); }
   /** @return AwsExternalQueueService */

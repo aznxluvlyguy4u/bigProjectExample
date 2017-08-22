@@ -368,4 +368,8 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@app.serializer.ir'
           - '@app.cache'
-          - '@app.user'            
+          - '@app.user'
+
+    app.declare.error_message:
+        parent: app.controller.base
+        class: AppBundle\Service\ErrorMessageService
