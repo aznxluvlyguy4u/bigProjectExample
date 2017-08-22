@@ -135,6 +135,24 @@ abstract class DeclareBase
     protected $hideFailedMessage;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    protected $hideForAdmin;
+
+
+    /**
+     * @var DeclareBase
+     * @ORM\ManyToOne(targetEntity="DeclareBase")
+     * @ORM\JoinColumn(name="newest_version_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\DeclareBase")
+     */
+    protected $newestVersion;
+
+
+    /**
      * DeclareBase constructor.
      */
     public function __construct() {
@@ -361,7 +379,7 @@ abstract class DeclareBase
     }
 
     /**
-     * @return Client|Employee
+     * @return Client|Employee|Person
      */
     public function getActionBy()
     {
@@ -390,6 +408,39 @@ abstract class DeclareBase
     public function setHideFailedMessage($hideFailedMessage)
     {
         $this->hideFailedMessage = $hideFailedMessage;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHideForAdmin()
+    {
+        return $this->hideForAdmin;
+    }
+
+    /**
+     * @param bool $hideForAdmin
+     */
+    public function setHideForAdmin($hideForAdmin)
+    {
+        $this->hideForAdmin = $hideForAdmin;
+    }
+
+    /**
+     * @return DeclareBase
+     */
+    public function getNewestVersion()
+    {
+        return $this->newestVersion;
+    }
+
+    /**
+     * @param DeclareBase $newestVersion
+     * @return DeclareBase
+     */
+    public function setNewestVersion($newestVersion)
+    {
+        $this->newestVersion = $newestVersion;
     }
 
 
