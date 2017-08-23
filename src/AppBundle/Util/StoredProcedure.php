@@ -173,8 +173,7 @@ class StoredProcedure
              b.type,
              declareType.dutch as dutch_type,
              NULLIF(TRIM(CONCAT(a.first_name,' ',a.last_name)), '') as action_by,
-             COALESCE(e.access_level, 'CLIENT') as action_by_type,
-             b.hide_for_admin,";
+             COALESCE(e.access_level, 'CLIENT') as action_by_type,";
 
         $joinBase =
             "LEFT JOIN person a ON a.id = b.action_by_id
@@ -194,18 +193,28 @@ class StoredProcedure
                  d.date_of_birth as event_date,
                  null as related_ubn,
                  CONCAT(uln_country_code, uln_number) as declare_info,
-                 nsfo_b.message_id as non_ir_request_id
+                 nsfo_b.message_id as non_ir_request_id,
+                 nsfo_b.hide_for_admin
                FROM declare_base b
                  INNER JOIN declare_birth d ON b.id = d.id
                  INNER JOIN litter l ON l.id = d.litter_id
                  INNER JOIN declare_nsfo_base nsfo_b ON nsfo_b.id = l.id
                  $joinBase
                WHERE
-                  $whereBase
+                  b.request_state = '".RequestStateType::FAILED."' AND
+                  nsfo_b.newest_version_id ISNULL --only return latest version of litter
                   AND (
-                        nsfo_b.request_state = " . RequestStateType::FAILED . " OR
-                        nsfo_b.request_state = " . RequestStateType::OPEN . " OR
-                        l.status = " . RequestStateType::INCOMPLETE . "
+                        b.hide_for_admin = option1
+                        OR b.hide_for_admin = option2
+                      )
+                  AND (
+                        nsfo_b.request_state = '" . RequestStateType::FAILED . "' OR
+                        nsfo_b.request_state = '" . RequestStateType::OPEN . "' OR
+                        l.status = '" . RequestStateType::INCOMPLETE . "'
+                      )
+                  AND (
+                        nsfo_b.hide_for_admin = option1
+                        OR nsfo_b.hide_for_admin = option2
                       )
 
                UNION
@@ -215,7 +224,8 @@ class StoredProcedure
                  d.arrival_date as event_date,
                  d.ubn_previous_owner as related_ubn,
                  CONCAT(uln_country_code, uln_number) as declare_info,
-                 null as non_ir_request_id
+                 null as non_ir_request_id,
+                 b.hide_for_admin
                FROM declare_base b
                  INNER JOIN declare_arrival d ON b.id = d.id
                  $joinBase
@@ -229,7 +239,8 @@ class StoredProcedure
                  d.date_of_death as event_date,
                  d.ubn_destructor as related_ubn,
                  CONCAT(uln_country_code, uln_number) as declare_info,
-                 null as non_ir_request_id
+                 null as non_ir_request_id,
+                 b.hide_for_admin
                FROM declare_base b
                  INNER JOIN declare_loss d ON b.id = d.id
                  $joinBase
@@ -244,7 +255,8 @@ class StoredProcedure
                  null as related_ubn,
                  CONCAT(d.uln_country_code_to_replace, d.uln_number_to_replace,' => ',
                         d.uln_country_code_replacement, d.uln_number_replacement) as declare_info,
-                 null as non_ir_request_id
+                 null as non_ir_request_id,
+                 b.hide_for_admin
                FROM declare_base b
                  INNER JOIN declare_tag_replace d ON b.id = d.id
                  $joinBase
@@ -258,7 +270,8 @@ class StoredProcedure
                  b.log_date as event_date,
                  null as related_ubn,
                  declareTypeRequest.dutch as declare_info,
-                 null as non_ir_request_id
+                 null as non_ir_request_id,
+                 b.hide_for_admin
                FROM declare_base b
                  INNER JOIN revoke_declaration d ON b.id = d.id
                  LEFT JOIN (VALUES ".SqlUtil::declareIRTranslationValues().") 
@@ -274,7 +287,8 @@ class StoredProcedure
                  b.log_date as event_date,
                  d.ubn_new_owner as related_ubn,
                  null as declare_info,
-                 null as non_ir_request_id
+                 null as non_ir_request_id,
+                 b.hide_for_admin
                FROM declare_base b
                  INNER JOIN declare_tags_transfer d ON b.id = d.id
                  $joinBase
