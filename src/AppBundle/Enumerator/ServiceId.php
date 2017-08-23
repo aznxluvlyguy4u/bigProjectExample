@@ -12,6 +12,7 @@ class ServiceId
     const ADMIN_AUTH_SERVICE = 'app.security.admin_auth';
     const ADMIN_PROFILE_SERVICE = 'app.admin.profile';
     const ANIMAL_LOCATION_HISTORY = 'app.animallocation.history';
+    const ANIMAL_SERVICE = 'app.animal';
     const AUTH_SERVICE = 'app.security.auth';
     const BREED_VALUES_OVERVIEW_REPORT = 'app.report.breed_values_overview';
     const CACHE = 'app.cache';

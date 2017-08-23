@@ -42,7 +42,7 @@ class AdminProfileService extends ControllerServiceBase implements AdminProfileA
     public function getAdminProfile(Request $request)
     {
         $admin = $this->getEmployee();
-        if (!AdminValidator::isAdmin($admin, AccessLevelType::SUPER_ADMIN)) {
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 
@@ -58,7 +58,7 @@ class AdminProfileService extends ControllerServiceBase implements AdminProfileA
     public function editAdminProfile(Request $request)
     {
         $admin = $this->getEmployee();
-        if (!AdminValidator::isAdmin($admin, AccessLevelType::SUPER_ADMIN)) {
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 

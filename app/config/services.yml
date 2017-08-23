@@ -443,3 +443,8 @@ services:
           - '@app.cache'
           - '@app.user'
           - '@security.password_encoder'
+
+    app.animal:
+        parent: app.controller.declare_base
+        class: AppBundle\Service\AnimalService
+

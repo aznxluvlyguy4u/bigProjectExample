@@ -50,7 +50,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
      */
     public function getAdmins(Request $request)
     {
-        if (!AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::SUPER_ADMIN)) {
+        if (!AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 

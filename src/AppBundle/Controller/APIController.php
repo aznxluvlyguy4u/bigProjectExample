@@ -43,6 +43,7 @@ use AppBundle\Service\AdminAuthService;
 use AppBundle\Service\AdminProfileService;
 use AppBundle\Service\AdminService;
 use AppBundle\Service\AnimalLocationHistoryService;
+use AppBundle\Service\AnimalService;
 use AppBundle\Service\AuthService;
 use AppBundle\Service\AwsExternalQueueService;
 use AppBundle\Service\AwsInternalQueueService;
@@ -92,6 +93,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::ADMIN_SERVICE => null,
       ServiceId::ADMIN_PROFILE_SERVICE => null,
       ServiceId::ANIMAL_LOCATION_HISTORY => null,
+      ServiceId::ANIMAL_SERVICE => null,
       ServiceId::AUTH_SERVICE => null,
       ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
       ServiceId::CACHE => null,
@@ -138,6 +140,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getAdminProfileService(){ return $this->getService(ServiceId::ADMIN_PROFILE_SERVICE); }
   /** @return AnimalLocationHistoryService */
   protected function getAnimalLocationHistoryService(){ return $this->getService(ServiceId::ANIMAL_LOCATION_HISTORY); }
+  /** @return AnimalService */
+  protected function getAnimalService(){ return $this->getService(ServiceId::ANIMAL_SERVICE); }
   /** @return AuthService */
   protected function getAuthService(){ return $this->getService(ServiceId::AUTH_SERVICE); }
   /** @return BreedValuesOverviewReportService */
