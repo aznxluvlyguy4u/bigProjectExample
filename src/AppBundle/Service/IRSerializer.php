@@ -184,7 +184,8 @@ class IRSerializer implements IRSerializerInterface
      */
     public function deserializeToObject($json, $messageClassNameSpace, $basePath = "AppBundle\\Entity\\")
     {
-        $messageClassPathNameSpace = $basePath . $messageClassNameSpace;
+        $messageClassPathNameSpace = strtr($basePath . $messageClassNameSpace,
+            ["AppBundle\\Entity\\AppBundle\\Entity\\" => "AppBundle\\Entity\\"]);
 
         $messageObject = $this->serializer->deserialize($json, $messageClassPathNameSpace, Constant::jsonNamespace);
 
