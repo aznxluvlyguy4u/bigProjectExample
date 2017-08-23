@@ -40,6 +40,7 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\AdminAuthService;
+use AppBundle\Service\AdminProfileService;
 use AppBundle\Service\AdminService;
 use AppBundle\Service\AnimalLocationHistoryService;
 use AppBundle\Service\AuthService;
@@ -89,6 +90,7 @@ class APIController extends Controller implements APIControllerInterface
   private $services = [
       ServiceId::ADMIN_AUTH_SERVICE => null,
       ServiceId::ADMIN_SERVICE => null,
+      ServiceId::ADMIN_PROFILE_SERVICE => null,
       ServiceId::ANIMAL_LOCATION_HISTORY => null,
       ServiceId::AUTH_SERVICE => null,
       ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
@@ -132,6 +134,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getAdminAuthService(){ return $this->getService(ServiceId::ADMIN_AUTH_SERVICE); }
   /** @return AdminService */
   protected function getAdminService(){ return $this->getService(ServiceId::ADMIN_SERVICE); }
+  /** @return AdminProfileService */
+  protected function getAdminProfileService(){ return $this->getService(ServiceId::ADMIN_PROFILE_SERVICE); }
   /** @return AnimalLocationHistoryService */
   protected function getAnimalLocationHistoryService(){ return $this->getService(ServiceId::ANIMAL_LOCATION_HISTORY); }
   /** @return AuthService */

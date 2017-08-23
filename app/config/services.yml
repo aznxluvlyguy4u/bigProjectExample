@@ -434,3 +434,12 @@ services:
           - '@app.user'
           - '@app.security.auth'
           - '@app.email'
+
+    app.admin.profile:
+        class: AppBundle\Service\AdminProfileService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.cache'
+          - '@app.user'
+          - '@security.password_encoder'
