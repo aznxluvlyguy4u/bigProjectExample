@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Cache\AnimalCacher;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareNsfoBase;
@@ -13,6 +14,7 @@ use AppBundle\Output\Output;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\DeclareNsfoBaseValidator;
+use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -83,6 +85,28 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         $log = ActionLogWriter::completeActionLog($om, $log);
 
         return new JsonResponse($messageArray, 200);
+    }
+
+
+    public function hasMessageNumber(ArrayCollection $content)
+    {
+        //Default values
+        $isValid = false;
+        $messageNumber = null;
+        $code = 428;
+        $messageBody = 'THERE IS NO VALUE GIVEN FOR THE MESSAGE NUMBER';
+
+        if($content->containsKey(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE)) {
+            $messageNumber = $content->get(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE);
+
+            if($messageNumber != null || $messageNumber != "") {
+                $isValid = true;
+                $code = 200;
+                $messageBody = 'MESSAGE NUMBER FIELD EXISTS AND IS NOT EMPTY';
+            }
+        }
+
+        return Utils::buildValidationArray($isValid, $code, $messageBody, array('messageNumber' => $messageNumber));
     }
 
 

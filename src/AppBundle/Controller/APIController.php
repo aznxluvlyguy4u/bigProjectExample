@@ -183,17 +183,6 @@ class APIController extends Controller implements APIControllerInterface
   /** @return string */
   protected function getCurrentEnvironment() { return $this->get('kernel')->getEnvironment(); }
 
-  /** @return string */
-  protected function getRootDirectory() { return $this->get('kernel')->getRootDir(); }
-
-  /** @return string */
-  protected function getWebDirectory() { return realpath($this->getRootDirectory() . '/../web'); }
-
-  /** @return string */
-  protected function getAssetsDirectory() { return $this->getWebDirectory().'/assets'; }
-
-  /** @return string */
-  protected function getImagesDirectory() { return $this->getAssetsDirectory().'/images'; }
 
   /**
    * @param Request $request
@@ -204,19 +193,6 @@ class APIController extends Controller implements APIControllerInterface
       return RequestUtil::getContentAsArray($request);
   }
 
-  /**
-   * @param Request $request
-   * @return JsonResponse|array|string
-   */
-  public function getToken(Request $request)
-  {
-    //Get auth header to read token
-    if(!$request->headers->has(Constant::AUTHORIZATION_HEADER_NAMESPACE)) {
-      return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
-    }
-
-    return $request->headers->get('AccessToken');
-  }
 
   /**
    * @param $messageClassNameSpace
@@ -297,12 +273,12 @@ class APIController extends Controller implements APIControllerInterface
    */
   protected function sendMessageObjectToQueue($messageObject, $isUpdate = false) {
 
-    $doctrine = $this->getDoctrine();
+    $em = $this->getDoctrine()->getManager();
     $requestId = $messageObject->getRequestId();
     $repository = $this->getDoctrine()->getRepository(Utils::getRepositoryNameSpace($messageObject));
 
     //create array and jsonMessage
-    $messageArray = RequestMessageOutputBuilder::createOutputArray($doctrine->getManager(), $messageObject, $isUpdate);
+    $messageArray = RequestMessageOutputBuilder::createOutputArray($em, $messageObject, $isUpdate);
 
     if($messageArray == null) {
       //These objects do not have a customized minimal json output for the queue yet
@@ -322,12 +298,12 @@ class APIController extends Controller implements APIControllerInterface
     //If send to Queue, failed, it needs to be resend, set state to failed
     if ($sendToQresult['statusCode'] != '200') {
       $messageObject->setRequestState(RequestStateType::FAILED);
-      $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $doctrine);
+      $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $em);
       $this->persist($messageObject);
 
     } else if($isUpdate) { //If successfully sent to the queue and message is an Update/Edit request
       $messageObject->setRequestState(RequestStateType::OPEN); //update the RequestState
-      $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $doctrine);
+      $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $em);
       $this->persist($messageObject);
     }
 
@@ -391,56 +367,8 @@ class APIController extends Controller implements APIControllerInterface
 
 
   /**
-   * @param array $animalArray
-   * @return ArrayCollection
-   */
-  public function verifyOnlyPedigreeCodeInAnimal($animalArray)
-  {
-    $array = new ArrayCollection();
-
-    $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
-    $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
-    $isValid = Validator::verifyPedigreeCode($this->getDoctrine()->getManager(), $pedigreeCountryCode, $pedigreeNumber, true);
-
-    if($pedigreeCountryCode != null && $pedigreeNumber != null) {
-      $pedigree = $pedigreeCountryCode.$pedigreeNumber;
-    } else {
-      $pedigree = null;
-    }
-
-    $array->set('isValid', $isValid);
-    $array->set(JsonInputConstant::PEDIGREE_NUMBER, $pedigreeNumber);
-    $array->set(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $pedigreeCountryCode);
-    $array->set(Constant::PEDIGREE_NAMESPACE, $pedigree);
-
-    return $array;
-  }
-
-
-  public function isTagUnassigned($ulnCountryCode, $ulnNumber)
-  {
-    $isValid = true;
-    $jsonResponse = null;
-
-    $tag = $this->getEntityGetter()->retrieveTag($ulnCountryCode, $ulnNumber);
-
-    if($tag == null) {
-      $isValid = false;
-      $message = "Tag " . $ulnCountryCode . $ulnNumber . " for child does not exist";
-      $jsonResponse = new JsonResponse(array('code'=>428, "message" => $message), 428);
-
-    } else {
-      if($tag->getTagStatus() == TagStateType::ASSIGNED || $tag->getTagStatus() == TagStateType::ASSIGNING){
-        $isValid = false;
-        $message = "Tag " . $ulnCountryCode . $ulnNumber . " for child already in use";
-        $jsonResponse = new JsonResponse(array('code'=>428, "message" => $message), 428);
-      }
-    }
-
-    return array('isValid' => $isValid, 'jsonResponse' => $jsonResponse);
-  }
-
-  /**
+   * TODO move to AUTH service
+   *
    * @param Request $request
    * @return JsonResponse
    */
@@ -544,93 +472,6 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @param $emailAddress
-   * @return Client
-   */
-  public function getActiveClientByEmail($emailAddress) {
-    /** @var ClientRepository $clientRepository */
-    $clientRepository = $this->getDoctrine()->getRepository(Client::class);
-    return $clientRepository->findActiveOneByEmailAddress($emailAddress);
-  }
-
-  /**
-   * @param Client $client
-   * @param string $ubn
-   * @return Location|null
-   */
-  public function getLocationByUbn($client, $ubn)
-  {
-    return $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findOfClientByUbn($client, $ubn);
-  }
-
-
-  public function persistNewTagsToAssigning($client, $animalObject)
-  {
-    $tag = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY)->findByAnimal($client, $animalObject);
-    $tag->setTagStatus(TagStateType::ASSIGNING);
-
-    //Because of cascade persist, unset the tag from the animal first
-    $tag->setAnimal(null);
-
-    $this->getDoctrine()->getManager()->persist($tag);
-    $this->getDoctrine()->getManager()->flush();
-
-    return $tag;
-  }
-
-  /**
-   * @param string $ubn
-   * @return array
-   */
-  public function isUbnValid($ubn)
-  {
-    //Default values
-    $isValid = false;
-    $relationNumberKeeper = null;
-    $code = 428;
-    $message = 'THE UBN IS NOT REGISTERED AT NSFO';
-
-    $location = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubn);
-
-    if($location != null) {
-      $isValid = true;
-      //'relationNumberKeeper' is an obligatory field in Client, so no need to verify if that field exists or not.
-      $relationNumberKeeper = $location->getCompany()->getOwner()->getRelationNumberKeeper();
-      $code = 200;
-      $message = 'UBN IS VALID';
-    } //else just use the default values
-
-    return array('isValid' => $isValid,
-    'relationNumberKeeper' => $relationNumberKeeper,
-        Constant::MESSAGE_NAMESPACE => $message,
-           Constant::CODE_NAMESPACE => $code
-                );
-
-  }
-
-
-  public function hasMessageNumber(ArrayCollection $content)
-  {
-    //Default values
-    $isValid = false;
-    $messageNumber = null;
-    $code = 428;
-    $messageBody = 'THERE IS NO VALUE GIVEN FOR THE MESSAGE NUMBER';
-
-    if($content->containsKey(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE)) {
-      $messageNumber = $content->get(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE);
-
-      if($messageNumber != null || $messageNumber != "") {
-        $isValid = true;
-        $code = 200;
-        $messageBody = 'MESSAGE NUMBER FIELD EXISTS AND IS NOT EMPTY';
-      }
-    }
-
-    return Utils::buildValidationArray($isValid, $code, $messageBody, array('messageNumber' => $messageNumber));
-  }
-
-  /**
    * @param Request $request
    * @return Location|null
    */
@@ -639,46 +480,10 @@ class APIController extends Controller implements APIControllerInterface
       return $this->getUserService()->getSelectedLocation($request);
   }
 
-  /**
-   * @param Request $request
-   * @return string|null
-   */
-  public function getSelectedUbn(Request $request)
-  {
-      return $this->getUserService()->getSelectedUbn($request);
-  }
-
-  public function syncAnimalsForAllLocations($loggedInUser)
-  {
-    $allLocations = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findAll();
-    $content = new ArrayCollection();
-    $count = 0;
-
-    /** @var Location $location */
-    foreach($allLocations as $location) {
-      $client = $location->getCompany()->getOwner();
-
-      //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
-
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($messageObject);
-
-      //Send it to the queue and persist/update any changed state to the database
-      $messageArray = $this->sendMessageObjectToQueue($messageObject);
-
-      $count++;
-    }
-
-    $total = sizeof($allLocations);
-    $message = "THE ANIMALS HAVE BEEN SYNCED FOR " . $count . " OUT OF " . $total . " TOTAL LOCATIONS (UBNS)";
-
-    return array('message' => $message,
-        'count' => $count);
-  }
-
   
   /**
+   * TODO move to AUTH Service
+   *
    * @param Person $person
    * @param int $passwordLength
    * @return string
@@ -698,6 +503,8 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
+   * TODO move to email service
+   *
    * @param Person $person
    */
   protected function emailNewPasswordToPerson($person, $newPassword, $isAdmin = false, $isNewUser = false)

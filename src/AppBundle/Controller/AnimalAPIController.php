@@ -352,6 +352,37 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     }
   }
 
+
+    public function syncAnimalsForAllLocations($loggedInUser)
+    {
+        $allLocations = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findAll();
+        $content = new ArrayCollection();
+        $count = 0;
+
+        /** @var Location $location */
+        foreach($allLocations as $location) {
+            $client = $location->getCompany()->getOwner();
+
+            //Convert the array into an object and add the mandatory values retrieved from the database
+            $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
+
+            //First Persist object to Database, before sending it to the queue
+            $this->persist($messageObject);
+
+            //Send it to the queue and persist/update any changed state to the database
+            $messageArray = $this->sendMessageObjectToQueue($messageObject);
+
+            $count++;
+        }
+
+        $total = sizeof($allLocations);
+        $message = "THE ANIMALS HAVE BEEN SYNCED FOR " . $count . " OUT OF " . $total . " TOTAL LOCATIONS (UBNS)";
+
+        return array('message' => $message,
+            'count' => $count);
+    }
+
+
   /**
    * Create a RetrieveAnimalDetails request
    *

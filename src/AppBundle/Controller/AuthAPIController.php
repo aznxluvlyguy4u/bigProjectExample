@@ -376,6 +376,17 @@ class AuthAPIController extends APIController {
   }
 
 
+    /**
+     * @param $emailAddress
+     * @return Client
+     */
+    public function getActiveClientByEmail($emailAddress) {
+        /** @var ClientRepository $clientRepository */
+        $clientRepository = $this->getDoctrine()->getRepository(Client::class);
+        return $clientRepository->findActiveOneByEmailAddress($emailAddress);
+    }
+
+
   /**
    * Validate whether a ubn in the header is valid or not.
    *

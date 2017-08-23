@@ -92,6 +92,37 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
   }
 
 
+    /**
+     * @param string $ubn
+     * @return array
+     */
+    public function isUbnValid($ubn)
+    {
+        //Default values
+        $isValid = false;
+        $relationNumberKeeper = null;
+        $code = 428;
+        $message = 'THE UBN IS NOT REGISTERED AT NSFO';
+
+        $location = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubn);
+
+        if($location != null) {
+            $isValid = true;
+            //'relationNumberKeeper' is an obligatory field in Client, so no need to verify if that field exists or not.
+            $relationNumberKeeper = $location->getCompany()->getOwner()->getRelationNumberKeeper();
+            $code = 200;
+            $message = 'UBN IS VALID';
+        } //else just use the default values
+
+        return array('isValid' => $isValid,
+            'relationNumberKeeper' => $relationNumberKeeper,
+            Constant::MESSAGE_NAMESPACE => $message,
+            Constant::CODE_NAMESPACE => $code
+        );
+
+    }
+
+
   /**
    *
    * Get TagTransferItemRequests which have failed last responses.

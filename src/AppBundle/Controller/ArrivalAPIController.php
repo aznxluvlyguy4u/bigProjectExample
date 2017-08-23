@@ -496,6 +496,33 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   }
 
 
+    /**
+     * @param array $animalArray
+     * @return ArrayCollection
+     */
+    public function verifyOnlyPedigreeCodeInAnimal($animalArray)
+    {
+        $array = new ArrayCollection();
+
+        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+        $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+        $isValid = Validator::verifyPedigreeCode($this->getDoctrine()->getManager(), $pedigreeCountryCode, $pedigreeNumber, true);
+
+        if($pedigreeCountryCode != null && $pedigreeNumber != null) {
+            $pedigree = $pedigreeCountryCode.$pedigreeNumber;
+        } else {
+            $pedigree = null;
+        }
+
+        $array->set('isValid', $isValid);
+        $array->set(JsonInputConstant::PEDIGREE_NUMBER, $pedigreeNumber);
+        $array->set(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $pedigreeCountryCode);
+        $array->set(Constant::PEDIGREE_NAMESPACE, $pedigree);
+
+        return $array;
+    }
+
+
   /**
    * @param ArrayCollection $content
    * @return ArrayCollection
