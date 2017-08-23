@@ -420,25 +420,8 @@ class Validator
      */
     public static function createJsonResponse($message, $code, $errors = array())
     {
-        //Success message
-        if($errors == null || sizeof($errors) == 0){
-            $result = array(
-                Constant::MESSAGE_NAMESPACE => $message,
-                Constant::CODE_NAMESPACE => $code);
-
-        //Error message
-        } else {
-            $result = array();
-            foreach ($errors as $errorMessage) {
-                $errorArray = [
-                    Constant::CODE_NAMESPACE => $code,
-                    Constant::MESSAGE_NAMESPACE => $errorMessage
-                ];
-                $result[] = $errorArray;
-            }
-        }
-
-        return new JsonResponse([JsonInputConstant::RESULT => $result], $code);
+        //TODO replace use of this function with ResultUtil::errorResult()
+        return ResultUtil::errorResult($message, $code, $errors);
     }
 
 
