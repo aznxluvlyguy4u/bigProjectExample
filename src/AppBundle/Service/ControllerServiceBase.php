@@ -27,6 +27,7 @@ use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareNsfoBaseRepository;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\EmployeeRepository;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
@@ -39,6 +40,8 @@ use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Tag;
 use AppBundle\Entity\TagRepository;
+use AppBundle\Entity\Token;
+use AppBundle\Entity\TokenRepository;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -71,10 +74,14 @@ abstract class ControllerServiceBase
     protected $declareBaseResponseRepository;
     /** @var DeclareNsfoBaseRepository */
     protected $declareNsfoBaseRepository;
+    /** @var EmployeeRepository */
+    protected $employeeRepository;
     /** @var LocationRepository */
     protected $locationRepository;
     /** @var TagRepository */
     protected $tagRepository;
+    /** @var TokenRepository */
+    protected $tokenRepository;
 
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
                                 CacheService $cacheService, UserService $userService)
@@ -91,8 +98,10 @@ abstract class ControllerServiceBase
         $this->declareBaseRepository = $this->em->getRepository(DeclareBase::class);
         $this->declareBaseResponseRepository = $this->em->getRepository(DeclareBaseResponse::class);
         $this->declareNsfoBaseRepository = $this->em->getRepository(DeclareNsfoBase::class);
+        $this->employeeRepository = $this->em->getRepository(Employee::class);
         $this->locationRepository = $this->em->getRepository(Location::class);
         $this->tagRepository = $this->em->getRepository(Tag::class);
+        $this->tokenRepository = $this->em->getRepository(Token::class);
     }
 
 

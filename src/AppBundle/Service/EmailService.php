@@ -5,22 +5,27 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\Environment;
 use AppBundle\Entity\Person;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Templating\EngineInterface;
 
 class EmailService extends ControllerServiceBase
 {
+    /** @var string */
+    private $environment;
+    /** @var \Swift_Mailer */
     private $swiftMailer;
     /** @var string */
     private $mailerSourceAddress;
     /** @var EngineInterface */
     private $templating;
 
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService, UserService $userService, \Swift_Mailer $swiftMailer, $mailerSourceAddress, EngineInterface $templating)
+    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService, UserService $userService, \Swift_Mailer $swiftMailer, $mailerSourceAddress, EngineInterface $templating, $environment)
     {
         parent::__construct($em, $serializer, $cacheService, $userService);
 
+        $this->environment = $environment;
         $this->swiftMailer = $swiftMailer;
         $this->mailerSourceAddress = $mailerSourceAddress;
         $this->templating = $templating;
@@ -29,6 +34,7 @@ class EmailService extends ControllerServiceBase
 
     /**
      * @param $emailAddress
+     * @return boolean false if email not sent to anyone
      */
     public function sendNewPasswordEmail($emailAddress)
     {
@@ -46,7 +52,7 @@ class EmailService extends ControllerServiceBase
             )
             ->setSender($this->mailerSourceAddress);
 
-        $this->swiftMailer->send($message);
+        return $this->swiftMailer->send($message) > 0;
     }
 
 
@@ -55,6 +61,7 @@ class EmailService extends ControllerServiceBase
      * @param $newPassword
      * @param bool $isAdmin
      * @param bool $isNewUser
+     * @return boolean false if email not sent to anyone
      */
     public function emailNewPasswordToPerson($person, $newPassword, $isAdmin = false, $isNewUser = false)
     {
@@ -75,7 +82,6 @@ class EmailService extends ControllerServiceBase
             ->setSubject($subjectHeader)
             ->setFrom($this->mailerSourceAddress)
             ->setTo($person->getEmailAddress())
-            ->setBcc($this->mailerSourceAddress)
             ->setBody(
                 $this->templating->render(
                 // app/Resources/views/...
@@ -91,6 +97,11 @@ class EmailService extends ControllerServiceBase
             ->setSender($this->mailerSourceAddress)
         ;
 
-        $this->swiftMailer->send($message);
+        //Only send BCC in prod env
+        if ($this->environment === Environment::PROD) {
+            $message->setBcc($this->mailerSourceAddress);
+        }
+
+        return $this->swiftMailer->send($message) > 0;
     }
 }

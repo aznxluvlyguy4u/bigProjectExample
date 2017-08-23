@@ -39,6 +39,7 @@ use AppBundle\Enumerator\ServiceId;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\RequestMessageOutputBuilder;
+use AppBundle\Service\AdminService;
 use AppBundle\Service\AnimalLocationHistoryService;
 use AppBundle\Service\AuthService;
 use AppBundle\Service\AwsExternalQueueService;
@@ -85,6 +86,7 @@ class APIController extends Controller implements APIControllerInterface
 {
   /** @var array */
   private $services = [
+      ServiceId::ADMIN_SERVICE => null,
       ServiceId::ANIMAL_LOCATION_HISTORY => null,
       ServiceId::AUTH_SERVICE => null,
       ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
@@ -125,6 +127,8 @@ class APIController extends Controller implements APIControllerInterface
   }
 
 
+  /** @return AdminService */
+  protected function getAdminService(){ return $this->getService(ServiceId::ADMIN_SERVICE); }
   /** @return AnimalLocationHistoryService */
   protected function getAnimalLocationHistoryService(){ return $this->getService(ServiceId::ANIMAL_LOCATION_HISTORY); }
   /** @return AuthService */
@@ -344,15 +348,6 @@ class APIController extends Controller implements APIControllerInterface
     return $this->getUserService()->getEmployee($tokenCode);
   }
 
-
-  /**
-   * @param Request $request
-   * @return JsonResponse
-   */
-    public function isAccessTokenValid(Request $request)
-    {
-        return $this->getAuthService()->isAccessTokenValid($request);
-    }
 
   /**
    * Retrieve the messageObject related to the RevokeDeclaration

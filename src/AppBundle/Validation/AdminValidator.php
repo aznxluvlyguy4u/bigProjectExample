@@ -9,6 +9,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\PersonRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\JsonFormat\ValidationResults;
+use AppBundle\Output\AccessLevelOverviewOutput;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Constant\Constant;
 use \Symfony\Component\HttpFoundation\JsonResponse;

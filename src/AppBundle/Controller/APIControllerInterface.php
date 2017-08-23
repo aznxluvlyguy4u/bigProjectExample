@@ -13,10 +13,4 @@ interface APIControllerInterface {
    * @return mixed
    */
   public function getAccountOwner(Request $request);
-
-  /**
-   * @param Request $request
-   * @return mixed
-   */
-  public function isAccessTokenValid(Request $request);
 }

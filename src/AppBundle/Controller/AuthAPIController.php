@@ -64,7 +64,7 @@ class AuthAPIController extends APIController {
    */
   public function validateToken(Request $request)
   {
-    return $this->isAccessTokenValid($request);
+    return $this->getAuthService()->isAccessTokenValid($request);
   }
 
   /**

@@ -8,8 +8,9 @@ namespace AppBundle\Enumerator;
  */
 class ServiceId
 {
+    const ADMIN_SERVICE = 'app.admin';
     const ANIMAL_LOCATION_HISTORY = 'app.animallocation.history';
-    const AUTH_SERVICE = 'app.security.base';
+    const AUTH_SERVICE = 'app.security.auth';
     const BREED_VALUES_OVERVIEW_REPORT = 'app.report.breed_values_overview';
     const CACHE = 'app.cache';
     const CLIENT_MIGRATOR = 'app.migrator.client';

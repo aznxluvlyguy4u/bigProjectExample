@@ -392,19 +392,34 @@ services:
           - '@app.doctrine.entitygetter'
           - '@app.request.message_builder'
 
-    app.security.base:
-        parent: app.controller.declare_base
+    app.security.auth:
         class: AppBundle\Service\AuthService
-        arguments: {
-          index_4: '@security.password_encoder',
-          index_5: '@app.email'
-          }
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.cache'
+          - '@app.user'
+          - '@security.password_encoder'
+          - '@app.email'
 
     app.email:
-        parent: app.controller.base
         class: AppBundle\Service\EmailService
-        arguments: {
-          index_4: '@mailer',
-          index_5: '%mailer_source_address%',
-          index_6: '@templating'
-          }
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.cache'
+          - '@app.user'
+          - '@mailer'
+          - '%mailer_source_address%'
+          - '@templating'
+          - '%kernel.environment%'
+
+    app.admin:
+        class: AppBundle\Service\AdminService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.cache'
+          - '@app.user'
+          - '@app.security.auth'
+          - '@app.email'
