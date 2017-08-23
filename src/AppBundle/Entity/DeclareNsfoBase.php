@@ -128,6 +128,14 @@ abstract class DeclareNsfoBase
      */
     protected $isHidden;
 
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS"})
+     */
+    protected $hideForAdmin;
 
     /**
      * This variable is used to differentiate between the current version,
@@ -364,6 +372,24 @@ abstract class DeclareNsfoBase
     public function setIsHidden($isHidden)
     {
         $this->isHidden = $isHidden;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHideForAdmin()
+    {
+        return $this->hideForAdmin;
+    }
+
+    /**
+     * @param bool $hideForAdmin
+     * @return DeclareNsfoBase
+     */
+    public function setHideForAdmin($hideForAdmin)
+    {
+        $this->hideForAdmin = $hideForAdmin;
         return $this;
     }
 
