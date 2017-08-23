@@ -13,4 +13,5 @@ interface ErrorMessageAPIControllerInterface
     function getErrorDetailsNonIRmessage(Request $request, $messageId);
     function updateError(Request $request);
     function updateNsfoDeclarationError(Request $request, $messageId);
+    function updateHideStatus(Request $request);
 }

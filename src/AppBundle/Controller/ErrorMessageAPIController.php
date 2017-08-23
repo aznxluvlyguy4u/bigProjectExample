@@ -166,4 +166,54 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
     {
         return $this->getErrorMessageService()->updateNsfoDeclarationError($request, $messageId);
     }
+
+
+    /**
+     * Hide an error a user or admin does not want to see anymore.
+     * At least one or both boolean values must be given: hide_for_admin or is_hidden.
+     *
+     * ### Request body ###
+     *
+     *  {
+     *      "message_id": "4293920591adb11732d2",
+     *      "is_ir_message": false,
+     *      "hide_for_admin": false,
+     *      "is_hidden": false
+     *  }
+     *
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "message_id": "4293920591adb11732d2",
+     *          "request_state": "FINISHED",
+     *          "is_hidden": false,
+     *          "hide_for_admin": false
+     *      }
+     *  }
+     *
+     *
+     * @ApiDoc(
+     *   section = "Errors",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Hide an error a user or admin does not want to see anymore"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-hidden-status")
+     * @Method("PUT")
+     */
+    public function updateHideStatus(Request $request)
+    {
+        return $this->getErrorMessageService()->updateHideStatus($request);
+    }
 }
