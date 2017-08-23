@@ -746,7 +746,7 @@ class DeclareBirth extends DeclareBase
     }
 
     /**
-     * @return mixed
+     * @return Litter
      */
     public function getLitter()
     {
@@ -754,7 +754,7 @@ class DeclareBirth extends DeclareBase
     }
 
     /**
-     * @param mixed $litter
+     * @param Litter $litter
      */
     public function setLitter($litter)
     {
