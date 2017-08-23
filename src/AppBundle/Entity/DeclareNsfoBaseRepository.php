@@ -8,7 +8,7 @@ use AppBundle\Util\Validator;
  * Class DeclareNsfoBaseRepository
  * @package AppBundle\Entity
  */
-class DeclareNsfoBaseRepository extends BaseRepository
+class DeclareNsfoBaseRepository extends BaseRepository implements DeclareBaseRepositoryInterface
 {
     /**
      * @param $messageId

@@ -7,7 +7,10 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\ErrorMessageAPIControllerInterface;
+use AppBundle\Entity\DeclareBaseRepository;
+use AppBundle\Entity\DeclareBaseRepositoryInterface;
 use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Entity\DeclareNsfoBaseRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
@@ -60,15 +63,7 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
      */
     public function getErrorDetails(Request $request, $messageId)
     {
-        if(!AdminValidator::isAdmin($this->userService->getEmployee(),AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
-
-        $declare = $this->declareBaseRepository->getErrorDetails($messageId);
-        if ($declare instanceof JsonResponse) { return $declare; }
-
-        $output = $this->serializer->getDecodedJson($declare, [JmsGroup::ERROR_DETAILS]);
-        return ResultUtil::successResult($output);
+        return $this->getErrorDetailsBase($request, $messageId, $this->declareBaseRepository);
     }
 
 
@@ -79,17 +74,28 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
      */
     public function getErrorDetailsNonIRmessage(Request $request, $messageId)
     {
+        return $this->getErrorDetailsBase($request, $messageId, $this->declareNsfoBaseRepository);
+    }
+
+
+    /**
+     * @param Request $request
+     * @param $messageId
+     * @param DeclareBaseRepositoryInterface $repository
+     * @return JsonResponse
+     */
+    public function getErrorDetailsBase(Request $request, $messageId, $repository)
+    {
         if(!AdminValidator::isAdmin($this->userService->getEmployee(),AccessLevelType::ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $declare = $this->declareNsfoBaseRepository->getErrorDetails($messageId);
+        $declare = $repository->getErrorDetails($messageId);
         if ($declare instanceof JsonResponse) { return $declare; }
 
         $output = $this->serializer->getDecodedJson($declare, [JmsGroup::ERROR_DETAILS]);
         return ResultUtil::successResult($output);
     }
-
 
 
     /**

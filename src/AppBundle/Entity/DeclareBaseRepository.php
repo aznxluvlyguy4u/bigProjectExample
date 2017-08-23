@@ -14,7 +14,7 @@ use AppBundle\Util\Validator;
  * Class DeclareBaseRepository
  * @package AppBundle\Entity
  */
-class DeclareBaseRepository extends BaseRepository
+class DeclareBaseRepository extends BaseRepository implements DeclareBaseRepositoryInterface
 {
     /**
      * @param Animal $animal
