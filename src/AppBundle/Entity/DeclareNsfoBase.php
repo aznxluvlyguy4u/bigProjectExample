@@ -140,6 +140,21 @@ abstract class DeclareNsfoBase
      */
     protected $isOverwrittenVersion;
 
+    /**
+     * @var DeclareNsfoBase
+     * @ORM\ManyToOne(targetEntity="DeclareNsfoBase", inversedBy="olderVersions")
+     * @ORM\JoinColumn(name="newest_version_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\DeclareNsfoBase")
+     */
+    protected $newestVersion;
+
+    /**
+     * @var ArrayCollection
+     * @ORM\OneToMany(targetEntity="DeclareNsfoBase", mappedBy="newestVersion")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareNsfoBase>")
+     */
+    protected $olderVersions;
+
 
     /**
      * DeclareNsfoBase constructor.
@@ -149,6 +164,7 @@ abstract class DeclareNsfoBase
         $this->setMessageId(MessageBuilderBase::getNewRequestId());
         $this->isHidden = false;
         $this->isOverwrittenVersion = false;
+        $this->olderVersions = new ArrayCollection();
     }
 
     /**
@@ -362,6 +378,61 @@ abstract class DeclareNsfoBase
         $this->isOverwrittenVersion = $isOverwrittenVersion;
     }
 
+    /**
+     * @return DeclareNsfoBase
+     */
+    public function getNewestVersion()
+    {
+        return $this->newestVersion;
+    }
+
+    /**
+     * @param DeclareNsfoBase $newestVersion
+     * @return DeclareNsfoBase
+     */
+    public function setNewestVersion($newestVersion)
+    {
+        $this->newestVersion = $newestVersion;
+        return $this;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getOlderVersions()
+    {
+        return $this->olderVersions;
+    }
+
+    /**
+     * @param ArrayCollection $olderVersions
+     * @return DeclareNsfoBase
+     */
+    public function setOlderVersions($olderVersions)
+    {
+        $this->olderVersions = $olderVersions;
+        return $this;
+    }
+
+    /**
+     * @param DeclareNsfoBase $olderVersion
+     * @return $this
+     */
+    public function addOlderVersion($olderVersion)
+    {
+        $this->olderVersions->add($olderVersion);
+        return $this;
+    }
+
+    /**
+     * @param DeclareNsfoBase $olderVersion
+     * @return $this
+     */
+    public function removeOlderVersion($olderVersion)
+    {
+        $this->olderVersions->remove($olderVersion);
+        return $this;
+    }
 
     /**
      * @param Mate|DeclareWeight $nsfoMessage
@@ -380,6 +451,7 @@ abstract class DeclareNsfoBase
         $this->setRevokeDate($nsfoMessage->getRevokeDate());
         $this->setIsHidden($nsfoMessage->getIsHidden());
         $this->setIsOverwrittenVersion($nsfoMessage->getIsOverwrittenVersion());
+        $this->setNewestVersion($nsfoMessage->getNewestVersion());
     }
 
 
