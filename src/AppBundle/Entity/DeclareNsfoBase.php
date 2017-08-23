@@ -182,12 +182,11 @@ abstract class DeclareNsfoBase
      *
      * @param \DateTime $logDate
      *
-     * @return DeclareBase
+     * @return DeclareNsfoBase
      */
     public function setLogDate($logDate)
     {
         $this->logDate = $logDate;
-
         return $this;
     }
 
@@ -207,12 +206,11 @@ abstract class DeclareNsfoBase
      *
      * @param string $messageId
      *
-     * @return DeclareBase
+     * @return DeclareNsfoBase
      */
     public function setMessageId($messageId)
     {
         $this->messageId = $messageId;
-
         return $this;
     }
 
@@ -231,12 +229,11 @@ abstract class DeclareNsfoBase
      *
      * @param string $requestState
      *
-     * @return DeclareBase
+     * @return DeclareNsfoBase
      */
     public function setRequestState($requestState)
     {
         $this->requestState = $requestState;
-
         return $this;
     }
 
@@ -255,12 +252,11 @@ abstract class DeclareNsfoBase
      *
      * @param string $relationNumberKeeper
      *
-     * @return DeclareBase
+     * @return DeclareNsfoBase
      */
     public function setRelationNumberKeeper($relationNumberKeeper)
     {
         $this->relationNumberKeeper = $relationNumberKeeper;
-
         return $this;
     }
 
@@ -279,12 +275,11 @@ abstract class DeclareNsfoBase
      *
      * @param string $ubn
      *
-     * @return DeclareBase
+     * @return DeclareNsfoBase
      */
     public function setUbn($ubn)
     {
         $this->ubn = $ubn;
-
         return $this;
     }
 
@@ -299,7 +294,7 @@ abstract class DeclareNsfoBase
     }
 
     /**
-     * @return Client|Employee
+     * @return Client|Employee|Person
      */
     public function getActionBy()
     {
@@ -308,10 +303,12 @@ abstract class DeclareNsfoBase
 
     /**
      * @param Person $actionBy
+     * @return DeclareNsfoBase
      */
     public function setActionBy($actionBy)
     {
         $this->actionBy = $actionBy;
+        return $this;
     }
 
     /**
@@ -324,10 +321,12 @@ abstract class DeclareNsfoBase
 
     /**
      * @param Person $revokedBy
+     * @return DeclareNsfoBase
      */
     public function setRevokedBy($revokedBy)
     {
         $this->revokedBy = $revokedBy;
+        return $this;
     }
 
     /**
@@ -340,10 +339,12 @@ abstract class DeclareNsfoBase
 
     /**
      * @param \DateTime $revokeDate
+     * @return DeclareNsfoBase
      */
     public function setRevokeDate($revokeDate)
     {
         $this->revokeDate = $revokeDate;
+        return $this;
     }
 
     /**
@@ -356,10 +357,12 @@ abstract class DeclareNsfoBase
 
     /**
      * @param boolean $isHidden
+     * @return DeclareNsfoBase
      */
     public function setIsHidden($isHidden)
     {
         $this->isHidden = $isHidden;
+        return $this;
     }
 
     /**
@@ -372,10 +375,12 @@ abstract class DeclareNsfoBase
 
     /**
      * @param boolean $isOverwrittenVersion
+     * @return DeclareNsfoBase
      */
     public function setIsOverwrittenVersion($isOverwrittenVersion)
     {
         $this->isOverwrittenVersion = $isOverwrittenVersion;
+        return $this;
     }
 
     /**
@@ -416,7 +421,7 @@ abstract class DeclareNsfoBase
 
     /**
      * @param DeclareNsfoBase $olderVersion
-     * @return $this
+     * @return DeclareNsfoBase
      */
     public function addOlderVersion($olderVersion)
     {
@@ -426,7 +431,7 @@ abstract class DeclareNsfoBase
 
     /**
      * @param DeclareNsfoBase $olderVersion
-     * @return $this
+     * @return DeclareNsfoBase
      */
     public function removeOlderVersion($olderVersion)
     {
