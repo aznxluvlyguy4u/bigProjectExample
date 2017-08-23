@@ -125,7 +125,7 @@ class DeclareBaseRepository extends BaseRepository
     public function getErrorDetails($messageId)
     {
         /** @var DeclareBase $declare */
-        $declare = $this->findOneByRequestId($messageId);
+        $declare = $this->findOneByMessageId($messageId);
 
         if ($declare === null) {
             return Validator::createJsonResponse('No declare found for given messageId: '.$messageId, 428);
@@ -135,22 +135,7 @@ class DeclareBaseRepository extends BaseRepository
             return Validator::createJsonResponse('Declare does NOT have FAILED requestState, but: '.$declare->getRequestState(), 428);
         }
 
-        if (
-            $declare instanceof DeclareArrival ||
-            $declare instanceof DeclareImport ||
-            $declare instanceof DeclareDepart ||
-            $declare instanceof DeclareExport ||
-            $declare instanceof DeclareLoss ||
-            $declare instanceof DeclareTagReplace ||
-            $declare instanceof DeclareTagsTransfer ||
-            $declare instanceof RevokeDeclaration
-        ) {
-            return $declare;
-
-        } elseif ($declare instanceof DeclareBirth) {
-            return $declare->getLitter();
-
-        }
+        return $declare;
     }
 
 }

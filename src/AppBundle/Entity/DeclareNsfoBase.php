@@ -145,6 +145,7 @@ abstract class DeclareNsfoBase
      * @ORM\ManyToOne(targetEntity="DeclareNsfoBase", inversedBy="olderVersions")
      * @ORM\JoinColumn(name="newest_version_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\DeclareNsfoBase")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $newestVersion;
 
@@ -152,6 +153,7 @@ abstract class DeclareNsfoBase
      * @var ArrayCollection
      * @ORM\OneToMany(targetEntity="DeclareNsfoBase", mappedBy="newestVersion")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareNsfoBase>")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $olderVersions;
 

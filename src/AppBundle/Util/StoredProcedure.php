@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
 
 class StoredProcedure
@@ -181,7 +182,7 @@ class StoredProcedure
              LEFT JOIN (VALUES ".SqlUtil::declareIRTranslationValues().") AS declareType(english, dutch) ON b.type = declareType.english";
 
         $whereBase =
-            "b.request_state = 'FAILED' AND
+            "b.request_state = '".RequestStateType::FAILED."' AND
              b.newest_version_id ISNULL --only return latest version
              AND (
                    b.hide_for_admin = option1
@@ -192,12 +193,20 @@ class StoredProcedure
                  $selectBase
                  d.date_of_birth as event_date,
                  null as related_ubn,
-                 CONCAT(uln_country_code, uln_number) as declare_info
+                 CONCAT(uln_country_code, uln_number) as declare_info,
+                 nsfo_b.message_id as non_ir_request_id
                FROM declare_base b
                  INNER JOIN declare_birth d ON b.id = d.id
+                 INNER JOIN litter l ON l.id = d.litter_id
+                 INNER JOIN declare_nsfo_base nsfo_b ON nsfo_b.id = l.id
                  $joinBase
                WHERE
                   $whereBase
+                  AND (
+                        nsfo_b.request_state = " . RequestStateType::FAILED . " OR
+                        nsfo_b.request_state = " . RequestStateType::OPEN . " OR
+                        l.status = " . RequestStateType::INCOMPLETE . "
+                      )
 
                UNION
 
@@ -205,7 +214,8 @@ class StoredProcedure
                  $selectBase
                  d.arrival_date as event_date,
                  d.ubn_previous_owner as related_ubn,
-                 CONCAT(uln_country_code, uln_number) as declare_info
+                 CONCAT(uln_country_code, uln_number) as declare_info,
+                 null as non_ir_request_id
                FROM declare_base b
                  INNER JOIN declare_arrival d ON b.id = d.id
                  $joinBase
@@ -218,7 +228,8 @@ class StoredProcedure
                  $selectBase
                  d.date_of_death as event_date,
                  d.ubn_destructor as related_ubn,
-                 CONCAT(uln_country_code, uln_number) as declare_info
+                 CONCAT(uln_country_code, uln_number) as declare_info,
+                 null as non_ir_request_id
                FROM declare_base b
                  INNER JOIN declare_loss d ON b.id = d.id
                  $joinBase
@@ -232,7 +243,8 @@ class StoredProcedure
                  d.replace_date as event_date,
                  null as related_ubn,
                  CONCAT(d.uln_country_code_to_replace, d.uln_number_to_replace,' => ',
-                        d.uln_country_code_replacement, d.uln_number_replacement) as declare_info
+                        d.uln_country_code_replacement, d.uln_number_replacement) as declare_info,
+                 null as non_ir_request_id
                FROM declare_base b
                  INNER JOIN declare_tag_replace d ON b.id = d.id
                  $joinBase
@@ -245,7 +257,8 @@ class StoredProcedure
                  $selectBase
                  b.log_date as event_date,
                  null as related_ubn,
-                 declareTypeRequest.dutch as declare_info
+                 declareTypeRequest.dutch as declare_info,
+                 null as non_ir_request_id
                FROM declare_base b
                  INNER JOIN revoke_declaration d ON b.id = d.id
                  LEFT JOIN (VALUES ".SqlUtil::declareIRTranslationValues().") 
@@ -260,7 +273,8 @@ class StoredProcedure
                  $selectBase
                  b.log_date as event_date,
                  d.ubn_new_owner as related_ubn,
-                 null as declare_info
+                 null as declare_info,
+                 null as non_ir_request_id
                FROM declare_base b
                  INNER JOIN declare_tags_transfer d ON b.id = d.id
                  $joinBase

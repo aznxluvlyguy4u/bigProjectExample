@@ -65,11 +65,31 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
         }
 
         $declare = $this->declareBaseRepository->getErrorDetails($messageId);
-        if ($declare instanceof JsonInputConstant) { return $declare; }
+        if ($declare instanceof JsonResponse) { return $declare; }
 
         $output = $this->serializer->getDecodedJson($declare, [JmsGroup::ERROR_DETAILS]);
         return ResultUtil::successResult($output);
     }
+
+
+    /**
+     * @param Request $request
+     * @param $messageId
+     * @return JsonResponse
+     */
+    public function getErrorDetailsNonIRmessage(Request $request, $messageId)
+    {
+        if(!AdminValidator::isAdmin($this->userService->getEmployee(),AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $declare = $this->declareNsfoBaseRepository->getErrorDetails($messageId);
+        if ($declare instanceof JsonResponse) { return $declare; }
+
+        $output = $this->serializer->getDecodedJson($declare, [JmsGroup::ERROR_DETAILS]);
+        return ResultUtil::successResult($output);
+    }
+
 
 
     /**

@@ -55,7 +55,7 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
 
     /**
      *
-     * Get ErrorMessage details by id
+     * Get ErrorMessage details of IR message by messageId
      *
      * @ApiDoc(
      *   section = "Errors",
@@ -79,6 +79,35 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
     public function getErrorDetails(Request $request, $messageId)
     {
         return $this->getErrorMessageService()->getErrorDetails($request, $messageId);
+    }
+
+
+    /**
+     *
+     * Get ErrorMessage details of non-IR message by messageId
+     *
+     * @ApiDoc(
+     *   section = "Errors",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get ErrorMessage details by id"
+     * )
+     * @param Request $request the request object
+     * @param String $messageId
+     * @return JsonResponse
+     * @Route("/non-ir/{messageId}")
+     * @Method("GET")
+     */
+    public function getErrorDetailsNonIRmessage(Request $request, $messageId)
+    {
+        return $this->getErrorMessageService()->getErrorDetailsNonIRmessage($request, $messageId);
     }
 
 
