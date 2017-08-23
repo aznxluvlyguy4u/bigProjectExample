@@ -2,7 +2,7 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Util\Validator;
+use AppBundle\Util\ResultUtil;
 
 /**
  * Class DeclareNsfoBaseRepository
@@ -20,11 +20,11 @@ class DeclareNsfoBaseRepository extends BaseRepository implements DeclareBaseRep
         $declare = $this->findOneByMessageId($messageId);
 
         if ($declare === null) {
-            return Validator::createJsonResponse('No declare found for given messageId: '.$messageId, 428);
+            return ResultUtil::errorResult('No declare found for given messageId: '.$messageId, 428);
         }
 
 
-        $errorJsonResponse = Validator::createJsonResponse('Declare does NOT have FAILED or OPEN requestState, but: '.$declare->getRequestState(), 428);
+        $errorJsonResponse = ResultUtil::errorResult('Declare does NOT have FAILED or OPEN requestState, but: '.$declare->getRequestState(), 428);
 
         if ($declare instanceof Litter) {
             //Specific litter failed validation

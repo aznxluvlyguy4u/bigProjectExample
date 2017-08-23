@@ -5,10 +5,10 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\TimeUtil;
-use AppBundle\Util\Validator;
 
 /**
  * Class DeclareBaseRepository
@@ -128,11 +128,11 @@ class DeclareBaseRepository extends BaseRepository implements DeclareBaseReposit
         $declare = $this->findOneByMessageId($messageId);
 
         if ($declare === null) {
-            return Validator::createJsonResponse('No declare found for given messageId: '.$messageId, 428);
+            return ResultUtil::errorResult('No declare found for given messageId: '.$messageId, 428);
         }
 
         if ($declare->getRequestState() !== RequestStateType::FAILED) {
-            return Validator::createJsonResponse('Declare does NOT have FAILED requestState, but: '.$declare->getRequestState(), 428);
+            return ResultUtil::errorResult('Declare does NOT have FAILED requestState, but: '.$declare->getRequestState(), 428);
         }
 
         return $declare;
