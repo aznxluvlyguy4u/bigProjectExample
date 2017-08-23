@@ -43,7 +43,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  *                    "DeclareTagsTransfer" : "AppBundle\Entity\DeclareTagsTransfer",
  *                      "DeclareTagReplace" : "AppBundle\Entity\DeclareTagReplace",
  *                      "RevokeDeclaration" : "AppBundle\Entity\RevokeDeclaration"},
- *     groups = {"ERROR_DETAILS"})
+ *     groups = {"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
  *
  * @package AppBundle\Entity\DeclareBase
  */
@@ -71,7 +71,6 @@ abstract class DeclareBase
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $requestId;
 
@@ -80,6 +79,7 @@ abstract class DeclareBase
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $messageId;
 
@@ -87,7 +87,7 @@ abstract class DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $requestState;
 
@@ -152,7 +152,7 @@ abstract class DeclareBase
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $hideFailedMessage;
 
@@ -161,7 +161,7 @@ abstract class DeclareBase
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $hideForAdmin;
 

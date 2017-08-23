@@ -60,7 +60,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string", unique=true, nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $messageId;
 
@@ -69,7 +69,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $requestState;
 
@@ -124,7 +124,7 @@ abstract class DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $isHidden;
 
@@ -133,7 +133,7 @@ abstract class DeclareNsfoBase
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $hideForAdmin;
 
