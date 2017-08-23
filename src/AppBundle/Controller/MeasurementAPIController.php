@@ -18,6 +18,7 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\MeasurementsUtil;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
@@ -85,7 +86,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 
         $allowedExteriorCodes = MeasurementsUtil::getExteriorKinds($em, $animal);
 
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $exteriorValidator = new ExteriorValidator($em, $content, $allowedExteriorCodes, $ulnString, self::ALLOW_BLANK_INSPECTOR);
         if (!$exteriorValidator->getIsInputValid()) {
             return $exteriorValidator->createJsonResponse();
@@ -182,7 +183,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         }
         $animal = $animalDetailsValidator->getAnimal();
 
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
 
         if($content->get('is_active') === false) {
 

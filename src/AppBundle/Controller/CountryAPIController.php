@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Country;
 use AppBundle\Output\ProvinceOutput;
+use AppBundle\Util\RequestUtil;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Request;
@@ -81,7 +82,7 @@ class CountryAPIController extends APIController implements CountryAPIController
   function getCountries(Request $request)
   {
     //Get content to array
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
 

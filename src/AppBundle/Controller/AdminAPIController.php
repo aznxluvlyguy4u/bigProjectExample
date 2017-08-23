@@ -15,6 +15,7 @@ use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Output\AdminOverviewOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CreateAdminValidator;
 use AppBundle\Validation\EditAdminValidator;
@@ -101,7 +102,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         }
 
         $em = $this->getDoctrine()->getManager();
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
 
         $log = ActionLogWriter::createAdmin($em, $admin, $content);
 
@@ -176,7 +177,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         }
         
         $em = $this->getDoctrine()->getManager();
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $log = ActionLogWriter::editAdmin($em, $admin, $content);
 
         // Validate content
@@ -246,7 +247,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
     $em = $this->getDoctrine()->getManager();
     $repository = $this->getDoctrine()->getRepository(Employee::class);
     
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
 
     $personId = $content->get('person_id');
     /** @var Employee $adminToDeactivate */
@@ -283,7 +284,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
       return $employeeValidation->createJsonErrorResponse();
     }
 
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $personId = $content->get(JsonInputConstant::PERSON_ID);
 
     /** @var Client $client */

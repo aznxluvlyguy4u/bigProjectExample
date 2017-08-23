@@ -11,6 +11,7 @@ use AppBundle\Entity\ContentRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Output\ContentOutput;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -69,7 +70,7 @@ class ContentManagementAPIController extends APIController implements ContentMan
         if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
              return $adminValidator->createJsonErrorResponse();
         }
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $em = $this->getDoctrine()->getManager();
         /** @var Content $cms */
         $cms = $em->getRepository(Content::class)->getCMS();

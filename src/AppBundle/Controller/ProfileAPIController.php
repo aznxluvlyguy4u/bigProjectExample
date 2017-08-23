@@ -9,6 +9,7 @@ use AppBundle\Output\CompanyProfileOutput;
 use AppBundle\Output\LoginOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\RequestUtil;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -72,7 +73,7 @@ class ProfileAPIController extends APIController implements ProfileAPIController
     
     $client = $this->getAccountOwner($request);
     $loggedInUser = $this->getUser();
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $location = $this->getSelectedLocation($request);
 
     //TODO Phase 2: Give back a specific company and location of that company. The CompanyProfileOutput already can process a ($client, $company, $location) method signature.

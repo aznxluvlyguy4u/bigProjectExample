@@ -10,6 +10,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareReplaceTagsOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -50,7 +51,7 @@ class TagsReplaceAPIController extends APIController {
   public function createTagReplaceRequest(Request $request)
   {
     $om = $this->getDoctrine()->getManager();
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $client = $this->getAccountOwner($request);
     $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);

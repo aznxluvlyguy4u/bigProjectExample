@@ -16,6 +16,7 @@ use AppBundle\Entity\LocationAddress;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -88,7 +89,7 @@ class CompanyAPIController extends APIController
         }
 
         // Validate content
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         /** @var ObjectManager $em */
         $em = $this->getDoctrine()->getManager();
 
@@ -293,7 +294,7 @@ class CompanyAPIController extends APIController
             return $adminValidator->createJsonErrorResponse();
         }
         // Validate content
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         // TODO VALIDATE CONTENT
 
         // Get Company
@@ -590,7 +591,7 @@ class CompanyAPIController extends APIController
         }
 
         // Validate content
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         // TODO VALIDATE CONTENT
 
         // Get Content
@@ -686,7 +687,7 @@ class CompanyAPIController extends APIController
         }
 
         // Validate content
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         // TODO VALIDATE CONTENT
 
         // Get Company

@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\StringUtil;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -46,7 +47,7 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
      * @Method("PUT")
      */
     public function updateError(Request $request) {
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $requestId = $content->get("request_id");
         $isRemovedByUserBoolean = $content['is_removed_by_user'];
 
@@ -86,7 +87,7 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
      * @Method("PUT")
      */
     public function updateNsfoDeclarationError(Request $request, $messageId) {
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $isHidden = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::IS_HIDDEN, $content);
 
         if($messageId !== null && $isHidden !== null) {

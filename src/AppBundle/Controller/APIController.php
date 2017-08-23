@@ -166,16 +166,6 @@ class APIController extends Controller implements APIControllerInterface
 
 
   /**
-   * @param Request $request
-   * @return ArrayCollection
-   */
-  protected function getContentAsArray(Request $request)
-  {
-      return RequestUtil::getContentAsArray($request);
-  }
-
-
-  /**
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
@@ -357,7 +347,7 @@ class APIController extends Controller implements APIControllerInterface
     {
         $token = null;
         $response = null;
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
 
         //Get token header to read token value
         if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {

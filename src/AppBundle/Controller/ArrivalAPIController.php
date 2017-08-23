@@ -27,6 +27,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\TagValidator;
@@ -174,7 +175,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
         $departLocation = null;
         $em = $this->getDoctrine()->getManager();
 
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
@@ -297,7 +298,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function updateArrival(Request $request, $Id) {
 
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $requestId = $Id;
     $content->set("request_id", $requestId);
 

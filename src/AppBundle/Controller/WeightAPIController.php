@@ -12,6 +12,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\FormInput\WeightMeasurements;
 use AppBundle\Output\WeightMeasurementsOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\DeclareWeightValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -55,7 +56,7 @@ class WeightAPIController extends APIController
     public function createWeightMeasurements(Request $request)
     {
         $manager = $this->getDoctrine()->getManager();
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
@@ -106,7 +107,7 @@ class WeightAPIController extends APIController
         $manager = $this->getDoctrine()->getManager();
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
         $location = $this->getSelectedLocation($request);
 

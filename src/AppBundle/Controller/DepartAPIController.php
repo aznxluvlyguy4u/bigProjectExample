@@ -18,6 +18,7 @@ use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -159,7 +160,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
         $arrivalLocation = null;
         $em = $this->getDoctrine()->getManager();
 
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -271,7 +272,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function updateDepart(Request $request, $Id)
   {
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
 
     //Client can only depart/export own animals
     $client = $this->getAccountOwner($request);

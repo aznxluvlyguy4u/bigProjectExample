@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\Validator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -122,7 +123,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
   public function createRetrieveTags(Request $request)
   {
     //Get content to array
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $client = $this->getAccountOwner($request);
     $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);

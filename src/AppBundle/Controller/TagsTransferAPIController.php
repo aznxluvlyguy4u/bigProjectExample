@@ -9,6 +9,7 @@ use AppBundle\Entity\TagTransferItemRequest;
 use AppBundle\Entity\TagTransferItemResponse;
 use AppBundle\Entity\TagTransferItemResponseRepository;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -51,7 +52,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
   {
     $om = $this->getDoctrine()->getManager();
     
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $client = $this->getAccountOwner($request);
     $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);

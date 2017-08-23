@@ -12,6 +12,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\Output;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\DeclareNsfoBaseValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -57,7 +58,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
     {
         $om = $this->getDoctrine()->getManager();
 
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);

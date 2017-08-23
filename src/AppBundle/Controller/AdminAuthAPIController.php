@@ -19,6 +19,7 @@ use AppBundle\Entity\Company;
 use AppBundle\Enumerator\MigrationStatus;
 use AppBundle\Setting\MigrationSetting;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
@@ -112,7 +113,7 @@ class AdminAuthAPIController extends APIController {
         "email_address":"example@example.com"
     }
     */
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $em = $this->getDoctrine()->getManager();
     $emailAddress = strtolower($content->get('email_address'));
 

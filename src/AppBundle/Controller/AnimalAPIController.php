@@ -23,6 +23,7 @@ use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use AppBundle\Util\GenderChanger;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalDetailsValidator;
@@ -296,7 +297,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   public function createRetrieveAnimals(Request $request) {
     {
       //Get content to array
-      $content = $this->getContentAsArray($request);
+      $content = RequestUtil::getContentAsArray($request);
       $client = $this->getAccountOwner($request);
       $loggedInUser = $this->getUser();
       $location = $this->getSelectedLocation($request);
@@ -406,7 +407,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   function createAnimalDetails(Request $request) {
     //Get content to array
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $client = $this->getAccountOwner($request);
     $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);
@@ -446,7 +447,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   function updateAnimalDetails(Request $request, $ulnString) {
     //Get content to array
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $em = $this->getDoctrine()->getManager();
     $repository = $this->getDoctrine()
       ->getRepository(Constant::ANIMAL_REPOSITORY);
@@ -540,7 +541,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function changeGenderOfUln(Request $request) {
     $em = $this->getDoctrine()->getManager();
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $animal = null;
     
     //Check if mandatory field values are given

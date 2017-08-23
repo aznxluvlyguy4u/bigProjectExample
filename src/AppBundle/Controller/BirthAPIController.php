@@ -39,6 +39,7 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ExceptionUtil;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\WorkerTaskUtil;
 use AppBundle\Util\TimeUtil;
@@ -191,7 +192,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     */
     public function createBirth(Request $request)
     {
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -307,7 +308,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $manager = $this->getDoctrine()->getManager();
 
         $location = $this->getSelectedLocation($request);
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $statusCode = 428;
@@ -671,7 +672,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      * @Method("POST")
      */
     public function getCandidateFathers(Request $request, $uln) {
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $dateOfBirth = new \DateTime();
 
         if(key_exists('date_of_birth', $content->toArray())) {
@@ -814,7 +815,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             );
         }
 
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         if($content->containsKey('date_of_birth')) {
             $dateOfBirth = new \DateTime($content->get('date_of_birth'));
         } else {
@@ -935,7 +936,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      * @Method("POST")
      */
     public function getCandidateMothers(Request $request) {
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         $dateOfBirth = new \DateTime();
 
         if(key_exists('date_of_birth', $content->toArray())) {
@@ -1119,7 +1120,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function processInternalQueueMessage(Request $request)
     {
-        $messageId = $this->getContentAsArray($request)->get('message_id');
+        $messageId = RequestUtil::getContentAsArray($request)->get('message_id');
         $taskType = 'DECLARE_BIRTH';
         $jsonMessage = $request->getContent();
 

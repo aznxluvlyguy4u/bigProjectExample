@@ -70,7 +70,7 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
       return $adminValidator->createJsonErrorResponse();
     }
     $encoder = $this->get('security.password_encoder');
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
 
     $em = $this->getDoctrine()->getManager();
     

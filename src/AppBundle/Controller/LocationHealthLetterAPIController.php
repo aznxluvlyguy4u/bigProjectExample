@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\LocationHealthLetter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -75,7 +76,7 @@ class LocationHealthLetterAPIController extends APIController
             return $adminValidator->createJsonErrorResponse();
         }
 
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         // TODO VALIDATE CONTENT
 
         $type = strtoupper($content->get('illness') . '_' . $content->get('letter_type'));

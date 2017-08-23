@@ -13,6 +13,7 @@ use AppBundle\Entity\LocationHealthInspectionResult;
 use AppBundle\Entity\LocationHealthInspectionResultRepository;
 use AppBundle\FormInput\LocationHealthEditor;
 use AppBundle\Output\HealthInspectionOutput;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use Com\Tecnick\Barcode\Barcode;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -160,7 +161,7 @@ class LocationHealthInspectionAPIController extends APIController
         }
 
         // Validate content
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         // TODO VALIDATE CONTENT
 
         $repository = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY);
@@ -269,7 +270,7 @@ class LocationHealthInspectionAPIController extends APIController
         }
 
         // Validate content
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         // TODO VALIDATE CONTENT
 
         $repository = $this->getDoctrine()->getRepository(LocationHealthInspection::class);
@@ -362,7 +363,7 @@ class LocationHealthInspectionAPIController extends APIController
 
         $twigFile = 'animal_health/barcodes.html.twig';
 
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
 
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT
@@ -453,7 +454,7 @@ class LocationHealthInspectionAPIController extends APIController
 
         $twigFile = 'animal_health/base_letter.html.twig';
 
-        $contents = $this->getContentAsArray($request);
+        $contents = RequestUtil::getContentAsArray($request);
 
         $letters = [];
         foreach ($contents as $content) {
@@ -544,7 +545,7 @@ class LocationHealthInspectionAPIController extends APIController
      */
     public function createInspectionResults(Request $request)
     {
-        $contentResults = $this->getContentAsArray($request);
+        $contentResults = RequestUtil::getContentAsArray($request);
         $ubn = $contentResults->get('ubn');
         $illness = $contentResults->get('illness');
 
@@ -630,7 +631,7 @@ class LocationHealthInspectionAPIController extends APIController
      * @Method("POST")
      */
     public function createFailedInspectionResults(Request $request) {
-        $contentResults = $this->getContentAsArray($request);
+        $contentResults = RequestUtil::getContentAsArray($request);
         $filename = $contentResults->get('filename');
         $url = $contentResults->get('url');
         $serverName = $contentResults->get('server_name');
@@ -684,7 +685,7 @@ class LocationHealthInspectionAPIController extends APIController
             return $adminValidator->createJsonErrorResponse();
         }
 
-        $contentResults = $this->getContentAsArray($request);
+        $contentResults = RequestUtil::getContentAsArray($request);
         $fileExtension = $contentResults->get('extension');
         $encodedContent = $contentResults->get('content');
         $fileName = $contentResults->get('filename');

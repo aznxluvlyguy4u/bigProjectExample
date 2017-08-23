@@ -10,6 +10,7 @@ use AppBundle\Entity\MateRepository;
 use AppBundle\Output\MateOutput;
 use AppBundle\Output\Output;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\MateValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -50,7 +51,7 @@ class MateAPIController extends APIController {
   {
     $manager = $this->getDoctrine()->getManager();
 
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $client = $this->getAccountOwner($request);
     $location = $this->getSelectedLocation($request);
     $loggedInUser = $this->getUser();
@@ -104,7 +105,7 @@ class MateAPIController extends APIController {
     $manager = $this->getDoctrine()->getManager();
     $client = $this->getAccountOwner($request);
     $loggedInUser = $this->getUser();
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
     $location = $this->getSelectedLocation($request);
 

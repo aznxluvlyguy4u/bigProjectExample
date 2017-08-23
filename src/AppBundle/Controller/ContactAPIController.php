@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -27,7 +28,7 @@ class ContactAPIController extends APIController implements ContactAPIController
 
     $om = $this->getDoctrine()->getManager();
 
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $user = $this->getAccountOwner($request);
     $ubn = $this->getUserService()->getSelectedUbn($request);
     $loggedInUser = $this->getUser();

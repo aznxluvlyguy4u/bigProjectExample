@@ -20,6 +20,7 @@ use AppBundle\Enumerator\MigrationStatus;
 use AppBundle\Output\MenuBarOutput;
 use AppBundle\Setting\MigrationSetting;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
@@ -83,7 +84,7 @@ class AuthAPIController extends APIController {
     */
 
     //Get content to array
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
 
     $firstName = $content['first_name'];
     $lastName = $content['lastName'];
@@ -241,7 +242,7 @@ class AuthAPIController extends APIController {
     $om = $this->getDoctrine()->getManager();
     $client = $this->getAccountOwner($request);
     $loggedInUser = $this->getUser();
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $log = ActionLogWriter::passwordChange($om, $client, $loggedInUser);
 
     $enteredOldPassword = base64_decode($content->get('current_password'));
@@ -335,7 +336,7 @@ class AuthAPIController extends APIController {
     }
     */
     $om = $this->getDoctrine()->getManager();
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $emailAddress = strtolower($content->get('email_address'));
     $client = $this->getActiveClientByEmail($emailAddress);
     $log = ActionLogWriter::passwordReset($om, $client, $emailAddress);
@@ -370,7 +371,7 @@ class AuthAPIController extends APIController {
   {
     return new JsonResponse(array("code" => 403, "message" => "Forbidden"), 403);
     
-    $migrationResults = $this->getClientMigratorService()->generateNewPasswordsAndEmailsForMigratedClients($this->getContentAsArray($request));
+    $migrationResults = $this->getClientMigratorService()->generateNewPasswordsAndEmailsForMigratedClients(RequestUtil::getContentAsArray($request));
 
     return new JsonResponse($migrationResults, 200);
   }

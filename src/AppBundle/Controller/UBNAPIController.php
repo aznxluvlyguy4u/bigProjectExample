@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Output\ProcessorOutput;
+use AppBundle\Util\RequestUtil;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -42,7 +43,7 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
   function getUBNDetails(Request $request)
     {
       //Get content to array
-      $content = $this->getContentAsArray($request);
+      $content = RequestUtil::getContentAsArray($request);
       $client = $this->getAccountOwner($request);
       $loggedInUser = $this->getUser();
       $location = $this->getSelectedLocation($request);

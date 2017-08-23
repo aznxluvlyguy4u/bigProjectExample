@@ -12,6 +12,7 @@ use AppBundle\FormInput\LocationHealthEditor;
 use AppBundle\Output\HealthOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\AdminActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HealthEditValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -100,7 +101,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
       return new JsonResponse(array('code'=>428, "message" => $errorMessage), 428);
     }
 
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
 
     //Status and check date validation
     $healthEditValidator = new HealthEditValidator($em, $content);

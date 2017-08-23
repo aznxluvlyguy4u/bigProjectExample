@@ -7,6 +7,7 @@ use AppBundle\Entity\DeclareLossResponse;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -147,7 +148,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   {
     $om = $this->getDoctrine()->getManager();
 
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $client = $this->getAccountOwner($request);
     $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);
@@ -204,7 +205,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function editLoss(Request $request, $Id)
   {
-    $content = $this->getContentAsArray($request);
+    $content = RequestUtil::getContentAsArray($request);
     $client = $this->getAccountOwner($request);
     $loggedInUser = $this->getUser();
     $location = $this->getSelectedLocation($request);
