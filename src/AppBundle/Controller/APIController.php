@@ -40,10 +40,12 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\AnimalLocationHistoryService;
+use AppBundle\Service\AuthService;
 use AppBundle\Service\AwsExternalQueueService;
 use AppBundle\Service\AwsInternalQueueService;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CacheService;
+use AppBundle\Service\EmailService;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\HealthService;
@@ -84,9 +86,11 @@ class APIController extends Controller implements APIControllerInterface
   /** @var array */
   private $services = [
       ServiceId::ANIMAL_LOCATION_HISTORY => null,
+      ServiceId::AUTH_SERVICE => null,
       ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
       ServiceId::CACHE => null,
       ServiceId::CLIENT_MIGRATOR => null,
+      ServiceId::EMAIL_SERVICE => null,
       ServiceId::ENTITY_GETTER => null,
       ServiceId::EXCEL_SERVICE => null,
       ServiceId::EXTERNAL_QUEUE_SERVICE => null,
@@ -123,12 +127,16 @@ class APIController extends Controller implements APIControllerInterface
 
   /** @return AnimalLocationHistoryService */
   protected function getAnimalLocationHistoryService(){ return $this->getService(ServiceId::ANIMAL_LOCATION_HISTORY); }
+  /** @return AuthService */
+  protected function getAuthService(){ return $this->getService(ServiceId::AUTH_SERVICE); }
   /** @return BreedValuesOverviewReportService */
   protected function getBreedValuesOverviewReportService() { return $this->getService(ServiceId::BREED_VALUES_OVERVIEW_REPORT); }
   /** @return CacheService */
   protected function getCacheService(){ return $this->getService(ServiceId::CACHE); }
   /** @return ClientMigrator */
   protected function getClientMigratorService(){ return $this->getService(ServiceId::CLIENT_MIGRATOR); }
+  /** @return EmailService */
+  protected function getEmailService() { return $this->getService(ServiceId::EMAIL_SERVICE); }
   /** @return EntityGetter */
   protected function getEntityGetter() { return $this->getService(ServiceId::ENTITY_GETTER); }
   /** @return ExcelService */
@@ -338,82 +346,12 @@ class APIController extends Controller implements APIControllerInterface
 
 
   /**
-   * TODO move to AUTH service
-   *
    * @param Request $request
    * @return JsonResponse
    */
     public function isAccessTokenValid(Request $request)
     {
-        $token = null;
-        $response = null;
-        $content = RequestUtil::getContentAsArray($request);
-
-        //Get token header to read token value
-        if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
-
-            $environment = $content->get('env');
-            $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
-            $token = $this->getDoctrine()->getRepository(Token::class)
-                ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
-
-            if ($token != null) {
-                if ($environment == 'USER') {
-                    if ($token->getOwner() instanceof Client) {
-                        $response = array(
-                            'token_status' => 'valid',
-                            'token' => $tokenCode
-                        );
-                        return new JsonResponse($response, 200);
-                    } elseif ($token->getOwner() instanceof Employee ) {
-                        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
-                        $ghostToken = $this->getDoctrine()->getRepository(Token::class)
-                            ->findOneBy(array("code" => $ghostTokenCode, "type" => TokenType::GHOST));
-
-                        if($ghostToken != null) {
-                            $response = array(
-                                'token_status' => 'valid',
-                                'token' => $tokenCode
-                            );
-                            return new JsonResponse($response, 200);
-                        }
-                    } else {
-                        $response = array(
-                            'error' => 401,
-                            'errorMessage' => 'No AccessToken provided'
-                        );
-                    }
-                }
-            }
-
-            if ($environment == 'ADMIN') {
-                if ($token->getOwner() instanceof Employee) {
-                    $response = array(
-                        'token_status' => 'valid',
-                        'token' => $tokenCode
-                    );
-                    return new JsonResponse($response, 200);
-                } else {
-                    $response = array(
-                        'error' => 401,
-                        'errorMessage' => 'No AccessToken provided'
-                    );
-                }
-            }
-
-            $response = array(
-                'error'=> 401,
-                'errorMessage'=> 'No AccessToken provided'
-            );
-    } else {
-      //Mandatory AccessToken was not provided
-      $response = array(
-          'error'=> 401,
-          'errorMessage'=> 'Mandatory AccessToken header was not provided'
-      );
-    }
-
-    return new JsonResponse($response, 401);
+        return $this->getAuthService()->isAccessTokenValid($request);
     }
 
   /**
@@ -453,69 +391,26 @@ class APIController extends Controller implements APIControllerInterface
 
   
   /**
-   * TODO move to AUTH Service
-   *
    * @param Person $person
    * @param int $passwordLength
    * @return string
    */
   protected function persistNewPassword($person, $passwordLength = 9)
   {
-    $newPassword = Utils::randomString($passwordLength);
-
-    $encoder = $this->get('security.password_encoder');
-    $encodedNewPassword = $encoder->encodePassword($person, $newPassword);
-    $person->setPassword($encodedNewPassword);
-
-    $this->getDoctrine()->getManager()->persist($person);
-    $this->getDoctrine()->getManager()->flush();
-
-    return $newPassword;
+      return $this->getAuthService()->persistNewPassword($person, $passwordLength);
   }
 
-  /**
-   * TODO move to email service
-   *
-   * @param Person $person
-   */
+    /**
+     * TODO remove after refactor
+     *
+     * @param Person $person
+     * @param $newPassword
+     * @param bool $isAdmin
+     * @param bool $isNewUser
+     */
   protected function emailNewPasswordToPerson($person, $newPassword, $isAdmin = false, $isNewUser = false)
   {
-    $mailerSourceAddress = $this->getParameter('mailer_source_address');
-
-    if($isAdmin) {
-      $subjectHeader = Constant::NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER;
-    } else {
-      $subjectHeader = Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER;
-    }
-
-    if($isNewUser) {
-        $twig = 'User/new_user_email.html.twig';
-    } else {
-        $twig = 'User/reset_password_email.html.twig';
-    }
-    
-    //Confirmation message back to the sender
-    $message = \Swift_Message::newInstance()
-        ->setSubject($subjectHeader)
-        ->setFrom($mailerSourceAddress)
-        ->setTo($person->getEmailAddress())
-        ->setBcc($mailerSourceAddress)
-        ->setBody(
-            $this->renderView(
-            // app/Resources/views/...
-                $twig,
-                array('firstName' => $person->getFirstName(),
-                    'lastName' => $person->getLastName(),
-                    'userName' => $person->getUsername(),
-                    'email' => $person->getEmailAddress(),
-                    'password' => $newPassword)
-            ),
-            'text/html'
-        )
-        ->setSender($mailerSourceAddress)
-    ;
-
-    $this->get('mailer')->send($message);
+      return $this->getEmailService()->emailNewPasswordToPerson($person, $newPassword, $isAdmin, $isNewUser);
   }
 
   /**

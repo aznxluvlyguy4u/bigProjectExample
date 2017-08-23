@@ -9,9 +9,11 @@ namespace AppBundle\Enumerator;
 class ServiceId
 {
     const ANIMAL_LOCATION_HISTORY = 'app.animallocation.history';
+    const AUTH_SERVICE = 'app.security.base';
     const BREED_VALUES_OVERVIEW_REPORT = 'app.report.breed_values_overview';
     const CACHE = 'app.cache';
     const CLIENT_MIGRATOR = 'app.migrator.client';
+    const EMAIL_SERVICE = 'app.email';
     const ENTITY_GETTER = 'app.doctrine.entitygetter';
     const EXTERNAL_QUEUE_SERVICE = 'app.aws.queueservice.external';
     const EXCEL_SERVICE = 'app.excel.service';

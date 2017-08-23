@@ -10,6 +10,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\ClientRepository;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -62,6 +63,8 @@ abstract class ControllerServiceBase
 
     /** @var AnimalRepository */
     protected $animalRepository;
+    /** @var ClientRepository */
+    protected $clientRepository;
     /** @var DeclareBaseRepository */
     protected $declareBaseRepository;
     /** @var DeclareBaseResponseRepository */
@@ -84,6 +87,7 @@ abstract class ControllerServiceBase
         $this->conn = $this->em->getConnection();
 
         $this->animalRepository = $this->em->getRepository(Animal::class);
+        $this->clientRepository = $this->em->getRepository(Client::class);
         $this->declareBaseRepository = $this->em->getRepository(DeclareBase::class);
         $this->declareBaseResponseRepository = $this->em->getRepository(DeclareBaseResponse::class);
         $this->declareNsfoBaseRepository = $this->em->getRepository(DeclareNsfoBase::class);
@@ -153,6 +157,15 @@ abstract class ControllerServiceBase
         $this->em->flush();
         $this->em->clear();
         gc_collect_cycles();
+    }
+
+
+    /**
+     * @return Client|Employee|\AppBundle\Entity\Person
+     */
+    public function getUser()
+    {
+        return $this->userService->getUser();
     }
 
 

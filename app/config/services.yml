@@ -377,4 +377,34 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@app.serializer.ir'
           - '@app.cache'
-          - '@app.user'            
+          - '@app.user'
+
+    app.controller.declare_base:
+        abstract: true
+        arguments:
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.cache'
+          - '@app.user'
+          - '@app.aws.queueservice.external'
+          - '@app.aws.queueservice.internal'
+          - '@app.doctrine.entitygetter'
+          - '@app.request.message_builder'
+
+    app.security.base:
+        parent: app.controller.declare_base
+        class: AppBundle\Service\AuthService
+        arguments: {
+          index_4: '@security.password_encoder',
+          index_5: '@app.email'
+          }
+
+    app.email:
+        parent: app.controller.base
+        class: AppBundle\Service\EmailService
+        arguments: {
+          index_4: '@mailer',
+          index_5: '%mailer_source_address%',
+          index_6: '@templating'
+          }
