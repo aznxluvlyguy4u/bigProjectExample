@@ -25,6 +25,7 @@ class ServiceId
     const PEDIGREE_CERTIFICATES_REPORT = 'app.report.pedigree_certificates';
     const PEDIGREE_REGISTER_REPORT = 'app.report.pedigree_register';
     const REDIS_CLIENT = 'snc_redis.sncredis';
+    const REQUEST_MESSAGE_BUILDER = 'app.request.message_builder';
     const SERIALIZER = 'app.serializer.ir';
     const STORAGE_SERVICE = 'app.aws.storageservice';
     const USER_SERVICE = 'app.user';

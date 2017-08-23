@@ -5,18 +5,35 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Component\Modifier\MessageModifier;
+use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveCountries;
+use AppBundle\Entity\RetrieveTags;
+use AppBundle\Entity\RetrieveUbnDetails;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Worker\Task\WorkerMessageBody;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 
 abstract class DeclareControllerServiceBase extends ControllerServiceBase
@@ -27,15 +44,19 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     protected $externalQueueService;
     /** @var AwsInternalQueueService */
     protected $internalQueueService;
+    /** @var RequestMessageBuilder */
+    protected $requestMessageBuilder;
 
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService,
-                                UserService $userService, AwsExternalQueueService $externalQueueService, AwsInternalQueueService $internalQueueService, EntityGetter $entityGetter)
+                                UserService $userService, AwsExternalQueueService $externalQueueService, AwsInternalQueueService $internalQueueService, EntityGetter $entityGetter,
+                                RequestMessageBuilder $requestMessageBuilder)
     {
         parent::__construct($em, $serializer, $cacheService, $userService);
 
         $this->entityGetter = $entityGetter;
         $this->externalQueueService = $externalQueueService;
         $this->internalQueueService = $internalQueueService;
+        $this->requestMessageBuilder = $requestMessageBuilder;
     }
 
     /**
@@ -134,4 +155,41 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         $this->em->flush();
     }
 
+
+    /**
+     * @param $messageClassNameSpace
+     * @param ArrayCollection $contentArray
+     * @param $user
+     * @param Location $location
+     * @param Person $loggedInUser
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveCountries|RetrieveUbnDetails
+     * @throws \Exception
+     */
+    protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
+    {
+        $isEditMessage = true;
+        $messageObject = $this->requestMessageBuilder
+            ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
+
+        return $messageObject;
+    }
+
+
+    /**
+     * @param $messageClassNameSpace
+     * @param ArrayCollection $contentArray
+     * @param $user
+     * @param Location $location
+     * @param Person $loggedInUser
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
+     * @throws \Exception
+     */
+    protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
+    {
+        $isEditMessage = false;
+        $messageObject = $this->requestMessageBuilder
+            ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
+
+        return $messageObject;
+    }
 }

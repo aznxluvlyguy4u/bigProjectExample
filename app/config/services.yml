@@ -68,6 +68,15 @@ services:
           - '@app.aws.queueservice.mixblup_input'
           - '@app.aws.queueservice.mixblup_output'
 
+
+    app.request.message_builder:
+        class: AppBundle\Component\RequestMessageBuilder
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '%kernel.environment%'
+
+
     app.aws.queueservice.workers_base:
         abstract: true
         arguments:

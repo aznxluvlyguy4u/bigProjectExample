@@ -100,13 +100,11 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::PEDIGREE_CERTIFICATES_REPORT => null,
       ServiceId::PEDIGREE_REGISTER_REPORT => null,
       ServiceId::REDIS_CLIENT => null,
+      ServiceId::REQUEST_MESSAGE_BUILDER => null,
       ServiceId::SERIALIZER => null,
       ServiceId::STORAGE_SERVICE => null,
       ServiceId::USER_SERVICE => null,
   ];
-
-  /** @var RequestMessageBuilder */
-  private $requestMessageBuilder;
 
 
   /**
@@ -157,31 +155,14 @@ class APIController extends Controller implements APIControllerInterface
   protected function getPedigreeRegisterReportService() { return $this->getService(ServiceId::PEDIGREE_REGISTER_REPORT); }
   /** @return \Redis */
   protected function getRedisClient() { return $this->getService(ServiceId::REDIS_CLIENT); }
+  /** @return RequestMessageBuilder */
+  protected function getRequestMessageBuilder() { return $this->getService(ServiceId::REQUEST_MESSAGE_BUILDER); }
   /** @return IRSerializer */
   protected function getSerializer() { return $this->getService(ServiceId::SERIALIZER);  }
   /** @return AWSSimpleStorageService */
   protected function getStorageService(){ return $this->getService(ServiceId::STORAGE_SERVICE); }
   /** @return UserService */
   protected function getUserService(){ return $this->getService(ServiceId::USER_SERVICE); }
-
-  /**
-   * @return RequestMessageBuilder
-   */
-  protected function getRequestMessageBuilder()
-  {
-    if($this->requestMessageBuilder == null) {
-      $serializer = $this->getSerializer();
-      $em = $this->getDoctrine()->getManager();
-      $currentEnvironment = $this->getCurrentEnvironment();
-      $this->requestMessageBuilder = new RequestMessageBuilder($em, $serializer, $currentEnvironment);
-    }
-
-    return $this->requestMessageBuilder;
-  }
-
-
-  /** @return string */
-  protected function getCurrentEnvironment() { return $this->get('kernel')->getEnvironment(); }
 
 
   /**
