@@ -8,7 +8,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class InvoiceRules
- * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRulesRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRuleRepository")
  * @package AppBundle\Entity
  */
 class InvoiceRule {

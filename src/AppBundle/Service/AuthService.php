@@ -18,27 +18,10 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AuthService extends ControllerServiceBase
 {
-
-    /** @var UserPasswordEncoderInterface */
-    private $encoder;
-    /** @var EmailService */
-    private $emailService;
-
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService, UserService $userService, UserPasswordEncoderInterface $encoder, EmailService $emailService)
-    {
-        parent::__construct($em, $serializer, $cacheService, $userService);
-
-        $this->encoder = $encoder;
-        $this->emailService = $emailService;
-    }
-
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -82,11 +65,11 @@ class AuthService extends ControllerServiceBase
         $client->setEmailAddress($emailAddress);
         $client->setUsername($username);
 
-        $encodedPassword = $this->encoder->encodePassword($client, $password);
+        $encodedPassword = $this->container->getEncoder()->encodePassword($client, $password);
         $client->setPassword($encodedPassword);
 
         /** @var Client $client */
-        $client = $this->em->getRepository(Client::class)->persist($client);
+        $client = $this->container->getClientRepository()->persist($client);
 
         return new JsonResponse(array("access_token" => $client->getAccessToken()), 200);
     }
@@ -105,7 +88,7 @@ class AuthService extends ControllerServiceBase
         list($emailAddress, $password) = explode(":", $credentials);
         if($emailAddress != null && $password != null) {
             $emailAddress = strtolower($emailAddress);
-            $client = $this->clientRepository->findActiveOneByEmailAddress($emailAddress);
+            $client = $this->container->getClientRepository()->findActiveOneByEmailAddress($emailAddress);
             if($client == null) {
                 return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
             }
@@ -129,7 +112,7 @@ class AuthService extends ControllerServiceBase
                 }
             }
 
-            if($this->encoder->isPasswordValid($client, $password)) {
+            if($this->container->getEncoder()->isPasswordValid($client, $password)) {
                 /** @var Client $client */
                 $result = [
                     "access_token"=>$client->getAccessToken(),
@@ -164,11 +147,11 @@ class AuthService extends ControllerServiceBase
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $content = RequestUtil::getContentAsArray($request);
-        $log = ActionLogWriter::passwordChange($this->em, $client, $loggedInUser);
+        $log = ActionLogWriter::passwordChange($this->getManager(), $client, $loggedInUser);
 
         $enteredOldPassword = base64_decode($content->get('current_password'));
 
-        if(!$this->encoder->isPasswordValid($client, $enteredOldPassword)) {
+        if(!$this->container->getEncoder()->isPasswordValid($client, $enteredOldPassword)) {
             return new JsonResponse(array(Constant::MESSAGE_NAMESPACE => "CURRENT PASSWORD NOT VALID", Constant::CODE_NAMESPACE => 401), 401);
         }
 
@@ -181,11 +164,11 @@ class AuthService extends ControllerServiceBase
         }
 
         $encodedOldPassword = $client->getPassword();
-        $encodedNewPassword = $this->encoder->encodePassword($client, $newPassword);
+        $encodedNewPassword = $this->container->getEncoder()->encodePassword($client, $newPassword);
         $client->setPassword($encodedNewPassword);
 
-        $this->em->persist($client);
-        $this->em->flush();
+        $this->getManager()->persist($client);
+        $this->getManager()->flush();
 
         //Validate password change
         $client = $this->getAccountOwner($request);
@@ -193,9 +176,9 @@ class AuthService extends ControllerServiceBase
 
         if($encodedPasswordInDatabase == $encodedNewPassword) {
 
-            $this->emailService->sendNewPasswordEmail($client->getEmailAddress());
+            $this->container->getEmailService()->sendNewPasswordEmail($client->getEmailAddress());
 
-            $log = ActionLogWriter::completeActionLog($this->em, $log);
+            $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
             return new JsonResponse(array("code" => 200, "message"=>"Password has been changed"), 200);
 
@@ -224,8 +207,8 @@ class AuthService extends ControllerServiceBase
         */
         $content = RequestUtil::getContentAsArray($request);
         $emailAddress = strtolower($content->get('email_address'));
-        $client = $this->clientRepository->findActiveOneByEmailAddress($emailAddress);
-        $log = ActionLogWriter::passwordReset($this->em, $client, $emailAddress);
+        $client = $this->container->getClientRepository()->findActiveOneByEmailAddress($emailAddress);
+        $log = ActionLogWriter::passwordReset($this->getManager(), $client, $emailAddress);
 
         //Verify if email is correct
         if($client == null) {
@@ -234,10 +217,10 @@ class AuthService extends ControllerServiceBase
 
         //Create a new password
         $passwordLength = 9;
-        $newPassword = $this->persistNewPassword($client);
-        $this->emailService->emailNewPasswordToPerson($client, $newPassword);
+        $newPassword = $this->container->persistNewPassword($client);
+        $this->container->getEmailService()->emailNewPasswordToPerson($client, $newPassword);
 
-        $log = ActionLogWriter::completeActionLog($this->em, $log);
+        $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
         return new JsonResponse(array("code" => 200,
             "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
@@ -265,7 +248,7 @@ class AuthService extends ControllerServiceBase
     public function validateUbnInHeader(Request $request)
     {
         $client = $this->getAccountOwner($request);
-        $headerValidation = new HeaderValidation($this->em, $request, $client);
+        $headerValidation = new HeaderValidation($this->getManager(), $request, $client);
 
         if($headerValidation->isInputValid()) {
             return ResultUtil::successResult('UBN IS VALID');
@@ -276,99 +259,11 @@ class AuthService extends ControllerServiceBase
 
 
     /**
-     *
-     * @param Person $person
-     * @param int $passwordLength
-     * @return string
-     */
-    public function persistNewPassword($person, $passwordLength = 9)
-    {
-        $newPassword = Utils::randomString($passwordLength);
-
-        $encodedNewPassword = $this->encoder->encodePassword($person, $newPassword);
-        $person->setPassword($encodedNewPassword);
-
-        $this->em->persist($person);
-        $this->em->flush();
-
-        return $newPassword;
-    }
-
-
-    /**
      * @param Request $request
      * @return JsonResponse
      */
     public function isAccessTokenValid(Request $request)
     {
-        $token = null;
-        $response = null;
-        $content = RequestUtil::getContentAsArray($request);
-
-        //Get token header to read token value
-        if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
-
-            $environment = $content->get('env');
-            $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
-            $token = $this->em->getRepository(Token::class)
-                ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
-
-            if ($token != null) {
-                if ($environment == 'USER') {
-                    if ($token->getOwner() instanceof Client) {
-                        $response = array(
-                            'token_status' => 'valid',
-                            'token' => $tokenCode
-                        );
-                        return new JsonResponse($response, 200);
-                    } elseif ($token->getOwner() instanceof Employee ) {
-                        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
-                        $ghostToken = $this->em->getRepository(Token::class)
-                            ->findOneBy(array("code" => $ghostTokenCode, "type" => TokenType::GHOST));
-
-                        if($ghostToken != null) {
-                            $response = array(
-                                'token_status' => 'valid',
-                                'token' => $tokenCode
-                            );
-                            return new JsonResponse($response, 200);
-                        }
-                    } else {
-                        $response = array(
-                            'error' => 401,
-                            'errorMessage' => 'No AccessToken provided'
-                        );
-                    }
-                }
-            }
-
-            if ($environment == 'ADMIN') {
-                if ($token->getOwner() instanceof Employee) {
-                    $response = array(
-                        'token_status' => 'valid',
-                        'token' => $tokenCode
-                    );
-                    return new JsonResponse($response, 200);
-                } else {
-                    $response = array(
-                        'error' => 401,
-                        'errorMessage' => 'No AccessToken provided'
-                    );
-                }
-            }
-
-            $response = array(
-                'error'=> 401,
-                'errorMessage'=> 'No AccessToken provided'
-            );
-        } else {
-            //Mandatory AccessToken was not provided
-            $response = array(
-                'error'=> 401,
-                'errorMessage'=> 'Mandatory AccessToken header was not provided'
-            );
-        }
-
-        return new JsonResponse($response, 401);
+        return $this->container->isAccessTokenValid($request);
     }
 }

@@ -416,7 +416,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   protected function persistNewPassword($person, $passwordLength = 9)
   {
-      return $this->getAuthService()->persistNewPassword($person, $passwordLength);
+      return $this->getNonControllerServiceContainer()->persistNewPassword($person, $passwordLength);
   }
 
     /**

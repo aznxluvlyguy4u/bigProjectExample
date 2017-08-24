@@ -5,8 +5,6 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Component\Modifier\MessageModifier;
-use AppBundle\Component\RequestMessageBuilder;
-use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -34,31 +32,9 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 
 abstract class DeclareControllerServiceBase extends ControllerServiceBase
 {
-    /** @var EntityGetter */
-    protected $entityGetter;
-    /** @var AwsExternalQueueService */
-    protected $externalQueueService;
-    /** @var AwsInternalQueueService */
-    protected $internalQueueService;
-    /** @var RequestMessageBuilder */
-    protected $requestMessageBuilder;
-
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService,
-                                UserService $userService, AwsExternalQueueService $externalQueueService, AwsInternalQueueService $internalQueueService, EntityGetter $entityGetter,
-                                RequestMessageBuilder $requestMessageBuilder)
-    {
-        parent::__construct($em, $serializer, $cacheService, $userService);
-
-        $this->entityGetter = $entityGetter;
-        $this->externalQueueService = $externalQueueService;
-        $this->internalQueueService = $internalQueueService;
-        $this->requestMessageBuilder = $requestMessageBuilder;
-    }
-
     /**
      * @param DeclareBase $messageObject
      * @param bool $isUpdate
@@ -67,34 +43,34 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     protected function sendMessageObjectToQueue($messageObject, $isUpdate = false) {
 
         $requestId = $messageObject->getRequestId();
-        $repository = $this->em->getRepository(Utils::getRepositoryNameSpace($messageObject));
+        //$repository = $this->getManager()->getRepository(Utils::getRepositoryNameSpace($messageObject));
 
         //create array and jsonMessage
-        $messageArray = RequestMessageOutputBuilder::createOutputArray($this->em, $messageObject, $isUpdate);
+        $messageArray = RequestMessageOutputBuilder::createOutputArray($this->getManager(), $messageObject, $isUpdate);
 
         if($messageArray == null) {
             //These objects do not have a customized minimal json output for the queue yet
-            $jsonMessage = $this->serializer->serializeToJSON($messageObject);
+            $jsonMessage = $this->container->getIRSerializer()->serializeToJSON($messageObject);
             $messageArray = json_decode($jsonMessage, true);
         } else {
             //Use the minimized custom output
-            $jsonMessage = $this->serializer->serializeToJSON($messageArray);
+            $jsonMessage = $this->container->getIRSerializer()->serializeToJSON($messageArray);
         }
 
         //Send serialized message to Queue
         $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
 
-        $sendToQresult = $this->externalQueueService->send($jsonMessage, $requestTypeNameSpace, $requestId);
+        $sendToQresult = $this->container->getExternalQueueService()->send($jsonMessage, $requestTypeNameSpace, $requestId);
 
         //If send to Queue, failed, it needs to be resend, set state to failed
         if ($sendToQresult['statusCode'] != '200') {
             $messageObject->setRequestState(RequestStateType::FAILED);
-            $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $this->em);
+            $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $this->getManager());
             $this->persist($messageObject);
 
         } else if($isUpdate) { //If successfully sent to the queue and message is an Update/Edit request
             $messageObject->setRequestState(RequestStateType::OPEN); //update the RequestState
-            $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $this->em);
+            $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $this->getManager());
             $this->persist($messageObject);
         }
 
@@ -118,10 +94,10 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     protected function sendTaskToQueue($workerMessageBody) {
         if($workerMessageBody == null) { return false; }
 
-        $jsonMessage = $this->serializer->serializeToJSON($workerMessageBody);
+        $jsonMessage = $this->container->getIRSerializer()->serializeToJSON($workerMessageBody);
 
         //Send  message to Queue
-        $sendToQresult = $this->internalQueueService->send($jsonMessage, $workerMessageBody->getTaskType(), 1);
+        $sendToQresult = $this->container->getInternalQueueService()->send($jsonMessage, $workerMessageBody->getTaskType(), 1);
 
         //If send to Queue, failed, it needs to be resend, set state to failed
         return $sendToQresult['statusCode'] == '200';
@@ -137,7 +113,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      */
     public function persistRevokingRequestState($messageNumber)
     {
-        $messageObjectTobeRevoked = $this->entityGetter->getRequestMessageByMessageNumber($messageNumber);
+        $messageObjectTobeRevoked = $this->container->getEntityGetter()->getRequestMessageByMessageNumber($messageNumber);
 
         $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKING);
 
@@ -151,8 +127,8 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     public function persistAnimalTransferringStateAndFlush($animal)
     {
         $animal->setTransferState(AnimalTransferStatus::TRANSFERRING);
-        $this->em->persist($animal);
-        $this->em->flush();
+        $this->getManager()->persist($animal);
+        $this->getManager()->flush();
     }
 
 
@@ -168,7 +144,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
     {
         $isEditMessage = true;
-        $messageObject = $this->requestMessageBuilder
+        $messageObject = $this->container->getRequestMessageBuilder()
             ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
 
         return $messageObject;
@@ -187,7 +163,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
     {
         $isEditMessage = false;
-        $messageObject = $this->requestMessageBuilder
+        $messageObject = $this->container->getRequestMessageBuilder()
             ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
 
         return $messageObject;

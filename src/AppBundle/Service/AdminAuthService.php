@@ -16,24 +16,6 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AdminAuthService extends ControllerServiceBase
 {
-    /** @var AuthService */
-    private $authService;
-    /** @var EmailService */
-    private $emailService;
-    /** @var UserPasswordEncoderInterface */
-    private $encoder;
-
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService,
-                                UserService $userService, UserPasswordEncoderInterface $encoder,
-                                AuthService $authService, EmailService $emailService)
-    {
-        parent::__construct($em, $serializer, $cacheService, $userService);
-
-        $this->authService = $authService;
-        $this->emailService = $emailService;
-        $this->encoder = $encoder;
-    }
-
 
     /**
      * @param Request $request
@@ -50,12 +32,12 @@ class AdminAuthService extends ControllerServiceBase
             $emailAddress = strtolower($emailAddress);
 
             /** @var Employee $admin */
-            $admin = $this->employeeRepository->findActiveOneByEmailAddress($emailAddress);
+            $admin = $this->container->getEmployeeRepository()->findActiveOneByEmailAddress($emailAddress);
             if($admin == null) {
                 return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
             }
 
-            if($this->encoder->isPasswordValid($admin, $password)) {
+            if($this->container->getEncoder()->isPasswordValid($admin, $password)) {
                 $result = [
                     "access_token"=>$admin->getAccessToken(),
                     "user" =>[
@@ -88,8 +70,8 @@ class AdminAuthService extends ControllerServiceBase
         $content = RequestUtil::getContentAsArray($request);
         $emailAddress = strtolower($content->get('email_address'));
 
-        $admin = $this->employeeRepository->findActiveOneByEmailAddress($emailAddress);
-        $log = ActionLogWriter::adminPasswordReset($this->em, $admin, $emailAddress);
+        $admin = $this->container->getEmployeeRepository()->findActiveOneByEmailAddress($emailAddress);
+        $log = ActionLogWriter::adminPasswordReset($this->getManager(), $admin, $emailAddress);
 
         //Verify if email is correct
         if($admin == null) {
@@ -98,11 +80,11 @@ class AdminAuthService extends ControllerServiceBase
 
         //Create a new password
         $passwordLength = 9;
-        $newPassword = $this->authService->persistNewPassword($admin, $passwordLength);
-        $emailSuccessfullySent = $this->emailService->emailNewPasswordToPerson($admin, $newPassword, true);
+        $newPassword = $this->container->persistNewPassword($admin, $passwordLength);
+        $emailSuccessfullySent = $this->container->getEmailService()->emailNewPasswordToPerson($admin, $newPassword, true);
 
         if ($emailSuccessfullySent) {
-            $log = ActionLogWriter::completeActionLog($this->em, $log);
+            $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
             return new JsonResponse(array("code" => 200,
                 "message"=>"Your new password has been emailed to: " . $emailAddress), 200);

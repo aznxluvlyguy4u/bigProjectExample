@@ -7,10 +7,9 @@ namespace AppBundle\Service;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\Environment;
 use AppBundle\Entity\Person;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Templating\EngineInterface;
 
-class EmailService extends ControllerServiceBase
+class EmailService
 {
     /** @var string */
     private $environment;
@@ -21,10 +20,8 @@ class EmailService extends ControllerServiceBase
     /** @var EngineInterface */
     private $templating;
 
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService, UserService $userService, \Swift_Mailer $swiftMailer, $mailerSourceAddress, EngineInterface $templating, $environment)
+    public function __construct(\Swift_Mailer $swiftMailer, $mailerSourceAddress, EngineInterface $templating, $environment)
     {
-        parent::__construct($em, $serializer, $cacheService, $userService);
-
         $this->environment = $environment;
         $this->swiftMailer = $swiftMailer;
         $this->mailerSourceAddress = $mailerSourceAddress;

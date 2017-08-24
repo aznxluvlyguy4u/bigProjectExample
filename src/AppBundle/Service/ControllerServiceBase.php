@@ -8,56 +8,19 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\ClientRepository;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
-use AppBundle\Entity\DeclareArrivalRepository;
-use AppBundle\Entity\DeclareArrivalResponse;
-use AppBundle\Entity\DeclareArrivalResponseRepository;
-use AppBundle\Entity\DeclareBase;
-use AppBundle\Entity\DeclareBaseRepository;
-use AppBundle\Entity\DeclareBaseResponse;
-use AppBundle\Entity\DeclareBaseResponseRepository;
 use AppBundle\Entity\DeclareBirth;
-use AppBundle\Entity\DeclareBirthRepository;
-use AppBundle\Entity\DeclareBirthResponse;
-use AppBundle\Entity\DeclareBirthResponseRepository;
 use AppBundle\Entity\DeclareDepart;
-use AppBundle\Entity\DeclareDepartRepository;
-use AppBundle\Entity\DeclareDepartResponse;
-use AppBundle\Entity\DeclareDepartResponseRepository;
 use AppBundle\Entity\DeclareExport;
-use AppBundle\Entity\DeclareExportRepository;
-use AppBundle\Entity\DeclareExportResponse;
-use AppBundle\Entity\DeclareExportResponseRepository;
 use AppBundle\Entity\DeclareImport;
-use AppBundle\Entity\DeclareImportRepository;
-use AppBundle\Entity\DeclareImportResponse;
-use AppBundle\Entity\DeclareImportResponseRepository;
 use AppBundle\Entity\DeclareLoss;
-use AppBundle\Entity\DeclareLossRepository;
-use AppBundle\Entity\DeclareLossResponse;
-use AppBundle\Entity\DeclareLossResponseRepository;
-use AppBundle\Entity\DeclareNsfoBase;
-use AppBundle\Entity\DeclareNsfoBaseRepository;
-use AppBundle\Entity\DeclareTagReplace;
-use AppBundle\Entity\DeclareTagReplaceRepository;
-use AppBundle\Entity\DeclareTagReplaceResponse;
-use AppBundle\Entity\DeclareTagReplaceResponseRepository;
 use AppBundle\Entity\DeclareTagsTransfer;
-use AppBundle\Entity\DeclareTagsTransferRepository;
-use AppBundle\Entity\DeclareTagsTransferResponse;
-use AppBundle\Entity\DeclareTagsTransferResponseRepository;
 use AppBundle\Entity\Employee;
-use AppBundle\Entity\EmployeeRepository;
 use AppBundle\Entity\Ewe;
-use AppBundle\Entity\Litter;
-use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\RetrieveAnimals;
@@ -65,10 +28,7 @@ use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
-use AppBundle\Entity\Tag;
-use AppBundle\Entity\TagRepository;
-use AppBundle\Entity\Token;
-use AppBundle\Entity\TokenRepository;
+use AppBundle\Service\Container\NonControllerServiceContainer;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -79,114 +39,30 @@ use Symfony\Component\HttpFoundation\Request;
  */
 abstract class ControllerServiceBase
 {
-    /** @var EntityManagerInterface|ObjectManager */
-    protected $em;
-    /** @var IRSerializer */
-    protected $serializer;
-    /** @var CacheService */
-    protected $cacheService;
-    /** @var UserService */
-    protected $userService;
+    /** @var NonControllerServiceContainer */
+    protected $container;
 
-    /** @var Connection */
-    protected $conn;
-
-    /** @var AnimalRepository */
-    protected $animalRepository;
-    /** @var ClientRepository */
-    protected $clientRepository;
-
-    /** @var DeclareBaseRepository */
-    protected $declareBaseRepository;
-    /** @var DeclareBaseResponseRepository */
-    protected $declareBaseResponseRepository;
-    /** @var DeclareNsfoBaseRepository */
-    protected $declareNsfoBaseRepository;
-
-    /** @var DeclareArrivalRepository */
-    protected $declareArrivalRepository;
-    /** @var DeclareArrivalResponseRepository */
-    protected $declareArrivalResponseRepository;
-    /** @var DeclareBirthRepository */
-    protected $declareBirthRepository;
-    /** @var DeclareBirthResponseRepository */
-    protected $declareBirthResponseRepository;
-    /** @var DeclareImportRepository */
-    protected $declareImportRepository;
-    /** @var DeclareImportResponseRepository */
-    protected $declareImportResponseRepository;
-    /** @var DeclareDepartRepository */
-    protected $declareDepartRepository;
-    /** @var DeclareDepartResponseRepository */
-    protected $declareDepartResponseRepository;
-    /** @var DeclareExportRepository */
-    protected $declareExportRepository;
-    /** @var DeclareExportResponseRepository */
-    protected $declareExportResponseRepository;
-    /** @var DeclareLossRepository */
-    protected $declareLossRepository;
-    /** @var DeclareLossResponseRepository */
-    protected $declareLossResponseRepository;
-    /** @var DeclareTagsTransferRepository */
-    protected $declareTagsTransferRepository;
-    /** @var DeclareTagsTransferResponseRepository */
-    protected $declareTagsTransferResponseRepository;
-    /** @var DeclareTagReplaceRepository */
-    protected $declareTagReplaceRepository;
-    /** @var DeclareTagReplaceResponseRepository */
-    protected $declareTagReplaceResponseRepository;
-
-    /** @var EmployeeRepository */
-    protected $employeeRepository;
-    /** @var LitterRepository */
-    protected $litterRepository;
-    /** @var LocationRepository */
-    protected $locationRepository;
-    /** @var TagRepository */
-    protected $tagRepository;
-    /** @var TokenRepository */
-    protected $tokenRepository;
-    
-
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
-                                CacheService $cacheService, UserService $userService)
+    public function __construct(NonControllerServiceContainer $container)
     {
-        $this->em = $em;
-        $this->serializer = $serializer;
-        $this->cacheService = $cacheService;
-        $this->userService = $userService;
+        $this->container = $container;
+    }
 
-        $this->conn = $this->em->getConnection();
 
-        $this->animalRepository = $this->em->getRepository(Animal::class);
-        $this->clientRepository = $this->em->getRepository(Client::class);
+    /**
+     * @return ObjectManager|EntityManagerInterface
+     */
+    public function getManager()
+    {
+        return $this->container->getManager();
+    }
 
-        $this->declareBaseRepository = $this->em->getRepository(DeclareBase::class);
-        $this->declareBaseResponseRepository = $this->em->getRepository(DeclareBaseResponse::class);
-        $this->declareNsfoBaseRepository = $this->em->getRepository(DeclareNsfoBase::class);
 
-        $this->declareArrivalRepository = $this->em->getRepository(DeclareArrival::class);
-        $this->declareArrivalResponseRepository = $this->em->getRepository(DeclareArrivalResponse::class);
-        $this->declareBirthRepository = $this->em->getRepository(DeclareBirth::class);
-        $this->declareBirthResponseRepository = $this->em->getRepository(DeclareBirthResponse::class);
-        $this->declareImportRepository = $this->em->getRepository(DeclareImport::class);
-        $this->declareImportResponseRepository = $this->em->getRepository(DeclareImportResponse::class);
-        $this->declareDepartRepository = $this->em->getRepository(DeclareDepart::class);
-        $this->declareDepartResponseRepository = $this->em->getRepository(DeclareDepartResponse::class);
-        $this->declareExportRepository = $this->em->getRepository(DeclareExport::class);
-        $this->declareExportResponseRepository = $this->em->getRepository(DeclareExportResponse::class);
-        $this->declareLossRepository = $this->em->getRepository(DeclareLoss::class);
-        $this->declareLossResponseRepository = $this->em->getRepository(DeclareLossResponse::class);
-        $this->declareTagsTransferRepository = $this->em->getRepository(DeclareTagsTransfer::class);
-        $this->declareTagsTransferResponseRepository = $this->em->getRepository(DeclareTagsTransferResponse::class);
-        $this->declareTagReplaceRepository = $this->em->getRepository(DeclareTagReplace::class);
-        $this->declareTagReplaceResponseRepository = $this->em->getRepository(DeclareTagReplaceResponse::class);
-
-        $this->employeeRepository = $this->em->getRepository(Employee::class);
-        $this->litterRepository = $this->em->getRepository(Litter::class);
-        $this->locationRepository = $this->em->getRepository(Location::class);
-        $this->tagRepository = $this->em->getRepository(Tag::class);
-        $this->tokenRepository = $this->em->getRepository(Token::class);
+    /**
+     * @return Connection
+     */
+    public function getConnection()
+    {
+        return $this->container->getConnection();
     }
 
 
@@ -197,7 +73,7 @@ abstract class ControllerServiceBase
      * @param Animal | Ewe | Ram | Neuter $animal
      */
     protected function clearLivestockCacheForLocation(Location $location = null, $animal = null) {
-        $this->cacheService->clearLivestockCacheForLocation($location, $animal);
+        $this->container->getCacheService()->clearLivestockCacheForLocation($location, $animal);
     }
 
 
@@ -226,7 +102,7 @@ abstract class ControllerServiceBase
         $repositoryEntityNameSpace = Utils::getRepositoryNameSpace($messageObject);
 
         //Persist to database
-        $this->em->getRepository($repositoryEntityNameSpace)->persist($messageObject);
+        $this->getManager()->getRepository($repositoryEntityNameSpace)->persist($messageObject);
 
         return $messageObject;
     }
@@ -238,8 +114,8 @@ abstract class ControllerServiceBase
      */
     protected function persistAndFlush($object)
     {
-        $this->em->persist($object);
-        $this->em->flush();
+        $this->getManager()->persist($object);
+        $this->getManager()->flush();
         return $object;
     }
 
@@ -248,8 +124,8 @@ abstract class ControllerServiceBase
      */
     protected function flushClearAndGarbageCollect()
     {
-        $this->em->flush();
-        $this->em->clear();
+        $this->getManager()->flush();
+        $this->getManager()->clear();
         gc_collect_cycles();
     }
 
@@ -259,7 +135,7 @@ abstract class ControllerServiceBase
      */
     public function getUser()
     {
-        return $this->userService->getUser();
+        return $this->container->getUserService()->getUser();
     }
 
 
@@ -269,7 +145,7 @@ abstract class ControllerServiceBase
      */
     public function getAccountOwner(Request $request = null)
     {
-        return $this->userService->getAccountOwner($request);
+        return $this->container->getUserService()->getAccountOwner($request);
     }
 
 
@@ -279,7 +155,7 @@ abstract class ControllerServiceBase
      */
     public function getEmployee($tokenCode = null)
     {
-        return $this->userService->getEmployee($tokenCode);
+        return $this->container->getUserService()->getEmployee($tokenCode);
     }
 
 
@@ -289,7 +165,7 @@ abstract class ControllerServiceBase
      */
     public function getSelectedLocation(Request $request)
     {
-        return $this->userService->getSelectedLocation($request);
+        return $this->container->getUserService()->getSelectedLocation($request);
     }
 
 
@@ -299,6 +175,6 @@ abstract class ControllerServiceBase
      */
     public function getSelectedUbn(Request $request)
     {
-        return $this->userService->getSelectedUbn($request);
+        return $this->container->getUserService()->getSelectedUbn($request);
     }
 }

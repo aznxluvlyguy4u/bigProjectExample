@@ -18,7 +18,7 @@ use AppBundle\Entity\Collar;
 use AppBundle\Entity\CollarRepository;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\CompanyNote;
-use AppBundle\Entity\CompanyNotesRepository;
+use AppBundle\Entity\CompanyNoteRepository;
 use AppBundle\Entity\CompanyRepository;
 use AppBundle\Entity\ContactFormMenu;
 use AppBundle\Entity\ContactFormMenuRepository;
@@ -103,6 +103,7 @@ use AppBundle\Entity\InvoiceRuleRepository;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\LocationAddressRepository;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthInspection;
@@ -224,7 +225,7 @@ class RepositoryContainerBase
     protected $collarRepository;
     /** @var CompanyRepository */
     protected $companyRepository;
-    /** @var CompanyNotesRepository */
+    /** @var CompanyNoteRepository */
     protected $companyNoteRepository;
     /** @var ContactFormMenuRepository */
     protected $contactFormMenuRepository;
@@ -474,7 +475,7 @@ class RepositoryContainerBase
 
         $this->litterRepository = $this->manager->getRepository(Litter::class);
         $this->locationRepository = $this->manager->getRepository(Location::class);
-        $this->locationAddressRepository = $this->manager->getRepository(LocationAddressRepository::class);
+        $this->locationAddressRepository = $this->manager->getRepository(LocationAddress::class);
         $this->locationHealthRepository = $this->manager->getRepository(LocationHealth::class);
         $this->locationHealthInspectionRepository = $this->manager->getRepository(LocationHealthInspection::class);
         $this->locationHealthInspectionDirectionRepository = $this->manager->getRepository(LocationHealthInspectionDirection::class);
@@ -592,7 +593,7 @@ class RepositoryContainerBase
     }
 
     /**
-     * @return CompanyNotesRepository
+     * @return CompanyNoteRepository
      */
     public function getCompanyNoteRepository()
     {

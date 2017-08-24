@@ -16,25 +16,10 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\EditAdminProfileValidator;
 use AppBundle\Validation\PasswordValidator;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AdminProfileService extends ControllerServiceBase implements AdminProfileAPIControllerInterface
 {
-
-    /** @var UserPasswordEncoderInterface */
-    private $encoder;
-
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService,
-                                UserService $userService, UserPasswordEncoderInterface $encoder)
-    {
-        parent::__construct($em, $serializer, $cacheService, $userService);
-
-        $this->encoder = $encoder;
-    }
-
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -65,7 +50,7 @@ class AdminProfileService extends ControllerServiceBase implements AdminProfileA
         $content = RequestUtil::getContentAsArray($request);
 
         //Validate input
-        $inputValidator = new EditAdminProfileValidator($this->em, $content, $admin);
+        $inputValidator = new EditAdminProfileValidator($this->container->getManager(), $content, $admin);
         if (!$inputValidator->getIsValid()) {
             return $inputValidator->createJsonResponse();
         }
@@ -80,14 +65,14 @@ class AdminProfileService extends ControllerServiceBase implements AdminProfileA
             if(!$passwordValidator->getIsPasswordValid()) {
                 return $passwordValidator->createJsonErrorResponse();
             }
-            $encodedNewPassword = $this->encoder->encodePassword($admin, $newPassword);
+            $encodedNewPassword = $this->container->getEncoder()->encodePassword($admin, $newPassword);
             $content->set(JsonInputConstant::NEW_PASSWORD, $encodedNewPassword);
         }
 
         //Persist updated changes and return the updated values
         $client = AdminProfile::update($admin, $content);
-        $this->em->persist($admin);
-        $this->em->flush();
+        $this->container->getManager()->persist($admin);
+        $this->container->getManager()->flush();
 
         $outputArray = AdminOverviewOutput::createAdminOverview($admin);
         return ResultUtil::successResult($outputArray);

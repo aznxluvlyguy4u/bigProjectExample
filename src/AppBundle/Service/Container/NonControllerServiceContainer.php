@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Service;
+namespace AppBundle\Service\Container;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
@@ -22,13 +22,28 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
+use AppBundle\Entity\Token;
+use AppBundle\Enumerator\TokenType;
+use AppBundle\Service\AnimalLocationHistoryService;
+use AppBundle\Service\AwsExternalQueueService;
+use AppBundle\Service\AwsInternalQueueService;
+use AppBundle\Service\AWSSimpleStorageService;
+use AppBundle\Service\CacheService;
 use AppBundle\Service\Container\RepositoryContainerBase;
+use AppBundle\Service\CsvFromSqlResultsWriterService;
+use AppBundle\Service\EmailService;
+use AppBundle\Service\EntityGetter;
+use AppBundle\Service\HealthService;
+use AppBundle\Service\IRSerializer;
+use AppBundle\Service\UserService;
+use AppBundle\Util\RequestUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -410,6 +425,104 @@ class NonControllerServiceContainer extends RepositoryContainerBase
         $this->manager->getRepository($repositoryEntityNameSpace)->persist($messageObject);
 
         return $messageObject;
+    }
+
+
+    /**
+     *
+     * @param Person $person
+     * @param int $passwordLength
+     * @return string
+     */
+    public function persistNewPassword($person, $passwordLength = 9)
+    {
+        $newPassword = Utils::randomString($passwordLength);
+
+        $encodedNewPassword = $this->getEncoder()->encodePassword($person, $newPassword);
+        $person->setPassword($encodedNewPassword);
+
+        $this->getManager()->persist($person);
+        $this->getManager()->flush();
+
+        return $newPassword;
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function isAccessTokenValid(Request $request)
+    {
+        $token = null;
+        $response = null;
+        $content = RequestUtil::getContentAsArray($request);
+
+        //Get token header to read token value
+        if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
+
+            $environment = $content->get('env');
+            $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
+            $token = $this->getManager()->getRepository(Token::class)
+                ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
+
+            if ($token != null) {
+                if ($environment == 'USER') {
+                    if ($token->getOwner() instanceof Client) {
+                        $response = array(
+                            'token_status' => 'valid',
+                            'token' => $tokenCode
+                        );
+                        return new JsonResponse($response, 200);
+                    } elseif ($token->getOwner() instanceof Employee ) {
+                        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
+                        $ghostToken = $this->getManager()->getRepository(Token::class)
+                            ->findOneBy(array("code" => $ghostTokenCode, "type" => TokenType::GHOST));
+
+                        if($ghostToken != null) {
+                            $response = array(
+                                'token_status' => 'valid',
+                                'token' => $tokenCode
+                            );
+                            return new JsonResponse($response, 200);
+                        }
+                    } else {
+                        $response = array(
+                            'error' => 401,
+                            'errorMessage' => 'No AccessToken provided'
+                        );
+                    }
+                }
+            }
+
+            if ($environment == 'ADMIN') {
+                if ($token->getOwner() instanceof Employee) {
+                    $response = array(
+                        'token_status' => 'valid',
+                        'token' => $tokenCode
+                    );
+                    return new JsonResponse($response, 200);
+                } else {
+                    $response = array(
+                        'error' => 401,
+                        'errorMessage' => 'No AccessToken provided'
+                    );
+                }
+            }
+
+            $response = array(
+                'error'=> 401,
+                'errorMessage'=> 'No AccessToken provided'
+            );
+        } else {
+            //Mandatory AccessToken was not provided
+            $response = array(
+                'error'=> 401,
+                'errorMessage'=> 'Mandatory AccessToken header was not provided'
+            );
+        }
+
+        return new JsonResponse($response, 401);
     }
 
 

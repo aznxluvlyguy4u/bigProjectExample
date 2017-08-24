@@ -45,16 +45,6 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     const SHOW_OTHER_CANDIDATE_MOTHERS = false;
     const SHOW_OTHER_SURROGATE_MOTHERS = false;
 
-    /** @var Logger */
-    private $logger;
-
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService, UserService $userService, AwsExternalQueueService $externalQueueService, AwsInternalQueueService $internalQueueService, EntityGetter $entityGetter, RequestMessageBuilder $requestMessageBuilder, Logger $logger)
-    {
-        parent::__construct($em, $serializer, $cacheService, $userService, $externalQueueService, $internalQueueService, $entityGetter, $requestMessageBuilder);
-
-        $this->logger = $logger;
-    }
-
 
     /**
      * @param Request $request
@@ -70,7 +60,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         }
 
         /** @var Litter $litter */
-        $litter = $this->litterRepository->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
+        $litter = $this->container->getLitterRepository()->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
 
         if($litter instanceof Litter) {
             $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
@@ -114,7 +104,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                     INNER JOIN animal AS mother ON litter.animal_mother_id = mother.id
                 LEFT JOIN animal AS father ON litter.animal_father_id = father.id
                 WHERE (request_state <> '".RequestStateType::IMPORTED."' OR request_state <> '".RequestStateType::FAILED."') AND declare_nsfo_base.ubn = '" . $location->getUbn() ."'";
-        $birthDeclarations = $this->conn->query($sql)->fetchAll();
+        $birthDeclarations = $this->container->getConnection()->query($sql)->fetchAll();
 
         $result = DeclareBirthResponseOutput::createHistoryResponse($birthDeclarations);
         return ResultUtil::successResult($result);
@@ -132,7 +122,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
-        $requestMessages = $this->requestMessageBuilder
+        $requestMessages = $this->container->getRequestMessageBuilder()
             ->build(RequestType::DECLARE_BIRTH_ENTITY,
                 $content,
                 $client,
@@ -177,7 +167,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::DEVELOPER);
         if(!$isAdmin) { return AdminValidator::getStandardErrorResponse(); }
 
-        $requestMessages = $this->declareBirthRepository->findBy(['requestState' => RequestStateType::OPEN]);
+        $requestMessages = $this->container->getDeclareBirthRepository()->findBy(['requestState' => RequestStateType::OPEN]);
 
         $openCount = count($requestMessages);
         $resentCount = 0;
@@ -219,7 +209,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $litterId = $content['litter_id'];
         /** @var Litter $litter */
-        $litter = $this->litterRepository->findOneBy(array ('id' => $litterId));
+        $litter = $this->container->getLitterRepository()->findOneBy(array ('id' => $litterId));
 
         if (!$litter) {
             return new JsonResponse(
@@ -255,7 +245,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         //Remove still born childs
         foreach ($litter->getStillborns() as $stillborn) {
-            $this->em->remove($stillborn);
+            $this->container->getManager()->remove($stillborn);
             $stillbornsToRemove[] = $stillborn;
         }
 
@@ -272,43 +262,43 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 //Remove animal residence
                 $residenceHistory = $child->getAnimalResidenceHistory();
                 foreach ($residenceHistory as $residence) {
-                    $this->em->remove($residence);
+                    $this->container->getManager()->remove($residence);
                 }
 
                 //Remove weights
                 $weights = $child->getWeightMeasurements();
                 foreach ($weights as $weight) {
-                    $this->em->remove($weight);
+                    $this->container->getManager()->remove($weight);
                 }
 
                 //Remove tail lengths
                 $tailLengths = $child->getTailLengthMeasurements();
                 foreach ($tailLengths as $tailLength) {
-                    $this->em->remove($tailLength);
+                    $this->container->getManager()->remove($tailLength);
                 }
 
                 //Remove bodyfats
                 $bodyFats = $child->getBodyFatMeasurements();
                 foreach ($bodyFats as $bodyFat) {
-                    $this->em->remove($bodyFat);
+                    $this->container->getManager()->remove($bodyFat);
                 }
 
                 //Remove exteriors
                 $exteriors = $child->getExteriorMeasurements();
                 foreach ($exteriors as $exterior) {
-                    $this->em->remove($exterior);
+                    $this->container->getManager()->remove($exterior);
                 }
 
                 //Remove muscleThickness
                 $muscleThicknesses = $child->getMuscleThicknessMeasurements();
                 foreach ($muscleThicknesses as $muscleThickness) {
-                    $this->em->remove($muscleThickness);
+                    $this->container->getManager()->remove($muscleThickness);
                 }
 
                 //Remove gender change history items
                 $genderHistories = $child->getGenderHistory();
                 foreach ($genderHistories as $genderHistory) {
-                    $this->em->remove($genderHistory);
+                    $this->container->getManager()->remove($genderHistory);
                 }
 
 
@@ -319,15 +309,15 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                         if($declareToRemove->getRequestState() === RequestStateType::REVOKED || $declareToRemove->getRequestState() === RequestStateType::FAILED) {
 
                             foreach ($declareToRemove->getResponses() as $response) {
-                                $this->em->remove($response);
+                                $this->container->getManager()->remove($response);
                             }
 
                             if($declareToRemove instanceof DeclareDepart || $declaresToRemove instanceof DeclareArrival) {
-                                $message = $this->em->getRepository(Message::class)->findOneBy(['requestMessage'=>$declareToRemove]);
-                                $this->em->remove($message);
+                                $message = $this->container->getManager()->getRepository(Message::class)->findOneBy(['requestMessage'=>$declareToRemove]);
+                                $this->container->getManager()->remove($message);
                             }
 
-                            $this->em->remove($declareToRemove);
+                            $this->container->getManager()->remove($declareToRemove);
 
                         } else {
 
@@ -349,48 +339,48 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
 
                 if($child->getLatestBreedGrades()) {
-                    $this->em->remove($child->getLatestBreedGrades());
+                    $this->container->getManager()->remove($child->getLatestBreedGrades());
                 }
 
 
-                $breedValueRepository = $this->em->getRepository(BreedValue::class);
+                $breedValueRepository = $this->container->getManager()->getRepository(BreedValue::class);
                 $breedValues = $breedValueRepository->findBy(['animal'=>$child]);
                 foreach ($breedValues as $breedValue) {
-                    $this->em->remove($breedValue);
+                    $this->container->getManager()->remove($breedValue);
                 }
 
 
                 //Flush the removes separately
-                $this->em->flush();
+                $this->container->getManager()->flush();
 
                 //Restore tag if it does not exist
-                $tagToRestore = $this->tagRepository->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
+                $tagToRestore = $this->container->getTagRepository()->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
 
                 if ($tagToRestore) {
                     $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
-                    $this->em->persist($tagToRestore);
-                    $this->em->flush();
+                    $this->container->getManager()->persist($tagToRestore);
+                    $this->container->getManager()->flush();
                 } else {
-                    $tagToRestore = $this->tagRepository->restoreTagWithPrimaryKeyCheck($this->em, $location, $client, $child->getUlnCountryCode(), $child->getUlnNumber());
+                    $tagToRestore = $this->container->getTagRepository()->restoreTagWithPrimaryKeyCheck($this->container->getManager(), $location, $client, $child->getUlnCountryCode(), $child->getUlnNumber());
                     if($tagToRestore instanceof JsonResponse) { return $tagToRestore; }
                 }
 
                 //Remove child from location
                 if ($location->getAnimals()->contains($child)) {
                     $location->getAnimals()->removeElement($child);
-                    $this->em->persist($location);
+                    $this->container->getManager()->persist($location);
                 }
 
                 $litter->removeChild($child);
-                $this->em->persist($litter);
-                $this->em->flush();
+                $this->container->getManager()->persist($litter);
+                $this->container->getManager()->flush();
 
                 $child->setParentFather(null);
                 $child->setParentMother(null);
                 $child->setSurrogate(null);
 
-                $this->em->persist($child);
-                $this->em->flush();
+                $this->container->getManager()->persist($child);
+                $this->container->getManager()->flush();
 
                 $declareBirths = $litter->getDeclareBirths();
 
@@ -405,27 +395,27 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                                 if($declareBirthResponse->getAnimal() != null) {
                                     if ($declareBirthResponse->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
                                         $declareBirthResponse->setAnimal(null);
-                                        $this->em->persist($declareBirthResponse);
+                                        $this->container->getManager()->persist($declareBirthResponse);
 
                                     }
                                 }
                             }
                             //Remove child animal
                             $declareBirth->setAnimal(null);
-                            $this->em->persist($declareBirth);
+                            $this->container->getManager()->persist($declareBirth);
                         }
                     }
                 }
 
                 //Remove child animal
-                $this->em->remove($child);
+                $this->container->getManager()->remove($child);
             }
 
-            $this->em->flush();
+            $this->container->getManager()->flush();
 
         } catch (ForeignKeyConstraintViolationException $e) {
             $exceptionMessage = $e->getMessage();
-            $this->logger->critical($exceptionMessage);
+            $this->container->getLogger()->critical($exceptionMessage);
 
             $errorMessage = "Voor de kinderen in deze worp zijn nieuwe gegevens geregistreerd, waardoor het niet mogelijk is om deze dieren via een geboortemeldingintrekking te verwijderen.";
 
@@ -450,7 +440,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         //Re-retrieve litter, check count
         /** @var Litter $litter */
-        $litter = $this->litterRepository->findOneBy(array ('id'=> $litterId));
+        $litter = $this->container->getLitterRepository()->findOneBy(array ('id'=> $litterId));
 
         $succeeded = true;
 
@@ -479,8 +469,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             $litter->setRevokeDate(new \DateTime());
             $litter->setRevokedBy($loggedInUser);
 
-            $this->em->persist($litter);
-            $this->em->flush();
+            $this->container->getManager()->persist($litter);
+            $this->container->getManager()->flush();
 
             $revokeMessages = [];
             $declareBirthCount = 0;
@@ -489,7 +479,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             if ($litter->getDeclareBirths()->count() > 0) {
                 foreach ($litter->getDeclareBirths() as $declareBirth) {
                     $declareBirthCount++;
-                    $declareBirthResponse = $this->entityGetter
+                    $declareBirthResponse = $this->container->getEntityGetter()
                         ->getResponseDeclarationByMessageId($declareBirth->getMessageId());
 
                     if ($declareBirthResponse) {
@@ -563,7 +553,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         if($uln) {
             $motherUlnCountryCode = mb_substr($uln, 0, 2);
             $motherUlnNumber = substr($uln, 2);
-            $mother = $this->animalRepository->findOneBy(array('ulnCountryCode'=>$motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
+            $mother = $this->container->getAnimalRepository()->findOneBy(array('ulnCountryCode'=>$motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
         }
 
         if(!$mother) {
@@ -579,8 +569,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         }
 
         $result = [];
-        $candidateFathers = $this->declareBirthRepository->getCandidateFathers($mother, $dateOfBirth);
-        $otherCandidateFathers = $this->animalRepository->getLiveStock($location, true, false, false, Ram::class);
+        $candidateFathers = $this->container->getDeclareBirthRepository()->getCandidateFathers($mother, $dateOfBirth);
+        $otherCandidateFathers = $this->container->getAnimalRepository()->getLiveStock($location, true, false, false, Ram::class);
         $filteredOtherCandidateFathers = [];
         $suggestedCandidateFathers = [];
         $suggestedCandidateFatherIds = [];
@@ -629,7 +619,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $result['suggested_candidate_fathers'] = $suggestedCandidateFathers;
         $result['other_candidate_fathers'] = $filteredOtherCandidateFathers;
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+        return ResultUtil::successResult($result);
     }
 
 
@@ -651,7 +641,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         if($uln) {
             $motherUlnCountryCode = mb_substr($uln, 0, 2);
             $motherUlnNumber = substr($uln, 2);
-            $mother = $this->animalRepository->findOneBy(array ('ulnCountryCode' => $motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
+            $mother = $this->container->getAnimalRepository()->findOneBy(array ('ulnCountryCode' => $motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
         }
 
         if(!$mother) {
@@ -677,7 +667,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $otherCandidatesResult = [];
         $result = [];
 
-        $surrogateMotherCandidates = $this->declareBirthRepository->getCandidateSurrogateMothers($location , $mother);
+        $surrogateMotherCandidates = $this->container->getDeclareBirthRepository()->getCandidateSurrogateMothers($location , $mother);
 
         $offsetDays = 7;
         $minimumDaysIntervalFromNowAndBirth = 167;
@@ -762,7 +752,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $result['suggested_candidate_surrogates'] = $suggestedCandidatesResult;
         $result['other_candidate_surrogates'] = $otherCandidatesResult;
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+        return ResultUtil::successResult($result);
     }
 
 
@@ -781,7 +771,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $otherCandidatesResult = [];
         $result = [];
 
-        $motherCandidates = $this->animalRepository->getLiveStock($location , true, false, false, Ewe::class);
+        $motherCandidates = $this->container->getAnimalRepository()->getLiveStock($location , true, false, false, Ewe::class);
 
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;
@@ -817,7 +807,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             $addToOtherCandidates = true;
             $checkAnimalForMatings = true;
 
-            $children = $this->declareBirthRepository->getChildrenOfEwe($animal);
+            $children = $this->container->getDeclareBirthRepository()->getChildrenOfEwe($animal);
 
             //Check if Mother has children that are born in the last 5,5 months if so, it is not a true candidate
             /** @var Animal $child */
@@ -921,7 +911,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+        return ResultUtil::successResult($result);
     }
 
 
@@ -930,7 +920,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
      * @return JsonResponse
      */
     public function getBirthErrors(Request $request) {
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => []), 200);
+        return ResultUtil::successResult([]);
     }
 
 
@@ -944,12 +934,12 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $taskType = 'DECLARE_BIRTH';
         $jsonMessage = $request->getContent();
 
-        $declareBirthResponse = WorkerTaskUtil::deserializeMessageToDeclareBirthResponse($request, $this->serializer);
+        $declareBirthResponse = WorkerTaskUtil::deserializeMessageToDeclareBirthResponse($request, $this->container->getIRSerializer());
 
         $message = 'Message is not a DeclareBirthResponse';
         $statusCode = 428;
         if($declareBirthResponse instanceof DeclareBirthResponse) {
-            $sendToQresult = $this->internalQueueService
+            $sendToQresult = $this->container->getInternalQueueService()
                 ->sendDeclareResponse($jsonMessage, $taskType, $messageId);
 
             $statusCode = $sendToQresult['statusCode'];

@@ -22,26 +22,11 @@ use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CreateAdminValidator;
 use AppBundle\Validation\EditAdminValidator;
 use AppBundle\Validation\EmployeeValidator;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class AdminService extends ControllerServiceBase implements AdminAPIControllerInterface
 {
     const timeLimitInMinutes = 3;
-
-    /** @var AuthService */
-    private $authService;
-    /** @var EmailService */
-    private $emailService;
-
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService,
-                                UserService $userService, AuthService $authService, EmailService $emailService)
-    {
-        parent::__construct($em, $serializer, $cacheService, $userService);
-
-        $this->authService = $authService;
-        $this->emailService = $emailService;
-    }
 
 
     /**
@@ -54,7 +39,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $admins = $this->employeeRepository->findBy(array('isActive' => true));
+        $admins = $this->container->getEmployeeRepository()->findBy(array('isActive' => true));
         $result = AdminOverviewOutput::createAdminsOverview($admins);
 
         return ResultUtil::successResult($result);
@@ -74,7 +59,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
 
         $content = RequestUtil::getContentAsArray($request);
 
-        $log = ActionLogWriter::createAdmin($this->em, $admin, $content);
+        $log = ActionLogWriter::createAdmin($this->getManager(), $admin, $content);
 
         // Validate content
         $firstName = $content->get('first_name');
@@ -88,7 +73,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
                 "message" => "REQUIRED VALUES MISSING"), 400);
         }
 
-        $inputValidator = new CreateAdminValidator($this->em, $content);
+        $inputValidator = new CreateAdminValidator($this->getManager(), $content);
         if (!$inputValidator->getIsValid()) {
             return $inputValidator->createJsonResponse();
         }
@@ -97,21 +82,21 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         $newAdmin = new Employee($accessLevel, $firstName, $lastName, $emailAddress);
 
         // Send Email with passwords to Owner & Users
-        $password = $this->authService->persistNewPassword($newAdmin);
-        $this->emailService->emailNewPasswordToPerson($newAdmin, $password, true, true);
+        $password = $this->container->persistNewPassword($newAdmin);
+        $this->container->getEmailService()->emailNewPasswordToPerson($newAdmin, $password, true, true);
 
-        $this->em->persist($newAdmin);
-        $this->em->flush();
+        $this->getManager()->persist($newAdmin);
+        $this->getManager()->flush();
 
         /** @var Employee $admin */
-        $admin = $this->employeeRepository->findOneBy(array(
+        $admin = $this->container->getEmployeeRepository()->findOneBy(array(
             'emailAddress' => $newAdmin->getEmailAddress(),
             'isActive' => $newAdmin->getIsActive()
         ));
 
         $result = AdminOverviewOutput::createAdminOverview($admin);
 
-        $log = ActionLogWriter::completeActionLog($this->em, $log);
+        $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
         return ResultUtil::successResult($result);
     }
@@ -129,7 +114,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         }
 
         $content = RequestUtil::getContentAsArray($request);
-        $log = ActionLogWriter::editAdmin($this->em, $admin, $content);
+        $log = ActionLogWriter::editAdmin($this->getManager(), $admin, $content);
 
         // Validate content
         $personId = $content->get('person_id');
@@ -138,30 +123,30 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         $emailAddress = $content->get('email_address');
         $accessLevel = $content->get('access_level');
 
-        $inputValidator = new EditAdminValidator($this->em, $content);
+        $inputValidator = new EditAdminValidator($this->getManager(), $content);
         if (!$inputValidator->getIsValid()) {
             return $inputValidator->createJsonResponse();
         }
 
         /** @var Employee $admin */
-        $admin = $this->employeeRepository->findOneByPersonId($personId);
+        $admin = $this->container->getEmployeeRepository()->findOneByPersonId($personId);
 
         $admin->setFirstName($firstName);
         $admin->setLastName($lastName);
         $admin->setEmailAddress($emailAddress);
         $admin->setAccessLevel($accessLevel);
 
-        $this->em->persist($admin);
-        $this->em->flush();
+        $this->getManager()->persist($admin);
+        $this->getManager()->flush();
 
         /** @var Employee $newAdmin */
-        $newAdmin = $this->employeeRepository->findOneBy(array(
+        $newAdmin = $this->container->getEmployeeRepository()->findOneBy(array(
             'emailAddress' => $admin->getEmailAddress(),
             'isActive' => $admin->getIsActive()
         ));
         $result = AdminOverviewOutput::createAdminOverview($newAdmin);
 
-        $log = ActionLogWriter::completeActionLog($this->em, $log);
+        $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
         return ResultUtil::successResult($result);
     }
@@ -182,8 +167,8 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
 
         $personId = $content->get('person_id');
         /** @var Employee $adminToDeactivate */
-        $adminToDeactivate = $this->employeeRepository->findOneBy(['personId' => $personId]);
-        $log = ActionLogWriter::deactivateAdmin($this->em, $admin, $adminToDeactivate);
+        $adminToDeactivate = $this->container->getEmployeeRepository()->findOneBy(['personId' => $personId]);
+        $log = ActionLogWriter::deactivateAdmin($this->getManager(), $admin, $adminToDeactivate);
 
         //Validate input
         if($adminToDeactivate == null) {
@@ -192,8 +177,8 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
 
         //deactivate
         $adminToDeactivate->setIsActive(false);
-        $this->em->persist($adminToDeactivate);
-        $this->em->flush();
+        $this->getManager()->persist($adminToDeactivate);
+        $this->getManager()->flush();
 
         return ResultUtil::successResult('ok');
     }
@@ -215,11 +200,11 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         $personId = $content->get(JsonInputConstant::PERSON_ID);
 
         /** @var Client $client */
-        $client = $this->clientRepository->findOneBy(['personId' => $personId]);
+        $client = $this->container->getClientRepository()->findOneBy(['personId' => $personId]);
 
-        $existingGhostToken = $this->tokenRepository->findOneBy(array('owner' => $client, 'admin' => $employee));
+        $existingGhostToken = $this->container->getTokenRepository()->findOneBy(array('owner' => $client, 'admin' => $employee));
         if($existingGhostToken != null) {
-            $this->em->remove($existingGhostToken);
+            $this->getManager()->remove($existingGhostToken);
         }
 
         $ghostToken = new Token(TokenType::GHOST);
@@ -228,8 +213,8 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         $employee->addToken($ghostToken);
         $client->addToken($ghostToken);
 
-        $this->em->persist($ghostToken);
-        $this->em->flush();
+        $this->getManager()->persist($ghostToken);
+        $this->getManager()->flush();
 
         $result = array(Constant::GHOST_TOKEN_NAMESPACE => $ghostToken->getCode());
 
@@ -252,7 +237,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         */
 
         //User must have a valid accessToken
-        $tokenValidation = $this->authService->isAccessTokenValid($request);
+        $tokenValidation = $this->container->isAccessTokenValid($request);
         if($tokenValidation->getStatusCode() != 200) {
             return $tokenValidation;
         }
@@ -271,7 +256,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
             $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
 
             if ($ghostTokenCode != null){
-                $ghostToken = $this->tokenRepository->findOneBy(array('code' => $ghostTokenCode));
+                $ghostToken = $this->container->getTokenRepository()->findOneBy(array('code' => $ghostTokenCode));
                 if ($ghostToken != null) {
 
                     //First verify if the employee verifying this ghost token is the same employee as the one that created the ghost token
@@ -291,17 +276,17 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
                             $isGhostTokenExpired = $timeExpiredInMinutes > self::timeLimitInMinutes;
 
                             if ($isGhostTokenExpired){
-                                $this->em->remove($ghostToken);
+                                $this->getManager()->remove($ghostToken);
                                 $message = 'GHOST TOKEN EXPIRED AND WAS DELETED. VERIFY GHOST TOKENS WITHIN 3 MINUTES';
                                 $code = 428;
 
                             } else { //not expired
                                 $ghostToken->setIsVerified(true);
-                                $this->em->persist($ghostToken);
+                                $this->getManager()->persist($ghostToken);
                                 $message = 'GHOST TOKEN IS VERIFIED';
                                 $code = 200;
                             }
-                            $this->em->flush();
+                            $this->getManager()->flush();
                         }
                     }
 

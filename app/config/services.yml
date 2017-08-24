@@ -370,114 +370,17 @@ services:
             - '@doctrine.orm.entity_manager'
             - '%kernel.cache_dir%'
 
-    app.controller.base:
-        abstract: true
-        arguments:
-        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.cache'
-          - '@app.user'
-
-    app.controller.declare_base:
-        abstract: true
-        arguments:
-        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.cache'
-          - '@app.user'
-          - '@app.aws.queueservice.external'
-          - '@app.aws.queueservice.internal'
-          - '@app.doctrine.entitygetter'
-          - '@app.request.message_builder'
-
-    app.security.auth:
-        class: AppBundle\Service\AuthService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.cache'
-          - '@app.user'
-          - '@security.password_encoder'
-          - '@app.email'
-
-    app.security.admin_auth:
-        class: AppBundle\Service\AdminAuthService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.cache'
-          - '@app.user'
-          - '@security.password_encoder'
-          - '@app.security.auth'
-          - '@app.email'
-
     app.email:
         class: AppBundle\Service\EmailService
         arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.cache'
-          - '@app.user'
           - '@mailer'
           - '%mailer_source_address%'
           - '@templating'
           - '%kernel.environment%'
 
-    app.admin:
-        class: AppBundle\Service\AdminService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.cache'
-          - '@app.user'
-          - '@app.security.auth'
-          - '@app.email'
-
-    app.admin.profile:
-        class: AppBundle\Service\AdminProfileService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.cache'
-          - '@app.user'
-          - '@security.password_encoder'
-
-    app.animal:
-        parent: app.controller.declare_base
-        class: AppBundle\Service\AnimalService
-
-    app.arrival:
-        class: AppBundle\Service\ArrivalService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.cache'
-          - '@app.user'
-          - '@app.aws.queueservice.external'
-          - '@app.aws.queueservice.internal'
-          - '@app.doctrine.entitygetter'
-          - '@app.request.message_builder'
-          - '@app.health.updater'
-          - '@app.animallocation.history'
-          - '%kernel.environment%'
-
-    app.birth:
-        class: AppBundle\Service\BirthService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.cache'
-          - '@app.user'
-          - '@app.aws.queueservice.external'
-          - '@app.aws.queueservice.internal'
-          - '@app.doctrine.entitygetter'
-          - '@app.request.message_builder'
-          - '@logger'
 
     app.container.service.non_controller:
-        class: AppBundle\Service\NonControllerServiceContainer
+        class: AppBundle\Service\Container\NonControllerServiceContainer
         arguments:
           - '@app.animallocation.history'
           - '@app.aws.queueservice.external'
@@ -505,4 +408,40 @@ services:
         class: AppBundle\Service\Container\RepositoryContainerBase
         arguments:
           - '@doctrine.orm.entity_manager'
+
+
+    app.controller.base:
+        abstract: true
+        arguments:
+          - '@app.container.service.non_controller'
+
+    app.security.auth:
+        parent: app.controller.base
+        class: AppBundle\Service\AuthService
+
+    app.security.admin_auth:
+        parent: app.controller.base
+        class: AppBundle\Service\AdminAuthService
+
+    app.admin:
+        parent: app.controller.base
+        class: AppBundle\Service\AdminService
+
+    app.admin.profile:
+        parent: app.controller.base
+        class: AppBundle\Service\AdminProfileService
+
+    app.animal:
+        parent: app.controller.base
+        class: AppBundle\Service\AnimalService
+
+    app.arrival:
+        parent: app.controller.base
+        class: AppBundle\Service\ArrivalService
+
+    app.birth:
+        parent: app.controller.base
+        class: AppBundle\Service\BirthService
+
+
 
