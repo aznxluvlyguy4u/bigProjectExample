@@ -18,7 +18,7 @@ use AppBundle\Validation\EditAdminProfileValidator;
 use AppBundle\Validation\PasswordValidator;
 use Symfony\Component\HttpFoundation\Request;
 
-class AdminProfileService extends ControllerServiceBase implements AdminProfileAPIControllerInterface
+class AdminProfileService extends AuthServiceBase implements AdminProfileAPIControllerInterface
 {
     /**
      * @param Request $request
@@ -50,7 +50,7 @@ class AdminProfileService extends ControllerServiceBase implements AdminProfileA
         $content = RequestUtil::getContentAsArray($request);
 
         //Validate input
-        $inputValidator = new EditAdminProfileValidator($this->container->getManager(), $content, $admin);
+        $inputValidator = new EditAdminProfileValidator($this->getManager(), $content, $admin);
         if (!$inputValidator->getIsValid()) {
             return $inputValidator->createJsonResponse();
         }
@@ -65,14 +65,14 @@ class AdminProfileService extends ControllerServiceBase implements AdminProfileA
             if(!$passwordValidator->getIsPasswordValid()) {
                 return $passwordValidator->createJsonErrorResponse();
             }
-            $encodedNewPassword = $this->container->getEncoder()->encodePassword($admin, $newPassword);
+            $encodedNewPassword = $this->encoder->encodePassword($admin, $newPassword);
             $content->set(JsonInputConstant::NEW_PASSWORD, $encodedNewPassword);
         }
 
         //Persist updated changes and return the updated values
         $client = AdminProfile::update($admin, $content);
-        $this->container->getManager()->persist($admin);
-        $this->container->getManager()->flush();
+        $this->getManager()->persist($admin);
+        $this->getManager()->flush();
 
         $outputArray = AdminOverviewOutput::createAdminOverview($admin);
         return ResultUtil::successResult($outputArray);

@@ -36,7 +36,6 @@ class ServiceId
     const REDIS_CLIENT = 'snc_redis.sncredis';
     const REQUEST_MESSAGE_BUILDER = 'app.request.message_builder';
     const SERIALIZER = 'app.serializer.ir';
-    const NON_CONTROLLER_SERVICE_CONTAINER = 'app.container.service.non_controller';
     const STORAGE_SERVICE = 'app.aws.storageservice';
     const USER_SERVICE = 'app.user';
 }

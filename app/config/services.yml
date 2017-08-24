@@ -378,73 +378,79 @@ services:
           - '@templating'
           - '%kernel.environment%'
 
-
-    app.container.service.non_controller:
-        class: AppBundle\Service\Container\NonControllerServiceContainer
-        arguments:
-          - '@app.animallocation.history'
-          - '@app.aws.queueservice.external'
-          - '@app.aws.queueservice.internal'
-          - '@app.aws.storageservice'
-          - '@app.cache'
-          - '@app.writer.csv_from_sql_results'
-          - '@app.email'
-          - '@templating'
-          - '@app.doctrine.entitygetter'
-          - '@doctrine.orm.entity_manager'
-          - '@knp_snappy.pdf'
-          - '@app.health.updater'
-          - '@app.serializer.ir'
-          - '@logger'
-          - '@app.request.message_builder'
-          - '@security.password_encoder'
-          - '@app.user'
-          - '%kernel.cache_dir%'
-          - '%kernel.environment%'
-          - '%kernel.root_dir%'
-
-
-    app.container.repository:
-        class: AppBundle\Service\Container\RepositoryContainerBase
-        arguments:
-          - '@doctrine.orm.entity_manager'
-
-
-    app.controller.base:
+    app.abstract_base.controller:
         abstract: true
         arguments:
-          - '@app.container.service.non_controller'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+
+    app.abstract_base.auth:
+        abstract: true
+        arguments:
+          - '@app.cache'
+          - '@app.email'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@security.password_encoder'
 
     app.security.auth:
-        parent: app.controller.base
+        parent: app.abstract_base.auth
         class: AppBundle\Service\AuthService
 
     app.security.admin_auth:
-        parent: app.controller.base
+        parent: app.abstract_base.auth
         class: AppBundle\Service\AdminAuthService
 
     app.admin:
-        parent: app.controller.base
+        parent: app.abstract_base.auth
         class: AppBundle\Service\AdminService
 
     app.admin.profile:
-        parent: app.controller.base
+        parent: app.abstract_base.auth
         class: AppBundle\Service\AdminProfileService
 
+    app.abstract_base.declare:
+        abstract: true
+        arguments:
+          - '@app.aws.queueservice.external'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.request.message_builder'
+          - '@app.user'
+
     app.animal:
-        parent: app.controller.base
+        parent: app.abstract_base.declare
         class: AppBundle\Service\AnimalService
 
     app.arrival:
-        parent: app.controller.base
         class: AppBundle\Service\ArrivalService
+        arguments:
+          - '@app.aws.queueservice.external'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.request.message_builder'
+          - '@app.user'
+          - '@app.health.updater'
+          - '@app.animallocation.history'
+          - '%kernel.environment%'
 
     app.birth:
-        parent: app.controller.base
         class: AppBundle\Service\BirthService
+        arguments:
+          - '@app.aws.queueservice.external'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.request.message_builder'
+          - '@app.user'
+          - '@logger'
+          - '@app.aws.queueservice.internal'
+          - '@app.doctrine.entitygetter'
 
     app.client:
+        parent: app.abstract_base.controller
         class: AppBundle\Service\ClientService
-        arguments:
-          - "@=service('doctrine').getRepository('AppBundle:Client')"
 

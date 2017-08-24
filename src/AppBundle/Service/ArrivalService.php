@@ -10,7 +10,11 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\ArrivalAPIControllerInterface;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareArrivalResponse;
 use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareImportResponse;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Message;
 use AppBundle\Enumerator\MessageType;
@@ -29,6 +33,29 @@ use Symfony\Component\HttpFoundation\Request;
 
 class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIControllerInterface
 {
+    /** @var HealthService */
+    private $healthService;
+    /** @var AnimalLocationHistoryService */
+    private $animalLocationHistoryService;
+    /** @var string */
+    private $environment;
+
+    public function __construct(AwsExternalQueueService $externalQueueService,
+                                CacheService $cacheService,
+                                EntityManagerInterface $manager,
+                                IRSerializer $serializer,
+                                RequestMessageBuilder $requestMessageBuilder,
+                                UserService $userService, HealthService $healthService,
+                                AnimalLocationHistoryService $animalLocationHistoryService,
+                                $environment)
+    {
+        parent::__construct($externalQueueService, $cacheService, $manager, $serializer, $requestMessageBuilder, $userService);
+        $this->healthService = $healthService;
+        $this->animalLocationHistoryService = $animalLocationHistoryService;
+        $this->environment = $environment;
+    }
+
+
     /**
      * @param Request $request
      * @param $Id
@@ -37,7 +64,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     public function getArrivalById(Request $request, $Id)
     {
         $location = $this->getSelectedLocation($request);
-        $arrival = $this->container->getDeclareArrivalRepository()->getArrivalByRequestId($location, $Id);
+        $arrival = $this->getManager()->getRepository(DeclareArrival::class)->getArrivalByRequestId($location, $Id);
         return new JsonResponse($arrival, 200);
     }
 
@@ -52,24 +79,24 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
 
         if(!$stateExists) {
-            $declareArrivals = $this->container->getDeclareArrivalRepository()->getArrivals($location);
+            $declareArrivals = $this->getManager()->getRepository(DeclareArrival::class)->getArrivals($location);
 
         } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
             $declareArrivals = new ArrayCollection();
-            foreach($this->container->getDeclareArrivalRepository()->getArrivals($location, RequestStateType::OPEN) as $arrival) {
+            foreach($this->getManager()->getRepository(DeclareArrival::class)->getArrivals($location, RequestStateType::OPEN) as $arrival) {
                 $declareArrivals->add($arrival);
             }
-            foreach($this->container->getDeclareArrivalRepository()->getArrivals($location, RequestStateType::REVOKING) as $arrival) {
+            foreach($this->getManager()->getRepository(DeclareArrival::class)->getArrivals($location, RequestStateType::REVOKING) as $arrival) {
                 $declareArrivals->add($arrival);
             }
-            foreach($this->container->getDeclareArrivalRepository()->getArrivals($location, RequestStateType::FINISHED) as $arrival) {
+            foreach($this->getManager()->getRepository(DeclareArrival::class)->getArrivals($location, RequestStateType::FINISHED) as $arrival) {
                 $declareArrivals->add($arrival);
             }
 
         } else { //A state parameter was given, use custom filter to find subset
             $state = $request->query->get(Constant::STATE_NAMESPACE);
-            $declareArrivals = $this->container->getDeclareArrivalRepository()->getArrivals($location, $state);
+            $declareArrivals = $this->getManager()->getRepository(DeclareArrival::class)->getArrivals($location, $state);
         }
 
         return ResultUtil::successResult($declareArrivals);
@@ -89,7 +116,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
 
-        $log = ActionLogWriter::declareArrivalOrImportPost($this->container->getManager(), $client, $loggedInUser, $location, $content);
+        $log = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
         $content = $this->capitalizePedigreeNumberInPostArray($content);
 
@@ -100,8 +127,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         }
 
         //LocationHealth null value fixes
-        $this->container->getHealthService()->fixLocationHealthMessagesWithNullValues($location);
-        $this->container->getHealthService()->fixArrivalsAndImportsWithoutLocationHealthMessage($location);
+        $this->healthService->fixLocationHealthMessagesWithNullValues($location);
+        $this->healthService->fixArrivalsAndImportsWithoutLocationHealthMessage($location);
 
         $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
 
@@ -109,7 +136,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         if($isImportAnimal) { //DeclareImport
 
             //Validate if ulnNumber matches that of an unassigned Tag in the tag collection of the client
-            $tagValidator = new TagValidator($this->container->getManager(), $client, $location, $content);
+            $tagValidator = new TagValidator($this->getManager(), $client, $location, $content);
             if($tagValidator->getIsTagCollectionEmpty() || !$tagValidator->getIsTagValid() || $tagValidator->getIsInputEmpty()) {
                 return $tagValidator->createImportJsonErrorResponse();
             }
@@ -122,7 +149,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
 
             /** @var Location $departLocation */
-            $departLocation = $this->container->getLocationRepository()->findOneBy(['ubn' => $messageObject->getUbnPreviousOwner(), 'isActive' => true]);
+            $departLocation = $this->getManager()->getRepository(Location::class)->findOneBy(['ubn' => $messageObject->getUbnPreviousOwner(), 'isActive' => true]);
 
             if($departLocation) {
                 $departOwner = $departLocation->getCompany()->getOwner();
@@ -141,7 +168,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
                 $depart->setUbnNewOwner($location->getUbn());
                 $depart->setRecoveryIndicator(RecoveryIndicatorType::N);
 
-                $departMessage = new DepartMessageBuilder($this->container->getManager() , $this->container->getEnvironment());
+                $departMessage = new DepartMessageBuilder($this->getManager() , $this->environment);
                 $departMessageObject = $departMessage->buildMessage($depart, $departOwner, $loggedInUser, $departLocation);
                 $this->persist($departMessageObject);
 
@@ -169,12 +196,12 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             $this->persist($message);
         }
 
-        $this->container->getManager()->flush();
+        $this->getManager()->flush();
 
         //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
-        $this->container->getHealthService()->updateLocationHealth($messageObject);
+        $this->healthService->updateLocationHealth($messageObject);
 
-        ActionLogWriter::completeActionLog($this->container->getManager(), $log);
+        ActionLogWriter::completeActionLog($this->getManager(), $log);
 
         $this->clearLivestockCacheForLocation($location);
 
@@ -199,10 +226,10 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $content->set(Constant::LOCATION_NAMESPACE, $location);
 
         //verify requestId for arrivals
-        $messageObject = $this->container->getDeclareArrivalRepository()->getArrivalByRequestId($location, $requestId);
+        $messageObject = $this->getManager()->getRepository(DeclareArrival::class)->getArrivalByRequestId($location, $requestId);
 
         if($messageObject == null) { //verify requestId for imports
-            $messageObject = $this->container->getDeclareImportRepository()->getImportByRequestId($location, $requestId);
+            $messageObject = $this->getManager()->getRepository(DeclareImport::class)->getImportByRequestId($location, $requestId);
         }
 
         if($messageObject == null) {
@@ -233,7 +260,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         //Persist the update
         $this->persist($messageObject);
-        $this->container->getManager()->flush();
+        $this->getManager()->flush();
 
 
         /* LocationHealth status updates are not necessary */
@@ -248,7 +275,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
          */
 
         //log Animal location history
-        $this->container->getAnimalLocationHistoryService()->logAnimalResidenceInEdit($messageObject);
+        $this->animalLocationHistoryService->logAnimalResidenceInEdit($messageObject);
 
         $this->clearLivestockCacheForLocation($location);
 
@@ -263,8 +290,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     public function getArrivalErrors(Request $request)
     {
         $location = $this->getSelectedLocation($request);
-        $declareArrivals = $this->container->getDeclareArrivalResponseRepository()->getArrivalsWithLastErrorResponses($location);
-        $declareImports = $this->container->getdeclareImportResponseRepository()->getImportsWithLastErrorResponses($location);
+        $declareArrivals = $this->getManager()->getRepository(DeclareArrivalResponse::class)->getArrivalsWithLastErrorResponses($location);
+        $declareImports = $this->getManager()->getRepository(DeclareImportResponse::class)->getImportsWithLastErrorResponses($location);
 
         return ResultUtil::successResult(['arrivals' => $declareArrivals, 'imports' => $declareImports]);
     }
@@ -277,8 +304,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     public function getArrivalHistory(Request $request)
     {
         $location = $this->getSelectedLocation($request);
-        $declareArrivals = $this->container->getDeclareArrivalResponseRepository()->getArrivalsWithLastHistoryResponses($location);
-        $declareImports = $this->container->getDeclareImportResponseRepository()->getImportsWithLastHistoryResponses($location);
+        $declareArrivals = $this->getManager()->getRepository(DeclareArrivalResponse::class)->getArrivalsWithLastHistoryResponses($location);
+        $declareImports = $this->getManager()->getRepository(DeclareImportResponse::class)->getImportsWithLastHistoryResponses($location);
 
         return ResultUtil::successResult(['arrivals' => $declareArrivals, 'imports' => $declareImports]);
     }
@@ -348,7 +375,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
         $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
-        $isValid = Validator::verifyPedigreeCode($this->container->getManager(), $pedigreeCountryCode, $pedigreeNumber, true);
+        $isValid = Validator::verifyPedigreeCode($this->getManager(), $pedigreeCountryCode, $pedigreeNumber, true);
 
         if($pedigreeCountryCode != null && $pedigreeNumber != null) {
             $pedigree = $pedigreeCountryCode.$pedigreeNumber;

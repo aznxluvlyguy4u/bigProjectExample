@@ -14,9 +14,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
-class AdminAuthService extends ControllerServiceBase
+class AdminAuthService extends AuthServiceBase
 {
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -32,12 +31,12 @@ class AdminAuthService extends ControllerServiceBase
             $emailAddress = strtolower($emailAddress);
 
             /** @var Employee $admin */
-            $admin = $this->container->getEmployeeRepository()->findActiveOneByEmailAddress($emailAddress);
+            $admin = $this->getManager()->getRepository(Employee::class)->findActiveOneByEmailAddress($emailAddress);
             if($admin == null) {
                 return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
             }
 
-            if($this->container->getEncoder()->isPasswordValid($admin, $password)) {
+            if($this->encoder->isPasswordValid($admin, $password)) {
                 $result = [
                     "access_token"=>$admin->getAccessToken(),
                     "user" =>[
@@ -70,7 +69,7 @@ class AdminAuthService extends ControllerServiceBase
         $content = RequestUtil::getContentAsArray($request);
         $emailAddress = strtolower($content->get('email_address'));
 
-        $admin = $this->container->getEmployeeRepository()->findActiveOneByEmailAddress($emailAddress);
+        $admin = $this->getManager()->getRepository(Employee::class)->findActiveOneByEmailAddress($emailAddress);
         $log = ActionLogWriter::adminPasswordReset($this->getManager(), $admin, $emailAddress);
 
         //Verify if email is correct
@@ -80,8 +79,8 @@ class AdminAuthService extends ControllerServiceBase
 
         //Create a new password
         $passwordLength = 9;
-        $newPassword = $this->container->persistNewPassword($admin, $passwordLength);
-        $emailSuccessfullySent = $this->container->getEmailService()->emailNewPasswordToPerson($admin, $newPassword, true);
+        $newPassword = AuthService::persistNewPassword($this->encoder, $this->getManager(), $admin, $passwordLength);
+        $emailSuccessfullySent = $this->emailService->emailNewPasswordToPerson($admin, $newPassword, true);
 
         if ($emailSuccessfullySent) {
             $log = ActionLogWriter::completeActionLog($this->getManager(), $log);

@@ -28,7 +28,9 @@ use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
-use AppBundle\Service\Container\NonControllerServiceContainer;
+use AppBundle\Entity\Token;
+use AppBundle\Enumerator\TokenType;
+use AppBundle\Util\RequestUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -39,12 +41,20 @@ use Symfony\Component\HttpFoundation\Request;
  */
 abstract class ControllerServiceBase
 {
-    /** @var NonControllerServiceContainer */
-    protected $container;
+    /** @var EntityManagerInterface */
+    private $manager;
+    /** @var CacheService */
+    private $cacheService;
+    /** @var UserService */
+    private $userService;
 
-    public function __construct(NonControllerServiceContainer $container)
+    public function __construct(CacheService $cacheService,
+                                EntityManagerInterface $manager,
+                                UserService $userService)
     {
-        $this->container = $container;
+        $this->cacheService = $cacheService;
+        $this->manager = $manager;
+        $this->userService = $userService;
     }
 
 
@@ -53,7 +63,7 @@ abstract class ControllerServiceBase
      */
     public function getManager()
     {
-        return $this->container->getManager();
+        return $this->manager;
     }
 
 
@@ -62,7 +72,7 @@ abstract class ControllerServiceBase
      */
     public function getConnection()
     {
-        return $this->container->getConnection();
+        return $this->manager->getConnection();
     }
 
 
@@ -73,7 +83,16 @@ abstract class ControllerServiceBase
      * @param Animal | Ewe | Ram | Neuter $animal
      */
     protected function clearLivestockCacheForLocation(Location $location = null, $animal = null) {
-        $this->container->getCacheService()->clearLivestockCacheForLocation($location, $animal);
+        $this->cacheService->clearLivestockCacheForLocation($location, $animal);
+    }
+
+
+    /**
+     * @return CacheService
+     */
+    public function getCacheService()
+    {
+        return $this->cacheService;
     }
 
 
@@ -109,6 +128,84 @@ abstract class ControllerServiceBase
 
 
     /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function isAccessTokenValid(Request $request)
+    {
+        $token = null;
+        $response = null;
+        $content = RequestUtil::getContentAsArray($request);
+
+        //Get token header to read token value
+        if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
+
+            $environment = $content->get('env');
+            $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
+            $token = $this->getManager()->getRepository(Token::class)
+                ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
+
+            if ($token != null) {
+                if ($environment == 'USER') {
+                    if ($token->getOwner() instanceof Client) {
+                        $response = array(
+                            'token_status' => 'valid',
+                            'token' => $tokenCode
+                        );
+                        return new JsonResponse($response, 200);
+                    } elseif ($token->getOwner() instanceof Employee ) {
+                        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
+                        $ghostToken = $this->getManager()->getRepository(Token::class)
+                            ->findOneBy(array("code" => $ghostTokenCode, "type" => TokenType::GHOST));
+
+                        if($ghostToken != null) {
+                            $response = array(
+                                'token_status' => 'valid',
+                                'token' => $tokenCode
+                            );
+                            return new JsonResponse($response, 200);
+                        }
+                    } else {
+                        $response = array(
+                            'error' => 401,
+                            'errorMessage' => 'No AccessToken provided'
+                        );
+                    }
+                }
+            }
+
+            if ($environment == 'ADMIN') {
+                if ($token->getOwner() instanceof Employee) {
+                    $response = array(
+                        'token_status' => 'valid',
+                        'token' => $tokenCode
+                    );
+                    return new JsonResponse($response, 200);
+                } else {
+                    $response = array(
+                        'error' => 401,
+                        'errorMessage' => 'No AccessToken provided'
+                    );
+                }
+            }
+
+            $response = array(
+                'error'=> 401,
+                'errorMessage'=> 'No AccessToken provided'
+            );
+        } else {
+            //Mandatory AccessToken was not provided
+            $response = array(
+                'error'=> 401,
+                'errorMessage'=> 'Mandatory AccessToken header was not provided'
+            );
+        }
+
+        return new JsonResponse($response, 401);
+    }
+
+
+    /**
      * @param $object
      * @return mixed
      */
@@ -135,7 +232,7 @@ abstract class ControllerServiceBase
      */
     public function getUser()
     {
-        return $this->container->getUserService()->getUser();
+        return $this->userService->getUser();
     }
 
 
@@ -145,7 +242,7 @@ abstract class ControllerServiceBase
      */
     public function getAccountOwner(Request $request = null)
     {
-        return $this->container->getUserService()->getAccountOwner($request);
+        return $this->userService->getAccountOwner($request);
     }
 
 
@@ -155,7 +252,7 @@ abstract class ControllerServiceBase
      */
     public function getEmployee($tokenCode = null)
     {
-        return $this->container->getUserService()->getEmployee($tokenCode);
+        return $this->userService->getEmployee($tokenCode);
     }
 
 
@@ -165,7 +262,7 @@ abstract class ControllerServiceBase
      */
     public function getSelectedLocation(Request $request)
     {
-        return $this->container->getUserService()->getSelectedLocation($request);
+        return $this->userService->getSelectedLocation($request);
     }
 
 
@@ -175,6 +272,6 @@ abstract class ControllerServiceBase
      */
     public function getSelectedUbn(Request $request)
     {
-        return $this->container->getUserService()->getSelectedUbn($request);
+        return $this->userService->getSelectedUbn($request);
     }
 }

@@ -53,8 +53,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         $client = $this->getAccountOwner($request);
 
-        $animals = $this->animalRepository->findOfClientByAnimalTypeAndIsAlive($client, $animalType, $isAlive);
-        $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->em);
+        $animals = $this->getManager()->getRepository(Animal::class)->findOfClientByAnimalTypeAndIsAlive($client, $animalType, $isAlive);
+        $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getManager());
         return ResultUtil::successResult($minimizedOutput);
     }
 
@@ -66,8 +66,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      */
     public function getAnimalById(Request $request, $uln)
     {
-        $animal = $this->animalRepository->findByUlnOrPedigree($uln, true);
-        $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->em);
+        $animal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
+        $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
         return new JsonResponse($minimizedOutput, 200);
     }
 
@@ -81,7 +81,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = $this->getSelectedLocation($request);
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
-        $livestock = $this->animalRepository->getLiveStock($location);
+        $livestock = $this->getManager()->getRepository(Animal::class)->getLiveStock($location);
         $livestockAnimals = [];
 
         /** @var Animal $animal */
@@ -115,7 +115,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = $this->getSelectedLocation($request);
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
-        $historicLivestock = $this->animalRepository->getHistoricLiveStock($location);
+        $historicLivestock = $this->getManager()->getRepository(Animal::class)->getHistoricLiveStock($location);
         $historicLivestockAnimals = [];
 
         /** @var Animal $animal */
@@ -146,7 +146,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      */
     public function getAllRams(Request $request)
     {
-        return ResultUtil::successResult($this->animalRepository->getAllRams());
+        return ResultUtil::successResult($this->getManager()->getRepository(Animal::class)->getAllRams());
     }
 
 
@@ -200,7 +200,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      */
     public function syncAnimalsForAllLocations($loggedInUser)
     {
-        $allLocations = $this->locationRepository->findAll();
+        $allLocations = $this->getManager()->getRepository(Location::class)->findAll();
         $content = new ArrayCollection();
         $count = 0;
 
@@ -264,20 +264,20 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $content = RequestUtil::getContentAsArray($request);
 
         /** @var Animal $animal */
-        $animal = $this->animalRepository->findAnimalByUlnString($ulnString);
+        $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
 
         if($animal == null) {
             return ResultUtil::errorResult("For this account, no animal was found with uln: " . $ulnString, 204);
         }
 
-        AnimalDetailsUpdater::update($this->em, $animal, $content);
+        AnimalDetailsUpdater::update($this->getManager(), $animal, $content);
 
         $location = $this->getSelectedLocation($request);
 
         //Clear cache for this location, to reflect changes on the livestock
         $this->clearLivestockCacheForLocation($location);
 
-        $output = AnimalDetailsOutput::create($this->em, $animal, $animal->getLocation());
+        $output = AnimalDetailsOutput::create($this->getManager(), $animal, $animal->getLocation());
         return new JsonResponse($output, 200);
     }
 
@@ -295,7 +295,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = null;
         if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
 
-        $animalDetailsValidator = new AnimalDetailsValidator($this->em, $isAdmin, $location, $ulnString);
+        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $isAdmin, $location, $ulnString);
         if(!$animalDetailsValidator->getIsInputValid()) {
             return $animalDetailsValidator->createJsonResponse();
         }
@@ -303,7 +303,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $animal = $animalDetailsValidator->getAnimal();
         if($location == null) { $location = $animal->getLocation(); }
 
-        $output = AnimalDetailsOutput::create($this->em, $animal, $location);
+        $output = AnimalDetailsOutput::create($this->getManager(), $animal, $location);
         return ResultUtil::successResult($output);
     }
 
@@ -331,7 +331,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         //Try retrieving animal
-        $animal = $this->animalRepository
+        $animal = $this->getManager()->getRepository(Animal::class)
             ->findByUlnCountryCodeAndNumber($content['uln_country_code'] , $content['uln_number']);
 
         if ($animal == null) {
@@ -347,7 +347,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         //Try to change animal gender
         $gender = $content->get('gender');
-        $genderChanger = new GenderChanger($this->em);
+        $genderChanger = new GenderChanger($this->getManager());
         $targetGender = null;
         $result = null;
 
@@ -377,7 +377,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         //Clear cache for this location, to reflect changes on the livestock
         $this->clearLivestockCacheForLocation($this->getSelectedLocation($request), $animal);
 
-        $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->em);
+        $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
         return new JsonResponse($minimizedOutput, 200);
     }
 }

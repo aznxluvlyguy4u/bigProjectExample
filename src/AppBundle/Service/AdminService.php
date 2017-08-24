@@ -24,10 +24,9 @@ use AppBundle\Validation\EditAdminValidator;
 use AppBundle\Validation\EmployeeValidator;
 use Symfony\Component\HttpFoundation\Request;
 
-class AdminService extends ControllerServiceBase implements AdminAPIControllerInterface
+class AdminService extends AuthServiceBase implements AdminAPIControllerInterface
 {
     const timeLimitInMinutes = 3;
-
 
     /**
      * @param Request $request
@@ -39,7 +38,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $admins = $this->container->getEmployeeRepository()->findBy(array('isActive' => true));
+        $admins = $this->getManager()->getRepository(Employee::class)->findBy(array('isActive' => true));
         $result = AdminOverviewOutput::createAdminsOverview($admins);
 
         return ResultUtil::successResult($result);
@@ -82,14 +81,14 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         $newAdmin = new Employee($accessLevel, $firstName, $lastName, $emailAddress);
 
         // Send Email with passwords to Owner & Users
-        $password = $this->container->persistNewPassword($newAdmin);
-        $this->container->getEmailService()->emailNewPasswordToPerson($newAdmin, $password, true, true);
+        $password = AuthService::persistNewPassword($this->encoder, $this->getManager(), $newAdmin);
+        $this->emailService->emailNewPasswordToPerson($newAdmin, $password, true, true);
 
         $this->getManager()->persist($newAdmin);
         $this->getManager()->flush();
 
         /** @var Employee $admin */
-        $admin = $this->container->getEmployeeRepository()->findOneBy(array(
+        $admin = $this->getManager()->getRepository(Employee::class)->findOneBy(array(
             'emailAddress' => $newAdmin->getEmailAddress(),
             'isActive' => $newAdmin->getIsActive()
         ));
@@ -129,7 +128,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         }
 
         /** @var Employee $admin */
-        $admin = $this->container->getEmployeeRepository()->findOneByPersonId($personId);
+        $admin = $this->getManager()->getRepository(Employee::class)->findOneByPersonId($personId);
 
         $admin->setFirstName($firstName);
         $admin->setLastName($lastName);
@@ -140,7 +139,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         $this->getManager()->flush();
 
         /** @var Employee $newAdmin */
-        $newAdmin = $this->container->getEmployeeRepository()->findOneBy(array(
+        $newAdmin = $this->getManager()->getRepository(Employee::class)->findOneBy(array(
             'emailAddress' => $admin->getEmailAddress(),
             'isActive' => $admin->getIsActive()
         ));
@@ -167,7 +166,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
 
         $personId = $content->get('person_id');
         /** @var Employee $adminToDeactivate */
-        $adminToDeactivate = $this->container->getEmployeeRepository()->findOneBy(['personId' => $personId]);
+        $adminToDeactivate = $this->getManager()->getRepository(Employee::class)->findOneBy(['personId' => $personId]);
         $log = ActionLogWriter::deactivateAdmin($this->getManager(), $admin, $adminToDeactivate);
 
         //Validate input
@@ -200,9 +199,9 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         $personId = $content->get(JsonInputConstant::PERSON_ID);
 
         /** @var Client $client */
-        $client = $this->container->getClientRepository()->findOneBy(['personId' => $personId]);
+        $client = $this->getManager()->getRepository(Client::class)->findOneBy(['personId' => $personId]);
 
-        $existingGhostToken = $this->container->getTokenRepository()->findOneBy(array('owner' => $client, 'admin' => $employee));
+        $existingGhostToken = $this->getManager()->getRepository(Token::class)->findOneBy(array('owner' => $client, 'admin' => $employee));
         if($existingGhostToken != null) {
             $this->getManager()->remove($existingGhostToken);
         }
@@ -237,7 +236,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
         */
 
         //User must have a valid accessToken
-        $tokenValidation = $this->container->isAccessTokenValid($request);
+        $tokenValidation = parent::isAccessTokenValid($request);
         if($tokenValidation->getStatusCode() != 200) {
             return $tokenValidation;
         }
@@ -256,7 +255,7 @@ class AdminService extends ControllerServiceBase implements AdminAPIControllerIn
             $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
 
             if ($ghostTokenCode != null){
-                $ghostToken = $this->container->getTokenRepository()->findOneBy(array('code' => $ghostTokenCode));
+                $ghostToken = $this->getManager()->getRepository(Token::class)->findOneBy(array('code' => $ghostTokenCode));
                 if ($ghostToken != null) {
 
                     //First verify if the employee verifying this ghost token is the same employee as the one that created the ghost token

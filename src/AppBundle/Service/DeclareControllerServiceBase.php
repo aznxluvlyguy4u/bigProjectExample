@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Component\Modifier\MessageModifier;
+use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -32,9 +33,30 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\EntityManagerInterface;
 
 abstract class DeclareControllerServiceBase extends ControllerServiceBase
 {
+    /** @var AwsExternalQueueService */
+    protected $externalQueueService;
+    /** @var IRSerializer */
+    protected $serializer;
+    /** @var RequestMessageBuilder */
+    protected $requestMessageBuilder;
+
+    public function __construct(AwsExternalQueueService $externalQueueService,
+                                CacheService $cacheService,
+                                EntityManagerInterface $manager,
+                                IRSerializer $serializer,
+                                RequestMessageBuilder $requestMessageBuilder,
+                                UserService $userService)
+    {
+        parent::__construct($cacheService, $manager, $userService);
+        $this->externalQueueService = $externalQueueService;
+        $this->serializer = $serializer;
+        $this->requestMessageBuilder = $requestMessageBuilder;
+    }
+
     /**
      * @param DeclareBase $messageObject
      * @param bool $isUpdate
@@ -50,17 +72,17 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
         if($messageArray == null) {
             //These objects do not have a customized minimal json output for the queue yet
-            $jsonMessage = $this->container->getIRSerializer()->serializeToJSON($messageObject);
+            $jsonMessage = $this->serializer->serializeToJSON($messageObject);
             $messageArray = json_decode($jsonMessage, true);
         } else {
             //Use the minimized custom output
-            $jsonMessage = $this->container->getIRSerializer()->serializeToJSON($messageArray);
+            $jsonMessage = $this->serializer->serializeToJSON($messageArray);
         }
 
         //Send serialized message to Queue
         $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
 
-        $sendToQresult = $this->container->getExternalQueueService()->send($jsonMessage, $requestTypeNameSpace, $requestId);
+        $sendToQresult = $this->externalQueueService->send($jsonMessage, $requestTypeNameSpace, $requestId);
 
         //If send to Queue, failed, it needs to be resend, set state to failed
         if ($sendToQresult['statusCode'] != '200') {
@@ -88,16 +110,17 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
 
     /**
+     * @param AwsInternalQueueService $internalQueueService
      * @param WorkerMessageBody $workerMessageBody
      * @return bool
      */
-    protected function sendTaskToQueue($workerMessageBody) {
+    protected function sendTaskToQueue(AwsInternalQueueService $internalQueueService, $workerMessageBody) {
         if($workerMessageBody == null) { return false; }
 
-        $jsonMessage = $this->container->getIRSerializer()->serializeToJSON($workerMessageBody);
+        $jsonMessage = $this->serializer->serializeToJSON($workerMessageBody);
 
         //Send  message to Queue
-        $sendToQresult = $this->container->getInternalQueueService()->send($jsonMessage, $workerMessageBody->getTaskType(), 1);
+        $sendToQresult = $internalQueueService->send($jsonMessage, $workerMessageBody->getTaskType(), 1);
 
         //If send to Queue, failed, it needs to be resend, set state to failed
         return $sendToQresult['statusCode'] == '200';
@@ -109,11 +132,12 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      * reset the request state to 'REVOKING'
      * and persist the update.
      *
+     * @param EntityGetter $entityGetter
      * @param string $messageNumber
      */
-    public function persistRevokingRequestState($messageNumber)
+    public function persistRevokingRequestState(EntityGetter $entityGetter, $messageNumber)
     {
-        $messageObjectTobeRevoked = $this->container->getEntityGetter()->getRequestMessageByMessageNumber($messageNumber);
+        $messageObjectTobeRevoked = $entityGetter->getRequestMessageByMessageNumber($messageNumber);
 
         $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKING);
 
@@ -144,7 +168,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
     {
         $isEditMessage = true;
-        $messageObject = $this->container->getRequestMessageBuilder()
+        $messageObject = $this->requestMessageBuilder
             ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
 
         return $messageObject;
@@ -163,7 +187,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
     {
         $isEditMessage = false;
-        $messageObject = $this->container->getRequestMessageBuilder()
+        $messageObject = $this->requestMessageBuilder
             ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
 
         return $messageObject;

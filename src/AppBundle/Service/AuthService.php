@@ -18,9 +18,11 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
-class AuthService extends ControllerServiceBase
+class AuthService extends AuthServiceBase
 {
     /**
      * @param Request $request
@@ -65,11 +67,11 @@ class AuthService extends ControllerServiceBase
         $client->setEmailAddress($emailAddress);
         $client->setUsername($username);
 
-        $encodedPassword = $this->container->getEncoder()->encodePassword($client, $password);
+        $encodedPassword = $this->encoder->encodePassword($client, $password);
         $client->setPassword($encodedPassword);
 
         /** @var Client $client */
-        $client = $this->container->getClientRepository()->persist($client);
+        $client = $this->getManager()->getRepository(Client::class)->persist($client);
 
         return new JsonResponse(array("access_token" => $client->getAccessToken()), 200);
     }
@@ -88,7 +90,7 @@ class AuthService extends ControllerServiceBase
         list($emailAddress, $password) = explode(":", $credentials);
         if($emailAddress != null && $password != null) {
             $emailAddress = strtolower($emailAddress);
-            $client = $this->container->getClientRepository()->findActiveOneByEmailAddress($emailAddress);
+            $client = $this->getManager()->getRepository(Client::class)->findActiveOneByEmailAddress($emailAddress);
             if($client == null) {
                 return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
             }
@@ -112,7 +114,7 @@ class AuthService extends ControllerServiceBase
                 }
             }
 
-            if($this->container->getEncoder()->isPasswordValid($client, $password)) {
+            if($this->encoder->isPasswordValid($client, $password)) {
                 /** @var Client $client */
                 $result = [
                     "access_token"=>$client->getAccessToken(),
@@ -151,7 +153,7 @@ class AuthService extends ControllerServiceBase
 
         $enteredOldPassword = base64_decode($content->get('current_password'));
 
-        if(!$this->container->getEncoder()->isPasswordValid($client, $enteredOldPassword)) {
+        if(!$this->encoder->isPasswordValid($client, $enteredOldPassword)) {
             return new JsonResponse(array(Constant::MESSAGE_NAMESPACE => "CURRENT PASSWORD NOT VALID", Constant::CODE_NAMESPACE => 401), 401);
         }
 
@@ -164,7 +166,7 @@ class AuthService extends ControllerServiceBase
         }
 
         $encodedOldPassword = $client->getPassword();
-        $encodedNewPassword = $this->container->getEncoder()->encodePassword($client, $newPassword);
+        $encodedNewPassword = $this->encoder->encodePassword($client, $newPassword);
         $client->setPassword($encodedNewPassword);
 
         $this->getManager()->persist($client);
@@ -176,7 +178,7 @@ class AuthService extends ControllerServiceBase
 
         if($encodedPasswordInDatabase == $encodedNewPassword) {
 
-            $this->container->getEmailService()->sendNewPasswordEmail($client->getEmailAddress());
+            $this->emailService->sendNewPasswordEmail($client->getEmailAddress());
 
             $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
@@ -207,7 +209,7 @@ class AuthService extends ControllerServiceBase
         */
         $content = RequestUtil::getContentAsArray($request);
         $emailAddress = strtolower($content->get('email_address'));
-        $client = $this->container->getClientRepository()->findActiveOneByEmailAddress($emailAddress);
+        $client = $this->getManager()->getRepository(Client::class)->findActiveOneByEmailAddress($emailAddress);
         $log = ActionLogWriter::passwordReset($this->getManager(), $client, $emailAddress);
 
         //Verify if email is correct
@@ -217,8 +219,8 @@ class AuthService extends ControllerServiceBase
 
         //Create a new password
         $passwordLength = 9;
-        $newPassword = $this->container->persistNewPassword($client);
-        $this->container->getEmailService()->emailNewPasswordToPerson($client, $newPassword);
+        $newPassword = self::persistNewPassword($this->encoder, $this->getManager(), $client);
+        $this->emailService->emailNewPasswordToPerson($client, $newPassword);
 
         $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
@@ -264,6 +266,28 @@ class AuthService extends ControllerServiceBase
      */
     public function isAccessTokenValid(Request $request)
     {
-        return $this->container->isAccessTokenValid($request);
+        return parent::isAccessTokenValid($request);
+    }
+
+
+    /**
+     * @param UserPasswordEncoderInterface $encoder
+     * @param EntityManagerInterface $manager
+     * @param Person $person
+     * @param int $passwordLength
+     * @return string
+     */
+    public static function persistNewPassword(UserPasswordEncoderInterface $encoder, EntityManagerInterface $manager,
+                                              Person $person, $passwordLength = 9)
+    {
+        $newPassword = Utils::randomString($passwordLength);
+
+        $encodedNewPassword = $encoder->encodePassword($person, $newPassword);
+        $person->setPassword($encodedNewPassword);
+
+        $manager->persist($person);
+        $manager->flush();
+
+        return $newPassword;
     }
 }
