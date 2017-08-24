@@ -477,3 +477,8 @@ services:
     app.country:
         parent: app.abstract_base.declare
         class: AppBundle\Service\CountryService
+
+    app.dashboard:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\DashboardService
+

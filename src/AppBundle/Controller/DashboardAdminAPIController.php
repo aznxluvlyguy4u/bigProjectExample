@@ -23,21 +23,9 @@ class DashboardAdminAPIController extends APIController
      * @Method("GET")
      * @return JsonResponse
      */
-    public function getAdminDashBoard(Request $request) {
-
-        // Validation if user is an admin
-        $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
-        }
-
-        $em = $this->getDoctrine()->getManager();
-
-        $outputArray = AdminDashboardOutput::createAdminDashboard($em);
-
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+    public function getAdminDashBoard(Request $request)
+    {
+        return $this->get('app.dashboard')->getAdminDashBoard($request);
     }
 
 }
