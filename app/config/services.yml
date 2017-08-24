@@ -457,3 +457,7 @@ services:
     app.collar:
         parent: app.abstract_base.controller
         class: AppBundle\Service\CollarService
+
+    app.company:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\CompanyService

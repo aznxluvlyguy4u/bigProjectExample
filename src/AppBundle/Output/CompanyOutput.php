@@ -14,7 +14,7 @@ use AppBundle\Component\Count;
 class CompanyOutput
 {
     /**
-     * @param Collection $companies
+     * @param array $companies
      *
      * @return array
      */
