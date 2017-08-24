@@ -461,3 +461,8 @@ services:
     app.company:
         parent: app.abstract_base.auth
         class: AppBundle\Service\CompanyService
+
+    app.component:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\ComponentService
+
