@@ -443,5 +443,8 @@ services:
         parent: app.controller.base
         class: AppBundle\Service\BirthService
 
-
+    app.client:
+        class: AppBundle\Service\ClientService
+        arguments:
+          - "@=service('doctrine').getRepository('AppBundle:Client')"
 

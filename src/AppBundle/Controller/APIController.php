@@ -51,6 +51,7 @@ use AppBundle\Service\AwsInternalQueueService;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\BirthService;
 use AppBundle\Service\CacheService;
+use AppBundle\Service\ClientService;
 use AppBundle\Service\Container\RepositoryContainerBase;
 use AppBundle\Service\EmailService;
 use AppBundle\Service\EntityGetter;
@@ -104,6 +105,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
       ServiceId::CACHE => null,
       ServiceId::CLIENT_MIGRATOR => null,
+      ServiceId::CLIENT_SERVICE => null,
       ServiceId::EMAIL_SERVICE => null,
       ServiceId::ENTITY_GETTER => null,
       ServiceId::EXCEL_SERVICE => null,
@@ -161,6 +163,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getCacheService(){ return $this->getService(ServiceId::CACHE); }
   /** @return ClientMigrator */
   protected function getClientMigratorService(){ return $this->getService(ServiceId::CLIENT_MIGRATOR); }
+  /** @return ClientService */
+  protected function getClientService(){ return $this->getService(ServiceId::CLIENT_SERVICE); }
   /** @return EmailService */
   protected function getEmailService() { return $this->getService(ServiceId::EMAIL_SERVICE); }
   /** @return EntityGetter */

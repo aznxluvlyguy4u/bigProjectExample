@@ -53,29 +53,7 @@ class ClientAPIController extends APIController {
    */
   public function getClients(Request $request)
   {
-    $admin = $this->getEmployee();
-    $adminValidator = new AdminValidator($admin);
-    if(!$adminValidator->getIsAccessGranted()) { //validate if user is an admin
-      return $adminValidator->createJsonErrorResponse();
-    }
-
-    $ubnExists = $request->query->has(Constant::UBN_NAMESPACE);
-    $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
-
-    if(!$ubnExists) {
-      $clients = $repository->findAll();
-      $result = ClientOverviewOutput::createClientsOverview($clients);
-    } else { //Get client by ubn
-      $ubn = $request->query->get(Constant::UBN_NAMESPACE);
-      $client = $repository->getByUbn($ubn);
-      if($client == null) {
-        $result = 'NO CLIENT FOUND FOR GIVEN UBN';
-      } else {
-        $result = ClientOverviewOutput::createClientOverview($client);
-      }
-    }
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+      return $this->getClientService()->getClients($request);
   }
 
   /**
@@ -85,14 +63,9 @@ class ClientAPIController extends APIController {
    * @Route("")
    * @Method("POST")
    */
-  public function createClient(Request $request) {
-    $admin = $this->getEmployee();
-    $adminValidator = new AdminValidator($admin);
-    if(!$adminValidator->getIsAccessGranted()) { //validate if user is an admin
-      return $adminValidator->createJsonErrorResponse();
-    }
-
-    return new JsonResponse("ok", 200);
+  public function createClient(Request $request)
+  {
+      return $this->getClientService()->createClient($request);
   }
 
   /**

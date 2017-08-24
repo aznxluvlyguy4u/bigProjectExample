@@ -415,123 +415,123 @@ class RepositoryContainerBase
     {
         $this->manager = $manager;
 
-        $this->addressRepository = $this->manager->getRepository(Address::class);
-        $this->animalRepository = $this->manager->getRepository(Animal::class);
-
-        $this->bodyFatRepository = $this->manager->getRepository(BodyFat::class);
-
-        $this->caseousLymphadenitis = $this->manager->getRepository(CaseousLymphadenitis::class);
+//        $this->addressRepository = $this->manager->getRepository(Address::class);
+//        $this->animalRepository = $this->manager->getRepository(Animal::class);
+//
+//        $this->bodyFatRepository = $this->manager->getRepository(BodyFat::class);
+//
+//        $this->caseousLymphadenitis = $this->manager->getRepository(CaseousLymphadenitis::class);
         $this->clientRepository = $this->manager->getRepository(Client::class);
-        $this->collarRepository = $this->manager->getRepository(Collar::class);
-        $this->companyRepository = $this->manager->getRepository(Company::class);
-        $this->companyNoteRepository = $this->manager->getRepository(CompanyNote::class);
-        $this->contactFormMenuRepository = $this->manager->getRepository(ContactFormMenu::class);
-        $this->contentRepository = $this->manager->getRepository(Content::class);
-        $this->countryRepository = $this->manager->getRepository(Country::class);
-
-        $this->declareBaseRepository = $this->manager->getRepository(DeclareBase::class);
-        $this->declareBaseResponseRepository = $this->manager->getRepository(DeclareBaseResponse::class);
-        $this->declareNsfoBaseRepository = $this->manager->getRepository(DeclareNsfoBase::class);
-
-        $this->declarationDetailRepository = $this->manager->getRepository(DeclarationDetail::class);
-        $this->declareAnimalFlagRepository = $this->manager->getRepository(DeclareAnimalFlag::class);
-        $this->declareArrivalRepository = $this->manager->getRepository(DeclareArrival::class);
-        $this->declareArrivalResponseRepository = $this->manager->getRepository(DeclareArrivalResponse::class);
-        $this->declareBirthRepository = $this->manager->getRepository(DeclareBirth::class);
-        $this->declareBirthResponseRepository = $this->manager->getRepository(DeclareBirthResponse::class);
-        $this->declareImportRepository = $this->manager->getRepository(DeclareImport::class);
-        $this->declareImportResponseRepository = $this->manager->getRepository(DeclareImportResponse::class);
-        $this->declareDepartRepository = $this->manager->getRepository(DeclareDepart::class);
-        $this->declareDepartResponseRepository = $this->manager->getRepository(DeclareDepartResponse::class);
-        $this->declareExportRepository = $this->manager->getRepository(DeclareExport::class);
-        $this->declareExportResponseRepository = $this->manager->getRepository(DeclareExportResponse::class);
-        $this->declareLossRepository = $this->manager->getRepository(DeclareLoss::class);
-        $this->declareLossResponseRepository = $this->manager->getRepository(DeclareLossResponse::class);
-        $this->declareTagsTransferRepository = $this->manager->getRepository(DeclareTagsTransfer::class);
-        $this->declareTagsTransferResponseRepository = $this->manager->getRepository(DeclareTagsTransferResponse::class);
-        $this->declareTagReplaceRepository = $this->manager->getRepository(DeclareTagReplace::class);
-        $this->declareTagReplaceResponseRepository = $this->manager->getRepository(DeclareTagReplaceResponse::class);
-
-        $this->declareWeightRepository = $this->manager->getRepository(DeclareWeight::class);
-
-        $this->editTypeRepository = $this->manager->getRepository(EditType::class);
-        $this->employeeRepository = $this->manager->getRepository(Employee::class);
-        $this->errorLogAnimalPedigreeRepository = $this->manager->getRepository(ErrorLogAnimalPedigree::class);
-        $this->eweRepository = $this->manager->getRepository(Ewe::class);
-        $this->exteriorRepository = $this->manager->getRepository(Exterior::class);
-
-        $this->fat1Repository = $this->manager->getRepository(Fat1::class);
-        $this->fat2Repository = $this->manager->getRepository(Fat2::class);
-        $this->fat3Repository = $this->manager->getRepository(Fat3::class);
-        $this->footRotRepository = $this->manager->getRepository(FootRot::class);
-        $this->ftpFailedImportRepository = $this->manager->getRepository(FTPFailedImport::class);
-
-        $this->genderHistoryItemRepository = $this->manager->getRepository(GenderHistoryItem::class);
-
-        $this->inspectorRepository = $this->manager->getRepository(Inspector::class);
-        $this->inspectorAuthorizationRepository = $this->manager->getRepository(InspectorAuthorization::class);
-        $this->invoiceRepository = $this->manager->getRepository(Invoice::class);
-        $this->invoiceRuleRepository = $this->manager->getRepository(InvoiceRule::class);
-
-        $this->litterRepository = $this->manager->getRepository(Litter::class);
-        $this->locationRepository = $this->manager->getRepository(Location::class);
-        $this->locationAddressRepository = $this->manager->getRepository(LocationAddress::class);
-        $this->locationHealthRepository = $this->manager->getRepository(LocationHealth::class);
-        $this->locationHealthInspectionRepository = $this->manager->getRepository(LocationHealthInspection::class);
-        $this->locationHealthInspectionDirectionRepository = $this->manager->getRepository(LocationHealthInspectionDirection::class);
-        $this->locationHealthInspectionResultRepository = $this->manager->getRepository(LocationHealthInspectionResult::class);
-        $this->locationHealthLetterRepository = $this->manager->getRepository(LocationHealthLetter::class);
-        $this->locationHealthMessageRepository = $this->manager->getRepository(LocationHealthMessage::class);
-        $this->locationHealthQueueRepository = $this->manager->getRepository(LocationHealthQueue::class);
-
-        $this->maediVisnaRepository = $this->manager->getRepository(MaediVisna::class);
-        $this->mateRepository = $this->manager->getRepository(Mate::class);
-        $this->measurementRepository = $this->manager->getRepository(Measurement::class);
-        $this->messageRepository = $this->manager->getRepository(Message::class);
-        $this->muscleThicknessRepository = $this->manager->getRepository(MuscleThickness::class);
-
-        $this->neuterRepository = $this->manager->getRepository(Neuter::class);
-        $this->normalDistributionRepository = $this->manager->getRepository(NormalDistribution::class);
-
-        $this->pedigreeRepository = $this->manager->getRepository(Pedigree::class);
-        $this->pedigreeCodeRepository = $this->manager->getRepository(PedigreeCode::class);
-        $this->pedigreeRegisterRepository = $this->manager->getRepository(PedigreeRegister::class);
-        $this->performanceMeasurementRepository = $this->manager->getRepository(PerformanceMeasurement::class);
-        $this->personRepository = $this->manager->getRepository(Person::class);
-        $this->predicateRepository = $this->manager->getRepository(Predicate::class);
-        $this->processorRepository = $this->manager->getRepository(Processor::class);
-        $this->provinceRepository = $this->manager->getRepository(Province::class);
-
-        $this->raceRepository = $this->manager->getRepository(Race::class);
-        $this->ramRepository = $this->manager->getRepository(Ram::class);
-        $this->resultTableBreedGradesRepository = $this->manager->getRepository(ResultTableBreedGrades::class);
-        $this->retrieveAnimalDetailsRepository = $this->manager->getRepository(RetrieveAnimalDetails::class);
-        $this->retrieveAnimalDetailsResponseRepository = $this->manager->getRepository(RetrieveAnimalDetailsResponse::class);
-        $this->retrieveAnimalsRepository = $this->manager->getRepository(RetrieveAnimals::class);
-        $this->retrieveAnimalsResponseRepository = $this->manager->getRepository(RetrieveAnimalsResponse::class);
-        $this->retrieveCountriesRepository = $this->manager->getRepository(RetrieveCountries::class);
-        $this->retrieveCountriesResponseRepository = $this->manager->getRepository(RetrieveCountriesResponse::class);
-        $this->retrieveTagsRepository = $this->manager->getRepository(RetrieveTags::class);
-        $this->retrieveTagsResponseRepository = $this->manager->getRepository(RetrieveTagsResponse::class);
-        $this->retrieveUbnDetailsRepository = $this->manager->getRepository(RetrieveUbnDetails::class);
-        $this->retrieveUbnDetailsResponseRepository = $this->manager->getRepository(RetrieveUbnDetailsResponse::class);
-        $this->revokeDeclarationRepository = $this->manager->getRepository(RevokeDeclaration::class);
-        $this->revokeDeclarationResponseRepository = $this->manager->getRepository(RevokeDeclarationResponse::class);
-
-        $this->scrapieRepository = $this->manager->getRepository(Scrapie::class);
-        $this->stillbornRepository = $this->manager->getRepository(Stillborn::class);
-
-        $this->tagRepository = $this->manager->getRepository(Tag::class);
-        $this->tagSyncErrorLogRepository = $this->manager->getRepository(TagSyncErrorLog::class);
-        $this->tagTransferItemRequestRepository = $this->manager->getRepository(TagTransferItemRequest::class);
-        $this->tagTransferItemResponseRepository = $this->manager->getRepository(TagTransferItemResponse::class);
-        $this->tailLengthRepository = $this->manager->getRepository(TailLength::class);
-        $this->tokenRepository = $this->manager->getRepository(Token::class);
-
-        $this->vsmIdGroupRepository = $this->manager->getRepository(VsmIdGroup::class);
-
-        $this->weightRepository = $this->manager->getRepository(Weight::class);
-        $this->wormResistanceRepository = $this->manager->getRepository(WormResistance::class);
+//        $this->collarRepository = $this->manager->getRepository(Collar::class);
+//        $this->companyRepository = $this->manager->getRepository(Company::class);
+//        $this->companyNoteRepository = $this->manager->getRepository(CompanyNote::class);
+//        $this->contactFormMenuRepository = $this->manager->getRepository(ContactFormMenu::class);
+//        $this->contentRepository = $this->manager->getRepository(Content::class);
+//        $this->countryRepository = $this->manager->getRepository(Country::class);
+//
+//        $this->declareBaseRepository = $this->manager->getRepository(DeclareBase::class);
+//        $this->declareBaseResponseRepository = $this->manager->getRepository(DeclareBaseResponse::class);
+//        $this->declareNsfoBaseRepository = $this->manager->getRepository(DeclareNsfoBase::class);
+//
+//        $this->declarationDetailRepository = $this->manager->getRepository(DeclarationDetail::class);
+//        $this->declareAnimalFlagRepository = $this->manager->getRepository(DeclareAnimalFlag::class);
+//        $this->declareArrivalRepository = $this->manager->getRepository(DeclareArrival::class);
+//        $this->declareArrivalResponseRepository = $this->manager->getRepository(DeclareArrivalResponse::class);
+//        $this->declareBirthRepository = $this->manager->getRepository(DeclareBirth::class);
+//        $this->declareBirthResponseRepository = $this->manager->getRepository(DeclareBirthResponse::class);
+//        $this->declareImportRepository = $this->manager->getRepository(DeclareImport::class);
+//        $this->declareImportResponseRepository = $this->manager->getRepository(DeclareImportResponse::class);
+//        $this->declareDepartRepository = $this->manager->getRepository(DeclareDepart::class);
+//        $this->declareDepartResponseRepository = $this->manager->getRepository(DeclareDepartResponse::class);
+//        $this->declareExportRepository = $this->manager->getRepository(DeclareExport::class);
+//        $this->declareExportResponseRepository = $this->manager->getRepository(DeclareExportResponse::class);
+//        $this->declareLossRepository = $this->manager->getRepository(DeclareLoss::class);
+//        $this->declareLossResponseRepository = $this->manager->getRepository(DeclareLossResponse::class);
+//        $this->declareTagsTransferRepository = $this->manager->getRepository(DeclareTagsTransfer::class);
+//        $this->declareTagsTransferResponseRepository = $this->manager->getRepository(DeclareTagsTransferResponse::class);
+//        $this->declareTagReplaceRepository = $this->manager->getRepository(DeclareTagReplace::class);
+//        $this->declareTagReplaceResponseRepository = $this->manager->getRepository(DeclareTagReplaceResponse::class);
+//
+//        $this->declareWeightRepository = $this->manager->getRepository(DeclareWeight::class);
+//
+//        $this->editTypeRepository = $this->manager->getRepository(EditType::class);
+//        $this->employeeRepository = $this->manager->getRepository(Employee::class);
+//        $this->errorLogAnimalPedigreeRepository = $this->manager->getRepository(ErrorLogAnimalPedigree::class);
+//        $this->eweRepository = $this->manager->getRepository(Ewe::class);
+//        $this->exteriorRepository = $this->manager->getRepository(Exterior::class);
+//
+//        $this->fat1Repository = $this->manager->getRepository(Fat1::class);
+//        $this->fat2Repository = $this->manager->getRepository(Fat2::class);
+//        $this->fat3Repository = $this->manager->getRepository(Fat3::class);
+//        $this->footRotRepository = $this->manager->getRepository(FootRot::class);
+//        $this->ftpFailedImportRepository = $this->manager->getRepository(FTPFailedImport::class);
+//
+//        $this->genderHistoryItemRepository = $this->manager->getRepository(GenderHistoryItem::class);
+//
+//        $this->inspectorRepository = $this->manager->getRepository(Inspector::class);
+//        $this->inspectorAuthorizationRepository = $this->manager->getRepository(InspectorAuthorization::class);
+//        $this->invoiceRepository = $this->manager->getRepository(Invoice::class);
+//        $this->invoiceRuleRepository = $this->manager->getRepository(InvoiceRule::class);
+//
+//        $this->litterRepository = $this->manager->getRepository(Litter::class);
+//        $this->locationRepository = $this->manager->getRepository(Location::class);
+//        $this->locationAddressRepository = $this->manager->getRepository(LocationAddress::class);
+//        $this->locationHealthRepository = $this->manager->getRepository(LocationHealth::class);
+//        $this->locationHealthInspectionRepository = $this->manager->getRepository(LocationHealthInspection::class);
+//        $this->locationHealthInspectionDirectionRepository = $this->manager->getRepository(LocationHealthInspectionDirection::class);
+//        $this->locationHealthInspectionResultRepository = $this->manager->getRepository(LocationHealthInspectionResult::class);
+//        $this->locationHealthLetterRepository = $this->manager->getRepository(LocationHealthLetter::class);
+//        $this->locationHealthMessageRepository = $this->manager->getRepository(LocationHealthMessage::class);
+//        $this->locationHealthQueueRepository = $this->manager->getRepository(LocationHealthQueue::class);
+//
+//        $this->maediVisnaRepository = $this->manager->getRepository(MaediVisna::class);
+//        $this->mateRepository = $this->manager->getRepository(Mate::class);
+//        $this->measurementRepository = $this->manager->getRepository(Measurement::class);
+//        $this->messageRepository = $this->manager->getRepository(Message::class);
+//        $this->muscleThicknessRepository = $this->manager->getRepository(MuscleThickness::class);
+//
+//        $this->neuterRepository = $this->manager->getRepository(Neuter::class);
+//        $this->normalDistributionRepository = $this->manager->getRepository(NormalDistribution::class);
+//
+//        $this->pedigreeRepository = $this->manager->getRepository(Pedigree::class);
+//        $this->pedigreeCodeRepository = $this->manager->getRepository(PedigreeCode::class);
+//        $this->pedigreeRegisterRepository = $this->manager->getRepository(PedigreeRegister::class);
+//        $this->performanceMeasurementRepository = $this->manager->getRepository(PerformanceMeasurement::class);
+//        $this->personRepository = $this->manager->getRepository(Person::class);
+//        $this->predicateRepository = $this->manager->getRepository(Predicate::class);
+//        $this->processorRepository = $this->manager->getRepository(Processor::class);
+//        $this->provinceRepository = $this->manager->getRepository(Province::class);
+//
+//        $this->raceRepository = $this->manager->getRepository(Race::class);
+//        $this->ramRepository = $this->manager->getRepository(Ram::class);
+//        $this->resultTableBreedGradesRepository = $this->manager->getRepository(ResultTableBreedGrades::class);
+//        $this->retrieveAnimalDetailsRepository = $this->manager->getRepository(RetrieveAnimalDetails::class);
+//        $this->retrieveAnimalDetailsResponseRepository = $this->manager->getRepository(RetrieveAnimalDetailsResponse::class);
+//        $this->retrieveAnimalsRepository = $this->manager->getRepository(RetrieveAnimals::class);
+//        $this->retrieveAnimalsResponseRepository = $this->manager->getRepository(RetrieveAnimalsResponse::class);
+//        $this->retrieveCountriesRepository = $this->manager->getRepository(RetrieveCountries::class);
+//        $this->retrieveCountriesResponseRepository = $this->manager->getRepository(RetrieveCountriesResponse::class);
+//        $this->retrieveTagsRepository = $this->manager->getRepository(RetrieveTags::class);
+//        $this->retrieveTagsResponseRepository = $this->manager->getRepository(RetrieveTagsResponse::class);
+//        $this->retrieveUbnDetailsRepository = $this->manager->getRepository(RetrieveUbnDetails::class);
+//        $this->retrieveUbnDetailsResponseRepository = $this->manager->getRepository(RetrieveUbnDetailsResponse::class);
+//        $this->revokeDeclarationRepository = $this->manager->getRepository(RevokeDeclaration::class);
+//        $this->revokeDeclarationResponseRepository = $this->manager->getRepository(RevokeDeclarationResponse::class);
+//
+//        $this->scrapieRepository = $this->manager->getRepository(Scrapie::class);
+//        $this->stillbornRepository = $this->manager->getRepository(Stillborn::class);
+//
+//        $this->tagRepository = $this->manager->getRepository(Tag::class);
+//        $this->tagSyncErrorLogRepository = $this->manager->getRepository(TagSyncErrorLog::class);
+//        $this->tagTransferItemRequestRepository = $this->manager->getRepository(TagTransferItemRequest::class);
+//        $this->tagTransferItemResponseRepository = $this->manager->getRepository(TagTransferItemResponse::class);
+//        $this->tailLengthRepository = $this->manager->getRepository(TailLength::class);
+//        $this->tokenRepository = $this->manager->getRepository(Token::class);
+//
+//        $this->vsmIdGroupRepository = $this->manager->getRepository(VsmIdGroup::class);
+//
+//        $this->weightRepository = $this->manager->getRepository(Weight::class);
+//        $this->wormResistanceRepository = $this->manager->getRepository(WormResistance::class);
     }
 
 
