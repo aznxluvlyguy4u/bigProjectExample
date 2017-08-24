@@ -475,3 +475,34 @@ services:
           - '@app.doctrine.entitygetter'
           - '@app.request.message_builder'
           - '@logger'
+
+    app.container.service.non_controller:
+        class: AppBundle\Service\NonControllerServiceContainer
+        arguments:
+          - '@app.animallocation.history'
+          - '@app.aws.queueservice.external'
+          - '@app.aws.queueservice.internal'
+          - '@app.aws.storageservice'
+          - '@app.cache'
+          - '@app.writer.csv_from_sql_results'
+          - '@app.email'
+          - '@templating'
+          - '@app.doctrine.entitygetter'
+          - '@doctrine.orm.entity_manager'
+          - '@knp_snappy.pdf'
+          - '@app.health.updater'
+          - '@app.serializer.ir'
+          - '@logger'
+          - '@app.request.message_builder'
+          - '@security.password_encoder'
+          - '@app.user'
+          - '%kernel.cache_dir%'
+          - '%kernel.environment%'
+          - '%kernel.root_dir%'
+
+
+    app.container.repository:
+        class: AppBundle\Service\Container\RepositoryContainerBase
+        arguments:
+          - '@doctrine.orm.entity_manager'
+

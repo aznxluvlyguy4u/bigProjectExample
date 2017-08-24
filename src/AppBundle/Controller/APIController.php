@@ -51,6 +51,7 @@ use AppBundle\Service\AwsInternalQueueService;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\BirthService;
 use AppBundle\Service\CacheService;
+use AppBundle\Service\Container\RepositoryContainerBase;
 use AppBundle\Service\EmailService;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Service\ExcelService;
@@ -59,6 +60,7 @@ use AppBundle\Service\IRSerializer;
 use AppBundle\Service\Migration\ClientMigrator;
 use AppBundle\Service\MixBlupInputQueueService;
 use AppBundle\Service\MixBlupOutputQueueService;
+use AppBundle\Service\NonControllerServiceContainer;
 use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
@@ -113,6 +115,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::LOGGER => null,
       ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE => null,
       ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE => null,
+      ServiceId::NON_CONTROLLER_SERVICE_CONTAINER => null,
       ServiceId::PEDIGREE_CERTIFICATES_REPORT => null,
       ServiceId::PEDIGREE_REGISTER_REPORT => null,
       ServiceId::REDIS_CLIENT => null,
@@ -180,6 +183,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getMixBlupInputQueueService() { return $this->getService(ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE); }
   /** @return MixBlupOutputQueueService */
   protected function getMixBlupOutputQueueService() { return $this->getService(ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE); }
+  /** @return NonControllerServiceContainer */
+  protected function getNonControllerServiceContainer() { return $this->getService(ServiceId::NON_CONTROLLER_SERVICE_CONTAINER); }
   /** @return PedigreeCertificateReportService */
   protected function getPedigreeCertificateReportService() { return $this->getService(ServiceId::PEDIGREE_CERTIFICATES_REPORT); }
   /** @return PedigreeRegisterOverviewReportService */
