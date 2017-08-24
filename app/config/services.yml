@@ -473,3 +473,7 @@ services:
     app.content_management:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ContentManagementService
+
+    app.country:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\CountryService

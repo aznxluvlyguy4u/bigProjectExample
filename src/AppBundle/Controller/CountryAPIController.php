@@ -50,28 +50,11 @@ class CountryAPIController extends APIController implements CountryAPIController
    * @Route("")
    * @Method("GET")
    */
-  public function getCountryCodes(Request $request) {
-    if (!$request->query->has(Constant::CONTINENT_NAMESPACE)) {
-      $countries = $this->getDoctrine()
-        ->getRepository(Constant::COUNTRY_REPOSITORY)
-        ->findAll();
-    }
-    else {
-      $continent = ucfirst($request->query->get(Constant::CONTINENT_NAMESPACE));
-      if ($continent == Constant::ALL_NAMESPACE) {
-        $countries = $this->getDoctrine()
-          ->getRepository(Constant::COUNTRY_REPOSITORY)
-          ->findAll();
-      }
-      else {
-        $countries = $this->getDoctrine()
-          ->getRepository(Constant::COUNTRY_REPOSITORY)
-          ->findBy(array (Constant::CONTINENT_NAMESPACE => $continent));
-      }
-    }
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE=>$countries), 200);
+  public function getCountryCodes(Request $request)
+  {
+      return $this->get('app.country')->getCountryCodes($request);
   }
+
 
   /**
    * @param Request $request the request object
@@ -81,24 +64,10 @@ class CountryAPIController extends APIController implements CountryAPIController
    */
   function getCountries(Request $request)
   {
-    //Get content to array
-    $content = RequestUtil::getContentAsArray($request);
-    $client = $this->getAccountOwner($request);
-    $location = $this->getSelectedLocation($request);
-
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $retrieveCountries = $this->buildMessageObject(RequestType::RETRIEVE_COUNTRIES_ENTITY, $content, $client, $location);
-
-    //First Persist object to Database, before sending it to the queue
-    $this->persist($retrieveCountries);
-
-    //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($retrieveCountries);
-
-    return new JsonResponse($retrieveCountries, 200);
-
+      return $this->get('app.country')->getCountries($request);
   }
 
+  
   /**
    * Get list of Dutch provinces with their full name and code.
    *
@@ -122,10 +91,6 @@ class CountryAPIController extends APIController implements CountryAPIController
    */
   function getDutchProvinces(Request $request)
   {
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $provinces = $this->getDoctrine()->getRepository(Constant::PROVINCE_REPOSITORY)->findDutchProvinces();
-    $output = ProvinceOutput::create($provinces, true);
-
-    return new JsonResponse($output, 200);
+      return $this->get('app.country')->getDutchProvinces($request);
   }
 }
