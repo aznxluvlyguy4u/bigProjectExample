@@ -202,12 +202,13 @@ class ActionLogWriter
      * @param Person $loggedInUser
      * @param Client $client
      * @param string $description
+     * @param boolean $isCompleted
      * @return ActionLog
      */
-    public static function contactEmail(ObjectManager $om, $client, $loggedInUser, $description)
+    public static function contactEmail(ObjectManager $om, $client, $loggedInUser, $description, $isCompleted = true)
     {
         $userActionType = UserActionType::CONTACT_EMAIL;
-        $log = new ActionLog($client, $loggedInUser, $userActionType, true, $description);
+        $log = new ActionLog($client, $loggedInUser, $userActionType, $isCompleted, $description);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;

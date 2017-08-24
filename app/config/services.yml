@@ -466,3 +466,6 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ComponentService
 
+    app.contact:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\ContactService

@@ -101,4 +101,59 @@ class EmailService
 
         return $this->swiftMailer->send($message) > 0;
     }
+
+
+    /**
+     * @param string $contactMailSubjectHeader
+     * @param array $emailData
+     * @return bool
+     */
+    public function sendContactEmail($contactMailSubjectHeader, $emailData)
+    {
+        $message = \Swift_Message::newInstance()
+            ->setSubject($contactMailSubjectHeader)
+            ->setFrom($this->mailerSourceAddress) // EMAIL IS ONLY SENT IF THIS IS THE EMAIL ADDRESS!
+            ->setTo($this->mailerSourceAddress) //Send the original to kantoor@nsfo.nl
+            ->setBody(
+                $this->templating->render(
+                // app/Resources/views/...
+                    'User/contact_email.html.twig',
+                    $emailData
+                ),
+                'text/html'
+            )
+            ->setSender($this->mailerSourceAddress)
+        ;
+
+        return $this->swiftMailer->send($message) > 0;
+    }
+
+
+    /**
+     * @param array $emailData
+     * @return bool
+     */
+    public function sendContactVerificationEmail($emailData)
+    {
+        $emailAddressUser = $emailData['emailAddressUser'];
+
+        $messageConfirmation = \Swift_Message::newInstance()
+            ->setSubject(Constant::CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER)
+            ->setFrom($this->mailerSourceAddress) // EMAIL IS ONLY SENT IF THIS IS THE EMAIL ADDRESS!
+            ->setTo($emailAddressUser) //Send the confirmation back to the original sender
+            ->setBody(
+                $this->templating->render(
+                // app/Resources/views/...
+                    'User/contact_verification_email.html.twig',
+                    $emailData
+                ),
+                'text/html'
+            )
+            ->setSender($this->mailerSourceAddress)
+        ;
+
+        return $this->swiftMailer->send($messageConfirmation) > 0;
+    }
+
+
 }
