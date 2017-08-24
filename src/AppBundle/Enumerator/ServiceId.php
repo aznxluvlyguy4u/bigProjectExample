@@ -15,6 +15,7 @@ class ServiceId
     const ANIMAL_SERVICE = 'app.animal';
     const ARRIVAL_SERVICE = 'app.arrival';
     const AUTH_SERVICE = 'app.security.auth';
+    const BIRTH_SERVICE = 'app.birth';
     const BREED_VALUES_OVERVIEW_REPORT = 'app.report.breed_values_overview';
     const CACHE = 'app.cache';
     const CLIENT_MIGRATOR = 'app.migrator.client';

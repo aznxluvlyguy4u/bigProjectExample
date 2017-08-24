@@ -49,6 +49,7 @@ use AppBundle\Service\AuthService;
 use AppBundle\Service\AwsExternalQueueService;
 use AppBundle\Service\AwsInternalQueueService;
 use AppBundle\Service\AWSSimpleStorageService;
+use AppBundle\Service\BirthService;
 use AppBundle\Service\CacheService;
 use AppBundle\Service\EmailService;
 use AppBundle\Service\EntityGetter;
@@ -97,6 +98,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::ANIMAL_SERVICE => null,
       ServiceId::AUTH_SERVICE => null,
       ServiceId::ARRIVAL_SERVICE => null,
+      ServiceId::BIRTH_SERVICE => null,
       ServiceId::BREED_VALUES_OVERVIEW_REPORT => null,
       ServiceId::CACHE => null,
       ServiceId::CLIENT_MIGRATOR => null,
@@ -148,6 +150,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getAuthService(){ return $this->getService(ServiceId::AUTH_SERVICE); }
   /** @return ArrivalService */
   protected function getArrivalService(){ return $this->getService(ServiceId::ARRIVAL_SERVICE); }
+  /** @return BirthService */
+  protected function getBirthService(){ return $this->getService(ServiceId::BIRTH_SERVICE); }
   /** @return BreedValuesOverviewReportService */
   protected function getBreedValuesOverviewReportService() { return $this->getService(ServiceId::BREED_VALUES_OVERVIEW_REPORT); }
   /** @return CacheService */

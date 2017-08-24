@@ -164,7 +164,7 @@ class DeclareBirthResponseOutput extends Output
     }
 
     /**
-     * @param Collection $declarations
+     * @param array $declarations
      * @return array
      */
     public static function createHistoryResponse($declarations)

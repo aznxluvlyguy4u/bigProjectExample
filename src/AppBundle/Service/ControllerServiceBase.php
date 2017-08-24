@@ -22,6 +22,9 @@ use AppBundle\Entity\DeclareBaseRepository;
 use AppBundle\Entity\DeclareBaseResponse;
 use AppBundle\Entity\DeclareBaseResponseRepository;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareBirthRepository;
+use AppBundle\Entity\DeclareBirthResponse;
+use AppBundle\Entity\DeclareBirthResponseRepository;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareDepartRepository;
 use AppBundle\Entity\DeclareDepartResponse;
@@ -51,6 +54,8 @@ use AppBundle\Entity\DeclareTagsTransferResponseRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\EmployeeRepository;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Litter;
+use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\Neuter;
@@ -102,6 +107,10 @@ abstract class ControllerServiceBase
     protected $declareArrivalRepository;
     /** @var DeclareArrivalResponseRepository */
     protected $declareArrivalResponseRepository;
+    /** @var DeclareBirthRepository */
+    protected $declareBirthRepository;
+    /** @var DeclareBirthResponseRepository */
+    protected $declareBirthResponseRepository;
     /** @var DeclareImportRepository */
     protected $declareImportRepository;
     /** @var DeclareImportResponseRepository */
@@ -129,6 +138,8 @@ abstract class ControllerServiceBase
 
     /** @var EmployeeRepository */
     protected $employeeRepository;
+    /** @var LitterRepository */
+    protected $litterRepository;
     /** @var LocationRepository */
     protected $locationRepository;
     /** @var TagRepository */
@@ -156,6 +167,8 @@ abstract class ControllerServiceBase
 
         $this->declareArrivalRepository = $this->em->getRepository(DeclareArrival::class);
         $this->declareArrivalResponseRepository = $this->em->getRepository(DeclareArrivalResponse::class);
+        $this->declareBirthRepository = $this->em->getRepository(DeclareBirth::class);
+        $this->declareBirthResponseRepository = $this->em->getRepository(DeclareBirthResponse::class);
         $this->declareImportRepository = $this->em->getRepository(DeclareImport::class);
         $this->declareImportResponseRepository = $this->em->getRepository(DeclareImportResponse::class);
         $this->declareDepartRepository = $this->em->getRepository(DeclareDepart::class);
@@ -170,6 +183,7 @@ abstract class ControllerServiceBase
         $this->declareTagReplaceResponseRepository = $this->em->getRepository(DeclareTagReplaceResponse::class);
 
         $this->employeeRepository = $this->em->getRepository(Employee::class);
+        $this->litterRepository = $this->em->getRepository(Litter::class);
         $this->locationRepository = $this->em->getRepository(Location::class);
         $this->tagRepository = $this->em->getRepository(Tag::class);
         $this->tokenRepository = $this->em->getRepository(Token::class);

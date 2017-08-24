@@ -463,3 +463,15 @@ services:
           - '@app.animallocation.history'
           - '%kernel.environment%'
 
+    app.birth:
+        class: AppBundle\Service\BirthService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.cache'
+          - '@app.user'
+          - '@app.aws.queueservice.external'
+          - '@app.aws.queueservice.internal'
+          - '@app.doctrine.entitygetter'
+          - '@app.request.message_builder'
+          - '@logger'
