@@ -14,18 +14,40 @@ use AppBundle\Entity\ClientRepository;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareArrivalRepository;
+use AppBundle\Entity\DeclareArrivalResponse;
+use AppBundle\Entity\DeclareArrivalResponseRepository;
 use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\DeclareBaseRepository;
 use AppBundle\Entity\DeclareBaseResponse;
 use AppBundle\Entity\DeclareBaseResponseRepository;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareDepartRepository;
+use AppBundle\Entity\DeclareDepartResponse;
+use AppBundle\Entity\DeclareDepartResponseRepository;
 use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareExportRepository;
+use AppBundle\Entity\DeclareExportResponse;
+use AppBundle\Entity\DeclareExportResponseRepository;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareImportRepository;
+use AppBundle\Entity\DeclareImportResponse;
+use AppBundle\Entity\DeclareImportResponseRepository;
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareLossRepository;
+use AppBundle\Entity\DeclareLossResponse;
+use AppBundle\Entity\DeclareLossResponseRepository;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareNsfoBaseRepository;
+use AppBundle\Entity\DeclareTagReplace;
+use AppBundle\Entity\DeclareTagReplaceRepository;
+use AppBundle\Entity\DeclareTagReplaceResponse;
+use AppBundle\Entity\DeclareTagReplaceResponseRepository;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\DeclareTagsTransferRepository;
+use AppBundle\Entity\DeclareTagsTransferResponse;
+use AppBundle\Entity\DeclareTagsTransferResponseRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\EmployeeRepository;
 use AppBundle\Entity\Ewe;
@@ -68,12 +90,43 @@ abstract class ControllerServiceBase
     protected $animalRepository;
     /** @var ClientRepository */
     protected $clientRepository;
+
     /** @var DeclareBaseRepository */
     protected $declareBaseRepository;
     /** @var DeclareBaseResponseRepository */
     protected $declareBaseResponseRepository;
     /** @var DeclareNsfoBaseRepository */
     protected $declareNsfoBaseRepository;
+
+    /** @var DeclareArrivalRepository */
+    protected $declareArrivalRepository;
+    /** @var DeclareArrivalResponseRepository */
+    protected $declareArrivalResponseRepository;
+    /** @var DeclareImportRepository */
+    protected $declareImportRepository;
+    /** @var DeclareImportResponseRepository */
+    protected $declareImportResponseRepository;
+    /** @var DeclareDepartRepository */
+    protected $declareDepartRepository;
+    /** @var DeclareDepartResponseRepository */
+    protected $declareDepartResponseRepository;
+    /** @var DeclareExportRepository */
+    protected $declareExportRepository;
+    /** @var DeclareExportResponseRepository */
+    protected $declareExportResponseRepository;
+    /** @var DeclareLossRepository */
+    protected $declareLossRepository;
+    /** @var DeclareLossResponseRepository */
+    protected $declareLossResponseRepository;
+    /** @var DeclareTagsTransferRepository */
+    protected $declareTagsTransferRepository;
+    /** @var DeclareTagsTransferResponseRepository */
+    protected $declareTagsTransferResponseRepository;
+    /** @var DeclareTagReplaceRepository */
+    protected $declareTagReplaceRepository;
+    /** @var DeclareTagReplaceResponseRepository */
+    protected $declareTagReplaceResponseRepository;
+
     /** @var EmployeeRepository */
     protected $employeeRepository;
     /** @var LocationRepository */
@@ -82,6 +135,7 @@ abstract class ControllerServiceBase
     protected $tagRepository;
     /** @var TokenRepository */
     protected $tokenRepository;
+    
 
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
                                 CacheService $cacheService, UserService $userService)
@@ -95,9 +149,26 @@ abstract class ControllerServiceBase
 
         $this->animalRepository = $this->em->getRepository(Animal::class);
         $this->clientRepository = $this->em->getRepository(Client::class);
+
         $this->declareBaseRepository = $this->em->getRepository(DeclareBase::class);
         $this->declareBaseResponseRepository = $this->em->getRepository(DeclareBaseResponse::class);
         $this->declareNsfoBaseRepository = $this->em->getRepository(DeclareNsfoBase::class);
+
+        $this->declareArrivalRepository = $this->em->getRepository(DeclareArrival::class);
+        $this->declareArrivalResponseRepository = $this->em->getRepository(DeclareArrivalResponse::class);
+        $this->declareImportRepository = $this->em->getRepository(DeclareImport::class);
+        $this->declareImportResponseRepository = $this->em->getRepository(DeclareImportResponse::class);
+        $this->declareDepartRepository = $this->em->getRepository(DeclareDepart::class);
+        $this->declareDepartResponseRepository = $this->em->getRepository(DeclareDepartResponse::class);
+        $this->declareExportRepository = $this->em->getRepository(DeclareExport::class);
+        $this->declareExportResponseRepository = $this->em->getRepository(DeclareExportResponse::class);
+        $this->declareLossRepository = $this->em->getRepository(DeclareLoss::class);
+        $this->declareLossResponseRepository = $this->em->getRepository(DeclareLossResponse::class);
+        $this->declareTagsTransferRepository = $this->em->getRepository(DeclareTagsTransfer::class);
+        $this->declareTagsTransferResponseRepository = $this->em->getRepository(DeclareTagsTransferResponse::class);
+        $this->declareTagReplaceRepository = $this->em->getRepository(DeclareTagReplace::class);
+        $this->declareTagReplaceResponseRepository = $this->em->getRepository(DeclareTagReplaceResponse::class);
+
         $this->employeeRepository = $this->em->getRepository(Employee::class);
         $this->locationRepository = $this->em->getRepository(Location::class);
         $this->tagRepository = $this->em->getRepository(Tag::class);

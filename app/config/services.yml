@@ -448,3 +448,18 @@ services:
         parent: app.controller.declare_base
         class: AppBundle\Service\AnimalService
 
+    app.arrival:
+        class: AppBundle\Service\ArrivalService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.cache'
+          - '@app.user'
+          - '@app.aws.queueservice.external'
+          - '@app.aws.queueservice.internal'
+          - '@app.doctrine.entitygetter'
+          - '@app.request.message_builder'
+          - '@app.health.updater'
+          - '@app.animallocation.history'
+          - '%kernel.environment%'
+
