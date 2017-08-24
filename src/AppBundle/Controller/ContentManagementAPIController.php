@@ -37,13 +37,7 @@ class ContentManagementAPIController extends APIController implements ContentMan
      */
     public function getContentManagement(Request $request)
     {
-        /** @var ContentRepository $repository */
-        $repository = $this->getDoctrine()->getManager()->getRepository(Content::class);
-        $cms = $repository->getCMS();
-        
-        $outputArray = ContentOutput::create($cms);
-
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return $this->get('app.content_management')->getContentManagement($request);
     }
 
 
@@ -64,27 +58,6 @@ class ContentManagementAPIController extends APIController implements ContentMan
      */
     public function editContentManagement(Request $request)
     {
-        
-        $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-             return $adminValidator->createJsonErrorResponse();
-        }
-        $content = RequestUtil::getContentAsArray($request);
-        $em = $this->getDoctrine()->getManager();
-        /** @var Content $cms */
-        $cms = $em->getRepository(Content::class)->getCMS();
-
-        //Set values
-        $dashboardText = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::DASHBOARD, $content);
-        $contactInfo = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::CONTACT_INFO, $content);
-        $cms->setDashBoardIntroductionText($dashboardText);
-        $cms->setNsfoContactInformation($contactInfo);
-        $em->persist($cms);
-        $em->flush();
-
-        $outputArray = $outputArray = ContentOutput::create($cms);
-    
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return $this->get('app.content_management')->editContentManagement($request);
     }
 }

@@ -469,3 +469,7 @@ services:
     app.contact:
         parent: app.abstract_base.auth
         class: AppBundle\Service\ContactService
+
+    app.content_management:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\ContentManagementService
