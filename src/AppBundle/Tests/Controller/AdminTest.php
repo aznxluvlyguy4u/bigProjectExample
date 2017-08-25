@@ -3,6 +3,7 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\TestConstant;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\Validator;
@@ -62,7 +63,7 @@ class AdminTest extends WebTestCase
             die;
         }
 
-        self::$accessTokenCode = DoctrineUtil::getRandomAdminAccessTokenCode(self::$em);
+        self::$accessTokenCode = DoctrineUtil::getRandomAdminAccessTokenCode(self::$em, AccessLevelType::SUPER_ADMIN);
     }
 
 

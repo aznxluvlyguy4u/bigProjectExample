@@ -11,8 +11,10 @@ use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
 use AppBundle\Entity\Token;
+use AppBundle\Enumerator\AccessLevelType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class DoctrineUtil
@@ -111,16 +113,20 @@ class DoctrineUtil
 
 
     /**
-     * @param ObjectManager $em
+     * @param ObjectManager|EntityManagerInterface $em
+     * @param string $accessLevel
      * @return string
      */
-    public static function getRandomAdminAccessTokenCode(ObjectManager $em)
+    public static function getRandomAdminAccessTokenCode(ObjectManager $em, $accessLevel = AccessLevelType::ADMIN)
     {
         $sql = "SELECT token.code as code 
                 FROM employee 
                     INNER JOIN token ON employee.id = token.owner_id
                     INNER JOIN person ON employee.id = person.id
-                WHERE token.type = 'ACCESS' AND person.is_active = TRUE";
+                WHERE token.type = 'ACCESS' 
+                  AND person.is_active = TRUE
+                  AND employee.access_level = '".$accessLevel."'
+                  ";
         $tokenCodes = $em->getConnection()->query($sql)->fetchAll();
 
         //null check
