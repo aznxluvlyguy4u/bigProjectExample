@@ -107,8 +107,8 @@ class TagTransferService extends DeclareControllerServiceBase
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
 
-        $tagTransfers = $this->getManager()->getRepository(TagTransferItemResponse::class
-            ->getTagTransferItemRequestsWithLastErrorResponses($client, $location));
+        $tagTransfers = $this->getManager()->getRepository(TagTransferItemResponse::class)
+            ->getTagTransferItemRequestsWithLastErrorResponses($client, $location);
 
         return ResultUtil::successResult($tagTransfers);
     }
