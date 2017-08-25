@@ -36,12 +36,12 @@ class DepartService extends DeclareControllerServiceBase
     public function __construct(AwsExternalQueueService $externalQueueService,
                                 CacheService $cacheService,
                                 EntityManagerInterface $manager,
-                                IRSerializer $serializer,
+                                IRSerializer $irSerializer,
                                 RequestMessageBuilder $requestMessageBuilder,
                                 UserService $userService,
                                 $environment)
     {
-        parent::__construct($externalQueueService, $cacheService, $manager, $serializer, $requestMessageBuilder, $userService);
+        parent::__construct($externalQueueService, $cacheService, $manager, $irSerializer, $requestMessageBuilder, $userService);
         $this->environment = $environment;
     }
 

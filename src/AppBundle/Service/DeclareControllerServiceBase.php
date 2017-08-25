@@ -40,20 +40,20 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     /** @var AwsExternalQueueService */
     protected $externalQueueService;
     /** @var IRSerializer */
-    protected $serializer;
+    protected $irSerializer;
     /** @var RequestMessageBuilder */
     protected $requestMessageBuilder;
 
     public function __construct(AwsExternalQueueService $externalQueueService,
                                 CacheService $cacheService,
                                 EntityManagerInterface $manager,
-                                IRSerializer $serializer,
+                                IRSerializer $irSerializer,
                                 RequestMessageBuilder $requestMessageBuilder,
                                 UserService $userService)
     {
-        parent::__construct($cacheService, $manager, $userService);
+        parent::__construct($irSerializer, $cacheService, $manager, $userService);
         $this->externalQueueService = $externalQueueService;
-        $this->serializer = $serializer;
+        $this->irSerializer = $irSerializer;
         $this->requestMessageBuilder = $requestMessageBuilder;
     }
 
@@ -72,11 +72,11 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
         if($messageArray == null) {
             //These objects do not have a customized minimal json output for the queue yet
-            $jsonMessage = $this->serializer->serializeToJSON($messageObject);
+            $jsonMessage = $this->irSerializer->serializeToJSON($messageObject);
             $messageArray = json_decode($jsonMessage, true);
         } else {
             //Use the minimized custom output
-            $jsonMessage = $this->serializer->serializeToJSON($messageArray);
+            $jsonMessage = $this->irSerializer->serializeToJSON($messageArray);
         }
 
         //Send serialized message to Queue
@@ -117,7 +117,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     protected function sendTaskToQueue(AwsInternalQueueService $internalQueueService, $workerMessageBody) {
         if($workerMessageBody == null) { return false; }
 
-        $jsonMessage = $this->serializer->serializeToJSON($workerMessageBody);
+        $jsonMessage = $this->irSerializer->serializeToJSON($workerMessageBody);
 
         //Send  message to Queue
         $sendToQresult = $internalQueueService->send($jsonMessage, $workerMessageBody->getTaskType(), 1);

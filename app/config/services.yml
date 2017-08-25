@@ -302,6 +302,10 @@ services:
           cacheDir: %kernel.cache_dir%
           logger: '@logger'
 
+    app.serializer.base:
+        class: AppBundle\Service\BaseSerializer
+        arguments: ['@jms_serializer']
+
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
         arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter']
@@ -381,6 +385,7 @@ services:
     app.abstract_base.controller:
         abstract: true
         arguments:
+          - '@app.serializer.base'
           - '@app.cache'
           - '@doctrine.orm.entity_manager'
           - '@app.user'
@@ -388,6 +393,7 @@ services:
     app.abstract_base.auth:
         abstract: true
         arguments:
+          - '@app.serializer.base'
           - '@app.cache'
           - '@app.email'
           - '@doctrine.orm.entity_manager'

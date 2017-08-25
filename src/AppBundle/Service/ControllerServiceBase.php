@@ -41,6 +41,7 @@ use Symfony\Component\HttpFoundation\Request;
  */
 abstract class ControllerServiceBase
 {
+    private $baseSerializer;
     /** @var EntityManagerInterface */
     private $manager;
     /** @var CacheService */
@@ -48,10 +49,12 @@ abstract class ControllerServiceBase
     /** @var UserService */
     private $userService;
 
-    public function __construct(CacheService $cacheService,
+    public function __construct(BaseSerializer $baseSerializer,
+                                CacheService $cacheService,
                                 EntityManagerInterface $manager,
                                 UserService $userService)
     {
+        $this->baseSerializer = $baseSerializer;
         $this->cacheService = $cacheService;
         $this->manager = $manager;
         $this->userService = $userService;
@@ -74,6 +77,16 @@ abstract class ControllerServiceBase
     {
         return $this->manager->getConnection();
     }
+
+
+    /**
+     * @return BaseSerializer
+     */
+    public function getBaseSerializer()
+    {
+        return $this->baseSerializer;
+    }
+
 
 
     /**

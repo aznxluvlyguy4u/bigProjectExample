@@ -64,8 +64,10 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\LazyCriteriaCollection;
 use JMS\Serializer\SerializationContext;
+use JMS\Serializer\Serializer;
 use Symfony\Component\DependencyInjection\Tests\A;
 
 /**
@@ -86,125 +88,28 @@ use Symfony\Component\DependencyInjection\Tests\A;
  *
  * @package AppBundle\Service
  */
-class IRSerializer implements IRSerializerInterface
+class IRSerializer extends BaseSerializer implements IRSerializerInterface
 {
     const DISCRIMINATOR_TYPE_NAMESPACE = "type";
 
-    /**
-     * @var ObjectManager
-     */
+    /** @var ObjectManager */
     private $entityManager;
-
-    /**
-     * @var \JMS\Serializer\Serializer
-     */
-    private $serializer;
-
-    /**
-     * @var \AppBundle\Service\EntityGetter
-     */
+    /** @var \AppBundle\Service\EntityGetter */
     private $entityGetter;
-
     /** @var Connection */
     private $conn;
 
-    public function __construct($serializer, $entityManager, $entityGetter)
+    public function __construct(Serializer $jmsSerializer,
+                                EntityManagerInterface $entityManager,
+                                EntityGetter $entityGetter)
     {
-        $this->serializer = $serializer;
+        parent::__construct($jmsSerializer);
+
         $this->entityManager = $entityManager;
         $this->entityGetter = $entityGetter;
         $this->conn = $entityManager->getConnection();
     }
 
-
-    /**
-     * @param $object
-     * @param array|string $type
-     * @param bool $enableMaxDepthChecks
-     * @return mixed
-     */
-    public function getDecodedJson($object, $type = null, $enableMaxDepthChecks = true)
-    {
-        if($object instanceof ArrayCollection || is_array($object) || $object instanceof LazyCriteriaCollection) {
-            $results = [];
-            foreach ($object as $item) {
-                $results[] = $this->getDecodedJsonSingleObject($item, $type, $enableMaxDepthChecks);
-            }
-            return $results;
-        }
-
-        return $this->getDecodedJsonSingleObject($object, $type, $enableMaxDepthChecks);
-    }
-
-
-    /**
-     * @param $object
-     * @param array $type
-     * @param boolean $enableMaxDepthChecks
-     * @return mixed|array
-     */
-    private function getDecodedJsonSingleObject($object, $type = null, $enableMaxDepthChecks = true)
-    {
-        $jsonMessage = $this->serializeToJSON($object, $type, $enableMaxDepthChecks);
-        return json_decode($jsonMessage, true);
-    }
-
-
-    /**
-     * @param $object
-     * @param $type array|string
-     * @param $enableMaxDepthChecks boolean
-     * @return mixed|string
-     */
-    public function serializeToJSON($object, $type = null, $enableMaxDepthChecks = true)
-    {
-        if($type == '' || $type == null) {
-            if($enableMaxDepthChecks) {
-                $serializationContext = SerializationContext::create()->enableMaxDepthChecks();
-            } else {
-                $serializationContext = null;
-            }
-
-        } else {
-            $type = is_string($type) ? [$type] : $type;
-            if($enableMaxDepthChecks) {
-                $serializationContext = SerializationContext::create()->setGroups($type)->enableMaxDepthChecks();
-            } else {
-                $serializationContext = SerializationContext::create()->setGroups($type);
-            }
-        }
-
-        return $this->serializer->serialize($object, Constant::jsonNamespace, $serializationContext);
-    }
-
-    /**
-     * @param $json
-     * @param $messageClassNameSpace
-     * @return array|\JMS\Serializer\scalar|mixed|object|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
-     */
-    public function deserializeToObject($json, $messageClassNameSpace, $basePath = "AppBundle\\Entity\\")
-    {
-        $messageClassPathNameSpace = strtr($basePath . $messageClassNameSpace,
-            ["AppBundle\\Entity\\AppBundle\\Entity\\" => "AppBundle\\Entity\\"]);
-
-        $messageObject = $this->serializer->deserialize($json, $messageClassPathNameSpace, Constant::jsonNamespace);
-
-        return $messageObject;
-    }
-
-    /**
-     * @param $object
-     * @param $type array|string The JMS Groups
-     * @param $enableMaxDepthChecks boolean
-     * @return array
-     */
-    public function normalizeToArray($object, $type = null, $enableMaxDepthChecks = true)
-    {
-        $json = $this->serializeToJSON($object, $type, $enableMaxDepthChecks);
-        $array = json_decode($json, true);
-
-        return $array;
-    }
 
     /**
      * @param Animal $retrievedAnimal
@@ -1216,30 +1121,4 @@ class IRSerializer implements IRSerializerInterface
         return $retrieveUbnDetails;
     }
 
-    /**
-     * @param array $animalArray
-     * @return array
-     */
-    function extractUlnFromAnimal($animalArray)
-    {
-        if(array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalArray) && array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray)) {
-            if( ($animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE] != null && $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE] != "" )
-                && ($animalArray[Constant::ULN_NUMBER_NAMESPACE] != null && $animalArray[Constant::ULN_NUMBER_NAMESPACE] != "" ) ) {
-                
-                return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE],
-                                   Constant::ULN_NUMBER_NAMESPACE => $animalArray[Constant::ULN_NUMBER_NAMESPACE]);
-            }
-            
-        } elseif (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray)) {
-            if (($animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE] != null && $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE] != "")
-                && ($animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE] != null && $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE] != "") ) {
-
-                return $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)->getUlnByPedigree(
-                    $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE], $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE]);
-            }
-        }
-
-        return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => null,
-            Constant::ULN_NUMBER_NAMESPACE => null);
-    }
 }

@@ -43,13 +43,13 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     public function __construct(AwsExternalQueueService $externalQueueService,
                                 CacheService $cacheService,
                                 EntityManagerInterface $manager,
-                                IRSerializer $serializer,
+                                IRSerializer $irSerializer,
                                 RequestMessageBuilder $requestMessageBuilder,
                                 UserService $userService, HealthUpdaterService $healthService,
                                 AnimalLocationHistoryService $animalLocationHistoryService,
                                 $environment)
     {
-        parent::__construct($externalQueueService, $cacheService, $manager, $serializer, $requestMessageBuilder, $userService);
+        parent::__construct($externalQueueService, $cacheService, $manager, $irSerializer, $requestMessageBuilder, $userService);
         $this->healthService = $healthService;
         $this->animalLocationHistoryService = $animalLocationHistoryService;
         $this->environment = $environment;

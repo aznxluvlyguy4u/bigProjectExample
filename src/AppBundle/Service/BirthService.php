@@ -53,12 +53,12 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     /** @var Logger */
     private $logger;
 
-    public function __construct(AwsExternalQueueService $externalQueueService, CacheService $cacheService, EntityManagerInterface $manager, IRSerializer $serializer, RequestMessageBuilder $requestMessageBuilder, UserService $userService,
+    public function __construct(AwsExternalQueueService $externalQueueService, CacheService $cacheService, EntityManagerInterface $manager, IRSerializer $irSerializer, RequestMessageBuilder $requestMessageBuilder, UserService $userService,
                                 Logger $logger,
                                 AwsInternalQueueService $internalQueueService,
                                 EntityGetter $entityGetter)
     {
-        parent::__construct($externalQueueService, $cacheService, $manager, $serializer, $requestMessageBuilder, $userService);
+        parent::__construct($externalQueueService, $cacheService, $manager, $irSerializer, $requestMessageBuilder, $userService);
         $this->entityGetter = $entityGetter;
         $this->logger = $logger;
         $this->internalQueueService = $internalQueueService;
@@ -953,7 +953,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $taskType = 'DECLARE_BIRTH';
         $jsonMessage = $request->getContent();
 
-        $declareBirthResponse = WorkerTaskUtil::deserializeMessageToDeclareBirthResponse($request, $this->serializer);
+        $declareBirthResponse = WorkerTaskUtil::deserializeMessageToDeclareBirthResponse($request, $this->irSerializer);
 
         $message = 'Message is not a DeclareBirthResponse';
         $statusCode = 428;

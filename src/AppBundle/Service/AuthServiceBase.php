@@ -14,13 +14,14 @@ class AuthServiceBase extends ControllerServiceBase
     /** @var UserPasswordEncoderInterface */
     protected $encoder;
 
-    public function __construct(CacheService $cacheService,
+    public function __construct(BaseSerializer $baseSerializer,
+                                CacheService $cacheService,
                                 EmailService $emailService,
                                 EntityManagerInterface $manager,
                                 UserService $userService,
                                 UserPasswordEncoderInterface $encoder)
     {
-        parent::__construct($cacheService, $manager, $userService);
+        parent::__construct($baseSerializer, $cacheService, $manager, $userService);
         $this->emailService = $emailService;
         $this->encoder = $encoder;
     }
