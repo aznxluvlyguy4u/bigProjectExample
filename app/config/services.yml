@@ -524,6 +524,10 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MeasurementService
 
+    app.messages:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\MessageService
+
     app.profile:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ProfileService

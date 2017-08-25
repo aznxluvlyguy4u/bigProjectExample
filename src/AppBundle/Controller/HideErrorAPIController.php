@@ -96,7 +96,8 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
             $nsfoMessage = $this->getDoctrine()->getRepository(DeclareNsfoBase::class)->findOneByMessageId($messageId);
 
             $nsfoMessage->setIsHidden($isHidden);
-            $this->persistAndFlush($nsfoMessage);
+            $this->getDoctrine()->getManager()->persist($nsfoMessage);
+            $this->getDoctrine()->getManager()->flush();
 
             return new JsonResponse(["code"=>200, "message"=>"saved"], 200);
         }

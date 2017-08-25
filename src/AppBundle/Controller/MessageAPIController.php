@@ -21,48 +21,9 @@ class MessageAPIController extends APIController
      * @Route("")
      * @return jsonResponse
      */
-    public function getMessages(Request $request) {
-        $client = $this->getAccountOwner($request);
-        $location = $this->getSelectedLocation($request);
-        $em = $this->getDoctrine()->getManager();
-
-        if (!$client || !$location) {
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => []), 200);
-        }
-        
-        $sql = "SELECT
-                  receiver.last_name AS receiver_last_name,
-                  receiver.first_name AS receiver_last_name,
-                  receiver_location.ubn AS receiver_ubn,
-                  receiver_company.company_name AS receiver_company,
-                  sender.last_name AS sender_last_name,
-                  sender.first_name AS sender_first_name,
-                  sender_location.ubn AS sender_ubn,
-                  sender_company.company_name AS sender_company,
-                  message.message_id,
-                  message.type,
-                  message.subject,
-                  message.message,
-                  message.is_read,
-                  message.creation_date,
-                  message.is_hidden,
-                  message.data,
-                  declare_base_response.success_indicator
-                FROM
-                  message
-                LEFT JOIN person AS receiver ON message.receiver_id = receiver.id
-                LEFT JOIN person AS sender ON message.sender_id = sender.id
-                LEFT JOIN location AS receiver_location ON message.receiver_location_id = receiver_location.id
-                LEFT JOIN location AS sender_location ON message.sender_location_id = sender_location.id
-                LEFT JOIN company AS receiver_company ON receiver_location.company_id = receiver_company.id
-                LEFT JOIN company AS sender_company ON sender_location.company_id = sender_company.id
-                INNER JOIN declare_base_response ON message.declare_base_response_id = declare_base_response.id
-                WHERE
-                    message.receiver_id = " . $client->getId() . " OR message.receiver_location_id = '" . $location->getId() . "'";
-
-        $results = $em->getConnection()->query($sql)->fetchAll();
-
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $results), 200);
+    public function getMessages(Request $request)
+    {
+        return $this->get('app.messages')->getMessages($request);
     }
 
     /**
@@ -73,18 +34,9 @@ class MessageAPIController extends APIController
      * @Method("PUT")
      * @return jsonResponse
      */
-    public function changeReadStatus(Request $request, $messageId) {
-        $client = $this->getAccountOwner($request);
-
-        /** @var Message $message */
-        $repository = $this->getDoctrine()->getRepository(Message::class);
-        $message = $repository->findOneBy(['messageId' => $messageId]);
-        $message->setRead(true);
-
-        $this->getDoctrine()->getManager()->persist($message);
-        $this->getDoctrine()->getManager()->flush();
-
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+    public function changeReadStatus(Request $request, $messageId)
+    {
+        return $this->get('app.messages')->changeReadStatus($request, $messageId);
     }
 
     /**
@@ -95,17 +47,8 @@ class MessageAPIController extends APIController
      * @Method("PUT")
      * @return jsonResponse
      */
-    public function hideMessage(Request $request, $messageId) {
-        $client = $this->getAccountOwner($request);
-
-        /** @var Message $message */
-        $repository = $this->getDoctrine()->getRepository(Message::class);
-        $message = $repository->findOneBy(['messageId' => $messageId]);
-        $message->setHidden(true);
-
-        $this->getDoctrine()->getManager()->persist($message);
-        $this->getDoctrine()->getManager()->flush();
-
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+    public function hideMessage(Request $request, $messageId)
+    {
+        return $this->get('app.messages')->hideMessage($request, $messageId);
     }
 }
