@@ -52,7 +52,7 @@ class AdminValidator
     public function getIsAccessGranted() { return $this->isAccessGranted; }
 
     /**
-     * @return JsonResponse
+     * @return JsonResponse|\AppBundle\Component\HttpFoundation\JsonResponse
      */
     public function createJsonErrorResponse()
     {

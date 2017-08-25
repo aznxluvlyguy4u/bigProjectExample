@@ -511,3 +511,57 @@ services:
     app.loss:
         parent: app.abstract_base.declare
         class: AppBundle\Service\LossService
+
+    app.health.location:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\LocationHealthService
+
+    app.mate:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\MateService
+
+    app.measurement:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\MeasurementService
+
+    app.profile:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\ProfileService
+
+    app.declare.revoke:
+        class: AppBundle\Service\RevokeService
+        arguments:
+          - '@app.aws.queueservice.external'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.request.message_builder'
+          - '@app.user'
+          - '@app.doctrine.entitygetter'
+
+    app.tag.replace:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\TagReplaceService
+
+    app.tag.sync:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\TagSyncService
+
+    app.tag.transfer:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\TagTransferService
+
+    app.tags:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\TagsService
+
+    app.ubn:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\UbnService
+
+    app.weight:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\WeightService
+
+
+
