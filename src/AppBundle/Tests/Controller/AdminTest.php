@@ -91,6 +91,13 @@ class AdminTest extends WebTestCase
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
+
+
+        $this->client->request('GET',
+            $this::DECLARE_ADMIN_ENDPOINT.'-access-levels',
+            array(), array(), $this->defaultHeaders
+        );
+        $this->assertStatusCode(200, $this->client);
     }
 
 

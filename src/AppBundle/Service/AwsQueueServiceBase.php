@@ -36,15 +36,16 @@ abstract class AwsQueueServiceBase
     /**
      * AWSQueueServiceBase constructor, initialize SQS config
      * @param string $queueIdPrefix
-     * @param array $credentials containing AWS accessKey and secretKey.
+     * @param string $accessKeyId
+     * @param string $secretKey
      * @param string $region of the Queue
      * @param string $version
      * @param string $currentEnvironment
      */
-    public function __construct($queueIdPrefix, $credentials = array(), $region, $version, $currentEnvironment)
+    public function __construct($queueIdPrefix, $accessKeyId, $secretKey, $region, $version, $currentEnvironment)
     {
-        $this->accessKeyId = $credentials[0];
-        $this->secretKey = $credentials[1];
+        $this->accessKeyId = $accessKeyId;
+        $this->secretKey = $secretKey;
 
         $this->awsCredentials =  new Credentials($this->accessKeyId, $this->secretKey);
         $this->region = $region;

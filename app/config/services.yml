@@ -82,10 +82,11 @@ services:
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - placeholder_to_override #queueIdPrefix
-          - ['%aws_access_key_id%', '%aws_secret_key%'] #credentials
-          - %aws_sqs_region% #region
-          - %aws_sqs_version% #version
-          - %environment% #currentEnv
+          - '%aws_access_key_id%'
+          - '%aws_secret_key%'
+          - '%aws_sqs_region%' #region
+          - '%aws_sqs_version%' #version
+          - '%environment%' #currentEnv
 
     app.aws.queueservice.external:
         class: AppBundle\Service\AwsExternalQueueService
@@ -110,11 +111,12 @@ services:
     app.aws.storageservice:
         class: AppBundle\Service\AWSSimpleStorageService
         arguments:
-          credentials: ['%aws_access_key_id%', '%aws_secret_key%']
-          region: %aws_s3_region%
-          version: %aws_s3_version%
-          bucket: %aws_s3_bucket%
-          currentEnv: %environment%
+          - '%aws_access_key_id%'
+          - '%aws_secret_key%'
+          - '%aws_s3_region%'
+          - '%aws_s3_version%'
+          - '%aws_s3_bucket%'
+          - '%environment%'
 
     app.doctrine.entitygetter:
         class: AppBundle\Service\EntityGetter
@@ -135,28 +137,28 @@ services:
     app.messagebuilder.base:
         class: AppBundle\Component\MessageBuilderBase
         arguments:
-          entityManager: ['@doctrine.orm.entity_manager']
-          currentEnv: %environment%
+          - '@doctrine.orm.entity_manager'
+          - '%environment%'
 
     app.mixblup.input:
         class: AppBundle\Service\MixBlupInputFilesService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          AWSSimpleStorageService: '@app.aws.storageservice'
-          MixBlupInputQueueService: '@app.aws.queueservice.mixblup_input'
-          currentEnv: %environment%
-          cacheDir: %kernel.cache_dir%
-          logger: '@logger'
+          - '@doctrine.orm.entity_manager'
+          - '@app.aws.storageservice'
+          - '@app.aws.queueservice.mixblup_input'
+          - '%environment%'
+          - '%kernel.cache_dir%'
+          - '@logger'
 
     app.mixblup.output:
         class: AppBundle\Service\MixBlupOutputFilesService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          AWSSimpleStorageService: '@app.aws.storageservice'
-          MixBlupOutputQueueService: '@app.aws.queueservice.mixblup_output'
-          currentEnv: %environment%
-          cacheDir: %kernel.cache_dir%
-          logger: '@logger'
+          - '@doctrine.orm.entity_manager'
+          - '@app.aws.storageservice'
+          - '@app.aws.queueservice.mixblup_output'
+          - '%environment%'
+          - '%kernel.cache_dir%'
+          - '@logger'
 
     app.mixblup.input.validate:
         class: AppBundle\Component\MixBlup\MixBlupInputFileValidator
@@ -190,31 +192,31 @@ services:
     app.migrator.vsm:
         class: AppBundle\Service\Migration\VsmMigratorService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          rootDir: %kernel.root_dir%
-          animalTableImporter: '@app.migrator.importer.animaltable'
-          animalTableMigrator: '@app.migrator.animaltable'
-          birthMigrator: '@app.migrator.birth'
-          dateOfDeathMigrator: '@app.migrator.date_of_death'
-          exteriorMigrator: '@app.migrator.exteriors'
-          litterMigrator: '@app.migrator.litters'
-          tagReplaceMigrator: '@app.migrator.tagreplace'
-          wormResistanceMigrator: '@app.migrator.wormresistance'
-          duplicateAnimalsFixer: '@app.datafix.animals.duplicate'
-          duplicateLitterFixer: '@app.datafix.litter.duplicate'
+          - '@doctrine.orm.entity_manager'
+          - '%kernel.root_dir%'
+          - '@app.migrator.importer.animaltable'
+          - '@app.migrator.animaltable'
+          - '@app.migrator.birth'
+          - '@app.migrator.date_of_death'
+          - '@app.migrator.exteriors'
+          - '@app.migrator.litters'
+          - '@app.migrator.tagreplace'
+          - '@app.migrator.wormresistance'
+          - '@app.datafix.animals.duplicate'
+          - '@app.datafix.litter.duplicate'
 
     app.migrator.base:
         abstract: true
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
-          - %kernel.root_dir%
+          - '%kernel.root_dir%'
 
     app.migrator.importer.animaltable:
         class: AppBundle\Service\Migration\AnimalTableImporter
         arguments:
           - '@doctrine.orm.entity_manager'
-          - %kernel.root_dir%
+          - '%kernel.root_dir%'
           - '@app.datafix.animals.duplicate'
           - '@app.datafix.ubn'
 
@@ -222,7 +224,7 @@ services:
         class: AppBundle\Service\Migration\AnimalTableMigrator
         arguments:
           - '@doctrine.orm.entity_manager'
-          - %kernel.root_dir%
+          - '%kernel.root_dir%'
           - '@app.datafix.ubn'
 
     app.migrator.birth:
@@ -243,7 +245,7 @@ services:
         class: AppBundle\Service\Migration\ClientMigrator
         arguments:
           - '@doctrine.orm.entity_manager'
-          - %kernel.root_dir%
+          - '%kernel.root_dir%'
           - '@security.password_encoder'
 
     app.migrator.date_of_death:
@@ -279,28 +281,28 @@ services:
     app.breed.index:
         class: AppBundle\Service\BreedIndexService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          logger: '@logger'
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.breed.value:
         class: AppBundle\Service\BreedValueService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          logger: '@logger'
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.breed.valueprinter:
         class: AppBundle\Service\BreedValuePrinter
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          logger: '@logger'
-          cacheDir: %kernel.cache_dir%
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '%kernel.cache_dir%'
 
     app.excel.service:
         class: AppBundle\Service\ExcelService
         arguments:
-          excelBundle: '@phpexcel'
-          cacheDir: %kernel.cache_dir%
-          logger: '@logger'
+          - '@phpexcel'
+          - '%kernel.cache_dir%'
+          - '@logger'
 
     app.serializer.base:
         class: AppBundle\Service\BaseSerializer
@@ -317,9 +319,9 @@ services:
     app.authenticator.token:
         class: AppBundle\Component\Authentication\TokenAuthenticator
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          httpUtil: '@security.http_utils'
-          unauthedPaths: ['/api/v1/doc', '/api/v1/auth/register', '/api/v1/auth/authorize']
+          - '@doctrine.orm.entity_manager'
+          - '@security.http_utils'
+          - ['/api/v1/doc', '/api/v1/auth/register', '/api/v1/auth/authorize']
         public: false
 
     app.cache:
