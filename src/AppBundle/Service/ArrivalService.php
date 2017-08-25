@@ -33,7 +33,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIControllerInterface
 {
-    /** @var HealthService */
+    /** @var HealthUpdaterService */
     private $healthService;
     /** @var AnimalLocationHistoryService */
     private $animalLocationHistoryService;
@@ -45,7 +45,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
                                 EntityManagerInterface $manager,
                                 IRSerializer $serializer,
                                 RequestMessageBuilder $requestMessageBuilder,
-                                UserService $userService, HealthService $healthService,
+                                UserService $userService, HealthUpdaterService $healthService,
                                 AnimalLocationHistoryService $animalLocationHistoryService,
                                 $environment)
     {

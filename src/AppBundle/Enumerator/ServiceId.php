@@ -24,7 +24,7 @@ class ServiceId
     const ENTITY_GETTER = 'app.doctrine.entitygetter';
     const EXTERNAL_QUEUE_SERVICE = 'app.aws.queueservice.external';
     const EXCEL_SERVICE = 'app.excel.service';
-    const HEALTH_SERVICE = 'app.health.updater';
+    const HEALTH_UPDATER_SERVICE = 'app.health.updater';
     const INBREEDING_COEFFICIENT_REPORT_SERVICE = 'app.report.inbreeding_coefficient';
     const INTERNAL_QUEUE_SERVICE = 'app.aws.queueservice.internal';
     const LIVESTOCK_REPORT = 'app.report.livestock';

@@ -307,7 +307,7 @@ services:
         arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter']
 
     app.health.updater:
-        class: AppBundle\Service\HealthService
+        class: AppBundle\Service\HealthUpdaterService
         arguments: ['@doctrine.orm.entity_manager']
 
     app.authenticator.token:

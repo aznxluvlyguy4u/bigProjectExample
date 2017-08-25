@@ -56,7 +56,7 @@ use AppBundle\Service\Container\RepositoryContainerBase;
 use AppBundle\Service\EmailService;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Service\ExcelService;
-use AppBundle\Service\HealthService;
+use AppBundle\Service\HealthUpdaterService;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Service\Migration\ClientMigrator;
 use AppBundle\Service\MixBlupInputQueueService;
@@ -110,7 +110,7 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::ENTITY_GETTER => null,
       ServiceId::EXCEL_SERVICE => null,
       ServiceId::EXTERNAL_QUEUE_SERVICE => null,
-      ServiceId::HEALTH_SERVICE => null,
+      ServiceId::HEALTH_UPDATER_SERVICE => null,
       ServiceId::INBREEDING_COEFFICIENT_REPORT_SERVICE => null,
       ServiceId::INTERNAL_QUEUE_SERVICE => null,
       ServiceId::LIVESTOCK_REPORT => null,
@@ -172,8 +172,8 @@ class APIController extends Controller implements APIControllerInterface
   protected function getExcelService() { return $this->getService(ServiceId::EXCEL_SERVICE); }
   /** @return AwsExternalQueueService */
   protected function getExternalQueueService(){ return $this->getService(ServiceId::EXTERNAL_QUEUE_SERVICE); }
-  /** @return HealthService */
-  protected function getHealthService(){ return $this->getService(ServiceId::HEALTH_SERVICE); }
+  /** @return HealthUpdaterService */
+  protected function getHealthUpdaterService(){ return $this->getService(ServiceId::HEALTH_UPDATER_SERVICE); }
   /** @return InbreedingCoefficientReportService */
   protected function getInbreedingCoefficientReportService() { return $this->getService(ServiceId::INBREEDING_COEFFICIENT_REPORT_SERVICE); }
   /** @return AwsInternalQueueService */

@@ -23,13 +23,13 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 
-class HealthService
+class HealthUpdaterService
 {
     /** @var ObjectManager */
     private $entityManager;
 
     /**
-     * HealthService constructor.
+     * HealthUpdaterService constructor.
      * @param $entityManager
      */
     public function __construct(ObjectManager $entityManager)
