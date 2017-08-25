@@ -482,3 +482,26 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\DashboardService
 
+
+    app.depart:
+        class: AppBundle\Service\DepartService
+        arguments:
+          - '@app.aws.queueservice.external'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.request.message_builder'
+          - '@app.user'
+          - '%kernel.environment%'
+
+    app.export:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\ExportService
+
+    app.import:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\ImportService
+
+    app.loss:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\LossService
