@@ -30,9 +30,8 @@ class SettingAPIController extends APIController implements SettingAPIController
     public function editReasonsOfLoss(Request $request)
     {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // TODO: Implement editReasonOfLoss() method.
@@ -52,9 +51,8 @@ class SettingAPIController extends APIController implements SettingAPIController
     public function editReasonsOfDepart(Request $request)
     {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // TODO: Implement editReasonOfDepart() method.
@@ -74,9 +72,8 @@ class SettingAPIController extends APIController implements SettingAPIController
     public function editTreatmentOptions(Request $request)
     {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // TODO: Implement editTreatmentOptions() method.
@@ -96,9 +93,8 @@ class SettingAPIController extends APIController implements SettingAPIController
     public function editContactFormOptions(Request $request)
     {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // TODO: Implement editContactFormOptions() method.

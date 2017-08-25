@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\LocationHealthLetter;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -32,10 +33,8 @@ class LocationHealthLetterAPIController extends APIController
     {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $type = strtoupper($illness . '_' . $letter_type);
@@ -70,10 +69,8 @@ class LocationHealthLetterAPIController extends APIController
     {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $content = RequestUtil::getContentAsArray($request);

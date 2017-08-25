@@ -11,6 +11,7 @@ use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\LocationHealthInspectionDirection;
 use AppBundle\Entity\LocationHealthInspectionResult;
 use AppBundle\Entity\LocationHealthInspectionResultRepository;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\LocationHealthEditor;
 use AppBundle\Output\HealthInspectionOutput;
 use AppBundle\Util\RequestUtil;
@@ -47,10 +48,8 @@ class LocationHealthInspectionAPIController extends APIController
     {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // Get all NEW SCRAPIE HealthInspections
@@ -154,10 +153,8 @@ class LocationHealthInspectionAPIController extends APIController
     public function createInspection(Request $request) {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // Validate content
@@ -263,10 +260,8 @@ class LocationHealthInspectionAPIController extends APIController
     public function changeInspection(Request $request) {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // Validate content
@@ -351,14 +346,14 @@ class LocationHealthInspectionAPIController extends APIController
      * @Route("/barcodes")
      * @Method("POST")
      */
-    public function createBarcodes(Request $request) {
+    public function createBarcodes(Request $request)
+    {
         // Validation if user is an admin
-        $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
         $dateTimeNow = new \DateTime();
 
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        $admin = $this->getEmployee();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $twigFile = 'animal_health/barcodes.html.twig';
@@ -446,10 +441,8 @@ class LocationHealthInspectionAPIController extends APIController
     {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $twigFile = 'animal_health/base_letter.html.twig';
@@ -585,13 +578,11 @@ class LocationHealthInspectionAPIController extends APIController
      * @Route("/{inspectionId}/results")
      * @Method("GET")
      */
-    public function getInspectionResults(Request $request, $inspectionId) {
-        // Validation if user is an admin
+    public function getInspectionResults(Request $request, $inspectionId)
+    {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $em = $this->getDoctrine()->getManager();
@@ -630,7 +621,8 @@ class LocationHealthInspectionAPIController extends APIController
      * @Route("/failed-results")
      * @Method("POST")
      */
-    public function createFailedInspectionResults(Request $request) {
+    public function createFailedInspectionResults(Request $request)
+    {
         $contentResults = RequestUtil::getContentAsArray($request);
         $filename = $contentResults->get('filename');
         $url = $contentResults->get('url');
@@ -655,13 +647,11 @@ class LocationHealthInspectionAPIController extends APIController
      * @Route("/failed-results")
      * @Method("GET")
      */
-    public function getFailedInspectionResults(Request $request) {
-        // Validation if user is an admin
+    public function getFailedInspectionResults(Request $request)
+    {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $repository = $this->getDoctrine()->getRepository(FTPFailedImport::class);
@@ -676,13 +666,11 @@ class LocationHealthInspectionAPIController extends APIController
      * @Route("/failed-results")
      * @Method("PUT")
      */
-    public function changeFailedInspectionResults(Request $request) {
-        // Validation if user is an admin
+    public function changeFailedInspectionResults(Request $request)
+    {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $contentResults = RequestUtil::getContentAsArray($request);
