@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -37,7 +38,7 @@ class SettingAPIController extends APIController implements SettingAPIController
         // TODO: Implement editReasonOfLoss() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
     /**
@@ -58,7 +59,7 @@ class SettingAPIController extends APIController implements SettingAPIController
         // TODO: Implement editReasonOfDepart() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
     /**
@@ -79,7 +80,7 @@ class SettingAPIController extends APIController implements SettingAPIController
         // TODO: Implement editTreatmentOptions() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
     /**
@@ -100,7 +101,7 @@ class SettingAPIController extends APIController implements SettingAPIController
         // TODO: Implement editContactFormOptions() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
 }

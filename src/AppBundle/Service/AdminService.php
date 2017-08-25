@@ -171,7 +171,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
 
         //Validate input
         if($adminToDeactivate == null) {
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ADMIN NOT FOUND'), 428);
+            return ResultUtil::errorResult('ADMIN NOT FOUND', 428);
         }
 
         //deactivate

@@ -537,13 +537,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             ]), $statusCode);
         }
 
-        return new JsonResponse(
-            array(
-                Constant::RESULT_NAMESPACE => array (
-                    'code' => $statusCode,
-                    "message" => "Failed to revoke and remove all child and stillborn animals ",
-                )
-            ), $statusCode);
+        return ResultUtil::errorResult("Failed to revoke and remove all child and stillborn animals", $statusCode);
     }
 
 
