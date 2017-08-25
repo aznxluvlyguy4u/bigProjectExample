@@ -25,6 +25,13 @@ use \DateTime;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"Animal" = "Animal", "Ram" = "Ram", "Ewe" = "Ewe", "Neuter" = "Neuter"})
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "Animal" : "AppBundle\Entity\Animal",
+ *                           "Ram" : "AppBundle\Entity\Ram",
+ *                           "Ewe" : "AppBundle\Entity\Ewe",
+ *                        "Neuter" : "AppBundle\Entity\Neuter"},
+ *     groups = {"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+ *
  * @package AppBundle\Entity\Animal
  */
 abstract class Animal

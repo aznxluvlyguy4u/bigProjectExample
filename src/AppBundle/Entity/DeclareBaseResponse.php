@@ -29,6 +29,19 @@ use \DateTime;
  *      "RevokeDeclarationResponse" = "RevokeDeclarationResponse"
  *   }
  * )
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *      "DeclareArrivalResponse" : "AppBundle\Entity\DeclareArrivalResponse",
+ *      "DeclareDepartResponse" : "AppBundle\Entity\DeclareDepartResponse",
+ *      "DeclareBirthResponse" : "AppBundle\Entity\DeclareBirthResponse",
+ *      "DeclareLossResponse" : "AppBundle\Entity\DeclareLossResponse",
+ *      "DeclareImportResponse" : "AppBundle\Entity\DeclareImportResponse",
+ *      "DeclareExportResponse" : "AppBundle\Entity\DeclareExportResponse",
+ *      "DeclareAnimalFlagResponse" : "AppBundle\Entity\DeclareAnimalFlagResponse",
+ *      "DeclareTagsTransferResponse" : "AppBundle\Entity\DeclareTagsTransferResponse",
+ *      "DeclareTagReplaceResponse" : "AppBundle\Entity\DeclareTagReplaceResponse",
+ *      "RevokeDeclarationResponse" : "AppBundle\Entity\RevokeDeclarationResponse"},
+ *     groups = {"DECLARE"})
+ *
  * @package AppBundle\Entity\DeclareBaseResponse
  */
 abstract class DeclareBaseResponse

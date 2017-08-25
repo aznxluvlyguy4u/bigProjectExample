@@ -20,6 +20,11 @@ use JMS\Serializer\Annotation\Expose;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"Client" = "Client", "Employee" = "Employee", "Inspector" = "Inspector"})
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "Client" : "AppBundle\Entity\Client",
+ *                      "Employee" : "AppBundle\Entity\Employee",
+ *                     "Inspector" : "AppBundle\Entity\Inspector"},
+ *     groups = {"CONTACT_INFO","USER_MEASUREMENT"})
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */

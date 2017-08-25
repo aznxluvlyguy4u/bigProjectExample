@@ -31,6 +31,19 @@ use Doctrine\Common\Collections\ArrayCollection;
  *      "RevokeDeclaration" = "RevokeDeclaration"
  *   }
  * )
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *      "DeclarationDetail" : "AppBundle\Entity\DeclarationDetail",
+ *      "DeclareAnimalFlag" : "AppBundle\Entity\DeclareAnimalFlag",
+ *      "DeclareArrival" : "AppBundle\Entity\DeclareArrival",
+ *      "DeclareBirth" : "AppBundle\Entity\DeclareBirth",
+ *      "DeclareDepart" : "AppBundle\Entity\DeclareDepart",
+ *      "DeclareExport" : "AppBundle\Entity\DeclareExport",
+ *      "DeclareImport" : "AppBundle\Entity\DeclareImport",
+ *      "DeclareLoss" : "AppBundle\Entity\DeclareLoss",
+ *      "DeclareTagsTransfer" : "AppBundle\Entity\DeclareTagsTransfer",
+ *      "DeclareTagReplace" : "AppBundle\Entity\DeclareTagReplace",
+ *      "RevokeDeclaration" : "AppBundle\Entity\RevokeDeclaration"},
+ *     groups = {"DECLARE"})
  * @package AppBundle\Entity\DeclareBase
  */
 abstract class DeclareBase
