@@ -40,9 +40,10 @@ abstract class AwsQueueServiceBase
      * @param string $secretKey
      * @param string $region of the Queue
      * @param string $version
+     * @param string $selectedEnvironment
      * @param string $currentEnvironment
      */
-    public function __construct($queueIdPrefix, $accessKeyId, $secretKey, $region, $version, $currentEnvironment)
+    public function __construct($queueIdPrefix, $accessKeyId, $secretKey, $region, $version, $selectedEnvironment, $currentEnvironment)
     {
         $this->accessKeyId = $accessKeyId;
         $this->secretKey = $secretKey;
@@ -50,7 +51,9 @@ abstract class AwsQueueServiceBase
         $this->awsCredentials =  new Credentials($this->accessKeyId, $this->secretKey);
         $this->region = $region;
         $this->version = $version;
-        $this->queueId = $this->selectQueueIdByEnvironment($queueIdPrefix, $currentEnvironment);
+
+        if ($currentEnvironment === Environment::TEST) { $selectedEnvironment = $currentEnvironment; }
+        $this->queueId = $this->selectQueueIdByEnvironment($queueIdPrefix, $selectedEnvironment);
 
         $sqsConfig = array(
             'region'  => $this->region,

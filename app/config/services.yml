@@ -87,6 +87,7 @@ services:
           - '%aws_sqs_region%' #region
           - '%aws_sqs_version%' #version
           - '%environment%' #currentEnv
+          - '%kernel.environment%'
 
     app.aws.queueservice.external:
         class: AppBundle\Service\AwsExternalQueueService
