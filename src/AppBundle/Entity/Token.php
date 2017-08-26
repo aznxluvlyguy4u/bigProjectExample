@@ -48,7 +48,7 @@ class Token
 
     /**
      * @ORM\ManyToOne(targetEntity="Person", inversedBy="tokens", cascade={"persist"})
-     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Person")
      */
     private $owner;

@@ -85,8 +85,8 @@ abstract class Person implements UserInterface
   /**
    * @var ArrayCollection
    *
-   * @ORM\OneToMany(targetEntity="Token", mappedBy="owner", cascade={"persist"})
-   * @JMS\Type("array")
+   * @ORM\OneToMany(targetEntity="Token", mappedBy="owner", cascade={"persist", "remove"})
+   * @JMS\Type("ArrayCollection<AppBundle\Entity\Token>")
    */
   protected $tokens;
 
