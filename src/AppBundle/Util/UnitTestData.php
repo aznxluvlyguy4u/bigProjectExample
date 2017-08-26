@@ -17,7 +17,7 @@ class UnitTestData
      */
     public static function getTestAdmin($testEmail, $accessLevel = AccessLevelType::ADMIN)
     {
-//        filter_var()
+        Validator::validateEmailAddress($testEmail, true);
 
         $admin = new Employee(
             $accessLevel,
