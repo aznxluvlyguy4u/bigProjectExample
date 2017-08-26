@@ -51,14 +51,14 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
      */
     public function createAdmin(Request $request)
     {
-        $admin = $this->getEmployee();
-        if (!AdminValidator::isAdmin($admin, AccessLevelType::SUPER_ADMIN)) {
+        $actionBy = $this->getEmployee();
+        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 
         $content = RequestUtil::getContentAsArray($request);
 
-        $log = ActionLogWriter::createAdmin($this->getManager(), $admin, $content);
+        $log = ActionLogWriter::createAdmin($this->getManager(), null, $actionBy, $content);
 
         // Validate content
         $firstName = $content->get('first_name');
@@ -95,6 +95,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
 
         $result = AdminOverviewOutput::createAdminOverview($admin);
 
+        $log->setUserAccount($admin);
         $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
         return ResultUtil::successResult($result);
@@ -107,13 +108,12 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
      */
     public function editAdmin(Request $request)
     {
-        $admin = $this->getEmployee();
-        if (!AdminValidator::isAdmin($admin, AccessLevelType::SUPER_ADMIN)) {
+        $actionBy = $this->getEmployee();
+        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 
         $content = RequestUtil::getContentAsArray($request);
-        $log = ActionLogWriter::editAdmin($this->getManager(), $admin, $content);
 
         // Validate content
         $personId = $content->get('person_id');
@@ -129,6 +129,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
 
         /** @var Employee $admin */
         $admin = $this->getManager()->getRepository(Employee::class)->findOneByPersonId($personId);
+        $log = ActionLogWriter::editAdmin($this->getManager(),  $admin, $actionBy, $content);
 
         $admin->setFirstName($firstName);
         $admin->setLastName($lastName);
@@ -139,11 +140,8 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
         $this->getManager()->flush();
 
         /** @var Employee $newAdmin */
-        $newAdmin = $this->getManager()->getRepository(Employee::class)->findOneBy(array(
-            'emailAddress' => $admin->getEmailAddress(),
-            'isActive' => $admin->getIsActive()
-        ));
-        $result = AdminOverviewOutput::createAdminOverview($newAdmin);
+        $admin = $this->getManager()->getRepository(Employee::class)->findOneByPersonId($personId);
+        $result = AdminOverviewOutput::createAdminOverview($admin);
 
         $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
@@ -157,8 +155,8 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
      */
     public function deactivateAdmin(Request $request)
     {
-        $admin = $this->getEmployee();
-        if (!AdminValidator::isAdmin($admin, AccessLevelType::SUPER_ADMIN)) {
+        $actionBy = $this->getEmployee();
+        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 
@@ -167,7 +165,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
         $personId = $content->get('person_id');
         /** @var Employee $adminToDeactivate */
         $adminToDeactivate = $this->getManager()->getRepository(Employee::class)->findOneBy(['personId' => $personId]);
-        $log = ActionLogWriter::deactivateAdmin($this->getManager(), $admin, $adminToDeactivate);
+        $log = ActionLogWriter::deactivateAdmin($this->getManager(), $adminToDeactivate, $actionBy, $adminToDeactivate);
 
         //Validate input
         if($adminToDeactivate == null) {
@@ -178,6 +176,8 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
         $adminToDeactivate->setIsActive(false);
         $this->getManager()->persist($adminToDeactivate);
         $this->getManager()->flush();
+
+        $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
         return ResultUtil::successResult('ok');
     }

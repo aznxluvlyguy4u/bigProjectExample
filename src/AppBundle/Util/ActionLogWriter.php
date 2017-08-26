@@ -422,35 +422,38 @@ class ActionLogWriter
     /**
      * @param ObjectManager $om
      * @param $admin
+     * @param $actionBy
      * @param $content
      * @return ActionLog
      */
-    public static function createAdmin(ObjectManager $om, $admin, $content)
+    public static function createAdmin(ObjectManager $om, $admin, $actionBy, $content)
     {
-        return self::modifyAdmin($om, $admin, $content, UserActionType::CREATE_ADMIN);
+        return self::modifyAdmin($om, $admin, $actionBy, $content, UserActionType::CREATE_ADMIN);
     }
 
 
     /**
      * @param ObjectManager $om
      * @param $admin
+     * @param $actionBy
      * @param $content
      * @return ActionLog
      */
-    public static function editAdmin(ObjectManager $om, $admin, $content)
+    public static function editAdmin(ObjectManager $om, $admin, $actionBy, $content)
     {
-        return self::modifyAdmin($om, $admin, $content, UserActionType::EDIT_ADMIN);
+        return self::modifyAdmin($om, $admin, $actionBy, $content, UserActionType::EDIT_ADMIN);
     }
 
 
     /**
      * @param ObjectManager $om
      * @param Employee $admin
+     * @param $actionBy
      * @param ArrayCollection $content
      * @param String $userActionType
      * @return ActionLog
      */
-    private static function modifyAdmin(ObjectManager $om, $admin, $content, $userActionType)
+    private static function modifyAdmin(ObjectManager $om, $admin, $actionBy, $content, $userActionType)
     {
         $firstName = Utils::getNullCheckedArrayCollectionValue('first_name', $content);
         $lastName = Utils::getNullCheckedArrayCollectionValue('last_name', $content);
@@ -459,7 +462,7 @@ class ActionLogWriter
 
         $message = $accessLevel.'| '.$emailAddress.' : '.$firstName.' '.$lastName;
 
-        $log = new ActionLog($admin, $admin, $userActionType, false, $message, false);
+        $log = new ActionLog($admin, $actionBy, $userActionType, false, $message, false);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -469,10 +472,11 @@ class ActionLogWriter
     /**
      * @param ObjectManager $om
      * @param Employee $admin
+     * @param Employee $actionBy
      * @param Employee $adminToDeactivate
      * @return ActionLog
      */
-    public static function deactivateAdmin(ObjectManager $om, $admin, $adminToDeactivate)
+    public static function deactivateAdmin(ObjectManager $om, $admin, $actionBy, $adminToDeactivate)
     {
         $userActionType = UserActionType::DEACTIVATE_ADMIN;
         if($adminToDeactivate instanceof Employee) {
@@ -481,7 +485,7 @@ class ActionLogWriter
             $message = 'No admin to deactivate found';   
         }
 
-        $log = new ActionLog($admin, $admin, $userActionType, false, $message, false);
+        $log = new ActionLog($admin, $actionBy, $userActionType, false, $message, false);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
