@@ -5,9 +5,10 @@ namespace AppBundle\Tests\Controller;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Service\IRSerializer;
-use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 
@@ -26,7 +27,7 @@ class BirthTest extends WebTestCase
     static private $location;
     /** @var IRSerializer */
     static private $serializer;
-    /** @var ObjectManager */
+    /** @var EntityManagerInterface|ObjectManager */
     static private $em;
     /** @var RequestClient */
     private $client;
@@ -60,7 +61,7 @@ class BirthTest extends WebTestCase
             die;
         }
 
-        self::$location = DoctrineUtil::getRandomActiveLocation(self::$em);
+        self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 

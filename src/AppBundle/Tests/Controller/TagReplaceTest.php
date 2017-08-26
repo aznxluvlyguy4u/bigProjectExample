@@ -6,9 +6,10 @@ use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Service\IRSerializer;
-use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 
@@ -26,7 +27,7 @@ class TagReplaceTest extends WebTestCase
     static private $location;
     /** @var IRSerializer */
     static private $serializer;
-    /** @var ObjectManager */
+    /** @var EntityManagerInterface|ObjectManager */
     static private $em;
     /** @var RequestClient */
     private $client;
@@ -60,7 +61,7 @@ class TagReplaceTest extends WebTestCase
             die;
         }
 
-        self::$location = DoctrineUtil::getRandomActiveLocation(self::$em);
+        self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
@@ -89,8 +90,8 @@ class TagReplaceTest extends WebTestCase
      */
     public function testTagReplacePost()
     {
-        $tag = DoctrineUtil::getRandomUnassignedTag(self::$em, self::$location);
-        $animal = DoctrineUtil::getRandomAnimalFromLocation(self::$em, self::$location);
+        $tag = UnitTestData::getRandomUnassignedTag(self::$em, self::$location);
+        $animal = UnitTestData::getRandomAnimalFromLocation(self::$em, self::$location);
 
         $declareMateJson =
             json_encode(

@@ -87,7 +87,7 @@ class AdminTest extends WebTestCase
             die;
         }
 
-        self::$accessTokenCode = DoctrineUtil::getRandomAdminAccessTokenCode(self::$em, AccessLevelType::SUPER_ADMIN);
+        self::$accessTokenCode = UnitTestData::getRandomAdminAccessTokenCode(self::$em, AccessLevelType::SUPER_ADMIN);
 
         $testEmail = $container->getParameter('test_email');
         self::$employee = UnitTestData::getTestAdmin($testEmail, AccessLevelType::ADMIN);
@@ -268,7 +268,7 @@ class AdminTest extends WebTestCase
     public static function tearDownAfterClass()
     {
         if (self::$employee->getPersonId() !== null) {
-            /** @va Employee $employee */
+            /** @var Employee $employee */
             $employee = self::$em->getRepository(Employee::class)
                 ->findOneByPersonId(self::$employee->getPersonId());
 
