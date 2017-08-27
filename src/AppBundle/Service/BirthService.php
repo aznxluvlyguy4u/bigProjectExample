@@ -46,6 +46,12 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     const SHOW_OTHER_CANDIDATE_MOTHERS = false;
     const SHOW_OTHER_SURROGATE_MOTHERS = false;
 
+    const MEDIAN_PREGNANCY_DAYS = 145;
+    const MINIMUM_DAYS_BETWEEN_BIRTHS = 167;
+    const MATING_DAYS_OFFSET = 12;
+    const SURROGATE_MOTHER_OFFSET_DAYS = 7;
+    const REVOKE_MAX_MONTH_INTERVAL = 6;
+
     /** @var EntityGetter */
     private $entityGetter;
     /** @var AwsInternalQueueService */
@@ -243,20 +249,19 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $litterClone = clone $litter;
         $childrenToRemove = [];
         $stillbornsToRemove = [];
-        $maxMonthInterval = 6;
 
         //Check if birth registration is within a time span of maxMonthInterval from now,
         //then, and only then, the revoke and thus deletion of child animal is allowed
         foreach ($litter->getChildren() as $child) {
             $dateInterval = $child->getDateOfBirth()->diff(new \DateTime());
 
-            if($dateInterval->y > 0 || $dateInterval->m > $maxMonthInterval) {
+            if($dateInterval->y > 0 || $dateInterval->m > self::REVOKE_MAX_MONTH_INTERVAL) {
                 return new JsonResponse(
                     array (
                         Constant::RESULT_NAMESPACE => array (
                             'code' => $statusCode,
                             "message" => $child->getUlnCountryCode() .$child->getUlnNumber() . " heeft een geregistreerde geboortedatum dat langer dan "
-                                .$maxMonthInterval ." maand geleden is, zodoende is het niet geoorloofd om de melding in te trekken en daarmee de geboorte van het dier ongedaan te maken.",
+                                .self::REVOKE_MAX_MONTH_INTERVAL ." maand geleden is, zodoende is het niet geoorloofd om de melding in te trekken en daarmee de geboorte van het dier ongedaan te maken.",
                         )
                     ), $statusCode);
             }
@@ -682,9 +687,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $surrogateMotherCandidates = $this->getManager()->getRepository(DeclareBirth::class)->getCandidateSurrogateMothers($location , $mother);
 
-        $offsetDays = 7;
-        $minimumDaysIntervalFromNowAndBirth = 167;
-        $offsetDateFromNow = $dateOfBirth->modify('-' .$offsetDays .'days');
+        $offsetDateFromNow = $dateOfBirth->modify('-' . self::SURROGATE_MOTHER_OFFSET_DAYS .'days');
 
         /** @var Ewe $animal */
         foreach ($surrogateMotherCandidates as $animal) {
@@ -717,7 +720,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             foreach ($childeren as $child) {
                 if($child->getDateOfBirth()) {
                     //Add as a true candidate surrogate to list
-                    if(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow) > $minimumDaysIntervalFromNowAndBirth) {
+                    if(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {
                         $suggestedCandidatesResult[] = [
                             JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
                             JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
@@ -789,10 +792,6 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;
 
-        $pregnancyDays = 145;
-        $minimumDaysBetweenBirths = 167;
-        $matingDaysOffset = 12;
-
         //Animal has no registered matings, thus it is not a true candidate
         /** @var Ewe $animal */
         foreach ($motherCandidates as $animal) {
@@ -828,7 +827,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 if($child->getDateOfBirth()) {
                     $daysbetweenCurrentBirthAndPreviousBirths = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
 
-                    if(!($daysbetweenCurrentBirthAndPreviousBirths >= $minimumDaysBetweenBirths)) {
+                    if(!($daysbetweenCurrentBirthAndPreviousBirths >= self::MINIMUM_DAYS_BETWEEN_BIRTHS)) {
                         $checkAnimalForMatings = false;
                         break;
                     }
@@ -861,8 +860,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
             /** @var Mate $mating */
             foreach ($matings as $mating) {
-                $lowerboundPregnancyDays = $pregnancyDays - $matingDaysOffset;
-                $upperboundPregnancyDays = $pregnancyDays + $matingDaysOffset;
+                $lowerboundPregnancyDays = self::MEDIAN_PREGNANCY_DAYS - self::MATING_DAYS_OFFSET;
+                $upperboundPregnancyDays = self::MEDIAN_PREGNANCY_DAYS + self::MATING_DAYS_OFFSET;
 
                 //Compare if final father suggestion date is before dateOfBirth lower- & upperbound
                 $expectedBirthDateLowerbound = clone $mating->getStartDate();
