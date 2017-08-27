@@ -32,6 +32,8 @@ class UnitTestData
     const EWE_ULN_NUMBER = '999999999997';
     const TAG_ULN_NUMBER = '999999999996';
 
+    const TEST_ANIMAL_LABEL = 'TEST_ANIMAL';
+
     /**
      * @param string $testEmail
      * @param string $accessLevel
@@ -69,7 +71,7 @@ class UnitTestData
      */
     public static function createTestEwe(EntityManagerInterface $em, $location = null)
     {
-        return self::createTestAnimal($em, new Ewe(), self::RAM_ULN_NUMBER, $location);
+        return self::createTestAnimal($em, new Ewe(), self::EWE_ULN_NUMBER, $location);
     }
 
 
@@ -96,6 +98,9 @@ class UnitTestData
         $animal->setUbnOfBirth(self::UBN_OF_BIRTH);
         $animal->setBreedCode(self::BREED_CODE);
         $animal->setBreedType(self::BREED_TYPE);
+
+        $animal->setNickname(self::TEST_ANIMAL_LABEL);
+        $animal->setName(self::TEST_ANIMAL_LABEL);
 
         $animal->setLocation($location);
         $animal->setIsAlive(true);
