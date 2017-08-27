@@ -67,6 +67,7 @@ class AnimalResidence
 
     /**
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="animalResidenceHistory")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
      */

@@ -30,7 +30,7 @@ class DeclareTagsTransfer extends DeclareBase
     private $tags;
 
     /**
-     * @ORM\ManyToMany(targetEntity="TagTransferItemRequest", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity="TagTransferItemRequest", cascade={"persist", "remove"})
      * @ORM\JoinTable(name="transfer_requests",
      *      joinColumns={@ORM\JoinColumn(name="declare_tags_transfer_id", referencedColumnName="id")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="tag_transfer_item_request_id", referencedColumnName="id", unique=true)}
@@ -68,7 +68,7 @@ class DeclareTagsTransfer extends DeclareBase
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="DeclareTagsTransferResponse", mappedBy="declareTagsTransferRequestMessage", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="DeclareTagsTransferResponse", mappedBy="declareTagsTransferRequestMessage", cascade={"persist", "remove"})
      * @ORM\JoinColumn(name="declare_tag_transfer_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
      */
