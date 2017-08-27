@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\TokenType;
+use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -30,7 +31,7 @@ use JMS\Serializer\Annotation\Expose;
  */
 abstract class Person implements UserInterface
 {
-    const TABLE_NAME = 'person';
+    use EntityClassInfo;
 
   /**
    * @ORM\Column(type="integer")

@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -36,6 +37,8 @@ use \DateTime;
  */
 abstract class Animal
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *

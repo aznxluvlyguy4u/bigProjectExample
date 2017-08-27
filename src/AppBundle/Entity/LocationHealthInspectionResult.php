@@ -15,6 +15,9 @@ use JMS\Serializer\Annotation as JMS;
  */
 class LocationHealthInspectionResult
 {
+    use EntityClassInfo
+        ;
+
     /**
      * @var integer
      *

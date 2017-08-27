@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -19,7 +20,7 @@ use JMS\Serializer\Annotation as JMS;
  */
 class BreedValue
 {
-    const TABLE_NAME = 'breed_value';
+    use EntityClassInfo;
 
     /**
      * @var integer

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -11,7 +12,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\WeightRepository")
  * @package AppBundle\Entity
  */
-class Weight extends Measurement {
+class Weight extends Measurement
+{
+    use EntityClassInfo;
 
     /**
      * @var float

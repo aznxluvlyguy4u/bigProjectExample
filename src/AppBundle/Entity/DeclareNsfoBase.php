@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\MessageBuilderBase;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -35,7 +36,7 @@ use JMS\Serializer\Annotation\Expose;
  */
 abstract class DeclareNsfoBase
 {
-    const TABLE_NAME = 'declare_nsfo_base';
+    use EntityClassInfo;
 
     /**
      * @var integer

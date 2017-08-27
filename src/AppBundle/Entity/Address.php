@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\NullChecker;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -21,7 +22,9 @@ use JMS\Serializer\Annotation as JMS;
  *     groups = {"CONTACT_INFO"})
  * @package AppBundle\Entity
  */
-abstract class Address {
+abstract class Address
+{
+    use EntityClassInfo;
 
   /**
    * @ORM\Column(type="integer")
