@@ -2,14 +2,11 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Constant\Environment;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
-use AppBundle\Migration\AnimalExterminator;
 use AppBundle\Util\CommandUtil;
-
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
