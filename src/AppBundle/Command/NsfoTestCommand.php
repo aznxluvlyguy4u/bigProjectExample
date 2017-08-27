@@ -2,6 +2,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Constant\Environment;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Location;
@@ -81,6 +82,7 @@ class NsfoTestCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '1: Find locations with highest animal count', "\n",
             '2: Delete animal and all related records', "\n",
+            '3: Purge external worker test queue', "\n",
             'DEFAULT: Custom test', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -93,6 +95,10 @@ class NsfoTestCommand extends ContainerAwareCommand
             case 2:
                 if($this->isBlockedDatabase()) { $this->printDatabaseError(); break; }
                 $this->getContainer()->get('app.datafix.animals.exterminator')->deleteAnimalsByCliInput($this->cmdUtil);
+                break;
+            case 3:
+                $purgeCount = $this->getContainer()->get('app.aws.queueservice.external.test')->purgeQueue();
+                $this->cmdUtil->writeln('External test queue messages purged: '.$purgeCount);
                 break;
             default:
                 $this->customTest();

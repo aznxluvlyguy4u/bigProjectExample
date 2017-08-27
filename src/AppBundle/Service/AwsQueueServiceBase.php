@@ -32,6 +32,8 @@ abstract class AwsQueueServiceBase
     protected $awsCredentials;
     /** @var string */
     protected $queueId;
+    /** @var string */
+    protected $selectedEnvironment;
 
     /**
      * AWSQueueServiceBase constructor, initialize SQS config
@@ -53,7 +55,8 @@ abstract class AwsQueueServiceBase
         $this->version = $version;
 
         if ($currentEnvironment === Environment::TEST) { $selectedEnvironment = $currentEnvironment; }
-        $this->queueId = $this->selectQueueIdByEnvironment($queueIdPrefix, $selectedEnvironment);
+        $this->selectedEnvironment = $selectedEnvironment;
+        $this->queueId = $this->selectQueueIdByEnvironment($queueIdPrefix, $this->selectedEnvironment);
 
         $sqsConfig = array(
             'region'  => $this->region,

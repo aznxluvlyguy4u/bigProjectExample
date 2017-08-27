@@ -94,6 +94,11 @@ services:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%' }
 
+    app.aws.queueservice.external.test:
+        class: AppBundle\Service\AwsExternalTestQueueService
+        parent: app.aws.queueservice.workers_base
+        arguments: { index_0: '%aws_sqs_queue_exteral_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST }
+
     app.aws.queueservice.internal:
         class: AppBundle\Service\AwsInternalQueueService
         parent: app.aws.queueservice.workers_base
