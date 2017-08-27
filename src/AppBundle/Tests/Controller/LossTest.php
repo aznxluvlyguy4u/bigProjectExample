@@ -5,6 +5,7 @@ namespace AppBundle\Tests\Controller;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Ram;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
@@ -25,6 +26,8 @@ class LossTest extends WebTestCase
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
+    /** @var Ram */
+    static private $ram;
     /** @var IRSerializer */
     static private $serializer;
     /** @var EntityManagerInterface|ObjectManager */
@@ -62,12 +65,13 @@ class LossTest extends WebTestCase
         }
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
+        self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
     public static function tearDownAfterClass()
     {
-
+        UnitTestData::deleteTestAnimals(self::$em->getConnection());
     }
 
     /**
@@ -110,7 +114,6 @@ class LossTest extends WebTestCase
      */
     public function testLossPost()
     {
-        $animal = UnitTestData::getRandomAnimalFromLocation(self::$em, self::$location);
         $ubnDestructor = "2486574";
         $reasonOfLoss = "NO REASON";
 
@@ -118,8 +121,8 @@ class LossTest extends WebTestCase
             json_encode(
                 [
                     "animal" => [
-                        "uln_country_code" => $animal->getUlnCountryCode(),
-                        "uln_number" => $animal->getUlnNumber()
+                        "uln_country_code" => self::$ram->getUlnCountryCode(),
+                        "uln_number" => self::$ram->getUlnNumber()
                     ],
                     "date_of_death" => "2016-09-13T00:00:00+0200",
                     "reason_of_loss" => $reasonOfLoss,

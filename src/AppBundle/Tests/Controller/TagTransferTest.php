@@ -5,6 +5,7 @@ namespace AppBundle\Tests\Controller;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Tag;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
@@ -25,6 +26,8 @@ class TagTransferTest extends WebTestCase
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
+    /** @var Tag */
+    static private $tag;
     /** @var IRSerializer */
     static private $serializer;
     /** @var EntityManagerInterface|ObjectManager */
@@ -62,12 +65,13 @@ class TagTransferTest extends WebTestCase
         }
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
+        self::$tag = UnitTestData::createTag(self::$em, self::$location);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
     public static function tearDownAfterClass()
     {
-
+        UnitTestData::deleteTestTags(self::$em->getConnection());
     }
 
     /**
@@ -111,8 +115,7 @@ class TagTransferTest extends WebTestCase
      */
     public function testTagTransferPost()
     {
-        $tag = UnitTestData::getRandomUnassignedTag(self::$em, self::$location);
-        $locationReceiver = UnitTestData::getActiveTestLocation(self::$em, self::$location);
+        $locationReceiver = UnitTestData::getRandomActiveLocation(self::$em, self::$location);
         $relationNumberAcceptant = $locationReceiver->getCompany()->getOwner()->getRelationNumberKeeper();
         $ubnNewOwner = $locationReceiver->getUbn();
 
@@ -124,8 +127,8 @@ class TagTransferTest extends WebTestCase
                     "tags" =>
                         [
                             [
-                                "uln_country_code" => $tag->getUlnCountryCode(),
-                                "uln_number" => $tag->getUlnNumber()
+                                "uln_country_code" => self::$tag->getUlnCountryCode(),
+                                "uln_number" => self::$tag->getUlnNumber()
                             ]
                         ]
                 ]);

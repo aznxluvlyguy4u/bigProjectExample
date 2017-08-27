@@ -5,6 +5,7 @@ namespace AppBundle\Tests\Controller;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Ram;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
@@ -25,6 +26,8 @@ class DepartTest extends WebTestCase
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
+    /** @var Ram */
+    static private $ram;
     /** @var IRSerializer */
     static private $serializer;
     /** @var EntityManagerInterface|ObjectManager */
@@ -62,12 +65,13 @@ class DepartTest extends WebTestCase
         }
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
+        self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
     public static function tearDownAfterClass()
     {
-
+        UnitTestData::deleteTestAnimals(self::$em->getConnection());
     }
 
     /**
@@ -111,19 +115,18 @@ class DepartTest extends WebTestCase
      */
     public function testDepartPost()
     {
-        $animal = UnitTestData::getRandomAnimalFromLocation(self::$em, self::$location);
-        $ubnNewOwner = "1234567";
+        $otherLocation = UnitTestData::getRandomActiveLocation(self::$em, self::$location);
         $reasonOfDepart = "a very good reason";
 
         $declareMateJson =
             json_encode(
                 [
                     "reason_of_depart" => $reasonOfDepart,
-                    "ubn_new_owner" => $ubnNewOwner,
+                    "ubn_new_owner" => $otherLocation->getUbn(),
                     "is_export_animal" => false,
                     "animal" => [
-                        "uln_country_code" => $animal->getUlnCountryCode(),
-                        "uln_number" => $animal->getUlnNumber()
+                        "uln_country_code" => self::$ram->getUlnCountryCode(),
+                        "uln_number" => self::$ram->getUlnNumber()
                     ],
                     "depart_date" => "2012-04-21T18:25:43-05:00"
                 ]);

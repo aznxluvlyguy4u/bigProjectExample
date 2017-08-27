@@ -5,6 +5,7 @@ namespace AppBundle\Tests\Controller;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Ram;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
@@ -25,6 +26,8 @@ class ArrivalTest extends WebTestCase
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
+    /** @var Ram */
+    static private $ram;
     /** @var IRSerializer */
     static private $serializer;
     /** @var EntityManagerInterface|ObjectManager */
@@ -62,12 +65,13 @@ class ArrivalTest extends WebTestCase
         }
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
+        self::$ram = UnitTestData::createTestRam(self::$em, null); //For this test Animal.location = null
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
     public static function tearDownAfterClass()
     {
-
+        UnitTestData::deleteTestAnimals(self::$em->getConnection());
     }
 
     /**
@@ -110,15 +114,17 @@ class ArrivalTest extends WebTestCase
      */
     public function testArrivalPost()
     {
+        $otherLocation = UnitTestData::getRandomActiveLocation(self::$em, self::$location);
+
         $declareMateJson =
             json_encode(
                 [
                     "is_import_animal" => false,
-                    "ubn_previous_owner" => "123456",
+                    "ubn_previous_owner" => $otherLocation->getUbn(),
                     "arrival_date" => "2016-07-31T18:25:43-05:00",
                     "animal" => [
-                        "uln_country_code" => "NL",
-                        "uln_number" => "123456789012"
+                        "uln_country_code" => self::$ram->getUlnCountryCode(),
+                        "uln_number" => self::$ram->getUlnNumber()
                     ]
                 ]);
 

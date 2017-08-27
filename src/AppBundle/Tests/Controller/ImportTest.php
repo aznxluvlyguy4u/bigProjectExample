@@ -5,6 +5,7 @@ namespace AppBundle\Tests\Controller;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Tag;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
@@ -25,6 +26,8 @@ class ImportTest extends WebTestCase
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
+    /** @var Tag */
+    static private $tag;
     /** @var IRSerializer */
     static private $serializer;
     /** @var EntityManagerInterface|ObjectManager */
@@ -62,12 +65,14 @@ class ImportTest extends WebTestCase
         }
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
+        self::$tag = UnitTestData::createTag(self::$em, self::$location);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
     public static function tearDownAfterClass()
     {
-
+        UnitTestData::deleteTestAnimals(self::$em->getConnection());
+        UnitTestData::deleteTestTags(self::$em->getConnection());
     }
 
     /**
@@ -90,7 +95,6 @@ class ImportTest extends WebTestCase
     public function testImportFromEUCountryPost()
     {
         $countryOfOriginCode = 'FR';
-        $tagUlnNumber = UnitTestData::getRandomUnassignedTag(self::$em, self::$location)->getUlnNumber();
 
         $declareMateJson =
             json_encode(
@@ -100,7 +104,7 @@ class ImportTest extends WebTestCase
                     "arrival_date" => "2016-07-31T18:25:43-05:00",
                     "animal" => [
                         "uln_country_code" => $countryOfOriginCode,
-                        "uln_number" => $tagUlnNumber
+                        "uln_number" => self::$tag->getUlnNumber()
                     ]
                 ]);
 

@@ -5,6 +5,8 @@ namespace AppBundle\Tests\Controller;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Ram;
+use AppBundle\Entity\Tag;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
@@ -25,6 +27,10 @@ class TagReplaceTest extends WebTestCase
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
+    /** @var Ram */
+    static private $ram;
+    /** @var Tag */
+    static private $tag;
     /** @var IRSerializer */
     static private $serializer;
     /** @var EntityManagerInterface|ObjectManager */
@@ -62,12 +68,15 @@ class TagReplaceTest extends WebTestCase
         }
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
+        self::$tag = UnitTestData::createTag(self::$em, self::$location);
+        self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
     public static function tearDownAfterClass()
     {
-
+        UnitTestData::deleteTestAnimals(self::$em->getConnection());
+        UnitTestData::deleteTestTags(self::$em->getConnection());
     }
 
     /**
@@ -90,20 +99,17 @@ class TagReplaceTest extends WebTestCase
      */
     public function testTagReplacePost()
     {
-        $tag = UnitTestData::getRandomUnassignedTag(self::$em, self::$location);
-        $animal = UnitTestData::getRandomAnimalFromLocation(self::$em, self::$location);
-
         $declareMateJson =
             json_encode(
                 [
                     "replace_date" => "2016-06-09T19:25:43-05:00",  //if missing, the logData is used for replaceDate
                     "tag" => [
-                        "uln_country_code" => $tag->getUlnCountryCode(),
-                        "uln_number" => $tag->getUlnNumber()
+                        "uln_country_code" => self::$tag->getUlnCountryCode(),
+                        "uln_number" => self::$tag->getUlnNumber()
                     ],
                     "animal" => [
-                        "uln_country_code" => $animal->getUlnCountryCode(),
-                        "uln_number" => $animal->getUlnNumber()
+                        "uln_country_code" => self::$ram->getUlnCountryCode(),
+                        "uln_number" => self::$ram->getUlnNumber()
                     ]
                 ]);
 

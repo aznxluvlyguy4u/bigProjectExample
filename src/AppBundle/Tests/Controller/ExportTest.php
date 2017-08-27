@@ -5,6 +5,7 @@ namespace AppBundle\Tests\Controller;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Ram;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
@@ -25,6 +26,8 @@ class ExportTest extends WebTestCase
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
+    /** @var Ram */
+    static private $ram;
     /** @var IRSerializer */
     static private $serializer;
     /** @var EntityManagerInterface|ObjectManager */
@@ -62,12 +65,13 @@ class ExportTest extends WebTestCase
         }
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
+        self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
     public static function tearDownAfterClass()
     {
-
+        UnitTestData::deleteTestAnimals(self::$em->getConnection());
     }
 
     /**
@@ -90,7 +94,6 @@ class ExportTest extends WebTestCase
      */
     public function testExportPost()
     {
-        $animal = UnitTestData::getRandomAnimalFromLocation(self::$em, self::$location);
         $reasonOfExport = "a very good reason";
 
         $declareMateJson =
@@ -99,8 +102,8 @@ class ExportTest extends WebTestCase
                     "reason_of_depart" => $reasonOfExport,
                     "is_export_animal" => true,
                     "animal" => [
-                        "uln_country_code" => $animal->getUlnCountryCode(),
-                        "uln_number" => $animal->getUlnNumber()
+                        "uln_country_code" => self::$ram->getUlnCountryCode(),
+                        "uln_number" => self::$ram->getUlnNumber()
                     ],
                     "depart_date" => "2012-04-21T18:25:43-05:00"
                 ]);
