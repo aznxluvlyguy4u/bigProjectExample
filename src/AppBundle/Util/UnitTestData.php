@@ -15,6 +15,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
 class UnitTestData
@@ -33,6 +34,7 @@ class UnitTestData
     const TAG_ULN_NUMBER = '999999999996';
 
     const TEST_ANIMAL_LABEL = 'TEST_ANIMAL';
+    const TEST_TAG_LABEL = 'TEST_TAG';
 
     /**
      * @param string $testEmail
@@ -113,6 +115,18 @@ class UnitTestData
 
 
     /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function deleteTestAnimals(Connection $conn)
+    {
+        $testLabel = self::TEST_TAG_LABEL;
+        $sql = "DELETE FROM animal WHERE nickname = '$testLabel' AND name = '$testLabel'";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
      * @param Location $location
      * @param string $ulnNumber
      * @param string $tagStatus
@@ -134,8 +148,22 @@ class UnitTestData
         $tag->setLocation($location);
         $tag->setOwner($location->getOwner());
 
+        $tag->setTagDescription(self::TEST_TAG_LABEL);
+
         return $tag;
     }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function deleteTestTags(Connection $conn)
+    {
+        $sql = "DELETE FROM tag WHERE tag_description = '".self::TEST_TAG_LABEL."'";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
 
     /**
      * @param ObjectManager|EntityManagerInterface $em
