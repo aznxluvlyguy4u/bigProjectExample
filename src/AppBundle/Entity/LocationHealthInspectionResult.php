@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\LocationHealthInspection;
@@ -15,8 +16,7 @@ use JMS\Serializer\Annotation as JMS;
  */
 class LocationHealthInspectionResult
 {
-    use EntityClassInfo
-        ;
+    use EntityClassInfo;
 
     /**
      * @var integer
