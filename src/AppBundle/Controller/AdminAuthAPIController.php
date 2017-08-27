@@ -33,7 +33,7 @@ class AdminAuthAPIController extends APIController {
    */
   public function authorizeUser(Request $request)
   {
-      return $this->getAdminAuthService()->authorizeUser($request);
+      return $this->get('app.security.admin_auth')->authorizeUser($request);
   }
 
 
@@ -54,7 +54,7 @@ class AdminAuthAPIController extends APIController {
    */
   public function resetPassword(Request $request)
   {
-      return $this->getAdminAuthService()->resetPassword($request);
+      return $this->get('app.security.admin_auth')->resetPassword($request);
   }
 
 }

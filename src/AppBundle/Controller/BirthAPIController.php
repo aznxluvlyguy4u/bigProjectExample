@@ -39,7 +39,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function getBirth(Request $request, $litterId)
     {
-        return $this->getBirthService()->getBirth($request, $litterId);
+        return $this->get('app.birth')->getBirth($request, $litterId);
     }
 
     /**
@@ -65,7 +65,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     */
     public function getHistoryBirths(Request $request)
     {
-        return $this->getBirthService()->getHistoryBirths($request);
+        return $this->get('app.birth')->getHistoryBirths($request);
     }
 
     /**
@@ -92,7 +92,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     */
     public function createBirth(Request $request)
     {
-        return $this->getBirthService()->createBirth($request);
+        return $this->get('app.birth')->createBirth($request);
     }
 
 
@@ -120,7 +120,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function resendCreateBirth(Request $request)
     {
-        return $this->getBirthService()->resendCreateBirth($request);
+        return $this->get('app.birth')->resendCreateBirth($request);
     }
 
 
@@ -148,7 +148,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function revokeBirth(Request $request)
     {
-        return $this->getBirthService()->revokeBirth($request);
+        return $this->get('app.birth')->revokeBirth($request);
     }
 
     /**
@@ -174,7 +174,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function getCandidateFathers(Request $request, $uln)
     {
-        return $this->getBirthService()->getCandidateFathers($request, $uln);
+        return $this->get('app.birth')->getCandidateFathers($request, $uln);
     }
 
     /**
@@ -200,7 +200,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function getCandidateSurrogateMothers(Request $request, $uln)
     {
-        return $this->getBirthService()->getCandidateSurrogateMothers($request, $uln);
+        return $this->get('app.birth')->getCandidateSurrogateMothers($request, $uln);
     }
 
     /**
@@ -226,7 +226,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function getCandidateMothers(Request $request)
     {
-        return $this->getBirthService()->getCandidateMothers($request);
+        return $this->get('app.birth')->getCandidateMothers($request);
     }
 
     /**
@@ -240,7 +240,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function getBirthErrors(Request $request)
     {
-        return $this->getBirthService()->getBirthErrors($request);
+        return $this->get('app.birth')->getBirthErrors($request);
     }
 
 
@@ -252,7 +252,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function processInternalQueueMessage(Request $request)
     {
-        return $this->getBirthService()->processInternalQueueMessage($request);
+        return $this->get('app.birth')->processInternalQueueMessage($request);
     }
 
 

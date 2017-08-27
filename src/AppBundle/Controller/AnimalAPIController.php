@@ -55,7 +55,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getAllAnimalsByTypeOrState(Request $request)
   {
-      return $this->getAnimalService()->getAllAnimalsByTypeOrState($request);
+      return $this->get('app.animal')->getAllAnimalsByTypeOrState($request);
   }
 
   /**
@@ -82,7 +82,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getAnimalById(Request $request, $uln)
   {
-      return $this->getAnimalService()->getAnimalById($request, $uln);
+      return $this->get('app.animal')->getAnimalById($request, $uln);
   }
 
   /**
@@ -108,7 +108,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getLiveStock(Request $request)
   {
-      return $this->getAnimalService()->getLiveStock($request);
+      return $this->get('app.animal')->getLiveStock($request);
   }
 
 
@@ -136,7 +136,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getHistoricLiveStock(Request $request)
   {
-      return $this->getAnimalService()->getHistoricLiveStock($request);
+      return $this->get('app.animal')->getHistoricLiveStock($request);
   }
   
   /**
@@ -162,7 +162,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getAllRams(Request $request)
   {
-      return $this->getAnimalService()->getAllRams($request);
+      return $this->get('app.animal')->getAllRams($request);
   }
   
   /**
@@ -188,7 +188,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function createRetrieveAnimals(Request $request)
   {
-      return $this->getAnimalService()->createRetrieveAnimals($request);
+      return $this->get('app.animal')->createRetrieveAnimals($request);
   }
 
   /**
@@ -214,7 +214,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function createRetrieveAnimalsForAllLocations(Request $request)
   {
-      return $this->getAnimalService()->createRetrieveAnimalsForAllLocations($request);
+      return $this->get('app.animal')->createRetrieveAnimalsForAllLocations($request);
   }
 
 
@@ -241,7 +241,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   function createAnimalDetails(Request $request)
   {
-      return $this->getAnimalService()->createAnimalDetails($request);
+      return $this->get('app.animal')->createAnimalDetails($request);
   }
 
   /**
@@ -268,7 +268,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   function updateAnimalDetails(Request $request, $ulnString)
   {
-      return $this->getAnimalService()->updateAnimalDetails($request, $ulnString);
+      return $this->get('app.animal')->updateAnimalDetails($request, $ulnString);
   }
 
   /**
@@ -295,7 +295,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getAnimalDetailsByUln(Request $request, $ulnString)
   {
-      return $this->getAnimalService()->getAnimalDetailsByUln($request, $ulnString);
+      return $this->get('app.animal')->getAnimalDetailsByUln($request, $ulnString);
   }
 
   /**
@@ -323,7 +323,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function changeGenderOfUln(Request $request)
   {
-      return $this->getAnimalService()->changeGenderOfUln($request);
+      return $this->get('app.animal')->changeGenderOfUln($request);
   }
 
 }

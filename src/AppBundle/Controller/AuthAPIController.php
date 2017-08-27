@@ -38,7 +38,7 @@ class AuthAPIController extends APIController {
    */
   public function signUpUser(Request $request)
   {
-      return $this->getAuthService()->signUpUser($request);
+      return $this->get('app.security.auth')->signUpUser($request);
   }
 
   /**
@@ -64,7 +64,7 @@ class AuthAPIController extends APIController {
    */
   public function validateToken(Request $request)
   {
-    return $this->getAuthService()->isAccessTokenValid($request);
+    return $this->get('app.security.auth')->isAccessTokenValid($request);
   }
 
   /**
@@ -91,7 +91,7 @@ class AuthAPIController extends APIController {
    */
   public function authorizeUser(Request $request)
   {
-      return $this->getAuthService()->authorizeUser($request);
+      return $this->get('app.security.auth')->authorizeUser($request);
   }
 
   /**
@@ -117,7 +117,7 @@ class AuthAPIController extends APIController {
    */
   public function changePassword(Request $request)
   {
-      return $this->getAuthService()->changePassword($request);
+      return $this->get('app.security.auth')->changePassword($request);
   }
 
   /**
@@ -143,7 +143,7 @@ class AuthAPIController extends APIController {
    */
   public function resetPassword(Request $request)
   {
-      return $this->getAuthService()->resetPassword($request);
+      return $this->get('app.security.auth')->resetPassword($request);
   }
 
   /**
@@ -158,7 +158,7 @@ class AuthAPIController extends APIController {
    */
   public function generatePasswordsForNewClients(Request $request)
   {
-      return $this->getAuthService()->generatePasswordsForNewClients($request);
+      return $this->get('app.security.auth')->generatePasswordsForNewClients($request);
   }
 
 
@@ -185,7 +185,7 @@ class AuthAPIController extends APIController {
    */
   public function validateUbnInHeader(Request $request)
   {
-      return $this->getAuthService()->validateUbnInHeader($request);
+      return $this->get('app.security.auth')->validateUbnInHeader($request);
   }
 
 

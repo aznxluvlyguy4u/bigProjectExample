@@ -422,7 +422,7 @@ class LocationHealthInspectionAPIController extends APIController
                 'viewport-size' => '640x480'
             ));
 
-        $s3Service = $this->getStorageService();
+        $s3Service = $this->get('app.aws.storageservice');
         $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';
 
         $filename = 'barcode-'.$datePrint.'.pdf';
@@ -519,7 +519,7 @@ class LocationHealthInspectionAPIController extends APIController
                 'margin-right'  => 20
             ));
 
-        $s3Service = $this->getStorageService();
+        $s3Service = $this->get('app.aws.storageservice');
 
         $dateTimeNow = new \DateTime();
         $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';

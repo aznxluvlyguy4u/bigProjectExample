@@ -53,7 +53,7 @@ class ClientAPIController extends APIController {
    */
   public function getClients(Request $request)
   {
-      return $this->getClientService()->getClients($request);
+      return $this->get('app.client')->getClients($request);
   }
 
   /**
@@ -65,7 +65,7 @@ class ClientAPIController extends APIController {
    */
   public function createClient(Request $request)
   {
-      return $this->getClientService()->createClient($request);
+      return $this->get('app.client')->createClient($request);
   }
 
   /**

@@ -72,7 +72,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalById(Request $request, $Id)
   {
-      return $this->getArrivalService()->getArrivalById($request, $Id);
+      return $this->get('app.arrival')->getArrivalById($request, $Id);
   }
 
   /**
@@ -115,7 +115,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivals(Request $request)
   {
-      return $this->getArrivalService()->getArrivals($request);
+      return $this->get('app.arrival')->getArrivals($request);
   }
 
 
@@ -142,7 +142,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
     public function createArrival(Request $request)
     {
-        return $this->getArrivalService()->createArrival($request);
+        return $this->get('app.arrival')->createArrival($request);
     }
 
   /**
@@ -169,7 +169,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function updateArrival(Request $request, $Id)
   {
-      return $this->getArrivalService()->updateArrival($request, $Id);
+      return $this->get('app.arrival')->updateArrival($request, $Id);
   }
 
 
@@ -198,7 +198,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalErrors(Request $request)
   {
-      return $this->getArrivalService()->getArrivalErrors($request);
+      return $this->get('app.arrival')->getArrivalErrors($request);
   }
 
 
@@ -227,7 +227,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalHistory(Request $request)
   {
-      return $this->getArrivalService()->getArrivalHistory($request);
+      return $this->get('app.arrival')->getArrivalHistory($request);
   }
 
 

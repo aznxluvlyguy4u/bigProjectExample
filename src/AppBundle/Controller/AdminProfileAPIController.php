@@ -24,7 +24,7 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
    */
   public function getAdminProfile(Request $request)
   {
-      return $this->getAdminProfileService()->getAdminProfile($request);
+      return $this->get('app.admin.profile')->getAdminProfile($request);
   }
 
 
@@ -47,7 +47,7 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
    */
   public function editAdminProfile(Request $request)
   {
-      return $this->getAdminProfileService()->editAdminProfile($request);
+      return $this->get('app.admin.profile')->editAdminProfile($request);
   }
 
 }

@@ -38,7 +38,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function getAdmins(Request $request)
   {
-      return $this->getAdminService()->getAdmins($request);
+      return $this->get('app.admin')->getAdmins($request);
   }
 
 
@@ -66,7 +66,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
     public function createAdmin(Request $request)
     {
-        return $this->getAdminService()->createAdmin($request);
+        return $this->get('app.admin')->createAdmin($request);
     }
 
 
@@ -94,7 +94,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
     public function editAdmin(Request $request)
     {
-        return $this->getAdminService()->editAdmin($request);
+        return $this->get('app.admin')->editAdmin($request);
     }
 
 
@@ -121,7 +121,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function deactivateAdmin(Request $request)
   {
-      return $this->getAdminService()->deactivateAdmin($request);
+      return $this->get('app.admin')->deactivateAdmin($request);
   }
 
 
@@ -136,7 +136,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function getTemporaryGhostToken(Request $request)
   {
-      return $this->getAdminService()->getTemporaryGhostToken($request);
+      return $this->get('app.admin')->getTemporaryGhostToken($request);
   }
 
   /**
@@ -150,7 +150,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function verifyGhostToken(Request $request)
   {
-      return $this->getAdminService()->verifyGhostToken($request);
+      return $this->get('app.admin')->verifyGhostToken($request);
   }
 
 
@@ -178,6 +178,6 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function getAccessLevelTypes(Request $request)
   {
-      return $this->getAdminService()->getAccessLevelTypes($request);
+      return $this->get('app.admin')->getAccessLevelTypes($request);
   }
 }
