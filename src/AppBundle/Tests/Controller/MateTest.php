@@ -3,13 +3,17 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\TestConstant;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Ram;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 
 /**
@@ -25,10 +29,16 @@ class MateTest extends WebTestCase
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
+    /** @var Ewe */
+    static private $ewe;
+    /** @var Ram */
+    static private $ram;
     /** @var IRSerializer */
     static private $serializer;
     /** @var EntityManagerInterface|ObjectManager */
     static private $em;
+    /** @var Logger */
+    static private $logger;
     /** @var RequestClient */
     private $client;
     /** @var array */
@@ -53,6 +63,7 @@ class MateTest extends WebTestCase
         //Get service classes
         self::$serializer = $container->get('app.serializer.ir');
         self::$em = $container->get('doctrine')->getManager();
+        self::$logger = $container->get('logger');
 
         //Database safety check
         $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
@@ -62,12 +73,24 @@ class MateTest extends WebTestCase
         }
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
+        //Ewe should be on location of client, but Ram does not have to be.
+        self::$ewe = UnitTestData::createTestEwe(self::$em, self::$location);
+        self::$ram = UnitTestData::createTestRam(self::$em);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
+
     public static function tearDownAfterClass()
     {
+        self::$em->refresh(self::$ewe);
+        //$ewe = self::$em->getRepository(Ewe::class)->find(self::$ewe->getId());
+        foreach (self::$ewe->getMatings() as $mating) {
+            self::$em->remove($mating);
+        }
 
+        self::$em->remove(self::$ewe);
+        self::$em->remove(self::$ram);
+        self::$em->flush();
     }
 
     /**
@@ -116,9 +139,6 @@ class MateTest extends WebTestCase
      */
     public function testMatingPost()
     {
-        $ram = UnitTestData::getRandomRamFromLocation(self::$em, self::$location);
-        $ewe = UnitTestData::getRandomEweFromLocation(self::$em, self::$location);
-
         $declareMateJson =
             json_encode(
                 [
@@ -127,12 +147,12 @@ class MateTest extends WebTestCase
                     "ki" => false,
                     "pmsg" => false,
                     "ram" => [
-                        "uln_country_code" => $ram->getUlnCountryCode(),
-                        "uln_number" => $ram->getUlnNumber()
+                        "uln_country_code" => self::$ram->getUlnCountryCode(),
+                        "uln_number" => self::$ram->getUlnNumber()
                     ],
                     "ewe" => [
-                        "uln_country_code" => $ewe->getUlnCountryCode(),
-                        "uln_number" => $ewe->getUlnNumber()
+                        "uln_country_code" => self::$ewe->getUlnCountryCode(),
+                        "uln_number" => self::$ewe->getUlnNumber()
                     ]
                 ]);
 
