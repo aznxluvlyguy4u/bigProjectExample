@@ -2,12 +2,12 @@
 
 namespace AppBundle\Tests\Controller;
 
+use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Service\IRSerializer;
-use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -24,7 +24,6 @@ use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 class MateTest extends WebTestCase
 {
 
-    const DECLARE_MATINGS_ENDPOINT = "/api/v1/matings";
     /** @var string */
     static private $accessTokenCode;
     /** @var Location */
@@ -114,19 +113,19 @@ class MateTest extends WebTestCase
     public function testMatingsGetters()
     {
         $this->client->request('GET',
-            $this::DECLARE_MATINGS_ENDPOINT . '-history',
+            Endpoint::DECLARE_MATINGS_ENDPOINT . '-history',
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
         $this->client->request('GET',
-            $this::DECLARE_MATINGS_ENDPOINT . '-errors',
+            Endpoint::DECLARE_MATINGS_ENDPOINT . '-errors',
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
         $this->client->request('GET',
-            $this::DECLARE_MATINGS_ENDPOINT . '-pending',
+            Endpoint::DECLARE_MATINGS_ENDPOINT . '-pending',
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
@@ -157,7 +156,7 @@ class MateTest extends WebTestCase
                 ]);
 
         $this->client->request('POST',
-            $this::DECLARE_MATINGS_ENDPOINT,
+            Endpoint::DECLARE_MATINGS_ENDPOINT,
             array(),
             array(),
             $this->defaultHeaders,
