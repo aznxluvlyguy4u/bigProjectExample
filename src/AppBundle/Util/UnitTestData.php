@@ -116,11 +116,22 @@ class UnitTestData
 
     /**
      * @param Connection $conn
+     * @param array|string $tableNames
      * @return int
      */
-    public static function deleteTestAnimals(Connection $conn)
+    public static function deleteTestAnimals(Connection $conn, $tableNames = [])
     {
-        $testLabel = self::TEST_TAG_LABEL;
+        $testLabel = self::TEST_ANIMAL_LABEL;
+
+        if (is_string($tableNames)) { $tableNames = [$tableNames]; }
+        foreach ($tableNames as $tableName) {
+            if (is_string($tableName)) {
+                $sql = "DELETE FROM $tableName WHERE animal_id IN 
+                (SELECT id FROM animal WHERE nickname = '$testLabel' AND name = '$testLabel')";
+                SqlUtil::updateWithCount($conn, $sql);
+            }
+        }
+
         $sql = "DELETE FROM animal WHERE nickname = '$testLabel' AND name = '$testLabel'";
         return SqlUtil::updateWithCount($conn, $sql);
     }

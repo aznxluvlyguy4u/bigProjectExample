@@ -4,6 +4,8 @@ namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Service\IRSerializer;
@@ -71,7 +73,8 @@ class ArrivalTest extends WebTestCase
 
     public static function tearDownAfterClass()
     {
-        UnitTestData::deleteTestAnimals(self::$em->getConnection());
+        UnitTestData::deleteTestAnimals(self::$em->getConnection(),
+            [DeclareArrival::getTableName(), DeclareDepart::getTableName()]);
     }
 
     /**

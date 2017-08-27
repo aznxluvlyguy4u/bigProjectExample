@@ -4,9 +4,12 @@ namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
+use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Tag;
+use AppBundle\Entity\TagTransferItemRequest;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -71,6 +74,7 @@ class TagTransferTest extends WebTestCase
 
     public static function tearDownAfterClass()
     {
+        self::deleteTagTransfersOfTestTags();
         UnitTestData::deleteTestTags(self::$em->getConnection());
     }
 
@@ -156,5 +160,34 @@ class TagTransferTest extends WebTestCase
     public function tearDown()
     {
         parent::tearDown();
+    }
+
+
+
+    private static function deleteTagTransfersOfTestTags()
+    {
+        $sql = "SELECT d.id FROM tag_transfer_item_request i
+                  INNER JOIN transfer_requests j ON j.tag_transfer_item_request_id = i.id
+                  INNER JOIN declare_tags_transfer d ON d.id = j.declare_tags_transfer_id
+                WHERE i.uln_country_code = '".UnitTestData::ULN_COUNTRY_CODE."'";
+        $results = self::$em->getConnection()->query($sql)->fetchAll();
+
+        if (count($results) > 0) {
+            $declareTagTransferIds = SqlUtil::getSingleValueGroupedSqlResults('id', $results, true);
+
+            foreach ($declareTagTransferIds as $declareTagTransferId)
+            {
+                /** @var DeclareTagsTransfer $declareTagTransfer */
+                $declareTagTransfer = self::$em->getRepository(DeclareTagsTransfer::class)->find($declareTagTransferId);
+
+                foreach ($declareTagTransfer->getTags() as $tag)
+                {
+                    self::$em->remove($tag);
+                }
+
+                self::$em->remove($declareTagTransfer);
+            }
+            self::$em->flush();
+        }
     }
 }

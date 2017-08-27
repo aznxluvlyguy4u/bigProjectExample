@@ -4,6 +4,7 @@ namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
@@ -75,7 +76,7 @@ class TagReplaceTest extends WebTestCase
 
     public static function tearDownAfterClass()
     {
-        UnitTestData::deleteTestAnimals(self::$em->getConnection());
+        UnitTestData::deleteTestAnimals(self::$em->getConnection(), DeclareTagReplace::getTableName());
         UnitTestData::deleteTestTags(self::$em->getConnection());
     }
 
