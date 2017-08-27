@@ -127,15 +127,39 @@ class UnitTestData
 
 
     /**
+     * @param EntityManagerInterface $em
      * @param Location $location
      * @param string $ulnNumber
      * @param string $tagStatus
      * @return Tag
      */
-    public static function createTag(Location $location,
+    public static function createTag(EntityManagerInterface $em,
+                                     Location $location,
                                      $ulnNumber = self::TAG_ULN_NUMBER,
                                      $tagStatus = TagStateType::UNASSIGNED)
     {
+        $tag = $em->getRepository(Tag::class)->findOneBy(
+            ['ulnCountryCode' => self::ULN_COUNTRY_CODE, 'ulnNumber' => $ulnNumber]);
+
+        if ($tag) {
+            if ($tag->getLocation() === $location &&
+                $tag->getTagStatus() === $tagStatus &&
+                $tag->getTagDescription() === self::TEST_TAG_LABEL
+            ) {
+                if ($location) {
+                    if ($tag->getOwner() === $location->getOwner()) { return $tag; }
+                } else {
+                    if ($tag->getOwner() === null) { return $tag; }
+                }
+            }
+            $tag->setLocation($location);
+            $tag->setOwner($location->getOwner());
+            $tag->setTagStatus($tagStatus);
+            $em->persist($tag);
+            $em->flush();
+            return $tag;
+        }
+
         $animalOrderNumber = StringUtil::getLast5CharactersFromString($ulnNumber);
 
         $tag = new Tag();
@@ -149,6 +173,9 @@ class UnitTestData
         $tag->setOwner($location->getOwner());
 
         $tag->setTagDescription(self::TEST_TAG_LABEL);
+
+        $em->persist($tag);
+        $em->flush();
 
         return $tag;
     }
