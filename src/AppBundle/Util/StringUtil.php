@@ -13,7 +13,7 @@ class StringUtil
     const ULN_LENGTH = 12;
     const ANIMAL_ORDER_NUMBER_LENGTH = 5;
     const BREEDER_NUMBER_LENGTH = 5;
-
+    const ENTITY_NAMESPACE = "AppBundle\\Entity\\";
 
     /**
      * @param $fullString
@@ -455,4 +455,15 @@ class StringUtil
         $int = ltrim(preg_replace("/[^0-9]/", "", $string),'0');
         return $int === '' ? null : $int;
     }
+
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    public static function convertCamelCaseToSnakeCase($string)
+    {
+        return ltrim(strtolower(preg_replace('/[A-Z]([A-Z](?![a-z]))*/', '_$0', $string)), '_');
+    }
+
 }
