@@ -5,6 +5,14 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareTagReplace;
+use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
@@ -134,6 +142,26 @@ class UnitTestData
 
         $sql = "DELETE FROM animal WHERE nickname = '$testLabel' AND name = '$testLabel'";
         return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function deleteTestAnimalsWithDeclares(Connection $conn)
+    {
+        return UnitTestData::deleteTestAnimals($conn,
+            [
+                DeclareArrival::getTableName(),
+                DeclareBirth::getTableName(),
+                DeclareDepart::getTableName(),
+                DeclareExport::getTableName(),
+                DeclareImport::getTableName(),
+                DeclareLoss::getTableName(),
+                DeclareTagReplace::getTableName(),
+                DeclareWeight::getTableName()
+            ]);
     }
 
 
