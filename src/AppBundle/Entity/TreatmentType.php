@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Entity\Employee;
+use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -19,6 +20,8 @@ use \DateTime;
  */
 class TreatmentType
 {
+    use EntityClassInfo;
+
     const OPEN_OPTION_DESCRIPTION = 'Overig';
 
     /**
