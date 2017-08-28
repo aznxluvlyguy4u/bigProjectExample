@@ -17,6 +17,7 @@ use AppBundle\Entity\LocationAddress;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -217,6 +218,8 @@ class CompanyService extends AuthServiceBase
         // Save to Database
         $this->getManager()->persist($company);
         $this->getManager()->flush();
+
+        $log = ActionLogWriter::createCompany($this->getManager(), $content, $company, $admin);
 
         // Send Email with passwords to Owner & Users
         $password = AuthService::persistNewPassword($this->encoder, $this->getManager(), $company->getOwner());
@@ -537,6 +540,8 @@ class CompanyService extends AuthServiceBase
             $this->emailService->emailNewPasswordToPerson($user, $password, false, true);
         }
 
+        $log = ActionLogWriter::editCompany($this->getManager(), $content, $company, $admin);
+
         $this->getManager()->getRepository(Animal::class)->updateLocationOfBirthByCompany($company);
 
         return ResultUtil::successResult('ok');
@@ -571,6 +576,8 @@ class CompanyService extends AuthServiceBase
         $company->setIsActive($isActive);
         $this->getManager()->persist($company);
         $this->getManager()->flush();
+
+        $log = ActionLogWriter::activeStatusCompany($this->getManager(), $isActive, $company, $admin);
 
         return ResultUtil::successResult('ok');
     }

@@ -9,6 +9,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Content;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Output\ContentOutput;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
@@ -47,10 +48,27 @@ class ContentManagementService extends ControllerServiceBase
         //Set values
         $dashboardText = $content->get(JsonInputConstant::DASHBOARD);
         $contactInfo = $content->get(JsonInputConstant::CONTACT_INFO);
-        $cms->setDashBoardIntroductionText($dashboardText);
-        $cms->setNsfoContactInformation($contactInfo);
-        $this->getManager()->persist($cms);
-        $this->getManager()->flush();
+
+        $updatedDashboardText = false;
+        if ($cms->getDashBoardIntroductionText() !== $dashboardText) {
+            $cms->setDashBoardIntroductionText($dashboardText);
+            $updatedDashboardText = true;
+        }
+
+        $updatedContactInfo = false;
+        if ($cms->getNsfoContactInformation() !== $contactInfo) {
+            $cms->setNsfoContactInformation($contactInfo);
+            $updatedContactInfo = true;
+        }
+
+        if ($updatedDashboardText || $updatedContactInfo) {
+            $this->getManager()->persist($cms);
+            $this->getManager()->flush();
+        }
+
+
+        if ($updatedDashboardText) { AdminActionLogWriter::updateDashBoardIntro($this->getManager(), $admin, $dashboardText); }
+        if ($updatedContactInfo) { AdminActionLogWriter::updateContactInfo($this->getManager(), $admin, $contactInfo); }
 
         $outputArray = $outputArray = ContentOutput::create($cms);
         return ResultUtil::successResult($outputArray);

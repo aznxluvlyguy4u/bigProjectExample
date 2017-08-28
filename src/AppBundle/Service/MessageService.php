@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Message;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ResultUtil;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -72,6 +73,8 @@ class MessageService extends ControllerServiceBase
         $this->getManager()->persist($message);
         $this->getManager()->flush();
 
+        ActionLogWriter::changeMessageReadStatus($this->getManager(), $this->getAccountOwner($request), $this->getUser(), $message);
+
         return ResultUtil::successResult('ok');
     }
 
@@ -88,6 +91,8 @@ class MessageService extends ControllerServiceBase
 
         $this->getManager()->persist($message);
         $this->getManager()->flush();
+
+        ActionLogWriter::changeMessageHideStatus($this->getManager(), $this->getAccountOwner($request), $this->getUser(), $message);
 
         return ResultUtil::successResult('ok');
     }

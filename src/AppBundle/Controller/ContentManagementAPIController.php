@@ -3,16 +3,6 @@
 namespace AppBundle\Controller;
 
 
-use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Content;
-use AppBundle\Entity\ContentRepository;
-use AppBundle\Entity\Employee;
-use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Output\ContentOutput;
-use AppBundle\Util\RequestUtil;
-use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;

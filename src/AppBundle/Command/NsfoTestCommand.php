@@ -70,6 +70,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         $this->locationRepository = $em->getRepository(Location::class);
         $this->animalRepository = $em->getRepository(Animal::class);
         $this->databaseName = $this->conn->getDatabase();
+        
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));

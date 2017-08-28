@@ -116,7 +116,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
 
-        $log = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
+        $arrivalOrImportLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
+        $departLog = null;
 
         $content = $this->capitalizePedigreeNumberInPostArray($content);
 
@@ -173,6 +174,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
                 $this->persist($departMessageObject);
 
                 $this->sendMessageObjectToQueue($departMessageObject);
+
+                $departLog = ActionLogWriter::declareDepart($depart, $departOwner, true);
             }
         }
 
@@ -201,7 +204,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
         $this->healthService->updateLocationHealth($messageObject);
 
-        ActionLogWriter::completeActionLog($this->getManager(), $log);
+        if ($departLog) { $this->persist($departLog); }
+        ActionLogWriter::completeActionLog($this->getManager(), $arrivalOrImportLog);
 
         $this->clearLivestockCacheForLocation($location);
 

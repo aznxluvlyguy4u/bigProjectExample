@@ -16,6 +16,7 @@ use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Output\AdminOverviewOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
@@ -58,7 +59,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
 
         $content = RequestUtil::getContentAsArray($request);
 
-        $log = ActionLogWriter::createAdmin($this->getManager(), null, $actionBy, $content);
+        $log = AdminActionLogWriter::createAdmin($this->getManager(), $actionBy, $content);
 
         // Validate content
         $firstName = $content->get('first_name');
@@ -95,8 +96,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
 
         $result = AdminOverviewOutput::createAdminOverview($admin);
 
-        $log->setUserAccount($admin);
-        $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
+        $log = AdminActionLogWriter::completeAdminCreateOrEditActionLog($this->getManager(), $log, $newAdmin);
 
         return ResultUtil::successResult($result);
     }
@@ -114,6 +114,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
         }
 
         $content = RequestUtil::getContentAsArray($request);
+        $log = AdminActionLogWriter::editAdmin($this->getManager(), $actionBy, $content);
 
         // Validate content
         $personId = $content->get('person_id');
@@ -129,7 +130,6 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
 
         /** @var Employee $admin */
         $admin = $this->getManager()->getRepository(Employee::class)->findOneByPersonId($personId);
-        $log = ActionLogWriter::editAdmin($this->getManager(),  $admin, $actionBy, $content);
 
         $admin->setFirstName($firstName);
         $admin->setLastName($lastName);
@@ -143,7 +143,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
         $admin = $this->getManager()->getRepository(Employee::class)->findOneByPersonId($personId);
         $result = AdminOverviewOutput::createAdminOverview($admin);
 
-        $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
+        $log = AdminActionLogWriter::completeAdminCreateOrEditActionLog($this->getManager(), $log, $admin);
 
         return ResultUtil::successResult($result);
     }
@@ -165,7 +165,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
         $personId = $content->get('person_id');
         /** @var Employee $adminToDeactivate */
         $adminToDeactivate = $this->getManager()->getRepository(Employee::class)->findOneBy(['personId' => $personId]);
-        $log = ActionLogWriter::deactivateAdmin($this->getManager(), $adminToDeactivate, $actionBy, $adminToDeactivate);
+        $log = AdminActionLogWriter::deactivateAdmin($this->getManager(), $actionBy, $adminToDeactivate);
 
         //Validate input
         if($adminToDeactivate == null) {

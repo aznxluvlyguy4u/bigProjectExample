@@ -14,6 +14,7 @@ use AppBundle\Entity\LocationHealthInspectionResultRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\LocationHealthEditor;
 use AppBundle\Output\HealthInspectionOutput;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use Com\Tecnick\Barcode\Barcode;
@@ -230,6 +231,8 @@ class LocationHealthInspectionAPIController extends APIController
             $this->getDoctrine()->getManager()->persist($location);
             $this->getDoctrine()->getManager()->flush();
 
+            AdminActionLogWriter::createInspection($this->getDoctrine()->getManager(), $admin, $inspection);
+
             $output = array(
                 "inspection_id" => $inspection->getInspectionId(),
                 "inspection" => $inspection->getInspectionSubject(),
@@ -315,6 +318,8 @@ class LocationHealthInspectionAPIController extends APIController
             }
             // Save to Database
             $this->getDoctrine()->getManager()->flush();
+
+            AdminActionLogWriter::changeInspectionStatus($this->getDoctrine()->getManager(), $admin, $inspection);
 
             $output = array(
                 "inspection_id" => $inspection->getInspectionId(),

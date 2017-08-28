@@ -107,7 +107,8 @@ class DepartService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
-        $log = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
+        $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
+        $arrivalLog = null;
 
         //Client can only depart/export own animals
         $animal = $content->get(Constant::ANIMAL_NAMESPACE);
@@ -153,6 +154,8 @@ class DepartService extends DeclareControllerServiceBase
                 $this->persist($arrivalMessageObject);
 
                 $this->sendMessageObjectToQueue($arrivalMessageObject);
+
+                $arrivalLog = ActionLogWriter::declareArrival($arrival, $arrivalOwner, true);
             }
         }
 
@@ -180,7 +183,8 @@ class DepartService extends DeclareControllerServiceBase
 
         $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
 
-        ActionLogWriter::completeActionLog($this->getManager(), $log);
+        if ($arrivalLog) { $this->persist($arrivalLog); }
+        ActionLogWriter::completeActionLog($this->getManager(), $departOrExportLog);
 
         $this->clearLivestockCacheForLocation($location);
 

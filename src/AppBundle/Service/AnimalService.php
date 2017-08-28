@@ -19,6 +19,7 @@ use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -348,6 +349,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         //Try to change animal gender
         $gender = $content->get('gender');
         $genderChanger = new GenderChanger($this->getManager());
+        $oldGender = $animal->getGender();
         $targetGender = null;
         $result = null;
 
@@ -373,6 +375,9 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         //FIXME Temporarily workaround, for returning the reflected gender change, it is persisted, though the updated fields is not returned.
         $result->setGender($targetGender);
+
+        ActionLogWriter::editGender($this->getManager(), $this->getAccountOwner($request),
+            $this->getEmployee(), $oldGender, $targetGender);
 
         //Clear cache for this location, to reflect changes on the livestock
         $this->clearLivestockCacheForLocation($this->getSelectedLocation($request), $animal);

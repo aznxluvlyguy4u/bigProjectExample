@@ -2,29 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Cache\AnimalCacher;
-use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\Exterior;
-use AppBundle\Entity\ExteriorRepository;
-use AppBundle\Entity\Inspector;
-use AppBundle\Entity\InspectorAuthorization;
-use AppBundle\Entity\InspectorAuthorizationRepository;
-use AppBundle\Entity\InspectorRepository;
-use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\InspectorMeasurementType;
-use AppBundle\Enumerator\JmsGroup;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Enumerator\RequestType;
-use AppBundle\Util\MeasurementsUtil;
-use AppBundle\Util\RequestUtil;
-use AppBundle\Util\TimeUtil;
-use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
-use AppBundle\Validation\AnimalDetailsValidator;
-use AppBundle\Validation\ExteriorValidator;
-use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;

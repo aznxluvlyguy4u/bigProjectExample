@@ -10,6 +10,7 @@ use AppBundle\Entity\Exterior;
 use AppBundle\Entity\InspectorAuthorization;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -87,6 +88,9 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
         $this->getManager()->persist($exterior);
         $this->getManager()->flush();
 
+        AdminActionLogWriter::createExterior($this->getManager(), $this->getAccountOwner($request),
+            $loggedInUser, $exterior);
+
         //Update exterior values in animalCache AFTER persisting exterior
         AnimalCacher::cacheExteriorByAnimal($this->getManager(), $animal);
 
@@ -138,6 +142,8 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
             $this->getManager()->persist($exterior);
             $this->getManager()->flush();
 
+            AdminActionLogWriter::deactivateExterior($this->getManager(), $this->getAccountOwner($request), $loggedInUser, $exterior);
+
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($this->getManager(), $animal);
 
@@ -166,6 +172,8 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
             }
             $inspector = $exteriorValidator->getInspector();
 
+            $oldExterior = clone $exterior;
+
             $exterior->setActionBy($loggedInUser);
             $exterior->setEditDate(new \DateTime());
             $exterior->setAnimal($animal);
@@ -189,10 +197,15 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
             $this->getManager()->persist($exterior);
             $this->getManager()->flush();
 
+            AdminActionLogWriter::updateExterior($this->getManager(), $this->getAccountOwner($request),
+                $loggedInUser, $exterior, $oldExterior);
+
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($this->getManager(), $animal);
 
             $output = $this->getBaseSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
+
+            $oldExterior = null;
 
         }
 

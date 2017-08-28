@@ -2,24 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Component\ArrivalMessageBuilder;
-use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\DeclareArrival;
-use AppBundle\Entity\DeclareDepartResponse;
-use AppBundle\Entity\DeclareExport;
-use AppBundle\Entity\DeclareExportResponse;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\Message;
-use AppBundle\Enumerator\AnimalTransferStatus;
-use AppBundle\Enumerator\MessageType;
-use AppBundle\Enumerator\RecoveryIndicatorType;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Enumerator\RequestType;
-use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\RequestUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;

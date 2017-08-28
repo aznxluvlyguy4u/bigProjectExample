@@ -11,6 +11,8 @@ use AppBundle\Controller\AdminProfileAPIControllerInterface;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\AdminProfile;
 use AppBundle\Output\AdminOverviewOutput;
+use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
@@ -57,6 +59,7 @@ class AdminProfileService extends AuthServiceBase implements AdminProfileAPICont
 
         //If password is changed: validate and encrypt it
         $newPassword = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::NEW_PASSWORD, $content);
+        $passwordChangeLog = null;
         if($newPassword != null) {
             $newPassword = base64_decode($newPassword);
 
@@ -67,7 +70,10 @@ class AdminProfileService extends AuthServiceBase implements AdminProfileAPICont
             }
             $encodedNewPassword = $this->encoder->encodePassword($admin, $newPassword);
             $content->set(JsonInputConstant::NEW_PASSWORD, $encodedNewPassword);
+            $passwordChangeLog = AdminActionLogWriter::passwordChangeAdminInProfile($this->getManager(), $admin);
         }
+
+        $valuesLog = AdminActionLogWriter::editOwnAdminProfile($this->getManager(), $admin, $content);
 
         //Persist updated changes and return the updated values
         $client = AdminProfile::update($admin, $content);
@@ -75,6 +81,12 @@ class AdminProfileService extends AuthServiceBase implements AdminProfileAPICont
         $this->getManager()->flush();
 
         $outputArray = AdminOverviewOutput::createAdminOverview($admin);
+
+        ActionLogWriter::completeActionLog($this->getManager(), $valuesLog);
+        if ($passwordChangeLog) {
+            ActionLogWriter::completeActionLog($this->getManager(), $passwordChangeLog);
+        }
+
         return ResultUtil::successResult($outputArray);
     }
 }
