@@ -138,34 +138,36 @@ class MateTest extends WebTestCase
      */
     public function testMatingPost()
     {
-        $declareMateJson =
-            json_encode(
-                [
-                    "start_date" => "2016-07-31T18:25:43-05:00",
-                    "end_date" => "2016-07-31T18:25:43-05:00",
-                    "ki" => false,
-                    "pmsg" => false,
-                    "ram" => [
-                        "uln_country_code" => self::$ram->getUlnCountryCode(),
-                        "uln_number" => self::$ram->getUlnNumber()
-                    ],
-                    "ewe" => [
-                        "uln_country_code" => self::$ewe->getUlnCountryCode(),
-                        "uln_number" => self::$ewe->getUlnNumber()
-                    ]
-                ]);
+        if (!BirthTest::TEST_BIRTH_CUD) {
+            $declareMateJson =
+                json_encode(
+                    [
+                        "start_date" => "2016-07-31T18:25:43-05:00",
+                        "end_date" => "2016-07-31T18:25:43-05:00",
+                        "ki" => false,
+                        "pmsg" => false,
+                        "ram" => [
+                            "uln_country_code" => self::$ram->getUlnCountryCode(),
+                            "uln_number" => self::$ram->getUlnNumber()
+                        ],
+                        "ewe" => [
+                            "uln_country_code" => self::$ewe->getUlnCountryCode(),
+                            "uln_number" => self::$ewe->getUlnNumber()
+                        ]
+                    ]);
 
-        $this->client->request('POST',
-            Endpoint::DECLARE_MATINGS_ENDPOINT,
-            array(),
-            array(),
-            $this->defaultHeaders,
-            $declareMateJson
-        );
+            $this->client->request('POST',
+                Endpoint::DECLARE_MATINGS_ENDPOINT,
+                array(),
+                array(),
+                $this->defaultHeaders,
+                $declareMateJson
+            );
 
-        $response = $this->client->getResponse();
-        $data = json_decode($response->getContent(), true);
-        $this->assertStatusCode(200, $this->client);
+            $response = $this->client->getResponse();
+            $data = json_decode($response->getContent(), true);
+            $this->assertStatusCode(200, $this->client);
+        }
     }
 
     /*

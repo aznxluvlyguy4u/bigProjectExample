@@ -2,9 +2,24 @@
 
 namespace AppBundle\Tests\Controller;
 
+use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
+use AppBundle\Entity\Ram;
+use AppBundle\Entity\Tag;
+use AppBundle\Entity\TailLength;
+use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\GenderType;
+use AppBundle\Service\BirthService;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -19,12 +34,18 @@ use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
  */
 class BirthTest extends WebTestCase
 {
+    const TEST_BIRTH_CUD = true;
 
-    const DECLARE_BIRTH_ENDPOINT = "/api/v1/births";
     /** @var string */
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
+    /** @var Ewe */
+    static private $ewe;
+    /** @var Ram */
+    static private $ram;
+    /** @var Tag */
+    static private $tag;
     /** @var IRSerializer */
     static private $serializer;
     /** @var EntityManagerInterface|ObjectManager */
@@ -62,12 +83,54 @@ class BirthTest extends WebTestCase
         }
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
+        self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
+        self::$ewe = UnitTestData::createTestEwe(self::$em, self::$location);
+        self::$tag = UnitTestData::createTag(self::$em, self::$location);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
     public static function tearDownAfterClass()
     {
+        self::$em->refresh(self::$ewe);
+        foreach (self::$ewe->getMatings() as $mating) {
+            self::$em->remove($mating);
+        }
+        self::$em->flush();
 
+        /** @var Litter $litter */
+        foreach (self::$ewe->getLitters() as $litter) {
+
+            $litter->setAnimalMother(null);
+            $litter->setAnimalFather(null);
+            self::$em->persist($litter);
+
+            /** @var Animal $child */
+            foreach ($litter->getChildren() as $child) {
+                $child->setLitter(null);
+                self::$em->persist($child);
+                self::$em->flush();
+            }
+
+            /** @var Animal $child */
+            foreach ($litter->getChildren() as $child) {
+                self::$em->remove($child);
+            }
+
+            foreach ($litter->getStillborns() as $stillborn) {
+                self::$em->remove($stillborn);
+            }
+
+            self::$em->remove($litter);
+            self::$em->flush();
+        }
+
+        self::$em->remove(self::$ewe);
+        self::$em->remove(self::$ram);
+        self::$em->flush();
+
+        DoctrineUtil::updateTableSequence(self::$em->getConnection(),
+            [Animal::getTableName(), DeclareBase::getTableName(), DeclareNsfoBase::getTableName(), Mate::getTableName(),
+                Weight::getTableName(),TailLength::getTableName()]);
     }
 
     /**
@@ -90,11 +153,98 @@ class BirthTest extends WebTestCase
     public function testBirthsGetters()
     {
         $this->client->request('GET',
-            $this::DECLARE_BIRTH_ENDPOINT,
+            Endpoint::DECLARE_BIRTH_ENDPOINT,
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
     }
+
+
+    /**
+     * @group cud
+     * @group birth-cud
+     * Test birth post endpoint
+     */
+    public function testBirthPost()
+    {
+        $eventDate = new \DateTime('2017-01-04');
+
+        $declareMateJson =
+            json_encode(
+                [
+                    "start_date" => TimeUtil::getTimeStampForJsonBody($eventDate),
+                    "end_date" => TimeUtil::getTimeStampForJsonBody($eventDate),
+                    "ki" => false,
+                    "pmsg" => false,
+                    "ram" => [
+                        "uln_country_code" => self::$ram->getUlnCountryCode(),
+                        "uln_number" => self::$ram->getUlnNumber()
+                    ],
+                    "ewe" => [
+                        "uln_country_code" => self::$ewe->getUlnCountryCode(),
+                        "uln_number" => self::$ewe->getUlnNumber()
+                    ]
+                ]);
+
+        $this->client->request('POST',
+            Endpoint::DECLARE_MATINGS_ENDPOINT,
+            array(),
+            array(),
+            $this->defaultHeaders,
+            $declareMateJson
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+
+        $this->assertStatusCode(200, $this->client);
+
+        $eventDate->add(new \DateInterval('P'.BirthService::MEDIAN_PREGNANCY_DAYS.'D'));
+
+        $declareMateJson =
+            json_encode(
+                [
+                    "mother" => [
+                        "uln_country_code" => self::$ewe->getUlnCountryCode(),
+                        "uln_number" => self::$ewe->getUlnNumber()
+                    ],
+                    "father" => [
+                        "uln_country_code" => self::$ram->getUlnCountryCode(),
+                        "uln_number" => self::$ram->getUlnNumber()
+                    ],
+                    "children" => [
+                        0 => [
+                            "uln_country_code" => self::$tag->getUlnCountryCode(),
+                            "uln_number" => self::$tag->getUlnNumber(),
+                            "is_alive" => true,
+                            "nurture_type" => "NONE",
+                            "gender" => GenderType::MALE,
+                            "birth_progress" => "NO HELP",
+                            "birth_weight" => 0.01,
+                            "tail_length" => 0,
+                        ]
+                    ],
+                    "date_of_birth" => TimeUtil::getTimeStampForJsonBody($eventDate),
+                    "is_aborted" => false,
+                    "is_pseudo_pregnancy" => false,
+                    "litter_size" => 1,
+                    "stillborn_count" => 0
+                ]
+            );
+
+        $this->client->request('POST',
+            Endpoint::DECLARE_BIRTH_ENDPOINT,
+            array(),
+            array(),
+            $this->defaultHeaders,
+            $declareMateJson
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
+    }
+
 
     /*
      * Runs after all testcases ran and teardown
