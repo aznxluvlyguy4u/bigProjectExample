@@ -96,6 +96,8 @@ class NsfoTestCommand extends ContainerAwareCommand
             case 3:
                 $purgeCount = $this->getContainer()->get('app.aws.queueservice.external.test')->purgeQueue();
                 $this->cmdUtil->writeln('External test queue messages purged: '.$purgeCount);
+                $purgeCount = $this->getContainer()->get('app.aws.queueservice.internal.test')->purgeQueue();
+                $this->cmdUtil->writeln('Internal test queue messages purged: '.$purgeCount);
                 break;
             default:
                 $this->customTest();

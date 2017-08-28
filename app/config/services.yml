@@ -104,6 +104,11 @@ services:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%' }
 
+    app.aws.queueservice.internal.test:
+        class: AppBundle\Service\AwsInternalTestQueueService
+        parent: app.aws.queueservice.workers_base
+        arguments: { index_0: '%aws_sqs_queue_interal_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST }
+
     app.aws.queueservice.mixblup_input:
         class: AppBundle\Service\MixBlupInputQueueService
         parent: app.aws.queueservice.workers_base
