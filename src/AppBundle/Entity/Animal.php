@@ -46,6 +46,7 @@ abstract class Animal
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"TREATMENT_TEMPLATE"})
      */
     protected $id;
 
@@ -118,7 +119,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"DECLARE","MIXBLUP"})
+     * @JMS\Groups({"DECLARE","MIXBLUP","TREATMENT_TEMPLATE"})
      */
     protected $dateOfBirth;
 
@@ -289,7 +290,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP","TREATMENT_TEMPLATE"})
      */
     protected $isAlive;
 
@@ -298,7 +299,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP",
+     *     "TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
      */
     protected $ulnNumber;
 
@@ -309,7 +311,8 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP",
+     *     "TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
      */
     protected $ulnCountryCode;
 
@@ -565,6 +568,14 @@ abstract class Animal
     protected $latestBreedGrades;
 
     /**
+     * @var ArrayCollection
+     * @ORM\OrderBy({"description" = "ASC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentAnimal", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentAnimal>")
+     */
+    protected $treatments;
+
+    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -606,6 +617,7 @@ abstract class Animal
         $this->ulnHistory = new ArrayCollection();
         $this->genderHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
+        $this->treatments = new ArrayCollection();
         $this->wormResistances = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
@@ -2350,6 +2362,46 @@ abstract class Animal
      */
     public function setCollarNumber($collarNumber) {
         $this->collarNumber = $collarNumber;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getTreatments()
+    {
+        return $this->treatments;
+    }
+
+    /**
+     * @param ArrayCollection $treatments
+     * @return Animal
+     */
+    public function setTreatments($treatments)
+    {
+        $this->treatments = $treatments;
+        return $this;
+    }
+
+    /**
+     * Add treatment
+     * @param TreatmentAnimal $treatment
+     * @return Animal
+     */
+    public function addTreatment(TreatmentAnimal $treatment)
+    {
+        $this->treatments->add($treatment);
+        return $this;
+    }
+
+    /**
+     * Remove treatment
+     * @param TreatmentAnimal $treatment
+     * @return Animal
+     */
+    public function removeTreatment(TreatmentAnimal $treatment)
+    {
+        $this->treatments->removeElement($treatment);
+        return $this;
     }
 
     /**

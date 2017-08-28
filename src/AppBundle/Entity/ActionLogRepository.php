@@ -36,24 +36,28 @@ class ActionLogRepository extends BaseRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
 
+        $qb
+            ->select('action_log')
+            ->from ('AppBundle:ActionLog', 'action_log')
+        ;
+
         $startDateQuery = $startDate !== null
             ? $qb->expr()->gte('action_log.logDate', "'".TimeUtil::getTimeStampForSql($startDate)."'") : null;
         $endDateQuery = $endDate !== null
             ? $qb->expr()->lte('action_log.logDate', "'".TimeUtil::getTimeStampForSql($endDate)."'") : null;
         $userActionTypeQuery = $userActionType !== null
             ? $qb->expr()->eq('action_log.userActionType', "'".$userActionType."'") : null;
-        $userAccountId = $userAccountId !== null
+        $userAccountIdQuery = $userAccountId !== null
             ? $qb->expr()->eq('action_log.userAccount', $userAccountId) : null;
 
-        $qb
-            ->select('action_log')
-            ->from ('AppBundle:ActionLog', 'action_log')
-            ->where($qb->expr()->andX(
+        if ($startDateQuery !== null || $endDateQuery !== null || $userActionTypeQuery !== null || $userAccountIdQuery !== null) {
+            $qb->where($qb->expr()->andX(
                 $startDateQuery,
                 $endDateQuery,
                 $userActionTypeQuery,
-                $userAccountId
+                $userAccountIdQuery
             ));
+        }
 
         $query = $qb->getQuery();
         return $query->getResult();

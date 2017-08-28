@@ -81,7 +81,7 @@ class ActionLogAPIController extends APIController
      */
     public function getUserActionTypes(Request $request)
     {
-        return $this->getActionLogService()->getUserActionTypes($request);
+        return $this->get('api.action_log')->getUserActionTypes($request);
     }
 
 
@@ -184,7 +184,7 @@ class ActionLogAPIController extends APIController
      */
     public function getActionLogs(Request $request)
     {
-        return $this->getActionLogService()->getActionLogs($request);
+        return $this->get('api.action_log')->getActionLogs($request);
     }
 
 
@@ -237,6 +237,6 @@ class ActionLogAPIController extends APIController
      */
     public function getAccountOwnerIds(Request $request)
     {
-        return $this->getActionLogService()->getAccountOwnerIds();
+        return $this->get('api.action_log')->getAccountOwnerIds();
     }
 }
