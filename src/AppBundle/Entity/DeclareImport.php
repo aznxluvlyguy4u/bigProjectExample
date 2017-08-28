@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -22,6 +23,7 @@ use AppBundle\Entity\DeclareImportResponse;
  */
 class DeclareImport extends DeclareBase
 {
+    use EntityClassInfo;
 
   /**
    * @ORM\ManyToOne(targetEntity="Animal", inversedBy="imports")

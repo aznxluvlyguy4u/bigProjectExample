@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: werner
- * Date: 10-5-17
- * Time: 10:42
- */
 
 namespace AppBundle\Output;
 

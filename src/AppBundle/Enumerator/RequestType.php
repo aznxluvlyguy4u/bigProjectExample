@@ -111,4 +111,13 @@ class RequestType
     {
         return RequestType::getRequestTypeFromEntityNameSpace(Utils::getClassName($object));
     }
+
+
+    /**
+     * @return array
+     */
+    static function getConstants() {
+        $oClass = new \ReflectionClass(__CLASS__);
+        return $oClass->getConstants();
+    }
 }

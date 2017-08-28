@@ -7,6 +7,7 @@ use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Traits\EntityClassInfo;
 use \DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -23,6 +24,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 class LocationHealthMessage
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *

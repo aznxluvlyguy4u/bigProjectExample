@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -9,11 +10,13 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class InvoiceRule
- * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRuleTemplateRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRuleRepository")
  * @package AppBundle\Entity
  */
 class InvoiceRule
 {
+    use EntityClassInfo;
+
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id

@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: werner
- * Date: 7-4-17
- * Time: 10:24
- */
 
 namespace AppBundle\Controller;
 
@@ -49,16 +43,7 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
      */
     public function getInvoiceSenderDetails()
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
-        $serializer = $this->getSerializer();
-        $em = $this->getManager();
-        $details = $em->getRepository(InvoiceSenderDetails::class)->createQueryBuilder('qb')
-            ->orderBy('qb.id', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $details), Response::HTTP_OK);
+        return $this->get('app.invoice.sender.details')->getInvoiceSenderDetails();
     }
 
     /**
@@ -83,30 +68,7 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
      */
     public function createInvoiceSenderDetails(Request $request)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
-        $details = new InvoiceSenderDetails();
-        $content = $this->getContentAsArray($request);
-        $contentAddress = $content->get('address');
-        $address = new BillingAddress();
-        $address->setStreetName($contentAddress['street_name']);
-        $address->setAddressNumber($contentAddress['address_number']);
-
-        if(isset($contentAddress['address_number_suffix'])) {
-            $address->setAddressNumberSuffix($contentAddress['address_number_suffix']);
-        }
-
-        $address->setPostalCode($contentAddress['postal_code']);
-        $address->setCity("");
-        $address->setCountry("Nederland");
-        $details->setName($content->get('name'));
-        $details->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
-        $details->setVatNumber($content->get('vat_number'));
-        $details->setPaymentDeadlineInDays($content->get('payment_deadline_in_days'));
-        $details->setIban($content->get('iban'));
-        $details->setAddress($address);
-        $this->persistAndFlush($details);
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $details), Response::HTTP_OK);
+        return $this->get('app.invoice.sender.details')->createInvoiceSenderDetails($request);
     }
 
     /**
@@ -131,31 +93,7 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
      */
     public function updateInvoiceSenderDetails(Request $request, InvoiceSenderDetails $invoiceSenderDetails)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
-        $content = $this->getContentAsArray($request);
-        $temporaryInvoiceSenderDetails = new InvoiceSenderDetails();
-        $contentAddress = $content->get('address');
-        $temporaryAddress = new BillingAddress();
-        $temporaryAddress->setStreetName($contentAddress['street_name']);
-        $temporaryAddress->setAddressNumber($contentAddress['address_number']);
-
-        if(isset($contentAddress['suffix'])) {
-            $temporaryAddress->setAddressNumberSuffix($contentAddress['address_number_suffix']);
-        }
-
-        $temporaryAddress->setPostalCode($contentAddress['postal_code']);
-        $temporaryAddress->setCity($contentAddress['city']);
-        $temporaryAddress->setCountry($contentAddress['country']);
-        $temporaryInvoiceSenderDetails->setName($content->get('name'));
-        $temporaryInvoiceSenderDetails->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
-        $temporaryInvoiceSenderDetails->setVatNumber($content->get('vat_number'));
-        $temporaryInvoiceSenderDetails->setPaymentDeadlineInDays($content->get('payment_deadline_in_days'));
-        $temporaryInvoiceSenderDetails->setIban($content->get('iban'));
-        $temporaryInvoiceSenderDetails->setAddress($temporaryAddress);
-        $invoiceSenderDetails->copyValues($temporaryInvoiceSenderDetails);
-        $this->persistAndFlush($invoiceSenderDetails);
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoiceSenderDetails), Response::HTTP_OK);
+        return $this->get('app.invoice.sender.details')->updateInvoiceSenderDetails($request, $invoiceSenderDetails);
     }
 
     /**
@@ -180,10 +118,7 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
      */
     public function deleteInvoiceSenderDetails(InvoiceSenderDetails $invoiceSenderDetails)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
-        $invoiceSenderDetails->setIsDeleted(true);
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoiceSenderDetails), Response::HTTP_OK);
+        return $this->get('app.invoice.sender.details')->deleteInvoiceSenderDetails($invoiceSenderDetails);
     }
 
 }

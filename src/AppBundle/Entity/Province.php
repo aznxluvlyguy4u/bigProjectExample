@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -11,7 +12,10 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\ProvinceRepository")
  * @package AppBundle\Entity
  */
-class Province {
+class Province
+{
+    use EntityClassInfo;
+
     /**
     * @var integer
     *

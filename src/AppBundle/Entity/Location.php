@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -21,6 +22,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 class Location
 {
+    use EntityClassInfo;
+
   /**
    * @var integer
    *
@@ -48,7 +51,7 @@ class Location
    * @Assert\NotBlank
    * @Assert\Length(max = 12)
    * @JMS\Type("string")
-   * @JMS\Groups({"INVOICE"})
+   * @JMS\Groups({"INVOICE","TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
    * @Expose
    */
   protected $ubn;
@@ -216,13 +219,29 @@ class Location
      * @JMS\Type("array")
      */
     private $tags;
-  
+
+    /**
+     * @var ArrayCollection
+     * @ORM\OrderBy({"description" = "ASC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentTemplate", mappedBy="location", cascade={"persist"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentTemplate>")
+     */
+    private $treatmentTemplates;
+
+    /**
+     * @var ArrayCollection
+     * @ORM\OrderBy({"description" = "ASC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentLocation", mappedBy="location", cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentLocation>")
+     */
+    private $treatments;
+
     /**
      * @var boolean
      *
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({"INVOICE","TREATMENT_TEMPLATE"})
      * @Expose
      */
     private $isActive;
@@ -247,6 +266,8 @@ class Location
     $this->healthMessages = new ArrayCollection();
     $this->animalResidenceHistory = new ArrayCollection();
     $this->tags = new ArrayCollection();
+    $this->treatmentTemplates = new ArrayCollection();
+    $this->treatments = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 
@@ -931,7 +952,90 @@ class Location
     }
 
 
-  /**
+    /**
+     * @return ArrayCollection
+     */
+    public function getTreatmentTemplates()
+    {
+        return $this->treatmentTemplates;
+    }
+
+    /**
+     * @param ArrayCollection $treatmentTemplates
+     * @return Location
+     */
+    public function setTreatmentTemplates($treatmentTemplates)
+    {
+        $this->treatmentTemplates = $treatmentTemplates;
+        return $this;
+    }
+
+    /**
+     * Add treatmentTemplate
+     * @param TreatmentTemplate $treatmentTemplate
+     * @return Location
+     */
+    public function addTreatmentTemplate(TreatmentTemplate $treatmentTemplate)
+    {
+        $this->treatmentTemplates->add($treatmentTemplate);
+        return $this;
+    }
+
+    /**
+     * Remove treatmentTemplate
+     * @param TreatmentTemplate $treatmentTemplate
+     * @return Location
+     */
+    public function removeTreatmentTemplate(TreatmentTemplate $treatmentTemplate)
+    {
+        $this->treatmentTemplates->removeElement($treatmentTemplate);
+        return $this;
+    }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getTreatments()
+    {
+        return $this->treatments;
+    }
+
+    /**
+     * @param ArrayCollection $treatments
+     * @return Location
+     */
+    public function setTreatments($treatments)
+    {
+        $this->treatments = $treatments;
+        return $this;
+    }
+
+    /**
+     * Add treatment
+     * @param TreatmentLocation $treatment
+     * @return Location
+     */
+    public function addTreatment(TreatmentLocation $treatment)
+    {
+        $this->treatments->add($treatment);
+        return $this;
+    }
+
+    /**
+     * Remove treatment
+     * @param TreatmentLocation $treatment
+     * @return Location
+     */
+    public function removeTreatment(TreatmentLocation $treatment)
+    {
+        $this->treatments->removeElement($treatment);
+        return $this;
+    }
+
+
+
+    /**
      * @return mixed
      */
     public function getIsActive()

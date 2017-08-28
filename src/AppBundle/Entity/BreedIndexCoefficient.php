@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -14,7 +15,7 @@ use JMS\Serializer\Annotation as JMS;
  */
 class BreedIndexCoefficient
 {
-    const TABLE_NAME = 'breed_index_coefficient';
+    use EntityClassInfo;
 
     /**
      * @var integer

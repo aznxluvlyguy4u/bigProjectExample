@@ -3,10 +3,8 @@
 namespace AppBundle\Controller;
 
 
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\InvoiceRule;
 use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Util\Validator;
+use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -31,14 +29,7 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function getInvoiceRuleTemplate(Request $request)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
-
-        $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
-        $ruleTemplates = $repository->findAll();
-        $output = $this->getDecodedJson($ruleTemplates, self::INVOICE_JMS_GROUP);
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return $this->get('app.invoice.rule.template')->getInvoiceRuleTemplate($request);
     }
 
     /**
@@ -49,16 +40,7 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function createInvoiceRuleTemplate(Request $request)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
-
-        $content = $this->getContentAsArray($request);
-
-        $ruleTemplate = $this->getObjectFromContent($content, InvoiceRule::class);
-        $this->persistAndFlush($ruleTemplate);
-
-        $output = $this->getDecodedJson($ruleTemplate, self::INVOICE_JMS_GROUP);
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return $this->get('app.invoice.rule.template')->createInvoiceRuleTemplate($request);
     }
 
 
@@ -70,24 +52,7 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function changeInvoiceRuleTemplate(Request $request)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
-
-        $content = $this->getContentAsArray($request);
-
-        /** @var InvoiceRule $updatedRuleTemplate */
-        $updatedRuleTemplate = $this->getObjectFromContent($content, InvoiceRule::class);
-
-        $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
-        /** @var InvoiceRule $currentRuleTemplate */
-        $currentRuleTemplate = $repository->find($updatedRuleTemplate->getId());
-        if(!$currentRuleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
-
-        $currentRuleTemplate->copyValues($updatedRuleTemplate);
-        $this->persistAndFlush($currentRuleTemplate);
-
-        $output = $this->getDecodedJson($updatedRuleTemplate, self::INVOICE_JMS_GROUP);
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return $this->get('app.invoice.rule.template')->changeInvoiceRuleTemplate($request);
     }
 
     /**
@@ -98,19 +63,7 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function deleteInvoiceRuleTemplate(Request $request, $id)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
-
-        $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
-        $ruleTemplate = $repository->find($id);
-
-        if(!$ruleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
-
-        $this->getDoctrine()->getManager()->remove($ruleTemplate);
-        $this->getDoctrine()->getManager()->flush();
-
-        $output = $this->getDecodedJson($ruleTemplate, self::INVOICE_JMS_GROUP);
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return $this->get('app.invoice.rule.template')->deleteInvoiceRuleTemplate($request, $id);
     }
 
 
@@ -129,13 +82,15 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editReasonsOfLoss(Request $request)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+        $admin = $this->getEmployee();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
 
         // TODO: Implement editReasonOfLoss() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
     /**
@@ -148,13 +103,15 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editReasonsOfDepart(Request $request)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+        $admin = $this->getEmployee();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
 
         // TODO: Implement editReasonOfDepart() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
     /**
@@ -167,13 +124,15 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editTreatmentOptions(Request $request)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+        $admin = $this->getEmployee();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
 
         // TODO: Implement editTreatmentOptions() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
     /**
@@ -186,13 +145,15 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editContactFormOptions(Request $request)
     {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+        $admin = $this->getEmployee();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
 
         // TODO: Implement editContactFormOptions() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
 }

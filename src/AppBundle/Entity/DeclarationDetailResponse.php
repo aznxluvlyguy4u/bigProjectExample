@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use \AppBundle\Entity\DeclarationDetail;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -11,7 +12,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclarationDetailResponseRepository")
  * @package AppBundle\Entity
  */
-class DeclarationDetailResponse extends DeclarationBaseResponse {
+class DeclarationDetailResponse extends DeclarationBaseResponse
+{
+    use EntityClassInfo;
 
     /**
      * @var DeclarationDetail

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -13,7 +14,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRepository")
  * @package AppBundle\Entity
  */
-class Invoice {
+class Invoice
+{
+    use EntityClassInfo;
 
     /**
      * @ORM\Column(type="integer")

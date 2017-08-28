@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\NullChecker;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -14,9 +15,16 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"CompanyAddress" = "CompanyAddress", "BillingAddress" = "BillingAddress", "LocationAddress" = "LocationAddress"})
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "CompanyAddress" : "AppBundle\Entity\CompanyAddress",
+ *                           "BillingAddress" : "AppBundle\Entity\BillingAddress",
+ *                        "LocationAddress" : "AppBundle\Entity\LocationAddress"},
+ *     groups = {"CONTACT_INFO"})
  * @package AppBundle\Entity
  */
-abstract class Address {
+abstract class Address
+{
+    use EntityClassInfo;
 
   /**
    * @ORM\Column(type="integer")

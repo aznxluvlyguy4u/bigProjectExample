@@ -9,6 +9,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\AnimalArrayReader;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
@@ -590,6 +591,8 @@ class AnimalRepository extends BaseRepository
   public function getAnimalByUlnOrPedigree($content)
   {
     $result = null;
+
+    if (!is_array($content)) { return $result; }
 
     if(key_exists('uln_country_code', $content) && key_exists('uln_number', $content)) {
       if ($content['uln_country_code'] != '' && $content['uln_number'] != '') {
@@ -1277,6 +1280,9 @@ class AnimalRepository extends BaseRepository
   }
 
 
+
+
+
   /**
    * @param array|int $animalIds
    */
@@ -1324,5 +1330,33 @@ class AnimalRepository extends BaseRepository
     }
   }
 
+
+    /**
+     * @param $ulnCountryCode
+     * @param $ulnNumber
+     * @param \DateTime $dateOfBirth
+     * @return Animal|Ram|Ewe|Neuter|null
+     */
+  public function findOneByUlnAndDateOfBirth($ulnCountryCode, $ulnNumber, $dateOfBirth)
+  {
+      $qb = $this->getManager()->createQueryBuilder();
+      $query =
+          $qb
+              ->select('animal')
+              ->from(Animal::class, 'animal')
+              ->where($qb->expr()->andX(
+                  $qb->expr()->eq('animal.dateOfBirth', "'".($dateOfBirth->format('Y-m-d'))."'"),
+                  $qb->expr()->eq('animal.ulnCountryCode', "'".$ulnCountryCode."'"),
+                  $qb->expr()->eq('animal.ulnNumber', "'".$ulnNumber."'")
+              ))
+              ->orderBy('animal.id' ,'DESC')
+              ->getQuery();
+
+      $results = $query->getResult();
+      if ($results > 0) {
+          return ArrayUtil::firstValue($results);
+      }
+      return null;
+  }
 
 }

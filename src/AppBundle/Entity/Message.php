@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Enumerator\MessageType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -17,6 +18,8 @@ use DateTime;
  */
 class Message
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *

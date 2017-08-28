@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -17,12 +18,13 @@ use JMS\Serializer\Annotation\Expose;
  */
 class Client extends Person
 {
+    use EntityClassInfo;
 
     /**
     * @ORM\Column(type="string", nullable=true)
     * @Assert\Length(max = 20)
     * @JMS\Type("string")
-    * @JMS\Groups({"INVOICE"}) 
+    * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER","INVOICE"})
     * @Expose
     */
     private $relationNumberKeeper;

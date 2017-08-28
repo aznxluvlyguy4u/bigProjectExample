@@ -13,6 +13,7 @@ use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\PredicateTypeDutch;
+use AppBundle\Enumerator\TreatmentTypeOption;
 
 /**
  * This class translates the English used in the API to Dutch values displayed in the output.
@@ -213,5 +214,17 @@ class Translation
         );
     }
 
+
+    /**
+     * @param string $type
+     * @return string
+     */
+    public static function getDutchTreatmentType($type)
+    {
+        return strtr($type, [
+            TreatmentTypeOption::INDIVIDUAL => 'Individueel',
+            TreatmentTypeOption::LOCATION => 'UBN',
+        ]);
+    }
 
 }

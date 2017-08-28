@@ -136,7 +136,7 @@ class HealthEditValidator
 
 
     /**
-     * @return JsonResponse
+     * @return JsonResponse|\AppBundle\Component\HttpFoundation\JsonResponse
      */
     public function createJsonResponse()
     {

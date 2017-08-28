@@ -13,6 +13,6 @@ class InvoiceRuleTemplateRepository extends BaseRepository
      */
     public function findAll()
     {
-        return $this->findBy([],['sortOrder' => 'ASC', 'category' => 'ASC', 'description' => 'ASC']);
+        return $this->findBy([],['category' => 'ASC', 'description' => 'ASC']);
     }
 }

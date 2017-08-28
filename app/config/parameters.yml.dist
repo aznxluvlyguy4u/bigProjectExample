@@ -44,3 +44,5 @@ parameters:
     web_local_host_url: ~
     web_stage_host_url: ~
     web_prod_host_url: ~
+
+    test_email: ~
