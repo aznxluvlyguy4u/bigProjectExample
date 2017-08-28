@@ -20,30 +20,44 @@ use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 use Faker;
 
 /**
- * Class TreatmentTemplateTypeTest
+ * Class TreatmentTemplateTest
  *
  * @package AppBundle\Tests\Controller
  * @group treatment
  * @group treatment-template
  */
-class TreatmentTemplateTypeTest extends WebTestCase
+class TreatmentTemplateTest extends WebTestCase
 {
-    const GET = 'GET';
-    const POST = 'POST';
-    const EDIT = 'EDIT';
-    const DELETE = 'DELETE';
+    const GET_individualDefault = 'GET_individualDefault';
+    const GET_individual = 'GET_individual';
+    const GET_locationDefault = 'GET_locationDefault';
+    const GET_location = 'GET_location';
+    const POST_individual = 'POST_individual';
+    const POST_location = 'POST_location';
+    const EDIT_individual = 'EDIT_individual';
+    const EDIT_location = 'EDIT_location';
+    const DELETE_individual = 'DELETE_individual';
+    const DELETE_location = 'DELETE_location';
 
     private $endpointSuffixes = [
-        self::GET => '',
-        self::POST => '',
-        self::EDIT => '/',//{treatmentTypeId}
-        self::DELETE => '/',//{treatmentTypeId}
+        self::GET_individualDefault => '/template/individual',
+        self::GET_individual => '/template/individual/',//{ubn}
+        self::GET_locationDefault => '/template/location',
+        self::GET_location => '/template/location/',//{ubn}
+        self::POST_individual => '/individual/template',
+        self::POST_location => '/location/template',
+        self::EDIT_individual => '/individual/template/',//{templateId}
+        self::EDIT_location => '/location/template/',//{templateId}
+        self::DELETE_individual => '/individual/template/',//{templateId}
+        self::DELETE_location => '/location/template/',//{templateId}
     ];
 
     /** @var string */
     static private $accessTokenCode;
     /** @var EntityManagerInterface|ObjectManager */
     static private $em;
+    /** @var Location */
+    static private $location;
     /** @var Faker\Factory */
     static private $faker;
     /** @var TreatmentType */
@@ -80,6 +94,7 @@ class TreatmentTemplateTypeTest extends WebTestCase
             die;
         }
 
+        self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$accessTokenCode = UnitTestData::getRandomAdminAccessTokenCode(self::$em,AccessLevelType::SUPER_ADMIN);
     }
 
@@ -106,13 +121,30 @@ class TreatmentTemplateTypeTest extends WebTestCase
 
     /**
      * @group get
-     * @group treatment-template-type-get
+     * @group treatment-template-get
      */
     public function testGet()
     {
-        //Get tags-transfers
         $this->client->request('GET',
-            Endpoint::TREATMENT_TYPES . $this->endpointSuffixes[self::GET],
+            Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_individualDefault],
+            array(), array(), $this->defaultHeaders
+        );
+        $this->assertStatusCode(200, $this->client);
+
+        $this->client->request('GET',
+            Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_individual] . self::$location->getUbn(),
+            array(), array(), $this->defaultHeaders
+        );
+        $this->assertStatusCode(200, $this->client);
+
+        $this->client->request('GET',
+            Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_locationDefault],
+            array(), array(), $this->defaultHeaders
+        );
+        $this->assertStatusCode(200, $this->client);
+
+        $this->client->request('GET',
+            Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_location] . self::$location->getUbn(),
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
@@ -120,70 +152,11 @@ class TreatmentTemplateTypeTest extends WebTestCase
 
     /**
      * @group cud
-     * @group treatment-template-cud
+     * @group treatment-template-type-cud
      */
     public function testCreateUpdateDelete()
     {
-        $json =
-            json_encode(
-                [
-                    "description" => self::$faker->name,
-                    "type" => TreatmentTypeOption::LOCATION,
-                ]);
-
-        $this->client->request('POST',
-            Endpoint::TREATMENT_TYPES . $this->endpointSuffixes[self::POST],
-            array(),
-            array(),
-            $this->defaultHeaders,
-            $json
-        );
-
-        $response = $this->client->getResponse();
-        $this->assertStatusCode(200, $this->client);
-
-        if ($response->getStatusCode() === 200) {
-            $data = ResultUtil::getResultArray($response);
-            $id = ArrayUtil::get('id', $data);
-            $description = ArrayUtil::get('description', $data);
-            $newDescription = $description.'213546u7rteyw';
-
-            $json =
-                json_encode(
-                    [
-                        "description" => $newDescription,
-                    ]);
-
-            $this->client->request('PUT',
-                Endpoint::TREATMENT_TYPES . $this->endpointSuffixes[self::EDIT] . $id,
-                array(),
-                array(),
-                $this->defaultHeaders,
-                $json
-            );
-
-            $response = $this->client->getResponse();
-            $updatedDescription = ResultUtil::getFromResult('description', $response);
-
-            $this->assertEquals($newDescription, $updatedDescription);
-            $this->assertStatusCode(200, $this->client);
-
-
-            $this->client->request('DELETE',
-                Endpoint::TREATMENT_TYPES . $this->endpointSuffixes[self::DELETE] . $id,
-                array(),
-                array(),
-                $this->defaultHeaders,
-                $json
-            );
-
-            $response = $this->client->getResponse();
-            $isActive = ResultUtil::getFromResult('is_active', $response);
-            $this->assertEquals($isActive, false);
-            $this->assertStatusCode(200, $this->client);
-
-            self::$treatmentType = self::$em->getRepository(TreatmentType::class)->find($id);
-        }
+        //TODO
     }
 
     /*
