@@ -15,4 +15,7 @@ class Endpoint
     const DECLARE_TAG_REPLACE_ENDPOINT = "/api/v1/tags-replace";
 
     const REVOKE_ENDPOINT = "/api/v1/revokes";
+
+    const TREATMENTS = "/api/v1/treatments";
+    const TREATMENT_TYPES = "/api/v1/treatment-types";
 }
