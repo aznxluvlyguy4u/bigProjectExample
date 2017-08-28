@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -17,6 +18,7 @@ use JMS\Serializer\Annotation\Expose;
  */
 class Client extends Person
 {
+    use EntityClassInfo;
 
     /**
     * @ORM\Column(type="string", nullable=true)

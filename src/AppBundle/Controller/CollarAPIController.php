@@ -37,12 +37,8 @@ class CollarAPIController extends APIController implements CollarAPIControllerIn
    * @Route("")
    * @Method("GET")
    */
-  function getCollarCodes(Request $request) {
-
-    $collarColourCodes = $this->getDoctrine()
-      ->getRepository(Constant::COLLAR_REPOSITORY)
-      ->findAll();
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE=>$collarColourCodes), 200);
+  function getCollarCodes(Request $request)
+  {
+      return $this->get('app.collar')->getCollarCodes($request);
   }
 }

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -20,6 +21,8 @@ use JMS\Serializer\Annotation as JMS;
  * @package AppBundle\Entity\DeclareBase
  */
 abstract class DeclarationBase {
+
+    use EntityClassInfo;
 
   /**
    * @ORM\Column(type="integer")

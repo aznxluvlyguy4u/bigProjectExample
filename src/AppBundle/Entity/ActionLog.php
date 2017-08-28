@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\UserActionType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
@@ -19,6 +20,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class ActionLog
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *

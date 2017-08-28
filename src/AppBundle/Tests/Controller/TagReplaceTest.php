@@ -4,11 +4,15 @@ namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Ram;
+use AppBundle\Entity\Tag;
 use AppBundle\Service\IRSerializer;
-use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 
@@ -17,122 +21,121 @@ use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
  * @package AppBundle\Tests\Controller
  * @group tag-replace
  */
-class TagReplaceTest extends WebTestCase {
+class TagReplaceTest extends WebTestCase
+{
 
-  /** @var RequestClient */
-  private $client;
+    /** @var string */
+    static private $accessTokenCode;
+    /** @var Location */
+    static private $location;
+    /** @var Ram */
+    static private $ram;
+    /** @var Tag */
+    static private $tag;
+    /** @var IRSerializer */
+    static private $serializer;
+    /** @var EntityManagerInterface|ObjectManager */
+    static private $em;
+    /** @var RequestClient */
+    private $client;
+    /** @var array */
+    private $defaultHeaders;
 
-  /** @var string */
-  static private $accessTokenCode;
 
-  /** @var Location */
-  static private $location;
+    /**
+     * Runs before class setup
+     */
+    public static function setUpBeforeClass()
+    {
+        //start the symfony kernel
+        $kernel = static::createKernel();
+        $kernel->boot();
 
-  /** @var IRSerializer */
-  static private $serializer;
+        static::$kernel = static::createKernel();
+        static::$kernel->boot();
 
-  /** @var ObjectManager */
-  static private $em;
+        //Get the DI container
+        $container = $kernel->getContainer();
 
-  /** @var array */
-  private $defaultHeaders;
+        //Get service classes
+        self::$serializer = $container->get('app.serializer.ir');
+        self::$em = $container->get('doctrine')->getManager();
 
+        //Database safety check
+        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
+        if (!$isLocalTestDatabase) {
+            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
+            die;
+        }
 
-  /**
-   * Runs before class setup
-   */
-  public static function setUpBeforeClass()
-  {    
-    //start the symfony kernel
-    $kernel = static::createKernel();
-    $kernel->boot();
-
-    static::$kernel = static::createKernel();
-    static::$kernel->boot();
-
-    //Get the DI container
-    $container = $kernel->getContainer();
-    
-    //Get service classes
-    self::$serializer = $container->get('app.serializer.ir');
-    self::$em = $container->get('doctrine')->getManager();
-
-    //Database safety check
-    $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-    if(!$isLocalTestDatabase) {
-      dump(TestConstant::TEST_DB_ERROR_MESSAGE);die;
+        self::$location = UnitTestData::getActiveTestLocation(self::$em);
+        self::$tag = UnitTestData::createTag(self::$em, self::$location);
+        self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
+        self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
-    self::$location = DoctrineUtil::getRandomActiveLocation(self::$em);
-    self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
-  }
+    public static function tearDownAfterClass()
+    {
+        UnitTestData::deleteTestAnimals(self::$em->getConnection(), DeclareTagReplace::getTableName());
+        UnitTestData::deleteTestTags(self::$em->getConnection());
+    }
 
+    /**
+     * Runs on each testcase
+     */
+    public function setUp()
+    {
+        $this->client = parent::createClient();
 
-  /**
-   * Runs on each testcase
-   */
-  public function setUp()
-  {
-    $this->client = parent::createClient();
+        $this->defaultHeaders = array(
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_ACCESSTOKEN' => self::$accessTokenCode,
+        );
+    }
 
-    $this->defaultHeaders = array(
-        'CONTENT_TYPE' => 'application/json',
-        'HTTP_ACCESSTOKEN' => self::$accessTokenCode,
-    );
-  }
-  
+    /**
+     * @group post
+     * @group tag-replace-post
+     * Test tag-replace post endpoint
+     */
+    public function testTagReplacePost()
+    {
+        $declareMateJson =
+            json_encode(
+                [
+                    "replace_date" => "2016-06-09T19:25:43-05:00",  //if missing, the logData is used for replaceDate
+                    "tag" => [
+                        "uln_country_code" => self::$tag->getUlnCountryCode(),
+                        "uln_number" => self::$tag->getUlnNumber()
+                    ],
+                    "animal" => [
+                        "uln_country_code" => self::$ram->getUlnCountryCode(),
+                        "uln_number" => self::$ram->getUlnNumber()
+                    ]
+                ]);
 
-  /**
-   * @group post
-   * @group tag-replace-post
-   * Test tag-replace post endpoint
-   */
-  public function testTagReplacePost()
-  {
-    $tag = DoctrineUtil::getRandomUnassignedTag(self::$em, self::$location);
-    $animal = DoctrineUtil::getRandomAnimalFromLocation(self::$em, self::$location);
+        $this->client->request('POST',
+            Endpoint::DECLARE_TAG_REPLACE_ENDPOINT,
+            array(),
+            array(),
+            $this->defaultHeaders,
+            $declareMateJson
+        );
 
-    $declareMateJson =
-        json_encode(
-            [
-                "replace_date" => "2016-06-09T19:25:43-05:00",  //if missing, the logData is used for replaceDate
-                "tag" => [
-                    "uln_country_code" => $tag->getUlnCountryCode(),
-                    "uln_number" => $tag->getUlnNumber()
-                ],
-                "animal" => [
-                    "uln_country_code" => $animal->getUlnCountryCode(),
-                    "uln_number" => $animal->getUlnNumber()
-                ]
-            ]);
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
+    }
 
-    $this->client->request('POST',
-        Endpoint::DECLARE_TAG_REPLACE_ENDPOINT,
-        array(),
-        array(),
-        $this->defaultHeaders,
-        $declareMateJson
-    );
+    /*
+     * Runs after all testcases ran and teardown
+     */
 
-    $response = $this->client->getResponse();
-    $data = json_decode($response->getContent(), true);
-    $this->assertStatusCode(200, $this->client);
-  }
-
-
-
-  /**
-   * Runs after each testcase
-   */
-  public function tearDown() {
-    parent::tearDown();
-  }
-
-  /*
-   * Runs after all testcases ran and teardown
-   */
-  public static function tearDownAfterClass()
-  {
-
-  }
+    /**
+     * Runs after each testcase
+     */
+    public function tearDown()
+    {
+        parent::tearDown();
+    }
 }

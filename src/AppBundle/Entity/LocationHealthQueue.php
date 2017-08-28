@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
@@ -17,6 +18,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class LocationHealthQueue
 {
+    use EntityClassInfo;
+
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id

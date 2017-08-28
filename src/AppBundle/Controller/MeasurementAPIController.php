@@ -2,29 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Cache\AnimalCacher;
-use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\Exterior;
-use AppBundle\Entity\ExteriorRepository;
-use AppBundle\Entity\Inspector;
-use AppBundle\Entity\InspectorAuthorization;
-use AppBundle\Entity\InspectorAuthorizationRepository;
-use AppBundle\Entity\InspectorRepository;
-use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\InspectorMeasurementType;
-use AppBundle\Enumerator\JmsGroup;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Enumerator\RequestType;
-use AppBundle\Util\AdminActionLogWriter;
-use AppBundle\Util\MeasurementsUtil;
-use AppBundle\Util\TimeUtil;
-use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
-use AppBundle\Validation\AnimalDetailsValidator;
-use AppBundle\Validation\ExteriorValidator;
-use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -37,10 +14,6 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
  */
 class MeasurementAPIController extends APIController implements MeasurementAPIControllerInterface
 {
-
-    const ALLOW_BLANK_INSPECTOR = true;
-
-
 
     /**
      *
@@ -68,78 +41,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function createExteriorMeasurement(Request $request, $ulnString)
     {
-        $loggedInUser = $this->getUser();
-        $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
-        $isAdmin = $adminValidator->getIsAccessGranted();
-        $em = $this->getDoctrine()->getManager();
-
-        $location = null;
-        if (!$isAdmin) {
-            return $adminValidator->createJsonErrorResponse();
-            //$location = $this->getSelectedLocation($request);
-        }
-
-        $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
-        if (!$animalDetailsValidator->getIsInputValid()) {
-            return $animalDetailsValidator->createJsonResponse();
-        }
-        $animal = $animalDetailsValidator->getAnimal();
-
-        $allowedExteriorCodes = MeasurementsUtil::getExteriorKinds($em, $animal);
-
-        $content = $this->getContentAsArray($request);
-        $exteriorValidator = new ExteriorValidator($em, $content, $allowedExteriorCodes, $ulnString, self::ALLOW_BLANK_INSPECTOR);
-        if (!$exteriorValidator->getIsInputValid()) {
-            return $exteriorValidator->createJsonResponse();
-        }
-        $inspector = $exteriorValidator->getInspector();
-        $measurementDate = $exteriorValidator->getMeasurementDate();
-
-        /** @var ExteriorRepository $repository */
-        $repository = $em->getRepository(Exterior::class);
-        /** @var Exterior $exterior */
-        $exterior = $repository->findOneBy(['measurementDate' => $measurementDate, 'animal' => $animal, 'isActive' => true]);
-        if($exterior != null) {
-            $output = 'THERE ALREADY EXISTS AN EXTERIOR MEASUREMENT ON THIS DATE';
-            $code = 428;
-
-        } else {
-            $exterior = new Exterior();
-
-            $exterior->setActionBy($loggedInUser);
-            $exterior->setEditDate(new \DateTime());
-            $exterior->setAnimal($animal);
-            $exterior->setMeasurementDate($measurementDate);
-            $exterior->setKind($exteriorValidator->getKind());
-            $exterior->setSkull($exteriorValidator->getSkull());
-            $exterior->setProgress($exteriorValidator->getProgress());
-            $exterior->setMuscularity($exteriorValidator->getMuscularity());
-            $exterior->setProportion($exteriorValidator->getProportion());
-            $exterior->setExteriorType($exteriorValidator->getExteriorType());
-            $exterior->setLegWork($exteriorValidator->getLegWork());
-            $exterior->setFur($exteriorValidator->getFur());
-            $exterior->setGeneralAppearance($exteriorValidator->getGeneralAppearance());
-            $exterior->setHeight($exteriorValidator->getHeight());
-            $exterior->setBreastDepth($exteriorValidator->getBreastDepth());
-            $exterior->setTorsoLength($exteriorValidator->getTorsoLength());
-            $exterior->setMarkings($exteriorValidator->getMarkings());
-            $exterior->setInspector($inspector);
-            $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $measurementDate);
-
-            $em->persist($exterior);
-            $em->flush();
-
-            AdminActionLogWriter::createExterior($this->getManager(), $this->getUserService()->getAccountOwner($request),
-                $loggedInUser, $exterior);
-
-            //Update exterior values in animalCache AFTER persisting exterior
-            AnimalCacher::cacheExteriorByAnimal($em, $animal);
-
-            $output = $this->getSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
-            $code = 200;
-        }
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], $code);
+        return $this->get('app.measurement')->createExteriorMeasurement($request, $ulnString);
     }
 
 
@@ -170,115 +72,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function editExteriorMeasurement(Request $request, $ulnString, $measurementDateString)
     {
-        $loggedInUser = $this->getUser();
-        $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
-        $isAdmin = $adminValidator->getIsAccessGranted();
-        $em = $this->getDoctrine()->getManager();
-
-        $location = null;
-        if (!$isAdmin) {
-            return $adminValidator->createJsonErrorResponse();
-            //$location = $this->getSelectedLocation($request);
-        }
-
-        $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
-        if (!$animalDetailsValidator->getIsInputValid()) {
-            return $animalDetailsValidator->createJsonResponse();
-        }
-        $animal = $animalDetailsValidator->getAnimal();
-
-        $content = $this->getContentAsArray($request);
-
-        if($content->get('is_active') === false) {
-
-            /* Deactivate the Exterior measurement without updating any other values */
-
-            $validationResults = ExteriorValidator::validateDeactivation($em, $animal, $measurementDateString);
-            if(!$validationResults->isValid()) {
-                return $validationResults->getJsonResponse();
-            }
-
-            /** @var Exterior $exterior */
-            $exterior = $validationResults->getValidResultObject();
-            $exterior->setIsActive(false);
-            $exterior->setDeleteDate(new \DateTime());
-            $exterior->setDeletedBy($loggedInUser);
-            $em->persist($exterior);
-            $em->flush();
-
-            AdminActionLogWriter::deactivateExterior($this->getManager(), $this->getUserService()->getAccountOwner($request), $loggedInUser, $exterior);
-
-            //Update exterior values in animalCache AFTER persisting exterior
-            AnimalCacher::cacheExteriorByAnimal($em, $animal);
-
-            $output = $this->getSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
-            $code = 200;
-
-        } else {
-
-            /* Edit the Exterior measurement */
-
-            /** @var ExteriorRepository $repository */
-            $repository = $em->getRepository(Exterior::class);
-
-            $currentMeasurementDate = new \DateTime($measurementDateString);
-            /** @var Exterior $exterior */
-            $exterior = $repository->findOneBy(['measurementDate' => $currentMeasurementDate, 'animal' => $animal, 'isActive' => true]);
-
-            if(!($exterior instanceof Exterior)) {
-                $output = 'Exterior for given date and uln does not exists!';
-                return Validator::createJsonResponse($output, 428);
-            }
-
-            $currentKind = $exterior->getKind();
-
-            $allowedExteriorCodes = MeasurementsUtil::getExteriorKinds($em, $animal, $currentKind);
-
-            $exteriorValidator = new ExteriorValidator($em, $content, $allowedExteriorCodes, $ulnString, self::ALLOW_BLANK_INSPECTOR, $measurementDateString);
-            if (!$exteriorValidator->getIsInputValid()) {
-                return $exteriorValidator->createJsonResponse();
-            }
-            $inspector = $exteriorValidator->getInspector();
-
-            $oldExterior = clone $exterior;
-
-            $exterior->setActionBy($loggedInUser);
-            $exterior->setEditDate(new \DateTime());
-            $exterior->setAnimal($animal);
-            $exterior->setMeasurementDate($exteriorValidator->getNewMeasurementDate());
-            $exterior->setKind($exteriorValidator->getKind());
-            $exterior->setSkull($exteriorValidator->getSkull());
-            $exterior->setProgress($exteriorValidator->getProgress());
-            $exterior->setMuscularity($exteriorValidator->getMuscularity());
-            $exterior->setProportion($exteriorValidator->getProportion());
-            $exterior->setExteriorType($exteriorValidator->getExteriorType());
-            $exterior->setLegWork($exteriorValidator->getLegWork());
-            $exterior->setFur($exteriorValidator->getFur());
-            $exterior->setGeneralAppearance($exteriorValidator->getGeneralAppearance());
-            $exterior->setHeight($exteriorValidator->getHeight());
-            $exterior->setBreastDepth($exteriorValidator->getBreastDepth());
-            $exterior->setTorsoLength($exteriorValidator->getTorsoLength());
-            $exterior->setMarkings($exteriorValidator->getMarkings());
-            $exterior->setInspector($inspector);
-            $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $currentMeasurementDate);
-
-            $em->persist($exterior);
-            $em->flush();
-
-            AdminActionLogWriter::updateExterior($this->getManager(), $this->getUserService()->getAccountOwner($request),
-                $loggedInUser, $exterior, $oldExterior);
-
-            //Update exterior values in animalCache AFTER persisting exterior
-            AnimalCacher::cacheExteriorByAnimal($em, $animal);
-
-            $output = $this->getSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
-            $code = 200;
-
-            $oldExterior = null;
-
-        }
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], $code);
+        return $this->get('app.measurement')->editExteriorMeasurement($request, $ulnString, $measurementDateString);
     }
 
 
@@ -308,26 +102,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function getAllowedExteriorKinds(Request $request, $ulnString)
     {
-        $loggedInUser = $this->getUser();
-        $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
-        $isAdmin = $adminValidator->getIsAccessGranted();
-        $em = $this->getDoctrine()->getManager();
-
-        $location = null;
-        if (!$isAdmin) {
-            $location = $this->getSelectedLocation($request);
-        }
-
-        $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
-        if (!$animalDetailsValidator->getIsInputValid()) {
-            return $animalDetailsValidator->createJsonResponse();
-        }
-        //Uln has already been validated above
-        $animal = $animalDetailsValidator->getAnimal();
-
-        $output = MeasurementsUtil::getExteriorKindsOutput($em, $animal);
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return $this->get('app.measurement')->getAllowedExteriorKinds($request, $ulnString);
     }
 
 
@@ -359,39 +134,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function getAllowedExteriorKindsForEdit(Request $request, $ulnString, $measurementDateString)
     {
-        $loggedInUser = $this->getUser();
-        $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
-        $isAdmin = $adminValidator->getIsAccessGranted();
-        $em = $this->getDoctrine()->getManager();
-
-        $location = null;
-        if (!$isAdmin) {
-            $location = $this->getSelectedLocation($request);
-        }
-
-        $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
-        if (!$animalDetailsValidator->getIsInputValid()) {
-            return $animalDetailsValidator->createJsonResponse();
-        }
-        //Uln has already been validated above
-        $animal = $animalDetailsValidator->getAnimal();
-
-        $measurementDate = new \DateTime($measurementDateString);
-
-        /** @var ExteriorRepository $repository */
-        $repository = $em->getRepository(Exterior::class);
-        /** @var Exterior $exterior */
-        $exterior = $repository->findOneBy(['measurementDate' => $measurementDate, 'animal' => $animal, 'isActive' => true]);
-
-        if($exterior == null) {
-            $output = 'Exterior for given date and uln does not exists!';
-            return Validator::createJsonResponse($output, 428);
-        }
-
-        $currentKind = $exterior->getKind();
-        $output = MeasurementsUtil::getExteriorKindsOutput($em, $animal, $currentKind);
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return $this->get('app.measurement')->getAllowedExteriorKindsForEdit($request, $ulnString, $measurementDateString);
     }
 
 
@@ -421,18 +164,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function getAllowedInspectorsForExteriorMeasurements(Request $request, $ulnString)
     {
-        $em = $this->getDoctrine()->getManager();
-
-        $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
-        if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
-            return $adminValidator->createJsonErrorResponse();
-        }
-
-        /** @var InspectorAuthorizationRepository $repository */
-        $repository = $em->getRepository(InspectorAuthorization::class);
-        $output = $repository->getAuthorizedInspectorsExteriorByUln($ulnString);
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return $this->get('app.measurement')->getAllowedInspectorsForExteriorMeasurements($request, $ulnString);
     }
 
 }

@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -30,15 +31,14 @@ class SettingAPIController extends APIController implements SettingAPIController
     public function editReasonsOfLoss(Request $request)
     {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // TODO: Implement editReasonOfLoss() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
     /**
@@ -52,15 +52,14 @@ class SettingAPIController extends APIController implements SettingAPIController
     public function editReasonsOfDepart(Request $request)
     {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // TODO: Implement editReasonOfDepart() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
     /**
@@ -74,15 +73,14 @@ class SettingAPIController extends APIController implements SettingAPIController
     public function editTreatmentOptions(Request $request)
     {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // TODO: Implement editTreatmentOptions() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
     /**
@@ -96,15 +94,14 @@ class SettingAPIController extends APIController implements SettingAPIController
     public function editContactFormOptions(Request $request)
     {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // TODO: Implement editContactFormOptions() method.
         $outputArray = array();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+        return ResultUtil::successResult($outputArray);
     }
 
 }

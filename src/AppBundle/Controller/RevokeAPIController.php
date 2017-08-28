@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Cache\AnimalCacher;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareNsfoBase;
@@ -11,8 +12,10 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\Output;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\DeclareNsfoBaseValidator;
+use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -53,36 +56,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      */
     public function createRevoke(Request $request)
     {
-        $om = $this->getDoctrine()->getManager();
-
-        $content = $this->getContentAsArray($request);
-        $client = $this->getAccountOwner($request);
-        $loggedInUser = $this->getUser();
-        $location = $this->getSelectedLocation($request);
-
-        //Validate if there is a message_number. It is mandatory for IenR
-        $validation = $this->hasMessageNumber($content);
-        if(!$validation['isValid']) {
-            return new JsonResponse($validation[Constant::MESSAGE_NAMESPACE], $validation[Constant::CODE_NAMESPACE]);
-        }
-
-        //Convert the array into an object and add the mandatory values retrieved from the database
-        $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $client, $loggedInUser, $location);
-
-        $log = ActionLogWriter::revokePost($om, $client, $loggedInUser, $revokeDeclarationObject);
-
-        //First Persist object to Database, before sending it to the queue
-        $this->persist($revokeDeclarationObject);
-        
-        //Now set the requestState of the revoked message to REVOKED
-        $this->persistRevokingRequestState($revokeDeclarationObject->getMessageNumber());
-
-        //Send it to the queue and persist/update any changed state to the database
-        $messageArray = $this->sendMessageObjectToQueue($revokeDeclarationObject);
-
-        $log = ActionLogWriter::completeActionLog($om, $log);
-
-        return new JsonResponse($messageArray, 200);
+        return $this->get('app.declare.revoke')->createRevoke($request);
     }
 
 
@@ -111,49 +85,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      */
     public function revokeNsfoDeclaration(Request $request, $messageId)
     {
-        $manager = $this->getDoctrine()->getManager();
-        $client = $this->getAccountOwner($request);
-        $loggedInUser = $this->getUser();
-
-        $log = ActionLogWriter::revokeNsfoDeclaration($manager, $client, $loggedInUser, $messageId);
-
-        $declarationFromMessageId = Validator::isNonRevokedNsfoDeclarationOfClient($manager, $client, $messageId);
-
-        if(!($declarationFromMessageId instanceof DeclareNsfoBase)) {
-            return Output::createStandardJsonErrorResponse();
-        }
-
-        $nsfoDeclaration = self::revoke($declarationFromMessageId, $loggedInUser);
-        $this->persistAndFlush($nsfoDeclaration);
-
-        $output = 'Revoke complete';
-
-        if($nsfoDeclaration instanceof DeclareWeight) {
-            AnimalCacher::cacheWeightByAnimal($manager, $nsfoDeclaration->getAnimal());
-        }
-
-        $log = ActionLogWriter::completeActionLog($manager, $log);
-
-        return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
+        return $this->get('app.declare.revoke')->revokeNsfoDeclaration($request, $messageId);
     }
 
-
-    /**
-     * @param DeclareNsfoBase $declareNsfoBase
-     * @return DeclareNsfoBase
-     */
-    public static function revoke(DeclareNsfoBase $declareNsfoBase, $loggedInUser)
-    {
-        if($declareNsfoBase instanceof DeclareWeight) {
-            if($declareNsfoBase->getWeightMeasurement() != null) {
-                $declareNsfoBase->getWeightMeasurement()->setIsRevoked(true);
-                $declareNsfoBase->getWeightMeasurement()->setIsActive(false);
-            }
-        }
-
-        $declareNsfoBase->setRequestState(RequestStateType::REVOKED);
-        $declareNsfoBase->setRevokeDate(new \DateTime('now'));
-        $declareNsfoBase->setRevokedBy($loggedInUser);
-        return $declareNsfoBase;
-    }
 }

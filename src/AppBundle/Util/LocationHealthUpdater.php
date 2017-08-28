@@ -32,7 +32,7 @@ class LocationHealthUpdater
      * @param ObjectManager $em
      * @param Location $locationOfDestination
      * @param DeclareArrival $declareArrival
-     * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthService for loop
+     * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @return ArrayCollection
      */
     public static function updateByGivenUbnOfOrigin(ObjectManager $em, Location $locationOfDestination,
@@ -50,7 +50,7 @@ class LocationHealthUpdater
      * @param ObjectManager $em
      * @param Location $locationOfDestination
      * @param DeclareImport $declareImport
-     * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthService for loop
+     * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @return ArrayCollection
      */
     public static function updateWithoutOriginHealthData(ObjectManager $em, Location $locationOfDestination, DeclareImport $declareImport, $isDeclareInBase)
@@ -66,7 +66,7 @@ class LocationHealthUpdater
      * @param Location $locationOfDestination
      * @param DeclareArrival|DeclareImport $declareIn
      * @param \DateTime $checkDate
-     * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthService for loop
+     * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @param Location $locationOfOrigin
      * @return DeclareArrival|DeclareImport
      */

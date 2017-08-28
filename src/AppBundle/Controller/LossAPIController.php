@@ -7,6 +7,7 @@ use AppBundle\Entity\DeclareLossResponse;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -45,12 +46,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossById(Request $request, $Id)
   {
-    $location = $this->getSelectedLocation($request);
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
-
-    $loss = $repository->getLossByRequestId($location, $Id);
-
-    return new JsonResponse($loss, 200);
+      return $this->get('app.loss')->getLossById($request, $Id);
   }
 
 
@@ -92,32 +88,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLosses(Request $request)
   {
-    $location = $this->getSelectedLocation($request);
-    $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
-
-    if(!$stateExists) {
-      $declareLosses = $repository->getLosses($location);
-
-    } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
-
-      $declareLosses = new ArrayCollection();
-      foreach($repository->getLosses($location, RequestStateType::OPEN) as $loss) {
-        $declareLosses->add($loss);
-      }
-      foreach($repository->getLosses($location, RequestStateType::REVOKING) as $loss) {
-        $declareLosses->add($loss);
-      }
-      foreach($repository->getLosses($location, RequestStateType::FINISHED) as $loss) {
-        $declareLosses->add($loss);
-      }
-      
-    } else { //A state parameter was given, use custom filter to find subset
-      $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareLosses = $repository->getLosses($location, $state);
-    }
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses), 200);
+      return $this->get('app.loss')->getLosses($request);
   }
 
 
@@ -145,37 +116,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function createLoss(Request $request)
   {
-    $om = $this->getDoctrine()->getManager();
-
-    $content = $this->getContentAsArray($request);
-    $client = $this->getAccountOwner($request);
-    $loggedInUser = $this->getUser();
-    $location = $this->getSelectedLocation($request);
-
-    $log = ActionLogWriter::declareLossPost($om, $client, $loggedInUser, $location, $content);
-
-    //Client can only report a loss of own animals //TODO verify if animal belongs to UBN
-    $animal = $content->get(Constant::ANIMAL_NAMESPACE);
-    $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
-
-    if(!$isAnimalOfClient) {
-      return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
-    }
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
-
-    //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject);
-    $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
-
-    //Send it to the queue and persist/update any changed state to the database
-    $messageArray = $this->sendMessageObjectToQueue($messageObject);
-
-    $log = ActionLogWriter::completeActionLog($om, $log);
-
-    $this->clearLivestockCacheForLocation($location);
-
-    return new JsonResponse($messageArray, 200);
+      return $this->get('app.loss')->createLoss($request);
   }
 
 
@@ -204,39 +145,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function editLoss(Request $request, $Id)
   {
-    $content = $this->getContentAsArray($request);
-    $client = $this->getAccountOwner($request);
-    $loggedInUser = $this->getUser();
-    $location = $this->getSelectedLocation($request);
-
-    //Client can only report a loss of own animals
-    $animal = $content->get(Constant::ANIMAL_NAMESPACE);
-    $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
-
-    if(!$isAnimalOfClient) {
-      return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
-    }
-
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
-
-    $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
-    $messageObject = $entityManager->updateDeclareLossMessage($declareLossUpdate, $location, $Id);
-
-    if($messageObject == null) {
-      return new JsonResponse(array("message"=>"No DeclareLoss found with request_id: " . $Id), 204);
-    }
-
-    //Send it to the queue and persist/update any changed state to the database
-    $messageArray = $this->sendEditMessageObjectToQueue($messageObject);
-    $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
-
-    //Persist object to Database
-    $this->persist($messageObject);
-
-    $this->clearLivestockCacheForLocation($location);
-
-    return new JsonResponse($messageArray, 200);
+      return $this->get('app.loss')->editLoss($request, $Id);
   }
 
 
@@ -265,12 +174,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossErrors(Request $request)
   {
-    $location = $this->getSelectedLocation($request);
-
-    $repository = $this->getDoctrine()->getRepository(DeclareLossResponse::class);
-    $declareLosses = $repository->getLossesWithLastErrorResponses($location);
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses), 200);
+      return $this->get('app.loss')->getLossErrors($request);
   }
 
 
@@ -299,11 +203,6 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossHistory(Request $request)
   {
-    $location = $this->getSelectedLocation($request);
-
-    $repository = $this->getDoctrine()->getRepository(DeclareLossResponse::class);
-    $declareLosses = $repository->getLossesWithLastHistoryResponses($location);
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses),200);
+      return $this->get('app.loss')->getLossHistory($request);
   }
 }

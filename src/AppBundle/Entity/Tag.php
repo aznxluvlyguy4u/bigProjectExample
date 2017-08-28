@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints\DateTime;
 use JMS\Serializer\Annotation\ExclusionPolicy;
@@ -17,7 +18,9 @@ use JMS\Serializer\Annotation as JMS;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class Tag {
+class Tag
+{
+    use EntityClassInfo;
 
     /**
      * @var integer

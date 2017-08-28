@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -11,9 +12,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\InspectorRepository")
  * @package AppBundle\Entity
  */
-class Inspector extends Person {
-
-    const TABLE_NAME = 'inspector';
+class Inspector extends Person
+{
+    use EntityClassInfo;
 
     /**
      * @var string

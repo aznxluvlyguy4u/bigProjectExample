@@ -76,7 +76,7 @@ class ReportAPIController extends APIController {
    */
   public function getPedigreeCertificates(Request $request)
   {
-    return $this->getPedigreeCertificateReportService()->getReport($request);
+    return $this->get('app.report.pedigree_certificates')->getReport($request);
   }
 
 
@@ -112,7 +112,7 @@ class ReportAPIController extends APIController {
    */
   public function getInbreedingCoefficientsReport(Request $request)
   {
-      return $this->getInbreedingCoefficientReportService()->getReport($request);
+      return $this->get('app.report.inbreeding_coefficient')->getReport($request);
   }
 
 
@@ -148,7 +148,7 @@ class ReportAPIController extends APIController {
    */
   public function getLiveStockReport(Request $request)
   {
-      return $this->getLiveStockReportService()->getReport($request);
+      return $this->get('app.report.livestock')->getReport($request);
   }
 
 
@@ -184,7 +184,7 @@ class ReportAPIController extends APIController {
      */
     public function getPedigreeRegisterOverview(Request $request)
     {
-        return $this->getPedigreeRegisterReportService()->request($request);
+        return $this->get('app.report.pedigree_register')->request($request);
     }
 
 
@@ -220,7 +220,7 @@ class ReportAPIController extends APIController {
      */
     public function getBreedValuesReportOverview(Request $request)
     {
-        return $this->getBreedValuesOverviewReportService()->request($request, $this->getEmployee());
+        return $this->get('app.report.breed_values_overview')->request($request, $this->getEmployee());
     }
 
 

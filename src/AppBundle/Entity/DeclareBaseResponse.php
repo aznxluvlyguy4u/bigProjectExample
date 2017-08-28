@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -29,10 +30,25 @@ use \DateTime;
  *      "RevokeDeclarationResponse" = "RevokeDeclarationResponse"
  *   }
  * )
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *      "DeclareArrivalResponse" : "AppBundle\Entity\DeclareArrivalResponse",
+ *      "DeclareDepartResponse" : "AppBundle\Entity\DeclareDepartResponse",
+ *      "DeclareBirthResponse" : "AppBundle\Entity\DeclareBirthResponse",
+ *      "DeclareLossResponse" : "AppBundle\Entity\DeclareLossResponse",
+ *      "DeclareImportResponse" : "AppBundle\Entity\DeclareImportResponse",
+ *      "DeclareExportResponse" : "AppBundle\Entity\DeclareExportResponse",
+ *      "DeclareAnimalFlagResponse" : "AppBundle\Entity\DeclareAnimalFlagResponse",
+ *      "DeclareTagsTransferResponse" : "AppBundle\Entity\DeclareTagsTransferResponse",
+ *      "DeclareTagReplaceResponse" : "AppBundle\Entity\DeclareTagReplaceResponse",
+ *      "RevokeDeclarationResponse" : "AppBundle\Entity\RevokeDeclarationResponse"},
+ *     groups = {"DECLARE"})
+ *
  * @package AppBundle\Entity\DeclareBaseResponse
  */
 abstract class DeclareBaseResponse
 {
+    use EntityClassInfo;
+
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id

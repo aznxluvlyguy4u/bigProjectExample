@@ -14,7 +14,7 @@ use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\LocationHealthQueueRepository;
 use AppBundle\Entity\RamRepository;
 use AppBundle\Enumerator\AnimalType;
-use AppBundle\Service\HealthService;
+use AppBundle\Service\HealthUpdaterService;
 use AppBundle\Service\IRSerializer;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -41,7 +41,7 @@ class LocationHealthQueueUpdateTest extends WebTestCase
     /** @var DoctrineBundle */
     static private $doctrine;
 
-    /** @var HealthService */
+    /** @var HealthUpdaterService */
     static private $healthService;
 
     /** @var ObjectManager */

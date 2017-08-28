@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -20,8 +21,11 @@ use JMS\Serializer\Annotation\Expose;
  */
 class DeclareBirth extends DeclareBase
 {
+    use EntityClassInfo;
+
     /**
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
      */

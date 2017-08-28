@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -13,7 +14,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\MateRepository")
  * @package AppBundle\Entity
  */
-class Mate extends DeclareNsfoBase {
+class Mate extends DeclareNsfoBase
+{
+    use EntityClassInfo;
 
     /**
      * 2016-04-01T22:00:48.131Z
