@@ -32,24 +32,31 @@ abstract class AwsQueueServiceBase
     protected $awsCredentials;
     /** @var string */
     protected $queueId;
+    /** @var string */
+    protected $selectedEnvironment;
 
     /**
      * AWSQueueServiceBase constructor, initialize SQS config
      * @param string $queueIdPrefix
-     * @param array $credentials containing AWS accessKey and secretKey.
+     * @param string $accessKeyId
+     * @param string $secretKey
      * @param string $region of the Queue
      * @param string $version
+     * @param string $selectedEnvironment
      * @param string $currentEnvironment
      */
-    public function __construct($queueIdPrefix, $credentials = array(), $region, $version, $currentEnvironment)
+    public function __construct($queueIdPrefix, $accessKeyId, $secretKey, $region, $version, $selectedEnvironment, $currentEnvironment)
     {
-        $this->accessKeyId = $credentials[0];
-        $this->secretKey = $credentials[1];
+        $this->accessKeyId = $accessKeyId;
+        $this->secretKey = $secretKey;
 
         $this->awsCredentials =  new Credentials($this->accessKeyId, $this->secretKey);
         $this->region = $region;
         $this->version = $version;
-        $this->queueId = $this->selectQueueIdByEnvironment($queueIdPrefix, $currentEnvironment);
+
+        if ($currentEnvironment === Environment::TEST) { $selectedEnvironment = $currentEnvironment; }
+        $this->selectedEnvironment = $selectedEnvironment;
+        $this->queueId = $this->selectQueueIdByEnvironment($queueIdPrefix, $this->selectedEnvironment);
 
         $sqsConfig = array(
             'region'  => $this->region,

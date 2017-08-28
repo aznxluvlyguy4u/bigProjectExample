@@ -733,7 +733,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->nullAccuracyCount = 0;
         $this->processScanCount = 0;
 
-        DoctrineUtil::updateTableSequence($this->conn, [BreedValue::TABLE_NAME]);
+        DoctrineUtil::updateTableSequence($this->conn, [BreedValue::getTableName()]);
 
         switch ($relaniType) {
 

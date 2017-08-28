@@ -14,6 +14,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class FTPFailedImport
 {
+    //Do not use the EntityClassInfo trait here, because this Class name violates convention.
+
     /**
      * @var integer
      *

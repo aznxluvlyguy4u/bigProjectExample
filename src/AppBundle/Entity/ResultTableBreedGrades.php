@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\ArrayUtil;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -21,7 +22,7 @@ use JMS\Serializer\Annotation as JMS;
  */
 class ResultTableBreedGrades
 {
-    const TABLE_NAME = 'result_table_breed_grades';
+    use EntityClassInfo;
 
     /**
      * @var integer
@@ -44,7 +45,7 @@ class ResultTableBreedGrades
     /**
      * @var Animal
      * @ORM\OneToOne(targetEntity="Animal", inversedBy="latestBreedGrades")
-     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", nullable=false)
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", nullable=false, onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;

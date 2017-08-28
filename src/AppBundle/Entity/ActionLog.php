@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\UserActionType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
@@ -18,6 +19,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class ActionLog
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *
@@ -66,7 +69,7 @@ class ActionLog
     /**
      * @var string
      *
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      * @JMS\Type("string")
      */
     private $description;

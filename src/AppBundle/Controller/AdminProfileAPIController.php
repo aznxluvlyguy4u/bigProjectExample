@@ -2,15 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\FormInput\AdminProfile;
-use AppBundle\Output\AdminOverviewOutput;
-use AppBundle\Validation\AdminValidator;
-use AppBundle\Validation\EditAdminProfileValidator;
-use AppBundle\Validation\PasswordValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -31,17 +22,9 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
    * @Method("GET")
    * @return jsonResponse
    */
-  public function getAdminProfile(Request $request) {
-
-    $admin = $this->getEmployee();
-    $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-    if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-      return $adminValidator->createJsonErrorResponse();
-    }
-
-    $outputArray = AdminOverviewOutput::createAdminOverview($admin);
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+  public function getAdminProfile(Request $request)
+  {
+      return $this->get('app.admin.profile')->getAdminProfile($request);
   }
 
 
@@ -62,46 +45,9 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
    * @Method("PUT")
    * @return jsonResponse
    */
-  public function editAdminProfile(Request $request) {
-
-    $admin = $this->getEmployee();
-    $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-    if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-      return $adminValidator->createJsonErrorResponse();
-    }
-    $encoder = $this->get('security.password_encoder');
-    $content = $this->getContentAsArray($request);
-
-    $em = $this->getDoctrine()->getManager();
-    
-    //Validate input
-    $inputValidator = new EditAdminProfileValidator($em, $content, $admin);
-    if (!$inputValidator->getIsValid()) {
-      return $inputValidator->createJsonResponse();
-    }
-    
-    //If password is changed: validate and encrypt it
-    $newPassword = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::NEW_PASSWORD, $content);
-    if($newPassword != null) {
-      $newPassword = base64_decode($newPassword);
-
-      //Validate password format
-      $passwordValidator = new PasswordValidator($newPassword);
-      if(!$passwordValidator->getIsPasswordValid()) {
-        return $passwordValidator->createJsonErrorResponse();
-      }
-      $encodedNewPassword = $encoder->encodePassword($admin, $newPassword);
-      $content->set(JsonInputConstant::NEW_PASSWORD, $encodedNewPassword);
-    }
-
-    //Persist updated changes and return the updated values
-    $client = AdminProfile::update($admin, $content);
-    $this->getDoctrine()->getManager()->persist($admin);
-    $this->getDoctrine()->getManager()->flush();
-
-    $outputArray = AdminOverviewOutput::createAdminOverview($admin);
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+  public function editAdminProfile(Request $request)
+  {
+      return $this->get('app.admin.profile')->editAdminProfile($request);
   }
 
 }

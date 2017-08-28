@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -23,6 +24,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 abstract class DropDownMenu
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *

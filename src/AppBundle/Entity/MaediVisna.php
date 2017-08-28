@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -20,6 +21,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 class MaediVisna
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *

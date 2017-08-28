@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -85,4 +86,66 @@ class RequestUtil
         return $nullResult;
     }
 
+
+    /**
+     * @param array $keys
+     * @param ArrayCollection|array $content
+     * @return JsonResponse|bool
+     */
+    public static function contentContainsNecessaryKeys(array $keys, $content)
+    {
+        if ($content instanceof ArrayCollection) {
+            $content = $content->toArray();
+        }
+
+        $missingKeys = [];
+        foreach ($keys as $key) {
+            if (!key_exists($key, $content)) {
+                $missingKeys[] = $key;
+            }
+        }
+
+        if (count($missingKeys) === 0) { return true; }
+
+        $keyLabel = count($missingKeys) > 1 ? 'keys are' : 'key is';
+        $errorMessage = 'The following '.$keyLabel.' missing in the json body: '
+            . implode(', ', $missingKeys);
+
+        return ResultUtil::errorResult($errorMessage, 428);
+    }
+
+
+    /**
+     * Content must contain at least one of the keys in the given set.
+     *
+     * @param array $keysSet
+     * @param ArrayCollection|array $content
+     * @return JsonResponse|bool
+     */
+    public static function contentContainsAtLeastOneKey($keysSet, $content)
+    {
+        $keysSetCount = count($keysSet);
+        if ($keysSetCount === 0) { return true; }
+
+        if ($content instanceof ArrayCollection) {
+            $content = $content->toArray();
+        }
+
+        $containsAtLeastOneKeyInSet = false;
+        foreach ($keysSet as $key) {
+            if (key_exists($key, $content)) {
+                $containsAtLeastOneKeyInSet = true;
+                break;
+            }
+        }
+
+        if ($containsAtLeastOneKeyInSet) { return true; }
+
+
+        $keyLabel = $keysSetCount > 1 ? 'one of the following keys' : 'the following key';
+        $errorMessage = 'At least include '.$keyLabel.' in the json body: '
+            . implode(', ', $keysSet);
+
+        return ResultUtil::errorResult($errorMessage, 428);
+    }
 }

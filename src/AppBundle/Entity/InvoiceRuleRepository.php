@@ -3,7 +3,7 @@
 namespace AppBundle\Entity;
 
 /**
- * Class CompanyRepository
+ * Class InvoiceRuleRepository
  * @package AppBundle\Entity
  */
 class InvoiceRuleRepository extends BaseRepository

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -13,7 +14,9 @@ use \AppBundle\Entity\DeclareBirth;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareBirthResponseRepository")
  * @package AppBundle\Entity
  */
-class DeclareBirthResponse extends DeclareBaseResponse {
+class DeclareBirthResponse extends DeclareBaseResponse
+{
+    use EntityClassInfo;
 
     /**
      * 2016-04-01T22:00:48.131Z

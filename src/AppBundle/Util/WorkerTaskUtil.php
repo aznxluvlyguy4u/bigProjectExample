@@ -118,7 +118,7 @@ class WorkerTaskUtil
         $post['log_date'] = WorkerTaskUtil::convertJavaEpochToDate($post['log_date']);
         $post['date_of_birth'] = WorkerTaskUtil::convertJavaEpochToDate($post['date_of_birth']);
         /** @var DeclareBirthResponse $declareBirthResponse */
-        return $irSerializer->deserializeToObject(json_encode($post), 'DeclareBirthResponse');
+        return $irSerializer->deserializeToObject(json_encode($post), DeclareBirthResponse::class);
     }
 
 

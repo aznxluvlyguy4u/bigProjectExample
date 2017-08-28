@@ -2,15 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Component\MateBuilder;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Mate;
-use AppBundle\Entity\MateRepository;
-use AppBundle\Output\MateOutput;
-use AppBundle\Output\Output;
-use AppBundle\Util\ActionLogWriter;
-use AppBundle\Validation\MateValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -48,31 +39,7 @@ class MateAPIController extends APIController {
    */
   public function createMate(Request $request)
   {
-    $manager = $this->getDoctrine()->getManager();
-
-    $content = $this->getContentAsArray($request);
-    $client = $this->getAccountOwner($request);
-    $location = $this->getSelectedLocation($request);
-    $loggedInUser = $this->getUser();
-
-    $log = ActionLogWriter::createMate($manager, $client, $loggedInUser, $location, $content);
-
-    $validateEweGender = true;
-    $mateValidator = new MateValidator($manager, $content, $client, $validateEweGender);
-    if(!$mateValidator->getIsInputValid()) { return $mateValidator->createJsonResponse(); }
-
-    $mate = MateBuilder::post($manager, $content, $client, $loggedInUser, $location);
-
-    //TODO when messaging system is complete, have the studRam owner confirm the mate
-    MateBuilder::approveMateDeclaration($mate, $loggedInUser);
-
-    $this->persistAndFlush($mate);
-
-    $output = MateOutput::createMateOverview($mate);
-
-    $log = ActionLogWriter::completeActionLog($manager, $log);
-    
-    return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
+      return $this->get('app.mate')->createMate($request);
   }
   
   
@@ -95,39 +62,14 @@ class MateAPIController extends APIController {
    * )
    *
    * @param Request $request the request object
+   * @param $messageId
    * @return JsonResponse
    * @Route("/{messageId}")
    * @Method("PUT")
    */
   public function editMate(Request $request, $messageId)
   {
-    $manager = $this->getDoctrine()->getManager();
-    $client = $this->getAccountOwner($request);
-    $loggedInUser = $this->getUser();
-    $content = $this->getContentAsArray($request);
-    $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
-    $location = $this->getSelectedLocation($request);
-
-    $log = ActionLogWriter::editMate($manager, $client, $loggedInUser, $location, $content);
-    
-    $validateEweGender = true;
-    $isPost = false;
-    $mateValidator = new MateValidator($manager, $content, $client, $validateEweGender, $isPost);
-    if(!$mateValidator->getIsInputValid()) { return $mateValidator->createJsonResponse(); }
-
-    $mate = $mateValidator->getMateFromMessageId();
-    $mate = MateBuilder::edit($manager, $mate, $content, $client, $loggedInUser, $location);
-
-    //TODO when messaging system is complete, have the studRam owner confirm the mate
-    MateBuilder::approveMateDeclaration($mate, $loggedInUser);
-
-    $this->persistAndFlush($mate);
-
-    $output = MateOutput::createMateOverview($mate);
-
-    $log = ActionLogWriter::completeActionLog($manager, $log);
-    
-    return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
+      return $this->get('app.mate')->editMate($request, $messageId);
   }
   
   
@@ -156,13 +98,7 @@ class MateAPIController extends APIController {
    */
   public function getMateHistory(Request $request)
   {
-    $location = $this->getSelectedLocation($request);
-
-    /** @var MateRepository $repository */
-    $repository = $this->getDoctrine()->getRepository(Mate::class);
-    $matings = $repository->getMatingsHistoryOutput($location);
-
-    return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
+      return $this->get('app.mate')->getMateHistory($request);
   }
 
 
@@ -191,13 +127,7 @@ class MateAPIController extends APIController {
    */
   public function getMateErrors(Request $request)
   {
-    $location = $this->getSelectedLocation($request);
-
-    /** @var MateRepository $repository */
-    $repository = $this->getDoctrine()->getRepository(Mate::class);
-    $matings = $repository->getMatingsErrorOutput($location);
-
-    return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
+      return $this->get('app.mate')->getMateErrors($request);
   }
 
 
@@ -226,13 +156,7 @@ class MateAPIController extends APIController {
    */
   public function getMatingsToBeVerified(Request $request)
   {
-    $location = $this->getSelectedLocation($request);
-
-    /** @var MateRepository $repository */
-    $repository = $this->getDoctrine()->getRepository(Mate::class);
-    $matings = $repository->getMatingsStudRamOutput($location);
-
-    return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
+      return $this->get('app.mate')->getMatingsToBeVerified($request);
   }
 
   

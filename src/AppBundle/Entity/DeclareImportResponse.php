@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -11,7 +12,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareImportResponseRepository")
  * @package AppBundle\Entity
  */
-class DeclareImportResponse extends DeclareBaseResponse {
+class DeclareImportResponse extends DeclareBaseResponse
+{
+    use EntityClassInfo;
 
   /**
    * @var DeclareImport
