@@ -37,7 +37,7 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      */
     function getIndividualTreatments(Request $request)
     {
-        return $this->getTreatmentService()->getIndividualTreatments($request);
+        return $this->get('app.treatment')->getIndividualTreatments($request);
     }
 
     /**
@@ -63,7 +63,7 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      */
     function getLocationTreatments(Request $request)
     {
-        return $this->getTreatmentService()->getLocationTreatments($request);
+        return $this->get('app.treatment')->getLocationTreatments($request);
     }
 
     /**
@@ -89,7 +89,7 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      */
     function createIndividualTreatments(Request $request)
     {
-        return $this->getTreatmentService()->createIndividualTreatments($request);
+        return $this->get('app.treatment')->createIndividualTreatments($request);
     }
 
     /**
@@ -115,7 +115,7 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      */
     function createLocationTreatments(Request $request)
     {
-        return $this->getTreatmentService()->getLocationTreatments($request);
+        return $this->get('app.treatment')->getLocationTreatments($request);
     }
 
     /**
@@ -142,7 +142,7 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      */
     function editIndividualTreatments(Request $request, $treatmentId)
     {
-        return $this->getTreatmentService()->editIndividualTreatments($request, $treatmentId);
+        return $this->get('app.treatment')->editIndividualTreatments($request, $treatmentId);
     }
 
     /**
@@ -169,7 +169,7 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      */
     function editLocationTreatments(Request $request, $treatmentId)
     {
-        return $this->getTreatmentService()->editLocationTreatments($request, $treatmentId);
+        return $this->get('app.treatment')->editLocationTreatments($request, $treatmentId);
     }
 
     /**
@@ -196,7 +196,7 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      */
     function deleteIndividualTreatments(Request $request, $treatmentId)
     {
-        return $this->getTreatmentService()->deleteIndividualTreatments($request, $treatmentId);
+        return $this->get('app.treatment')->deleteIndividualTreatments($request, $treatmentId);
     }
 
     /**
@@ -223,7 +223,7 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      */
     function deleteLocationTreatments(Request $request, $treatmentId)
     {
-        return $this->getTreatmentService()->deleteLocationTreatments($request, $treatmentId);
+        return $this->get('app.treatment')->deleteLocationTreatments($request, $treatmentId);
     }
 
 

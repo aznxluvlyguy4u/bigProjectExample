@@ -3,6 +3,9 @@
 namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\LocationHealthLetter;
+use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Util\RequestUtil;
+use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -31,10 +34,8 @@ class LocationHealthLetterAPIController extends APIController
     {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $type = strtoupper($illness . '_' . $letter_type);
@@ -52,11 +53,9 @@ class LocationHealthLetterAPIController extends APIController
                 ORDER BY location_health_letter.log_date DESC LIMIT 1";
         $result = $em->getConnection()->query($sql)->fetch();
 
-        if($result == null) {
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => []), 200);
-        }
+        if($result === null) { $result = []; }
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+        return ResultUtil::successResult($result);
     }
 
     /**
@@ -69,13 +68,11 @@ class LocationHealthLetterAPIController extends APIController
     {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         // TODO VALIDATE CONTENT
 
         $type = strtoupper($content->get('illness') . '_' . $content->get('letter_type'));
@@ -95,6 +92,6 @@ class LocationHealthLetterAPIController extends APIController
         $this->getDoctrine()->getManager()->persist($locationHealthLetter);
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+        ResultUtil::successResult('ok');
     }
 }

@@ -39,7 +39,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
         if ($type instanceof JsonResponse) { return $type; }
 
         $templates = $this->treatmentTypeRepository->findByQueries($activeOnly, $type);
-        $output = $this->serializer->getDecodedJson($templates, [JmsGroup::TREATMENT_TEMPLATE]);
+        $output = $this->getBaseSerializer()->getDecodedJson($templates, [JmsGroup::TREATMENT_TEMPLATE]);
 
         return ResultUtil::successResult($output);
     }
@@ -51,7 +51,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
      */
     function create(Request $request)
     {
-        $admin = $this->userService->getEmployee();
+        $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
         //Deserialization and Validation
@@ -73,14 +73,14 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
         }
 
         $treatmentType->__construct();
-        $treatmentType->setCreationBy($this->userService->getUser());
+        $treatmentType->setCreationBy($this->getUser());
 
-        $this->em->persist($treatmentType);
-        $this->em->flush();
+        $this->getManager()->persist($treatmentType);
+        $this->getManager()->flush();
 
-        AdminActionLogWriter::createTreatmentType($this->em, $admin, $request, $treatmentType);
+        AdminActionLogWriter::createTreatmentType($this->getManager(), $admin, $request, $treatmentType);
 
-        $output = $this->serializer->getDecodedJson($treatmentType, [JmsGroup::TREATMENT_TEMPLATE]);
+        $output = $this->getBaseSerializer()->getDecodedJson($treatmentType, [JmsGroup::TREATMENT_TEMPLATE]);
         return ResultUtil::successResult($output);
     }
 
@@ -92,7 +92,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
     private function baseValidateDeserializedTreatmentType($request)
     {
         /** @var TreatmentType $treatmentType */
-        $treatmentType = $this->serializer->deserializeToObject($request->getContent(), TreatmentType::class);
+        $treatmentType = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentType::class);
         if (!($treatmentType instanceof TreatmentType)) {
             return Validator::createJsonResponse('Json body must have the TreatmentType structure', 428);
         }
@@ -116,7 +116,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
      */
     function edit(Request $request, $treatmentTypeId)
     {
-        $admin = $this->userService->getEmployee();
+        $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
         /** @var TreatmentType $treatmentTypeInDb */
@@ -166,13 +166,13 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
 
                     } else {
                         $treatmentTypeInDbByValues->setIsActive(true);
-                        $this->em->persist($treatmentTypeInDbByValues);
+                        $this->getManager()->persist($treatmentTypeInDbByValues);
                         $treatmentTypeOutput = $treatmentTypeInDbByValues;
 
                         $treatmentTypeInDb->setIsActive(false);
-                        $this->em->persist($treatmentTypeInDb);
+                        $this->getManager()->persist($treatmentTypeInDb);
 
-                        $this->em->flush();
+                        $this->getManager()->flush();
                     }
                 }
 
@@ -182,14 +182,14 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
 
             if ($isSimpleUpdate) {
                 $treatmentTypeInDb->setDescription($newDescription);
-                $this->em->persist($treatmentTypeInDb);
-                $this->em->flush();
+                $this->getManager()->persist($treatmentTypeInDb);
+                $this->getManager()->flush();
             }
 
-            AdminActionLogWriter::editTreatmentType($this->em, $admin, $this->actionLogDescription);
+            AdminActionLogWriter::editTreatmentType($this->getManager(), $admin, $this->actionLogDescription);
         }
 
-        $output = $this->serializer->getDecodedJson($treatmentTypeOutput, [JmsGroup::TREATMENT_TEMPLATE]);
+        $output = $this->getBaseSerializer()->getDecodedJson($treatmentTypeOutput, [JmsGroup::TREATMENT_TEMPLATE]);
         return ResultUtil::successResult($output);
     }
 
@@ -201,7 +201,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
      */
     function delete(Request $request, $treatmentTypeId)
     {
-        $admin = $this->userService->getEmployee();
+        $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
         /** @var TreatmentType $treatmentType */
@@ -210,12 +210,12 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
         if ($treatmentType->isActive() === false) { return Validator::createJsonResponse('Template has already been deactivated', 428); }
 
         $treatmentType->setIsActive(false);
-        $this->em->persist($treatmentType);
-        $this->em->flush();
+        $this->getManager()->persist($treatmentType);
+        $this->getManager()->flush();
 
-        AdminActionLogWriter::deleteTreatmentType($this->em, $admin, $treatmentType);
+        AdminActionLogWriter::deleteTreatmentType($this->getManager(), $admin, $treatmentType);
 
-        $output = $this->serializer->getDecodedJson($treatmentType, [JmsGroup::TREATMENT_TEMPLATE]);
+        $output = $this->getBaseSerializer()->getDecodedJson($treatmentType, [JmsGroup::TREATMENT_TEMPLATE]);
         return ResultUtil::successResult($output);
     }
 

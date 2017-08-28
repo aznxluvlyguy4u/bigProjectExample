@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use AppBundle\Enumerator\AnimalType;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -18,6 +19,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 class Ewe extends Animal
 {
+    use EntityClassInfo;
+
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentMother")
      * @JMS\Type("AppBundle\Entity\Ewe")

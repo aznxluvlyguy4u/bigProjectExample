@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\TokenType;
+use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -20,12 +21,22 @@ use JMS\Serializer\Annotation\Expose;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"Client" = "Client", "Employee" = "Employee", "Inspector" = "Inspector"})
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "Client" : "AppBundle\Entity\Client",
+ *                      "Employee" : "AppBundle\Entity\Employee",
+ *                     "Inspector" : "AppBundle\Entity\Inspector"},
+ *     groups = {"CONTACT_INFO","USER_MEASUREMENT"})
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                          "Client" : "AppBundle\Entity\Client",
+ *                        "Employee" : "AppBundle\Entity\Employee",
+ *                       "Inspector" : "AppBundle\Entity\Inspector"},
+ *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
  */
 abstract class Person implements UserInterface
 {
-    const TABLE_NAME = 'person';
+    use EntityClassInfo;
 
   /**
    * @ORM\Column(type="integer")
@@ -51,7 +62,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"USER_MEASUREMENT"})
+   * @JMS\Groups({"USER_MEASUREMENT","ACTION_LOG_ADMIN","ACTION_LOG_USER"})
    * @Expose
    */
   protected $firstName;
@@ -62,7 +73,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"USER_MEASUREMENT"})
+   * @JMS\Groups({"USER_MEASUREMENT","ACTION_LOG_ADMIN","ACTION_LOG_USER"})
    * @Expose
    */
   protected $lastName;
@@ -80,8 +91,8 @@ abstract class Person implements UserInterface
   /**
    * @var ArrayCollection
    *
-   * @ORM\OneToMany(targetEntity="Token", mappedBy="owner", cascade={"persist"})
-   * @JMS\Type("array")
+   * @ORM\OneToMany(targetEntity="Token", mappedBy="owner", cascade={"persist", "remove"})
+   * @JMS\Type("ArrayCollection<AppBundle\Entity\Token>")
    */
   protected $tokens;
 
@@ -428,7 +439,7 @@ abstract class Person implements UserInterface
    *
    * @param Token $token
    *
-   * @return Animal
+   * @return Person
    */
   public function addToken(Token $token)
   {

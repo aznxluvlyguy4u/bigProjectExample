@@ -82,7 +82,7 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
      */
     function getByQuery(Request $request)
     {
-        return $this->getTreatmentTypeService()->getByQuery($request);
+        return $this->get('app.treatment.type')->getByQuery($request);
     }
 
 
@@ -131,7 +131,7 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
      */
     function create(Request $request)
     {
-        return $this->getTreatmentTypeService()->create($request);
+        return $this->get('app.treatment.type')->create($request);
     }
 
 
@@ -191,7 +191,7 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
      */
     function edit(Request $request, $treatmentTypeId)
     {
-        return $this->getTreatmentTypeService()->edit($request, $treatmentTypeId);
+        return $this->get('app.treatment.type')->edit($request, $treatmentTypeId);
     }
 
 
@@ -240,7 +240,7 @@ class TreatmentTypeAPIController extends APIController implements TreatmentTypeA
      */
     function delete(Request $request, $treatmentTypeId)
     {
-        return $this->getTreatmentTypeService()->delete($request, $treatmentTypeId);
+        return $this->get('app.treatment.type')->delete($request, $treatmentTypeId);
     }
 
 

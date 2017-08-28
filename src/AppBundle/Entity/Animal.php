@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -25,10 +26,19 @@ use \DateTime;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"Animal" = "Animal", "Ram" = "Ram", "Ewe" = "Ewe", "Neuter" = "Neuter"})
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "Animal" : "AppBundle\Entity\Animal",
+ *                           "Ram" : "AppBundle\Entity\Ram",
+ *                           "Ewe" : "AppBundle\Entity\Ewe",
+ *                        "Neuter" : "AppBundle\Entity\Neuter"},
+ *     groups = {"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+ *
  * @package AppBundle\Entity\Animal
  */
 abstract class Animal
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *
@@ -227,7 +237,7 @@ abstract class Animal
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareBirth")
-     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal")
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist","remove"})
      */
     protected $births;
 
@@ -357,7 +367,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="animal", cascade={"persist", "remove"})
      * @ORM\OrderBy({"startDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\AnimalResidence")
      */
@@ -384,7 +394,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="TailLength", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="TailLength", mappedBy="animal", cascade={"persist","remove"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\TailLength")
      */
@@ -393,7 +403,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="Weight", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="Weight", mappedBy="animal", cascade={"persist", "remove"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\Weight")
      */

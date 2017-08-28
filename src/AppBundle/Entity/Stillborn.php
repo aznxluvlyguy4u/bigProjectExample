@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -14,7 +15,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\StillbornRepository")
  * @package AppBundle\Entity
  */
-class Stillborn {
+class Stillborn
+{
+    use EntityClassInfo;
 
     /**
      * @var integer

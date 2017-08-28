@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\MessageBuilderBase;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -25,11 +26,17 @@ use JMS\Serializer\Annotation\Expose;
  *      "Litter" = "Litter"
  *   }
  * )
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "Mate" : "AppBundle\Entity\Mate",
+ *               "DeclareWeight" : "AppBundle\Entity\DeclareWeight",
+ *                      "Litter" : "AppBundle\Entity\Litter"},
+ *     groups = {"ERROR_DETAILS"})
+ *
  * @package AppBundle\Entity\DeclareNsfoBase
  */
 abstract class DeclareNsfoBase
 {
-    const TABLE_NAME = 'declare_nsfo_base';
+    use EntityClassInfo;
 
     /**
      * @var integer

@@ -23,6 +23,7 @@ use AppBundle\Service\Migration\TreatmentTypeInitializer;
 use AppBundle\Service\Migration\StoredProcedureInitializer;
 use AppBundle\Service\Migration\VsmMigratorService;
 use AppBundle\Service\Worker\DepartInternalWorkerCliOptions;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
@@ -695,7 +696,7 @@ class CliOptionsService
             'Choose option: ', "\n",
             '=====================================', "\n",
             '1: BirthProgress', "\n",
-
+            '2: is_rvo_message boolean in action_log', "\n",
             '3: TreatmentType', "\n",
             '4: StoredProcedures', "\n\n",
 
@@ -704,7 +705,7 @@ class CliOptionsService
 
         switch ($option) {
             case 1: $this->birthProgressInitializer->run($this->cmdUtil); break;
-
+            case 2: ActionLogWriter::initializeIsRvoMessageValues($this->conn, $this->cmdUtil); break;
             case 3: $this->treatmentTypeInitializer->run($this->cmdUtil); break;
             case 4: $this->storedProcedureInitializer->initialize(); break;
 

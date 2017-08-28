@@ -4,18 +4,10 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\TreatmentTemplateAPIControllerInterface;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Location;
 use AppBundle\Entity\MedicationOption;
 use AppBundle\Entity\TreatmentTemplate;
-use AppBundle\Entity\TreatmentTemplateRepository;
-use AppBundle\Entity\TreatmentType;
-use AppBundle\Entity\TreatmentTypeRepository;
-use AppBundle\Enumerator\JmsGroup;
-use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\AdminActionLogWriter;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
@@ -43,7 +35,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
     function getIndividualDefaultTemplates(Request $request)
     {
         $templates = $this->treatmentTemplateRepository->findActiveIndividualTypeByLocation(null);
-        $output = $this->serializer->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
+        $output = $this->getBaseSerializer()->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
@@ -62,7 +54,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         if ($clientValidation instanceof JsonResponse) { return $clientValidation; }
 
         $templates = $this->treatmentTemplateRepository->findActiveIndividualTypeByLocation($location);
-        $output = $this->serializer->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
+        $output = $this->getBaseSerializer()->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
@@ -74,7 +66,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
     function getLocationDefaultTemplates(Request $request)
     {
         $templates = $this->treatmentTemplateRepository->findActiveLocationTypeByLocation(null);
-        $output = $this->serializer->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
+        $output = $this->getBaseSerializer()->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
@@ -93,7 +85,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         if ($clientValidation instanceof JsonResponse) { return $clientValidation; }
 
         $templates = $this->treatmentTemplateRepository->findActiveLocationTypeByLocation($location);
-        $output = $this->serializer->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
+        $output = $this->getBaseSerializer()->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
@@ -123,11 +115,11 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
      */
     private function createTemplate(Request $request, $type)
     {
-        $admin = $this->userService->getEmployee();
+        $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
         /** @var TreatmentTemplate $template */
-        $template = $this->serializer->deserializeToObject($request->getContent(), TreatmentTemplate::class);
+        $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
         if (!($template instanceof TreatmentTemplate)) {
             return Validator::createJsonResponse('Json body must have the TreatmentTemplate structure', 428);
         }
@@ -146,14 +138,14 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         }
 
         $template->__construct();
-        $template->setCreationBy($this->userService->getUser());
+        $template->setCreationBy($this->getUser());
 
-        $this->em->persist($template);
-        $this->em->flush();
+        $this->getManager()->persist($template);
+        $this->getManager()->flush();
 
-        AdminActionLogWriter::createTreatmentTemplate($this->em, $admin, $request, $template);
+        AdminActionLogWriter::createTreatmentTemplate($this->getManager(), $admin, $request, $template);
 
-        $output = $this->serializer->getDecodedJson($template, $this->getJmsGroupByQuery($request));
+        $output = $this->getBaseSerializer()->getDecodedJson($template, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
@@ -234,14 +226,14 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
      */
     private function editTemplate(Request $request, $templateId, $type)
     {
-        $admin = $this->userService->getEmployee();
+        $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
         $templateInDatabase = $this->getTemplateByIdAndType($templateId, $type);
         if ($templateInDatabase instanceof JsonResponse) { return $templateInDatabase; }
 
         /** @var TreatmentTemplate $template */
-        $template = $this->serializer->deserializeToObject($request->getContent(), TreatmentTemplate::class);
+        $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
         if (!($template instanceof TreatmentTemplate)) {
             return Validator::createJsonResponse('Json body must have the TreatmentTemplate structure', 428);
         }
@@ -331,7 +323,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
                 //Remove medication
                 $this->appendDescription('remove '.$medication->getDescription());
                 $templateInDatabase->removeMedication($medication);
-                $this->em->remove($medication);
+                $this->getManager()->remove($medication);
                 $isAnyValueUpdated = true;
             }
         }
@@ -350,16 +342,16 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         if ($isAnyValueUpdated) {
             $templateInDatabase
-                ->setEditedBy($this->userService->getUser())
+                ->setEditedBy($this->getUser())
                 ->setLogDate(new \DateTime())
             ;
-            $this->em->persist($templateInDatabase);
-            $this->em->flush();
+            $this->getManager()->persist($templateInDatabase);
+            $this->getManager()->flush();
 
-            AdminActionLogWriter::editTreatmentTemplate($this->em, $template->getLocationOwner(), $admin, $this->actionLogDescription);
+            AdminActionLogWriter::editTreatmentTemplate($this->getManager(), $template->getLocationOwner(), $admin, $this->actionLogDescription);
         }
 
-        $output = $this->serializer->getDecodedJson($templateInDatabase, $this->getJmsGroupByQuery($request));
+        $output = $this->getBaseSerializer()->getDecodedJson($templateInDatabase, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
     }
@@ -393,19 +385,19 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
      */
     private function deleteTemplate($request, $templateId, $type)
     {
-        $admin = $this->userService->getEmployee();
+        $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
         $template = $this->getTemplateByIdAndType($templateId, $type);
         if ($template instanceof JsonResponse) { return $template; }
 
         $template->setIsActive(false);
-        $this->em->persist($template);
-        $this->em->flush();
+        $this->getManager()->persist($template);
+        $this->getManager()->flush();
 
-        AdminActionLogWriter::deleteTreatmentTemplate($this->em, $template->getLocationOwner(), $admin, $template);
+        AdminActionLogWriter::deleteTreatmentTemplate($this->getManager(), $template->getLocationOwner(), $admin, $template);
 
-        $output = $this->serializer->getDecodedJson($template, $this->getJmsGroupByQuery($request));
+        $output = $this->getBaseSerializer()->getDecodedJson($template, $this->getJmsGroupByQuery($request));
         return ResultUtil::successResult($output);
     }
 }

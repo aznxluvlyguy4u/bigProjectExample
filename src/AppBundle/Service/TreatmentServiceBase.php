@@ -44,12 +44,12 @@ class TreatmentServiceBase extends ControllerServiceBase
     public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
                                 CacheService $cacheService, UserService $userService)
     {
-        parent::__construct($em, $serializer, $cacheService, $userService);
+        parent::__construct($serializer, $cacheService, $em, $userService);
 
-        $this->treatmentAnimalRepository = $this->em->getRepository(TreatmentAnimal::class);
-        $this->treatmentLocationRepository = $this->em->getRepository(TreatmentLocation::class);
-        $this->treatmentTemplateRepository = $this->em->getRepository(TreatmentTemplate::class);
-        $this->treatmentTypeRepository = $this->em->getRepository(TreatmentType::class);
+        $this->treatmentAnimalRepository = $this->getManager()->getRepository(TreatmentAnimal::class);
+        $this->treatmentLocationRepository = $this->getManager()->getRepository(TreatmentLocation::class);
+        $this->treatmentTemplateRepository = $this->getManager()->getRepository(TreatmentTemplate::class);
+        $this->treatmentTypeRepository = $this->getManager()->getRepository(TreatmentType::class);
     }
 
 
@@ -76,7 +76,7 @@ class TreatmentServiceBase extends ControllerServiceBase
             return Validator::createJsonResponse('UBN must be a number', 428);
         }
 
-        $location = $this->locationRepository->findOneByActiveUbn($ubn);
+        $location = $this->getManager()->getRepository(Location::class)->findOneByActiveUbn($ubn);
         if ($location === null) {
             return Validator::createJsonResponse('No active location found for given UBN', 428);
         }
@@ -90,7 +90,7 @@ class TreatmentServiceBase extends ControllerServiceBase
      */
     protected function validateIfLocationBelongsToClient($location)
     {
-        $user = $this->userService->getUser();
+        $user = $this->getUser();
         if ($user instanceof Client) {
             //A client is only allowed to see own templates
             if ($location->getOwner()) {

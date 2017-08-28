@@ -76,7 +76,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      */
     function getIndividualDefaultTemplates(Request $request)
     {
-        return $this->getTreatmentTemplateService()->getIndividualDefaultTemplates($request);
+        return $this->get('app.treatment.template')->getIndividualDefaultTemplates($request);
     }
 
     /**
@@ -146,7 +146,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      */
     function getIndividualSpecificTemplates(Request $request, $ubn)
     {
-        return $this->getTreatmentTemplateService()->getIndividualSpecificTemplates($request, $ubn);
+        return $this->get('app.treatment.template')->getIndividualSpecificTemplates($request, $ubn);
     }
 
     /**
@@ -212,7 +212,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      */
     function getLocationDefaultTemplates(Request $request)
     {
-        return $this->getTreatmentTemplateService()->getLocationDefaultTemplates($request);
+        return $this->get('app.treatment.template')->getLocationDefaultTemplates($request);
     }
 
     /**
@@ -282,7 +282,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      */
     function getLocationSpecificTemplates(Request $request, $ubn)
     {
-        return $this->getTreatmentTemplateService()->getLocationSpecificTemplates($request, $ubn);
+        return $this->get('app.treatment.template')->getLocationSpecificTemplates($request, $ubn);
     }
 
     /**
@@ -363,7 +363,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      */
     function createIndividualTemplate(Request $request)
     {
-        return $this->getTreatmentTemplateService()->createIndividualTemplate($request);
+        return $this->get('app.treatment.template')->createIndividualTemplate($request);
     }
 
     /**
@@ -444,7 +444,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      */
     function createLocationTemplate(Request $request)
     {
-        return $this->getTreatmentTemplateService()->createLocationTemplate($request);
+        return $this->get('app.treatment.template')->createLocationTemplate($request);
     }
 
     /**
@@ -526,7 +526,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      */
     function editIndividualTemplate(Request $request, $templateId)
     {
-        return $this->getTreatmentTemplateService()->editIndividualTemplate($request, $templateId);
+        return $this->get('app.treatment.template')->editIndividualTemplate($request, $templateId);
     }
 
     /**
@@ -608,7 +608,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      */
     function editLocationTemplate(Request $request, $templateId)
     {
-        return $this->getTreatmentTemplateService()->editLocationTemplate($request, $templateId);
+        return $this->get('app.treatment.template')->editLocationTemplate($request, $templateId);
     }
 
     /**
@@ -674,7 +674,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      */
     function deleteIndividualTemplate(Request $request, $templateId)
     {
-        return $this->getTreatmentTemplateService()->deleteIndividualTemplate($request, $templateId);
+        return $this->get('app.treatment.template')->deleteIndividualTemplate($request, $templateId);
     }
 
     /**
@@ -740,7 +740,7 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      */
     function deleteLocationTemplate(Request $request, $templateId)
     {
-        return $this->getTreatmentTemplateService()->deleteLocationTemplate($request, $templateId);
+        return $this->get('app.treatment.template')->deleteLocationTemplate($request, $templateId);
     }
 
 

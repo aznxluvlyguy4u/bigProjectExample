@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -12,7 +13,9 @@ use \AppBundle\Entity\DeclareArrival;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareArrivalResponseRepository")
  * @package AppBundle\Entity
  */
-class DeclareArrivalResponse extends DeclareBaseResponse {
+class DeclareArrivalResponse extends DeclareBaseResponse
+{
+    use EntityClassInfo;
 
   /**
    * @var DeclareArrival
