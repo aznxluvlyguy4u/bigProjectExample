@@ -24,7 +24,7 @@ use Faker;
  *
  * @package AppBundle\Tests\Controller
  * @group treatment
- * @group treatment-type
+ * @group treatment-template
  */
 class TreatmentTemplateTypeTest extends WebTestCase
 {
@@ -106,7 +106,7 @@ class TreatmentTemplateTypeTest extends WebTestCase
 
     /**
      * @group get
-     * @group treatment-type-get
+     * @group treatment-template-get
      */
     public function testGet()
     {
@@ -120,7 +120,7 @@ class TreatmentTemplateTypeTest extends WebTestCase
 
     /**
      * @group cud
-     * @group treatment-cud
+     * @group treatment-template-cud
      */
     public function testCreateUpdateDelete()
     {
