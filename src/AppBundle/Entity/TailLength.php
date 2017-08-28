@@ -27,6 +27,7 @@ class TailLength extends Measurement
 
     /**
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="tailLengthMeasurements")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;

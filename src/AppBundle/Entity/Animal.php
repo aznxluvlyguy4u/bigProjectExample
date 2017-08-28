@@ -236,7 +236,7 @@ abstract class Animal
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareBirth")
-     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal")
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist","remove"})
      */
     protected $births;
 
@@ -391,7 +391,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="TailLength", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="TailLength", mappedBy="animal", cascade={"persist","remove"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\TailLength")
      */
@@ -400,7 +400,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="Weight", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="Weight", mappedBy="animal", cascade={"persist", "remove"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\Weight")
      */

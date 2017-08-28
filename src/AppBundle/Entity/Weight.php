@@ -27,6 +27,7 @@ class Weight extends Measurement
 
     /**
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="weightMeasurements")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;
