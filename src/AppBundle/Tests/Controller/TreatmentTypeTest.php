@@ -5,7 +5,6 @@ namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
-use AppBundle\Entity\Location;
 use AppBundle\Entity\TreatmentType;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\TreatmentTypeOption;
@@ -20,13 +19,13 @@ use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 use Faker;
 
 /**
- * Class TreatmentTemplateTypeTest
+ * Class TreatmentTypeTest
  *
  * @package AppBundle\Tests\Controller
  * @group treatment
  * @group treatment-template
  */
-class TreatmentTemplateTypeTest extends WebTestCase
+class TreatmentTypeTest extends WebTestCase
 {
     const GET = 'GET';
     const POST = 'POST';
