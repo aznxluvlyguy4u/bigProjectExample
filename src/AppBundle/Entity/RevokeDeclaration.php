@@ -32,7 +32,9 @@ class RevokeDeclaration extends DeclareBase
     /**
      * @ORM\OneToMany(targetEntity="RevokeDeclarationResponse", mappedBy="revokeDeclarationRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="revoke_declaration_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $responses;
@@ -105,6 +107,7 @@ class RevokeDeclaration extends DeclareBase
      * @Assert\Length(max = 15)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $messageNumber;
@@ -113,6 +116,7 @@ class RevokeDeclaration extends DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $requestIdToRevoke;
@@ -121,6 +125,7 @@ class RevokeDeclaration extends DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $requestTypeToRevoke;

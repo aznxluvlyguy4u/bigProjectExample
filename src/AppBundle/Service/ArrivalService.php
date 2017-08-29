@@ -201,6 +201,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->getManager()->flush();
 
+        $this->saveNewestDeclareVersion($content, $messageObject);
+
         //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
         $this->healthService->updateLocationHealth($messageObject);
 

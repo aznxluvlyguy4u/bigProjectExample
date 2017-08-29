@@ -8,7 +8,6 @@ use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -25,14 +24,9 @@ use JMS\Serializer\Annotation\Expose;
  *                        "Client" : "AppBundle\Entity\Client",
  *                      "Employee" : "AppBundle\Entity\Employee",
  *                     "Inspector" : "AppBundle\Entity\Inspector"},
- *     groups = {"CONTACT_INFO","USER_MEASUREMENT"})
+ *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER","CONTACT_INFO","ERROR_DETAILS","USER_MEASUREMENT"})
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
- * @JMS\Discriminator(field = "type", disabled=false, map = {
- *                          "Client" : "AppBundle\Entity\Client",
- *                        "Employee" : "AppBundle\Entity\Employee",
- *                       "Inspector" : "AppBundle\Entity\Inspector"},
- *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
  */
 abstract class Person implements UserInterface
 {
@@ -62,7 +56,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"USER_MEASUREMENT","ACTION_LOG_ADMIN","ACTION_LOG_USER"})
+   * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER","ERROR_DETAILS","USER_MEASUREMENT"})
    * @Expose
    */
   protected $firstName;
@@ -73,7 +67,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"USER_MEASUREMENT","ACTION_LOG_ADMIN","ACTION_LOG_USER"})
+   * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER","ERROR_DETAILS","USER_MEASUREMENT"})
    * @Expose
    */
   protected $lastName;

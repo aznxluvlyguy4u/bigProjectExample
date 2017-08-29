@@ -15,12 +15,6 @@ use Symfony\Component\HttpFoundation\Request;
 class TreatmentService extends TreatmentServiceBase implements TreatmentAPIControllerInterface
 {
 
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
-                                CacheService $cacheService, UserService $userService)
-    {
-        parent::__construct($em, $serializer, $cacheService, $userService);
-    }
-
     /**
      * @param Request $request
      * @return JsonResponse

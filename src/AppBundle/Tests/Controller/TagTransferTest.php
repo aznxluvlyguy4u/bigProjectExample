@@ -75,7 +75,6 @@ class TagTransferTest extends WebTestCase
     public static function tearDownAfterClass()
     {
         self::deleteTagTransfersOfTestTags();
-        UnitTestData::deleteTestTags(self::$em->getConnection());
     }
 
     /**
@@ -171,6 +170,10 @@ class TagTransferTest extends WebTestCase
                   INNER JOIN declare_tags_transfer d ON d.id = j.declare_tags_transfer_id
                 WHERE i.uln_country_code = '".UnitTestData::ULN_COUNTRY_CODE."'";
         $results = self::$em->getConnection()->query($sql)->fetchAll();
+
+
+        UnitTestData::deleteTestTags(self::$em->getConnection());
+
 
         if (count($results) > 0) {
             $declareTagTransferIds = SqlUtil::getSingleValueGroupedSqlResults('id', $results, true);

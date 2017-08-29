@@ -2,6 +2,7 @@
 
 
 namespace AppBundle\Service;
+
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Cache\ExteriorCacher;
 use AppBundle\Cache\GeneDiversityUpdater;
@@ -698,7 +699,8 @@ class CliOptionsService
             '1: BirthProgress', "\n",
             '2: is_rvo_message boolean in action_log', "\n",
             '3: TreatmentType', "\n",
-            '4: StoredProcedures', "\n\n",
+            '4: StoredProcedures', "\n",
+            '5: StoredProcedures: overwrite all', "\n\n",
 
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
@@ -708,6 +710,7 @@ class CliOptionsService
             case 2: ActionLogWriter::initializeIsRvoMessageValues($this->conn, $this->cmdUtil); break;
             case 3: $this->treatmentTypeInitializer->run($this->cmdUtil); break;
             case 4: $this->storedProcedureInitializer->initialize(); break;
+            case 5: $this->storedProcedureInitializer->update(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }

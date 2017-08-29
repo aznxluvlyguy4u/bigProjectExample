@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -16,6 +17,7 @@ use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
@@ -31,9 +33,11 @@ use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\RequestMessageOutputBuilder;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 abstract class DeclareControllerServiceBase extends ControllerServiceBase
 {
@@ -192,4 +196,64 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
         return $messageObject;
     }
+
+
+    /**
+     * @param ArrayCollection $content
+     * @param DeclareBase|DeclareNsfoBase $newestDeclare
+     * @return DeclareBase|DeclareNsfoBase
+     * @throws \Exception
+     */
+    protected function saveNewestDeclareVersion(ArrayCollection $content, $newestDeclare)
+    {
+        if ($newestDeclare instanceof DeclareBase) {
+            $key = JsonInputConstant::REQUEST_ID;
+            $keyParameter = 'requestId';
+            $clazz = DeclareBase::class;
+            $tableName = DeclareBase::getTableName();
+
+        } elseif ($newestDeclare instanceof DeclareNsfoBase) {
+            $key = JsonInputConstant::MESSAGE_ID;
+            $keyParameter = 'messageId';
+            $clazz = DeclareNsfoBase::class;
+            $tableName = DeclareNsfoBase::getTableName();
+
+        } else {
+            throw new \Exception('Declare must be a DeclareBase or DeclareNsfoBase', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        if(!$content->containsKey($key) || $newestDeclare === null) {
+            return $newestDeclare;
+        }
+
+        $newId = $newestDeclare->getId();
+        if ($newId === null) {
+            throw new \Exception('Newest Declare must have already been persisted', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $oldRequestId = $content->get($key);
+        $oldRequest = $this->getManager()->getRepository($clazz)->findOneBy([$keyParameter => $oldRequestId]);
+
+        //Update old request
+        if ($oldRequest) {
+            if ($oldRequest instanceof DeclareNsfoBase) {
+                $oldRequest->setIsOverwrittenVersion(true);
+            }
+
+            $oldRequest->setNewestVersion($newestDeclare);
+            $this->getManager()->persist($oldRequest);
+            $this->getManager()->flush();
+
+            $oldId = $oldRequest->getId();
+            if (is_int($oldId) || ctype_digit($oldId)) {
+                //Update all older requests
+                $sql = "UPDATE $tableName SET newest_version_id = '$newId' WHERE newest_version_id = '$oldId' ";
+                $updateCount = SqlUtil::updateWithCount($this->getConnection(), $sql);
+            }
+        }
+
+        return $newestDeclare;
+    }
+
+
 }

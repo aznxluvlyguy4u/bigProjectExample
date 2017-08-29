@@ -79,6 +79,8 @@ class TagReplaceService extends DeclareControllerServiceBase
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($declareTagReplace);
 
+        $this->saveNewestDeclareVersion($content, $declareTagReplace);
+
         ActionLogWriter::completeActionLog($this->getManager(), $log);
 
         return new JsonResponse($messageArray, 200);

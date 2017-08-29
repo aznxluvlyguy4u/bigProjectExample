@@ -8,10 +8,10 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use Symfony\Component\HttpFoundation\JsonResponse as SymfonyJsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class ResultUtil
 {
-    const SUCCESS_CODE = 200;
 
     /**
      * @param $result
@@ -19,7 +19,7 @@ class ResultUtil
      */
     public static function successResult($result)
     {
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $result], self::SUCCESS_CODE);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $result], Response::HTTP_OK);
     }
 
 
@@ -80,4 +80,5 @@ class ResultUtil
         }
         return null;
     }
+
 }
