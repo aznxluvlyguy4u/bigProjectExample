@@ -236,6 +236,10 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
         //Update old request
         if ($oldRequest) {
+            if ($oldRequest instanceof DeclareNsfoBase) {
+                $oldRequest->setIsOverwrittenVersion(true);
+            }
+
             $oldRequest->setNewestVersion($newestDeclare);
             $this->getManager()->persist($oldRequest);
             $this->getManager()->flush();
