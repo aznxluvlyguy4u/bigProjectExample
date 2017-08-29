@@ -174,6 +174,7 @@ abstract class DeclareNsfoBase
         $this->logDate = new \DateTime();
         $this->setMessageId(MessageBuilderBase::getNewRequestId());
         $this->isHidden = false;
+        $this->hideForAdmin = false;
         $this->isOverwrittenVersion = false;
         $this->olderVersions = new ArrayCollection();
     }

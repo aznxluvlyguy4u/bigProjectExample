@@ -180,6 +180,8 @@ abstract class DeclareBase
      */
     public function __construct() {
         $this->setHideFailedMessage(false);
+        $this->hideForAdmin = false;
+        $this->hideFailedMessage = false;
     }
 
     /**
