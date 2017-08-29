@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\MessageBuilderBase;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -25,17 +26,24 @@ use JMS\Serializer\Annotation\Expose;
  *      "Litter" = "Litter"
  *   }
  * )
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "Mate" : "AppBundle\Entity\Mate",
+ *               "DeclareWeight" : "AppBundle\Entity\DeclareWeight",
+ *                      "Litter" : "AppBundle\Entity\Litter"},
+ *     groups = {"ERROR_DETAILS"})
+ *
  * @package AppBundle\Entity\DeclareNsfoBase
  */
 abstract class DeclareNsfoBase
 {
-    const TABLE_NAME = 'declare_nsfo_base';
+    use EntityClassInfo;
 
     /**
      * @var integer
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $id;
 
@@ -44,6 +52,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="datetime")
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $logDate;
 
@@ -52,6 +61,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string", unique=true, nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $messageId;
 
@@ -60,6 +70,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $requestState;
 
@@ -68,6 +79,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $relationNumberKeeper;
 
@@ -77,6 +89,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $ubn;
 
@@ -85,6 +98,7 @@ abstract class DeclareNsfoBase
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id", nullable=true)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $actionBy;
 
@@ -111,9 +125,18 @@ abstract class DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $isHidden;
 
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     */
+    protected $hideForAdmin;
 
     /**
      * This variable is used to differentiate between the current version,
@@ -122,8 +145,26 @@ abstract class DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $isOverwrittenVersion;
+
+    /**
+     * @var DeclareNsfoBase
+     * @ORM\ManyToOne(targetEntity="DeclareNsfoBase", inversedBy="olderVersions")
+     * @ORM\JoinColumn(name="newest_version_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\DeclareNsfoBase")
+     * @JMS\Groups({"ERROR_DETAILS"})
+     */
+    protected $newestVersion;
+
+    /**
+     * @var ArrayCollection
+     * @ORM\OneToMany(targetEntity="DeclareNsfoBase", mappedBy="newestVersion")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareNsfoBase>")
+     * @JMS\Groups({"ERROR_DETAILS"})
+     */
+    protected $olderVersions;
 
 
     /**
@@ -133,7 +174,9 @@ abstract class DeclareNsfoBase
         $this->logDate = new \DateTime();
         $this->setMessageId(MessageBuilderBase::getNewRequestId());
         $this->isHidden = false;
+        $this->hideForAdmin = false;
         $this->isOverwrittenVersion = false;
+        $this->olderVersions = new ArrayCollection();
     }
 
     /**
@@ -151,12 +194,11 @@ abstract class DeclareNsfoBase
      *
      * @param \DateTime $logDate
      *
-     * @return DeclareBase
+     * @return DeclareNsfoBase
      */
     public function setLogDate($logDate)
     {
         $this->logDate = $logDate;
-
         return $this;
     }
 
@@ -176,12 +218,11 @@ abstract class DeclareNsfoBase
      *
      * @param string $messageId
      *
-     * @return DeclareBase
+     * @return DeclareNsfoBase
      */
     public function setMessageId($messageId)
     {
         $this->messageId = $messageId;
-
         return $this;
     }
 
@@ -200,12 +241,11 @@ abstract class DeclareNsfoBase
      *
      * @param string $requestState
      *
-     * @return DeclareBase
+     * @return DeclareNsfoBase
      */
     public function setRequestState($requestState)
     {
         $this->requestState = $requestState;
-
         return $this;
     }
 
@@ -224,12 +264,11 @@ abstract class DeclareNsfoBase
      *
      * @param string $relationNumberKeeper
      *
-     * @return DeclareBase
+     * @return DeclareNsfoBase
      */
     public function setRelationNumberKeeper($relationNumberKeeper)
     {
         $this->relationNumberKeeper = $relationNumberKeeper;
-
         return $this;
     }
 
@@ -248,12 +287,11 @@ abstract class DeclareNsfoBase
      *
      * @param string $ubn
      *
-     * @return DeclareBase
+     * @return DeclareNsfoBase
      */
     public function setUbn($ubn)
     {
         $this->ubn = $ubn;
-
         return $this;
     }
 
@@ -268,7 +306,7 @@ abstract class DeclareNsfoBase
     }
 
     /**
-     * @return Client|Employee
+     * @return Client|Employee|Person
      */
     public function getActionBy()
     {
@@ -277,10 +315,12 @@ abstract class DeclareNsfoBase
 
     /**
      * @param Person $actionBy
+     * @return DeclareNsfoBase
      */
     public function setActionBy($actionBy)
     {
         $this->actionBy = $actionBy;
+        return $this;
     }
 
     /**
@@ -293,10 +333,12 @@ abstract class DeclareNsfoBase
 
     /**
      * @param Person $revokedBy
+     * @return DeclareNsfoBase
      */
     public function setRevokedBy($revokedBy)
     {
         $this->revokedBy = $revokedBy;
+        return $this;
     }
 
     /**
@@ -309,10 +351,12 @@ abstract class DeclareNsfoBase
 
     /**
      * @param \DateTime $revokeDate
+     * @return DeclareNsfoBase
      */
     public function setRevokeDate($revokeDate)
     {
         $this->revokeDate = $revokeDate;
+        return $this;
     }
 
     /**
@@ -325,10 +369,30 @@ abstract class DeclareNsfoBase
 
     /**
      * @param boolean $isHidden
+     * @return DeclareNsfoBase
      */
     public function setIsHidden($isHidden)
     {
         $this->isHidden = $isHidden;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHideForAdmin()
+    {
+        return $this->hideForAdmin;
+    }
+
+    /**
+     * @param bool $hideForAdmin
+     * @return DeclareNsfoBase
+     */
+    public function setHideForAdmin($hideForAdmin)
+    {
+        $this->hideForAdmin = $hideForAdmin;
+        return $this;
     }
 
     /**
@@ -341,12 +405,69 @@ abstract class DeclareNsfoBase
 
     /**
      * @param boolean $isOverwrittenVersion
+     * @return DeclareNsfoBase
      */
     public function setIsOverwrittenVersion($isOverwrittenVersion)
     {
         $this->isOverwrittenVersion = $isOverwrittenVersion;
+        return $this;
     }
 
+    /**
+     * @return DeclareNsfoBase
+     */
+    public function getNewestVersion()
+    {
+        return $this->newestVersion;
+    }
+
+    /**
+     * @param DeclareNsfoBase $newestVersion
+     * @return DeclareNsfoBase
+     */
+    public function setNewestVersion($newestVersion)
+    {
+        $this->newestVersion = $newestVersion;
+        return $this;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getOlderVersions()
+    {
+        return $this->olderVersions;
+    }
+
+    /**
+     * @param ArrayCollection $olderVersions
+     * @return DeclareNsfoBase
+     */
+    public function setOlderVersions($olderVersions)
+    {
+        $this->olderVersions = $olderVersions;
+        return $this;
+    }
+
+    /**
+     * @param DeclareNsfoBase $olderVersion
+     * @return DeclareNsfoBase
+     */
+    public function addOlderVersion($olderVersion)
+    {
+        $this->olderVersions->add($olderVersion);
+        return $this;
+    }
+
+    /**
+     * @param DeclareNsfoBase $olderVersion
+     * @return DeclareNsfoBase
+     */
+    public function removeOlderVersion($olderVersion)
+    {
+        $this->olderVersions->remove($olderVersion);
+        return $this;
+    }
 
     /**
      * @param Mate|DeclareWeight $nsfoMessage
@@ -365,6 +486,7 @@ abstract class DeclareNsfoBase
         $this->setRevokeDate($nsfoMessage->getRevokeDate());
         $this->setIsHidden($nsfoMessage->getIsHidden());
         $this->setIsOverwrittenVersion($nsfoMessage->getIsOverwrittenVersion());
+        $this->setNewestVersion($nsfoMessage->getNewestVersion());
     }
 
 

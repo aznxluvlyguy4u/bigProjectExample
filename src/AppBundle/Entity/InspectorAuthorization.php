@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
 use Doctrine\ORM\Mapping as ORM;
@@ -16,6 +17,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class InspectorAuthorization
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *

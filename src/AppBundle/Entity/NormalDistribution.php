@@ -4,6 +4,7 @@
 namespace AppBundle\Entity;
 
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
@@ -20,6 +21,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class NormalDistribution
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *

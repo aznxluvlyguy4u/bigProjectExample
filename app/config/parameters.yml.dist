@@ -34,3 +34,5 @@ parameters:
     aws_s3_version: ~
     aws_s3_bucket: ~
 
+    test_email: ~
+

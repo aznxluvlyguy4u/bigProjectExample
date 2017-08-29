@@ -9,6 +9,8 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\PersonRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\JsonFormat\ValidationResults;
+use AppBundle\Output\AccessLevelOverviewOutput;
+use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Constant\Constant;
 use \Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,50 +27,21 @@ class AdminValidator
     const VALID_CODE = 200;
     const VALID_MESSAGE = 'ACCESS GRANTED';
 
-    /** @var boolean */
-    private $isAccessGranted;
-
-    /** @var string */
-    private $accessLevelRequired;
 
     /**
-     * AdminValidator constructor.
-     * @param Person $admin
-     * @param string $accessLevelRequired
+     * @param $admin
+     * @param $accessLevelRequired
+     * @return boolean
      */
-    public function __construct($admin, $accessLevelRequired = AccessLevelType::ADMIN)
+    public static function isAdmin($admin, $accessLevelRequired)
     {
-        $this->accessLevelRequired = $accessLevelRequired;
-
-        //Validate user
-        if(!($admin instanceof Employee)) {
-            $this->isAccessGranted = false;
-        } else {
-            $this->isAccessGranted = self::checkIsAccessGranted($this->accessLevelRequired, $admin->getAccessLevel());
-        }
-    }
-
-    public function getIsAccessGranted() { return $this->isAccessGranted; }
-
-    /**
-     * @return JsonResponse
-     */
-    public function createJsonErrorResponse()
-    {
-        if($this->isAccessGranted){
-            $message = self::VALID_MESSAGE;
-            $code = self::VALID_CODE;
-        } else {
-            $message = self::ERROR_MESSAGE;
-            $code = self::ERROR_CODE;
+        if($admin instanceof Employee) {
+            return self::checkIsAccessGranted($accessLevelRequired, $admin->getAccessLevel());
         }
 
-        $result = array(
-            Constant::MESSAGE_NAMESPACE => $message,
-            Constant::CODE_NAMESPACE => $code);
-
-        return new JsonResponse($result, $code);
+        return false;
     }
+
 
     /**
      * @param string $accessLevelRequired
@@ -98,21 +71,6 @@ class AdminValidator
 
         return $isAccessGranted;
     }
-
-
-    /**
-     * @param $admin
-     * @param $accessLevelRequired
-     * @return boolean
-     */
-    public static function isAdmin($admin, $accessLevelRequired)
-    {
-        if($admin instanceof Employee) {
-            return self::checkIsAccessGranted($accessLevelRequired, $admin->getAccessLevel());
-        }
-
-        return false;
-    }
     
     
     /**
@@ -126,7 +84,7 @@ class AdminValidator
         $validationResults->setErrorCode(self::ERROR_CODE);
 
         if(!$validationResults->isValid()) {
-            $validationResults->addError('UNAUTHORIZED');
+            $validationResults->addError(self::ERROR_MESSAGE);
         }
 
         return $validationResults;
@@ -138,9 +96,6 @@ class AdminValidator
      */
     public static function getStandardErrorResponse()
     {
-        $code = self::ERROR_CODE;
-        $message = 'UNAUTHORIZED';
-
-        return new JsonResponse(['code'=>$code, "message" => $message], $code);
+        return ResultUtil::errorResult(self::ERROR_MESSAGE, self::ERROR_CODE);
     }
 }

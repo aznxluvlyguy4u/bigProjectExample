@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
+use AppBundle\Traits\EntityClassInfo;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -20,6 +21,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 class LocationHealth
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *

@@ -3,8 +3,11 @@
 namespace AppBundle\Service\DataFix;
 
 
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
+use AppBundle\Entity\Stillborn;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\LitterUtil;
@@ -81,9 +84,9 @@ class DuplicateLitterFixer extends DuplicateFixerBase
             (!is_int($secondaryLitterId) && !ctype_digit($secondaryLitterId))) { return false; }
 
         $tableNamesByVariableType = [
-            [ self::TABLE_NAME => 'animal',         self::VARIABLE_TYPE => 'litter_id' ],
-            [ self::TABLE_NAME => 'stillborn',      self::VARIABLE_TYPE => 'litter_id' ],
-            [ self::TABLE_NAME => 'declare_birth',  self::VARIABLE_TYPE => 'litter_id' ],
+            [ self::TABLE_NAME => Animal::getTableName(),       self::VARIABLE_TYPE => 'litter_id' ],
+            [ self::TABLE_NAME => Stillborn::getTableName(),    self::VARIABLE_TYPE => 'litter_id' ],
+            [ self::TABLE_NAME => DeclareBirth::getTableName(), self::VARIABLE_TYPE => 'litter_id' ],
         ];
 
         $mergeResults = $this->mergeColumnValuesInTables($primaryLitterId, $secondaryLitterId, $tableNamesByVariableType);

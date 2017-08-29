@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -21,6 +22,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 class DeclareDepart extends DeclareBase
 {
+    use EntityClassInfo;
+
     /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="departures", cascade={"persist"})
@@ -32,6 +35,7 @@ class DeclareDepart extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $ulnCountryCode;
@@ -40,6 +44,7 @@ class DeclareDepart extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $ulnNumber;
@@ -64,6 +69,7 @@ class DeclareDepart extends DeclareBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $isExportAnimal;
@@ -82,6 +88,7 @@ class DeclareDepart extends DeclareBase
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $animalType;
@@ -103,6 +110,7 @@ class DeclareDepart extends DeclareBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $departDate;
@@ -111,6 +119,7 @@ class DeclareDepart extends DeclareBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $reasonOfDepart;
@@ -121,6 +130,7 @@ class DeclareDepart extends DeclareBase
      * @Assert\Length(max = 10)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $ubnNewOwner;
@@ -135,7 +145,9 @@ class DeclareDepart extends DeclareBase
     /**
      * @ORM\OneToMany(targetEntity="DeclareDepartResponse", mappedBy="declareDepartRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_depart_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $responses;
 

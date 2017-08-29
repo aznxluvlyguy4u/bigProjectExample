@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -14,6 +15,8 @@ use \DateTime;
  */
 class RetrieveTags
 {
+    use EntityClassInfo;
+
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id

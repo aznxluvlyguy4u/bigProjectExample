@@ -420,25 +420,8 @@ class Validator
      */
     public static function createJsonResponse($message, $code, $errors = array())
     {
-        //Success message
-        if($errors == null || sizeof($errors) == 0){
-            $result = array(
-                Constant::MESSAGE_NAMESPACE => $message,
-                Constant::CODE_NAMESPACE => $code);
-
-        //Error message
-        } else {
-            $result = array();
-            foreach ($errors as $errorMessage) {
-                $errorArray = [
-                    Constant::CODE_NAMESPACE => $code,
-                    Constant::MESSAGE_NAMESPACE => $errorMessage
-                ];
-                $result[] = $errorArray;
-            }
-        }
-
-        return new JsonResponse([JsonInputConstant::RESULT => $result], $code);
+        //TODO replace use of this function with ResultUtil::errorResult()
+        return ResultUtil::errorResult($message, $code, $errors);
     }
 
 
@@ -624,4 +607,40 @@ class Validator
     {
         return strval(floatval($value)) === $value;
     }
+
+
+    /**
+     * @param string $emailAddress
+     * @return boolean
+     */
+    public static function isEmailAddressFormat($emailAddress)
+    {
+        return filter_var($emailAddress, FILTER_VALIDATE_EMAIL);
+    }
+
+
+    /**
+     * @param string $emailAddress
+     * @param bool $throwException
+     * @param int $errorCode
+     * @return JsonResponse|bool
+     * @throws \Exception
+     */
+    public static function validateEmailAddress($emailAddress, $throwException = false, $errorCode = 428)
+    {
+        $isValid = self::isEmailAddressFormat($emailAddress);
+
+        if ($isValid) {
+            return true;
+        }
+
+        $errorMessage = 'Invalid email address: ' . $emailAddress;
+
+        if ($throwException) {
+            throw new \Exception($errorMessage, $errorCode);
+        }
+
+        return ResultUtil::errorResult($errorMessage, $errorCode);
+    }
+
 }

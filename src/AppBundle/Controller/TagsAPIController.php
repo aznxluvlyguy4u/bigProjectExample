@@ -47,27 +47,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    */
   public function getTagById(Request $request, $Id)
   {
-    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
-
-    //validate if Id is of format: AZ123456789
-    $isValidUlnFormat = Validator::verifyUlnFormat($Id);
-    
-    if(!$isValidUlnFormat){
-      return new JsonResponse(
-          array("errorCode" => 428,
-              "errorMessage" => "Given tagId format is invalid, supply tagId in the following format: AZ123456789"), 428);
-    }
-
-    $client = $this->getAccountOwner($request);
-    $tag = $tagRepository->findOneByString($client, $Id);
-
-    if($tag == null) {
-      return new JsonResponse(
-          array("errorCode" => 400,
-              "errorMessage" => "No tag found"), 400);
-    } else {
-      return new JsonResponse($tag, 200);
-    }
+      return $this->get('app.tags')->getTagById($request, $Id);
   }
 
   /**
@@ -108,20 +88,6 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    */
   public function getTags(Request $request)
   {
-    $client = $this->getAccountOwner($request);
-    $location = $this->getSelectedLocation($request);
-    /** @var TagRepository $tagRepository */
-    $tagRepository = $this->getDoctrine()->getRepository(Tag::class);
-
-    //No explicit filter given, thus find all
-    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
-      //Only retrieve tags that are either assigned OR unassigned, ignore transferred tags
-      $tags = $tagRepository->findTags($client, $location);
-    } else { //A state parameter was given, use custom filter to find subset
-      $tagStatus = $request->query->get(Constant::STATE_NAMESPACE);
-      $tags = $tagRepository->findTags($client, $location, $tagStatus);
-    }
-
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $tags], 200);
+      return $this->get('app.tags')->getTags($request);
   }
 }

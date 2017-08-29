@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -9,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\LocationAddressRepository")
  * @package AppBundle\Entity
  */
-class LocationAddress extends Address {
-
+class LocationAddress extends Address
+{
+    use EntityClassInfo;
 }

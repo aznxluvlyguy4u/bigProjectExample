@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -29,10 +30,25 @@ use \DateTime;
  *      "RevokeDeclarationResponse" = "RevokeDeclarationResponse"
  *   }
  * )
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *      "DeclareArrivalResponse" : "AppBundle\Entity\DeclareArrivalResponse",
+ *      "DeclareDepartResponse" : "AppBundle\Entity\DeclareDepartResponse",
+ *      "DeclareBirthResponse" : "AppBundle\Entity\DeclareBirthResponse",
+ *      "DeclareLossResponse" : "AppBundle\Entity\DeclareLossResponse",
+ *      "DeclareImportResponse" : "AppBundle\Entity\DeclareImportResponse",
+ *      "DeclareExportResponse" : "AppBundle\Entity\DeclareExportResponse",
+ *      "DeclareAnimalFlagResponse" : "AppBundle\Entity\DeclareAnimalFlagResponse",
+ *      "DeclareTagsTransferResponse" : "AppBundle\Entity\DeclareTagsTransferResponse",
+ *      "DeclareTagReplaceResponse" : "AppBundle\Entity\DeclareTagReplaceResponse",
+ *      "RevokeDeclarationResponse" : "AppBundle\Entity\RevokeDeclarationResponse"},
+ *     groups = {"DECLARE"})
+ *
  * @package AppBundle\Entity\DeclareBaseResponse
  */
 abstract class DeclareBaseResponse
 {
+    use EntityClassInfo;
+
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id
@@ -60,6 +76,7 @@ abstract class DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $messageNumber;
 
@@ -68,6 +85,7 @@ abstract class DeclareBaseResponse
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $logDate;
 
@@ -75,7 +93,7 @@ abstract class DeclareBaseResponse
      * @var string;
      *
      * @ORM\Column(type="string", nullable=true)
-     *
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $errorCode;
 
@@ -83,6 +101,7 @@ abstract class DeclareBaseResponse
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $errorMessage;
 
@@ -91,6 +110,7 @@ abstract class DeclareBaseResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $errorKindIndicator;
 
@@ -99,6 +119,7 @@ abstract class DeclareBaseResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $successIndicator;
 

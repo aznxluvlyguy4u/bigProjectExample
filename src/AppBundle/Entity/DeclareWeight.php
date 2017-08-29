@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -15,6 +16,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class DeclareWeight extends DeclareNsfoBase
 {
+    use EntityClassInfo;
+
     /**
      * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy = "declareWeights", cascade={"persist"})
