@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -17,6 +18,8 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class DeclareAnimalFlag extends DeclareBase
 {
+    use EntityClassInfo;
+
     /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="flags", cascade={"persist"})
@@ -61,6 +64,7 @@ class DeclareAnimalFlag extends DeclareBase
     /**
      * @ORM\OneToMany(targetEntity="DeclareAnimalFlagResponse", mappedBy="declareAnimalFlagRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_animal_flag_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
      */
     private $responses;

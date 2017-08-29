@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -17,6 +18,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 class RevokeDeclaration extends DeclareBase
 {
+    use EntityClassInfo;
+
     /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="revokes", cascade={"persist"})
@@ -29,7 +32,9 @@ class RevokeDeclaration extends DeclareBase
     /**
      * @ORM\OneToMany(targetEntity="RevokeDeclarationResponse", mappedBy="revokeDeclarationRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="revoke_declaration_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $responses;
@@ -102,6 +107,7 @@ class RevokeDeclaration extends DeclareBase
      * @Assert\Length(max = 15)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $messageNumber;
@@ -110,6 +116,7 @@ class RevokeDeclaration extends DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $requestIdToRevoke;
@@ -118,6 +125,7 @@ class RevokeDeclaration extends DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      * @Expose
      */
     private $requestTypeToRevoke;

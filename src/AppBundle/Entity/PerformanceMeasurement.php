@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -12,7 +13,9 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\PerformanceMeasurementRepository")
  * @package AppBundle\Entity
  */
-class PerformanceMeasurement extends Measurement {
+class PerformanceMeasurement extends Measurement
+{
+    use EntityClassInfo;
   
     /**
      * @ORM\ManyToMany(targetEntity="BodyFat")

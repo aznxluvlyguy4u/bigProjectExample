@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -12,7 +13,9 @@ use \AppBundle\Entity\DeclareLoss;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareLossResponseRepository")
  * @package AppBundle\Entity
  */
-class DeclareLossResponse extends DeclareBaseResponse {
+class DeclareLossResponse extends DeclareBaseResponse
+{
+    use EntityClassInfo;
 
     /**
      * @var DeclareLoss

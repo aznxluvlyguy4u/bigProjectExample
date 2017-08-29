@@ -8,6 +8,8 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\DutchGender;
+use AppBundle\Enumerator\RequestTypeIRDutchInformal;
+use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -523,6 +525,17 @@ class SqlUtil
     public static function genderTranslationValues()
     {
         return SqlUtil::createSqlValuesString(DutchGender::getConstants(), true, true);
+    }
+
+
+    /**
+     * @param bool $isInformal
+     * @return string
+     */
+    public static function declareIRTranslationValues($isInformal = true)
+    {
+        $values = $isInformal ? RequestTypeIRDutchInformal::getConstants() : RequestTypeIRDutchOfficial::getConstants();
+        return SqlUtil::createSqlValuesString($values, false, false);
     }
 
 }

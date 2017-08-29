@@ -2,6 +2,7 @@
 
 
 namespace AppBundle\Service;
+
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Cache\ExteriorCacher;
 use AppBundle\Cache\GeneDiversityUpdater;
@@ -19,9 +20,11 @@ use AppBundle\Service\DataFix\GenderChangeCommandService;
 use AppBundle\Service\DataFix\UbnFixer;
 use AppBundle\Service\Migration\BirthProgressInitializer;
 use AppBundle\Service\Migration\InspectorMigrator;
+use AppBundle\Service\Migration\TreatmentTypeInitializer;
 use AppBundle\Service\Migration\StoredProcedureInitializer;
 use AppBundle\Service\Migration\VsmMigratorService;
 use AppBundle\Service\Worker\DepartInternalWorkerCliOptions;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
@@ -85,6 +88,8 @@ class CliOptionsService
     private $storedProcedureInitializer;
     /** @var UbnFixer */
     private $ubnFixer;
+    /** @var TreatmentTypeInitializer */
+    private $treatmentTypeInitializer;
     /** @var VsmMigratorService */
     private $vsmMigratorService;
 
@@ -107,6 +112,7 @@ class CliOptionsService
      * @param MixBlupCliOptionsService $mixBlupCliOptionsService
      * @param StoredProcedureInitializer $storedProcedureInitializer
      * @param UbnFixer $ubnFixer
+     * @param TreatmentTypeInitializer $treatmentTypeInitializer
      * @param VsmMigratorService $vsmMigratorService
      */
     public function __construct(ObjectManager $em, Logger $logger, $rootDir,
@@ -119,6 +125,7 @@ class CliOptionsService
                                 MixBlupCliOptionsService $mixBlupCliOptionsService,
                                 StoredProcedureInitializer $storedProcedureInitializer,
                                 UbnFixer $ubnFixer,
+                                TreatmentTypeInitializer $treatmentTypeInitializer,
                                 VsmMigratorService $vsmMigratorService
     )
     {
@@ -135,6 +142,7 @@ class CliOptionsService
         $this->mixBlupCliOptionsService = $mixBlupCliOptionsService;
         $this->storedProcedureInitializer = $storedProcedureInitializer;
         $this->ubnFixer = $ubnFixer;
+        $this->treatmentTypeInitializer = $treatmentTypeInitializer;
         $this->vsmMigratorService = $vsmMigratorService;
 
         $this->conn = $this->em->getConnection();
@@ -689,14 +697,20 @@ class CliOptionsService
             'Choose option: ', "\n",
             '=====================================', "\n",
             '1: BirthProgress', "\n",
-            '4: StoredProcedures', "\n\n",
+            '2: is_rvo_message boolean in action_log', "\n",
+            '3: TreatmentType', "\n",
+            '4: StoredProcedures', "\n",
+            '5: StoredProcedures: overwrite all', "\n\n",
+
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1: $this->birthProgressInitializer->run($this->cmdUtil); break;
-
+            case 2: ActionLogWriter::initializeIsRvoMessageValues($this->conn, $this->cmdUtil); break;
+            case 3: $this->treatmentTypeInitializer->run($this->cmdUtil); break;
             case 4: $this->storedProcedureInitializer->initialize(); break;
+            case 5: $this->storedProcedureInitializer->update(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }

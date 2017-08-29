@@ -41,13 +41,9 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareExportRepository")
    * @Method("GET")
    */
-  public function getExportById(Request $request, $Id) {
-    $location = $this->getSelectedLocation($request);
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
-
-    $export = $repository->getExportByRequestId($location, $Id);
-
-    return new JsonResponse($export, 200);
+  public function getExportById(Request $request, $Id)
+  {
+      return $this->get('app.export')->getExportById($request, $Id);
   }
 
   /**
@@ -86,34 +82,9 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    * @Route("")
    * @Method("GET")
    */
-  public function getExports(Request $request) {
-    $location = $this->getSelectedLocation($request);
-    $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
-
-    if(!$stateExists) {
-      $declareExports = $repository->getExports($location);
-
-    } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
-
-      $declareExports = new ArrayCollection();
-      foreach($repository->getExports($location, RequestStateType::OPEN) as $export) {
-        $declareExports->add($export);
-      }
-
-      foreach($repository->getExports($location, RequestStateType::REVOKING) as $export) {
-        $declareExports->add($export);
-      }
-      foreach($repository->getExports($location, RequestStateType::FINISHED) as $export) {
-        $declareExports->add($export);
-      }
-
-    } else { //A state parameter was given, use custom filter to find subset
-      $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareExports = $repository->getExports($location, $state);
-    }
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareExports), 200);
+  public function getExports(Request $request)
+  {
+      return $this->get('app.export')->getExports($request);
   }
 
 

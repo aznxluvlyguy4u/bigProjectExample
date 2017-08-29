@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Traits\EntityClassInfo;
 use Symfony\Component\Validator\Constraints\DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -13,7 +14,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\TagTransferItemRequestRepository")
  * @package AppBundle\Entity
  */
-class TagTransferItemRequest {
+class TagTransferItemRequest
+{
+    use EntityClassInfo;
 
     /**
      * @var integer
@@ -44,6 +47,7 @@ class TagTransferItemRequest {
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $ulnCountryCode;
 
@@ -51,6 +55,7 @@ class TagTransferItemRequest {
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $ulnNumber;
 
@@ -58,6 +63,7 @@ class TagTransferItemRequest {
      * @var integer
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $animalType;
 
@@ -65,6 +71,7 @@ class TagTransferItemRequest {
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $ubnNewOwner;
 
@@ -74,6 +81,7 @@ class TagTransferItemRequest {
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $relationNumberAcceptant;
 
@@ -89,6 +97,7 @@ class TagTransferItemRequest {
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $requestState;
 
@@ -102,6 +111,7 @@ class TagTransferItemRequest {
      * @ORM\OneToMany(targetEntity="TagTransferItemResponse", mappedBy="tagTransferItemRequest", cascade={"persist"})
      * @ORM\JoinColumn(name="tag_transfer_item_request_id", referencedColumnName="id")
      * @JMS\Type("array")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $responses;
 

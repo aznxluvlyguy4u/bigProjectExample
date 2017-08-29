@@ -97,7 +97,7 @@ class CompanyValidator extends BaseValidator
 
     /**
      * @param string $emailAddress
-     * @return JsonResponse
+     * @return JsonResponse|\AppBundle\Component\HttpFoundation\JsonResponse
      */
     public static function emailAddressIsInUseErrorMessage($emailAddress)
     {

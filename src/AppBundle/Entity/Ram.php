@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -20,6 +21,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 class Ram extends Animal
 {
+    use EntityClassInfo;
+
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentFather")
      * @JMS\Type("AppBundle\Entity\Ram")

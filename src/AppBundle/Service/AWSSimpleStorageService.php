@@ -12,22 +12,16 @@ class AWSSimpleStorageService
 {
     /** @var string */
     protected $region;
-
     /** @var string */
     private $version;
-
     /** @var string */
     private $accessKeyId;
-
     /** @var string */
     private $secretKey;
-
     /** @var S3Client; */
     private $s3Service;
-
     /** @var string */
     private $bucket;
-
     /** @var string */
     private $pathApppendage;
 
@@ -37,10 +31,10 @@ class AWSSimpleStorageService
     private $awsCredentials;
     
 
-    public function __construct($credentials = array(), $region, $version, $bucket, $currentEnvironment = null)
+    public function __construct($acccessKeyId, $secretKey, $region, $version, $bucket, $currentEnvironment = null)
     {
-        $this->accessKeyId = $credentials[0];
-        $this->secretKey = $credentials[1];
+        $this->accessKeyId = $acccessKeyId;
+        $this->secretKey = $secretKey;
         
         $this->awsCredentials =  new Credentials($this->accessKeyId, $this->secretKey);
         $this->region = $region;

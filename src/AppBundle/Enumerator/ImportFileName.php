@@ -9,4 +9,5 @@ namespace AppBundle\Enumerator;
 class ImportFileName
 {
     const BIRTH_PROGRESS = 'birth_progress_values.csv';
+    const TREATMENT_TYPES = 'treatment_types.csv';
 }

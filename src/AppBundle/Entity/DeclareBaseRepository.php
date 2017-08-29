@@ -3,13 +3,18 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Enumerator\RequestType;
+use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\TimeUtil;
 
 /**
  * Class DeclareBaseRepository
  * @package AppBundle\Entity
  */
-class DeclareBaseRepository extends BaseRepository
+class DeclareBaseRepository extends BaseRepository implements DeclareBaseRepositoryInterface
 {
     /**
      * @param Animal $animal
@@ -101,4 +106,36 @@ class DeclareBaseRepository extends BaseRepository
 
         return $results;
     }
+
+
+    /**
+     * @param bool $showHiddenForAdmin
+     * @return array
+     */
+    public function getErrorsOverview($showHiddenForAdmin = false)
+    {
+        return StoredProcedure::getErrorMessages($this->getConnection(), $showHiddenForAdmin);
+    }
+
+
+    /**
+     * @param $messageId
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse|DeclareBase|DeclareArrival|DeclareImport|DeclareDepart|DeclareExport|DeclareLoss|DeclareTagReplace|DeclareTagsTransfer|RevokeDeclaration|DeclareBirth|Litter
+     */
+    public function getErrorDetails($messageId)
+    {
+        /** @var DeclareBase $declare */
+        $declare = $this->findOneByMessageId($messageId);
+
+        if ($declare === null) {
+            return ResultUtil::errorResult('No declare found for given messageId: '.$messageId, 428);
+        }
+
+        if ($declare->getRequestState() !== RequestStateType::FAILED) {
+            return ResultUtil::errorResult('Declare does NOT have FAILED requestState, but: '.$declare->getRequestState(), 428);
+        }
+
+        return $declare;
+    }
+
 }

@@ -52,7 +52,7 @@ class ExteriorMigrator extends Migrator2017JunServiceBase implements IMigratorSe
     {
         $this->writeLn('Creating inspector search Array ...');
 
-        DoctrineUtil::updateTableSequence($this->conn, [Person::TABLE_NAME]);
+        DoctrineUtil::updateTableSequence($this->conn, [Person::getTableName()]);
 
         $this->inspectorIdsInDbByFullName = $this->getInspectorSearchArrayWithNameCorrections();
 
@@ -93,7 +93,7 @@ class ExteriorMigrator extends Migrator2017JunServiceBase implements IMigratorSe
     {
         $this->writeLn('=== Migrating NEW exterior measurements ===');
 
-        DoctrineUtil::updateTableSequence($this->conn, [Measurement::TABLE_NAME]);
+        DoctrineUtil::updateTableSequence($this->conn, [Measurement::getTableName()]);
 
         $this->sqlBatchProcessor
             ->createBatchSet(QueryType::BASE_INSERT)
@@ -110,7 +110,7 @@ class ExteriorMigrator extends Migrator2017JunServiceBase implements IMigratorSe
                                               exterior_type, leg_work, fur, general_appearance, height, breast_depth, 
                                               torso_length, kind, progress)  VALUES ");
 
-        $id = SqlUtil::getMaxId($this->conn, Measurement::TABLE_NAME);
+        $id = SqlUtil::getMaxId($this->conn, Measurement::getTableName());
         $firstMaxId = $id + 1;
 
         $this->writeLn('Create animal_id by vsmId search array');

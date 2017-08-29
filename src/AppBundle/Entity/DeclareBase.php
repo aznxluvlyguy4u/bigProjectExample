@@ -2,12 +2,11 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\Animal;
 use \DateTime;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class DeclareBase
@@ -32,23 +31,24 @@ use Doctrine\Common\Collections\ArrayCollection;
  *   }
  * )
  * @JMS\Discriminator(field = "type", disabled=false, map = {
- *                        "DeclarationDetail" : "AppBundle\Entity\DeclarationDetail",
- *                        "DeclareAnimalFlag" : "AppBundle\Entity\DeclareAnimalFlag",
- *                        "DeclareArrival" : "AppBundle\Entity\DeclareArrival",
- *                        "DeclareBirth" : "AppBundle\Entity\DeclareBirth",
- *                        "DeclareDepart" : "AppBundle\Entity\DeclareDepart",
- *                        "DeclareExport" : "AppBundle\Entity\DeclareExport",
- *                        "DeclareImport" : "AppBundle\Entity\DeclareImport",
- *                        "DeclareLoss" : "AppBundle\Entity\DeclareLoss",
- *                        "DeclareTagsTransfer" : "AppBundle\Entity\DeclareTagsTransfer",
- *                        "DeclareTagReplace" : "AppBundle\Entity\DeclareTagReplace",
- *                        "RevokeDeclaration" : "AppBundle\Entity\RevokeDeclaration"},
- *     groups = {"BASIC"})
- * 
+ *                      "DeclarationDetail" : "AppBundle\Entity\DeclarationDetail",
+ *                      "DeclareAnimalFlag" : "AppBundle\Entity\DeclareAnimalFlag",
+ *                         "DeclareArrival" : "AppBundle\Entity\DeclareArrival",
+ *                           "DeclareBirth" : "AppBundle\Entity\DeclareBirth",
+ *                          "DeclareDepart" : "AppBundle\Entity\DeclareDepart",
+ *                          "DeclareExport" : "AppBundle\Entity\DeclareExport",
+ *                          "DeclareImport" : "AppBundle\Entity\DeclareImport",
+ *                            "DeclareLoss" : "AppBundle\Entity\DeclareLoss",
+ *                    "DeclareTagsTransfer" : "AppBundle\Entity\DeclareTagsTransfer",
+ *                      "DeclareTagReplace" : "AppBundle\Entity\DeclareTagReplace",
+ *                      "RevokeDeclaration" : "AppBundle\Entity\RevokeDeclaration"},
+ *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER","BASIC","DECLARE","ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+ *
  * @package AppBundle\Entity\DeclareBase
  */
 abstract class DeclareBase
 {
+    use EntityClassInfo;
 
     /**
      * @ORM\Column(type="integer")
@@ -62,6 +62,7 @@ abstract class DeclareBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $logDate;
 
@@ -78,6 +79,7 @@ abstract class DeclareBase
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $messageId;
 
@@ -85,6 +87,7 @@ abstract class DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $requestState;
 
@@ -111,6 +114,7 @@ abstract class DeclareBase
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $relationNumberKeeper;
 
@@ -121,6 +125,7 @@ abstract class DeclareBase
      * @Assert\NotBlank
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $ubn;
 
@@ -128,6 +133,7 @@ abstract class DeclareBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $messageNumberToRecover;
 
@@ -137,6 +143,7 @@ abstract class DeclareBase
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     protected $actionBy;
 
@@ -145,14 +152,36 @@ abstract class DeclareBase
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
      */
     protected $hideFailedMessage;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     */
+    protected $hideForAdmin;
+
+
+    /**
+     * @var DeclareBase
+     * @ORM\ManyToOne(targetEntity="DeclareBase")
+     * @ORM\JoinColumn(name="newest_version_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\DeclareBase")
+     */
+    protected $newestVersion;
+
 
     /**
      * DeclareBase constructor.
      */
     public function __construct() {
         $this->setHideFailedMessage(false);
+        $this->hideForAdmin = false;
+        $this->hideFailedMessage = false;
     }
 
     /**
@@ -375,7 +404,7 @@ abstract class DeclareBase
     }
 
     /**
-     * @return Client|Employee
+     * @return Client|Employee|Person
      */
     public function getActionBy()
     {
@@ -404,6 +433,39 @@ abstract class DeclareBase
     public function setHideFailedMessage($hideFailedMessage)
     {
         $this->hideFailedMessage = $hideFailedMessage;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHideForAdmin()
+    {
+        return $this->hideForAdmin;
+    }
+
+    /**
+     * @param bool $hideForAdmin
+     */
+    public function setHideForAdmin($hideForAdmin)
+    {
+        $this->hideForAdmin = $hideForAdmin;
+    }
+
+    /**
+     * @return DeclareBase
+     */
+    public function getNewestVersion()
+    {
+        return $this->newestVersion;
+    }
+
+    /**
+     * @param DeclareBase $newestVersion
+     * @return DeclareBase
+     */
+    public function setNewestVersion($newestVersion)
+    {
+        $this->newestVersion = $newestVersion;
     }
 
 

@@ -2,16 +2,19 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class InvoiceRules
- * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRulesRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRuleRepository")
  * @package AppBundle\Entity
  */
-class InvoiceRule {
+class InvoiceRule
+{
+    use EntityClassInfo;
 
     /**
      * @ORM\Column(type="integer")

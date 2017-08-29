@@ -2,43 +2,13 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Cache\AnimalCacher;
-use AppBundle\Component\AnimalDetailsUpdater;
-use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\Employee;
-use AppBundle\Entity\Ewe;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\Message;
-use AppBundle\Entity\Neuter;
-use AppBundle\Entity\Ram;
-use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\AnimalObjectType;
-use AppBundle\Enumerator\BreedType;
-use AppBundle\Enumerator\GenderType;
-use AppBundle\Enumerator\JmsGroup;
-use AppBundle\Enumerator\MessageType;
-use AppBundle\Enumerator\WorkerTaskType;
-use AppBundle\FormInput\AnimalDetails;
-use AppBundle\Output\AnimalDetailsOutput;
-use AppBundle\Output\AnimalOutput;
-use AppBundle\Util\GenderChanger;
-use AppBundle\Util\Validator;
-use AppBundle\Util\RequestUtil;
-use AppBundle\Validation\AdminValidator;
-use AppBundle\Validation\AnimalDetailsValidator;
-use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Symfony\Component\Form\Extension\Core\DataMapper\RadioListMapper;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use AppBundle\Enumerator\RequestType;
 
 
 /**
@@ -83,30 +53,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("")
    * @Method("GET")
    */
-  public function getAllAnimalsByTypeOrState(Request $request) {
-
-    if($request->query->has(Constant::ANIMAL_TYPE_NAMESPACE)) {
-      $animalTypeMaybeNotAllCaps = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
-      $animalType = strtoupper($animalTypeMaybeNotAllCaps);
-    } else {
-      $animalType = null;
-    }
-
-    if($request->query->has(Constant::ALIVE_NAMESPACE)) {
-      $isAlive = $request->query->get(Constant::ALIVE_NAMESPACE);
-    } else {
-      $isAlive = null;
-    }
-
-    //TODO Phase 2 Admin must be able to search all animals for which he is authorized.
-
-    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-    $client = $this->getAccountOwner($request);
-
-    $animals = $animalRepository->findOfClientByAnimalTypeAndIsAlive($client, $animalType, $isAlive);
-    $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getManager());
-
-    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
+  public function getAllAnimalsByTypeOrState(Request $request)
+  {
+      return $this->get('app.animal')->getAllAnimalsByTypeOrState($request);
   }
 
   /**
@@ -131,14 +80,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("/{uln}")
    * @Method("GET")
    */
-  public function getAnimalById(Request $request, $uln) {
-    $repository = $this->getDoctrine()
-      ->getRepository(Constant::ANIMAL_REPOSITORY);
-    $animal = $repository->findByUlnOrPedigree($uln, true);
-
-    $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getDoctrine()->getManager());
-
-    return new JsonResponse($minimizedOutput, 200);
+  public function getAnimalById(Request $request, $uln)
+  {
+      return $this->get('app.animal')->getAnimalById($request, $uln);
   }
 
   /**
@@ -162,35 +106,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("-livestock")
    * @Method("GET")
    */
-  public function getLiveStock(Request $request) {
-    /** @var Location $location */
-    $location = $this->getSelectedLocation($request);
-    if($location == null) { return Validator::createJsonResponse('Location cannot be null', 428); }
-
-    /** @var  $animalRepository */
-    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-    $livestock = $animalRepository->getLiveStock($location);
-    $livestockAnimals = [];
-
-    /** @var Animal $animal */
-    foreach ($livestock as $animal) {
-      $livestockAnimals[] = [
-        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-        JsonInputConstant::GENDER =>  $animal->getGender(),
-        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-        JsonInputConstant::UBN => $location->getUbn(),
-        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-      ];
-    }
-
-    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $livestockAnimals), 200);
+  public function getLiveStock(Request $request)
+  {
+      return $this->get('app.animal')->getLiveStock($request);
   }
 
 
@@ -216,34 +134,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("-historic-livestock")
    * @Method("GET")
    */
-  public function getHistoricLiveStock(Request $request) {
-    $location = $this->getSelectedLocation($request);
-    if($location == null) { return Validator::createJsonResponse('Location cannot be null', 428); }
-
-    /** @var AnimalRepository $repository */
-    $repository = $this->getDoctrine()->getRepository(Animal::class);
-    $historicLivestock = $repository->getHistoricLiveStock($location);
-    $historicLivestockAnimals = [];
-
-    /** @var Animal $animal */
-    foreach ($historicLivestock as $animal) {
-      $historicLivestockAnimals[] = [
-        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-        JsonInputConstant::GENDER =>  $animal->getGender(),
-        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-        JsonInputConstant::UBN => $location->getUbn(),
-        JsonInputConstant::IS_HISTORIC_ANIMAL => true,
-        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-      ];
-    }
-
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $historicLivestockAnimals], 200);
+  public function getHistoricLiveStock(Request $request)
+  {
+      return $this->get('app.animal')->getHistoricLiveStock($request);
   }
   
   /**
@@ -267,12 +160,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("-rams")
    * @Method("GET")
    */
-  public function getAllRams(Request $request) {
-    /** @var AnimalRepository $animalRepository */
-    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-    $ramsArray = $animalRepository->getAllRams();
-
-    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $ramsArray), 200);
+  public function getAllRams(Request $request)
+  {
+      return $this->get('app.animal')->getAllRams($request);
   }
   
   /**
@@ -296,28 +186,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("-sync")
    * @Method("POST")
    */
-  public function createRetrieveAnimals(Request $request) {
-    {
-      //Get content to array
-      $content = $this->getContentAsArray($request);
-      $client = $this->getAccountOwner($request);
-      $loggedInUser = $this->getUser();
-      $location = $this->getSelectedLocation($request);
-
-      if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }
-      if($location == null) { return Validator::createJsonResponse('Location cannot be null', 428); }
-
-      //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
-
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($messageObject);
-
-      //Send it to the queue and persist/update any changed state to the database
-      $messageArray = $this->sendMessageObjectToQueue($messageObject);
-
-      return new JsonResponse($messageArray, 200);
-    }
+  public function createRetrieveAnimals(Request $request)
+  {
+      return $this->get('app.animal')->createRetrieveAnimals($request);
   }
 
   /**
@@ -341,19 +212,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("-sync-all")
    * @Method("POST")
    */
-  public function createRetrieveAnimalsForAllLocations(Request $request) {
-    {
-      $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::SUPER_ADMIN);
-      if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
-
-      $loggedInUser = $this->getUser();
-      
-      //Any logged in user can sync all animals
-      $message = $this->syncAnimalsForAllLocations($loggedInUser)[Constant::MESSAGE_NAMESPACE];
-
-      return new JsonResponse(array(Constant::RESULT_NAMESPACE => $message), 200);
-    }
+  public function createRetrieveAnimalsForAllLocations(Request $request)
+  {
+      return $this->get('app.animal')->createRetrieveAnimalsForAllLocations($request);
   }
+
 
   /**
    * Create a RetrieveAnimalDetails request
@@ -376,23 +239,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("-details")
    * @Method("POST")
    */
-  function createAnimalDetails(Request $request) {
-    //Get content to array
-    $content = $this->getContentAsArray($request);
-    $client = $this->getAccountOwner($request);
-    $loggedInUser = $this->getUser();
-    $location = $this->getSelectedLocation($request);
-
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $client, $loggedInUser, $location);
-
-    //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject);
-
-    //Send it to the queue and persist/update any changed state to the database
-    $messageArray = $this->sendMessageObjectToQueue($messageObject);
-
-    return new JsonResponse($messageArray, 200);
+  function createAnimalDetails(Request $request)
+  {
+      return $this->get('app.animal')->createAnimalDetails($request);
   }
 
   /**
@@ -417,53 +266,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("-details/{ulnString}")
    * @Method("PUT")
    */
-  function updateAnimalDetails(Request $request, $ulnString) {
-    //Get content to array
-    $content = $this->getContentAsArray($request);
-    /** @var AnimalRepository $repository */
-    $repository = $this->getDoctrine()->getRepository(Animal::class);
-    $animal = $repository->findAnimalByUlnString($ulnString);
-
-    $isAdminEnv = $content->get(JsonInputConstant::IS_ADMIN_ENV);
-
-    if($animal == null) {
-      if($this->getUser() instanceof Employee) {
-        $errorMessage = "No animal was found with uln: ".$ulnString;
-      } else {
-        //For regular users, hide the fact that the animal does not exist in the database at all.
-        $errorMessage = "For this account, no animal was found with uln: ".$ulnString;
-      }
-      return Validator::createJsonResponse($errorMessage, 404);
-    }
-
-    if($isAdminEnv) {
-      $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::SUPER_ADMIN);
-      if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
-      
-      //Animal Edit from ADMIN environment
-      AnimalDetailsUpdater::updateAsAdmin($this->getSerializer(), $animal, $content, $this->getUser());
-
-      if($animal->getLocation()) {
-        //Clear cache for this location, to reflect changes on the livestock
-        $this->clearLivestockCacheForLocation($animal->getLocation());
-      }
-
-      $output = $this->getDecodedJsonForAnimalDetailsOutputFromAdminEnvironment($animal);
-
-    } else {
-      //Animal Edit from USER environment
-      AnimalDetailsUpdater::update($this->getManager(), $animal, $content);
-
-      if($animal->getLocation()) {
-        //Clear cache for this location, to reflect changes on the livestock
-        $this->clearLivestockCacheForLocation($animal->getLocation());
-      }
-
-      $output = AnimalDetailsOutput::create($this->getManager(), $animal, $animal->getLocation());
-
-    }
-
-    return new JsonResponse($output, 200);
+  function updateAnimalDetails(Request $request, $ulnString)
+  {
+      return $this->get('app.animal.details.updater')->updateAnimalDetails($request, $ulnString);
   }
 
   /**
@@ -488,71 +293,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("-details/{ulnString}")
    * @Method("GET")
    */
-  public function getAnimalDetailsByUln(Request $request, $ulnString) {
-    $isAdminEnvironment = RequestUtil::getBooleanQuery($request, JsonInputConstant::IS_ADMIN_ENV);
-
-    if($isAdminEnvironment) {
-      /** @var AnimalRepository $repository */
-      $repository = $this->getDoctrine()->getRepository(Animal::class);
-      $animal = $repository->findAnimalByUlnString($ulnString);
-
-      if($animal == null) {
-        return Validator::createJsonResponse("No animal was found with uln: ".$ulnString, 404);
-      }
-
-      $output = $this->getDecodedJsonForAnimalDetailsOutputFromAdminEnvironment($animal);
-
-    } else {
-
-      $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-      $isAdmin = $validationResult->isValid();
-
-      $location = null;
-      if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
-
-      $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $isAdmin, $location, $ulnString);
-      if(!$animalDetailsValidator->getIsInputValid()) {
-        return $animalDetailsValidator->createJsonResponse();
-      }
-
-      $animal = $animalDetailsValidator->getAnimal();
-      if($location == null) { $location = $animal->getLocation(); }
-
-      $output = AnimalDetailsOutput::create($this->getManager(), $animal, $location);
-    }
-
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
-  }
-
-
-  /**
-   * Get BreedTypes
-   *
-   * @ApiDoc(
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Get BreedTypes",
-   *   output = "AppBundle\Entity\Animal"
-   * )
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("-breed-types")
-   * @Method("GET")
-   */
-  public function getBreedTypes(Request $request) {
-    if(RequestUtil::getBooleanQuery($request, JsonInputConstant::IS_DUTCH)) {
-      $output = BreedType::getAllInDutch();
-    } else {
-      $output = BreedType::getConstants();
-    }
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+  public function getAnimalDetailsByUln(Request $request, $ulnString)
+  {
+      return $this->get('app.animal')->getAnimalDetailsByUln($request, $ulnString);
   }
 
 
@@ -579,75 +322,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("-gender")
    * @Method("POST")
    */
-  public function changeGenderOfUln(Request $request) {
-    $em = $this->getDoctrine()->getManager();
-    $content = $this->getContentAsArray($request);
-    $animal = null;
-    
-    //Check if mandatory field values are given
-    if(!$content['uln_number'] || !$content['uln_country_code'] || !$content['gender']) {
-      $statusCode = 400;
-      return new JsonResponse(
-        array(
-          Constant::RESULT_NAMESPACE => array(
-              'code'=> $statusCode,
-              'message'=> "ULN number, country code is missing or gender is not specified."
-          )
-        ), $statusCode
-      );
-    }
-
-    //Try retrieving animal
-    $animal = $this->getDoctrine()
-      ->getRepository(Constant::ANIMAL_REPOSITORY)
-      ->findByUlnCountryCodeAndNumber($content['uln_country_code'] , $content['uln_number']);
-   
-    if ($animal == null) {
-      $statusCode = 204;
-      return new JsonResponse(
-        array(
-          Constant::RESULT_NAMESPACE => array (
-            'code' => $statusCode,
-            "message" => "No animal found with ULN: " . $content['uln_country_code'] . $content['uln_number']
-          )
-      ), $statusCode);
-    }
-    
-    //Try to change animal gender
-    $gender = $content->get('gender');
-    $genderChanger = new GenderChanger($em);
-    $targetGender = null;
-    $result = null;
-
-    switch ($gender) {
-      case AnimalObjectType::EWE:
-        $targetGender = "FEMALE";
-        $result = $genderChanger->changeToGender($animal, Ewe::class, $this->getUser());
-        break;
-      case AnimalObjectType::RAM:
-        $targetGender = "MALE";
-        $result = $genderChanger->changeToGender($animal, Ram::class, $this->getUser());
-        break;
-      case AnimalObjectType::NEUTER:
-        $targetGender = "NEUTER";
-        $result = $genderChanger->changeToGender($animal, Neuter::class, $this->getUser());
-        break;
-    }
-
-    //An exception on the request has occured, return json response error message
-    if($result instanceof JsonResponse) {
-      return $result;
-    }
-
-    //FIXME Temporarily workaround, for returning the reflected gender change, it is persisted, though the updated fields is not returned.
-    $result->setGender($targetGender);
-
-    //Clear cache for this location, to reflect changes on the livestock
-    $this->clearLivestockCacheForLocation($this->getSelectedLocation($request), $animal);
-    
-    $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getDoctrine()->getManager());
-
-    return new JsonResponse($minimizedOutput, 200);
+  public function changeGenderOfUln(Request $request)
+  {
+      return $this->get('app.animal')->changeGenderOfUln($request);
   }
 
 }

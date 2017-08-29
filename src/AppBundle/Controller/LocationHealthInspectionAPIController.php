@@ -11,8 +11,11 @@ use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\LocationHealthInspectionDirection;
 use AppBundle\Entity\LocationHealthInspectionResult;
 use AppBundle\Entity\LocationHealthInspectionResultRepository;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\LocationHealthEditor;
 use AppBundle\Output\HealthInspectionOutput;
+use AppBundle\Util\AdminActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use Com\Tecnick\Barcode\Barcode;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -46,10 +49,8 @@ class LocationHealthInspectionAPIController extends APIController
     {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // Get all NEW SCRAPIE HealthInspections
@@ -153,14 +154,12 @@ class LocationHealthInspectionAPIController extends APIController
     public function createInspection(Request $request) {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // Validate content
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         // TODO VALIDATE CONTENT
 
         $repository = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY);
@@ -232,6 +231,8 @@ class LocationHealthInspectionAPIController extends APIController
             $this->getDoctrine()->getManager()->persist($location);
             $this->getDoctrine()->getManager()->flush();
 
+            AdminActionLogWriter::createInspection($this->getDoctrine()->getManager(), $admin, $inspection);
+
             $output = array(
                 "inspection_id" => $inspection->getInspectionId(),
                 "inspection" => $inspection->getInspectionSubject(),
@@ -262,14 +263,12 @@ class LocationHealthInspectionAPIController extends APIController
     public function changeInspection(Request $request) {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         // Validate content
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
         // TODO VALIDATE CONTENT
 
         $repository = $this->getDoctrine()->getRepository(LocationHealthInspection::class);
@@ -320,6 +319,8 @@ class LocationHealthInspectionAPIController extends APIController
             // Save to Database
             $this->getDoctrine()->getManager()->flush();
 
+            AdminActionLogWriter::changeInspectionStatus($this->getDoctrine()->getManager(), $admin, $inspection);
+
             $output = array(
                 "inspection_id" => $inspection->getInspectionId(),
                 "inspection" => $inspection->getInspectionSubject(),
@@ -350,19 +351,19 @@ class LocationHealthInspectionAPIController extends APIController
      * @Route("/barcodes")
      * @Method("POST")
      */
-    public function createBarcodes(Request $request) {
+    public function createBarcodes(Request $request)
+    {
         // Validation if user is an admin
-        $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
         $dateTimeNow = new \DateTime();
 
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        $admin = $this->getEmployee();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $twigFile = 'animal_health/barcodes.html.twig';
 
-        $content = $this->getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
 
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT
@@ -426,7 +427,7 @@ class LocationHealthInspectionAPIController extends APIController
                 'viewport-size' => '640x480'
             ));
 
-        $s3Service = $this->getStorageService();
+        $s3Service = $this->get('app.aws.storageservice');
         $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';
 
         $filename = 'barcode-'.$datePrint.'.pdf';
@@ -445,15 +446,13 @@ class LocationHealthInspectionAPIController extends APIController
     {
         // Validation if user is an admin
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $twigFile = 'animal_health/base_letter.html.twig';
 
-        $contents = $this->getContentAsArray($request);
+        $contents = RequestUtil::getContentAsArray($request);
 
         $letters = [];
         foreach ($contents as $content) {
@@ -525,7 +524,7 @@ class LocationHealthInspectionAPIController extends APIController
                 'margin-right'  => 20
             ));
 
-        $s3Service = $this->getStorageService();
+        $s3Service = $this->get('app.aws.storageservice');
 
         $dateTimeNow = new \DateTime();
         $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';
@@ -544,7 +543,7 @@ class LocationHealthInspectionAPIController extends APIController
      */
     public function createInspectionResults(Request $request)
     {
-        $contentResults = $this->getContentAsArray($request);
+        $contentResults = RequestUtil::getContentAsArray($request);
         $ubn = $contentResults->get('ubn');
         $illness = $contentResults->get('illness');
 
@@ -584,13 +583,11 @@ class LocationHealthInspectionAPIController extends APIController
      * @Route("/{inspectionId}/results")
      * @Method("GET")
      */
-    public function getInspectionResults(Request $request, $inspectionId) {
-        // Validation if user is an admin
+    public function getInspectionResults(Request $request, $inspectionId)
+    {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $em = $this->getDoctrine()->getManager();
@@ -629,8 +626,9 @@ class LocationHealthInspectionAPIController extends APIController
      * @Route("/failed-results")
      * @Method("POST")
      */
-    public function createFailedInspectionResults(Request $request) {
-        $contentResults = $this->getContentAsArray($request);
+    public function createFailedInspectionResults(Request $request)
+    {
+        $contentResults = RequestUtil::getContentAsArray($request);
         $filename = $contentResults->get('filename');
         $url = $contentResults->get('url');
         $serverName = $contentResults->get('server_name');
@@ -654,13 +652,11 @@ class LocationHealthInspectionAPIController extends APIController
      * @Route("/failed-results")
      * @Method("GET")
      */
-    public function getFailedInspectionResults(Request $request) {
-        // Validation if user is an admin
+    public function getFailedInspectionResults(Request $request)
+    {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $repository = $this->getDoctrine()->getRepository(FTPFailedImport::class);
@@ -675,16 +671,14 @@ class LocationHealthInspectionAPIController extends APIController
      * @Route("/failed-results")
      * @Method("PUT")
      */
-    public function changeFailedInspectionResults(Request $request) {
-        // Validation if user is an admin
+    public function changeFailedInspectionResults(Request $request)
+    {
         $admin = $this->getEmployee();
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
         }
 
-        $contentResults = $this->getContentAsArray($request);
+        $contentResults = RequestUtil::getContentAsArray($request);
         $fileExtension = $contentResults->get('extension');
         $encodedContent = $contentResults->get('content');
         $fileName = $contentResults->get('filename');

@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -17,6 +18,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class DeclarationDetail extends DeclarationBase
 {
+    use EntityClassInfo;
 
     /**
      * @Assert\NotBlank
@@ -36,6 +38,7 @@ class DeclarationDetail extends DeclarationBase
     /**
      * @ORM\OneToMany(targetEntity="DeclarationDetailResponse", mappedBy="declarationDetailRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declaration_detail_request_message_id", referencedColumnName="id")
+     * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
      */
     private $responses;

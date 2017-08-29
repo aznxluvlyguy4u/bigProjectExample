@@ -85,7 +85,7 @@ class BirthDataMigrator extends Migrator2017JunServiceBase implements IMigratorS
     {
         $this->writeLn('=== Migrating NEW birth weight measurements ===');
 
-        DoctrineUtil::updateTableSequence($this->conn, [Measurement::TABLE_NAME]);
+        DoctrineUtil::updateTableSequence($this->conn, [Measurement::getTableName()]);
 
         $this->sqlBatchProcessor
             ->purgeAllSets()
@@ -101,7 +101,7 @@ class BirthDataMigrator extends Migrator2017JunServiceBase implements IMigratorS
 
         $insertBatchSet->setSqlQueryBase("INSERT INTO weight (id, animal_id, weight, is_birth_weight) VALUES ");
 
-        $id = SqlUtil::getMaxId($this->conn, Measurement::TABLE_NAME);
+        $id = SqlUtil::getMaxId($this->conn, Measurement::getTableName());
         $firstMaxId = $id + 1;
 
 
@@ -218,7 +218,7 @@ class BirthDataMigrator extends Migrator2017JunServiceBase implements IMigratorS
     {
         $this->writeLn('=== Migrating NEW tailLength (at birth) measurements ===');
 
-        DoctrineUtil::updateTableSequence($this->conn, [Measurement::TABLE_NAME]);
+        DoctrineUtil::updateTableSequence($this->conn, [Measurement::getTableName()]);
 
         $this->sqlBatchProcessor
             ->purgeAllSets()
@@ -234,7 +234,7 @@ class BirthDataMigrator extends Migrator2017JunServiceBase implements IMigratorS
 
         $insertBatchSet->setSqlQueryBase("INSERT INTO tail_length (id, animal_id, length) VALUES ");
 
-        $id = SqlUtil::getMaxId($this->conn, Measurement::TABLE_NAME);
+        $id = SqlUtil::getMaxId($this->conn, Measurement::getTableName());
         $firstMaxId = $id + 1;
 
         $this->writeLn('Create current tailLengths search array ...');

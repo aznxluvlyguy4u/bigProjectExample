@@ -212,9 +212,7 @@ class AnimalDetailsOutput
      */
     private static function getLog(ObjectManager $em, Animal $animal, $location, $replacementText)
     {
-        /** @var DeclareBaseRepository $declareBaseRepository */
-        $declareBaseRepository = $em->getRepository(DeclareBase::class);
-        return $declareBaseRepository->getLog($animal, $location, $replacementText);
+        return $em->getRepository(DeclareBase::class)->getLog($animal, $location, $replacementText);
     }
 
 }

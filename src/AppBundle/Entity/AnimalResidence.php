@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\Country as CountryEnumerator;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -21,6 +22,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 class AnimalResidence
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *
@@ -68,6 +71,7 @@ class AnimalResidence
 
     /**
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="animalResidenceHistory")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
      */

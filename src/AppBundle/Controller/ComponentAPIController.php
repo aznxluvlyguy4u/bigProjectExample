@@ -42,12 +42,9 @@ class ComponentAPIController extends APIController {
    * @Route("/menu-bar")
    * @Method("GET")
    */
-    public function getMenuBar(Request $request) {
-        $client = $this->getAccountOwner($request);
-        if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }
-        $outputArray = MenuBarOutput::create($client);
-
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+    public function getMenuBar(Request $request)
+    {
+        return $this->get('app.component')->getMenuBar($request);
     }
 
     /**
@@ -56,12 +53,8 @@ class ComponentAPIController extends APIController {
     * @Route("/admin-menu-bar")
     * @Method("GET")
     */
-    public function getAdminMenuBar(Request $request) {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
-
-        $outputArray = MenuBarOutput::createAdmin($this->getUser());
-
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+    public function getAdminMenuBar(Request $request)
+    {
+        return $this->get('app.component')->getAdminMenuBar($request);
     }
 }

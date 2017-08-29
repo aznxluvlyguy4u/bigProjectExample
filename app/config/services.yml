@@ -8,6 +8,9 @@ services:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
 
+    api.action_log:
+        class: AppBundle\Service\ActionLogService
+        arguments: ['@doctrine.orm.entity_manager', '@app.serializer.ir','@app.user']
 
     app.cli.options:
         class: AppBundle\Service\CliOptionsService
@@ -24,6 +27,7 @@ services:
           - '@app.cli.mixblup'
           - '@app.initializer.stored_procedure'
           - '@app.datafix.ubn'
+          - '@app.initializer.treatment_type'
           - '@app.migrator.vsm'
 
     app.cli.gender_changer:
@@ -68,25 +72,46 @@ services:
           - '@app.aws.queueservice.mixblup_input'
           - '@app.aws.queueservice.mixblup_output'
 
+
+    app.request.message_builder:
+        class: AppBundle\Component\RequestMessageBuilder
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '%kernel.environment%'
+
+
     app.aws.queueservice.workers_base:
         abstract: true
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - placeholder_to_override #queueIdPrefix
-          - ['%aws_access_key_id%', '%aws_secret_key%'] #credentials
-          - %aws_sqs_region% #region
-          - %aws_sqs_version% #version
-          - %environment% #currentEnv
+          - '%aws_access_key_id%'
+          - '%aws_secret_key%'
+          - '%aws_sqs_region%' #region
+          - '%aws_sqs_version%' #version
+          - '%environment%' #currentEnv
+          - '%kernel.environment%'
 
     app.aws.queueservice.external:
         class: AppBundle\Service\AwsExternalQueueService
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%' }
 
+    app.aws.queueservice.external.test:
+        class: AppBundle\Service\AwsExternalTestQueueService
+        parent: app.aws.queueservice.workers_base
+        arguments: { index_0: '%aws_sqs_queue_exteral_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST }
+
     app.aws.queueservice.internal:
         class: AppBundle\Service\AwsInternalQueueService
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%' }
+
+    app.aws.queueservice.internal.test:
+        class: AppBundle\Service\AwsInternalTestQueueService
+        parent: app.aws.queueservice.workers_base
+        arguments: { index_0: '%aws_sqs_queue_interal_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST }
 
     app.aws.queueservice.mixblup_input:
         class: AppBundle\Service\MixBlupInputQueueService
@@ -101,11 +126,12 @@ services:
     app.aws.storageservice:
         class: AppBundle\Service\AWSSimpleStorageService
         arguments:
-          credentials: ['%aws_access_key_id%', '%aws_secret_key%']
-          region: %aws_s3_region%
-          version: %aws_s3_version%
-          bucket: %aws_s3_bucket%
-          currentEnv: %environment%
+          - '%aws_access_key_id%'
+          - '%aws_secret_key%'
+          - '%aws_s3_region%'
+          - '%aws_s3_version%'
+          - '%aws_s3_bucket%'
+          - '%environment%'
 
     app.doctrine.entitygetter:
         class: AppBundle\Service\EntityGetter
@@ -119,6 +145,10 @@ services:
         class: AppBundle\Component\Modifier\AnimalRemover
         arguments: ['@doctrine.orm.entity_manager']
 
+    app.animal.details.updater:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\AnimalDetailsUpdaterService
+
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
         arguments: ['@doctrine.orm.entity_manager']
@@ -126,28 +156,28 @@ services:
     app.messagebuilder.base:
         class: AppBundle\Component\MessageBuilderBase
         arguments:
-          entityManager: ['@doctrine.orm.entity_manager']
-          currentEnv: %environment%
+          - '@doctrine.orm.entity_manager'
+          - '%environment%'
 
     app.mixblup.input:
         class: AppBundle\Service\MixBlupInputFilesService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          AWSSimpleStorageService: '@app.aws.storageservice'
-          MixBlupInputQueueService: '@app.aws.queueservice.mixblup_input'
-          currentEnv: %environment%
-          cacheDir: %kernel.cache_dir%
-          logger: '@logger'
+          - '@doctrine.orm.entity_manager'
+          - '@app.aws.storageservice'
+          - '@app.aws.queueservice.mixblup_input'
+          - '%environment%'
+          - '%kernel.cache_dir%'
+          - '@logger'
 
     app.mixblup.output:
         class: AppBundle\Service\MixBlupOutputFilesService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          AWSSimpleStorageService: '@app.aws.storageservice'
-          MixBlupOutputQueueService: '@app.aws.queueservice.mixblup_output'
-          currentEnv: %environment%
-          cacheDir: %kernel.cache_dir%
-          logger: '@logger'
+          - '@doctrine.orm.entity_manager'
+          - '@app.aws.storageservice'
+          - '@app.aws.queueservice.mixblup_output'
+          - '%environment%'
+          - '%kernel.cache_dir%'
+          - '@logger'
 
     app.mixblup.input.validate:
         class: AppBundle\Component\MixBlup\MixBlupInputFileValidator
@@ -181,31 +211,31 @@ services:
     app.migrator.vsm:
         class: AppBundle\Service\Migration\VsmMigratorService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          rootDir: %kernel.root_dir%
-          animalTableImporter: '@app.migrator.importer.animaltable'
-          animalTableMigrator: '@app.migrator.animaltable'
-          birthMigrator: '@app.migrator.birth'
-          dateOfDeathMigrator: '@app.migrator.date_of_death'
-          exteriorMigrator: '@app.migrator.exteriors'
-          litterMigrator: '@app.migrator.litters'
-          tagReplaceMigrator: '@app.migrator.tagreplace'
-          wormResistanceMigrator: '@app.migrator.wormresistance'
-          duplicateAnimalsFixer: '@app.datafix.animals.duplicate'
-          duplicateLitterFixer: '@app.datafix.litter.duplicate'
+          - '@doctrine.orm.entity_manager'
+          - '%kernel.root_dir%'
+          - '@app.migrator.importer.animaltable'
+          - '@app.migrator.animaltable'
+          - '@app.migrator.birth'
+          - '@app.migrator.date_of_death'
+          - '@app.migrator.exteriors'
+          - '@app.migrator.litters'
+          - '@app.migrator.tagreplace'
+          - '@app.migrator.wormresistance'
+          - '@app.datafix.animals.duplicate'
+          - '@app.datafix.litter.duplicate'
 
     app.migrator.base:
         abstract: true
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
-          - %kernel.root_dir%
+          - '%kernel.root_dir%'
 
     app.migrator.importer.animaltable:
         class: AppBundle\Service\Migration\AnimalTableImporter
         arguments:
           - '@doctrine.orm.entity_manager'
-          - %kernel.root_dir%
+          - '%kernel.root_dir%'
           - '@app.datafix.animals.duplicate'
           - '@app.datafix.ubn'
 
@@ -213,7 +243,7 @@ services:
         class: AppBundle\Service\Migration\AnimalTableMigrator
         arguments:
           - '@doctrine.orm.entity_manager'
-          - %kernel.root_dir%
+          - '%kernel.root_dir%'
           - '@app.datafix.ubn'
 
     app.migrator.birth:
@@ -223,6 +253,10 @@ services:
     app.initializer.birth_progress:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\BirthProgressInitializer
+
+    app.initializer.treatment_type:
+        parent: app.migrator.base
+        class: AppBundle\Service\Migration\TreatmentTypeInitializer
 
     app.initializer.stored_procedure:
         class: AppBundle\Service\Migration\StoredProcedureInitializer
@@ -234,7 +268,7 @@ services:
         class: AppBundle\Service\Migration\ClientMigrator
         arguments:
           - '@doctrine.orm.entity_manager'
-          - %kernel.root_dir%
+          - '%kernel.root_dir%'
           - '@security.password_encoder'
 
     app.migrator.date_of_death:
@@ -270,43 +304,47 @@ services:
     app.breed.index:
         class: AppBundle\Service\BreedIndexService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          logger: '@logger'
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.breed.value:
         class: AppBundle\Service\BreedValueService
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          logger: '@logger'
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.breed.valueprinter:
         class: AppBundle\Service\BreedValuePrinter
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          logger: '@logger'
-          cacheDir: %kernel.cache_dir%
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '%kernel.cache_dir%'
 
     app.excel.service:
         class: AppBundle\Service\ExcelService
         arguments:
-          excelBundle: '@phpexcel'
-          cacheDir: %kernel.cache_dir%
-          logger: '@logger'
+          - '@phpexcel'
+          - '%kernel.cache_dir%'
+          - '@logger'
+
+    app.serializer.base:
+        class: AppBundle\Service\BaseSerializer
+        arguments: ['@jms_serializer']
 
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
         arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter']
 
     app.health.updater:
-        class: AppBundle\Service\HealthService
+        class: AppBundle\Service\HealthUpdaterService
         arguments: ['@doctrine.orm.entity_manager']
 
     app.authenticator.token:
         class: AppBundle\Component\Authentication\TokenAuthenticator
         arguments:
-          entityManager: '@doctrine.orm.entity_manager'
-          httpUtil: '@security.http_utils'
-          unauthedPaths: ['/api/v1/doc', '/api/v1/auth/register', '/api/v1/auth/authorize']
+          - '@doctrine.orm.entity_manager'
+          - '@security.http_utils'
+          - ['/api/v1/doc', '/api/v1/auth/register', '/api/v1/auth/authorize']
         public: false
 
     app.cache:
@@ -360,3 +398,216 @@ services:
         arguments:
             - '@doctrine.orm.entity_manager'
             - '%kernel.cache_dir%'
+
+
+    app.declare.error_message:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\ErrorMessageService
+
+    app.treatment:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\TreatmentService
+
+    app.treatment.template:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\TreatmentTemplateService
+
+    app.treatment.type:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\TreatmentTypeService
+
+    app.email:
+        class: AppBundle\Service\EmailService
+        arguments:
+          - '@mailer'
+          - '%mailer_source_address%'
+          - '@templating'
+          - '%kernel.environment%'
+
+    app.abstract_base.controller:
+        abstract: true
+        arguments:
+          - '@app.serializer.base'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+
+    app.abstract_base.auth:
+        abstract: true
+        arguments:
+          - '@app.serializer.base'
+          - '@app.cache'
+          - '@app.email'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@security.password_encoder'
+
+    app.security.auth:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\AuthService
+
+    app.security.admin_auth:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\AdminAuthService
+
+    app.admin:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\AdminService
+
+    app.admin.profile:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\AdminProfileService
+
+    app.abstract_base.declare:
+        abstract: true
+        arguments:
+          - '@app.aws.queueservice.external'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.request.message_builder'
+          - '@app.user'
+
+    app.animal:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\AnimalService
+
+    app.arrival:
+        class: AppBundle\Service\ArrivalService
+        arguments:
+          - '@app.aws.queueservice.external'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.request.message_builder'
+          - '@app.user'
+          - '@app.health.updater'
+          - '@app.animallocation.history'
+          - '%kernel.environment%'
+
+    app.birth:
+        class: AppBundle\Service\BirthService
+        arguments:
+          - '@app.aws.queueservice.external'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.request.message_builder'
+          - '@app.user'
+          - '@logger'
+          - '@app.aws.queueservice.internal'
+          - '@app.doctrine.entitygetter'
+
+    app.client:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\ClientService
+
+    app.collar:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\CollarService
+
+    app.company:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\CompanyService
+
+    app.component:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\ComponentService
+
+    app.contact:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\ContactService
+
+    app.content_management:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\ContentManagementService
+
+    app.country:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\CountryService
+
+    app.dashboard:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\DashboardService
+
+
+    app.depart:
+        class: AppBundle\Service\DepartService
+        arguments:
+          - '@app.aws.queueservice.external'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.request.message_builder'
+          - '@app.user'
+          - '%kernel.environment%'
+
+    app.export:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\ExportService
+
+    app.import:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\ImportService
+
+    app.loss:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\LossService
+
+    app.health.location:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\LocationHealthService
+
+    app.mate:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\MateService
+
+    app.measurement:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\MeasurementService
+
+    app.messages:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\MessageService
+
+    app.profile:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\ProfileService
+
+    app.declare.revoke:
+        class: AppBundle\Service\RevokeService
+        arguments:
+          - '@app.aws.queueservice.external'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.request.message_builder'
+          - '@app.user'
+          - '@app.doctrine.entitygetter'
+
+    app.tag.replace:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\TagReplaceService
+
+    app.tag.sync:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\TagSyncService
+
+    app.tag.transfer:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\TagTransferService
+
+    app.tags:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\TagsService
+
+    app.ubn:
+        parent: app.abstract_base.declare
+        class: AppBundle\Service\UbnService
+
+    app.weight:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\WeightService
+
+
+

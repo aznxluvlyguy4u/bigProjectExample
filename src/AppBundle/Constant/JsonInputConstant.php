@@ -162,6 +162,8 @@ class JsonInputConstant
     const LOG_DATE = 'log_date';
     const RESULT = 'result';
     const IS_HIDDEN = 'is_hidden';
+    const IS_IR_MESSAGE = 'is_ir_message';
+    const HIDE_FOR_ADMIN = 'hide_for_admin';
     const IS_OVERWRITTEN = 'is_overwritten';
     const REVOKED_BY = 'revoked_by';
     const REVOKE_DATE = 'revoke_date';

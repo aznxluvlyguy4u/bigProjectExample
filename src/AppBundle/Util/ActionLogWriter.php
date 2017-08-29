@@ -8,14 +8,20 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Message;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 
 class ActionLogWriter
 {
@@ -45,8 +51,27 @@ class ActionLogWriter
         $description = 'ubn destination: '.$ubn.'. '.$origin.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
+        return $log;
+    }
+
+
+    /**
+     * @param DeclareArrival $arrival
+     * @param Client $arrivalOwner
+     * @param bool $isCompleted
+     * @return ActionLog
+     */
+    public static function declareArrival(DeclareArrival $arrival, Client $arrivalOwner, $isCompleted = true)
+    {
+        $origin = 'ubn previous owner: '.$arrival->getUbnPreviousOwner();
+        $uln = $arrival->getUlnCountryCode().$arrival->getUlnNumber();
+        $description = 'ubn destination: '.$arrival->getUbn().'. '.$origin.'. uln: '.$uln;
+
+        $log = new ActionLog($arrivalOwner, $arrival->getActionBy(), UserActionType::DECLARE_ARRIVAL, $isCompleted, $description);
+        $log->setIsRvoMessage(true);
         return $log;
     }
 
@@ -76,8 +101,28 @@ class ActionLogWriter
         $description = 'ubn: '.$ubn.'. '.$destination.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
+        return $log;
+    }
+
+
+    /**
+     * @param DeclareDepart $declareDepart
+     * @param Client $departOwner
+     * @param bool $isCompleted
+     * @return ActionLog
+     */
+    public static function declareDepart(DeclareDepart $declareDepart, Client $departOwner, $isCompleted = true)
+    {
+        $destination = 'ubn new owner: '.$declareDepart->getUbnNewOwner();
+        $uln = $declareDepart->getUlnCountryCode().$declareDepart->getUlnNumber();
+
+        $description = 'ubn: '.$declareDepart->getUbn().'. '.$destination.'. uln: '.$uln;
+
+        $log = new ActionLog($departOwner, $declareDepart->getActionBy(), UserActionType::DECLARE_DEPART, $isCompleted, $description);
+        $log->setIsRvoMessage(true);
         return $log;
     }
 
@@ -101,6 +146,7 @@ class ActionLogWriter
         $description = 'ubn: '.$ubn.'. ubn processor: '.$ubnProcessor.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -126,6 +172,7 @@ class ActionLogWriter
         $description = 'rel.nr.acceptant: '.$relationNumberAcceptant.'. ubn new owner: '.$ubnNewOwner.'. tagsCount: '.$tagsCount;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -150,7 +197,207 @@ class ActionLogWriter
         $description = 'uln of animal: '.$ulnAnimal.'. uln of tag: '.$ulnTag.'.';
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param array $requestMessages
+     * @param Client $client
+     * @return array
+     * @throws \Exception
+     */
+    public static function createBirth(ObjectManager $em, $requestMessages, Client $client = null)
+    {
+        $logs = [];
+
+        if (count($requestMessages) === 0) { return $logs; }
+
+        /** @var DeclareBirth $requestMessage */
+        foreach ($requestMessages as $requestMessage) {
+
+            $dateOfBirth = $requestMessage->getDateOfBirth()->format('Y-m-d');
+            $gender = Translation::getGenderInDutch($requestMessage->getGender());
+            $uln = $requestMessage->getUlnCountryCode().$requestMessage->getUlnNumber();
+            $ulnMother = $requestMessage->getUlnCountryCodeMother().$requestMessage->getUlnMother();
+            $ulnFather = $requestMessage->getUlnCountryCodeFather().$requestMessage->getUlnFather();
+
+            $litterData = '';
+            $litter = $requestMessage->getLitter();
+            if ($litter) {
+                $litterData = ', Worp: nLing '. $litter->getSize() .' (levend ' .$litter->getBornAliveCount() . ', dood ' . $litter->getStillbornCount().')';
+            }
+
+            $description = $gender.' '.$uln.' GebDatum '.$dateOfBirth.', moeder: '.$ulnMother. ', vader: '.$ulnFather.$litterData;
+
+            $clientOfDeclare = $client;
+            if ($client === null) {
+                if ($requestMessage->getLocation()) {
+                    $clientOfDeclare = $requestMessage->getLocation()->getOwner();
+                }
+            }
+
+            $log = new ActionLog($clientOfDeclare, $requestMessage->getActionBy(), UserActionType::DECLARE_BIRTH, false, $description);
+            $log->setIsRvoMessage(true);
+            $em->persist($log);
+            $logs[] = $log;
+        }
+        $em->flush();
+
+        return $logs;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Litter $litter
+     * @param Person $actionBy
+     * @param Client $client
+     * @return ActionLog
+     */
+    public static function revokeLitter(ObjectManager $em, Litter $litter, Person $actionBy, Client $client)
+    {
+        $dateOfBirth = $litter->getLitterDate()->format('Y-m-d');
+
+        $description = 'Intrekking Worp: WorpDatum '.$dateOfBirth;
+
+        if ($litter->getAnimalMother()) {
+            $description = $description .', moeder: '.$litter->getAnimalMother()->getUln();
+        }
+
+        if ($litter->getAnimalFather()) {
+            $description = $description .', vader: '.$litter->getAnimalFather()->getUln();
+        }
+
+        $description = $description . ', Worp: nLing '. $litter->getSize() .' (levend ' .$litter->getBornAliveCount() . ', dood ' . $litter->getStillbornCount().')';
+
+
+        $log = new ActionLog($client, $actionBy, UserActionType::BIRTH_REVOKE, true, $description);
+        $log->setIsRvoMessage(false);
+        if ($litter->getBornAliveCount() > 0) {
+            $log->setIsRvoMessage(true);
+        }
+
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return  $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param ArrayCollection $content
+     * @param Company $company
+     * @param Person $loggedInUser
+     * @return ActionLog
+     */
+    public static function createCompany(ObjectManager $om, ArrayCollection $content, Company $company, $loggedInUser)
+    {
+        try {
+            $description = self::getCompanyDescription($company).', user input : '.ArrayUtil::implode($content);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::CREATE_COMPANY, true, $description, false);
+            DoctrineUtil::persistAndFlush($om, $log);
+        } catch (\Exception $exception) {
+            $description = $company->getCompanyName();
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::CREATE_COMPANY, true, $description, false);
+            DoctrineUtil::persistAndFlush($om, $log);
+        }
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param ArrayCollection $content
+     * @param Company $company
+     * @param Person $loggedInUser
+     * @return ActionLog
+     */
+    public static function editCompany(ObjectManager $om, ArrayCollection $content, Company $company, $loggedInUser)
+    {
+        try {
+            $description = self::getCompanyDescription($company).', user input : '.ArrayUtil::implode($content);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::EDIT_COMPANY, true, $description, false);
+            DoctrineUtil::persistAndFlush($om, $log);
+        } catch (\Exception $exception) {
+            $description = $company->getCompanyName();
+            $log = new ActionLog($company->getOwner(), $loggedInUser, UserActionType::EDIT_COMPANY, true, $description, false);
+            DoctrineUtil::persistAndFlush($om, $log);
+        }
+
+        return $log;
+    }
+
+
+    /**
+     * @param Company $company
+     * @return string
+     */
+    private static function getCompanyDescription(Company $company)
+    {
+        $description = '';
+        $prefix = '';
+
+        if ($company) {
+            if ($company->getCompanyName() !== null && trim($company->getCompanyName()) !== '' ) {
+                $companyName = $company->getCompanyName();
+            } else {
+                $companyName = $company->getCompanyId();
+            }
+
+            $description = $description . $prefix . 'Bedrijf: '. $companyName;
+            $prefix = ', ';
+
+            if ($company->getOwner()) {
+                $description = $description . $prefix . 'eigenaar: '. $company->getOwner()->getFullName();
+                $prefix = ', ';
+            }
+
+            if (count($company->getLocations()) > 0) {
+                $description = $description . $prefix . 'ubns: ';
+                $prefix = ', ';
+
+                $ubnPrefix = '';
+                /** @var Location $location */
+                foreach ($company->getLocations() as $location)
+                {
+                    if ($location->getIsActive()) {
+                        $description = $description . $ubnPrefix . $location->getUbn();
+                        $ubnPrefix = ', ';
+                    }
+                }
+            }
+        }
+
+        return $description;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $loggedInUser
+     * @param bool $isActive
+     * @param Company $company
+     * @return ActionLog
+     */
+    public static function activeStatusCompany(ObjectManager $om, $isActive, Company $company, $loggedInUser)
+    {
+        $userActionType = $isActive ? UserActionType::ACTIVATE_COMPANY : UserActionType::DEACTIVATE_COMPANY;
+
+        try {
+            $description = self::getCompanyDescription($company);
+            $log = new ActionLog($company->getOwner(), $loggedInUser, $userActionType, true, $description, false);
+            DoctrineUtil::persistAndFlush($om, $log);
+        } catch (\Exception $exception) {
+            $description = $company->getCompanyName();
+            $log = new ActionLog($company->getOwner(), $loggedInUser, $userActionType, true, $description, false);
+            DoctrineUtil::persistAndFlush($om, $log);
+        }
 
         return $log;
     }
@@ -172,6 +419,7 @@ class ActionLogWriter
         $description = 'revoking: '.$requestTypeToRevoke.' with messageNumber: '.$messageNumber.'.';
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $log->setIsRvoMessage(true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -202,12 +450,57 @@ class ActionLogWriter
      * @param Person $loggedInUser
      * @param Client $client
      * @param string $description
+     * @param boolean $isCompleted
      * @return ActionLog
      */
-    public static function contactEmail(ObjectManager $om, $client, $loggedInUser, $description)
+    public static function contactEmail(ObjectManager $om, $client, $loggedInUser, $description, $isCompleted = true)
     {
         $userActionType = UserActionType::CONTACT_EMAIL;
-        $log = new ActionLog($client, $loggedInUser, $userActionType, true, $description);
+        $log = new ActionLog($client, $loggedInUser, $userActionType, $isCompleted, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $accountOwner
+     * @param Employee $actionBy
+     * @param boolean $isSuccessfulLogin
+     * @return ActionLog
+     */
+    public static function loginAdmin(ObjectManager $om, $accountOwner, $actionBy, $isSuccessfulLogin)
+    {
+        return self::login($om, $accountOwner, $actionBy, $isSuccessfulLogin, UserActionType::ADMIN_LOGIN, false);
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $accountOwner
+     * @param Client|Employee $actionBy
+     * @param boolean $isSuccessfulLogin
+     * @return ActionLog
+     */
+    public static function loginUser(ObjectManager $om, $accountOwner, $actionBy, $isSuccessfulLogin)
+    {
+        return self::login($om, $accountOwner, $actionBy, $isSuccessfulLogin, UserActionType::USER_LOGIN, true);
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $accountOwner
+     * @param Person $actionBy
+     * @param boolean $isSuccessfulLogin
+     * @param string $userActionType
+     * @param boolean $isUserEnvironment
+     * @return ActionLog
+     */
+    private static function login(ObjectManager $om, $accountOwner, $actionBy, $isSuccessfulLogin, $userActionType, $isUserEnvironment)
+    {
+        $log = new ActionLog($accountOwner, $actionBy, $userActionType, $isSuccessfulLogin, null, $isUserEnvironment);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -334,24 +627,6 @@ class ActionLogWriter
         return $log;
     }
 
-    /**
-     * @param ObjectManager $om
-     * @param Client $client
-     * @param Person $loggedInUser
-     * @param Ewe $mother
-     * @return ActionLog
-     */
-    public static function createBirth(ObjectManager $om, $client, $loggedInUser, Ewe $mother)
-    {
-        $userActionType = UserActionType::BIRTH_CREATE;
-
-        $description = 'Litter created for Ewe: '. $mother->getUlnCountryCode() . $mother->getUlnNumber();
-
-        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        DoctrineUtil::persistAndFlush($om, $log);
-
-        return $log;
-    }
 
     /**
      * @param ObjectManager $om
@@ -420,45 +695,16 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
-     * @param $admin
-     * @param $content
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param string $description
+     * @param boolean $isCompleted
      * @return ActionLog
      */
-    public static function createAdmin(ObjectManager $om, $admin, $content)
+    public static function editAnimalDetails(ObjectManager $om, $client, $loggedInUser, $description, $isCompleted = true)
     {
-        return self::modifyAdmin($om, $admin, $content, UserActionType::CREATE_ADMIN);
-    }
-
-
-    /**
-     * @param ObjectManager $om
-     * @param $admin
-     * @param $content
-     * @return ActionLog
-     */
-    public static function editAdmin(ObjectManager $om, $admin, $content)
-    {
-        return self::modifyAdmin($om, $admin, $content, UserActionType::EDIT_ADMIN);
-    }
-
-
-    /**
-     * @param ObjectManager $om
-     * @param Employee $admin
-     * @param ArrayCollection $content
-     * @param String $userActionType
-     * @return ActionLog
-     */
-    private static function modifyAdmin(ObjectManager $om, $admin, $content, $userActionType)
-    {
-        $firstName = Utils::getNullCheckedArrayCollectionValue('first_name', $content);
-        $lastName = Utils::getNullCheckedArrayCollectionValue('last_name', $content);
-        $emailAddress = Utils::getNullCheckedArrayCollectionValue('email_address', $content);
-        $accessLevel = Utils::getNullCheckedArrayCollectionValue('access_level', $content);
-
-        $message = $accessLevel.'| '.$emailAddress.' : '.$firstName.' '.$lastName;
-
-        $log = new ActionLog($admin, $admin, $userActionType, false, $message, false);
+        $userActionType = UserActionType::ANIMAL_DETAILS_EDIT;
+        $log = new ActionLog($client, $loggedInUser, $userActionType, $isCompleted, $description);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -467,20 +713,58 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
-     * @param Employee $admin
-     * @param Employee $adminToDeactivate
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param string $oldGender
+     * @param string $newGender
+     * @param boolean $isCompleted
      * @return ActionLog
      */
-    public static function deactivateAdmin(ObjectManager $om, $admin, $adminToDeactivate)
+    public static function editGender(ObjectManager $om, $client, $loggedInUser, $oldGender, $newGender, $isCompleted = true)
     {
-        $userActionType = UserActionType::DEACTIVATE_ADMIN;
-        if($adminToDeactivate instanceof Employee) {
-            $message = $adminToDeactivate->getEmailAddress().' | '.$adminToDeactivate->getFullName();
-        } else {
-            $message = 'No admin to deactivate found';   
-        }
+        $userActionType = UserActionType::GENDER_CHANGE;
 
-        $log = new ActionLog($admin, $admin, $userActionType, false, $message, false);
+        $description = Translation::getGenderInDutch($oldGender) . ' => ' . Translation::getGenderInDutch($newGender);
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, $isCompleted, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $accountOwner
+     * @param Person $actionBy
+     * @param Message $message
+     * @return ActionLog
+     */
+    public static function changeMessageReadStatus(ObjectManager $om, $accountOwner, $actionBy, $message)
+    {
+        $read = $message->isRead() ? 'READ': 'UNREAD';
+        $description = $read . ' ' . $message->getType().' '.$message->getData();
+
+        $log = new ActionLog($accountOwner, $actionBy, UserActionType::CHANGE_READ_MESSAGE_STATUS, true, $description, true);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $accountOwner
+     * @param Person $actionBy
+     * @param Message $message
+     * @return ActionLog
+     */
+    public static function changeMessageHideStatus(ObjectManager $om, $accountOwner, $actionBy, $message)
+    {
+        $hide = $message->isHidden() ? 'HIDE': 'UNHIDE';
+        $description = $hide . ' ' . $message->getType().' '.$message->getData();
+
+        $log = new ActionLog($accountOwner, $actionBy, UserActionType::CHANGE_HIDE_MESSAGE_STATUS, true, $description, true);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -504,14 +788,68 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
+     * @param ActionLog|array $log
+     * @return ActionLog|array
+     */
+    public static function completeActionLog(ObjectManager $om, $log)
+    {
+        if (is_array($log)) {
+            foreach ($log as $item) {
+                self::completeSingleActionLog($om, $item, false);
+            }
+            $om->flush();
+            return $log;
+        }
+
+        return self::completeSingleActionLog($om, $log);
+    }
+
+
+    /**
+     * @param ObjectManager $om
      * @param ActionLog $log
+     * @param bool $flush
      * @return ActionLog
      */
-    public static function completeActionLog(ObjectManager $om, ActionLog $log)
+    private static function completeSingleActionLog(ObjectManager $om, ActionLog $log, $flush = true)
     {
-        $log->setIsCompleted(true);
-        DoctrineUtil::persistAndFlush($om, $log);
+        if ($log !== null) {
+            $log->setIsCompleted(true);
+            $om->persist($log);
+
+            if($flush) { $om->flush(); }
+        }
 
         return $log;
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public static function initializeIsRvoMessageValues(Connection $conn, $cmdUtil = null)
+    {
+        if ($cmdUtil) { $cmdUtil->writeln('Initializing is_rvo_message boolean in action_log table ...'); }
+
+        $actionTypeFilter = '';
+        $prefix = '';
+        foreach (UserActionType::getRvoMessageActionTypes() as $requestType)
+        {
+            $actionTypeFilter = $actionTypeFilter . $prefix . "'".$requestType."'";
+            $prefix = ',';
+        }
+
+        $sql = "UPDATE action_log SET is_rvo_message = TRUE
+                WHERE user_action_type IN ($actionTypeFilter)
+                AND is_rvo_message = FALSE";
+        $updateCount = SqlUtil::updateWithCount($conn, $sql);
+
+        $countString = $updateCount === 0 ? 'No': $updateCount;
+
+        if ($cmdUtil) { $cmdUtil->writeln($countString . ' records updated'); }
+        return $updateCount;
+    }
+
 }

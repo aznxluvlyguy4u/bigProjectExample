@@ -106,7 +106,7 @@ class RequestMessageBuilder
      * @param Person|Client $loggedInUser
      * @param Location $location
      * @param boolean $isEditMessage
-     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace|JsonResponse
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace|JsonResponse|array
      * @throws \Exception
      */
     public function build($messageClassNameSpace, ArrayCollection $contentArray, $person, $loggedInUser, $location, $isEditMessage)

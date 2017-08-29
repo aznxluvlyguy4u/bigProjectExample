@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\TokenType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -21,6 +22,8 @@ use JMS\Serializer\Annotation\Expose;
  */
 class Token
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *
@@ -48,7 +51,7 @@ class Token
 
     /**
      * @ORM\ManyToOne(targetEntity="Person", inversedBy="tokens", cascade={"persist"})
-     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Person")
      */
     private $owner;
