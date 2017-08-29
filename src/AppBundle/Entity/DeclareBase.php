@@ -2,12 +2,11 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\Animal;
 use \DateTime;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class DeclareBase
@@ -43,12 +42,13 @@ use Doctrine\Common\Collections\ArrayCollection;
  *                    "DeclareTagsTransfer" : "AppBundle\Entity\DeclareTagsTransfer",
  *                      "DeclareTagReplace" : "AppBundle\Entity\DeclareTagReplace",
  *                      "RevokeDeclaration" : "AppBundle\Entity\RevokeDeclaration"},
- *     groups = {"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+ *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER","DECLARE","ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
  *
  * @package AppBundle\Entity\DeclareBase
  */
 abstract class DeclareBase
 {
+    use EntityClassInfo;
 
     /**
      * @ORM\Column(type="integer")

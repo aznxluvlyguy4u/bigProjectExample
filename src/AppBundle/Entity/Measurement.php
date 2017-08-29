@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -24,11 +25,22 @@ use JMS\Serializer\Annotation as JMS;
  *                        "PerformanceMeasurement" = "PerformanceMeasurement",
  *                        "Exterior" = "Exterior"
  * })
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                      "BodyFat" : "AppBundle\Entity\BodyFat",
+ *                         "Fat1" : "AppBundle\Entity\Fat1",
+ *                         "Fat2" : "AppBundle\Entity\Fat2",
+ *                         "Fat3" : "AppBundle\Entity\Fat3",
+ *              "MuscleThickness" : "AppBundle\Entity\MuscleThickness",
+ *                   "TailLength" : "AppBundle\Entity\TailLength",
+ *                       "Weight" : "AppBundle\Entity\Weight",
+ *       "PerformanceMeasurement" : "AppBundle\Entity\PerformanceMeasurement",
+ *                     "Exterior" : "AppBundle\Entity\Exterior"},
+ *     groups = {"USER_MEASUREMENT"})
  * @package AppBundle\Entity
  */
-abstract class Measurement {
-
-    const TABLE_NAME = 'measurement';
+abstract class Measurement
+{
+    use EntityClassInfo;
 
     /**
      * @var integer
@@ -72,6 +84,8 @@ abstract class Measurement {
 
 
     /**
+     * @var Inspector
+     *
      * @ORM\ManyToOne(targetEntity="Inspector")
      * @ORM\JoinColumn(name="inspector_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Inspector")
@@ -334,6 +348,14 @@ abstract class Measurement {
     }
 
 
+    /**
+     * @param null $nullReplacement
+     * @return null|string
+     */
+    public function getInspectorFullName($nullReplacement = null)
+    {
+        return $this->inspector !== null ? $this->inspector->getFullName() : $nullReplacement;
+    }
 
 
 }

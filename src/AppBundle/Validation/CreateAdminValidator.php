@@ -45,7 +45,7 @@ class CreateAdminValidator
 
     /**
      * PasswordValidator constructor.
-     * @param array $profileEditContent
+     * @param ArrayCollection $profileEditContent
      * @param ObjectManager $em
      */
     public function __construct(ObjectManager $em, $profileEditContent, $runValidator = true)

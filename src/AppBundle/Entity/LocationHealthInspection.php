@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
+use AppBundle\Traits\EntityClassInfo;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Location;
@@ -18,6 +19,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class LocationHealthInspection
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *

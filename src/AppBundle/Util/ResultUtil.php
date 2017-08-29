@@ -7,6 +7,7 @@ namespace AppBundle\Util;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use Symfony\Component\HttpFoundation\JsonResponse as SymfonyJsonResponse;
 
 class ResultUtil
 {
@@ -50,4 +51,34 @@ class ResultUtil
 
         return new JsonResponse([JsonInputConstant::RESULT => $result], $code);
     }
+
+
+    /**
+     * @param JsonResponse|SymfonyJsonResponse $response
+     * @return mixed|null
+     */
+    public static function getResultArray($response)
+    {
+        $data = json_decode($response->getContent(), true);
+        if (is_array($data)) {
+            return ArrayUtil::get(Constant::RESULT_NAMESPACE, $data);
+        }
+        return null;
+    }
+
+
+    /**
+     * @param string $key
+     * @param JsonResponse|SymfonyJsonResponse $response
+     * @return mixed|null
+     */
+    public static function getFromResult($key, $response)
+    {
+        $result = self::getResultArray($response);
+        if (is_array($result)) {
+            return ArrayUtil::get($key, $result);
+        }
+        return null;
+    }
+
 }

@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Entity\Animal;
+use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -16,6 +17,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class Litter extends DeclareNsfoBase
 {
+    use EntityClassInfo;
+
     /**
      * @ORM\OneToOne(targetEntity="Mate")
      * @ORM\JoinColumn(name="mate_id", referencedColumnName="id")

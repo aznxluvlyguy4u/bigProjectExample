@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Traits\EntityClassInfo;
 use Symfony\Component\Validator\Constraints\DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -13,7 +14,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\TagTransferItemRequestRepository")
  * @package AppBundle\Entity
  */
-class TagTransferItemRequest {
+class TagTransferItemRequest
+{
+    use EntityClassInfo;
 
     /**
      * @var integer

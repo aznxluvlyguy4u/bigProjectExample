@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -19,6 +20,8 @@ use AppBundle\Entity\Location;
  */
 class Company
 {
+    use EntityClassInfo;
+
     /**
     * @ORM\Column(type="integer")
     * @ORM\Id
@@ -714,4 +717,19 @@ class Company
     }
 
 
+    /**
+     * @param null $nullReplacement
+     * @return null|string
+     */
+    public function getOwnersRelationNumberKeeper($nullReplacement = null)
+    {
+        $relationNumberKeeper = $nullReplacement;
+        if ($this->getOwner()) {
+            $relationNumberKeeper = $this->getOwner()->getRelationNumberKeeper();
+            if ($relationNumberKeeper === null || trim($relationNumberKeeper) === '') {
+                $relationNumberKeeper = $nullReplacement;
+            }
+        }
+        return $relationNumberKeeper;
+    }
 }

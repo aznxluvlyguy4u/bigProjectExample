@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -20,7 +21,9 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareArrival extends DeclareBase {
+class DeclareArrival extends DeclareBase
+{
+    use EntityClassInfo;
 
     /**
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="arrivals")

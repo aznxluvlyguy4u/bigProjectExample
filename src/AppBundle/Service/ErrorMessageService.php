@@ -8,10 +8,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\ErrorMessageAPIControllerInterface;
 use AppBundle\Entity\DeclareBase;
-use AppBundle\Entity\DeclareBaseRepository;
 use AppBundle\Entity\DeclareBaseRepositoryInterface;
 use AppBundle\Entity\DeclareNsfoBase;
-use AppBundle\Entity\DeclareNsfoBaseRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
@@ -31,30 +29,17 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
 {
 
     /**
-     * ErrorMessageService constructor.
-     * @param EntityManagerInterface $em
-     * @param IRSerializer $serializer
-     * @param CacheService $cacheService
-     * @param UserService $userService
-     */
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, CacheService $cacheService, UserService $userService)
-    {
-        parent::__construct($em, $serializer, $cacheService, $userService);
-    }
-
-
-    /**
      * @param Request $request
      * @return JsonResponse
      */
     public function getErrors(Request $request)
     {
-        if(!AdminValidator::isAdmin($this->userService->getEmployee(),AccessLevelType::ADMIN)) {
+        if(!AdminValidator::isAdmin($this->getEmployee(),AccessLevelType::ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 
         $showHiddenForAdmin = RequestUtil::getBooleanQuery($request,QueryParameter::SHOW_HIDDEN,false);
-        return ResultUtil::successResult($this->declareBaseRepository->getErrorsOverview($showHiddenForAdmin));
+        return ResultUtil::successResult($this->getManager()->getRepository(DeclareBase::class)->getErrorsOverview($showHiddenForAdmin));
     }
 
 
@@ -65,7 +50,7 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
      */
     public function getErrorDetails(Request $request, $messageId)
     {
-        return $this->getErrorDetailsBase($request, $messageId, $this->declareBaseRepository);
+        return $this->getErrorDetailsBase($request, $messageId, $this->getManager()->getRepository(DeclareBase::class));
     }
 
 
@@ -76,7 +61,7 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
      */
     public function getErrorDetailsNonIRmessage(Request $request, $messageId)
     {
-        return $this->getErrorDetailsBase($request, $messageId, $this->declareNsfoBaseRepository);
+        return $this->getErrorDetailsBase($request, $messageId, $this->getManager()->getRepository(DeclareNsfoBase::class));
     }
 
 
@@ -88,14 +73,14 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
      */
     public function getErrorDetailsBase(Request $request, $messageId, $repository)
     {
-        if(!AdminValidator::isAdmin($this->userService->getEmployee(),AccessLevelType::ADMIN)) {
+        if(!AdminValidator::isAdmin($this->getEmployee(),AccessLevelType::ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 
         $declare = $repository->getErrorDetails($messageId);
         if ($declare instanceof JsonResponse) { return $declare; }
 
-        $output = $this->serializer->getDecodedJson($declare, [JmsGroup::ERROR_DETAILS]);
+        $output = $this->getBaseSerializer()->getDecodedJson($declare, [JmsGroup::ERROR_DETAILS]);
         return ResultUtil::successResult($output);
     }
 
@@ -113,7 +98,7 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
 
             $sql = "UPDATE declare_base SET hide_failed_message = ".StringUtil::getBooleanAsString($isRemovedByUserBoolean)."
             WHERE request_id = '".$requestId."'";
-            $this->conn->exec($sql);
+            $this->getConnection()->exec($sql);
 
             return new JsonResponse(array("code"=>200, "message"=>"saved"), 200);
         }
@@ -134,11 +119,11 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
         if($messageId !== null && $isHidden !== null) {
 
             /** @var DeclareNsfoBase $nsfoMessage */
-            $nsfoMessage = $this->declareNsfoBaseRepository->findOneByMessageId($messageId);
+            $nsfoMessage = $this->getManager()->getRepository(DeclareNsfoBase::class)->findOneByMessageId($messageId);
 
             $nsfoMessage->setIsHidden($isHidden);
-            $this->em->persist($nsfoMessage);
-            $this->em->flush();
+            $this->getManager()->persist($nsfoMessage);
+            $this->getManager()->flush();
 
             return new JsonResponse(["code"=>200, "message"=>"saved"], 200);
         }
@@ -153,7 +138,7 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
      */
     public function updateHideStatus(Request $request)
     {
-        $employee = $this->userService->getEmployee();
+        $employee = $this->getEmployee();
         $content = RequestUtil::getContentAsArray($request);
 
         /* Validation */
@@ -191,10 +176,10 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
         $isIrMessage = $content->get(JsonInputConstant::IS_IR_MESSAGE);
         if ($isIrMessage) {
             /** @var DeclareBase $declare */
-            $declare = $this->declareBaseRepository->findOneByMessageId($messageId);
+            $declare = $this->getManager()->getRepository(DeclareBase::class)->findOneByMessageId($messageId);
         } else {
             /** @var DeclareNsfoBase $declare */
-            $declare = $this->declareNsfoBaseRepository->findOneByMessageId($messageId);
+            $declare = $this->getManager()->getRepository(DeclareNsfoBase::class)->findOneByMessageId($messageId);
         }
 
         if ($declare === null) {
@@ -225,14 +210,14 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
         }
 
         if ($anyValueUpdated) {
-            $this->em->persist($declare);
-            $this->em->flush();
+            $this->getManager()->persist($declare);
+            $this->getManager()->flush();
         }
 
         $jmsGroups = [JmsGroup::HIDDEN_STATUS];
         if ($employee) { $jmsGroups[] = JmsGroup::ADMIN_HIDDEN_STATUS; }
 
-        $output = $this->serializer->getDecodedJson($declare, $jmsGroups);
+        $output = $this->getBaseSerializer()->getDecodedJson($declare, $jmsGroups);
         return ResultUtil::successResult($output);
     }
 }

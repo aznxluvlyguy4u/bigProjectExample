@@ -6,6 +6,7 @@ use \AppBundle\Entity\Fat1;
 use \AppBundle\Entity\Fat2;
 use \AppBundle\Entity\Fat3;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -15,7 +16,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\BodyFatRepository")
  * @package AppBundle\Entity
  */
-class BodyFat extends Measurement {
+class BodyFat extends Measurement
+{
+    use EntityClassInfo;
 
     /**
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="bodyFatMeasurements")

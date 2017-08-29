@@ -3,6 +3,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -12,7 +13,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\Fat2Repository")
  * @package AppBundle\Entity
  */
-class Fat2 extends Measurement {
+class Fat2 extends Measurement
+{
+    use EntityClassInfo;
 
   /**
    * @var float

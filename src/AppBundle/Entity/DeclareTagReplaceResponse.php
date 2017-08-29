@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -15,7 +16,9 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareTagReplaceResponseRepository")
  * @package AppBundle\Entity
  */
-class DeclareTagReplaceResponse extends DeclareBaseResponse {
+class DeclareTagReplaceResponse extends DeclareBaseResponse
+{
+    use EntityClassInfo;
 
     /**
      * @var DeclareTagReplace

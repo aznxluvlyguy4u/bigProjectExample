@@ -46,7 +46,7 @@ class BreedValuesResultTableUpdater
 
         $this->breedValueService = new BreedValueService($em, $logger);
 
-        $this->resultTableName = ResultTableBreedGrades::TABLE_NAME;
+        $this->resultTableName = ResultTableBreedGrades::getTableName();
     }
 
 

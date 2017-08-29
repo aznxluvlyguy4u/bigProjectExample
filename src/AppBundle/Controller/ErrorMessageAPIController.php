@@ -49,7 +49,7 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      */
     public function getErrors(Request $request)
     {
-        return $this->getErrorMessageService()->getErrors($request);
+        return $this->get('app.declare.error_message')->getErrors($request);
     }
 
 
@@ -78,7 +78,7 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      */
     public function getErrorDetails(Request $request, $messageId)
     {
-        return $this->getErrorMessageService()->getErrorDetails($request, $messageId);
+        return $this->get('app.declare.error_message')->getErrorDetails($request, $messageId);
     }
 
 
@@ -107,7 +107,7 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      */
     public function getErrorDetailsNonIRmessage(Request $request, $messageId)
     {
-        return $this->getErrorMessageService()->getErrorDetailsNonIRmessage($request, $messageId);
+        return $this->get('app.declare.error_message')->getErrorDetailsNonIRmessage($request, $messageId);
     }
 
 
@@ -135,7 +135,7 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      */
     public function updateError(Request $request)
     {
-        return $this->getErrorMessageService()->updateError($request);
+        return $this->get('app.declare.error_message')->updateError($request);
     }
 
 
@@ -164,7 +164,7 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      */
     public function updateNsfoDeclarationError(Request $request, $messageId)
     {
-        return $this->getErrorMessageService()->updateNsfoDeclarationError($request, $messageId);
+        return $this->get('app.declare.error_message')->updateNsfoDeclarationError($request, $messageId);
     }
 
 
@@ -214,6 +214,6 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      */
     public function updateHideStatus(Request $request)
     {
-        return $this->getErrorMessageService()->updateHideStatus($request);
+        return $this->get('app.declare.error_message')->updateHideStatus($request);
     }
 }

@@ -31,24 +31,9 @@ class DashboardAPIController extends APIController {
    * @Route("")
    * @Method("GET")
    */
-  public function getDashBoard(Request $request) {
-    $client = $this->getAccountOwner($request);
-    $location = $this->getSelectedLocation($request);
-
-    if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }
-    if($location == null) { return Validator::createJsonResponse('Location cannot be null', 428); }
-    
-    $errorMessageForDateIsNull = "";
-    
-    /** @var DeclareBaseRepository $declareBaseRepository */
-    $declareBaseRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
-    $declarationLogDate = $declareBaseRepository->getLatestLogDatesForDashboardDeclarationsPerLocation($location, $errorMessageForDateIsNull);
-
-    $em = $this->getDoctrine()->getManager();
-    
-    $outputArray = DashboardOutput::create($em, $client, $declarationLogDate, $location);
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+  public function getDashBoard(Request $request)
+  {
+      return $this->get('app.dashboard')->getDashBoard($request);
   }
 
 }

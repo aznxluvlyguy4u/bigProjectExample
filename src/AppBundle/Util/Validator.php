@@ -607,4 +607,40 @@ class Validator
     {
         return strval(floatval($value)) === $value;
     }
+
+
+    /**
+     * @param string $emailAddress
+     * @return boolean
+     */
+    public static function isEmailAddressFormat($emailAddress)
+    {
+        return filter_var($emailAddress, FILTER_VALIDATE_EMAIL);
+    }
+
+
+    /**
+     * @param string $emailAddress
+     * @param bool $throwException
+     * @param int $errorCode
+     * @return JsonResponse|bool
+     * @throws \Exception
+     */
+    public static function validateEmailAddress($emailAddress, $throwException = false, $errorCode = 428)
+    {
+        $isValid = self::isEmailAddressFormat($emailAddress);
+
+        if ($isValid) {
+            return true;
+        }
+
+        $errorMessage = 'Invalid email address: ' . $emailAddress;
+
+        if ($throwException) {
+            throw new \Exception($errorMessage, $errorCode);
+        }
+
+        return ResultUtil::errorResult($errorMessage, $errorCode);
+    }
+
 }

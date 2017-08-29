@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -14,6 +15,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class DropDownOption
 {
+    use EntityClassInfo;
+
     /**
      * @var integer
      *
