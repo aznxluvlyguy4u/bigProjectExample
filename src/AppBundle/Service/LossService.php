@@ -100,6 +100,8 @@ class LossService extends DeclareControllerServiceBase
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
+        $this->saveNewestDeclareVersion($content, $messageObject);
+
         $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
         $this->clearLivestockCacheForLocation($location);

@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ResultUtil
 {
+
     /**
      * @param $result
      * @return JsonResponse
@@ -79,4 +80,5 @@ class ResultUtil
         }
         return null;
     }
+
 }

@@ -16,6 +16,8 @@ class Endpoint
     const DECLARE_TAGS_TRANSFERS_ENDPOINT = "/api/v1/tags-transfers";
     const DECLARE_TAG_REPLACE_ENDPOINT = "/api/v1/tags-replace";
 
+    const ERROR_ENDPOINT = '/api/v1/errors';
+
     const FRONTEND_INVOICE_DETAILS_ENDPOINT = '/main/invoices/details';
 
     const MOLLIE_ENDPOINT = "/api/v1/mollie";

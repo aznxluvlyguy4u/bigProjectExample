@@ -49,6 +49,7 @@ abstract class ControllerServiceBase
     /** @var UserService */
     private $userService;
 
+
     public function __construct(BaseSerializer $baseSerializer,
                                 CacheService $cacheService,
                                 EntityManagerInterface $manager,

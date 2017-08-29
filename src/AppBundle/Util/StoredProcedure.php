@@ -4,11 +4,13 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
 
 class StoredProcedure
 {
     const GET_LIVESTOCK_REPORT = 'get_livestock_report';
+    const GET_ERROR_MESSAGES = 'get_error_messages';
 
     /**
      * @return array
@@ -44,8 +46,11 @@ class StoredProcedure
      * @param string $functionName
      * @param string $query
      * @param array $parameters parameters by their type
+     * @param string $declareStatement
+     * @param string $beginStatement
      */
-    private static function createOrUpdateProcedureBase(Connection $conn, $functionName, $query, array $parameters)
+    private static function createOrUpdateProcedureBase(Connection $conn, $functionName, $query, array $parameters,
+                                                        $declareStatement = '', $beginStatement = '')
     {
         $parameterString = '';
         $prefix = '';
@@ -58,7 +63,9 @@ class StoredProcedure
 
         $sql = "CREATE OR REPLACE FUNCTION $functionName($parameterString) RETURNS refcursor AS $$
                 DECLARE ref refcursor;
+                    $declareStatement
                 BEGIN
+                    $beginStatement
                   OPEN ref FOR $query;
                   RETURN ref;
                 END;
@@ -75,6 +82,7 @@ class StoredProcedure
     {
         switch ($functionName) {
             case self::GET_LIVESTOCK_REPORT: self::createLiveStockReport($conn); break;
+            case self::GET_ERROR_MESSAGES: self::createErrorMessages($conn); break;
             default: break;
         }
     }
@@ -138,6 +146,176 @@ class StoredProcedure
         ];
 
         self::createOrUpdateProcedureBase($conn, self::GET_LIVESTOCK_REPORT, $sql, $parameters);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param bool $showHidden
+     * @return array
+     */
+    public static function getErrorMessages(Connection $conn, $showHidden = false)
+    {
+        return self::getProcedure($conn,self::GET_ERROR_MESSAGES, [StringUtil::getBooleanAsString($showHidden)]);
+    }
+
+
+    /**
+     * @param Connection $conn
+     */
+    public static function createErrorMessages(Connection $conn)
+    {
+        $selectBase =
+            "b.request_id,
+             b.request_state,
+             b.log_date,
+             b.ubn,
+             b.type,
+             declareType.dutch as dutch_type,
+             NULLIF(TRIM(CONCAT(a.first_name,' ',a.last_name)), '') as action_by,
+             COALESCE(e.access_level, 'CLIENT') as action_by_type,";
+
+        $joinBase =
+            "LEFT JOIN person a ON a.id = b.action_by_id
+             LEFT JOIN employee e ON e.id = a.id
+             LEFT JOIN (VALUES ".SqlUtil::declareIRTranslationValues().") AS declareType(english, dutch) ON b.type = declareType.english";
+
+        $whereBase =
+            "b.request_state = '".RequestStateType::FAILED."' AND
+             b.newest_version_id ISNULL --only return latest version
+             AND (
+                   b.hide_for_admin = option1
+                   OR b.hide_for_admin = option2
+                 )";
+
+        $sql = "SELECT
+                 $selectBase
+                 d.date_of_birth as event_date,
+                 null as related_ubn,
+                 CONCAT(uln_country_code, uln_number) as declare_info,
+                 nsfo_b.message_id as non_ir_request_id,
+                 nsfo_b.hide_for_admin
+               FROM declare_base b
+                 INNER JOIN declare_birth d ON b.id = d.id
+                 INNER JOIN litter l ON l.id = d.litter_id
+                 INNER JOIN declare_nsfo_base nsfo_b ON nsfo_b.id = l.id
+                 $joinBase
+               WHERE
+                  b.request_state = '".RequestStateType::FAILED."' AND
+                  nsfo_b.newest_version_id ISNULL --only return latest version of litter
+                  AND (
+                        b.hide_for_admin = option1
+                        OR b.hide_for_admin = option2
+                      )
+                  AND (
+                        nsfo_b.request_state = '" . RequestStateType::FAILED . "' OR
+                        nsfo_b.request_state = '" . RequestStateType::OPEN . "' OR
+                        l.status = '" . RequestStateType::INCOMPLETE . "'
+                      )
+                  AND (
+                        nsfo_b.hide_for_admin = option1
+                        OR nsfo_b.hide_for_admin = option2
+                      )
+
+               UNION
+
+               SELECT
+                 $selectBase
+                 d.arrival_date as event_date,
+                 d.ubn_previous_owner as related_ubn,
+                 CONCAT(uln_country_code, uln_number) as declare_info,
+                 null as non_ir_request_id,
+                 b.hide_for_admin
+               FROM declare_base b
+                 INNER JOIN declare_arrival d ON b.id = d.id
+                 $joinBase
+               WHERE
+                 $whereBase
+
+               UNION
+
+               SELECT
+                 $selectBase
+                 d.date_of_death as event_date,
+                 d.ubn_destructor as related_ubn,
+                 CONCAT(uln_country_code, uln_number) as declare_info,
+                 null as non_ir_request_id,
+                 b.hide_for_admin
+               FROM declare_base b
+                 INNER JOIN declare_loss d ON b.id = d.id
+                 $joinBase
+               WHERE
+                 $whereBase
+
+               UNION
+
+               SELECT
+                 $selectBase
+                 d.replace_date as event_date,
+                 null as related_ubn,
+                 CONCAT(d.uln_country_code_to_replace, d.uln_number_to_replace,' => ',
+                        d.uln_country_code_replacement, d.uln_number_replacement) as declare_info,
+                 null as non_ir_request_id,
+                 b.hide_for_admin
+               FROM declare_base b
+                 INNER JOIN declare_tag_replace d ON b.id = d.id
+                 $joinBase
+               WHERE
+                 $whereBase
+
+               UNION
+
+               SELECT
+                 $selectBase
+                 b.log_date as event_date,
+                 null as related_ubn,
+                 declareTypeRequest.dutch as declare_info,
+                 null as non_ir_request_id,
+                 b.hide_for_admin
+               FROM declare_base b
+                 INNER JOIN revoke_declaration d ON b.id = d.id
+                 LEFT JOIN (VALUES ".SqlUtil::declareIRTranslationValues().") 
+                    AS declareTypeRequest(english, dutch) ON d.request_type_to_revoke = declareTypeRequest.english
+                 $joinBase
+               WHERE
+                 $whereBase
+
+               UNION
+
+               SELECT
+                 $selectBase
+                 b.log_date as event_date,
+                 d.ubn_new_owner as related_ubn,
+                 null as declare_info,
+                 null as non_ir_request_id,
+                 b.hide_for_admin
+               FROM declare_base b
+                 INNER JOIN declare_tags_transfer d ON b.id = d.id
+                 $joinBase
+               WHERE
+                 $whereBase
+
+               ORDER BY log_date DESC";
+
+        $parameters = [
+            'showHidden' => 'BOOLEAN',
+        ];
+
+        $declareStatement =
+            "  option1 BOOLEAN;
+               option2 BOOLEAN;";
+
+        $beginStatement =
+            "IF showHidden = TRUE THEN
+                option1 = true;
+                option2 = false;
+             ELSE
+                option1 = false;
+                option2 = false;
+             END IF;";
+
+        self::createOrUpdateProcedureBase($conn, self::GET_ERROR_MESSAGES, $sql, $parameters,
+            $declareStatement, $beginStatement);
     }
 
 }

@@ -64,6 +64,7 @@ class TagTransferItemResponse
      * @var string;
      *
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"ERROR_DETAILS"})
      *
      */
     private $errorCode;
@@ -72,6 +73,7 @@ class TagTransferItemResponse
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $errorMessage;
 
@@ -80,6 +82,7 @@ class TagTransferItemResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $errorKindIndicator;
 
@@ -88,6 +91,7 @@ class TagTransferItemResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $successIndicator;
 
@@ -95,6 +99,7 @@ class TagTransferItemResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $messageNumber;
 
@@ -103,6 +108,7 @@ class TagTransferItemResponse
      *
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $isRemovedByUser;
 
@@ -111,6 +117,7 @@ class TagTransferItemResponse
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $logDate;
 
@@ -118,6 +125,7 @@ class TagTransferItemResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"ERROR_DETAILS"})
      */
     private $requestState;
 

@@ -183,6 +183,8 @@ class DepartService extends DeclareControllerServiceBase
 
         $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
 
+        $this->saveNewestDeclareVersion($content, $messageObject);
+
         if ($arrivalLog) { $this->persist($arrivalLog); }
         ActionLogWriter::completeActionLog($this->getManager(), $departOrExportLog);
 

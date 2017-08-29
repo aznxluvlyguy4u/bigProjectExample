@@ -41,8 +41,10 @@ class TreatmentServiceBase extends ControllerServiceBase
     /** @var string */
     protected $actionLogDescription;
 
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
-                                CacheService $cacheService, UserService $userService)
+    public function __construct(BaseSerializer $serializer,
+                                CacheService $cacheService,
+                                EntityManagerInterface $em,
+                                UserService $userService)
     {
         parent::__construct($serializer, $cacheService, $em, $userService);
 

@@ -27,14 +27,14 @@ class StoredProcedureInitializer
     }
 
 
-    public function initialize()
+    public function initialize($overwriteOldVersions = false)
     {
         $updateCount = 0;
 
         $currentStoredProcedures = $this->getStoredProcedures();
         foreach (StoredProcedure::getConstants() as $routineName)
         {
-            if (!key_exists($routineName, $currentStoredProcedures)) {
+            if (!key_exists($routineName, $currentStoredProcedures) || $overwriteOldVersions) {
                 StoredProcedure::createOrUpdateProcedure($this->conn, $routineName);
                 $updateCount++;
             }
@@ -42,6 +42,12 @@ class StoredProcedureInitializer
 
         $count = $updateCount === 0 ? 'No' : $updateCount;
         $this->logger->notice($count . ' SQL stored procedures initialized');
+    }
+
+
+    public function update()
+    {
+        $this->initialize(true);
     }
 
 

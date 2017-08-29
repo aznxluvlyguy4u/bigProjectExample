@@ -22,6 +22,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
 use AppBundle\Entity\Message;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\Stillborn;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
@@ -166,14 +167,27 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $logs = ActionLogWriter::createBirth($this->getManager(), $requestMessages, $client);
 
         //Creating request succeeded, send to Queue
+
+        $litter = null;
+        /** @var DeclareBirth $requestMessage */
         foreach ($requestMessages as $requestMessage) {
             //First persist requestmessage, before sending it to the queue
             $this->persist($requestMessage);
 
             //Send it to the queue and persist/update any changed state to the database
             $result[] = $this->sendMessageObjectToQueue($requestMessage);
+
+
+            if ($litter === null &&
+                ($requestMessage instanceof DeclareBirth || $requestMessage instanceof Stillborn)) {
+                if ($requestMessage->getLitter()) {
+                    //All these births belong to the same litter
+                    $litter = $requestMessage->getLitter();
+                }
+            }
         }
 
+        $this->saveNewestDeclareVersion($content, $litter);
 
         //Send workerTask to update resultTable records of parents and children
         $this->sendTaskToQueue($this->internalQueueService, WorkerTaskUtil::createResultTableMessageBodyByBirthRequests($requestMessages));
