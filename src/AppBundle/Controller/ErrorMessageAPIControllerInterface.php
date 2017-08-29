@@ -14,4 +14,5 @@ interface ErrorMessageAPIControllerInterface
     function updateError(Request $request);
     function updateNsfoDeclarationError(Request $request, $messageId);
     function updateHideStatus(Request $request);
+    function getDutchDeclareTypes(Request $request);
 }

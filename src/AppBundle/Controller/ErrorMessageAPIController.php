@@ -33,7 +33,7 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      *   parameters={
      *      {
      *        "name"="show_hidden",
-     *        "dataType"="string",
+     *        "dataType"="boolean",
      *        "required"=false,
      *        "description"="show error messages hidden for admin, default = false",
      *        "format"="?show_hidden=true"
@@ -215,5 +215,42 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
     public function updateHideStatus(Request $request)
     {
         return $this->get('app.declare.error_message')->updateHideStatus($request);
+    }
+
+
+    /**
+     *
+     * Get Dutch declare types
+     *
+     * @ApiDoc(
+     *   section = "Errors",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="formal",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"=" choose if dutch output should be formal or informal, default = false",
+     *        "format"="?formal=true"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Get Dutch declare types"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-declare-types")
+     * @Method("GET")
+     */
+    public function getDutchDeclareTypes(Request $request)
+    {
+        return $this->get('app.declare.error_message')->getDutchDeclareTypes($request);
     }
 }

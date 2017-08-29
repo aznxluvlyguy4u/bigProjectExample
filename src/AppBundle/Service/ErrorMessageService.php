@@ -13,6 +13,8 @@ use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
+use AppBundle\Enumerator\RequestTypeIRDutchInformal;
+use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
@@ -218,6 +220,18 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
         if ($employee) { $jmsGroups[] = JmsGroup::ADMIN_HIDDEN_STATUS; }
 
         $output = $this->getBaseSerializer()->getDecodedJson($declare, $jmsGroups);
+        return ResultUtil::successResult($output);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getDutchDeclareTypes(Request $request)
+    {
+        $isFormal = RequestUtil::getBooleanQuery($request, QueryParameter::FORMAL, false);
+        $output = $isFormal ? RequestTypeIRDutchOfficial::getConstants() : RequestTypeIRDutchInformal::getConstants();
         return ResultUtil::successResult($output);
     }
 }

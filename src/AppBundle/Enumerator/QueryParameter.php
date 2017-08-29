@@ -10,6 +10,7 @@ class QueryParameter
     const CONCAT_VALUE_AND_ACCURACY = 'concat_value_and_accuracy';
     const END_DATE = 'end_date';
     const FILE_TYPE_QUERY = 'file_type';
+    const FORMAL = 'formal';
     const INCLUDE_ALL_LIVESTOCK_ANIMALS = 'include_all_livestock_animals';
     const MINIMAL_OUTPUT = 'minimal_output';
     const S3_UPLOAD = 's3_upload';
