@@ -31,6 +31,7 @@ use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 class AnimalRepository extends BaseRepository
 {
   const BATCH = 1000;
+  const USE_REDIS_CACHE = false; //TODO activate this when the livestock and historicLivestock redis cache is fixed
   const LIVESTOCK_CACHE_ID = 'GET_LIVESTOCK_';
   const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
   const CANDIDATE_FATHERS_CACHE_ID = 'GET_CANDIDATE_FATHERS_';
@@ -394,9 +395,12 @@ class AnimalRepository extends BaseRepository
         ));
 
     $query = $livestockAnimalsQueryBuilder->getQuery();
-    $query->useQueryCache(true);
-    $query->setCacheable(true);
-    $query->useResultCache(true, Constant::CACHE_LIVESTOCK_TIME_SPAN, $cacheId);
+
+    if (self::USE_REDIS_CACHE) {
+        $query->useQueryCache(true);
+        $query->setCacheable(true);
+        $query->useResultCache(true, Constant::CACHE_LIVESTOCK_TIME_SPAN, $cacheId);
+    }
 
     return $query->getResult();
   }
@@ -503,10 +507,11 @@ class AnimalRepository extends BaseRepository
 
     $query = $historicAnimalsQuery->getQuery();
 
-
-    $query->useQueryCache(true);
-    $query->setCacheable(true);
-    $query->useResultCache(true, Constant::CACHE_HISTORIC_LIVESTOCK_TIME_SPAN, $cacheId);
+    if (self::USE_REDIS_CACHE) {
+        $query->useQueryCache(true);
+        $query->setCacheable(true);
+        $query->useResultCache(true, Constant::CACHE_HISTORIC_LIVESTOCK_TIME_SPAN, $cacheId);
+    }
 
     //Returns a list of AnimalResidences
     $retrievedHistoricAnimalResidences = $query->getResult();

@@ -46,7 +46,7 @@ class CacheService
             $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
 
             $lastIndex = 10;
-            for($i = 1; $i <= $lastIndex; $i++) {
+            for($i = 0; $i <= $lastIndex; $i++) {
                 $this->redis->del('[' .$cacheId .']['.$i.']');
             }
         }
