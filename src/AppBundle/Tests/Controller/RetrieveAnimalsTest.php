@@ -95,7 +95,19 @@ class RetrieveAnimalsTest extends WebTestCase
             // empty
         ];
 
-        $this->testPostBase($body);
+        $json = json_encode($body);
+
+        $this->client->request('POST',
+            Endpoint::RETRIEVE_ANIMALS,
+            array(),
+            array(),
+            $this->defaultHeaders,
+            $json
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
     }
 
 
@@ -110,16 +122,7 @@ class RetrieveAnimalsTest extends WebTestCase
             "is_rvo_leading" => true,
         ];
 
-        $this->testPostBase($body);
-    }
-
-
-    /**
-     * @param array $bodyAsArray
-     */
-    private function testPostBase($bodyAsArray)
-    {
-        $json = json_encode($bodyAsArray);
+        $json = json_encode($body);
 
         $this->client->request('POST',
             Endpoint::RETRIEVE_ANIMALS,

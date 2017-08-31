@@ -96,7 +96,19 @@ class RetrieveTagsTest extends WebTestCase
             // empty
         ];
 
-        $this->testPostBase($body);
+        $json = json_encode($body);
+
+        $this->client->request('POST',
+            Endpoint::RETRIEVE_TAGS,
+            array(),
+            array(),
+            $this->defaultHeaders,
+            $json
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
     }
 
 
@@ -112,16 +124,7 @@ class RetrieveTagsTest extends WebTestCase
             "tag_type" => "V",
         ];
 
-        $this->testPostBase($body);
-    }
-
-
-    /**
-     * @param array $bodyAsArray
-     */
-    private function testPostBase($bodyAsArray)
-    {
-        $json = json_encode($bodyAsArray);
+        $json = json_encode($body);
 
         $this->client->request('POST',
             Endpoint::RETRIEVE_TAGS,
