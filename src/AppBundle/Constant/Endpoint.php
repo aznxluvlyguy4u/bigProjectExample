@@ -18,6 +18,8 @@ class Endpoint
 
     const ERROR_ENDPOINT = '/api/v1/errors';
 
+    const RETRIEVE_ANIMALS = '/api/v1/animals-sync';
+
     const REVOKE_ENDPOINT = "/api/v1/revokes";
 
     const TREATMENTS = "/api/v1/treatments";
