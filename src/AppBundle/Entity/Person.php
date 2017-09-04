@@ -19,12 +19,13 @@ use JMS\Serializer\Annotation\Expose;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\PersonRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
- * @ORM\DiscriminatorMap({"Client" = "Client", "Employee" = "Employee", "Inspector" = "Inspector"})
+ * @ORM\DiscriminatorMap({"Client" = "Client", "Employee" = "Employee", "Inspector" = "Inspector", "VwaEmployee" = "VwaEmployee"})
  * @JMS\Discriminator(field = "type", disabled=false, map = {
  *                        "Client" : "AppBundle\Entity\Client",
  *                      "Employee" : "AppBundle\Entity\Employee",
- *                     "Inspector" : "AppBundle\Entity\Inspector"},
- *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER","CONTACT_INFO","ERROR_DETAILS","USER_MEASUREMENT"})
+ *                     "Inspector" : "AppBundle\Entity\Inspector",
+ *                   "VwaEmployee" : "AppBundle\Entity\VwaEmployee"},
+ *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER","CONTACT_INFO","ERROR_DETAILS","USER_MEASUREMENT","VWA"})
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
@@ -56,7 +57,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER","ERROR_DETAILS","USER_MEASUREMENT"})
+   * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER","VWA","ERROR_DETAILS","USER_MEASUREMENT"})
    * @Expose
    */
   protected $firstName;
@@ -67,7 +68,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER","ERROR_DETAILS","USER_MEASUREMENT"})
+   * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER","VWA","ERROR_DETAILS","USER_MEASUREMENT"})
    * @Expose
    */
   protected $lastName;
@@ -78,6 +79,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @JMS\Groups({"VWA"})
    * @Expose
    */
   protected $emailAddress;
@@ -96,6 +98,7 @@ abstract class Person implements UserInterface
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
      * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({"VWA"})
      * @Expose
      */
   private $isActive;
@@ -130,6 +133,71 @@ abstract class Person implements UserInterface
    */
   private $cellphoneNumber;
 
+
+    /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="created_by_id", referencedColumnName="id")
+     * @JMS\Groups({"DETAILS"})
+     */
+    protected $createdBy;
+
+
+    /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="edited_by_id", referencedColumnName="id")
+     * @JMS\Groups({"DETAILS"})
+     */
+    protected $editedBy;
+
+
+    /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="deleted_by_id", referencedColumnName="id")
+     * @JMS\Groups({"DETAILS"})
+     */
+    protected $deletedBy;
+
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @JMS\Groups({"DETAILS"})
+     */
+    protected $creationDate;
+
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @JMS\Groups({"DETAILS"})
+     */
+    protected $deleteDate;
+
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @JMS\Groups({"VWA"})
+     */
+    protected $lastLoginDate;
+
+
+
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
   {
@@ -142,6 +210,7 @@ abstract class Person implements UserInterface
     $this->setUsername($username);
     $this->setCellphoneNumber($cellphoneNumber);
     $this->setIsActive(true);
+    $this->setCreationDate(new \DateTime());
 
     $this->setPersonId(Utils::generatePersonId());
 
@@ -485,8 +554,113 @@ abstract class Person implements UserInterface
     $this->personId = $personId;
   }
 
+    /**
+     * @return Person
+     */
+    public function getCreatedBy()
+    {
+        return $this->createdBy;
+    }
 
+    /**
+     * @param Person $createdBy
+     * @return Person
+     */
+    public function setCreatedBy($createdBy)
+    {
+        $this->createdBy = $createdBy;
+        return $this;
+    }
 
+    /**
+     * @return Person
+     */
+    public function getEditedBy()
+    {
+        return $this->editedBy;
+    }
+
+    /**
+     * @param Person $editedBy
+     * @return Person
+     */
+    public function setEditedBy($editedBy)
+    {
+        $this->editedBy = $editedBy;
+        return $this;
+    }
+
+    /**
+     * @return Person
+     */
+    public function getDeletedBy()
+    {
+        return $this->deletedBy;
+    }
+
+    /**
+     * @param Person $deletedBy
+     * @return Person
+     */
+    public function setDeletedBy($deletedBy)
+    {
+        $this->deletedBy = $deletedBy;
+        return $this;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getCreationDate()
+    {
+        return $this->creationDate;
+    }
+
+    /**
+     * @param \DateTime $creationDate
+     * @return Person
+     */
+    public function setCreationDate($creationDate)
+    {
+        $this->creationDate = $creationDate;
+        return $this;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getDeleteDate()
+    {
+        return $this->deleteDate;
+    }
+
+    /**
+     * @param \DateTime $deleteDate
+     * @return Person
+     */
+    public function setDeleteDate($deleteDate)
+    {
+        $this->deleteDate = $deleteDate;
+        return $this;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getLastLoginDate()
+    {
+        return $this->lastLoginDate;
+    }
+
+    /**
+     * @param \DateTime $lastLoginDate
+     * @return Person
+     */
+    public function setLastLoginDate($lastLoginDate)
+    {
+        $this->lastLoginDate = $lastLoginDate;
+        return $this;
+    }
 
 
 }
