@@ -76,11 +76,7 @@ class ErrorTest extends WebTestCase
         self::$faker = Faker\Factory::create();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$accessTokenCode = UnitTestData::getRandomAdminAccessTokenCode(self::$em,AccessLevelType::SUPER_ADMIN);
     }
