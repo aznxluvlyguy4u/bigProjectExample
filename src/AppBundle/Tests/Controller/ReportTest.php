@@ -164,7 +164,7 @@ class ReportTest extends WebTestCase
     {
         $totalAnimalCount = 10;
 
-        $json = null;dump($json);die;
+        $json = null;
 
         $this->client->request('POST',
             Endpoint::REPORT . $this->endpointSuffixes[self::POST_livestockReport],
