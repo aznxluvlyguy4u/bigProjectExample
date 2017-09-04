@@ -338,6 +338,7 @@ class AnimalRepository extends BaseRepository
    * @param bool $isDeparted
    * @param bool $isExported
    * @param Animal $queryOnlyOnAnimalGenderType
+   * @param bool $prioritizeRedisCache
    * 
    * @return array
    */
@@ -345,7 +346,9 @@ class AnimalRepository extends BaseRepository
                                $isAlive = true,
                                $isDeparted = false,
                                $isExported = false,
-                               $queryOnlyOnAnimalGenderType = null)
+                               $queryOnlyOnAnimalGenderType = null,
+                               $prioritizeRedisCache = true
+  )
   {
     $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID . $location->getId(); //. sha1($location->getId());
     $isAlive = $isAlive ? 'true' : 'false';
@@ -396,7 +399,7 @@ class AnimalRepository extends BaseRepository
 
     $query = $livestockAnimalsQueryBuilder->getQuery();
 
-    if (self::USE_REDIS_CACHE) {
+    if (self::USE_REDIS_CACHE && $prioritizeRedisCache) {
         $query->useQueryCache(true);
         $query->setCacheable(true);
         $query->useResultCache(true, Constant::CACHE_LIVESTOCK_TIME_SPAN, $cacheId);

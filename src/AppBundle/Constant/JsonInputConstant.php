@@ -15,6 +15,7 @@ class JsonInputConstant
     const WORK_NUMBER = 'work_number';
     const IS_ALIVE = 'is_alive';
     const ANIMAL = 'animal';
+    const ANIMALS = 'animals';
     const ANIMAL_ID = 'animal_id';
     const BIRTH_PROGRESS = 'birth_progress';
     const RAM = 'ram';
