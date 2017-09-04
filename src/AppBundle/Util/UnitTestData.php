@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
@@ -396,5 +397,34 @@ class UnitTestData
             }
         }
         return null;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Location $location
+     * @param $totalAnimalCount
+     * @param $gender
+     * @return array
+     */
+    public static function getAnimalsUlnsBody(EntityManagerInterface $em, Location $location, $totalAnimalCount, $gender = null)
+    {
+        $animals = $em->getRepository(Animal::class)->getLiveStock($location, true,false,false, $gender,false);
+
+        $result = [];
+        $animalCount = 0;
+        /** @var Animal $animal */
+        foreach ($animals as $animal) {
+            $animalCount++;
+            $result[] = [
+              JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+              JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+            ];
+
+            if (++$animalCount >= $totalAnimalCount) {
+                break;
+            }
+        }
+        return $result;
     }
 }

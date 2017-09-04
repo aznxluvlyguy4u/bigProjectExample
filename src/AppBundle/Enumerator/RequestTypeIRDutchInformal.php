@@ -4,8 +4,12 @@
 namespace AppBundle\Enumerator;
 
 
+use AppBundle\Traits\EnumInfo;
+
 class RequestTypeIRDutchInformal
 {
+    use EnumInfo;
+
     const DeclarationDetail = 'Melding Detail';
     const DeclareAnimalFlag = 'Diervlag';
     const DeclareArrival = 'Aanvoer';
@@ -23,11 +27,4 @@ class RequestTypeIRDutchInformal
     const RetrieveCountries = "Landen info";
     const RetrieveUbnDetails = "UBN info";
 
-    /**
-     * @return array
-     */
-    static function getConstants() {
-        $oClass = new \ReflectionClass(__CLASS__);
-        return $oClass->getConstants();
-    }
 }

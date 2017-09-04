@@ -1,14 +1,14 @@
 <?php
 
+
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
-use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\Ram;
-use AppBundle\Entity\Tag;
-use AppBundle\Service\IRSerializer;
+use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveTags;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -17,23 +17,17 @@ use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 
 /**
- * Class TagReplaceTest
+ * Class RetrieveTagsTest
  * @package AppBundle\Tests\Controller
- * @group tag-replace
+ * @group sync
+ * @group tag-sync
  */
-class TagReplaceTest extends WebTestCase
+class RetrieveTagsTest extends WebTestCase
 {
-
     /** @var string */
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
-    /** @var Ram */
-    static private $ram;
-    /** @var Tag */
-    static private $tag;
-    /** @var IRSerializer */
-    static private $serializer;
     /** @var EntityManagerInterface|ObjectManager */
     static private $em;
     /** @var RequestClient */
@@ -58,22 +52,19 @@ class TagReplaceTest extends WebTestCase
         $container = $kernel->getContainer();
 
         //Get service classes
-        self::$serializer = $container->get('app.serializer.ir');
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
         Validator::isTestDatabase(self::$em);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
-        self::$tag = UnitTestData::createTag(self::$em, self::$location);
-        self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
     }
 
+
     public static function tearDownAfterClass()
     {
-        UnitTestData::deleteTestAnimals(self::$em->getConnection(), DeclareTagReplace::getTableName());
-        UnitTestData::deleteTestTags(self::$em->getConnection());
+
     }
 
     /**
@@ -89,39 +80,61 @@ class TagReplaceTest extends WebTestCase
         );
     }
 
+
     /**
      * @group post
-     * @group tag-replace-post
-     * Test tag-replace post endpoint
+     * @group sync-post
+     * @group tag-sync-post
      */
-    public function testTagReplacePost()
+    public function testPostStandard()
     {
-        $declareMateJson =
-            json_encode(
-                [
-                    "replace_date" => "2016-06-09T19:25:43-05:00",  //if missing, the logData is used for replaceDate
-                    "tag" => [
-                        "uln_country_code" => self::$tag->getUlnCountryCode(),
-                        "uln_number" => self::$tag->getUlnNumber()
-                    ],
-                    "animal" => [
-                        "uln_country_code" => self::$ram->getUlnCountryCode(),
-                        "uln_number" => self::$ram->getUlnNumber()
-                    ]
-                ]);
+        $body = [
+            // empty
+        ];
+
+        $json = json_encode($body);
 
         $this->client->request('POST',
-            Endpoint::DECLARE_TAG_REPLACE_ENDPOINT,
+            Endpoint::RETRIEVE_TAGS,
             array(),
             array(),
             $this->defaultHeaders,
-            $declareMateJson
+            $json
         );
 
         $response = $this->client->getResponse();
         $data = json_decode($response->getContent(), true);
         $this->assertStatusCode(200, $this->client);
     }
+
+
+    /**
+     * @group post
+     * @group sync-post
+     * @group tag-sync-post
+     */
+    public function testPostWithSettingsInBody()
+    {
+        $body = [
+            "animal_type" => 3,
+            "tag_type" => "V",
+        ];
+
+        $json = json_encode($body);
+
+        $this->client->request('POST',
+            Endpoint::RETRIEVE_TAGS,
+            array(),
+            array(),
+            $this->defaultHeaders,
+            $json
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
+    }
+
 
     /*
      * Runs after all testcases ran and teardown
@@ -133,5 +146,11 @@ class TagReplaceTest extends WebTestCase
     public function tearDown()
     {
         parent::tearDown();
+
+        $retrieveMessage = self::$em->getRepository(RetrieveTags::class)->findOneBy([
+            'requestState' => RequestStateType::OPEN,
+            'ubn' => self::$location->getUbn()], ['logDate' => 'DESC']);
+        self::$em->remove($retrieveMessage);
+        self::$em->flush();
     }
 }

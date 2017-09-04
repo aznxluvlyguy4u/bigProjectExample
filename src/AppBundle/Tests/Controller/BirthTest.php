@@ -36,6 +36,16 @@ class BirthTest extends WebTestCase
 {
     const TEST_BIRTH_CUD = true;
 
+    const GET_CandidateMothers = 'GET_CandidateMothers';
+    const GET_CandidateFathers = 'GET_CandidateFathers';
+    const GET_CandidateSurrogates = 'GET_CandidateSurrogates';
+
+    private $endpointSuffixes = [
+        self::GET_CandidateMothers => '/candidate-mothers',
+        self::GET_CandidateFathers => '/candidate-fathers', //prepend with /{ulnMother}
+        self::GET_CandidateSurrogates => '/candidate-surrogates', //prepend with /{ulnMother}
+    ];
+
     /** @var string */
     static private $accessTokenCode;
     /** @var Location */
@@ -76,11 +86,7 @@ class BirthTest extends WebTestCase
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
@@ -156,6 +162,62 @@ class BirthTest extends WebTestCase
             Endpoint::DECLARE_BIRTH_ENDPOINT,
             array(), array(), $this->defaultHeaders
         );
+        $this->assertStatusCode(200, $this->client);
+    }
+
+
+    /**
+     * @group get
+     * @group birth-get
+     */
+    public function testCandidatePosts()
+    {
+        $eventDate = new \DateTime('2017-01-04');
+
+        $json =
+            json_encode(
+                [
+                    "date_of_birth" => TimeUtil::getTimeStampForJsonBody($eventDate),
+                ]);
+
+        $this->client->request('POST',
+            Endpoint::DECLARE_BIRTH_ENDPOINT . $this->endpointSuffixes[self::GET_CandidateMothers],
+            array(),
+            array(),
+            $this->defaultHeaders,
+            $json
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
+
+
+
+        $this->client->request('POST',
+            Endpoint::DECLARE_BIRTH_ENDPOINT . '/' . self::$ewe->getUln() . $this->endpointSuffixes[self::GET_CandidateFathers],
+            array(),
+            array(),
+            $this->defaultHeaders,
+            $json
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
+
+
+
+        $this->client->request('POST',
+            Endpoint::DECLARE_BIRTH_ENDPOINT . '/' . self::$ewe->getUln() . $this->endpointSuffixes[self::GET_CandidateSurrogates],
+            array(),
+            array(),
+            $this->defaultHeaders,
+            $json
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
         $this->assertStatusCode(200, $this->client);
     }
 

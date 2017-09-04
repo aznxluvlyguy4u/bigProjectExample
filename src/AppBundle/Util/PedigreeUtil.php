@@ -4,8 +4,11 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Enumerator\PedigreeMasterKey;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class PedigreeUtil
 {
@@ -13,8 +16,9 @@ class PedigreeUtil
     const CHILD_PARAM = 'c';
     const FATHER_PARAM = 'f';
     const MOTHER_PARAM = 'm';
+    const DEFAULT_MASTER_KEY = 'uln';// PedigreeMasterKey::ULN;
 
-    /** @var ObjectManager */
+    /** @var ObjectManager|EntityManagerInterface */
     private $em;
 
     /** @var array */
@@ -122,16 +126,107 @@ class PedigreeUtil
      * @param Connection $conn
      * @param array $animalIds
      * @param int $generationLimit
-     * @return string
+     * @param string $masterKey
+     * @return array
+     * @throws \Exception
+     */
+    public static function findNestedParentsBySingleSqlQuery(Connection $conn, array $animalIds, $generationLimit = 1,
+                                                             $masterKey = PedigreeMasterKey::ULN)
+    {
+        $flatResults = self::findParentsBySingleSqlQuery($conn, $animalIds, $generationLimit);
+        if (count($animalIds) === 1) {
+            $flatResults = [$flatResults];
+        }
+
+        if (!in_array($masterKey, PedigreeMasterKey::getConstants())) {
+            $masterKey = self::DEFAULT_MASTER_KEY;
+        }
+        $masterKey = 'c_'.$masterKey;
+
+        $nestedResults = [];
+        foreach ($flatResults as $flatResult)
+        {
+            $nestedResult = [];
+            $masterKeyValue = null;
+            foreach ($flatResult as $key => $value)
+            {
+                $parts = explode('_', $key);
+                if (count($parts) !== 2) {
+                    throw new \Exception('Parent key does not consist of two parts', 500);
+                }
+                $parentsPart = $parts[0];
+                $parameterPart = $parts[1];
+
+                $orderedParentGenders = str_split($parentsPart, 1);
+                $orderedParentGenders[] = $parameterPart;
+                $nestedResult = self::nestedFill($orderedParentGenders, $value, $nestedResult);
+                if ($key === $masterKey) {
+                    $masterKeyValue = $value;
+                }
+            }
+
+            if ($masterKeyValue !== null) {
+                $nestedResults[$masterKeyValue] = $nestedResult;
+            } else {
+                $nestedResults[] = $nestedResult;
+            }
+        }
+
+        return $nestedResults;
+    }
+
+
+    private static function nestedFill(array $orderedKeys, $value, array $array = [])
+    {
+        if (count($orderedKeys) === 0 || $value === null || $value === '') { return $array; }
+
+        $isChildValue = false;
+        $keysString = '';
+        foreach ($orderedKeys as $index => $key)
+        {
+            if ($key === 'c') {
+                //Move child values to top level
+                continue;
+            }
+
+            switch ($key) {
+                case 'f': $key = 'father'; break;
+                case 'm': $key = 'mother'; break;
+                default: break;
+            }
+
+            if ($key !== 'c') {
+                $keysString = $keysString . "['".$key."']";
+            }
+        }
+
+        eval("\$array".$keysString." = \$value;");
+
+        return $array;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $animalIds
+     * @param int $generationLimit
+     * @return string|array
+     * @throws \Exception
      */
     public static function findParentsBySingleSqlQuery(Connection $conn, array $animalIds, $generationLimit = 1)
     {
+        if ($generationLimit > 8) {
+            throw new \Exception('The maximum generation limit is 8 to prevent a too large sql query. 
+            Inserted generation limit: '.$generationLimit, Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
         $sql = 'SELECT '.implode(', ', self::ulnSelectString($generationLimit))
              .' FROM animal '.self::CHILD_PARAM
              .' '.implode(' ', self::joinParents($generationLimit))
              .' WHERE '.SqlUtil::getFilterStringByIdsArray($animalIds, self::CHILD_PARAM.'.id');
         ;
-        if(count($animalIds) == 1) {
+
+        if(count($animalIds) === 1) {
             return $conn->query($sql)->fetch();
         }
         return $conn->query($sql)->fetchAll();

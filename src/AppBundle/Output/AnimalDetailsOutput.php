@@ -28,8 +28,11 @@ use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedValueUtil;
+use AppBundle\Util\PedigreeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 
 /**
@@ -37,13 +40,15 @@ use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
  */
 class AnimalDetailsOutput
 {
+    const NESTED_GENERATION_LIMIT = 4;
+
     /**
-     * @param ObjectManager $em
+     * @param ObjectManager|EntityManagerInterface $em
      * @param Animal $animal
      * @param Location $location
      * @return array
      */
-    public static function create(ObjectManager $em, Animal $animal, $location)
+    public static function create($em, Animal $animal, $location)
     {
         $replacementString = "";
 
@@ -130,6 +135,8 @@ class AnimalDetailsOutput
             }
         }
 
+        $ascendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($em->getConnection(), [$animal->getId()],self::NESTED_GENERATION_LIMIT);
+
         $result = array(
             Constant::ULN_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
             Constant::ULN_NUMBER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnNumber(), $replacementString),
@@ -182,6 +189,7 @@ class AnimalDetailsOutput
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
             "declare_log" => self::getLog($em, $animal, $location, $replacementString),
             "children" => $animalRepository->getOffspringLogDataBySql($animal, $replacementString),
+            "ascendants" => ArrayUtil::get($animal->getUln(), $ascendants, []),
         );
 
         return $result;
