@@ -4,6 +4,7 @@ namespace AppBundle\Enumerator;
 
 
 use AppBundle\Component\Utils;
+use AppBundle\Traits\EnumInfo;
 
 /**
  * Class RequestType
@@ -11,6 +12,8 @@ use AppBundle\Component\Utils;
  */
 class RequestType
 {
+    use EnumInfo;
+
     //RequestType
     const DECLARATION_DETAIL = 'DECLARATION_DETAIL';
     const DECLARE_ARRIVAL = 'DECLARE_ARRIVAL';
@@ -113,11 +116,4 @@ class RequestType
     }
 
 
-    /**
-     * @return array
-     */
-    static function getConstants() {
-        $oClass = new \ReflectionClass(__CLASS__);
-        return $oClass->getConstants();
-    }
 }
