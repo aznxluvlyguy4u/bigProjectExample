@@ -17,6 +17,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Response;
 
 
 /**
@@ -72,11 +73,7 @@ class ReportTest extends WebTestCase
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$location = self::$em->getRepository(Location::class)->find(self::TEST_LOCATION_ID);
         self::$accessTokenCode = self::$location->getOwner()->getAccessToken();
@@ -164,7 +161,7 @@ class ReportTest extends WebTestCase
     {
         $totalAnimalCount = 10;
 
-        $json = null;dump($json);die;
+        $json = null;
 
         $this->client->request('POST',
             Endpoint::REPORT . $this->endpointSuffixes[self::POST_livestockReport],
