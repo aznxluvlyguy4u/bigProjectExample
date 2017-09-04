@@ -55,11 +55,7 @@ class RetrieveTagsTest extends WebTestCase
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();

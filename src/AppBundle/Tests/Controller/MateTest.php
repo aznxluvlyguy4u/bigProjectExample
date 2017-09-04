@@ -65,11 +65,7 @@ class MateTest extends WebTestCase
         self::$logger = $container->get('logger');
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         //Ewe should be on location of client, but Ram does not have to be.
