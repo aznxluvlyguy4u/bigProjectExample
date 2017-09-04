@@ -103,7 +103,9 @@ class LiveStockReportService extends ReportServiceBase
         if ($this->content === null) { return true; }
 
         if (!$this->content->containsKey(JsonInputConstant::ANIMALS)) {
-            return ResultUtil::errorResult("The 'animals' key is missing", 428);
+            //if 'animals' key is missing, process as default full livestock report
+            $this->content = null;
+            return true;
         }
 
         $animalUlns = $this->content->get(JsonInputConstant::ANIMALS);
