@@ -23,12 +23,7 @@ class RequestUtil
             throw new BadRequestHttpException("Content is empty");
         }
 
-        $array = json_decode($content, true);
-        if($array == null) {
-            return null;
-        }
-
-        return new ArrayCollection($array);
+        return new ArrayCollection(json_decode($content, true));
     }
 
 

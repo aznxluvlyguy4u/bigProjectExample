@@ -22,6 +22,8 @@ class Endpoint
 
     const MOLLIE_ENDPOINT = "/api/v1/mollie";
 
+    const RETRIEVE_ANIMALS = '/api/v1/animals-sync';
+    const RETRIEVE_TAGS = '/api/v1/tags-sync';
     const REVOKE_ENDPOINT = "/api/v1/revokes";
 
     const TREATMENTS = "/api/v1/treatments";
