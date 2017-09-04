@@ -37,7 +37,7 @@ class TagSyncMessageBuilder extends MessageBuilderBase {
    * @param Client|Person $person
    * @param Person $loggedInUser
    * @param Location $location
-   * @return ArrayCollection
+   * @return RetrieveTags
    */
   public function buildMessage(RetrieveTags $messageObject, $person, $loggedInUser, $location)
   {

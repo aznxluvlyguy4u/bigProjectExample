@@ -38,7 +38,7 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
    * @param Client|Person $person
    * @param Person $loggedInUser
    * @param Location $location
-   * @return ArrayCollection
+   * @return DeclareTagsTransfer
    */
   public function buildMessage(DeclareTagsTransfer $messageObject, $person, $loggedInUser, $location)
   {
