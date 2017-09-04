@@ -8,6 +8,7 @@ use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Count;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Client;
@@ -21,10 +22,13 @@ use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\RequestUtil;
+use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\TwigOutputUtil;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
@@ -52,6 +56,8 @@ class LiveStockReportService extends ReportServiceBase
     /** @var Location */
     private $location;
 
+    /** @var ArrayCollection */
+    private $content;
     /** @var array */
     private $data;
 
@@ -73,6 +79,10 @@ class LiveStockReportService extends ReportServiceBase
         $this->client = $this->userService->getAccountOwner($request);
         $this->location = $this->userService->getSelectedLocation($request);
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
+        $this->content = RequestUtil::getContentAsArray($request, true, null);
+
+        $validationResult = $this->validateContent();
+        if ($validationResult instanceof JsonResponse) { return $validationResult; }
 
         $this->getPdfReportData();
         $this->filename = self::FILE_NAME_REPORT_TYPE.'_'.$this->location->getUbn();
@@ -83,6 +93,48 @@ class LiveStockReportService extends ReportServiceBase
 
         return $this->getPdfReport();
     }
+
+
+    /**
+     * @return JsonResponse|bool
+     */
+    private function validateContent()
+    {
+        if ($this->content === null) { return true; }
+
+        if (!$this->content->containsKey(JsonInputConstant::ANIMALS)) {
+            return ResultUtil::errorResult("The 'animals' key is missing", 428);
+        }
+
+        $animalUlns = $this->content->get(JsonInputConstant::ANIMALS);
+
+        $mandatoryKeys = [
+            JsonInputConstant::ULN_COUNTRY_CODE,
+            JsonInputConstant::ULN_NUMBER,
+            ];
+
+        foreach ($animalUlns as $animalUln)
+        {
+            foreach ($mandatoryKeys as $mandatoryKey) {
+                if (!key_exists($mandatoryKey, $animalUln)) {
+                    return ResultUtil::errorResult("'".$mandatoryKey."' key is missing", 428);
+                }
+            }
+        }
+
+        //TODO Validate if animals belong to current livestock
+        $isValidLivestockAnimal = true;
+
+        //TODO Validate if animals belong to historic livestock
+        $isValidHistoricLiveStockAnimal = true;
+
+        if (!$isValidLivestockAnimal && !$isValidHistoricLiveStockAnimal) {
+            return ResultUtil::errorResult('List contains animals not on current nor historic livestock list of ubn', 428);
+        }
+
+        return true;
+    }
+
 
 
     private function getPdfReport()
@@ -157,7 +209,13 @@ class LiveStockReportService extends ReportServiceBase
      */
     private function retrieveLiveStockData()
     {
-        $results = StoredProcedure::getProcedure($this->conn, StoredProcedure::GET_LIVESTOCK_REPORT, [$this->location->getId()]);
+        if ($this->content !== null) {
+            $matchLocationOfSelectedAnimals = false; //This ensures inclusion of historic animals
+            $sql = StoredProcedure::createLiveStockReportSqlBase($this->location->getId(), $this->content->get(JsonInputConstant::ANIMALS), $matchLocationOfSelectedAnimals);
+            $results = $this->conn->query($sql)->fetchAll();
+        } else {
+            $results = StoredProcedure::getProcedure($this->conn, StoredProcedure::GET_LIVESTOCK_REPORT, [$this->location->getId()]);
+        }
 
         $keys = array_keys($results);
         foreach ($keys as $key) {
