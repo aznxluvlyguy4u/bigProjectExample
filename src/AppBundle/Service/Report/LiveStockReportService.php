@@ -144,14 +144,14 @@ class LiveStockReportService extends ReportServiceBase
 
         if(ReportAPIController::IS_LOCAL_TESTING) {
             //Save pdf in local cache
-            return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($this->getCacheDirFilename(), $html, TwigOutputUtil::pdfLandscapeOptions())], 200);
+            return ResultUtil::successResult($this->saveFileLocally($this->getCacheDirFilename(), $html, TwigOutputUtil::pdfLandscapeOptions()));
         }
 
         $pdfOutput = $this->knpGenerator->getOutputFromHtml($html,TwigOutputUtil::pdfLandscapeOptions());
 
         $url = $this->storageService->uploadPdf($pdfOutput, $this->getS3Key());
 
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+        return ResultUtil::successResult($url);
     }
 
 
