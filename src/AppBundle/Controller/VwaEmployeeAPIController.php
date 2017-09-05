@@ -158,33 +158,6 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
 
 
     /**
-     * Create and invite a VWA employee including sending their login data by email.
-     *
-     * @ApiDoc(
-     *   section = "VWA",
-     *   headers={
-     *     {
-     *       "name"="AccessToken",
-     *       "dataType"="string",
-     *       "requirement"="",
-     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-     *     }
-     *   },
-     *   resource = true,
-     *   description = "Invite a VWA employee including sending their login data by email."
-     * )
-     * @param Request $request the request object
-     * @return JsonResponse
-     * @Route("/invite")
-     * @Method("POST")
-     */
-    public function invite(Request $request)
-    {
-        return $this->get('app.vwa.employee')->invite($request);
-    }
-
-
-    /**
      * Retrieve a valid access token.
      *
      * @ApiDoc(
@@ -209,60 +182,6 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
     function authorize(Request $request)
     {
         return $this->get('app.vwa.employee')->authorize($request);
-    }
-
-
-    /**
-     * Request password reset of VWA employee by email.
-     *
-     * @ApiDoc(
-     *   section = "VWA",
-     *   headers={
-     *     {
-     *       "name"="AccessToken",
-     *       "dataType"="string",
-     *       "requirement"="",
-     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-     *     }
-     *   },
-     *   resource = true,
-     *   description = "Request password reset of VWA employee by email."
-     * )
-     * @param Request $request the request object
-     * @return JsonResponse
-     * @Route("/auth/password-reset")
-     * @Method("POST")
-     */
-    function passwordResetRequest(Request $request)
-    {
-        return $this->get('app.vwa.employee')->passwordResetRequest($request);
-    }
-
-
-    /**
-     * Confirm password reset of VWA employee by email.
-     *
-     * @ApiDoc(
-     *   section = "VWA",
-     *   headers={
-     *     {
-     *       "name"="AccessToken",
-     *       "dataType"="string",
-     *       "requirement"="",
-     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-     *     }
-     *   },
-     *   resource = true,
-     *   description = "Confirm password reset of VWA employee by email."
-     * )
-     * @param Request $request the request object
-     * @return JsonResponse
-     * @Route("/auth/password-reset")
-     * @Method("PUT")
-     */
-    function passwordResetConfirmation(Request $request)
-    {
-        return $this->get('app.vwa.employee')->passwordResetConfirmation($request);
     }
 
 

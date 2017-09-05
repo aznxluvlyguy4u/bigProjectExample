@@ -310,17 +310,6 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
      * @param Request $request
      * @return JsonResponse
      */
-    public function invite(Request $request)
-    {
-        // TODO: Implement invite() method. READ ids from content
-
-        return ResultUtil::successResult('ok');
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
     function authorize(Request $request)
     {
         // TODO: Implement authorize() method.

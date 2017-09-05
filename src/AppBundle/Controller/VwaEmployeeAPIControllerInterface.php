@@ -13,8 +13,5 @@ interface VwaEmployeeAPIControllerInterface
     function create(Request $request);
     function edit(Request $request, $id);
     function deactivate(Request $request, $id);
-
-    function invite(Request $request);
-
     function authorize(Request $request);
 }
