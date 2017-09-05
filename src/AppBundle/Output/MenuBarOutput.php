@@ -5,6 +5,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Component\Count;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -37,6 +38,20 @@ class MenuBarOutput extends Output
         );
 
         return $result;
+    }
+
+
+    /**
+     * @param VwaEmployee $vwaEmployee
+     * @return array
+     */
+    public static function createVwaEmployee(VwaEmployee $vwaEmployee)
+    {
+        return [
+            "first_name" => $vwaEmployee->getFirstName(),
+            "last_name" => $vwaEmployee->getLastName(),
+            "email_address" => $vwaEmployee->getEmailAddress(),
+        ];
     }
 
 

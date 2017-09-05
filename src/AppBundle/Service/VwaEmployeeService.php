@@ -3,11 +3,13 @@
 namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\VwaEmployeeAPIControllerInterface;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Output\MenuBarOutput;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
@@ -312,9 +314,35 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
      */
     function authorize(Request $request)
     {
-        // TODO: Implement authorize() method.
+        $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
+        $credentials = str_replace('Basic ', '', $credentials);
+        $credentials = base64_decode($credentials);
 
-        return ResultUtil::successResult('ok');
+        list($emailAddress, $password) = explode(":", $credentials);
+
+        if($emailAddress != null && $password != null) {
+            $emailAddress = trim(strtolower($emailAddress));
+            /** @var VwaEmployee $vwaEmployee */
+            $vwaEmployee = $this->getManager()->getRepository(VwaEmployee::class)
+                ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
+
+            if($vwaEmployee === null) {
+                return ResultUtil::unauthorized();
+            }
+
+            if($this->encoder->isPasswordValid($vwaEmployee, $password)) {
+                $result = [
+                    "access_token"=>$vwaEmployee->getAccessToken(),
+                    "user" => MenuBarOutput::createVwaEmployee($vwaEmployee),
+                ];
+
+                //TODO ActionLog
+
+                return ResultUtil::successResult($result);
+            }
+            //TODO ActionLog
+        }
+        return ResultUtil::unauthorized();
     }
 
 
