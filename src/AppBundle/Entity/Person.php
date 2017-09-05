@@ -663,4 +663,16 @@ abstract class Person implements UserInterface
     }
 
 
+    /**
+     * @return Person
+     */
+    public function reactivate()
+    {
+        $this->setIsActive(true);
+        $this->setDeletedBy(null);
+        $this->setDeleteDate(null);
+        $this->setEditedBy(null);
+        $this->setCreationDate(new \DateTime());
+        return $this;
+    }
 }

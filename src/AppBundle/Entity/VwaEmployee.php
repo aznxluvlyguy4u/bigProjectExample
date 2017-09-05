@@ -118,5 +118,17 @@ class VwaEmployee extends Person
     }
 
 
+    /**
+     * @return VwaEmployee
+     */
+    public function reactivate()
+    {
+        parent::reactivate();
+        $this
+            ->setInvitedBy(null)
+            ->setInvitationDate(null);
+        return $this;
+    }
+
 
 }
