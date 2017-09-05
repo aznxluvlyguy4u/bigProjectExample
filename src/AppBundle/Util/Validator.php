@@ -33,6 +33,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Validator
 {
+    const DEFAULT_MIN_PASSWORD_LENGTH = 6;
+
 
     /**
      * @param float $number
@@ -646,6 +648,30 @@ class Validator
         }
 
         return ResultUtil::errorResult($errorMessage, $errorCode);
+    }
+
+
+    /**
+     * @param string $password
+     * @param int $minLength
+     * @param bool $concatErrors
+     * @return JsonResponse|boolean
+     */
+    public static function validatePasswordFormat($password, $minLength = self::DEFAULT_MIN_PASSWORD_LENGTH, $concatErrors = true)
+    {
+        $errors = [];
+        if (strlen($password) < $minLength) {
+            $errors[] = 'Het wachtwoord moet minimaal '.$minLength.' tekens lang zijn.';
+        }
+
+        if (count($errors) > 0) {
+
+            $message = implode(', ', $errors);
+            if ($concatErrors) { $errors = []; }
+
+            return ResultUtil::errorResult($message,Response::HTTP_BAD_REQUEST, $errors);
+        }
+        return true;
     }
 
 }

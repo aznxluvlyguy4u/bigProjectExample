@@ -10,6 +10,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
 class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIControllerInterface
 {
     const VWA_PASSWORD_LENGTH = 9;
+    const MIN_VWA_PASSWORD_LENGTH = 6;
 
     //ErrorMessages that should be prevented by frontend validation
     const ERROR_EMAIL_ADDRESS_EDIT_EMPTY = "If 'email_address' key exists, its value cannot be empty";
@@ -240,6 +242,27 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
                 $vwaEmployee->setEmailAddress($newEmailAddress);
                 $anyValuesUpdated = true;
                 //TODO add ActionLog
+            }
+        }
+
+
+        if ($content->containsKey(JsonInputConstant::PASSWORD))
+        {
+            //Only allow password edit for own account. Admin is not allowed to edit the password.
+            if ($this->getUser() instanceof VwaEmployee) {
+                $newPassword = $content->get(JsonInputConstant::PASSWORD);
+                $validationResult = Validator::validatePasswordFormat($newPassword, self::MIN_VWA_PASSWORD_LENGTH);
+                if ($validationResult instanceof JsonResponse) {
+                    return $validationResult;
+                }
+
+                $encodedNewPassword = $this->encoder->encodePassword($vwaEmployee, $newPassword);
+                $vwaEmployee->setPassword($encodedNewPassword);
+                $anyValuesUpdated = true;
+                //TODO add ActionLog
+
+            } else {
+                return ResultUtil::errorResult('VWA passwords may only be edited by the users themselves', Response::HTTP_UNAUTHORIZED);
             }
         }
 
