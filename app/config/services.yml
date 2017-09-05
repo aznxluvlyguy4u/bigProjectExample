@@ -608,6 +608,10 @@ services:
         parent: app.abstract_base.declare
         class: AppBundle\Service\UbnService
 
+    app.vwa.employee:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\VwaEmployeeService
+
     app.weight:
         parent: app.abstract_base.controller
         class: AppBundle\Service\WeightService
