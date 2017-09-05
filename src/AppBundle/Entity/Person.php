@@ -6,6 +6,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -196,6 +197,23 @@ abstract class Person implements UserInterface
      */
     protected $lastLoginDate;
 
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", unique=true, nullable=true)
+     * @JMS\Type("string")
+     */
+    private $passwordResetToken;
+
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    protected $passwordResetTokenCreationDate;
 
 
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
@@ -659,6 +677,53 @@ abstract class Person implements UserInterface
     public function setLastLoginDate($lastLoginDate)
     {
         $this->lastLoginDate = $lastLoginDate;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPasswordResetToken()
+    {
+        return $this->passwordResetToken;
+    }
+
+
+    /**
+     * @param string $passwordResetToken
+     * @return Person
+     */
+    public function setPasswordResetToken($passwordResetToken)
+    {
+        $this->passwordResetToken = $passwordResetToken;
+        return $this;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getPasswordResetTokenCreationDate()
+    {
+        return $this->passwordResetTokenCreationDate;
+    }
+
+
+    /**
+     * @return bool|mixed
+     */
+    public function getPasswordResetTokenAgeInDays()
+    {
+        return TimeUtil::getDaysBetween($this->getPasswordResetTokenCreationDate(), new \DateTime());
+    }
+
+
+    /**
+     * @param \DateTime $passwordResetTokenCreationDate
+     * @return Person
+     */
+    public function setPasswordResetTokenCreationDate($passwordResetTokenCreationDate)
+    {
+        $this->passwordResetTokenCreationDate = $passwordResetTokenCreationDate;
         return $this;
     }
 
