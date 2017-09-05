@@ -11,7 +11,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\VwaEmployee;
-use Symfony\Component\Templating\EngineInterface;
+use Symfony\Bridge\Twig\TwigEngine;
 
 class EmailService
 {
@@ -21,10 +21,10 @@ class EmailService
     private $swiftMailer;
     /** @var string */
     private $mailerSourceAddress;
-    /** @var EngineInterface */
+    /** @var TwigEngine */
     private $templating;
 
-    public function __construct(\Swift_Mailer $swiftMailer, $mailerSourceAddress, EngineInterface $templating, $environment)
+    public function __construct(\Swift_Mailer $swiftMailer, $mailerSourceAddress, TwigEngine $templating, $environment)
     {
         $this->environment = $environment;
         $this->swiftMailer = $swiftMailer;

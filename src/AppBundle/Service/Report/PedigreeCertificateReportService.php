@@ -22,8 +22,8 @@ use AppBundle\Validation\UlnValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Templating\EngineInterface;
 
 class PedigreeCertificateReportService extends ReportServiceBase
 {
@@ -35,7 +35,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
     private $reportResults;
 
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
             $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);

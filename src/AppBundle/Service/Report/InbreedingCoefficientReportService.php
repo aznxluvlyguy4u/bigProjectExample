@@ -21,7 +21,7 @@ use AppBundle\Validation\InbreedingCoefficientInputValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
+use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpFoundation\Request;
 
 class InbreedingCoefficientReportService extends ReportServiceBase
@@ -33,7 +33,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     private $reportResults;
 
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
             $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);

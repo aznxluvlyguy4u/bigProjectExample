@@ -21,7 +21,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
+use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -48,7 +48,7 @@ class ReportServiceBase
     protected $csvWriter;
     /** @var UserService */
     protected $userService;
-    /** @var EngineInterface */
+    /** @var TwigEngine */
     protected $templating;
     /** @var GeneratorInterface */
     protected $knpGenerator;
@@ -81,7 +81,7 @@ class ReportServiceBase
      * @param AWSSimpleStorageService $storageService
      * @param CsvWriter $csvWriter
      * @param UserService $userService
-     * @param EngineInterface $templating
+     * @param TwigEngine $templating
      * @param GeneratorInterface $knpGenerator
      * @param String $folderName
      * @param String $rootDir
@@ -89,7 +89,7 @@ class ReportServiceBase
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
-                                UserService $userService, EngineInterface $templating,
+                                UserService $userService, TwigEngine $templating,
                                 GeneratorInterface $knpGenerator, $cacheDir, $rootDir, $folderName, $filename = self::DEFAULT_FILENAME)
     {
         $this->em = $em;
