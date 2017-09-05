@@ -6,7 +6,9 @@ namespace AppBundle\Service;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\Environment;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Person;
+use AppBundle\Entity\VwaEmployee;
 use Symfony\Component\Templating\EngineInterface;
 
 class EmailService
@@ -153,6 +155,31 @@ class EmailService
         ;
 
         return $this->swiftMailer->send($messageConfirmation) > 0;
+    }
+
+
+    /**
+     * @param array $emailData
+     * @return boolean false if email not sent to anyone
+     */
+    public function sendVwaInvitationEmail($emailData)
+    {
+        //Confirmation message back to the sender
+        $message = \Swift_Message::newInstance()
+            ->setSubject(Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER)
+            ->setFrom($this->mailerSourceAddress)
+            ->setTo($emailData[JsonInputConstant::EMAIL_ADDRESS])
+            ->setBody(
+                $this->templating->render(
+                // app/Resources/views/...
+                    'User/vwa_invitation_with_password_email.html.twig',
+                    $emailData
+                ),
+                'text/html'
+            )
+            ->setSender($this->mailerSourceAddress);
+
+        return $this->swiftMailer->send($message) > 0;
     }
 
 

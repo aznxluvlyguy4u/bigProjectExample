@@ -22,6 +22,20 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
 {
     const VWA_PASSWORD_LENGTH = 9;
 
+    //ErrorMessages that should be prevented by frontend validation
+    const ERROR_EMAIL_ADDRESS_EDIT_EMPTY = "If 'email_address' key exists, its value cannot be empty";
+    const ERROR_EMAIL_ADDRESS_EMPTY = "'email address' cannot be empty.";
+    const ERROR_EMAIL_ADDRESS_INVALID = 'Het opgegeven e-mailadres heeft geen geldig format';
+    const ERROR_FIRST_NAME_EDIT_EMPTY = "If 'first_name' key exists, its value cannot be empty";
+    const ERROR_FIRST_NAME_EMPTY = "'first_name' cannot be empty.";
+    const ERROR_LAST_NAME_EDIT_EMPTY = "If 'last_name' key exists, its value cannot be empty";
+    const ERROR_LAST_NAME_EMPTY = "'last_name' cannot be empty.";
+    const ERROR_VWA_EMPLOYEE_MISSING = 'No VWA Employee found for given id: ';
+    const ERROR_VWA_EMPLOYEE_DEACTIVATED = 'VWA Employee has been deactivated';
+
+    //ErrorMessages the user is able to see
+    const ERROR_VWA_EMPLOYEE_ALREADY_EXISTS = 'VWA Medewerker bestaat al';
+
 
     /**
      * @param Request $request
@@ -29,9 +43,12 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
      */
     function getAll(Request $request)
     {
-        // TODO: Implement getById() method.
+        if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::SUPER_ADMIN))
+        { return AdminValidator::getStandardErrorResponse(); }
 
-        return ResultUtil::successResult('ok');
+        $vwaEmployees = $this->getManager()->getRepository(VwaEmployee::class)->findAll();
+        $output = $this->getBaseSerializer()->getDecodedJson($vwaEmployees, [JmsGroup::VWA]);
+        return ResultUtil::successResult($output);
     }
 
 
@@ -42,9 +59,18 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
      */
     function getById(Request $request, $id)
     {
-        // TODO: Implement getById() method.
+        if (strtolower($id) === 'me' && $this->getUser() instanceof VwaEmployee) {
+            $vwaEmployee = $this->getUser();
 
-        return ResultUtil::successResult('ok');
+        } else {
+            if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::SUPER_ADMIN))
+            { return AdminValidator::getStandardErrorResponse(); }
+
+            $vwaEmployee = $this->getManager()->getRepository(VwaEmployee::class)->findOneBy(['personId' => $id]);
+        }
+
+        $output = $this->getBaseSerializer()->getDecodedJson($vwaEmployee, [JmsGroup::VWA, JmsGroup::DETAILS]);
+        return ResultUtil::successResult($output);
     }
 
 
@@ -54,9 +80,98 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
      */
     function create(Request $request)
     {
-        // TODO: Implement create() method.
+        $admin = $this->getEmployee();
+        if(!AdminValidator::isAdmin($admin, AccessLevelType::SUPER_ADMIN))
+        { return AdminValidator::getStandardErrorResponse(); }
 
-        return ResultUtil::successResult('ok');
+        $content = RequestUtil::getContentAsArray($request);
+
+        $firstName = $content->get(JsonInputConstant::FIRST_NAME);
+        $lastName = $content->get(JsonInputConstant::LAST_NAME);
+        $emailAddress = trim(strtolower($content->get(JsonInputConstant::EMAIL_ADDRESS)));
+
+        //Validate
+        $errorMessage = '';
+        if ($firstName === null || $firstName === '') { $errorMessage .= self::ERROR_FIRST_NAME_EMPTY; }
+        if ($lastName === null || $lastName === '') { $errorMessage .= self::ERROR_LAST_NAME_EMPTY; }
+        if ($emailAddress === null || $emailAddress === '') { $errorMessage .= self::ERROR_EMAIL_ADDRESS_EMPTY;
+        } elseif (!filter_var($emailAddress, FILTER_VALIDATE_EMAIL)) { $errorMessage .= self::ERROR_EMAIL_ADDRESS_INVALID; }
+
+        if ($errorMessage !== '') {
+            return ResultUtil::errorResult($errorMessage, Response::HTTP_BAD_REQUEST);
+        }
+
+        $vwaEmployee = $this->getManager()->getRepository(VwaEmployee::class)->findOneBy(['emailAddress' => $emailAddress]);
+
+        if ($vwaEmployee) {
+
+            if ($vwaEmployee->getIsActive()) {
+                return ResultUtil::errorResult(self::ERROR_VWA_EMPLOYEE_ALREADY_EXISTS, Response::HTTP_BAD_REQUEST);
+            }
+
+            $vwaEmployee->reactivate();
+            //TODO add ActionLog
+        } else {
+            $vwaEmployee = new VwaEmployee();
+        }
+
+        //Create new vwaEmployee
+        $vwaEmployee->setFirstName($firstName);
+        $vwaEmployee->setLastName($lastName);
+        $vwaEmployee->setEmailAddress($emailAddress);
+        $vwaEmployee->setCreatedBy($admin);
+
+        $newPassword = AuthService::persistNewPassword($this->encoder, $this->getManager(),
+            $vwaEmployee, self::VWA_PASSWORD_LENGTH);
+
+        $emailData = [
+            JsonInputConstant::EMAIL_ADDRESS => $emailAddress,
+            JsonInputConstant::NEW_PASSWORD => $newPassword,
+            JsonInputConstant::FIRST_NAME => $firstName,
+            JsonInputConstant::LAST_NAME => $lastName,
+        ];
+
+        $wasSentSuccessfully = $this->emailService->sendVwaInvitationEmail($emailData);
+
+        if ($wasSentSuccessfully) {
+            $vwaEmployee->setInvitationDate(new \DateTime());
+            $vwaEmployee->setInvitedBy($admin);
+            $this->getManager()->persist($vwaEmployee);
+            $this->getManager()->flush();
+        }
+
+        $output = $this->getBaseSerializer()->getDecodedJson($vwaEmployee, [JmsGroup::VWA, JmsGroup::DETAILS]);
+
+        //TODO add ActionLog
+
+        return ResultUtil::successResult($output);
+    }
+
+
+    /**
+     * @param string $id
+     * @return JsonResponse|VwaEmployee
+     */
+    private function findByIdAndUser($id)
+    {
+        if (strtolower($id) === 'me') {
+            if ($this->getUser() instanceof VwaEmployee) {
+                $vwaEmployee = $this->getUser();
+            } else {
+                return ResultUtil::unauthorized();
+            }
+
+        } else {
+            if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::SUPER_ADMIN))
+            { return ResultUtil::unauthorized(); }
+
+            $vwaEmployee = $this->getManager()->getRepository(VwaEmployee::class)->findOneBy(['personId' => $id]);
+        }
+
+        if ($vwaEmployee === null) {
+            return ResultUtil::errorResult(self::ERROR_VWA_EMPLOYEE_MISSING . $id, Response::HTTP_BAD_REQUEST);
+        }
+        return $vwaEmployee;
     }
 
 
@@ -67,21 +182,104 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
      */
     function edit(Request $request, $id)
     {
-        // TODO: Implement edit() method.
+        $vwaEmployee = $this->findByIdAndUser($id);
+        if ($vwaEmployee instanceof JsonResponse) { return $vwaEmployee; }
 
-        return ResultUtil::successResult('ok');
+        if (!$vwaEmployee->getIsActive()) {
+            return ResultUtil::errorResult(self::ERROR_VWA_EMPLOYEE_DEACTIVATED, Response::HTTP_BAD_REQUEST);
+        }
+
+        $content = RequestUtil::getContentAsArray($request);
+
+        $anyValuesUpdated = false;
+
+        if ($content->containsKey(JsonInputConstant::FIRST_NAME))
+        {
+            $newFirstName = $content->get(JsonInputConstant::FIRST_NAME);
+            if ($newFirstName !== $vwaEmployee->getFirstName()) {
+
+                if ($newFirstName === null || $newFirstName === '') {
+                    return ResultUtil::errorResult(self::ERROR_FIRST_NAME_EDIT_EMPTY, Response::HTTP_BAD_REQUEST);
+                }
+
+                $vwaEmployee->setFirstName($newFirstName);
+                $anyValuesUpdated = true;
+                //TODO add ActionLog
+            }
+        }
+
+
+        if ($content->containsKey(JsonInputConstant::LAST_NAME))
+        {
+            $newLastName = $content->get(JsonInputConstant::LAST_NAME);
+            if ($newLastName !== $vwaEmployee->getLastName()) {
+
+                if ($newLastName === null || $newLastName === '') {
+                    return ResultUtil::errorResult(self::ERROR_LAST_NAME_EDIT_EMPTY, Response::HTTP_BAD_REQUEST);
+                }
+
+                $vwaEmployee->setLastName($newLastName);
+                $anyValuesUpdated = true;
+                //TODO add ActionLog
+            }
+        }
+
+
+        if ($content->containsKey(JsonInputConstant::EMAIL_ADDRESS))
+        {
+            $newEmailAddress = trim(strtolower($content->get(JsonInputConstant::EMAIL_ADDRESS)));
+            if ($newEmailAddress !== $vwaEmployee->getEmailAddress()) {
+
+                if (!filter_var($newEmailAddress, FILTER_VALIDATE_EMAIL)) {
+                    return ResultUtil::errorResult(self::ERROR_EMAIL_ADDRESS_INVALID, Response::HTTP_BAD_REQUEST);
+
+                } elseif ($newEmailAddress === null || $newEmailAddress === '') {
+                    return ResultUtil::errorResult(self::ERROR_EMAIL_ADDRESS_EDIT_EMPTY, Response::HTTP_BAD_REQUEST);
+                }
+
+                $vwaEmployee->setEmailAddress($newEmailAddress);
+                $anyValuesUpdated = true;
+                //TODO add ActionLog
+            }
+        }
+
+
+        if ($anyValuesUpdated) {
+            $vwaEmployee->setEditedBy($this->getUser());
+            $this->getManager()->persist($vwaEmployee);
+            $this->getManager()->flush();
+            //TODO add ActionLog
+        }
+
+        $output = $this->getBaseSerializer()->getDecodedJson($vwaEmployee, [JmsGroup::VWA, JmsGroup::DETAILS]);
+        return ResultUtil::successResult($output);
     }
 
     /**
      * @param string $id
      * @param Request $request
-     * @return mixed
+     * @return JsonResponse
      */
     function deactivate(Request $request, $id)
     {
-        // TODO: Implement deactivate() method.
+        $vwaEmployee = $this->findByIdAndUser($id);
+        if ($vwaEmployee instanceof JsonResponse) { return $vwaEmployee; }
 
-        return ResultUtil::successResult('ok');
+        if (!$vwaEmployee->getIsActive()) {
+            return ResultUtil::errorResult(self::ERROR_VWA_EMPLOYEE_DEACTIVATED, Response::HTTP_BAD_REQUEST);
+        }
+
+        $vwaEmployee->setIsActive(false);
+        $vwaEmployee->setDeleteDate(new \DateTime());
+        $vwaEmployee->setDeletedBy($this->getUser());
+
+        $this->getManager()->persist($vwaEmployee);
+        $this->getManager()->flush();
+
+        //TODO add ActionLog
+
+        $output = $this->getBaseSerializer()->getDecodedJson($vwaEmployee, [JmsGroup::VWA, JmsGroup::DETAILS]);
+        return ResultUtil::successResult($output);
     }
 
 

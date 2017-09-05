@@ -75,7 +75,7 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
 
 
     /**
-     * Create a new VWA Employee.
+     * Create a new VWA Employee. An invitation email with the login data is send after creation.
      *
      * @ApiDoc(
      *   section = "VWA",
@@ -88,7 +88,7 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Create a new VWA Employee."
+     *   description = "Create a new VWA Employee. An invitation email with the login data is send after creation. "
      * )
      * @param Request $request the request object
      * @return JsonResponse
