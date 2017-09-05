@@ -17,6 +17,4 @@ interface VwaEmployeeAPIControllerInterface
     function invite(Request $request);
 
     function authorize(Request $request);
-    function passwordResetRequest(Request $request);
-    function passwordResetConfirmation(Request $request);
 }

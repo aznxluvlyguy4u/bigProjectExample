@@ -83,7 +83,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
 
         // Send Email with passwords to Owner & Users
         $password = AuthService::persistNewPassword($this->encoder, $this->getManager(), $newAdmin);
-        $this->emailService->emailNewPasswordToPerson($newAdmin, $password, true, true);
+        $this->emailService->emailNewPasswordToPerson($newAdmin, $password, true);
 
         $this->getManager()->persist($newAdmin);
         $this->getManager()->flush();

@@ -189,4 +189,58 @@ class AuthAPIController extends APIController {
   }
 
 
+    /**
+     * Request password reset and get reset token by email.
+     *
+     * @ApiDoc(
+     *   section = "Auth",
+     *   requirements={
+     *     {
+     *       "name"="Authorization header",
+     *       "dataType"="string",
+     *       "requirement"="Base64 encoded",
+     *       "description"="Basic Authentication header with a Base64 encoded secret, semicolon separated value, with delimiter"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Request password reset and get reset token by email"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/password-reset-token")
+     * @Method("POST")
+     */
+    public function passwordResetRequest(Request $request)
+    {
+        return $this->get('app.security.auth')->passwordResetRequest($request);
+    }
+
+
+    /**
+     * Confirm password reset and get new password by email.
+     *
+     * @ApiDoc(
+     *   section = "Auth",
+     *   requirements={
+     *     {
+     *       "name"="Authorization header",
+     *       "dataType"="string",
+     *       "requirement"="Base64 encoded",
+     *       "description"="Basic Authentication header with a Base64 encoded secret, semicolon separated value, with delimiter"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Request password reset and get reset token by email"
+     * )
+     *
+     * @param Request $request the request object
+     * @return string
+     * @Route("/password-reset-token/{resetToken}")
+     * @Method("GET")
+     */
+    public function passwordResetConfirmation(Request $request, $resetToken)
+    {
+        return $this->get('app.security.auth')->passwordResetConfirmation($resetToken);
+    }
+
 }

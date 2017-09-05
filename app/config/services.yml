@@ -444,6 +444,7 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@app.user'
           - '@security.password_encoder'
+          - '@templating'
 
     app.security.auth:
         parent: app.abstract_base.auth

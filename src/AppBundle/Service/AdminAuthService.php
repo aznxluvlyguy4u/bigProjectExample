@@ -56,6 +56,8 @@ class AdminAuthService extends AuthServiceBase
 
 
     /**
+     * TODO switch to the new password reset request and confirmation endpoint in AuthService
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -80,7 +82,7 @@ class AdminAuthService extends AuthServiceBase
         //Create a new password
         $passwordLength = 9;
         $newPassword = AuthService::persistNewPassword($this->encoder, $this->getManager(), $admin, $passwordLength);
-        $emailSuccessfullySent = $this->emailService->emailNewPasswordToPerson($admin, $newPassword, true);
+        $emailSuccessfullySent = $this->emailService->emailNewPasswordToPerson($admin, $newPassword);
 
         if ($emailSuccessfullySent) {
             $log = ActionLogWriter::completeActionLog($this->getManager(), $log);

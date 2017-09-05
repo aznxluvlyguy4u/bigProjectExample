@@ -305,28 +305,5 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
         return ResultUtil::successResult('ok');
     }
 
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    function passwordResetRequest(Request $request)
-    {
-        // TODO: Implement passwordReset() method.
-
-        return ResultUtil::successResult('ok');
-    }
-
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    function passwordResetConfirmation(Request $request)
-    {
-        // TODO: Implement passwordReset() method.
-
-        return ResultUtil::successResult('ok');
-    }
-
 
 }
