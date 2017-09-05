@@ -46,7 +46,7 @@ abstract class Person implements UserInterface
    *
    * @ORM\Column(type="string", unique=true, nullable=true)
    * @JMS\Type("string")
-   * @JMS\Groups({"USER_MEASUREMENT"})
+   * @JMS\Groups({"USER_MEASUREMENT","VWA"})
    * @Expose
    */
   protected $personId;
