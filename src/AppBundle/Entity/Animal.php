@@ -31,7 +31,7 @@ use \DateTime;
  *                           "Ram" : "AppBundle\Entity\Ram",
  *                           "Ewe" : "AppBundle\Entity\Ewe",
  *                        "Neuter" : "AppBundle\Entity\Neuter"},
- *     groups = {"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+ *     groups = {"BASIC","DECLARE","MINIMAL","USER_MEASUREMENT","MIXBLUP"})
  *
  * @package AppBundle\Entity\Animal
  */
@@ -71,6 +71,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"BASIC"})
      */
     protected $pedigreeCountryCode;
 
@@ -84,6 +85,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"BASIC"})
      */
     protected $pedigreeNumber;
 
@@ -122,6 +124,7 @@ abstract class Animal
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({"DECLARE","MIXBLUP","ERROR_DETAILS","TREATMENT_TEMPLATE"})
+     * @JMS\Groups({"MINIMAL","BASIC"})
      */
     protected $dateOfBirth;
 
@@ -132,6 +135,7 @@ abstract class Animal
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({"BASIC"})
      */
     protected $dateOfDeath;
 
@@ -142,6 +146,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"MINIMAL","BASIC"})
      */
     protected $gender;
 
@@ -286,6 +291,7 @@ abstract class Animal
     /**
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({"BASIC"})
      */
     protected $location;
 
@@ -304,6 +310,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({"DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN","USER_MEASUREMENT"})
+     * @JMS\Groups({"BASIC","MINIMAL"})
      */
     protected $ulnNumber;
 
@@ -315,6 +322,7 @@ abstract class Animal
      * @Assert\Length(max = 2)
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({"DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN","USER_MEASUREMENT"})
+     * @JMS\Groups({"BASIC","MINIMAL"})
      */
     protected $ulnCountryCode;
 
