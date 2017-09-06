@@ -9,6 +9,7 @@ class JmsGroup
     const ACTION_LOG_ADMIN = 'ACTION_LOG_ADMIN';
     const ACTION_LOG_USER = 'ACTION_LOG_USER';
     const ADMIN_HIDDEN_STATUS = 'ADMIN_HIDDEN_STATUS';
+    const MINIMAL = 'MINIMAL';
     const CONTACT_INFO = 'CONTACT_INFO';
     const DECLARE_ = 'DECLARE';
     const DETAILS = 'DETAILS';

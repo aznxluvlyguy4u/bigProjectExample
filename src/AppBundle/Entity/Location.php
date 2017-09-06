@@ -50,7 +50,7 @@ class Location
    * @Assert\NotBlank
    * @Assert\Length(max = 12)
    * @JMS\Type("string")
-   * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+   * @JMS\Groups({"MINIMAL","TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
    * @Expose
    */
   protected $ubn;
@@ -240,7 +240,7 @@ class Location
      *
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"TREATMENT_TEMPLATE"})
+     * @JMS\Groups({"MINIMAL","TREATMENT_TEMPLATE"})
      * @Expose
      */
     private $isActive;
