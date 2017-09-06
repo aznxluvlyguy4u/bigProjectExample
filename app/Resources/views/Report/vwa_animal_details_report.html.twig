@@ -1,0 +1,76 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+
+    {% set doubleSpace = '&nbsp; &nbsp;' %}
+
+    {# HEADER #}
+
+    <div class="nsfo-logo">
+        <img src="{{ imagesDirectory }}" width="556" height="70" />
+    </div>
+
+    {#<h3>{{ imagesDirectory }}</h3>#}
+
+    <h2>VWA NSFO Dieren overzicht</h2>
+
+{% endblock %}
+
+{% block stylesheets %}
+
+    <style type="text/css">
+        h2 { text-align: center; font-family:SansSerif, sans-serif;font-size:22px }
+        p { text-align: center; font-family:SansSerif, sans-serif;font-size:14px; margin-bottom: 18px}
+
+        .nsfo-logo { margin-top: 0.8cm; margin-bottom: 0.7cm; }
+
+        table, td {
+            border-collapse:collapse;
+            border-spacing:0;
+            border-style:solid;
+            border-width:1px;
+            font-size: 14px;
+        }
+
+        table.table-one {
+            float: left;
+            margin-left: 80px;
+        }
+
+        table.table-two {
+            float: right;
+            margin-right: 80px;
+        }
+
+        td {
+            padding: 6px;
+        }
+
+        /* this centers the table on the page */
+        .single-table {
+            /*float: left;*/
+            /*display: inline-block;*/
+            margin:0px auto;
+        }
+
+        .tg td{font-family:SansSerif, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+        .tg th{font-family:SansSerif, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+        .tg .tg-lqy6{text-align:right;vertical-align:top}
+        .tg .tg-ddb2{font-family:serif !important;;text-align:center;vertical-align:top}
+        .tg .tg-yw4l{vertical-align:top}
+        @media screen and (max-width: 767px) {
+            .tg {width: auto !important;}
+            .tg col {width: auto !important;}
+            .tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;}
+        }
+
+        /* Always insert a page break after each <footer> element (when printing) */
+        @media print {
+            footer {page-break-after: always;}
+        }
+
+    </style>
+
+{% endblock %}

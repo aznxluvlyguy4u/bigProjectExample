@@ -4,6 +4,7 @@
 namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Client;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
@@ -14,7 +15,9 @@ use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
+use AppBundle\Util\ResultUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\TwigOutputUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -220,6 +223,32 @@ class ReportServiceBase
     protected function renderView($view, array $parameters = array())
     {
         return $this->templating->render($view, $parameters);
+    }
+
+
+    /**
+     * @param string $twigFile
+     * @param array|object $data
+     * @param boolean $isLandscape
+     * @return JsonResponse
+     */
+    protected function getPdfReportBase($twigFile, $data, $isLandscape = true)
+    {
+        $html = $this->renderView($twigFile, ['variables' => $data]);
+        $this->extension = FileType::PDF;
+
+        $pdfOptions = $isLandscape ? TwigOutputUtil::pdfLandscapeOptions() : TwigOutputUtil::pdfPortraitOptions();
+
+        if(ReportAPIController::IS_LOCAL_TESTING) {
+            //Save pdf in local cache
+            return ResultUtil::successResult($this->saveFileLocally($this->getCacheDirFilename(), $html, $pdfOptions));
+        }
+
+        $pdfOutput = $this->knpGenerator->getOutputFromHtml($html, $pdfOptions);
+
+        $url = $this->storageService->uploadPdf($pdfOutput, $this->getS3Key());
+
+        return ResultUtil::successResult($url);
     }
 
 

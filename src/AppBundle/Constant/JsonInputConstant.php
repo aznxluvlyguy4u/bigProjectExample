@@ -137,6 +137,7 @@ class JsonInputConstant
 
     //Locations
     const LOCATION = 'location';
+    const LOCATIONS = 'locations';
     const PROVINCES = 'provinces';
     const CODES = 'codes';
 

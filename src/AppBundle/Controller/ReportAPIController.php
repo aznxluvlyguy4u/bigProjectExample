@@ -224,4 +224,65 @@ class ReportAPIController extends APIController {
     }
 
 
+    /**
+     * Generate VWA animal details report by 'file_type' pdf/csv.
+     *
+     * ### POST EXAMPLE ###
+     *
+     *  {
+     *      "result": {
+     *          "locations": [
+     *              {
+     *                  "ubn": "1674459"
+     *              },
+     *              {
+     *                  "ubn": "1245656"
+     *              }
+     *          ],
+     *          "animals": [
+     *              {
+     *                  "uln_country_code": "NL",
+     *                  "uln_number": "10083749930"
+     *              },
+     *              {
+     *                  "uln_country_code": "NL",
+     *                  "uln_number": "10083749990"
+     *              }
+     *          ]
+     *      }
+     *  }
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="file_type",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
+     *        "format"="?file_type=csv"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate breed index and breed value overview report by 'file_type' xls/csv."
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/vwa/animal-details")
+     * @Method("POST")
+     */
+    public function getVwaAnimalDetailsReport(Request $request)
+    {
+        return $this->get('app.report.vwa.animal_details')->getAnimalDetailsReport($request);
+    }
+
+
 }

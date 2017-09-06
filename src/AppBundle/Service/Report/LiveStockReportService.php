@@ -138,22 +138,12 @@ class LiveStockReportService extends ReportServiceBase
     }
 
 
-
+    /**
+     * @return JsonResponse
+     */
     private function getPdfReport()
     {
-        $html = $this->renderView(self::TWIG_FILE, ['variables' => $this->data]);
-        $this->extension = FileType::PDF;
-
-        if(ReportAPIController::IS_LOCAL_TESTING) {
-            //Save pdf in local cache
-            return ResultUtil::successResult($this->saveFileLocally($this->getCacheDirFilename(), $html, TwigOutputUtil::pdfLandscapeOptions()));
-        }
-
-        $pdfOutput = $this->knpGenerator->getOutputFromHtml($html,TwigOutputUtil::pdfLandscapeOptions());
-
-        $url = $this->storageService->uploadPdf($pdfOutput, $this->getS3Key());
-
-        return ResultUtil::successResult($url);
+        return $this->getPdfReportBase(self::TWIG_FILE, $this->data, true);
     }
 
 

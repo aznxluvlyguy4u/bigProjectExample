@@ -74,18 +74,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         $reportData = $this->reportResults->getData();
         $reportData[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
 
-        $html = $this->renderView(self::TWIG_FILE, ['variables' => $reportData]);
-
-        if(ReportAPIController::IS_LOCAL_TESTING) {
-            //Save pdf in local cache
-            return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($this->getCacheDirFilename(), $html, TwigOutputUtil::pdfPortraitOptions())], 200);
-        }
-
-        $pdfOutput = $this->knpGenerator->getOutputFromHtml($html,TwigOutputUtil::pdfPortraitOptions());
-
-        $url = $this->storageService->uploadPdf($pdfOutput, $this->reportResults->getS3Key());
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+        return $this->getPdfReportBase(self::TWIG_FILE, $reportData, false);
     }
 
 
