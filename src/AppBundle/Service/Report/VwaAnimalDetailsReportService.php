@@ -8,6 +8,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\ReportAPIController;
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
@@ -64,20 +66,17 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
             }
         }
 
-        $animalData = [];
+        $ulns = [];
         if ($content->containsKey(JsonInputConstant::ANIMALS)) {
-            $animalsData = $content->get(JsonInputConstant::ANIMALS);
-            foreach ($animalsData as $ulnData) {
-                $ulnCountryCode = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $ulnData);
-                $ulnNumber = ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $ulnData);
-
-                //TODO
-            }
+            $ulns = $content->get(JsonInputConstant::ANIMALS);
         }
 
-        //TODO retrieve data
+        $animals = $this->em->getRepository(Animal::class)->findByUbnsOrUlns($ubns, $ulns);
 
-        $this->data = [];
+        //TODO extract data from animals
+        dump($animals);die;
+
+        $this->data[ReportLabel::ANIMALS] = $animals;
         $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
 
         //TODO generate output
