@@ -27,6 +27,7 @@ use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class ReportServiceBase
@@ -230,11 +231,18 @@ class ReportServiceBase
      * @param string $twigFile
      * @param array|object $data
      * @param boolean $isLandscape
-     * @return JsonResponse
+     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
     protected function getPdfReportBase($twigFile, $data, $isLandscape = true)
     {
         $html = $this->renderView($twigFile, ['variables' => $data]);
+
+        if (ReportAPIController::DISPLAY_PDF_AS_HTML) {
+            $response = new Response($html);
+            $response->headers->set('Content-Type', 'text/html');
+            return $response;
+        }
+
         $this->extension = FileType::PDF;
 
         $pdfOptions = $isLandscape ? TwigOutputUtil::pdfLandscapeOptions() : TwigOutputUtil::pdfPortraitOptions();

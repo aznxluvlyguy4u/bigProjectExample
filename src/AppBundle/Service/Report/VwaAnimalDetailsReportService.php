@@ -9,7 +9,6 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
@@ -19,8 +18,6 @@ use AppBundle\Service\UserService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
-use AppBundle\Util\ResultUtil;
-use AppBundle\Util\TwigOutputUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
@@ -73,13 +70,8 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
 
         $animals = $this->em->getRepository(Animal::class)->findByUbnsOrUlns($ubns, $ulns);
 
-        //TODO extract data from animals
-        dump($animals);die;
-
         $this->data[ReportLabel::ANIMALS] = $animals;
         $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
-
-        //TODO generate output
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
 
@@ -96,7 +88,7 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
      */
     private function getPdfReport()
     {
-        return $this->getPdfReportBase(self::TWIG_FILE, $this->data, true);
+        return $this->getPdfReportBase(self::TWIG_FILE, $this->data, false);
     }
 
 
