@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\DeclareLogMessage;
+use AppBundle\Enumerator\Language;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -46,7 +48,7 @@ use \DateTime;
  *
  * @package AppBundle\Entity\DeclareBase
  */
-abstract class DeclareBase
+abstract class DeclareBase implements DeclareLogInterface
 {
     use EntityClassInfo;
 
@@ -469,6 +471,93 @@ abstract class DeclareBase
     }
 
 
+
+    /**
+     * @param int $language
+     * @return string
+     */
+    function getDeclareLogMessage($language = Language::EN)
+    {
+        switch ($this::getShortClassName()) {
+            case DeclareArrival::getShortClassName():
+                return Language::getValue($language, DeclareLogMessage::ARRIVAL_REPORTED);
+                break;
+
+            case DeclareBirth::getShortClassName():
+                return Language::getValue($language, DeclareLogMessage::BIRTH_REPORTED);
+                break;
+
+            case DeclareDepart::getShortClassName():
+                return Language::getValue($language, DeclareLogMessage::DEPART_REPORTED);
+                break;
+
+            case DeclareExport::getShortClassName():
+                return Language::getValue($language, DeclareLogMessage::EXPORT_REPORTED);
+                break;
+
+            case DeclareImport::getShortClassName():
+                return Language::getValue($language, DeclareLogMessage::IMPORT_REPORTED);
+                break;
+
+            case DeclareLoss::getShortClassName():
+                return Language::getValue($language, DeclareLogMessage::LOSS_REPORTED);
+                break;
+
+            case DeclareTagReplace::getShortClassName():
+                return Language::getValue($language, DeclareLogMessage::TAG_REPLACE_REPORTED);
+                break;
+        }
+        return DeclareLogInterface::DECLARE_LOG_MESSAGE_NULL_RESPONSE;
+    }
+
+
+    /**
+     * @return string
+     */
+    function getEventDate()
+    {
+        $eventDateString = '';
+
+        switch ($this::getShortClassName())
+        {
+            case DeclareArrival::getShortClassName():
+                /** @var DeclareArrival $this */
+                return $this->getArrivalDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                break;
+
+            case DeclareBirth::getShortClassName():
+                /** @var DeclareBirth $this */
+                return $this->getDateOfBirth()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                break;
+
+            case DeclareDepart::getShortClassName():
+                /** @var DeclareDepart $this */
+                return $this->getDepartDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                break;
+
+            case DeclareExport::getShortClassName():
+                /** @var DeclareExport $this */
+                return $this->getExportDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                break;
+
+            case DeclareImport::getShortClassName():
+                /** @var DeclareImport $this */
+                return $this->getImportDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                break;
+
+            case DeclareLoss::getShortClassName():
+                /** @var DeclareLoss $this */
+                return $this->getDateOfDeath()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                break;
+
+            case DeclareTagReplace::getShortClassName():
+                /** @var DeclareTagReplace $this */
+                return $this->getReplaceDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                break;
+        }
+
+        return $eventDateString !== '' ? $eventDateString : DeclareLogInterface::EVENT_DATE_NULL_RESPONSE;
+    }
 
 
 
