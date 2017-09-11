@@ -7,33 +7,21 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
-use AppBundle\Entity\Token;
-use AppBundle\Entity\VwaEmployee;
-use AppBundle\Enumerator\TokenType;
-use AppBundle\Enumerator\UserActionType;
+use AppBundle\Enumerator\DashboardType;
 use AppBundle\Output\MenuBarOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Util\StringUtil;
-use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AuthService extends AuthServiceBase
 {
-    const DEFAULT_PASSWORD_LENGTH = 9;
-    const PASSWORD_RESET_EXPIRATION_DAYS = 1;
-
-    const ERROR_EMAIL_ADDRESS_EMPTY = "'email address' cannot be empty.";
 
     /**
      * @param Request $request
@@ -210,41 +198,6 @@ class AuthService extends AuthServiceBase
 
 
     /**
-     * TODO switch to the new password reset request and confirmation endpoint in AuthService
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function resetPassword(Request $request)
-    {
-        /*
-        {
-            "email_address":"example@example.com"
-        }
-        */
-        $content = RequestUtil::getContentAsArray($request);
-        $emailAddress = strtolower($content->get('email_address'));
-        $client = $this->getManager()->getRepository(Client::class)->findActiveOneByEmailAddress($emailAddress);
-        $log = ActionLogWriter::clientPasswordReset($this->getManager(), $client, $emailAddress);
-
-        //Verify if email is correct
-        if($client == null) {
-            return new JsonResponse(array("code" => 428, "message"=>"No user found with emailaddress: " . $emailAddress), 428);
-        }
-
-        //Create a new password
-        $passwordLength = 9;
-        $newPassword = self::persistNewPassword($this->encoder, $this->getManager(), $client);
-        $this->emailService->emailNewPasswordToPerson($client, $newPassword);
-
-        $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
-
-        return new JsonResponse(array("code" => 200,
-            "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
-    }
-
-
-    /**
      * @param Request $request
      * @return JsonResponse
      */
@@ -307,117 +260,4 @@ class AuthService extends AuthServiceBase
     }
 
 
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    function passwordResetRequest(Request $request)
-    {
-        $content = RequestUtil::getContentAsArray($request);
-        if (!$content->containsKey(JsonInputConstant::EMAIL_ADDRESS)) {
-            return ResultUtil::errorResult(self::ERROR_EMAIL_ADDRESS_EMPTY, Response::HTTP_BAD_REQUEST);
-        }
-
-        $emailAddress = trim(strtolower($content->get(JsonInputConstant::EMAIL_ADDRESS)));
-        $dashboardType = $content->get('dashboard_type');
-
-        switch ($dashboardType) {
-            case 'admin':
-                $person = $this->getManager()->getRepository(Employee::class)
-                    ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
-                $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
-                break;
-            case 'client':
-                $person = $this->getManager()->getRepository(Client::class)
-                    ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
-                $userActionType = UserActionType::USER_PASSWORD_RESET;
-                break;
-            case 'vwa';
-                $person = $this->getManager()->getRepository(VwaEmployee::class)
-                    ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
-                $userActionType = UserActionType::VWA_PASSWORD_RESET;
-                break;
-            default:
-                $person = null;
-                $userActionType = null;
-                break;
-        }
-
-        $log = ActionLogWriter::passwordResetRequest($this->getManager(), $person, $userActionType, $emailAddress);
-
-        if ($person !== null) {
-            try {
-
-                $resetToken = false;
-                if ($person->getPasswordResetToken() === null || $person->getPasswordResetTokenCreationDate() === null) {
-                    $resetToken = true;
-                } elseif ($person->getPasswordResetTokenAgeInDays() > self::PASSWORD_RESET_EXPIRATION_DAYS) {
-                    $resetToken = true;
-                }
-
-                if ($resetToken) {
-                    $person->setPasswordResetToken(StringUtil::getResetToken());
-                    $person->setPasswordResetTokenCreationDate(new \DateTime());
-                    $this->getManager()->persist($person);
-                    $this->getManager()->flush();
-                }
-
-                $isEmailSent = $this->emailService->emailPasswordResetToken($person);
-                if ($isEmailSent) {
-                    ActionLogWriter::completeActionLog($this->getManager(), $log);
-                }
-
-            } catch (\Exception $exception) {
-                //TODO ActionLog error
-
-                return ResultUtil::errorResult('Er is iets fouts gegaan, probeer het nogmaals', Response::HTTP_CONFLICT);
-            }
-        }
-
-        return ResultUtil::successResult('Password reset request processed for email address: '.$emailAddress);
-    }
-
-
-    /**
-     * @param string $resetToken
-     * @return string
-     */
-    function passwordResetConfirmation($resetToken)
-    {
-        $response = new Response();
-        $response->headers->set('Content-Type', 'text/html');
-
-        $person = null;
-        if ($resetToken !== null) {
-            $person = $this->getManager()->getRepository(Person::class)
-                ->findOneBy(['isActive' => true, 'passwordResetToken' => $resetToken]);
-        }
-
-        if ($person) {
-            try {
-                $passwordLength = self::DEFAULT_PASSWORD_LENGTH;
-                if ($person instanceof VwaEmployee) {
-                    $passwordLength = VwaEmployeeService::VWA_PASSWORD_LENGTH;
-                }
-                $newPassword = AuthService::persistNewPassword($this->encoder, $this->getManager(),
-                    $person, $passwordLength);
-
-                if ($this->emailService->emailNewPasswordToPerson($person, $newPassword)) {
-                    $person->setPasswordResetToken(null);
-                    $person->setPasswordResetTokenCreationDate(null);
-                    $this->getManager()->persist($person);
-                    ActionLogWriter::passwordResetConfirmation($this->getManager(), $person);
-
-                    return $this->getTemplatingService()->renderResponse('Status/password_reset_success.html.twig', [], $response);
-                }
-            } catch (\Exception $exception) {
-                //TODO ActionLog error
-
-            }
-            //TODO ActionLog error
-        }
-        //TODO ActionLog error
-
-        return $this->getTemplatingService()->renderResponse('Status/password_reset_failed.html.twig', [], $response);
-    }
 }

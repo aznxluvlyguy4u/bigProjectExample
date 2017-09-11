@@ -100,11 +100,14 @@ class EmailService
                 $this->templating->render(
                 // app/Resources/views/...
                     $twig,
-                    array('firstName' => $person->getFirstName(),
+                    [
+                        'firstName' => $person->getFirstName(),
                         'lastName' => $person->getLastName(),
                         'userName' => $person->getUsername(),
                         'email' => $person->getEmailAddress(),
-                        'password' => $newPassword)
+                        'password' => $newPassword,
+                        'salutation' => $this->getSalutationByPersonType($person),
+                    ]
                 ),
                 'text/html'
             )
@@ -222,7 +225,7 @@ class EmailService
                 $this->templating->render(
                 // app/Resources/views/...
                     'User/reset_password_request_email.html.twig',
-                    ['person' => $person]
+                    ['person' => $person, 'salutation' => $this->getSalutationByPersonType($person)]
                 ),
                 'text/html'
             )
@@ -235,6 +238,20 @@ class EmailService
         }
 
         return $this->swiftMailer->send($message) > 0;
+    }
+
+
+    /**
+     * @param $person
+     * @return string
+     */
+    public function getSalutationByPersonType($person)
+    {
+        $salutation = 'Beste heer/mevrouw';
+        if ($person instanceof Employee) { $salutation = 'Beste admin'; }
+        elseif ($person instanceof VwaEmployee) { $salutation = 'Beste VWA medewerker'; }
+        elseif ($person instanceof Client) { $salutation = 'Beste klant'; }
+        return $salutation;
     }
 
 

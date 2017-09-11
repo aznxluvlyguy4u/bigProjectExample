@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Enumerator\DashboardType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -143,7 +144,7 @@ class AuthAPIController extends APIController {
    */
   public function resetPassword(Request $request)
   {
-      return $this->get('app.security.auth')->resetPassword($request);
+      return $this->get('app.security.auth')->passwordResetRequest($request, DashboardType::CLIENT);
   }
 
   /**
