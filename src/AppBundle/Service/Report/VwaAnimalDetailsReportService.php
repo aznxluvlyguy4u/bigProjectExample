@@ -23,6 +23,7 @@ use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class VwaAnimalDetailsReportService
@@ -94,6 +95,8 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
 
     private function getCsvReport()
     {
+        throw new \Exception('Not implemented', Response::HTTP_NOT_IMPLEMENTED);
+
         $this->extension = FileType::CSV;
 
         $csvData = $this->data;
