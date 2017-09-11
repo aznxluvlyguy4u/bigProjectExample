@@ -103,11 +103,20 @@ class ActionLog
      *
      * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ACTION_LOG_ADMIN"})
+     */
+    private $isVwaEnvironment;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
+     * @JMS\Type("boolean")
      * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
      */
     private $isRvoMessage;
 
-    public function __construct($userAccount, $actionBy, $userActionType, $isCompleted = false, $description = null, $isUserEnvironment = true)
+    public function __construct($userAccount, $actionBy, $userActionType, $isCompleted = false, $description = null, $isUserEnvironment = true, $isVwaEnvironment = false)
     {
         $this->logDate = new \DateTime();
         $this->isUserEnvironment = $isUserEnvironment;
@@ -116,6 +125,7 @@ class ActionLog
         $this->userActionType = $userActionType;
         $this->isCompleted = $isCompleted;
         $this->description = $description;
+        $this->isVwaEnvironment = $isVwaEnvironment;
         $this->isRvoMessage = ActionLog::isRvoMessageByUserActionType($userActionType);
     }
 
@@ -263,6 +273,31 @@ class ActionLog
     public static function isRvoMessageByUserActionType($userActionType)
     {
         return array_search($userActionType, UserActionType::getRvoMessageActionTypes()) !== false;
+    }
+
+
+    /**
+     * Set isVwaEnvironment
+     *
+     * @param boolean $isVwaEnvironment
+     *
+     * @return ActionLog
+     */
+    public function setIsVwaEnvironment($isVwaEnvironment)
+    {
+        $this->isVwaEnvironment = $isVwaEnvironment;
+
+        return $this;
+    }
+
+    /**
+     * Get isVwaEnvironment
+     *
+     * @return boolean
+     */
+    public function isVwaEnvironment()
+    {
+        return $this->isVwaEnvironment;
     }
 
 }
