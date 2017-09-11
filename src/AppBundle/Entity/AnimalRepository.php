@@ -373,12 +373,15 @@ class AnimalRepository extends BaseRepository
       switch ($queryOnlyOnAnimalGenderType) {
         case Ewe::class:
           $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'FEMALE'");
+          $cacheId .= '_'.Ewe::getShortClassName();
           break;
         case Ram::class:
           $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'MALE'");
+          $cacheId .= '_'.Ram::getShortClassName();
           break;
         case Neuter::class:
           $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'NEUTER'");
+          $cacheId .= '_'.Neuter::getShortClassName();
           break;
         default:
           break;
@@ -457,14 +460,17 @@ class AnimalRepository extends BaseRepository
         case Ewe::getClassName():
           $livestockAnimalsGenderExpression = $livestockAnimalQueryBuilder->expr()->eq('animal.gender', "'FEMALE'");
           $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'FEMALE'");
+          $cacheId .= '_'.Ewe::getShortClassName();
           break;
         case Ram::getClassName():
           $livestockAnimalsGenderExpression = $livestockAnimalQueryBuilder->expr()->eq('animal.gender', "'MALE'");
           $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'MALE'");
+          $cacheId .= '_'.Ram::getShortClassName();
           break;
         case Neuter::getClassName():
           $livestockAnimalsGenderExpression = $livestockAnimalQueryBuilder->expr()->eq('animal.gender', "'NEUTER'");
           $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'NEUTER'");
+          $cacheId .= '_'.Neuter::getShortClassName();
           break;
         default:
           break;
