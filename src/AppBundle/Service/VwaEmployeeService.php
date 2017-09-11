@@ -10,6 +10,7 @@ use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Output\MenuBarOutput;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
@@ -336,11 +337,13 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
                     "user" => MenuBarOutput::createVwaEmployee($vwaEmployee),
                 ];
 
-                //TODO ActionLog
+                $vwaEmployee->setLastLoginDate(new \DateTime());
+                $this->getManager()->persist($vwaEmployee);
+                ActionLogWriter::loginVwaEmployee($this->getManager(), $vwaEmployee, true);
 
                 return ResultUtil::successResult($result);
             }
-            //TODO ActionLog
+            ActionLogWriter::loginVwaEmployee($this->getManager(), $vwaEmployee, false);
         }
         return ResultUtil::unauthorized();
     }

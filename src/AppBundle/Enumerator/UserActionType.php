@@ -11,7 +11,8 @@ class UserActionType extends RequestType
     const ADMIN_PASSWORD_RESET = 'ADMIN_PASSWORD_RESET';
     const USER_LOGIN = 'USER_LOGIN';
     const ADMIN_LOGIN = 'ADMIN_LOGIN';
-    
+    const VWA_LOGIN = 'VWA_LOGIN';
+
     const PROFILE_UPDATE = 'PROFILE_UPDATE';
     const CONTACT_EMAIL = 'CONTACT_EMAIL';
     const DASHBOARD_INTRO_TEXT_UPDATE = 'DASHBOARD_INTRO_TEXT_UPDATE';

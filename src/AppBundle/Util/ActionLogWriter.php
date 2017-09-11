@@ -19,6 +19,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Message;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RevokeDeclaration;
+use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -492,16 +493,31 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
+     * @param VwaEmployee $vwaEmployee
+     * @param boolean $isSuccessfulLogin
+     * @return ActionLog
+     */
+    public static function loginVwaEmployee(ObjectManager $om, $vwaEmployee, $isSuccessfulLogin)
+    {
+        $actionBy = $isSuccessfulLogin ? $vwaEmployee : null;
+        return self::login($om, $vwaEmployee, $actionBy, $isSuccessfulLogin, UserActionType::VWA_LOGIN, false, true);
+    }
+
+
+    /**
+     * @param ObjectManager $om
      * @param Person $accountOwner
      * @param Person $actionBy
      * @param boolean $isSuccessfulLogin
      * @param string $userActionType
      * @param boolean $isUserEnvironment
+     * @param boolean $isVwaEnvironment
      * @return ActionLog
      */
-    private static function login(ObjectManager $om, $accountOwner, $actionBy, $isSuccessfulLogin, $userActionType, $isUserEnvironment)
+    private static function login(ObjectManager $om, $accountOwner, $actionBy, $isSuccessfulLogin, $userActionType,
+                                  $isUserEnvironment, $isVwaEnvironment = false)
     {
-        $log = new ActionLog($accountOwner, $actionBy, $userActionType, $isSuccessfulLogin, null, $isUserEnvironment);
+        $log = new ActionLog($accountOwner, $actionBy, $userActionType, $isSuccessfulLogin, null, $isUserEnvironment, $isVwaEnvironment);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
