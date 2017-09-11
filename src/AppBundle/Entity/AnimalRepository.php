@@ -8,6 +8,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Service\CacheService;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
@@ -21,6 +22,8 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Connection;
 use Doctrine\Common\Cache\RedisCache;
 use Doctrine\ORM\Query\Expr\Join;
+use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Symfony\Component\Cache\Adapter\TraceableAdapter;
 use Symfony\Component\Console\Output\OutputInterface;
 use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 
@@ -31,7 +34,7 @@ use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 class AnimalRepository extends BaseRepository
 {
   const BATCH = 1000;
-  const USE_REDIS_CACHE = false; //TODO activate this when the livestock and historicLivestock redis cache is fixed
+  const USE_REDIS_CACHE = true; //TODO activate this when the livestock and historicLivestock redis cache is fixed
   const LIVESTOCK_CACHE_ID = 'GET_LIVESTOCK_';
   const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
   const CANDIDATE_FATHERS_CACHE_ID = 'GET_CANDIDATE_FATHERS_';
@@ -334,6 +337,7 @@ class AnimalRepository extends BaseRepository
 
   /**
    * @param Location $location
+   * @param CacheService $cacheService
    * @param bool $isAlive
    * @param bool $isDeparted
    * @param bool $isExported
@@ -342,6 +346,7 @@ class AnimalRepository extends BaseRepository
    * @return array
    */
   public function getLiveStock(Location $location,
+                               CacheService $cacheService,
                                $isAlive = true,
                                $isDeparted = false,
                                $isExported = false,
@@ -397,9 +402,7 @@ class AnimalRepository extends BaseRepository
     $query = $livestockAnimalsQueryBuilder->getQuery();
 
     if (self::USE_REDIS_CACHE) {
-        $query->useQueryCache(true);
-        $query->setCacheable(true);
-        $query->useResultCache(true, Constant::CACHE_LIVESTOCK_TIME_SPAN, $cacheId);
+        return $cacheService->get($cacheId, $query);
     }
 
     return $query->getResult();
@@ -410,10 +413,11 @@ class AnimalRepository extends BaseRepository
    * Returns historic animals EXCLUDING animals on current location
    *
    * @param Location $location
+   * @param CacheService $cacheService
    * @param Ram | Ewe | Neuter $queryOnlyOnAnimalGenderType
    * @return array
    */
-  public function getHistoricLiveStock(Location $location, $queryOnlyOnAnimalGenderType = null)
+  public function getHistoricLiveStock(Location $location, $cacheService, $queryOnlyOnAnimalGenderType = null)
   {
     // Null check
     if(!($location instanceof Location)) {
@@ -507,14 +511,13 @@ class AnimalRepository extends BaseRepository
 
     $query = $historicAnimalsQuery->getQuery();
 
+    //Returns a list of AnimalResidences
     if (self::USE_REDIS_CACHE) {
-        $query->useQueryCache(true);
-        $query->setCacheable(true);
-        $query->useResultCache(true, Constant::CACHE_HISTORIC_LIVESTOCK_TIME_SPAN, $cacheId);
+        $retrievedHistoricAnimalResidences = $cacheService->get($cacheId, $query);
+    } else {
+        $retrievedHistoricAnimalResidences = $query->getResult();
     }
 
-    //Returns a list of AnimalResidences
-    $retrievedHistoricAnimalResidences = $query->getResult();
     $historicLivestock = [];
 
     //Grab the animals on returned residences

@@ -353,7 +353,7 @@ services:
     app.cache:
         class: AppBundle\Service\CacheService
         arguments:
-          - '@snc_redis.sncredis'
+          - '%redis_host%'
 
     app.user:
         class: AppBundle\Service\UserService
