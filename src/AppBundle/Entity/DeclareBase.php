@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Constant\DeclareLogMessage;
 use AppBundle\Enumerator\Language;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\Translation;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -480,31 +481,43 @@ abstract class DeclareBase implements DeclareLogInterface
     {
         switch ($this::getShortClassName()) {
             case DeclareArrival::getShortClassName():
-                return Language::getValue($language, DeclareLogMessage::ARRIVAL_REPORTED);
+                /** @var DeclareArrival $this */
+                return
+                    Language::getValue($language, DeclareLogMessage::ARRIVAL_REPORTED)
+                    . ' ('.Language::getValue($language, Language::PREVIOUS_OWNER).': '.$this->getUbnPreviousOwner().')';
                 break;
 
             case DeclareBirth::getShortClassName():
-                return Language::getValue($language, DeclareLogMessage::BIRTH_REPORTED);
+                /** @var DeclareBirth $this */
+                return Language::getValue($language, DeclareLogMessage::BIRTH_REPORTED)
+                    . ' ('.Language::getValue($language, strtolower($this->getGender())).' '.$this->getUln().')';
                 break;
 
             case DeclareDepart::getShortClassName():
-                return Language::getValue($language, DeclareLogMessage::DEPART_REPORTED);
+                /** @var DeclareDepart $this */
+                return Language::getValue($language, DeclareLogMessage::DEPART_REPORTED)
+                    . ' ('.Language::getValue($language, Language::NEW_OWNER).': '.$this->getUbnNewOwner().')';
                 break;
 
             case DeclareExport::getShortClassName():
+                /** @var DeclareExport $this */
                 return Language::getValue($language, DeclareLogMessage::EXPORT_REPORTED);
                 break;
 
             case DeclareImport::getShortClassName():
+                /** @var DeclareImport $this */
                 return Language::getValue($language, DeclareLogMessage::IMPORT_REPORTED);
                 break;
 
             case DeclareLoss::getShortClassName():
+                /** @var DeclareLoss $this */
                 return Language::getValue($language, DeclareLogMessage::LOSS_REPORTED);
                 break;
 
             case DeclareTagReplace::getShortClassName():
-                return Language::getValue($language, DeclareLogMessage::TAG_REPLACE_REPORTED);
+                /** @var DeclareTagReplace $this */
+                return Language::getValue($language, DeclareLogMessage::TAG_REPLACE_REPORTED)
+                    . ' ('.Language::getValue($language, Language::OLD_TAG).': '.$this->getUlnToReplace().')';
                 break;
         }
         return DeclareLogInterface::DECLARE_LOG_MESSAGE_NULL_RESPONSE;

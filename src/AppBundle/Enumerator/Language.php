@@ -16,7 +16,13 @@ class Language
 
     const EN = 0;
     const NL = 1;
-    
+
+    const OLD_TAG = 'old tag';
+    const NEW_OWNER = 'new owner';
+    const PREVIOUS_OWNER = 'previous owner';
+    const FEMALE = 'female';
+    const MALE = 'male';
+
     private static $values = [
         self::NL => [
             DeclareLogMessage::ARRIVAL_REPORTED => 'Aanvoer gemeld',
@@ -28,8 +34,11 @@ class Language
             DeclareLogMessage::MATING_REPORTED => "Dekking gemeld",
             DeclareLogMessage::WEIGHT_REPORTED => "Weging gemeld",
             DeclareLogMessage::TAG_REPLACE_REPORTED => "Omnummering gemeld",
-            "OLD TAG" => "Oude oormerk",
-            "NEW OWNER" => "Nieuw houder",
+            self::OLD_TAG => "oud oormerk",
+            self::NEW_OWNER => "nieuwe houder",
+            self::PREVIOUS_OWNER => "vorige houder",
+            self::FEMALE => 'Ooi',
+            self::MALE => 'Ram',
         ]
     ];
 
