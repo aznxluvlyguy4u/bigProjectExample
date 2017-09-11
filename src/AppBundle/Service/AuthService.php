@@ -14,6 +14,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\Token;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\TokenType;
+use AppBundle\Enumerator\UserActionType;
 use AppBundle\Output\MenuBarOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
@@ -224,7 +225,7 @@ class AuthService extends AuthServiceBase
         $content = RequestUtil::getContentAsArray($request);
         $emailAddress = strtolower($content->get('email_address'));
         $client = $this->getManager()->getRepository(Client::class)->findActiveOneByEmailAddress($emailAddress);
-        $log = ActionLogWriter::passwordReset($this->getManager(), $client, $emailAddress);
+        $log = ActionLogWriter::clientPasswordReset($this->getManager(), $client, $emailAddress);
 
         //Verify if email is correct
         if($client == null) {
@@ -324,19 +325,25 @@ class AuthService extends AuthServiceBase
             case 'admin':
                 $person = $this->getManager()->getRepository(Employee::class)
                     ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
+                $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
                 break;
             case 'client':
                 $person = $this->getManager()->getRepository(Client::class)
                     ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
+                $userActionType = UserActionType::USER_PASSWORD_RESET;
                 break;
             case 'vwa';
                 $person = $this->getManager()->getRepository(VwaEmployee::class)
                     ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
+                $userActionType = UserActionType::VWA_PASSWORD_RESET;
                 break;
             default:
                 $person = null;
+                $userActionType = null;
                 break;
         }
+
+        $log = ActionLogWriter::passwordResetRequest($this->getManager(), $person, $userActionType, $emailAddress);
 
         if ($person !== null) {
             try {
@@ -355,7 +362,10 @@ class AuthService extends AuthServiceBase
                     $this->getManager()->flush();
                 }
 
-                $this->emailService->emailPasswordResetToken($person);
+                $isEmailSent = $this->emailService->emailPasswordResetToken($person);
+                if ($isEmailSent) {
+                    ActionLogWriter::completeActionLog($this->getManager(), $log);
+                }
 
             } catch (\Exception $exception) {
                 //TODO ActionLog error
@@ -396,7 +406,7 @@ class AuthService extends AuthServiceBase
                     $person->setPasswordResetToken(null);
                     $person->setPasswordResetTokenCreationDate(null);
                     $this->getManager()->persist($person);
-                    $this->getManager()->flush();
+                    ActionLogWriter::passwordResetConfirmation($this->getManager(), $person);
 
                     return $this->getTemplatingService()->renderResponse('Status/password_reset_success.html.twig', [], $response);
                 }

@@ -546,11 +546,10 @@ class ActionLogWriter
      * @param string $emailAddress
      * @return ActionLog
      */
-    public static function passwordReset(ObjectManager $om, $client, $emailAddress)
+    public static function clientPasswordReset(ObjectManager $om, $client, $emailAddress)
     {
-        $userActionType = UserActionType::USER_PASSWORD_RESET;
-
-        $log = new ActionLog($client, $client, $userActionType, false, $emailAddress);
+        $log = new ActionLog($client, $client, UserActionType::USER_PASSWORD_RESET, false,
+            $emailAddress);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -565,14 +564,89 @@ class ActionLogWriter
      */
     public static function adminPasswordReset(ObjectManager $om, $admin, $emailAddress)
     {
-        $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
-
-        $log = new ActionLog($admin, $admin, $userActionType, false, $emailAddress, false);
+        $log = new ActionLog($admin, $admin, UserActionType::ADMIN_PASSWORD_RESET, false,
+            $emailAddress, false);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
 
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $person
+     * @param string $emailAddress
+     * @param string $userActionType
+     * @return ActionLog
+     */
+    public static function passwordResetRequest(ObjectManager $om, $person, $userActionType, $emailAddress)
+    {
+        switch ($userActionType) {
+            case UserActionType::USER_PASSWORD_RESET:
+                $isUserEnvironment = true;
+                $isVwaEnvironment = false;
+                break;
+            case UserActionType::ADMIN_PASSWORD_RESET:
+                $isUserEnvironment = false;
+                $isVwaEnvironment = false;
+                break;
+            case UserActionType::VWA_PASSWORD_RESET:
+                $isUserEnvironment = false;
+                $isVwaEnvironment = true;
+                break;
+            default:
+                $isUserEnvironment = true;
+                $isVwaEnvironment = false;
+                break;
+        }
+
+        $log = new ActionLog($person, $person, $userActionType, false,
+            self::getPasswordResetDescription($emailAddress, true), $isUserEnvironment, $isVwaEnvironment);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $person
+     * @return ActionLog
+     */
+    public static function passwordResetConfirmation(ObjectManager $om, $person)
+    {
+        $userActionType = UserActionType::USER_PASSWORD_RESET;
+        $isUserEnvironment = true;
+        $isVwaEnvironment = false;
+        if ($person instanceof Employee) {
+            $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
+            $isUserEnvironment = false;
+            $isVwaEnvironment = false;
+        } elseif ($person instanceof VwaEmployee) {
+            $userActionType = UserActionType::VWA_PASSWORD_RESET;
+            $isUserEnvironment = false;
+            $isVwaEnvironment = true;
+        }
+
+        $log = new ActionLog($person, $person, $userActionType, true,
+            self::getPasswordResetDescription($person->getEmailAddress(), false),
+            $isUserEnvironment, $isVwaEnvironment);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param string $emailAddress
+     * @param boolean $isResetRequest
+     * @return string
+     */
+    private static function getPasswordResetDescription($emailAddress, $isResetRequest)
+    {
+        $descriptionType = $isResetRequest ? 'aanvraag' : 'bevestiging';
+        return $emailAddress . ': wachtwoord reset '.$descriptionType;
+    }
 
 
     /**
