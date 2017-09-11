@@ -46,6 +46,10 @@ class AdminAuthService extends AuthServiceBase
                     ]
                 ];
 
+                $admin->setLastLoginDate(new \DateTime());
+                $this->getManager()->persist($admin);
+                $this->getManager()->flush();
+
                 return ResultUtil::successResult($result);
             }
         }
