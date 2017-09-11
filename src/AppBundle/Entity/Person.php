@@ -141,6 +141,7 @@ abstract class Person implements UserInterface
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="created_by_id", referencedColumnName="id")
      * @JMS\Groups({"DETAILS"})
+     * @Expose
      */
     protected $createdBy;
 
@@ -151,6 +152,7 @@ abstract class Person implements UserInterface
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="edited_by_id", referencedColumnName="id")
      * @JMS\Groups({"DETAILS"})
+     * @Expose
      */
     protected $editedBy;
 
@@ -161,6 +163,7 @@ abstract class Person implements UserInterface
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="deleted_by_id", referencedColumnName="id")
      * @JMS\Groups({"DETAILS"})
+     * @Expose
      */
     protected $deletedBy;
 
@@ -172,6 +175,7 @@ abstract class Person implements UserInterface
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({"DETAILS"})
+     * @Expose
      */
     protected $creationDate;
 
@@ -183,6 +187,7 @@ abstract class Person implements UserInterface
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({"DETAILS"})
+     * @Expose
      */
     protected $deleteDate;
 
@@ -194,6 +199,7 @@ abstract class Person implements UserInterface
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({"VWA"})
+     * @Expose
      */
     protected $lastLoginDate;
 
