@@ -52,6 +52,7 @@ class NsfoMainCommand extends ContainerAwareCommand
     const FIX_DATABASE_VALUES = 'FIX DATABASE VALUES';
     const INFO_SYSTEM_SETTINGS = 'NSFO SYSTEM SETTINGS';
     const INITIALIZE_DATABASE_VALUES = 'INITIALIZE DATABASE VALUES';
+    const FILL_MISSING_DATA = 'FILL MISSING DATA';
     const GENDER_CHANGE = 'GENDER CHANGE';
 
 
@@ -149,12 +150,13 @@ class NsfoMainCommand extends ContainerAwareCommand
             '6: '.strtolower(self::FIX_DATABASE_VALUES), "\n",
             '7: '.strtolower(self::GENDER_CHANGE), "\n",
             '8: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
+            '9: '.strtolower(self::FILL_MISSING_DATA), "\n",
             '-----------------------------------------------', "\n",
-            '9: '.strtolower(CommandTitle::DATA_MIGRATION), "\n",
+            '10: '.strtolower(CommandTitle::DATA_MIGRATION), "\n",
             '-----------------------------------------------', "\n",
-            '10: '.strtolower(CommandTitle::MIXBLUP), "\n",
+            '11: '.strtolower(CommandTitle::MIXBLUP), "\n",
             '-----------------------------------------------', "\n",
-            '11: '.strtolower(CommandTitle::DEPART_INTERNAL_WORKER), "\n",
+            '12: '.strtolower(CommandTitle::DEPART_INTERNAL_WORKER), "\n",
             '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
@@ -162,16 +164,17 @@ class NsfoMainCommand extends ContainerAwareCommand
         switch ($option) {
             case 1: $this->getContainer()->get('app.info.parameters')->printInfo(); break;
 
-            case 2: $this->animalCacheOptions($this->cmdUtil); break;
-            case 3: $this->litterAndGeneDiversityOptions($this->cmdUtil); break;
-            case 4: $this->errorLogOptions($this->cmdUtil); break;
-            case 5: $this->fixDuplicateAnimalsOptions($this->cmdUtil); break;
-            case 6: $this->fixDatabaseValuesOptions($this->cmdUtil); break;
+            case 2: $this->animalCacheOptions(); break;
+            case 3: $this->litterAndGeneDiversityOptions(); break;
+            case 4: $this->errorLogOptions(); break;
+            case 5: $this->fixDuplicateAnimalsOptions(); break;
+            case 6: $this->fixDatabaseValuesOptions(); break;
             case 7: $this->getContainer()->get('app.cli.gender_changer')->run($this->cmdUtil); break;
-            case 8: $this->initializeDatabaseValuesOptions($this->cmdUtil); break;
-            case 9: $this->dataMigrationOptions($this->cmdUtil); break;
-            case 10: $this->getContainer()->get('app.cli.mixblup')->run($this->cmdUtil); break;
-            case 11: $this->getContainer()->get('app.cli.internal_worker.depart')->run($this->cmdUtil); break;
+            case 8: $this->initializeDatabaseValuesOptions(); break;
+            case 9: $this->fillMissingDataOptions(); break;
+            case 10: $this->dataMigrationOptions(); break;
+            case 11: $this->getContainer()->get('app.cli.mixblup')->run($this->cmdUtil); break;
+            case 12: $this->getContainer()->get('app.cli.internal_worker.depart')->run($this->cmdUtil); break;
 
             default: return;
         }
@@ -179,10 +182,7 @@ class NsfoMainCommand extends ContainerAwareCommand
     }
 
 
-    /**
-     * @param CommandUtil $cmdUtil
-     */
-    public function animalCacheOptions(CommandUtil $cmdUtil)
+    public function animalCacheOptions()
     {
         $this->initializeMenu(self::ANIMAL_CACHE_TITLE);
 
@@ -208,8 +208,6 @@ class NsfoMainCommand extends ContainerAwareCommand
             '23: BatchUpdate all Incongruent tailLength values', "\n",
             '-------------------------', "\n",
             '24: BatchInsert empty animal_cache records and BatchUpdate all Incongruent values', "\n\n",
-            '--- Fill Missing Values ---', "\n",
-            '30: Birth Weight and TailLength', "\n\n",
             '', "\n",
             '--- Helper Commands ---', "\n",
             '99: Get locationId from UBN', "\n",
@@ -220,71 +218,71 @@ class NsfoMainCommand extends ContainerAwareCommand
         switch ($option) {
             case 1:
                 AnimalCacher::cacheAnimalsBySqlInsert($this->em, $this->cmdUtil);
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
             case 2:
                 $locationId = intval($this->cmdUtil->generateQuestion('insert locationId (default = '.self::DEFAULT_LOCATION_ID.')', self::DEFAULT_LOCATION_ID));
                 AnimalCacher::cacheAnimalsBySqlInsert($this->em, $this->cmdUtil, $locationId);
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
             case 3:
                 AnimalCacher::cacheAllAnimals($this->em, $this->cmdUtil, false);
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
             case 4:
                 $locationId = intval($this->cmdUtil->generateQuestion('insert locationId (default = '.self::DEFAULT_LOCATION_ID.')', self::DEFAULT_LOCATION_ID));
                 AnimalCacher::cacheAnimalsOfLocationId($this->em, $locationId, $this->cmdUtil, false);
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
             case 5:
                 $todayDateString = TimeUtil::getTimeStampToday().' 00:00:00';
                 $dateString = intval($this->cmdUtil->generateQuestion('insert dateTimeString (default = '.$todayDateString.')', $todayDateString));
                 AnimalCacher::cacheAllAnimals($this->em, $this->cmdUtil, false, $dateString);
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
             case 6:
                 $locationId = intval($this->cmdUtil->generateQuestion('insert locationId (default = '.self::DEFAULT_LOCATION_ID.')', self::DEFAULT_LOCATION_ID));
                 AnimalCacher::cacheAnimalsAndAscendantsByLocationId($this->em, true, null, $this->cmdUtil, $locationId);
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
             case 7:
                 $locationId = intval($this->cmdUtil->generateQuestion('insert locationId (default = '.self::DEFAULT_LOCATION_ID.')', self::DEFAULT_LOCATION_ID));
                 AnimalCacher::cacheAnimalsAndAscendantsByLocationId($this->em, false, null, $this->cmdUtil, $locationId);
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
             case 8:
                 AnimalCacher::deleteDuplicateAnimalCacheRecords($this->em, $this->cmdUtil);
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
             case 9:
                 $this->em->getRepository(Animal::class)->updateAllLocationOfBirths($this->cmdUtil);
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
 
             case 11:
                 $this->cacheOneAnimalById();
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
             case 12:
                 AnimalCacher::cacheAllAnimalsByLocationGroupsIncludingAscendants($this->em, $this->cmdUtil);
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
 
             case 20:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update production and n-ling cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
-                    $cmdUtil->writeln('Updating all records...');
+                    $this->cmdUtil->writeln('Updating all records...');
                     $productionValuesUpdated = ProductionCacher::updateAllProductionValues($this->conn);
                     $nLingValuesUpdated = NLingCacher::updateAllNLingValues($this->conn);
                 } else {
@@ -302,7 +300,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 21:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update exterior cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
-                    $cmdUtil->writeln('Updating all records...');
+                    $this->cmdUtil->writeln('Updating all records...');
                     $updateCount = ExteriorCacher::updateAllExteriors($this->conn);
                 } else {
                     do{
@@ -311,14 +309,14 @@ class NsfoMainCommand extends ContainerAwareCommand
 
                     $updateCount = ExteriorCacher::updateExteriors($this->conn, [$animalId]);
                 }
-                $cmdUtil->writeln([$updateCount.' exterior animalCache records updated' ,'DONE!']);
+                $this->cmdUtil->writeln([$updateCount.' exterior animalCache records updated' ,'DONE!']);
                 break;
 
 
             case 22:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update weight cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
-                    $cmdUtil->writeln('Updating all records...');
+                    $this->cmdUtil->writeln('Updating all records...');
                     $updateCount = WeightCacher::updateAllWeights($this->conn);
                 } else {
                     do{
@@ -327,13 +325,13 @@ class NsfoMainCommand extends ContainerAwareCommand
 
                     $updateCount = WeightCacher::updateWeights($this->conn, [$animalId]);
                 }
-                $cmdUtil->writeln([$updateCount.' weight animalCache records updated' ,'DONE!']);
+                $this->cmdUtil->writeln([$updateCount.' weight animalCache records updated' ,'DONE!']);
                 break;
 
             case 23:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update tailLength cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
-                    $cmdUtil->writeln('Updating all records...');
+                    $this->cmdUtil->writeln('Updating all records...');
                     $updateCount = TailLengthCacher::updateAll($this->conn);
                 } else {
                     do{
@@ -342,21 +340,19 @@ class NsfoMainCommand extends ContainerAwareCommand
 
                     $updateCount = TailLengthCacher::update($this->conn, [$animalId]);
                 }
-                $cmdUtil->writeln([$updateCount.' tailLength animalCache records updated' ,'DONE!']);
+                $this->cmdUtil->writeln([$updateCount.' tailLength animalCache records updated' ,'DONE!']);
                 break;
 
             case 24: AnimalCacher::cacheAllAnimalsBySqlBatchQueries($this->conn, $this->cmdUtil); break;
 
-            case 30:
-
             case 99:
                 $this->printLocationIdFromGivenUbn();
-                $cmdUtil->writeln('DONE!');
+                $this->cmdUtil->writeln('DONE!');
                 break;
 
             default: $this->writeLn('Exit menu'); return;
         }
-        $this->animalCacheOptions($this->cmdUtil);
+        $this->animalCacheOptions();
     }
 
 
@@ -403,10 +399,7 @@ class NsfoMainCommand extends ContainerAwareCommand
     }
 
 
-    /**
-     * @param CommandUtil $cmdUtil
-     */
-    public function litterAndGeneDiversityOptions(CommandUtil $cmdUtil)
+    public function litterAndGeneDiversityOptions()
     {
         $this->initializeMenu(self::LITTER_GENE_DIVERSITY_TITLE);
 
@@ -446,14 +439,11 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             default: $this->writeLn('Exit menu'); return;
         }
-        $this->litterAndGeneDiversityOptions($this->cmdUtil);
+        $this->litterAndGeneDiversityOptions();
     }
 
 
-    /**
-     * @param CommandUtil $cmdUtil
-     */
-    public function errorLogOptions(CommandUtil $cmdUtil)
+    public function errorLogOptions()
     {
         $this->initializeMenu(self::ERROR_LOG_TITLE);
 
@@ -484,7 +474,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             default: $this->writeLn('Exit menu'); return;
         }
-        $this->errorLogOptions($this->cmdUtil);
+        $this->errorLogOptions();
     }
 
 
@@ -510,10 +500,7 @@ class NsfoMainCommand extends ContainerAwareCommand
     }
 
 
-    /**
-     * @param CommandUtil $cmdUtil
-     */
-    public function fixDuplicateAnimalsOptions(CommandUtil $cmdUtil)
+    public function fixDuplicateAnimalsOptions()
     {
         $this->initializeMenu(self::FIX_DUPLICATE_ANIMALS);
 
@@ -540,14 +527,11 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 6: $duplicateAnimalsFixer->mergePrimaryUlnWithSecondaryPedigreeNumberFromCsvFile($this->cmdUtil); break;
             default: $this->writeLn('Exit menu'); return;
         }
-        $this->fixDuplicateAnimalsOptions($this->cmdUtil);
+        $this->fixDuplicateAnimalsOptions();
     }
 
 
-    /**
-     * @param CommandUtil $cmdUtil
-     */
-    public function fixDatabaseValuesOptions(CommandUtil $cmdUtil)
+    public function fixDatabaseValuesOptions()
     {
         $this->initializeMenu(self::FIX_DATABASE_VALUES);
 
@@ -579,7 +563,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
-        $ascendantValidator = new AscendantValidator($this->em, $this->cmdUtil, $this->logger);
+        $ascendantValidator = new AscendantValidator($this->em, $this->cmdUtil, $this->getContainer()->get('logger'));
 
         switch ($option) {
             case 1: DatabaseDataFixer::updateMaxIdOfAllSequences($this->conn, $this->cmdUtil); break;
@@ -605,14 +589,11 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             default: $this->writeLn('Exit menu'); return;
         }
-        $this->fixDatabaseValuesOptions($this->cmdUtil);
+        $this->fixDatabaseValuesOptions();
     }
 
 
-    /**
-     * @param CommandUtil $cmdUtil
-     */
-    public function initializeDatabaseValuesOptions(CommandUtil $cmdUtil)
+    public function initializeDatabaseValuesOptions()
     {
         $this->initializeMenu(self::INITIALIZE_DATABASE_VALUES);
 
@@ -639,14 +620,32 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             default: $this->writeLn('Exit menu'); return;
         }
-        $this->initializeDatabaseValuesOptions($this->cmdUtil);
+        $this->initializeDatabaseValuesOptions();
     }
 
 
-    /**
-     * @param CommandUtil $cmdUtil
-     */
-    public function dataMigrationOptions(CommandUtil $cmdUtil)
+    public function fillMissingDataOptions()
+    {
+        $this->initializeMenu(self::FILL_MISSING_DATA);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '=====================================', "\n",
+            '1: Birth Weight and TailLength', "\n",
+            "\n",
+            'other: exit submenu', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+            case 1: $this->getContainer()->get('app.datafix.birth.measurements.missing')->run(); break;
+
+            default: $this->writeLn('Exit menu'); return;
+        }
+        $this->fillMissingDataOptions();
+    }
+
+
+    public function dataMigrationOptions()
     {
         $this->initializeMenu(CommandTitle::DATA_MIGRATION);
 
@@ -661,10 +660,10 @@ class NsfoMainCommand extends ContainerAwareCommand
 
         switch ($option) {
             case 1: $this->getContainer()->get('app.migrator.inspector')->run($this->cmdUtil); break;
-            case 2: $this->getContainer()->get('app.migrator.vsm')->run($cmdUtil); break;
+            case 2: $this->getContainer()->get('app.migrator.vsm')->run($this->cmdUtil); break;
             default: $this->writeLn('Exit menu'); return;
         }
-        $this->dataMigrationOptions($this->cmdUtil);
+        $this->dataMigrationOptions();
     }
 
 
