@@ -15,6 +15,7 @@ use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
@@ -75,6 +76,8 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
         $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
+
+        ActionLogWriter::getVwaAnimalDetailsReport($this->em, $this->getUser(), $ubns, $ulns, $fileType);
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();

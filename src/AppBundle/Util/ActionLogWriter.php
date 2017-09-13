@@ -917,6 +917,34 @@ class ActionLogWriter
 
 
     /**
+     * @param EntityManagerInterface $em
+     * @param Person $actionBy
+     * @param array $ubns
+     * @param array $ulns
+     * @param string $fileType
+     * @return ActionLog
+     */
+    public static function getVwaAnimalDetailsReport(EntityManagerInterface $em, Person $actionBy, array $ubns, array $ulns, $fileType)
+    {
+        $description = '';
+
+        foreach (['ubns' => $ubns, 'ulns' => $ulns] as $key => $values) {
+            if (count($ubns) > 0) {
+                $description .= $key.': ' . implode(', ', $values);
+            }
+        }
+
+        $description .= 'fileType: '.$fileType;
+
+        $log = new ActionLog($actionBy, $actionBy, UserActionType::VWA_EMPLOYEE_ANIMAL_DETAILS_REPORT_REQUEST,true,
+            $description,false,true);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
      * @param ObjectManager $om
      * @param ActionLog|array $log
      * @return ActionLog|array

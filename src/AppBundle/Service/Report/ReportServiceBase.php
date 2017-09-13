@@ -381,4 +381,13 @@ class ReportServiceBase
     }
 
 
+    /**
+     * @return Client|\AppBundle\Entity\Employee|\AppBundle\Entity\Person
+     */
+    protected function getUser()
+    {
+        return $this->userService->getUser();
+    }
+
+
 }
