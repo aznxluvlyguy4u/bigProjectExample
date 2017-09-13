@@ -108,6 +108,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
 
         $vwaEmployee = $this->getManager()->getRepository(VwaEmployee::class)->findOneBy(['emailAddress' => $emailAddress]);
 
+        $isReactivation = false;
         if ($vwaEmployee) {
 
             if ($vwaEmployee->getIsActive()) {
@@ -115,7 +116,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
             }
 
             $vwaEmployee->reactivate();
-            //TODO add ActionLog
+            $isReactivation = true;
         } else {
             $vwaEmployee = new VwaEmployee();
         }
@@ -147,7 +148,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
 
         $output = $this->getBaseSerializer()->getDecodedJson($vwaEmployee, [JmsGroup::VWA, JmsGroup::DETAILS]);
 
-        //TODO add ActionLog
+        ActionLogWriter::createVwaEmployee($this->getManager(), $admin, $vwaEmployee, $isReactivation);
 
         return ResultUtil::successResult($output);
     }
@@ -197,6 +198,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
         $content = RequestUtil::getContentAsArray($request);
 
         $anyValuesUpdated = false;
+        $this->clearActionLogEditMessage();
 
         if ($content->containsKey(JsonInputConstant::FIRST_NAME))
         {
@@ -209,7 +211,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
 
                 $vwaEmployee->setFirstName($newFirstName);
                 $anyValuesUpdated = true;
-                //TODO add ActionLog
+                $this->updateActionLogEditMessage('first_name', $vwaEmployee->getFirstName(), $newFirstName);
             }
         }
 
@@ -225,7 +227,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
 
                 $vwaEmployee->setLastName($newLastName);
                 $anyValuesUpdated = true;
-                //TODO add ActionLog
+                $this->updateActionLogEditMessage('last_name', $vwaEmployee->getLastName(), $newLastName);
             }
         }
 
@@ -244,7 +246,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
 
                 $vwaEmployee->setEmailAddress($newEmailAddress);
                 $anyValuesUpdated = true;
-                //TODO add ActionLog
+                $this->updateActionLogEditMessage('email_address', $vwaEmployee->getEmailAddress(), $newEmailAddress);
             }
         }
 
@@ -262,7 +264,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
                 $encodedNewPassword = $this->encoder->encodePassword($vwaEmployee, $newPassword);
                 $vwaEmployee->setPassword($encodedNewPassword);
                 $anyValuesUpdated = true;
-                //TODO add ActionLog
+                $this->updateActionLogEditMessage('password', '****', '****');
 
             } else {
                 return ResultUtil::errorResult('VWA passwords may only be edited by the users themselves', Response::HTTP_UNAUTHORIZED);
@@ -274,7 +276,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
             $vwaEmployee->setEditedBy($this->getUser());
             $this->getManager()->persist($vwaEmployee);
             $this->getManager()->flush();
-            //TODO add ActionLog
+            ActionLogWriter::editVwaEmployee($this->getManager(), $this->getUser(), $vwaEmployee,$this->getActionLogEditMessage());
         }
 
         $output = $this->getBaseSerializer()->getDecodedJson($vwaEmployee, [JmsGroup::VWA, JmsGroup::DETAILS]);
@@ -302,7 +304,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
         $this->getManager()->persist($vwaEmployee);
         $this->getManager()->flush();
 
-        //TODO add ActionLog
+        ActionLogWriter::deleteVwaEmployee($this->getManager(), $this->getUser(), $vwaEmployee);
 
         $output = $this->getBaseSerializer()->getDecodedJson($vwaEmployee, [JmsGroup::VWA, JmsGroup::DETAILS]);
         return ResultUtil::successResult($output);

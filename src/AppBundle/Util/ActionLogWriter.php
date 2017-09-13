@@ -24,6 +24,7 @@ use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 
 class ActionLogWriter
 {
@@ -857,6 +858,59 @@ class ActionLogWriter
 
         $log = new ActionLog($accountOwner, $actionBy, UserActionType::CHANGE_HIDE_MESSAGE_STATUS, true, $description, true);
         DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Person $actionBy
+     * @param VwaEmployee $vwaEmployee
+     * @param boolean $isReactivation
+     * @return ActionLog
+     */
+    public static function createVwaEmployee(EntityManagerInterface $em, Person $actionBy,
+                                             VwaEmployee $vwaEmployee, $isReactivation)
+    {
+        $userActionType = $isReactivation ? UserActionType::VWA_EMPLOYEE_REACTIVATE : UserActionType::VWA_EMPLOYEE_CREATE;
+
+        $description = $vwaEmployee->getFullName() .',  '. $vwaEmployee->getEmailAddress() . ', invited by: '
+            .$actionBy->getFullName();
+
+        $log = new ActionLog($vwaEmployee, $actionBy, $userActionType,true,$description,false,true);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Person $actionBy
+     * @param VwaEmployee $vwaEmployee
+     * @param string $description
+     * @return ActionLog
+     */
+    public static function editVwaEmployee(EntityManagerInterface $em, Person $actionBy, VwaEmployee $vwaEmployee, $description)
+    {
+        $log = new ActionLog($vwaEmployee, $actionBy, UserActionType::VWA_EMPLOYEE_EDIT,true,$description,false,true);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Person $actionBy
+     * @param VwaEmployee $vwaEmployee
+     * @return ActionLog
+     */
+    public static function deleteVwaEmployee(EntityManagerInterface $em, Person $actionBy, VwaEmployee $vwaEmployee)
+    {
+        $log = new ActionLog($vwaEmployee, $actionBy, UserActionType::VWA_EMPLOYEE_DEACTIVATE,true,null,false,true);
+        DoctrineUtil::persistAndFlush($em, $log);
 
         return $log;
     }
