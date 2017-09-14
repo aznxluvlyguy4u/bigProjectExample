@@ -31,6 +31,8 @@ class Endpoint
 
     const UBNS = "/api/v1/ubns";
 
+    const TAGS = "/api/v1/tags";
+
     const TREATMENTS = "/api/v1/treatments";
     const TREATMENT_TYPES = "/api/v1/treatment-types";
 
