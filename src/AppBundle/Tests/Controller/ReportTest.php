@@ -6,9 +6,11 @@ namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\UnitTestData;
@@ -31,27 +33,36 @@ class ReportTest extends WebTestCase
      * Test location should have alive males and females
      */
     const TEST_LOCATION_ID = 262;
+    const TEST_UBN_INPUT_FOR_VWA_ANIMAL_DETAILS_REPORT = false;
 
     const POST_pedigreeCertificates = 'POST_pedigreeCertificates';
     const POST_inbreedingCoefficientReport = 'POST_inbreedingCoefficientReport';
     const POST_livestockReport = 'POST_livestockReport';
+    const POST_vwaAnimalDetailsReport = 'POST_vwaAnimalDetailsReport';
 
     private $endpointSuffixes = [
         self::POST_pedigreeCertificates => '/pedigree-certificates',
         self::POST_inbreedingCoefficientReport => '/inbreeding-coefficients',
         self::POST_livestockReport => '/livestock',
+        self::POST_vwaAnimalDetailsReport => '/vwa/animal-details',
     ];
 
     /** @var string */
     static private $accessTokenCode;
     /** @var Location */
     static private $location;
+    /** @var Animal */
+    static private $animal;
+    /** @var VwaEmployee */
+    static private $vwaEmployee;
     /** @var EntityManagerInterface|ObjectManager */
     static private $em;
     /** @var RequestClient */
     private $client;
     /** @var array */
     private $defaultHeaders;
+    /** @var array */
+    private $vwaEmployeeHeaders;
 
 
     /**
@@ -77,6 +88,8 @@ class ReportTest extends WebTestCase
 
         self::$location = self::$em->getRepository(Location::class)->find(self::TEST_LOCATION_ID);
         self::$accessTokenCode = self::$location->getOwner()->getAccessToken();
+        self::$animal = UnitTestData::getRandomAnimalFromLocation(self::$em, self::$location);
+        self::$vwaEmployee = UnitTestData::getOrCreateVwaEmployee(self::$em, $container->getParameter('test_email'));
     }
 
     public static function tearDownAfterClass()
@@ -93,6 +106,11 @@ class ReportTest extends WebTestCase
         $this->defaultHeaders = array(
             'CONTENT_TYPE' => 'application/json',
             'HTTP_ACCESSTOKEN' => self::$accessTokenCode,
+        );
+
+        $this->vwaEmployeeHeaders = array(
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_ACCESSTOKEN' => self::$vwaEmployee->getAccessToken(),
         );
     }
 
@@ -229,9 +247,41 @@ class ReportTest extends WebTestCase
         $this->assertStatusCode(200, $this->client);
     }
 
-    /*
-     * Runs after all testcases ran and teardown
+
+    /**
+     * @group post
+     * @group report-vwa-animal-details
      */
+    public function testVwaAnimalDetailsPost()
+    {
+        $input = [
+            "animals" => [
+                [
+                    "uln_country_code" => self::$animal->getUlnCountryCode(),
+                    "uln_number" => self::$animal->getUlnNumber(),
+                ]
+            ]
+        ];
+
+        if (self::TEST_UBN_INPUT_FOR_VWA_ANIMAL_DETAILS_REPORT) {
+            $input["locations"] = [
+                "ubn" => self::$location->getUbn(),
+            ];
+        }
+
+        $this->client->request('POST',
+            Endpoint::REPORT . $this->endpointSuffixes[self::POST_vwaAnimalDetailsReport],
+            array(),
+            array(),
+            $this->vwaEmployeeHeaders,
+            json_encode($input)
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
+    }
+
 
     /**
      * Runs after each testcase
