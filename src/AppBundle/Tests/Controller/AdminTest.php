@@ -3,7 +3,7 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Constant;
-use AppBundle\Constant\TestConstant;
+use AppBundle\Constant\Endpoint;
 use AppBundle\Entity\Employee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Service\IRSerializer;
@@ -25,9 +25,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 class AdminTest extends WebTestCase
 {
-
-    const DECLARE_ADMIN_ENDPOINT = "/api/v1/admins";
-
     const GET_getAdmins = 'GET_getAdmins';
     const GET_getAccessLevelTypes = 'GET_getAccessLevelTypes';
     const POST_createAdmin = 'POST_createAdmin';
@@ -111,14 +108,14 @@ class AdminTest extends WebTestCase
     public function testAdminsGetters()
     {
         $this->client->request('GET',
-            $this::DECLARE_ADMIN_ENDPOINT . $this->endpointSuffixes[self::GET_getAdmins],
+            Endpoint::ADMIN . $this->endpointSuffixes[self::GET_getAdmins],
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
 
         $this->client->request('GET',
-            $this::DECLARE_ADMIN_ENDPOINT . $this->endpointSuffixes[self::GET_getAccessLevelTypes],
+            Endpoint::ADMIN . $this->endpointSuffixes[self::GET_getAccessLevelTypes],
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
@@ -145,7 +142,7 @@ class AdminTest extends WebTestCase
                 ]);
 
         $this->client->request('POST',
-            $this::DECLARE_ADMIN_ENDPOINT . $this->endpointSuffixes[self::POST_createAdmin],
+            Endpoint::ADMIN . $this->endpointSuffixes[self::POST_createAdmin],
             array(),
             array(),
             $this->defaultHeaders,
@@ -185,7 +182,7 @@ class AdminTest extends WebTestCase
                     ]);
 
             $this->client->request('PUT',
-                $this::DECLARE_ADMIN_ENDPOINT . $this->endpointSuffixes[self::PUT_editAdmin],
+                Endpoint::ADMIN . $this->endpointSuffixes[self::PUT_editAdmin],
                 array(),
                 array(),
                 $this->defaultHeaders,
@@ -216,7 +213,7 @@ class AdminTest extends WebTestCase
                     ]);
 
             $this->client->request('PUT',
-                $this::DECLARE_ADMIN_ENDPOINT . $this->endpointSuffixes[self::PUT_deactivateAdmin],
+                Endpoint::ADMIN . $this->endpointSuffixes[self::PUT_deactivateAdmin],
                 array(),
                 array(),
                 $this->defaultHeaders,
