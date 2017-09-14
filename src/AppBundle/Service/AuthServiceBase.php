@@ -80,7 +80,7 @@ class AuthServiceBase extends ControllerServiceBase
         }
 
         $emailAddress = trim(strtolower($content->get(JsonInputConstant::EMAIL_ADDRESS)));
-        $dashboardType = $dashboardType === null ? $content->get('dashboard_type') : $dashboardType;
+        $dashboardType = $dashboardType === null ? $content->get(JsonInputConstant::DASHBOARD_TYPE) : $dashboardType;
 
         switch ($dashboardType) {
             case DashboardType::ADMIN:
@@ -99,9 +99,8 @@ class AuthServiceBase extends ControllerServiceBase
                 $userActionType = UserActionType::VWA_PASSWORD_RESET;
                 break;
             default:
-                $person = null;
-                $userActionType = null;
-                break;
+                $message = "Valid '".JsonInputConstant::DASHBOARD_TYPE."' is missing. Allowed values: " . implode(', ', DashboardType::getConstants());
+                return ResultUtil::errorResult($message, 428);
         }
 
         $log = ActionLogWriter::passwordResetRequest($this->getManager(), $person, $userActionType, $emailAddress);

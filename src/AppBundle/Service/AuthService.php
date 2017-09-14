@@ -143,6 +143,7 @@ class AuthService extends AuthServiceBase
     {
         /*
         {
+            "current_password":"Tm90TXlGaXJzdFBhc3N3b3JkMQ==" //base64 encoded 'MyFirstPassword1'
             "new_password":"Tm90TXlGaXJzdFBhc3N3b3JkMQ==" //base64 encoded 'NotMyFirstPassword1'
         }
         */
