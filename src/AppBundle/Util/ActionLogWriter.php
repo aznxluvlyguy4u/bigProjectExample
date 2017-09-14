@@ -951,6 +951,8 @@ class ActionLogWriter
      */
     public static function completeActionLog(ObjectManager $om, $log)
     {
+        if ($log === null) { return $log; }
+        
         if (is_array($log)) {
             foreach ($log as $item) {
                 self::completeSingleActionLog($om, $item, false);
