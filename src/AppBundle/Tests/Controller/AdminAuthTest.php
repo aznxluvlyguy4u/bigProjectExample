@@ -23,6 +23,8 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class AdminAuthTest extends WebTestCase
 {
+    const USE_NEW_PASSWORD_RESET_REQUEST_ENDPOINT = false;
+
     const PUT_password_reset = 'PUT_password_reset';
     const POST_password_reset_request = 'POST_password_reset_request';
     const GET_password_reset_confirmation = 'GET_password_reset_confirmation';
@@ -104,16 +106,32 @@ class AdminAuthTest extends WebTestCase
     {
         $resetHeaders = [];
 
-        $content = [
-            'email_address' => self::$emailAddress,
-            'dashboard_type' => DashboardType::ADMIN,
-        ];
+        if (self::USE_NEW_PASSWORD_RESET_REQUEST_ENDPOINT) {
 
-        $this->client->request(Request::METHOD_PUT,
-            Endpoint::ADMIN_AUTH . $this->endpointSuffixes[self::PUT_password_reset],
-            array(), array(), $resetHeaders, json_encode($content)
-        );
-        $this->assertStatusCode(200, $this->client);
+            $content = [
+                'email_address' => self::$emailAddress,
+                'dashboard_type' => DashboardType::ADMIN,
+            ];
+
+            $this->client->request(Request::METHOD_POST,
+                Endpoint::AUTH . $this->endpointSuffixes[self::POST_password_reset_request],
+                array(), array(), $resetHeaders, json_encode($content)
+            );
+            $this->assertStatusCode(200, $this->client);
+
+        } else {
+
+            $content = [
+                'email_address' => self::$emailAddress,
+            ];
+
+            $this->client->request(Request::METHOD_PUT,
+                Endpoint::ADMIN_AUTH . $this->endpointSuffixes[self::PUT_password_reset],
+                array(), array(), $resetHeaders, json_encode($content)
+            );
+            $this->assertStatusCode(200, $this->client);
+
+        }
 
 
         self::$em->refresh(self::$admin);
