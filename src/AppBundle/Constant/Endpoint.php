@@ -6,6 +6,9 @@ namespace AppBundle\Constant;
 class Endpoint
 {
     const ACTION_LOG = '/api/v1/log/action';
+    const ADMIN = '/api/v1/admins';
+    const ADMIN_AUTH = '/api/v1/admins/auth';
+    const ADMIN_PROFILE = '/api/v1/profiles-admin';
     const AUTH = '/api/v1/auth';
 
     const DECLARE_ARRIVAL_ENDPOINT = "/api/v1/arrivals";
