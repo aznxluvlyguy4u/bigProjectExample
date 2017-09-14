@@ -5,21 +5,18 @@ namespace AppBundle\Tests\Controller;
 
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\VwaEmployee;
-use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 
 
 /**
@@ -127,7 +124,7 @@ class ReportTest extends WebTestCase
                     "animals" => UnitTestData::getAnimalsUlnsBody(self::$em, self::$location, 3),
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::REPORT . $this->endpointSuffixes[self::POST_pedigreeCertificates],
             array(),
             array(),
@@ -157,7 +154,7 @@ class ReportTest extends WebTestCase
                     "ewes" => $ewes,
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::REPORT . $this->endpointSuffixes[self::POST_inbreedingCoefficientReport],
             array(),
             array(),
@@ -181,7 +178,7 @@ class ReportTest extends WebTestCase
 
         $json = null;
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::REPORT . $this->endpointSuffixes[self::POST_livestockReport],
             array(),
             array(),
@@ -193,7 +190,7 @@ class ReportTest extends WebTestCase
         $data = json_decode($response->getContent(), true);
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::REPORT . $this->endpointSuffixes[self::POST_livestockReport] . '?file_type=csv',
             array(),
             array(),
@@ -221,7 +218,7 @@ class ReportTest extends WebTestCase
                     "animals" => UnitTestData::getAnimalsUlnsBody(self::$em, self::$location, $totalAnimalCount),
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::REPORT . $this->endpointSuffixes[self::POST_livestockReport], //as pdf
             array(),
             array(),
@@ -234,7 +231,7 @@ class ReportTest extends WebTestCase
         $this->assertStatusCode(200, $this->client);
 
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::REPORT . $this->endpointSuffixes[self::POST_livestockReport] . '?file_type=csv', // as csv
             array(),
             array(),
@@ -269,7 +266,7 @@ class ReportTest extends WebTestCase
             ];
         }
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::REPORT . $this->endpointSuffixes[self::POST_vwaAnimalDetailsReport],
             array(),
             array(),

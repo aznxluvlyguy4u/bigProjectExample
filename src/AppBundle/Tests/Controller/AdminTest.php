@@ -17,6 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class AdminTest
@@ -107,14 +108,14 @@ class AdminTest extends WebTestCase
      */
     public function testAdminsGetters()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::ADMIN . $this->endpointSuffixes[self::GET_getAdmins],
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::ADMIN . $this->endpointSuffixes[self::GET_getAccessLevelTypes],
             array(), array(), $this->defaultHeaders
         );
@@ -141,7 +142,7 @@ class AdminTest extends WebTestCase
                     "access_level" => self::$employee->getAccessLevel(),
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::ADMIN . $this->endpointSuffixes[self::POST_createAdmin],
             array(),
             array(),
@@ -181,7 +182,7 @@ class AdminTest extends WebTestCase
                         "access_level" => $newAccessLevel,
                     ]);
 
-            $this->client->request('PUT',
+            $this->client->request(Request::METHOD_PUT,
                 Endpoint::ADMIN . $this->endpointSuffixes[self::PUT_editAdmin],
                 array(),
                 array(),
@@ -212,7 +213,7 @@ class AdminTest extends WebTestCase
                         "person_id" => $personId,
                     ]);
 
-            $this->client->request('PUT',
+            $this->client->request(Request::METHOD_PUT,
                 Endpoint::ADMIN . $this->endpointSuffixes[self::PUT_deactivateAdmin],
                 array(),
                 array(),

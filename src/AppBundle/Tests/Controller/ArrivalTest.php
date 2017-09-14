@@ -3,7 +3,6 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Location;
@@ -15,6 +14,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class ArrivalTest
@@ -93,13 +93,13 @@ class ArrivalTest extends WebTestCase
      */
     public function testArrivalsGetters()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_ARRIVAL_ENDPOINT . '-history',
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_ARRIVAL_ENDPOINT . '-errors',
             array(), array(), $this->defaultHeaders
         );
@@ -127,7 +127,7 @@ class ArrivalTest extends WebTestCase
                     ]
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::DECLARE_ARRIVAL_ENDPOINT,
             array(),
             array(),

@@ -3,7 +3,6 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Location;
@@ -15,6 +14,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class DepartTest
@@ -94,13 +94,13 @@ class DepartTest extends WebTestCase
      */
     public function testDepartsGetters()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_DEPART_ENDPOINT . '-history',
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_DEPART_ENDPOINT . '-errors',
             array(), array(), $this->defaultHeaders
         );
@@ -130,7 +130,7 @@ class DepartTest extends WebTestCase
                     "depart_date" => "2012-04-21T18:25:43-05:00"
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::DECLARE_DEPART_ENDPOINT,
             array(),
             array(),

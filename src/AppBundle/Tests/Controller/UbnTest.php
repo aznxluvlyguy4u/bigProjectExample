@@ -14,6 +14,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class UbnTest
@@ -128,7 +129,7 @@ class UbnTest extends WebTestCase
      */
     public function testGet()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::UBNS . $this->endpointSuffixes[self::GET_all],
             array(), array(), $this->vwaEmployeeHeaders
         );
@@ -136,13 +137,13 @@ class UbnTest extends WebTestCase
 
 
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::UBNS . $this->endpointSuffixes[self::GET_processors],
             array(), array(), $this->defaultAdminHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::UBNS . $this->endpointSuffixes[self::GET_processors],
             array(), array(), $this->nsfoClientHeaders
         );

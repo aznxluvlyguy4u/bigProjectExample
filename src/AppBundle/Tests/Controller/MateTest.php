@@ -3,7 +3,6 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
@@ -15,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class MateTest
@@ -108,19 +108,19 @@ class MateTest extends WebTestCase
      */
     public function testMatingsGetters()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_MATINGS_ENDPOINT . '-history',
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_MATINGS_ENDPOINT . '-errors',
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_MATINGS_ENDPOINT . '-pending',
             array(), array(), $this->defaultHeaders
         );
@@ -152,7 +152,7 @@ class MateTest extends WebTestCase
                         ]
                     ]);
 
-            $this->client->request('POST',
+            $this->client->request(Request::METHOD_POST,
                 Endpoint::DECLARE_MATINGS_ENDPOINT,
                 array(),
                 array(),

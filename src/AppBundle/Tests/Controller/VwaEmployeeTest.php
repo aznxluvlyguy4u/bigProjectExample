@@ -3,9 +3,7 @@
 namespace AppBundle\Tests\Controller;
 
 
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\Endpoint;
-use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
@@ -15,6 +13,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class VwaEmployeeTest
@@ -118,14 +117,14 @@ class VwaEmployeeTest extends WebTestCase
      */
     public function testGet()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::VWA_EMPLOYEE . $this->endpointSuffixes[self::GET_all],
             array(), array(), $this->defaultAdminHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::VWA_EMPLOYEE . $this->endpointSuffixes[self::GET_byId]. self::$vwaEmployee->getPersonId(),
             array(), array(), $this->defaultAdminHeaders
         );
@@ -133,7 +132,7 @@ class VwaEmployeeTest extends WebTestCase
 
 
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::VWA_EMPLOYEE . $this->endpointSuffixes[self::GET_own],
             array(), array(), $this->vwaEmployeeHeaders
         );
@@ -147,7 +146,7 @@ class VwaEmployeeTest extends WebTestCase
      */
     public function testCreateUpdateDeactivate()
     {
-        $this->client->request('DELETE',
+        $this->client->request(Request::METHOD_DELETE,
             Endpoint::VWA_EMPLOYEE . $this->endpointSuffixes[self::DELETE] . self::$vwaEmployee->getPersonId(),
             array(), array(), $this->defaultAdminHeaders
         );
@@ -162,7 +161,7 @@ class VwaEmployeeTest extends WebTestCase
                     "email_address" => self::$emailAddress,
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::VWA_EMPLOYEE . $this->endpointSuffixes[self::POST],
             array(), array(), $this->defaultAdminHeaders, $postJson
         );
@@ -179,7 +178,7 @@ class VwaEmployeeTest extends WebTestCase
                     //password may only be edited by own vwaEmployee
                 ]);
 
-        $this->client->request('PUT',
+        $this->client->request(Request::METHOD_PUT,
             Endpoint::VWA_EMPLOYEE . $this->endpointSuffixes[self::PUT_byId]. self::$vwaEmployee->getPersonId(),
             array(), array(), $this->defaultAdminHeaders, $editJson
         );
@@ -198,7 +197,7 @@ class VwaEmployeeTest extends WebTestCase
                     "password" => $newPassword,
                 ]);
 
-        $this->client->request('PUT',
+        $this->client->request(Request::METHOD_PUT,
             Endpoint::VWA_EMPLOYEE . $this->endpointSuffixes[self::PUT_own],
             array(), array(), $this->vwaEmployeeHeaders, $editJson
         );
@@ -211,7 +210,7 @@ class VwaEmployeeTest extends WebTestCase
             'PHP_AUTH_PW'   => $newPassword,
         ];
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::VWA_EMPLOYEE . $this->endpointSuffixes[self::GET_authorize],
             array(), array(), $authorizationHeaders
         );

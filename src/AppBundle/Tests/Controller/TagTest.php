@@ -2,7 +2,6 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\UnitTestData;
@@ -11,6 +10,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class TagTest
@@ -86,7 +86,7 @@ class TagTest extends WebTestCase
      */
     public function testTagsGetters()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             $this::DECLARE_TAG_ENDPOINT,
             array(), array(), $this->defaultHeaders
         );
