@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
  * @package AppBundle\Tests\Controller
  * @group auth
  * @group auth-vwa
+ * @group vwa
  */
 class VwaAuthTest extends WebTestCase
 {

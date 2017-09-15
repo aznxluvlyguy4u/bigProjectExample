@@ -247,6 +247,7 @@ class ReportTest extends WebTestCase
 
     /**
      * @group post
+     * @group vwa
      * @group report-vwa-animal-details
      */
     public function testVwaAnimalDetailsPost()
