@@ -31,7 +31,7 @@ class AWSSimpleStorageService
     private $awsCredentials;
     
 
-    public function __construct($acccessKeyId, $secretKey, $region, $version, $bucket, $currentEnvironment = null)
+    public function __construct($acccessKeyId, $secretKey, $region, $version, $bucket, $selectedEnvironment, $systemEnvironment)
     {
         $this->accessKeyId = $acccessKeyId;
         $this->secretKey = $secretKey;
@@ -53,25 +53,30 @@ class AWSSimpleStorageService
         /**
          * Get current environment, set separate files based on environment
          */
-        switch($currentEnvironment) {
-            case Environment::PROD:
-                $this->pathApppendage = "production/";
-                break;
-            case Environment::STAGE:
-                $this->pathApppendage = 'staging/';
-                break;
-            case Environment::DEV:
-                $this->pathApppendage = 'dev/';
-                break;
-            case Environment::TEST:
-                $this->pathApppendage = 'dev/';
-                break;
-            case Environment::LOCAL:
-                $this->pathApppendage = 'dev/';
-                break;
-            default;
-                $this->pathApppendage = 'dev/';
-                break;
+        if ($systemEnvironment = 'test') {
+            $this->pathApppendage = "test/";
+
+        } else {
+            switch($selectedEnvironment) {
+                case Environment::PROD:
+                    $this->pathApppendage = "production/";
+                    break;
+                case Environment::STAGE:
+                    $this->pathApppendage = 'staging/';
+                    break;
+                case Environment::DEV:
+                    $this->pathApppendage = 'dev/';
+                    break;
+                case Environment::TEST:
+                    $this->pathApppendage = 'test/';
+                    break;
+                case Environment::LOCAL:
+                    $this->pathApppendage = 'dev/';
+                    break;
+                default;
+                    $this->pathApppendage = 'dev/';
+                    break;
+            }
         }
     }
 

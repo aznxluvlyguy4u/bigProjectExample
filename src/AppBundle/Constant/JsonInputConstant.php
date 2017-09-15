@@ -6,6 +6,7 @@ namespace AppBundle\Constant;
 class JsonInputConstant
 {
     const ID = 'id';
+    const DASHBOARD_TYPE = 'dashboard_type';
 
     //Admins
     const ADMINS = 'admins';
@@ -137,6 +138,7 @@ class JsonInputConstant
 
     //Locations
     const LOCATION = 'location';
+    const LOCATIONS = 'locations';
     const PROVINCES = 'provinces';
     const CODES = 'codes';
 

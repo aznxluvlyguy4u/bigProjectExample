@@ -3,6 +3,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
@@ -19,10 +20,13 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Message;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RevokeDeclaration;
+use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class ActionLogWriter
 {
@@ -492,16 +496,31 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
+     * @param VwaEmployee $vwaEmployee
+     * @param boolean $isSuccessfulLogin
+     * @return ActionLog
+     */
+    public static function loginVwaEmployee(ObjectManager $om, $vwaEmployee, $isSuccessfulLogin)
+    {
+        $actionBy = $isSuccessfulLogin ? $vwaEmployee : null;
+        return self::login($om, $vwaEmployee, $actionBy, $isSuccessfulLogin, UserActionType::VWA_LOGIN, false, true);
+    }
+
+
+    /**
+     * @param ObjectManager $om
      * @param Person $accountOwner
      * @param Person $actionBy
      * @param boolean $isSuccessfulLogin
      * @param string $userActionType
      * @param boolean $isUserEnvironment
+     * @param boolean $isVwaEnvironment
      * @return ActionLog
      */
-    private static function login(ObjectManager $om, $accountOwner, $actionBy, $isSuccessfulLogin, $userActionType, $isUserEnvironment)
+    private static function login(ObjectManager $om, $accountOwner, $actionBy, $isSuccessfulLogin, $userActionType,
+                                  $isUserEnvironment, $isVwaEnvironment = false)
     {
-        $log = new ActionLog($accountOwner, $actionBy, $userActionType, $isSuccessfulLogin, null, $isUserEnvironment);
+        $log = new ActionLog($accountOwner, $actionBy, $userActionType, $isSuccessfulLogin, null, $isUserEnvironment, $isVwaEnvironment);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -530,11 +549,10 @@ class ActionLogWriter
      * @param string $emailAddress
      * @return ActionLog
      */
-    public static function passwordReset(ObjectManager $om, $client, $emailAddress)
+    public static function clientPasswordReset(ObjectManager $om, $client, $emailAddress)
     {
-        $userActionType = UserActionType::USER_PASSWORD_RESET;
-
-        $log = new ActionLog($client, $client, $userActionType, false, $emailAddress);
+        $log = new ActionLog($client, $client, UserActionType::USER_PASSWORD_RESET, false,
+            $emailAddress);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -549,14 +567,89 @@ class ActionLogWriter
      */
     public static function adminPasswordReset(ObjectManager $om, $admin, $emailAddress)
     {
-        $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
-
-        $log = new ActionLog($admin, $admin, $userActionType, false, $emailAddress, false);
+        $log = new ActionLog($admin, $admin, UserActionType::ADMIN_PASSWORD_RESET, false,
+            $emailAddress, false);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
 
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $person
+     * @param string $emailAddress
+     * @param string $userActionType
+     * @return ActionLog
+     */
+    public static function passwordResetRequest(ObjectManager $om, $person, $userActionType, $emailAddress)
+    {
+        switch ($userActionType) {
+            case UserActionType::USER_PASSWORD_RESET:
+                $isUserEnvironment = true;
+                $isVwaEnvironment = false;
+                break;
+            case UserActionType::ADMIN_PASSWORD_RESET:
+                $isUserEnvironment = false;
+                $isVwaEnvironment = false;
+                break;
+            case UserActionType::VWA_PASSWORD_RESET:
+                $isUserEnvironment = false;
+                $isVwaEnvironment = true;
+                break;
+            default:
+                $isUserEnvironment = true;
+                $isVwaEnvironment = false;
+                break;
+        }
+
+        $log = new ActionLog($person, $person, $userActionType, false,
+            self::getPasswordResetDescription($emailAddress, true), $isUserEnvironment, $isVwaEnvironment);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $person
+     * @return ActionLog
+     */
+    public static function passwordResetConfirmation(ObjectManager $om, $person)
+    {
+        $userActionType = UserActionType::USER_PASSWORD_RESET;
+        $isUserEnvironment = true;
+        $isVwaEnvironment = false;
+        if ($person instanceof Employee) {
+            $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
+            $isUserEnvironment = false;
+            $isVwaEnvironment = false;
+        } elseif ($person instanceof VwaEmployee) {
+            $userActionType = UserActionType::VWA_PASSWORD_RESET;
+            $isUserEnvironment = false;
+            $isVwaEnvironment = true;
+        }
+
+        $log = new ActionLog($person, $person, $userActionType, true,
+            self::getPasswordResetDescription($person->getEmailAddress(), false),
+            $isUserEnvironment, $isVwaEnvironment);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param string $emailAddress
+     * @param boolean $isResetRequest
+     * @return string
+     */
+    private static function getPasswordResetDescription($emailAddress, $isResetRequest)
+    {
+        $descriptionType = $isResetRequest ? 'aanvraag' : 'bevestiging';
+        return $emailAddress . ': wachtwoord reset '.$descriptionType;
+    }
 
 
     /**
@@ -773,12 +866,113 @@ class ActionLogWriter
 
 
     /**
+     * @param EntityManagerInterface $em
+     * @param Person $actionBy
+     * @param VwaEmployee $vwaEmployee
+     * @param boolean $isReactivation
+     * @return ActionLog
+     */
+    public static function createVwaEmployee(EntityManagerInterface $em, Person $actionBy,
+                                             VwaEmployee $vwaEmployee, $isReactivation)
+    {
+        $userActionType = $isReactivation ? UserActionType::VWA_EMPLOYEE_REACTIVATE : UserActionType::VWA_EMPLOYEE_CREATE;
+
+        $description = $vwaEmployee->getFullName() .',  '. $vwaEmployee->getEmailAddress() . ', invited by: '
+            .$actionBy->getFullName();
+
+        $log = new ActionLog($vwaEmployee, $actionBy, $userActionType,true,$description,false,true);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Person $actionBy
+     * @param VwaEmployee $vwaEmployee
+     * @param string $description
+     * @return ActionLog
+     */
+    public static function editVwaEmployee(EntityManagerInterface $em, Person $actionBy, VwaEmployee $vwaEmployee, $description)
+    {
+        $log = new ActionLog($vwaEmployee, $actionBy, UserActionType::VWA_EMPLOYEE_EDIT,true,$description,false,true);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Person $actionBy
+     * @param VwaEmployee $vwaEmployee
+     * @return ActionLog
+     */
+    public static function deleteVwaEmployee(EntityManagerInterface $em, Person $actionBy, VwaEmployee $vwaEmployee)
+    {
+        $log = new ActionLog($vwaEmployee, $actionBy, UserActionType::VWA_EMPLOYEE_DEACTIVATE,true,null,false,true);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Person $actionBy
+     * @param array $ubns
+     * @param array $ulns
+     * @param string $fileType
+     * @return ActionLog|JsonResponse
+     */
+    public static function getVwaAnimalDetailsReport(EntityManagerInterface $em, Person $actionBy, array $ubns, array $ulns, $fileType)
+    {
+        $description = '';
+        $categoryPrefix = '';
+        $categoryPrefixSymbol = '; ';
+
+        try {
+            if (count($ubns) > 0) {
+                $description .= 'ubns: ' . implode(', ', $ubns);
+                $categoryPrefix = $categoryPrefixSymbol;
+            }
+
+
+            if (count($ulns) > 0) {
+                $description .= $categoryPrefix . 'ulns: ';
+                $prefix = '';
+                foreach ($ulns as $uln) {
+                    $description .= $prefix . implode('', $uln);
+                    $prefix = ', ';
+                }
+                $categoryPrefix = $categoryPrefixSymbol;
+            }
+
+        } catch (\Exception $exception) {
+            return ResultUtil::errorResult('Incorrect json format', Response::HTTP_BAD_REQUEST);
+        }
+
+
+        $description .= $categoryPrefix . 'fileType: '.$fileType;
+
+        $log = new ActionLog($actionBy, $actionBy, UserActionType::VWA_EMPLOYEE_ANIMAL_DETAILS_REPORT_REQUEST,true,
+            $description,false,true);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
      * @param ObjectManager $om
      * @param ActionLog|array $log
      * @return ActionLog|array
      */
     public static function completeActionLog(ObjectManager $om, $log)
     {
+        if ($log === null) { return $log; }
+        
         if (is_array($log)) {
             foreach ($log as $item) {
                 self::completeSingleActionLog($om, $item, false);

@@ -20,6 +20,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
+use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\TagStateType;
@@ -218,6 +219,34 @@ class UnitTestData
         $em->flush();
 
         return $tag;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param string $emailAddress
+     * @param string $firstName
+     * @param string $lastName
+     * @return VwaEmployee
+     */
+    public static function getOrCreateVwaEmployee(EntityManagerInterface $em, $emailAddress,
+                                                  $firstName = 'Billy', $lastName = 'Bob')
+    {
+        $vwaEmployee = $em->getRepository(VwaEmployee::class)->findOneBy(['emailAddress' => $emailAddress]);
+
+        if (!$vwaEmployee) {
+            $vwaEmployee = new VwaEmployee();
+            $vwaEmployee
+                ->setEmailAddress($emailAddress)
+                ->setFirstName($firstName)
+                ->setLastName($lastName)
+                ->setPassword('BLANK')
+            ;
+            $em->persist($vwaEmployee);
+            $em->flush();
+        }
+
+        return $vwaEmployee;
     }
 
 

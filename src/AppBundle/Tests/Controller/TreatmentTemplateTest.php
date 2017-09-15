@@ -4,20 +4,17 @@ namespace AppBundle\Tests\Controller;
 
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\TreatmentType;
 use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\TreatmentTypeOption;
-use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\ResultUtil;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Faker;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use Faker;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class TreatmentTemplateTest
@@ -121,25 +118,25 @@ class TreatmentTemplateTest extends WebTestCase
      */
     public function testGet()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_individualDefault],
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_individual] . self::$location->getUbn(),
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_locationDefault],
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_location] . self::$location->getUbn(),
             array(), array(), $this->defaultHeaders
         );

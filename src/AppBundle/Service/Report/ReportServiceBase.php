@@ -4,6 +4,7 @@
 namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Client;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
@@ -14,16 +15,19 @@ use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
+use AppBundle\Util\ResultUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\TwigOutputUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
+use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class ReportServiceBase
@@ -48,7 +52,7 @@ class ReportServiceBase
     protected $csvWriter;
     /** @var UserService */
     protected $userService;
-    /** @var EngineInterface */
+    /** @var TwigEngine */
     protected $templating;
     /** @var GeneratorInterface */
     protected $knpGenerator;
@@ -81,7 +85,7 @@ class ReportServiceBase
      * @param AWSSimpleStorageService $storageService
      * @param CsvWriter $csvWriter
      * @param UserService $userService
-     * @param EngineInterface $templating
+     * @param TwigEngine $templating
      * @param GeneratorInterface $knpGenerator
      * @param String $folderName
      * @param String $rootDir
@@ -89,7 +93,7 @@ class ReportServiceBase
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
-                                UserService $userService, EngineInterface $templating,
+                                UserService $userService, TwigEngine $templating,
                                 GeneratorInterface $knpGenerator, $cacheDir, $rootDir, $folderName, $filename = self::DEFAULT_FILENAME)
     {
         $this->em = $em;
@@ -224,6 +228,39 @@ class ReportServiceBase
 
 
     /**
+     * @param string $twigFile
+     * @param array|object $data
+     * @param boolean $isLandscape
+     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     */
+    protected function getPdfReportBase($twigFile, $data, $isLandscape = true)
+    {
+        $html = $this->renderView($twigFile, ['variables' => $data]);
+
+        if (ReportAPIController::DISPLAY_PDF_AS_HTML) {
+            $response = new Response($html);
+            $response->headers->set('Content-Type', 'text/html');
+            return $response;
+        }
+
+        $this->extension = FileType::PDF;
+
+        $pdfOptions = $isLandscape ? TwigOutputUtil::pdfLandscapeOptions() : TwigOutputUtil::pdfPortraitOptions();
+
+        if(ReportAPIController::IS_LOCAL_TESTING) {
+            //Save pdf in local cache
+            return ResultUtil::successResult($this->saveFileLocally($this->getCacheDirFilename(), $html, $pdfOptions));
+        }
+
+        $pdfOutput = $this->knpGenerator->getOutputFromHtml($html, $pdfOptions);
+
+        $url = $this->storageService->uploadPdf($pdfOutput, $this->getS3Key());
+
+        return ResultUtil::successResult($url);
+    }
+
+
+    /**
      * @param string $generatedPdfPath
      * @param $html
      * @param array $pdfOptions
@@ -341,6 +378,15 @@ class ReportServiceBase
     protected function getFilenameWithoutExtension()
     {
         return $this->filename.'_'.TimeUtil::getTimeStampNowForFiles();
+    }
+
+
+    /**
+     * @return Client|\AppBundle\Entity\Employee|\AppBundle\Entity\Person
+     */
+    protected function getUser()
+    {
+        return $this->userService->getUser();
     }
 
 

@@ -32,8 +32,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Templating\EngineInterface;
 
 class LiveStockReportService extends ReportServiceBase
 {
@@ -62,7 +62,7 @@ class LiveStockReportService extends ReportServiceBase
     private $data;
 
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
             $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
@@ -138,22 +138,12 @@ class LiveStockReportService extends ReportServiceBase
     }
 
 
-
+    /**
+     * @return JsonResponse
+     */
     private function getPdfReport()
     {
-        $html = $this->renderView(self::TWIG_FILE, ['variables' => $this->data]);
-        $this->extension = FileType::PDF;
-
-        if(ReportAPIController::IS_LOCAL_TESTING) {
-            //Save pdf in local cache
-            return ResultUtil::successResult($this->saveFileLocally($this->getCacheDirFilename(), $html, TwigOutputUtil::pdfLandscapeOptions()));
-        }
-
-        $pdfOutput = $this->knpGenerator->getOutputFromHtml($html,TwigOutputUtil::pdfLandscapeOptions());
-
-        $url = $this->storageService->uploadPdf($pdfOutput, $this->getS3Key());
-
-        return ResultUtil::successResult($url);
+        return $this->getPdfReportBase(self::TWIG_FILE, $this->data, true);
     }
 
 

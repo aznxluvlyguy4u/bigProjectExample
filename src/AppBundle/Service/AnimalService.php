@@ -14,8 +14,11 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
@@ -27,6 +30,7 @@ use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
 {
@@ -290,6 +294,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      */
     public function getAnimalDetailsByUln(Request $request, $ulnString)
     {
+        if ($this->getUser() instanceof VwaEmployee) {
+            return $this->getBasicAnimalDetailsByUln($ulnString);
+        }
+
         $admin = $this->getEmployee();
         $isAdmin = AdminValidator::isAdmin($admin, AccessLevelType::ADMIN);
 
@@ -304,7 +312,26 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $animal = $animalDetailsValidator->getAnimal();
         if($location == null) { $location = $animal->getLocation(); }
 
+        if (RequestUtil::getBooleanQuery($request, QueryParameter::MINIMAL_OUTPUT, false)) {
+            return $this->getBasicAnimalDetailsByUln($ulnString);
+        }
+
         $output = AnimalDetailsOutput::create($this->getManager(), $animal, $location);
+        return ResultUtil::successResult($output);
+    }
+
+
+    /**
+     * @param string $ulnString
+     * @return JsonResponse
+     */
+    private function getBasicAnimalDetailsByUln($ulnString)
+    {
+        $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
+        if ($animal === null) {
+            return ResultUtil::errorResult(AnimalDetailsValidator::ERROR_NON_EXISTENT_ANIMAL, Response::HTTP_BAD_REQUEST);
+        }
+        $output = $this->getBaseSerializer()->getDecodedJson($animal, [JmsGroup::BASIC]);
         return ResultUtil::successResult($output);
     }
 
