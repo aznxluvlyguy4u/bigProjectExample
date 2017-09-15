@@ -74,6 +74,10 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
             $vwaEmployee = $this->getManager()->getRepository(VwaEmployee::class)->findOneBy(['personId' => $id]);
         }
 
+        if ($vwaEmployee === null) {
+            return ResultUtil::errorResult(self::ERROR_VWA_EMPLOYEE_MISSING . $id, Response::HTTP_BAD_REQUEST);
+        }
+
         $output = $this->getBaseSerializer()->getDecodedJson($vwaEmployee, [JmsGroup::VWA, JmsGroup::DETAILS]);
         return ResultUtil::successResult($output);
     }
