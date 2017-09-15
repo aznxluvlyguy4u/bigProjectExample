@@ -3,6 +3,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
@@ -25,6 +26,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class ActionLogWriter
 {
@@ -922,19 +924,37 @@ class ActionLogWriter
      * @param array $ubns
      * @param array $ulns
      * @param string $fileType
-     * @return ActionLog
+     * @return ActionLog|JsonResponse
      */
     public static function getVwaAnimalDetailsReport(EntityManagerInterface $em, Person $actionBy, array $ubns, array $ulns, $fileType)
     {
         $description = '';
+        $categoryPrefix = '';
+        $categoryPrefixSymbol = '; ';
 
-        foreach (['ubns' => $ubns, 'ulns' => $ulns] as $key => $values) {
+        try {
             if (count($ubns) > 0) {
-                $description .= $key.': ' . implode(', ', $values);
+                $description .= 'ubns: ' . implode(', ', $ubns);
+                $categoryPrefix = $categoryPrefixSymbol;
             }
+
+
+            if (count($ulns) > 0) {
+                $description .= $categoryPrefix . 'ulns: ';
+                $prefix = '';
+                foreach ($ulns as $uln) {
+                    $description .= $prefix . implode('', $uln);
+                    $prefix = ', ';
+                }
+                $categoryPrefix = $categoryPrefixSymbol;
+            }
+
+        } catch (\Exception $exception) {
+            return ResultUtil::errorResult('Incorrect json format', Response::HTTP_BAD_REQUEST);
         }
 
-        $description .= 'fileType: '.$fileType;
+
+        $description .= $categoryPrefix . 'fileType: '.$fileType;
 
         $log = new ActionLog($actionBy, $actionBy, UserActionType::VWA_EMPLOYEE_ANIMAL_DETAILS_REPORT_REQUEST,true,
             $description,false,true);

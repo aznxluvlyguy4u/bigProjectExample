@@ -76,8 +76,12 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
         $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
+        $fileType = $fileType !== FileType::CSV ? FileType::PDF : $fileType;
 
-        ActionLogWriter::getVwaAnimalDetailsReport($this->em, $this->getUser(), $ubns, $ulns, $fileType);
+        $log = ActionLogWriter::getVwaAnimalDetailsReport($this->em, $this->getUser(), $ubns, $ulns, $fileType);
+        if ($log instanceof JsonResponse) {
+            return $log;
+        }
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
