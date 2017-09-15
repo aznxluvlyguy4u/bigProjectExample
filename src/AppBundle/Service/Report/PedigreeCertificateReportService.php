@@ -22,8 +22,8 @@ use AppBundle\Validation\UlnValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Templating\EngineInterface;
 
 class PedigreeCertificateReportService extends ReportServiceBase
 {
@@ -35,7 +35,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
     private $reportResults;
 
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
             $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
@@ -81,26 +81,8 @@ class PedigreeCertificateReportService extends ReportServiceBase
     private function getPdfReport()
     {
         //Or use... $this->getCurrentEnvironment() == Environment::PROD;
-        if(ReportAPIController::IS_USE_PROD_VERSION_OUTPUT) {
-            $twigFile = self::TWIG_FILE;
-        } else {
-            //containing extra unfinished features
-            $twigFile = self::TWIG_FILE_BETA;
-        }
-
-        $variables = $this->reportResults->getReports();
-        $html = $this->renderView($twigFile, ['variables' => $variables]);
-
-        if(ReportAPIController::IS_LOCAL_TESTING) {
-            //Save pdf in local cache
-            return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($this->reportResults->getFilePath($this->cacheDir), $html, TwigOutputUtil::pdfLandscapeOptions())], 200);
-        }
-
-        $pdfOutput = $this->knpGenerator->getOutputFromHtml($html,TwigOutputUtil::pdfLandscapeOptions());
-
-        $url = $this->storageService->uploadPdf($pdfOutput, $this->reportResults->getS3Key());
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+        $twigFile = ReportAPIController::IS_USE_PROD_VERSION_OUTPUT ? self::TWIG_FILE : self::TWIG_FILE_BETA;
+        return $this->getPdfReportBase($twigFile, $this->reportResults->getReports(), true);
     }
 
 

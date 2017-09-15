@@ -3,7 +3,6 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\DeclareNsfoBase;
@@ -26,6 +25,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class BirthTest
@@ -86,11 +86,7 @@ class BirthTest extends WebTestCase
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
@@ -162,7 +158,7 @@ class BirthTest extends WebTestCase
      */
     public function testBirthsGetters()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_BIRTH_ENDPOINT,
             array(), array(), $this->defaultHeaders
         );
@@ -184,7 +180,7 @@ class BirthTest extends WebTestCase
                     "date_of_birth" => TimeUtil::getTimeStampForJsonBody($eventDate),
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::DECLARE_BIRTH_ENDPOINT . $this->endpointSuffixes[self::GET_CandidateMothers],
             array(),
             array(),
@@ -198,7 +194,7 @@ class BirthTest extends WebTestCase
 
 
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::DECLARE_BIRTH_ENDPOINT . '/' . self::$ewe->getUln() . $this->endpointSuffixes[self::GET_CandidateFathers],
             array(),
             array(),
@@ -212,7 +208,7 @@ class BirthTest extends WebTestCase
 
 
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::DECLARE_BIRTH_ENDPOINT . '/' . self::$ewe->getUln() . $this->endpointSuffixes[self::GET_CandidateSurrogates],
             array(),
             array(),
@@ -252,7 +248,7 @@ class BirthTest extends WebTestCase
                     ]
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::DECLARE_MATINGS_ENDPOINT,
             array(),
             array(),
@@ -298,7 +294,7 @@ class BirthTest extends WebTestCase
                 ]
             );
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::DECLARE_BIRTH_ENDPOINT,
             array(),
             array(),

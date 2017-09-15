@@ -3,7 +3,6 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Tag;
@@ -14,6 +13,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class ImportTest
@@ -59,12 +59,7 @@ class ImportTest extends WebTestCase
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
-
+        Validator::isTestDatabase(self::$em);
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$tag = UnitTestData::createTag(self::$em, self::$location);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
@@ -109,7 +104,7 @@ class ImportTest extends WebTestCase
                     ]
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::DECLARE_ARRIVAL_ENDPOINT,
             array(),
             array(),

@@ -7,6 +7,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Animal;
@@ -27,9 +28,13 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class Validator
 {
+    const DEFAULT_MIN_PASSWORD_LENGTH = 6;
+
 
     /**
      * @param float $number
@@ -461,10 +466,10 @@ class Validator
     /**
      * Test if database used is the test database.
      * 
-     * @param ObjectManager $em
-     * @return bool
+     * @param EntityManagerInterface|ObjectManager $em
+     * @throws \Exception
      */
-    public static function isLocalTestDatabase(ObjectManager $em)
+    public static function isTestDatabase(ObjectManager $em)
     {
         /** @var Connection $connection */
         $connection = $em->getConnection();
@@ -472,11 +477,13 @@ class Validator
         $host = $connection->getHost();
         
         $isIgnoreCase = true;
-        $isLocalHost = self::isStringContainsAtleastOne($host, ['localhost', '127.0.0.1'], $isIgnoreCase);
+        //$isLocalHost = self::isStringContainsAtleastOne($host, ['localhost', '127.0.0.1'], $isIgnoreCase);
         $isTestDatabaseName = self::isStringContainsAtleastOne($databaseName, ['test'], $isIgnoreCase);
         $isNotProductionDatabaseName = !self::isStringContainsAtleastOne($databaseName, ['prod'], $isIgnoreCase);
 
-        return $isLocalHost && $isTestDatabaseName && $isNotProductionDatabaseName;
+        if (!($isTestDatabaseName && $isNotProductionDatabaseName)) {
+            throw new \Exception(TestConstant::TEST_DB_ERROR_MESSAGE, Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
 
@@ -641,6 +648,30 @@ class Validator
         }
 
         return ResultUtil::errorResult($errorMessage, $errorCode);
+    }
+
+
+    /**
+     * @param string $password
+     * @param int $minLength
+     * @param bool $concatErrors
+     * @return JsonResponse|boolean
+     */
+    public static function validatePasswordFormat($password, $minLength = self::DEFAULT_MIN_PASSWORD_LENGTH, $concatErrors = true)
+    {
+        $errors = [];
+        if (strlen($password) < $minLength) {
+            $errors[] = 'Het wachtwoord moet minimaal '.$minLength.' tekens lang zijn.';
+        }
+
+        if (count($errors) > 0) {
+
+            $message = implode(', ', $errors);
+            if ($concatErrors) { $errors = []; }
+
+            return ResultUtil::errorResult($message,Response::HTTP_BAD_REQUEST, $errors);
+        }
+        return true;
     }
 
 }

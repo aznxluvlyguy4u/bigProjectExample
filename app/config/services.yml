@@ -114,6 +114,7 @@ services:
           - '%aws_s3_version%'
           - '%aws_s3_bucket%'
           - '%environment%'
+          - '%kernel.environment%'
 
     app.doctrine.entitygetter:
         class: AppBundle\Service\EntityGetter
@@ -347,7 +348,7 @@ services:
     app.cache:
         class: AppBundle\Service\CacheService
         arguments:
-          - '@snc_redis.sncredis'
+          - '%redis_host%'
 
     app.user:
         class: AppBundle\Service\UserService
@@ -389,6 +390,10 @@ services:
     app.report.inbreeding_coefficient:
         parent: app.report.base
         class: AppBundle\Service\Report\InbreedingCoefficientReportService
+
+    app.report.vwa.animal_details:
+        parent: app.report.base
+        class: AppBundle\Service\Report\VwaAnimalDetailsReportService
 
     app.writer.csv_from_sql_results:
         class: AppBundle\Service\CsvFromSqlResultsWriterService
@@ -438,6 +443,7 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@app.user'
           - '@security.password_encoder'
+          - '@templating'
 
     app.security.auth:
         parent: app.abstract_base.auth
@@ -601,6 +607,10 @@ services:
     app.ubn:
         parent: app.abstract_base.declare
         class: AppBundle\Service\UbnService
+
+    app.vwa.employee:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\VwaEmployeeService
 
     app.weight:
         parent: app.abstract_base.controller

@@ -2,12 +2,16 @@
 
 namespace AppBundle\Enumerator;
 
+use AppBundle\Traits\EnumInfo;
+
 
 /**
  * Class QueryType
  */
 class QueryType
 {
+    use EnumInfo;
+
     const BASE_INSERT = 'BASE_INSERT';
     const INSERT = 'INSERT';
     const UPDATE = 'UPDATE';
@@ -16,11 +20,4 @@ class QueryType
     const DELETE = 'DELETE';
     const SELECT = 'SELECT';
 
-    /**
-     * @return array
-     */
-    static function getConstants() {
-        $oClass = new \ReflectionClass(__CLASS__);
-        return $oClass->getConstants();
-    }
 }

@@ -80,7 +80,7 @@ class NsfoTestCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '1: Find locations with highest animal count', "\n",
             '2: Delete animal and all related records', "\n",
-            '3: Purge external worker test queue', "\n",
+            '3: Purge worker test queues', "\n",
             'DEFAULT: Custom test', "\n"
         ], self::DEFAULT_OPTION);
 

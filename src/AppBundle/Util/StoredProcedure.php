@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
 
@@ -89,14 +90,28 @@ class StoredProcedure
 
 
     /**
-     * @param Connection $conn
+     * @param string|int $locationId
+     * @param array $ulnFilter
+     * @param bool $matchLocationIdOfSelectedAnimals
+     * @return string
      */
-    public static function createLiveStockReport(Connection $conn)
+    public static function createLiveStockReportSqlBase($locationId = 'locationId', array $ulnFilter = [], $matchLocationIdOfSelectedAnimals = true)
     {
+        $filterString = "WHERE a.is_alive = true AND a.location_id = ".$locationId." ORDER BY a.animal_order_number ASC";
+
+        $ulnCount = count($ulnFilter);
+        if ($ulnCount > 0) {
+            $filterString = "WHERE a.is_alive = true AND ".SqlUtil::getUlnQueryFilter($ulnFilter, 'a.');
+
+            if ($matchLocationIdOfSelectedAnimals) {
+                $filterString = $filterString ." a.location_id = ".$locationId;
+            }
+        }
+
         $sql = "SELECT DISTINCT CONCAT(a.uln_country_code, a.uln_number) as a_uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as a_stn,
                   CONCAT(m.uln_country_code, m.uln_number) as m_uln, CONCAT(m.pedigree_country_code, m.pedigree_number) as m_stn,
                   CONCAT(f.uln_country_code, f.uln_number) as f_uln, CONCAT(f.pedigree_country_code, f.pedigree_number) as f_stn,
-    a.gender,
+                  a.gender,
                   a.animal_order_number as a_animal_order_number, f.animal_order_number as f_animal_order_number, m.animal_order_number as m_animal_order_number,
                   DATE(a.date_of_birth) as a_date_of_birth, DATE(m.date_of_birth) as m_date_of_birth, DATE(f.date_of_birth) as f_date_of_birth,
                   a.breed_code as a_breed_code, m.breed_code as m_breed_code, f.breed_code as f_breed_code,
@@ -138,8 +153,18 @@ class StoredProcedure
     LEFT JOIN result_table_breed_grades ab ON a.id = ab.animal_id
     LEFT JOIN result_table_breed_grades mb ON m.id = mb.animal_id
     LEFT JOIN result_table_breed_grades fb ON f.id = fb.animal_id
-  WHERE a.is_alive = true AND a.location_id = locationId
-  ORDER BY a.animal_order_number ASC";
+  ".$filterString;
+
+        return $sql;
+    }
+
+
+    /**
+     * @param Connection $conn
+     */
+    public static function createLiveStockReport(Connection $conn)
+    {
+        $sql = self::createLiveStockReportSqlBase();
 
         $parameters = [
           'locationId' => 'INTEGER',

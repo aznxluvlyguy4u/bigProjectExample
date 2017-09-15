@@ -223,11 +223,11 @@ class CompanyService extends AuthServiceBase
 
         // Send Email with passwords to Owner & Users
         $password = AuthService::persistNewPassword($this->encoder, $this->getManager(), $company->getOwner());
-        $this->emailService->emailNewPasswordToPerson($company->getOwner(), $password, false, true);
+        $this->emailService->emailNewPasswordToPerson($company->getOwner(), $password, true);
 
         foreach ($company->getCompanyUsers() as $user) {
             $password = AuthService::persistNewPassword($this->encoder, $this->getManager(), $user);
-            $this->emailService->emailNewPasswordToPerson($user, $password, false, true);
+            $this->emailService->emailNewPasswordToPerson($user, $password, true);
         }
 
         //Update all LocationOfBirths of Animals, for locations belonging to this company
@@ -537,7 +537,7 @@ class CompanyService extends AuthServiceBase
 
         foreach ($newUsers as $user) {
             $password = AuthService::persistNewPassword($this->encoder, $this->getManager(), $user);
-            $this->emailService->emailNewPasswordToPerson($user, $password, false, true);
+            $this->emailService->emailNewPasswordToPerson($user, $password, true);
         }
 
         $log = ActionLogWriter::editCompany($this->getManager(), $content, $company, $admin);

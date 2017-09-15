@@ -21,7 +21,7 @@ use AppBundle\Validation\InbreedingCoefficientInputValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
+use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpFoundation\Request;
 
 class InbreedingCoefficientReportService extends ReportServiceBase
@@ -33,7 +33,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     private $reportResults;
 
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
             $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
@@ -74,18 +74,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         $reportData = $this->reportResults->getData();
         $reportData[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
 
-        $html = $this->renderView(self::TWIG_FILE, ['variables' => $reportData]);
-
-        if(ReportAPIController::IS_LOCAL_TESTING) {
-            //Save pdf in local cache
-            return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($this->getCacheDirFilename(), $html, TwigOutputUtil::pdfPortraitOptions())], 200);
-        }
-
-        $pdfOutput = $this->knpGenerator->getOutputFromHtml($html,TwigOutputUtil::pdfPortraitOptions());
-
-        $url = $this->storageService->uploadPdf($pdfOutput, $this->reportResults->getS3Key());
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+        return $this->getPdfReportBase(self::TWIG_FILE, $reportData, false);
     }
 
 
