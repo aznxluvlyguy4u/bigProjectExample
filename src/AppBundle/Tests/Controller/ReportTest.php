@@ -261,9 +261,9 @@ class ReportTest extends WebTestCase
         ];
 
         if (self::TEST_UBN_INPUT_FOR_VWA_ANIMAL_DETAILS_REPORT) {
-            $input["locations"] = [
+            $input["locations"] = [[
                 "ubn" => self::$location->getUbn(),
-            ];
+            ]];
         }
 
         $this->client->request(Request::METHOD_POST,
