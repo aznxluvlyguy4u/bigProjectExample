@@ -212,10 +212,9 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
                 if ($newFirstName === null || $newFirstName === '') {
                     return ResultUtil::errorResult(self::ERROR_FIRST_NAME_EDIT_EMPTY, Response::HTTP_BAD_REQUEST);
                 }
-
+                $this->updateActionLogEditMessage('first_name', $vwaEmployee->getFirstName(), $newFirstName);
                 $vwaEmployee->setFirstName($newFirstName);
                 $anyValuesUpdated = true;
-                $this->updateActionLogEditMessage('first_name', $vwaEmployee->getFirstName(), $newFirstName);
             }
         }
 
@@ -229,9 +228,9 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
                     return ResultUtil::errorResult(self::ERROR_LAST_NAME_EDIT_EMPTY, Response::HTTP_BAD_REQUEST);
                 }
 
+                $this->updateActionLogEditMessage('last_name', $vwaEmployee->getLastName(), $newLastName);
                 $vwaEmployee->setLastName($newLastName);
                 $anyValuesUpdated = true;
-                $this->updateActionLogEditMessage('last_name', $vwaEmployee->getLastName(), $newLastName);
             }
         }
 
@@ -248,9 +247,9 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
                     return ResultUtil::errorResult(self::ERROR_EMAIL_ADDRESS_EDIT_EMPTY, Response::HTTP_BAD_REQUEST);
                 }
 
+                $this->updateActionLogEditMessage('email_address', $vwaEmployee->getEmailAddress(), $newEmailAddress);
                 $vwaEmployee->setEmailAddress($newEmailAddress);
                 $anyValuesUpdated = true;
-                $this->updateActionLogEditMessage('email_address', $vwaEmployee->getEmailAddress(), $newEmailAddress);
             }
         }
 
@@ -265,10 +264,10 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
                     return $validationResult;
                 }
 
+                $this->updateActionLogEditMessage('password', '****', '*****');
                 $encodedNewPassword = $this->encoder->encodePassword($vwaEmployee, $newPassword);
                 $vwaEmployee->setPassword($encodedNewPassword);
                 $anyValuesUpdated = true;
-                $this->updateActionLogEditMessage('password', '****', '****');
 
             } else {
                 return ResultUtil::errorResult('VWA passwords may only be edited by the users themselves', Response::HTTP_UNAUTHORIZED);
