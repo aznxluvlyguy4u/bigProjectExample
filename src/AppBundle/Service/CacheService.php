@@ -9,24 +9,78 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use Doctrine\ORM\Query;
+use Symfony\Component\Cache\Adapter\RedisAdapter;
 
 /**
  * Class CacheService
  */
 class CacheService
 {
+    const CACHE_LIFETIME_IN_SECONDS = 3600;
 
-    /** @var \Predis\Client|\Redis */
-    private $redis;
+    /** @var String */
+    private $redisHost;
+
+    /** @var RedisAdapter */
+    private $redisAdapter;
 
 
     /**
      * CacheService constructor.
-     * @param \Predis\Client $redis
+     * @param string $redisHost
      */
-    public function __construct(\Predis\Client $redis)
+    public function __construct($redisHost)
     {
-        $this->redis = $redis;
+        $this->redisHost = $redisHost;
+        $this->getRedisAdapter();
+    }
+
+
+    /**
+     * @return RedisAdapter
+     */
+    public function getRedisAdapter()
+    {
+        if (!$this->redisAdapter) {
+
+            $client = RedisAdapter::createConnection(
+
+                // provide a string dsn
+                $this->redisHost,
+
+                // associative array of configuration options
+                array(
+                    'persistent' => 0,
+                    'persistent_id' => null,
+                    'timeout' => 30,
+                    'read_timeout' => 0,
+                    'retry_interval' => 0,
+                )
+            );
+
+            $this->redisAdapter = new RedisAdapter($client);
+        }
+
+        return $this->redisAdapter;
+    }
+
+
+    /**
+     * @param string $cacheId
+     * @param Query $query
+     * @return mixed
+     */
+    public function get($cacheId, $query)
+    {
+        $queryCache = $this->getRedisAdapter()->getItem($cacheId);
+        if(!$queryCache->isHit()) {
+            $queryCache->set($query->getResult());
+            $queryCache->expiresAfter(self::CACHE_LIFETIME_IN_SECONDS);
+            $this->getRedisAdapter()->save($queryCache);
+        }
+        $queryCache = $this->getRedisAdapter()->getItem($cacheId);
+        return $queryCache->get();
     }
 
 
@@ -44,11 +98,17 @@ class CacheService
 
         if($location) {
             $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
-
-            $lastIndex = 10;
-            for($i = 0; $i <= $lastIndex; $i++) {
-                $this->redis->del('[' .$cacheId .']['.$i.']');
-            }
+            $historicCacheId = AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID .$location->getId();
+            $this->getRedisAdapter()->deleteItems([
+                $cacheId,
+                $cacheId . Ewe::getShortClassName(),
+                $cacheId . Ram::getShortClassName(),
+                $cacheId . Neuter::getShortClassName(),
+                $historicCacheId,
+                $historicCacheId . Ewe::getShortClassName(),
+                $historicCacheId . Ram::getShortClassName(),
+                $historicCacheId . Neuter::getShortClassName(),
+            ]);
         }
     }
 }
