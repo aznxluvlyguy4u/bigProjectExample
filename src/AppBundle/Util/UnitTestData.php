@@ -24,6 +24,7 @@ use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Service\CacheService;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -431,14 +432,16 @@ class UnitTestData
 
     /**
      * @param EntityManagerInterface $em
+     * @param CacheService $cacheService
      * @param Location $location
      * @param $totalAnimalCount
      * @param $gender
      * @return array
      */
-    public static function getAnimalsUlnsBody(EntityManagerInterface $em, Location $location, $totalAnimalCount, $gender = null)
+    public static function getAnimalsUlnsBody(EntityManagerInterface $em, CacheService $cacheService,
+                                              Location $location, $totalAnimalCount, $gender = null)
     {
-        $animals = $em->getRepository(Animal::class)->getLiveStock($location, true,false,false, $gender,false);
+        $animals = $em->getRepository(Animal::class)->getLiveStock($location, $cacheService, true, $gender);
 
         $result = [];
         $animalCount = 0;

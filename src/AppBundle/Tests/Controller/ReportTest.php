@@ -10,6 +10,7 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\VwaEmployee;
+use AppBundle\Service\CacheService;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -54,6 +55,8 @@ class ReportTest extends WebTestCase
     static private $vwaEmployee;
     /** @var EntityManagerInterface|ObjectManager */
     static private $em;
+    /** @var CacheService */
+    static private $cacheService;
     /** @var RequestClient */
     private $client;
     /** @var array */
@@ -79,6 +82,7 @@ class ReportTest extends WebTestCase
 
         //Get service classes
         self::$em = $container->get('doctrine')->getManager();
+        self::$cacheService = $container->get('app.cache');
 
         //Database safety check
         Validator::isTestDatabase(self::$em);
@@ -121,7 +125,7 @@ class ReportTest extends WebTestCase
         $json =
             json_encode(
                 [
-                    "animals" => UnitTestData::getAnimalsUlnsBody(self::$em, self::$location, 3),
+                    "animals" => UnitTestData::getAnimalsUlnsBody(self::$em, self::$cacheService, self::$location, 3),
                 ]);
 
         $this->client->request(Request::METHOD_POST,
@@ -144,8 +148,8 @@ class ReportTest extends WebTestCase
      */
     public function testInbreedingCoefficientPost()
     {
-        $ram = UnitTestData::getAnimalsUlnsBody(self::$em, self::$location, 1, Ram::class);
-        $ewes = UnitTestData::getAnimalsUlnsBody(self::$em, self::$location, 3, Ewe::class);
+        $ram = UnitTestData::getAnimalsUlnsBody(self::$em, self::$cacheService, self::$location, 1, Ram::class);
+        $ewes = UnitTestData::getAnimalsUlnsBody(self::$em, self::$cacheService, self::$location, 3, Ewe::class);
 
         $json =
             json_encode(
@@ -215,7 +219,7 @@ class ReportTest extends WebTestCase
         $json =
             json_encode(
                 [
-                    "animals" => UnitTestData::getAnimalsUlnsBody(self::$em, self::$location, $totalAnimalCount),
+                    "animals" => UnitTestData::getAnimalsUlnsBody(self::$em, self::$cacheService, self::$location, $totalAnimalCount),
                 ]);
 
         $this->client->request(Request::METHOD_POST,

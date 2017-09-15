@@ -31,7 +31,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIControllerInterface
+class getArrivalService extends DeclareControllerServiceBase implements ArrivalAPIControllerInterface
 {
     /** @var HealthUpdaterService */
     private $healthService;

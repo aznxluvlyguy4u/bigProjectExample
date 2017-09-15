@@ -342,27 +342,18 @@ class AnimalRepository extends BaseRepository
    * @param Location $location
    * @param CacheService $cacheService
    * @param bool $isAlive
-   * @param bool $isDeparted
-   * @param bool $isExported
    * @param Animal $queryOnlyOnAnimalGenderType
-   * @param bool $prioritizeRedisCache
    * 
    * @return array
    */
   public function getLiveStock(Location $location,
                                CacheService $cacheService,
                                $isAlive = true,
-                               $isDeparted = false,
-                               $isExported = false,
-                               $queryOnlyOnAnimalGenderType = null,
-                               $prioritizeRedisCache = true
+                               $queryOnlyOnAnimalGenderType = null
   )
   {
     $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID . $location->getId(); //. sha1($location->getId());
     $isAlive = $isAlive ? 'true' : 'false';
-    //unused
-    $isDeparted = $isDeparted ? 'true' : 'false';
-    $isExported = $isExported ? 'true' : 'false';
 
     $em = $this->getEntityManager();
     $livestockAnimalsQueryBuilder = $em->createQueryBuilder();
