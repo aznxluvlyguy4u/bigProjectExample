@@ -71,4 +71,42 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
       return $this->get('app.ubn')->getUbnProcessors($request);
   }
 
+
+    /**
+     *
+     * Get list of all active UBNs.
+     *
+     * @ApiDoc(
+     *   section = "UBNs",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="active_only",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Get list of all active UBNs"
+     * )
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("")
+     * @Method("GET")
+     */
+    public function getAll(Request $request)
+    {
+        return $this->get('app.ubn')->getAll($request);
+    }
+
 }

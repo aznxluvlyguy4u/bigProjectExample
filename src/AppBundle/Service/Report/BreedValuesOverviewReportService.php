@@ -19,7 +19,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
+use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpFoundation\Request;
 
 class BreedValuesOverviewReportService extends ReportServiceBase
@@ -39,12 +39,13 @@ class BreedValuesOverviewReportService extends ReportServiceBase
      * @param AWSSimpleStorageService $storageService
      * @param CsvWriter $csvWriter
      * @param UserService $userService
+     * @param TwigEngine $templating
      * @param GeneratorInterface $knpGenerator
      * @param string $cacheDir
      * @param string $rootDir
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter, UserService $userService, TwigEngine $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
             $knpGenerator,$cacheDir, $rootDir, self::FOLDER, self::FILENAME);

@@ -3,7 +3,6 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
@@ -14,6 +13,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class LossTest
@@ -59,11 +59,7 @@ class LossTest extends WebTestCase
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
@@ -95,13 +91,13 @@ class LossTest extends WebTestCase
      */
     public function testLosssGetters()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_LOSSES_ENDPOINT . '-history',
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_LOSSES_ENDPOINT . '-errors',
             array(), array(), $this->defaultHeaders
         );
@@ -130,7 +126,7 @@ class LossTest extends WebTestCase
                     "ubn_destructor" => $ubnDestructor
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::DECLARE_LOSSES_ENDPOINT,
             array(),
             array(),

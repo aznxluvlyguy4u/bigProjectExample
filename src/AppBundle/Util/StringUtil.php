@@ -466,4 +466,13 @@ class StringUtil
         return ltrim(strtolower(preg_replace('/[A-Z]([A-Z](?![a-z]))*/', '_$0', $string)), '_');
     }
 
+
+    /**
+     * @return string
+     */
+    public static function getResetToken()
+    {
+        return str_replace('/', '-', base64_encode(random_bytes(128)));
+    }
+
 }

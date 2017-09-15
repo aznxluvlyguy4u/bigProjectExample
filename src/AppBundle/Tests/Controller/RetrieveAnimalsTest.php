@@ -4,7 +4,6 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Enumerator\RequestStateType;
@@ -14,6 +13,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class RetrieveAnimalsTest
@@ -54,11 +54,7 @@ class RetrieveAnimalsTest extends WebTestCase
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
@@ -97,7 +93,7 @@ class RetrieveAnimalsTest extends WebTestCase
 
         $json = json_encode($body);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::RETRIEVE_ANIMALS,
             array(),
             array(),
@@ -124,7 +120,7 @@ class RetrieveAnimalsTest extends WebTestCase
 
         $json = json_encode($body);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::RETRIEVE_ANIMALS,
             array(),
             array(),

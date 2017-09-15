@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Enumerator\DashboardType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -54,7 +55,7 @@ class AdminAuthAPIController extends APIController {
    */
   public function resetPassword(Request $request)
   {
-      return $this->get('app.security.admin_auth')->resetPassword($request);
+      return $this->get('app.security.admin_auth')->passwordResetRequest($request, DashboardType::ADMIN);
   }
 
 }

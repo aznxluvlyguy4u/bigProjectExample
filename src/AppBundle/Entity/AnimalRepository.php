@@ -21,9 +21,12 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Connection;
 use Doctrine\Common\Cache\RedisCache;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Join;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Adapter\TraceableAdapter;
+use Doctrine\ORM\Query\Parameter;
 use Symfony\Component\Console\Output\OutputInterface;
 use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 
@@ -342,6 +345,7 @@ class AnimalRepository extends BaseRepository
    * @param bool $isDeparted
    * @param bool $isExported
    * @param Animal $queryOnlyOnAnimalGenderType
+   * @param bool $prioritizeRedisCache
    * 
    * @return array
    */
@@ -350,7 +354,9 @@ class AnimalRepository extends BaseRepository
                                $isAlive = true,
                                $isDeparted = false,
                                $isExported = false,
-                               $queryOnlyOnAnimalGenderType = null)
+                               $queryOnlyOnAnimalGenderType = null,
+                               $prioritizeRedisCache = true
+  )
   {
     $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID . $location->getId(); //. sha1($location->getId());
     $isAlive = $isAlive ? 'true' : 'false';
@@ -1372,5 +1378,62 @@ class AnimalRepository extends BaseRepository
       }
       return null;
   }
+
+
+    /**
+     * @param array $ubns
+     * @param array $ulns
+     * @return array
+     */
+  public function findByUbnsOrUlns(array $ubns = [], $ulns = [])
+  {
+      $qb = $this->getManager()->createQueryBuilder();
+
+      $qb
+          ->select('animal')
+          ->from(Animal::class, 'animal');
+
+      $count = 1;
+      foreach ($ulns as $ulnData) {
+          $ulnCountryCode = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $ulnData);
+          $ulnNumber = ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $ulnData);
+
+          $countryCodeParameter = 'ulnCountryCode'.$count;
+          $numberParameter = 'ulnNumber'.$count;
+
+          $ulnQuery = $qb->expr()->andX(
+              $qb->expr()->eq('animal.ulnCountryCode', ':'.$countryCodeParameter),
+              $qb->expr()->eq('animal.ulnNumber', ':'.$numberParameter)
+          );
+
+          $qb
+              ->orWhere($ulnQuery)
+              ->setParameter($countryCodeParameter, $ulnCountryCode, Type::STRING)
+              ->setParameter($numberParameter, $ulnNumber, Type::STRING)
+          ;
+
+          $count++;
+      }
+
+      $locationsQuery = $this->getManager()->getRepository(Location::class)->getLocationsQueryByUbns($ubns);
+
+      if ($locationsQuery !== null) {
+          $qb->orWhere($qb->expr()->in('animal.location', $locationsQuery->getDQL()));
+
+          /** @var Parameter $parameter */
+          foreach ($locationsQuery->getParameters() as $parameter) {
+              $qb->setParameter($parameter->getName(), $parameter->getValue(), $parameter->getType());
+          }
+      }
+
+      $qb
+          ->orderBy('animal.ulnCountryCode' ,'ASC')
+          ->addOrderBy('animal.ulnNumber', 'ASC');
+
+      $query = $qb->getQuery();
+
+      return $query->getResult();
+  }
+
 
 }
