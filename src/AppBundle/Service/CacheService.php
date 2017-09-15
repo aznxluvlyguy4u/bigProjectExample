@@ -17,6 +17,8 @@ use Symfony\Component\Cache\Adapter\RedisAdapter;
  */
 class CacheService
 {
+    const CACHE_LIFETIME_IN_SECONDS = 3600;
+
     /** @var String */
     private $redisHost;
 
@@ -74,6 +76,7 @@ class CacheService
         $queryCache = $this->getRedisAdapter()->getItem($cacheId);
         if(!$queryCache->isHit()) {
             $queryCache->set($query->getResult());
+            $queryCache->expiresAfter(self::CACHE_LIFETIME_IN_SECONDS);
             $this->getRedisAdapter()->save($queryCache);
         }
         $queryCache = $this->getRedisAdapter()->getItem($cacheId);
