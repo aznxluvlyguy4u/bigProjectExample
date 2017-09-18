@@ -126,6 +126,7 @@ class ExteriorRepository extends MeasurementRepository {
                                    SELECT animal_id, max(m.measurement_date) as measurement_date
                                    FROM exterior e
                                      INNER JOIN measurement m ON m.id = e.id
+                                   WHERE m.is_active = TRUE
                                    GROUP BY animal_id) y on y.animal_id = x.animal_id 
                     WHERE m.measurement_date = y.measurement_date AND m.is_active = TRUE ";
 
