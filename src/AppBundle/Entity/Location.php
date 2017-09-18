@@ -51,6 +51,7 @@ class Location
    * @Assert\Length(max = 12)
    * @JMS\Type("string")
    * @JMS\Groups({"BASIC","MINIMAL","TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+   * @JMS\Groups({"LIVESTOCK"})
    * @Expose
    */
   protected $ubn;

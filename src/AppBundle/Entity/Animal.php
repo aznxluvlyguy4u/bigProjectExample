@@ -108,6 +108,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE"})
      * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"LIVESTOCK"})
      */
     protected $ubnOfBirth;
 
@@ -116,6 +117,7 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Location")
      * @ORM\JoinColumn(name="location_of_birth_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({"LIVESTOCK"})
      */
     protected $locationOfBirth;
 
@@ -294,6 +296,7 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({"LIVESTOCK"})
      */
     protected $location;
 
@@ -302,7 +305,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
-     * @JMS\Groups({"DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","USER_MEASUREMENT"})
+     * @JMS\Groups({"BASIC","DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","USER_MEASUREMENT"})
      */
     protected $isAlive;
 
@@ -332,7 +335,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({"DECLARE","BASIC"})
      */
     protected $animalOrderNumber;
 
