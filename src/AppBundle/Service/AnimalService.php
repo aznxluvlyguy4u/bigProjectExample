@@ -136,7 +136,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
                 JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
                 JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
                 JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                JsonInputConstant::UBN => $location->getUbn(),
+                JsonInputConstant::UBN => $animal->getUbn(),
                 JsonInputConstant::IS_HISTORIC_ANIMAL => true,
                 JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
             ];
