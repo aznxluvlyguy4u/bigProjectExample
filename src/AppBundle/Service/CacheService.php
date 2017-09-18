@@ -136,13 +136,13 @@ class CacheService
             $historicCacheId = AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID .$location->getId();
             $this->getRedisAdapter()->deleteItems([
                 $cacheId,
-                $cacheId . Ewe::getShortClassName(),
-                $cacheId . Ram::getShortClassName(),
-                $cacheId . Neuter::getShortClassName(),
+                $cacheId . '_' . Ewe::getShortClassName(),
+                $cacheId . '_' . Ram::getShortClassName(),
+                $cacheId . '_' . Neuter::getShortClassName(),
                 $historicCacheId,
-                $historicCacheId . Ewe::getShortClassName(),
-                $historicCacheId . Ram::getShortClassName(),
-                $historicCacheId . Neuter::getShortClassName(),
+                $historicCacheId . '_' . Ewe::getShortClassName(),
+                $historicCacheId . '_' . Ram::getShortClassName(),
+                $historicCacheId . '_' . Neuter::getShortClassName(),
             ]);
         }
     }
