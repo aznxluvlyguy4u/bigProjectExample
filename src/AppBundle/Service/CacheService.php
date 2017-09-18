@@ -85,6 +85,41 @@ class CacheService
 
 
     /**
+     * @param string $cacheId
+     * @return bool
+     */
+    public function isHit($cacheId)
+    {
+        $queryCache = $this->getRedisAdapter()->getItem($cacheId);
+        return $queryCache->isHit();
+    }
+
+
+    /**
+     * @param string $cacheId
+     * @return mixed
+     */
+    public function getItem($cacheId)
+    {
+        $queryCache = $this->getRedisAdapter()->getItem($cacheId);
+        return $queryCache->get();
+    }
+
+
+
+    public function set($cacheId, $values)
+    {
+        $queryCache = $this->getRedisAdapter()->getItem($cacheId);
+        $queryCache->set($values);
+        $queryCache->expiresAfter(self::CACHE_LIFETIME_IN_SECONDS);
+        $this->getRedisAdapter()->save($queryCache);
+        return $queryCache->get();
+
+    }
+
+
+
+    /**
      * Clears the redis cache for the Livestock of a given location , to reflect changes of animals on Livestock.
      *
      * @param Location $location
