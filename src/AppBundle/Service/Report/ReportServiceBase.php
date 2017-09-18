@@ -6,6 +6,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Report\ReportBase;
@@ -75,6 +76,9 @@ class ReportServiceBase
     protected $extension;
 
     /** @var array */
+    protected $inputErrors;
+
+    /** @var array */
     protected $convertedResult;
 
     /**
@@ -119,6 +123,7 @@ class ReportServiceBase
         $this->filename = $filename;
 
         $this->fs = new Filesystem();
+        $this->inputErrors = [];
     }
 
 
