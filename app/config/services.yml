@@ -12,24 +12,6 @@ services:
         class: AppBundle\Service\ActionLogService
         arguments: ['@doctrine.orm.entity_manager', '@app.serializer.ir','@app.user']
 
-    app.cli.options:
-        class: AppBundle\Service\CliOptionsService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@logger'
-          - '%kernel.root_dir%'
-          - '@app.initializer.birth_progress'
-          - '@app.datafix.animals.duplicate'
-          - '@app.cli.gender_changer'
-          - '@app.info.parameters'
-          - '@app.migrator.inspector'
-          - '@app.cli.internal_worker.depart'
-          - '@app.cli.mixblup'
-          - '@app.initializer.stored_procedure'
-          - '@app.datafix.ubn'
-          - '@app.initializer.treatment_type'
-          - '@app.migrator.vsm'
-
     app.cli.gender_changer:
         class: AppBundle\Service\DataFix\GenderChangeCommandService
         arguments:
@@ -210,6 +192,18 @@ services:
     app.datafix.ubn:
         parent: app.datafix.base.duplicate
         class: AppBundle\Service\DataFix\UbnFixer
+
+    app.datafix.base:
+        abstract: true
+        arguments:
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '%kernel.root_dir%'
+
+    app.datafix.birth.measurements.missing:
+        parent: app.datafix.base
+        class: AppBundle\Service\DataFix\MissingBirthMeasurementsService
 
 
     app.migrator.vsm:

@@ -29,13 +29,28 @@ class LitterUtil
                          INNER JOIN declare_nsfo_base bl ON bl.id = l.id
                          INNER JOIN declare_nsfo_base bm ON bm.id = m.id
                          INNER JOIN (
-                                      SELECT l.id, animal_mother_id, animal_father_id, MAX(m.end_date) as max_end_date FROM litter l
+                                      SELECT l.id, l.animal_mother_id, l.animal_father_id, MAX(m.end_date) as max_end_date,
+                                             min(min_litter_date) as double_matched_min_litter_date
+                                      FROM litter l
                                         INNER JOIN mate m ON l.animal_mother_id = m.stud_ewe_id AND l.animal_father_id = m.stud_ram_id
                                         INNER JOIN declare_nsfo_base bl ON bl.id = l.id
                                         INNER JOIN declare_nsfo_base bm ON bm.id = m.id
-                                       ".$filter."
-                                      GROUP BY l.id, animal_mother_id, animal_father_id
+                                        LEFT JOIN (
+                                          --check if a single mate is matched with more than one litter
+                                          --if that is the case, link the mate to the first litter
+                                          SELECT animal_mother_id, animal_father_id, m.id as mate_id,
+                                                 COUNT(*) as matched_litter_mates, MIN(l.litter_date) as min_litter_date
+                                          FROM litter l
+                                            INNER JOIN mate m ON l.animal_mother_id = m.stud_ewe_id AND l.animal_father_id = m.stud_ram_id
+                                            INNER JOIN declare_nsfo_base bl ON bl.id = l.id
+                                            INNER JOIN declare_nsfo_base bm ON bm.id = m.id
+                                          ".self::getMatchingMatesFilter(true, null)."
+                                          GROUP BY animal_mother_id, animal_father_id, m.id HAVING COUNT(*) > 1
+                                          ) AS double_matched_mates ON double_matched_mates.mate_id = m.id  
+                                       ".self::getMatchingMatesFilter($regenerate, $litterId, true)."
+                                      GROUP BY l.id, l.animal_mother_id, l.animal_father_id
                                     )g ON g.max_end_date = m.end_date AND l.animal_mother_id = g.animal_mother_id AND l.animal_father_id = g.animal_father_id
+                                    AND (l.litter_date = double_matched_min_litter_date OR double_matched_min_litter_date ISNULL)
                        ".$filter."
                 ) as v(litter_id, mate_id) WHERE id = v.litter_id
                 ";
@@ -77,10 +92,19 @@ class LitterUtil
     /**
      * @param bool $regenerate
      * @param int $litterId
+     * @param bool $groupDoubleMatchedMates
      * @return string
      */
-    private static function getMatchingMatesFilter($regenerate = false, $litterId = null)
+    private static function getMatchingMatesFilter($regenerate = false, $litterId = null, $groupDoubleMatchedMates = false)
     {
+        $doubleMatchedMatesFilter = '';
+        if ($groupDoubleMatchedMates) {
+            $doubleMatchedMatesFilter =
+                ' AND (double_matched_mates.mate_id ISNULL
+                        OR double_matched_mates.min_litter_date = l.litter_date
+                      ) ';
+        }
+
         $filterByLitterId = is_int($litterId) || ctype_digit($litterId) ? ' AND l.id = '.$litterId : '';
         $regenerateFilter = $regenerate ? '' : ' AND l.mate_id ISNULL ';
 
@@ -92,7 +116,7 @@ class LitterUtil
                 AND bl.is_overwritten_version = FALSE
                 AND (bl.request_state = '".RequestStateType::FINISHED."' OR bl.request_state = '".RequestStateType::FINISHED_WITH_WARNING."')
                 AND (m.is_approved_by_third_party ISNULL OR m.is_approved_by_third_party = TRUE)
-                AND l.status <> '".RequestStateType::REVOKED."' ".$filterByLitterId.$regenerateFilter;
+                AND l.status <> '".RequestStateType::REVOKED."' ".$filterByLitterId.$regenerateFilter.$doubleMatchedMatesFilter;
     }
 
 

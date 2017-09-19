@@ -8,6 +8,8 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
@@ -22,6 +24,7 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Connection;
 use Doctrine\Common\Cache\RedisCache;
 use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Join;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -414,10 +417,11 @@ class AnimalRepository extends BaseRepository
    *
    * @param Location $location
    * @param CacheService $cacheService
+   * @param BaseSerializer $serializer
    * @param Ram | Ewe | Neuter $queryOnlyOnAnimalGenderType
    * @return array
    */
-  public function getHistoricLiveStock(Location $location, $cacheService, $queryOnlyOnAnimalGenderType = null)
+  public function getHistoricLiveStock(Location $location, $cacheService, $serializer, $queryOnlyOnAnimalGenderType = null)
   {
     // Null check
     if(!($location instanceof Location)) {
@@ -501,7 +505,7 @@ class AnimalRepository extends BaseRepository
     //as Subselect to get only Historic Livestock Animals
     $historicAnimalsQuery =
       $historicAnimalsQueryBuilder
-        ->select('a,r')
+        ->select('a,r,l')
         ->from('AppBundle:AnimalResidence', 'r')
         ->innerJoin('r.animal', 'a', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('r.animal', 'a.id'))
         ->leftJoin('r.location', 'l', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('a.location', 'l.id'))
@@ -513,24 +517,50 @@ class AnimalRepository extends BaseRepository
         ));
 
     $query = $historicAnimalsQuery->getQuery();
+    $query->setFetchMode(AnimalResidence::class, 'animal', ClassMetadata::FETCH_EAGER);
+    $query->setFetchMode(Animal::class, 'location', ClassMetadata::FETCH_EAGER);
 
     //Returns a list of AnimalResidences
     if (self::USE_REDIS_CACHE) {
-        $retrievedHistoricAnimalResidences = $cacheService->get($cacheId, $query);
+        if ($cacheService->isHit($cacheId)) {
+            $historicLivestock = $serializer->deserializeArrayOfObjects($cacheService->getItem($cacheId), Animal::class);
+        } else {
+            $retrievedHistoricAnimalResidences = $query->getResult();
+            $historicLivestock = $this->getHistoricLivestockFromResidences($retrievedHistoricAnimalResidences);
+
+            $serializedHistoricLivestock = $serializer->getArrayOfSerializedObjects($historicLivestock, [JmsGroup::BASIC, JmsGroup::LIVESTOCK],true);
+            $cacheService->set($cacheId, $serializedHistoricLivestock);
+        }
+
     } else {
         $retrievedHistoricAnimalResidences = $query->getResult();
-    }
-
-    $historicLivestock = [];
-
-    //Grab the animals on returned residences
-    /** @var AnimalResidence $historicAnimalResidence */
-    foreach ($retrievedHistoricAnimalResidences as $historicAnimalResidence) {
-      $historicLivestock[$historicAnimalResidence->getAnimal()->getId()] = $historicAnimalResidence->getAnimal();
+        $historicLivestock = $this->getHistoricLivestockFromResidences($retrievedHistoricAnimalResidences);
     }
 
     return $historicLivestock;
   }
+
+
+    /**
+     * @param $retrievedHistoricAnimalResidences
+     * @return array
+     */
+  private function getHistoricLivestockFromResidences($retrievedHistoricAnimalResidences)
+  {
+      $historicLivestock = [];
+
+      //Grab the animals on returned residences
+      /** @var AnimalResidence $historicAnimalResidence */
+      foreach ($retrievedHistoricAnimalResidences as $historicAnimalResidence)
+      {
+          $animalId = $historicAnimalResidence->getAnimal()->getId();
+          if (!key_exists($animalId, $historicLivestock)) {
+              $historicLivestock[$animalId] = $historicAnimalResidence->getAnimal();
+          }
+      }
+      return $historicLivestock;
+  }
+
 
   /**
    * @param Client $client

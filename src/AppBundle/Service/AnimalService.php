@@ -121,7 +121,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
         $historicLivestock = $this->getManager()->getRepository(Animal::class)
-            ->getHistoricLiveStock($location, $this->getCacheService());
+            ->getHistoricLiveStock($location, $this->getCacheService(), $this->getBaseSerializer());
         $historicLivestockAnimals = [];
 
         /** @var Animal $animal */
@@ -136,7 +136,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
                 JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
                 JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
                 JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                JsonInputConstant::UBN => $location->getUbn(),
+                JsonInputConstant::UBN => $animal->getUbn(),
                 JsonInputConstant::IS_HISTORIC_ANIMAL => true,
                 JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
             ];

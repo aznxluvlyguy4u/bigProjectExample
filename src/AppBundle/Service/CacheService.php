@@ -85,6 +85,41 @@ class CacheService
 
 
     /**
+     * @param string $cacheId
+     * @return bool
+     */
+    public function isHit($cacheId)
+    {
+        $queryCache = $this->getRedisAdapter()->getItem($cacheId);
+        return $queryCache->isHit();
+    }
+
+
+    /**
+     * @param string $cacheId
+     * @return mixed
+     */
+    public function getItem($cacheId)
+    {
+        $queryCache = $this->getRedisAdapter()->getItem($cacheId);
+        return $queryCache->get();
+    }
+
+
+
+    public function set($cacheId, $values)
+    {
+        $queryCache = $this->getRedisAdapter()->getItem($cacheId);
+        $queryCache->set($values);
+        $queryCache->expiresAfter(self::CACHE_LIFETIME_IN_SECONDS);
+        $this->getRedisAdapter()->save($queryCache);
+        return $queryCache->get();
+
+    }
+
+
+
+    /**
      * Clears the redis cache for the Livestock of a given location , to reflect changes of animals on Livestock.
      *
      * @param Location $location
@@ -101,13 +136,13 @@ class CacheService
             $historicCacheId = AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID .$location->getId();
             $this->getRedisAdapter()->deleteItems([
                 $cacheId,
-                $cacheId . Ewe::getShortClassName(),
-                $cacheId . Ram::getShortClassName(),
-                $cacheId . Neuter::getShortClassName(),
+                $cacheId . '_' . Ewe::getShortClassName(),
+                $cacheId . '_' . Ram::getShortClassName(),
+                $cacheId . '_' . Neuter::getShortClassName(),
                 $historicCacheId,
-                $historicCacheId . Ewe::getShortClassName(),
-                $historicCacheId . Ram::getShortClassName(),
-                $historicCacheId . Neuter::getShortClassName(),
+                $historicCacheId . '_' . Ewe::getShortClassName(),
+                $historicCacheId . '_' . Ram::getShortClassName(),
+                $historicCacheId . '_' . Neuter::getShortClassName(),
             ]);
         }
     }

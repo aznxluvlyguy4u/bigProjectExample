@@ -98,6 +98,40 @@ class BaseSerializer
         return $messageObject;
     }
 
+
+    /**
+     * @param array $objects
+     * @param array|string $type
+     * @param bool $enableMaxDepthChecks
+     * @return array
+     */
+    public function getArrayOfSerializedObjects($objects, $type = null, $enableMaxDepthChecks = true)
+    {
+        $serializedObjects = [];
+        foreach ($objects as $object) {
+            $serializedObjects[] = $this->serializeToJSON($object, $type, $enableMaxDepthChecks);
+        }
+        return $serializedObjects;
+    }
+
+
+
+    /**
+     * @param array $jsonSerializedObjects
+     * @param string $messageClassNameSpace
+     * @param string $basePath
+     * @return array
+     */
+    public function deserializeArrayOfObjects($jsonSerializedObjects, $messageClassNameSpace, $basePath = self::ENTITY_NAMESPACE)
+    {
+        $objects = [];
+        foreach ($jsonSerializedObjects as $object) {
+            $objects[] = $this->deserializeToObject($object, $messageClassNameSpace, $basePath);
+        }
+        return $objects;
+    }
+
+
     /**
      * @param $object
      * @param $type array|string The JMS Groups
