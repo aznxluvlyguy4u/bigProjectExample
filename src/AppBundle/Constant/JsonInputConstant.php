@@ -59,6 +59,7 @@ class JsonInputConstant
     const PARENT_TYPES = 'parent_types';
     const EXCLUDE_MOTHER = 'exclude_mother';
     const EXCLUDE_FATHER = 'exclude_father';
+    const GENERATIONS = 'generations';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
