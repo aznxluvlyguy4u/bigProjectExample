@@ -34,11 +34,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class InbreedingCoefficientReportService extends ReportServiceBase
 {
-    const GENERATION_OF_ASCENDANTS = 8;
+    const GENERATION_OF_ASCENDANTS = 7;
     const MAX_GENERATION_OF_ASCENDANTS = 8;
 
     const TITLE = 'inbreeding_coefficient_report';
     const TWIG_FILE = 'Report/inbreeding_coefficient_report.html.twig';
+
+    const PEDIGREE_NULL_FILLER = '-';
+    const ULN_NULL_FILLER = '-';
 
 
     //Error messages
@@ -58,8 +61,8 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     const MAX_GENERATIONS_LIMIT_EXCEEDED     = 'MAX GENERATIONS LIMIT OF 8 EXCEEDED';
 
     //Validation
-    const MAX_EWES_COUNT = 20; // -1 = no limit, also update error message when updating max count
-    const EWES_COUNT_EXCEEDS_MAX = 'THE AMOUNT OF SELECTED EWES EXCEEDED 20';
+    const MAX_EWES_COUNT = 50; // -1 = no limit, also update error message when updating max count
+    const EWES_COUNT_EXCEEDS_MAX = 'THE AMOUNT OF SELECTED EWES EXCEEDED 50';
 
 
     /** @var ArrayCollection */
@@ -98,19 +101,8 @@ class InbreedingCoefficientReportService extends ReportServiceBase
             return ResultUtil::errorResult('',Response::HTTP_BAD_REQUEST, $this->inputErrors);
         }
 
-        $parentIds = [];
-        $parentIds[$this->ramData['id']] = $this->ramData['id'];
-        foreach ($this->ewesData as $eweData) {
-            $eweId = $eweData['id'];
-            $parentIds[$eweId] = $eweId;
-        }
-
-        $parentAscendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($this->conn,$parentIds, $this->generationOfAscendants,PedigreeMasterKey::ULN);
-
-        dump($parentAscendants);die;
-
-        //TODO
-        $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->content, $client);
+        $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->ramData, $this->ewesData,
+            $this->generationOfAscendants, $client);
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
@@ -157,6 +149,8 @@ class InbreedingCoefficientReportService extends ReportServiceBase
                 $this->inputErrors[] = self::MAX_GENERATIONS_LIMIT_EXCEEDED;
                 return;
             }
+        } else {
+            $this->generationOfAscendants = self::GENERATION_OF_ASCENDANTS;
         }
     }
 
