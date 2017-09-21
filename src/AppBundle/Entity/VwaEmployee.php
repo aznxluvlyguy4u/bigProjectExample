@@ -35,7 +35,9 @@ class VwaEmployee extends Person
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"VWA"})
+     * @JMS\Groups({
+     *     "VWA"
+     * })
      */
     private $invitationDate;
 
@@ -45,7 +47,9 @@ class VwaEmployee extends Person
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="invited_by_id", referencedColumnName="id")
-     * @JMS\Groups({"DETAILS"})
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
      */
     private $invitedBy;
 

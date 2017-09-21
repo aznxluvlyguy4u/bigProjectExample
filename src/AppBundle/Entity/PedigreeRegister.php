@@ -26,7 +26,10 @@ class PedigreeRegister
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Type("integer")
-     * @JMS\Groups({"USER_MEASUREMENT", "ANIMAL_DETAILS"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "USER_MEASUREMENT"
+     * })
      * @Expose
      */
     private $id;
@@ -37,7 +40,9 @@ class PedigreeRegister
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ANIMAL_DETAILS"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      * @Expose
      */
     private $abbreviation;
@@ -56,7 +61,10 @@ class PedigreeRegister
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"USER_MEASUREMENT", "ANIMAL_DETAILS"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "USER_MEASUREMENT"
+     * })
      * @Expose
      */
     private $fullName;
@@ -126,7 +134,10 @@ class PedigreeRegister
      * @ORM\Column(type="boolean", nullable=false, options={"default":true})
      * @Assert\NotBlank
      * @JMS\Type("boolean")
-     * @JMS\Groups({"USER_MEASUREMENT", "ANIMAL_DETAILS"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "USER_MEASUREMENT"
+     * })
      * @Expose
      */
     private $isRegisteredWithNsfo;

@@ -48,7 +48,9 @@ abstract class Measurement
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $id;
 
@@ -59,7 +61,9 @@ abstract class Measurement
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $logDate;
 
@@ -70,7 +74,9 @@ abstract class Measurement
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $measurementDate;
 
@@ -89,7 +95,9 @@ abstract class Measurement
      * @ORM\ManyToOne(targetEntity="Inspector")
      * @ORM\JoinColumn(name="inspector_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Inspector")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $inspector;
 
@@ -107,7 +115,9 @@ abstract class Measurement
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $editDate;
 
@@ -116,7 +126,9 @@ abstract class Measurement
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="deleted_by_id", referencedColumnName="id")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $deletedBy;
 
@@ -126,7 +138,9 @@ abstract class Measurement
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $deleteDate;
 
@@ -135,7 +149,9 @@ abstract class Measurement
      *
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $isActive;
 

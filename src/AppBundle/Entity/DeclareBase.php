@@ -65,7 +65,9 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $logDate;
 
@@ -82,7 +84,11 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $messageId;
 
@@ -90,7 +96,11 @@ abstract class DeclareBase implements DeclareLogInterface
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $requestState;
 
@@ -117,7 +127,9 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $relationNumberKeeper;
 
@@ -128,7 +140,9 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\NotBlank
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $ubn;
 
@@ -136,7 +150,9 @@ abstract class DeclareBase implements DeclareLogInterface
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $messageNumberToRecover;
 
@@ -146,7 +162,9 @@ abstract class DeclareBase implements DeclareLogInterface
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $actionBy;
 
@@ -155,7 +173,11 @@ abstract class DeclareBase implements DeclareLogInterface
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $hideFailedMessage;
 
@@ -164,7 +186,11 @@ abstract class DeclareBase implements DeclareLogInterface
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $hideForAdmin;
 

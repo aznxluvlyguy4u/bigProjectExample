@@ -30,7 +30,9 @@ class AnimalResidence
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      * @Expose
      */
     private $id;
@@ -42,7 +44,9 @@ class AnimalResidence
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      * @Expose
      */
     private $logDate;
@@ -53,7 +57,9 @@ class AnimalResidence
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      * @Expose
      */
     private $startDate;
@@ -64,7 +70,9 @@ class AnimalResidence
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      * @Expose
      */
     private $endDate;
@@ -80,7 +88,9 @@ class AnimalResidence
     /**
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animalResidenceHistory")
      * @JMS\Type("AppBundle\Entity\Location")
-     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      * @Expose
      */
     private $location;
@@ -90,7 +100,9 @@ class AnimalResidence
      * @Assert\NotBlank
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
-     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      * @Expose
      */
     private $isPending;
@@ -99,7 +111,9 @@ class AnimalResidence
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      * @Expose
      */
     private $country;

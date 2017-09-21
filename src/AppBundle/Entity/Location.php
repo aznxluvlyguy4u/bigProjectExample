@@ -39,7 +39,10 @@ class Location
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"ANIMAL_DETAILS","BASIC"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC"
+     * })
      * @Expose
      */
     private $locationId;
@@ -51,9 +54,14 @@ class Location
    * @Assert\NotBlank
    * @Assert\Length(max = 12)
    * @JMS\Type("string")
-   * @JMS\Groups({"ANIMAL_DETAILS"})
-   * @JMS\Groups({"BASIC","MINIMAL","TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
-   * @JMS\Groups({"LIVESTOCK"})
+   * @JMS\Groups({
+   *     "ANIMAL_DETAILS",
+   *     "BASIC",
+   *     "LIVESTOCK",
+   *     "MINIMAL",
+   *     "TREATMENT_TEMPLATE",
+   *     "TREATMENT_TEMPLATE_MIN"
+   * })
    * @Expose
    */
   protected $ubn;
@@ -63,7 +71,10 @@ class Location
    *
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
-   * @JMS\Groups({"ANIMAL_DETAILS","BASIC"})
+   * @JMS\Groups({
+   *     "ANIMAL_DETAILS",
+   *     "BASIC"
+   * })
    * @Expose
    */
   private $locationHolder;
@@ -164,7 +175,9 @@ class Location
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
    * @JMS\Type("AppBundle\Entity\Company")
-   * @JMS\Groups({"ANIMAL_DETAILS"})
+   * @JMS\Groups({
+   *     "ANIMAL_DETAILS"
+   * })
    * @JMS\MaxDepth(depth=2)
    * @Expose
    */
@@ -247,8 +260,12 @@ class Location
      *
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ANIMAL_DETAILS"})
-     * @JMS\Groups({"BASIC","MINIMAL","TREATMENT_TEMPLATE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "MINIMAL",
+     *     "TREATMENT_TEMPLATE"
+     * })
      * @Expose
      */
     private $isActive;
