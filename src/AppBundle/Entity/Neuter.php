@@ -30,7 +30,9 @@ class Neuter extends Animal
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({
+     *     "DECLARE"
+     * })
      */
     private $objectType;
 

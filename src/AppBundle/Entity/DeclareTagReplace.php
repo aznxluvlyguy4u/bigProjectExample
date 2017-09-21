@@ -30,7 +30,9 @@ class DeclareTagReplace extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $ulnNumberToReplace;
 
@@ -38,7 +40,9 @@ class DeclareTagReplace extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $ulnCountryCodeToReplace;
 
@@ -53,7 +57,9 @@ class DeclareTagReplace extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $ulnNumberReplacement;
 
@@ -61,7 +67,9 @@ class DeclareTagReplace extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $ulnCountryCodeReplacement;
 
@@ -78,7 +86,9 @@ class DeclareTagReplace extends DeclareBase
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $animalType;
 
@@ -88,7 +98,9 @@ class DeclareTagReplace extends DeclareBase
      * @ORM\Column(type="datetime", nullable=false)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $replaceDate;
 
@@ -105,7 +117,9 @@ class DeclareTagReplace extends DeclareBase
      * @ORM\JoinColumn(name="declare_tag_replace_request_message_id", referencedColumnName="id")
      * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $responses;
 

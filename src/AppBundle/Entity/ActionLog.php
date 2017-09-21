@@ -38,7 +38,10 @@ class ActionLog
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
+     * @JMS\Groups({
+     *     "ACTION_LOG_ADMIN",
+     *     "ACTION_LOG_USER"
+     * })
      */
     private $logDate;
 
@@ -49,7 +52,10 @@ class ActionLog
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="user_account_id", referencedColumnName="id")
-     * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
+     * @JMS\Groups({
+     *     "ACTION_LOG_ADMIN",
+     *     "ACTION_LOG_USER"
+     * })
      */
     private $userAccount;
 
@@ -58,7 +64,10 @@ class ActionLog
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
-     * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
+     * @JMS\Groups({
+     *     "ACTION_LOG_ADMIN",
+     *     "ACTION_LOG_USER"
+     * })
      */
     private $actionBy;
     
@@ -67,7 +76,10 @@ class ActionLog
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
-     * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
+     * @JMS\Groups({
+     *     "ACTION_LOG_ADMIN",
+     *     "ACTION_LOG_USER"
+     * })
      */
     private $userActionType;
 
@@ -76,7 +88,10 @@ class ActionLog
      *
      * @ORM\Column(type="text", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
+     * @JMS\Groups({
+     *     "ACTION_LOG_ADMIN",
+     *     "ACTION_LOG_USER"
+     * })
      */
     private $description;
 
@@ -85,7 +100,10 @@ class ActionLog
      *
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
+     * @JMS\Groups({
+     *     "ACTION_LOG_ADMIN",
+     *     "ACTION_LOG_USER"
+     * })
      */
     private $isCompleted;
 
@@ -94,7 +112,10 @@ class ActionLog
      *
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
+     * @JMS\Groups({
+     *     "ACTION_LOG_ADMIN",
+     *     "ACTION_LOG_USER"
+     * })
      */
     private $isUserEnvironment;
 
@@ -103,7 +124,9 @@ class ActionLog
      *
      * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ACTION_LOG_ADMIN"})
+     * @JMS\Groups({
+     *     "ACTION_LOG_ADMIN"
+     * })
      */
     private $isVwaEnvironment;
 
@@ -112,7 +135,10 @@ class ActionLog
      *
      * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER"})
+     * @JMS\Groups({
+     *     "ACTION_LOG_ADMIN",
+     *     "ACTION_LOG_USER"
+     * })
      */
     private $isRvoMessage;
 
