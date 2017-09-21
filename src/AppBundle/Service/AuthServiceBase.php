@@ -64,8 +64,8 @@ class AuthServiceBase extends ControllerServiceBase
      *
      *  Json body example
      *  {
-     *      "email_address":"example@example.com"
      *      "dashboard_type":"admin/client/vwa",
+     *      "email_address":"example@example.com"
      *  }
      *
      * @param Request $request

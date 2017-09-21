@@ -193,6 +193,13 @@ class AuthAPIController extends APIController {
     /**
      * Request password reset and get reset token by email.
      *
+     * ### Request body ###
+     *
+     *  {
+     *      "dashboard_type":"admin/client/vwa",
+     *      "email_address":"example@example.com"
+     *  }
+     *
      * @ApiDoc(
      *   section = "Auth",
      *   requirements={
