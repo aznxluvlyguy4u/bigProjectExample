@@ -4,7 +4,6 @@
 namespace AppBundle\Service;
 
 
-use AppBundle\Component\AnimalDetailsUpdater;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -14,8 +13,11 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
@@ -83,7 +85,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = $this->getSelectedLocation($request);
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
-        $livestock = $this->getManager()->getRepository(Animal::class)->getLiveStock($location);
+        $livestock = $this->getManager()->getRepository(Animal::class)->getLiveStock($location, $this->getCacheService(), true);
         $livestockAnimals = [];
 
         /** @var Animal $animal */
@@ -117,7 +119,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = $this->getSelectedLocation($request);
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
-        $historicLivestock = $this->getManager()->getRepository(Animal::class)->getHistoricLiveStock($location);
+        $historicLivestock = $this->getManager()->getRepository(Animal::class)
+            ->getHistoricLiveStock($location, $this->getCacheService(), $this->getBaseSerializer());
         $historicLivestockAnimals = [];
 
         /** @var Animal $animal */
@@ -132,7 +135,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
                 JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
                 JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
                 JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                JsonInputConstant::UBN => $location->getUbn(),
+                JsonInputConstant::UBN => $animal->getUbn(),
                 JsonInputConstant::IS_HISTORIC_ANIMAL => true,
                 JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
             ];
@@ -278,10 +281,13 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return $this->getAnimalDetailsOutputForAdminEnvironment($animal);
         }
 
-        //User environment
+        //VWA environment
+        if ($this->getUser() instanceof VwaEmployee) {
+            return $this->getBasicAnimalDetailsByUln($ulnString);
+        }
 
-        $admin = $this->getEmployee();
-        $isAdmin = AdminValidator::isAdmin($admin, AccessLevelType::ADMIN);
+        //User environment
+        $isAdmin = AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::ADMIN);
 
         $location = null;
         if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
@@ -292,9 +298,27 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         $animal = $animalDetailsValidator->getAnimal();
-        if($location === null) { $location = $animal->getLocation(); }
 
-        return $this->getAnimalDetailsOutputForUserEnvironment($animal, $location);
+        if (RequestUtil::getBooleanQuery($request, QueryParameter::MINIMAL_OUTPUT, false)) {
+            return $this->getBasicAnimalDetailsByUln($ulnString);
+        }
+
+        return $this->getAnimalDetailsOutputForUserEnvironment($animal);
+    }
+
+
+    /**
+     * @param string $ulnString
+     * @return JsonResponse
+     */
+    private function getBasicAnimalDetailsByUln($ulnString)
+    {
+        $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
+        if ($animal === null) {
+            return ResultUtil::errorResult(AnimalDetailsValidator::ERROR_NON_EXISTENT_ANIMAL, Response::HTTP_BAD_REQUEST);
+        }
+        $output = $this->getBaseSerializer()->getDecodedJson($animal, [JmsGroup::BASIC]);
+        return ResultUtil::successResult($output);
     }
 
 

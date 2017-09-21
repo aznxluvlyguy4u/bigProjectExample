@@ -53,6 +53,8 @@ abstract class ControllerServiceBase
     /** @var UserService */
     private $userService;
 
+    /** @var string */
+    private $actionLogEditMessage;
 
     public function __construct(BaseSerializer $baseSerializer,
                                 CacheService $cacheService,
@@ -223,14 +225,42 @@ abstract class ControllerServiceBase
     }
 
 
+    protected function clearActionLogEditMessage()
+    {
+        $this->actionLogEditMessage = '';
+    }
+
+
+    /**
+     * @param string $type
+     * @param string $oldValue
+     * @param string $newValue
+     */
+    protected function updateActionLogEditMessage($type, $oldValue, $newValue)
+    {
+        if ($oldValue !== $newValue) {
+            $prefix = $this->actionLogEditMessage === '' ? '' : ', ';
+            $this->actionLogEditMessage = $this->actionLogEditMessage . $prefix . $type . ': '.$oldValue.' => '.$newValue;
+        }
+    }
+
+
+    /**
+     * @return string
+     */
+    protected function getActionLogEditMessage()
+    {
+        return $this->actionLogEditMessage;
+    }
+
+
     /**
      * @param Animal $animal
-     * @param Location $location
      * @return JsonResponse
      */
-    protected function getAnimalDetailsOutputForUserEnvironment(Animal $animal, $location)
+    protected function getAnimalDetailsOutputForUserEnvironment(Animal $animal)
     {
-        $output = AnimalDetailsOutput::create($this->getManager(), $animal, $location);
+        $output = AnimalDetailsOutput::create($this->getManager(), $animal);
         return new JsonResponse($output, 200);
     }
 

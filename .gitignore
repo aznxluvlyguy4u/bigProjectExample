@@ -110,6 +110,7 @@ nsfo_dev
 *.sql
 
 # NSFO import files:
+/app/Resources/corrections/
 /app/Resources/imports/
 /app/Resources/outputs/
 /app/Resources/mutations/

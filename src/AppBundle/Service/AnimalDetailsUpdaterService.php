@@ -49,6 +49,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
 
         //Get content to array
         $content = RequestUtil::getContentAsArray($request);
+        /** @var Animal $animal */
         $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
 
         $isAdminEnv = $content->get(JsonInputConstant::IS_ADMIN_ENV);
@@ -79,21 +80,27 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
         //User environment
+        $user = $this->getUser();
 
-        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), false, $this->getSelectedLocation($request), $ulnString);
-        if(!$animalDetailsValidator->getIsInputValid()) {
-            return $animalDetailsValidator->createJsonResponse();
+        if(!$user instanceof Employee) {
+            $animalOwner = $animal->getOwner();
+            if ($animalOwner !== $user && $animalOwner !== $user->getEmployer()) {
+                $message = 'Dit dier is op dit moment niet in uw bezit en u bent niet door de huidige eigenaar geautoriseerd,'
+                    .' dus het is niet toegestaan voor u om de gegevens aan te passen.';
+                return ResultUtil::errorResult($message, Response::HTTP_UNAUTHORIZED);
+            }
         }
 
         //Animal Edit from USER environment
         $this->updateValues($animal, $content);
 
+        //Clear cache for this location, to reflect changes on the livestock
         if($animal->getLocation()) {
             //Clear cache for this location, to reflect changes on the livestock
             $this->clearLivestockCacheForLocation($animal->getLocation());
         }
 
-        return $this->getAnimalDetailsOutputForUserEnvironment($animal, $animal->getLocation());
+        return $this->getAnimalDetailsOutputForUserEnvironment($animal);
     }
 
 
@@ -398,7 +405,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     private function saveActionLogMessage()
     {
         ActionLogWriter::editAnimalDetails($this->getManager(), $this->getAccountOwner($this->request),
-                                           $this->getUser(), $this->actionLogMessage,true);
+            $this->getUser(), $this->actionLogMessage,true);
     }
 
 

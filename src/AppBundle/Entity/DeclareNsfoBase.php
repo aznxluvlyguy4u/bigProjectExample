@@ -3,6 +3,8 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\MessageBuilderBase;
+use AppBundle\Constant\DeclareLogMessage;
+use AppBundle\Enumerator\Language;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -34,7 +36,7 @@ use JMS\Serializer\Annotation\Expose;
  *
  * @package AppBundle\Entity\DeclareNsfoBase
  */
-abstract class DeclareNsfoBase
+abstract class DeclareNsfoBase implements DeclareLogInterface
 {
     use EntityClassInfo;
 
@@ -487,6 +489,57 @@ abstract class DeclareNsfoBase
         $this->setIsHidden($nsfoMessage->getIsHidden());
         $this->setIsOverwrittenVersion($nsfoMessage->getIsOverwrittenVersion());
         $this->setNewestVersion($nsfoMessage->getNewestVersion());
+    }
+
+
+    /**
+     * @param int $language
+     * @return string
+     */
+    function getDeclareLogMessage($language = Language::EN)
+    {
+        switch ($this::getShortClassName()) {
+            case Mate::getShortClassName():
+                return Language::getValue($language, DeclareLogMessage::MATING_REPORTED);
+                break;
+            case DeclareWeight::getShortClassName():
+                /** @var DeclareWeight $this */
+                return Language::getValue($language, DeclareLogMessage::WEIGHT_REPORTED). ' ' . strval($this->getWeight()) . ' Kg';
+                break;
+        }
+        return DeclareLogInterface::DECLARE_LOG_MESSAGE_NULL_RESPONSE;
+    }
+
+
+    /**
+     * @return string
+     */
+    function getEventDate()
+    {
+        $eventDateString = '';
+
+        switch ($this::getShortClassName())
+        {
+            case Mate::getShortClassName():
+                /** @var Mate $this */
+                if ($this->getStartDate()) {
+                    $eventDateString .= $this->getStartDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                }
+                if ($this->getEndDate()) {
+                    if ($eventDateString !== '') {
+                        $eventDateString .= ' - ';
+                    }
+                    $eventDateString .= $this->getEndDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                }
+                break;
+
+            case DeclareWeight::getShortClassName():
+                /** @var DeclareWeight $this */
+                $eventDateString = $this->getMeasurementDate() ? $this->getMeasurementDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT) : $eventDateString;
+                break;
+        }
+
+        return $eventDateString !== '' ? $eventDateString : DeclareLogInterface::EVENT_DATE_NULL_RESPONSE;
     }
 
 

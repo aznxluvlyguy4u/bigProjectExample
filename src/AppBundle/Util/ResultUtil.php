@@ -54,6 +54,15 @@ class ResultUtil
 
 
     /**
+     * @return JsonResponse
+     */
+    public static function unauthorized()
+    {
+        return self::errorResult('UNAUTHORIZED', Response::HTTP_UNAUTHORIZED);
+    }
+
+
+    /**
      * @param JsonResponse|SymfonyJsonResponse $response
      * @return mixed|null
      */

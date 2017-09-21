@@ -46,6 +46,10 @@ class AdminAuthService extends AuthServiceBase
                     ]
                 ];
 
+                $admin->setLastLoginDate(new \DateTime());
+                $this->getManager()->persist($admin);
+                $this->getManager()->flush();
+
                 return ResultUtil::successResult($result);
             }
         }
@@ -55,40 +59,4 @@ class AdminAuthService extends AuthServiceBase
     }
 
 
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function resetPassword(Request $request)
-    {
-        /*
-        {
-            "email_address":"example@example.com"
-        }
-        */
-        $content = RequestUtil::getContentAsArray($request);
-        $emailAddress = strtolower($content->get('email_address'));
-
-        $admin = $this->getManager()->getRepository(Employee::class)->findActiveOneByEmailAddress($emailAddress);
-        $log = ActionLogWriter::adminPasswordReset($this->getManager(), $admin, $emailAddress);
-
-        //Verify if email is correct
-        if($admin == null) {
-            return new JsonResponse(array("code" => 428, "message"=>"No user found with emailaddress: " . $emailAddress), 428);
-        }
-
-        //Create a new password
-        $passwordLength = 9;
-        $newPassword = AuthService::persistNewPassword($this->encoder, $this->getManager(), $admin, $passwordLength);
-        $emailSuccessfullySent = $this->emailService->emailNewPasswordToPerson($admin, $newPassword, true);
-
-        if ($emailSuccessfullySent) {
-            $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
-
-            return new JsonResponse(array("code" => 200,
-                "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
-        }
-
-        return ResultUtil::errorResult('Error sending email', 500);
-    }
 }

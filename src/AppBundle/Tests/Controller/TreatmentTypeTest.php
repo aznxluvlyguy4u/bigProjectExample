@@ -4,7 +4,6 @@ namespace AppBundle\Tests\Controller;
 
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\TreatmentType;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\TreatmentTypeOption;
@@ -14,9 +13,10 @@ use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Faker;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use Faker;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class TreatmentTypeTest
@@ -106,7 +106,7 @@ class TreatmentTypeTest extends WebTestCase
     public function testGet()
     {
         //Get tags-transfers
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::TREATMENT_TYPES . $this->endpointSuffixes[self::GET],
             array(), array(), $this->defaultHeaders
         );
@@ -126,7 +126,7 @@ class TreatmentTypeTest extends WebTestCase
                     "type" => TreatmentTypeOption::LOCATION,
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::TREATMENT_TYPES . $this->endpointSuffixes[self::POST],
             array(),
             array(),
@@ -149,7 +149,7 @@ class TreatmentTypeTest extends WebTestCase
                         "description" => $newDescription,
                     ]);
 
-            $this->client->request('PUT',
+            $this->client->request(Request::METHOD_PUT,
                 Endpoint::TREATMENT_TYPES . $this->endpointSuffixes[self::EDIT] . $id,
                 array(),
                 array(),
@@ -164,7 +164,7 @@ class TreatmentTypeTest extends WebTestCase
             $this->assertStatusCode(200, $this->client);
 
 
-            $this->client->request('DELETE',
+            $this->client->request(Request::METHOD_DELETE,
                 Endpoint::TREATMENT_TYPES . $this->endpointSuffixes[self::DELETE] . $id,
                 array(),
                 array(),

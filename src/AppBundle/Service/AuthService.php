@@ -8,10 +8,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
-use AppBundle\Entity\Token;
-use AppBundle\Enumerator\TokenType;
+use AppBundle\Enumerator\DashboardType;
 use AppBundle\Output\MenuBarOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
@@ -24,6 +22,7 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AuthService extends AuthServiceBase
 {
+
     /**
      * @param Request $request
      * @return JsonResponse
@@ -121,13 +120,12 @@ class AuthService extends AuthServiceBase
                     "user" => MenuBarOutput::create($client)
                 ];
 
+                $client->setLastLoginDate(new \DateTime());
+                $this->getManager()->persist($client);
                 ActionLogWriter::loginUser($this->getManager(), $client, $client, true);
 
                 return new JsonResponse(array("access_token"=>$client->getAccessToken(),
                     Constant::RESULT_NAMESPACE => $result), 200);
-
-                //TODO If Frontend is updated use the following JsonResponse
-                //return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
             }
             ActionLogWriter::loginUser($this->getManager(), $client, null, false);
         }
@@ -145,6 +143,7 @@ class AuthService extends AuthServiceBase
     {
         /*
         {
+            "current_password":"Tm90TXlGaXJzdFBhc3N3b3JkMQ==" //base64 encoded 'MyFirstPassword1'
             "new_password":"Tm90TXlGaXJzdFBhc3N3b3JkMQ==" //base64 encoded 'NotMyFirstPassword1'
         }
         */
@@ -196,39 +195,6 @@ class AuthService extends AuthServiceBase
 
         return new JsonResponse(array("code" => 401, "message"=>"Password in database doesn't match new or old password"), 401);
 
-    }
-
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function resetPassword(Request $request)
-    {
-        /*
-        {
-            "email_address":"example@example.com"
-        }
-        */
-        $content = RequestUtil::getContentAsArray($request);
-        $emailAddress = strtolower($content->get('email_address'));
-        $client = $this->getManager()->getRepository(Client::class)->findActiveOneByEmailAddress($emailAddress);
-        $log = ActionLogWriter::passwordReset($this->getManager(), $client, $emailAddress);
-
-        //Verify if email is correct
-        if($client == null) {
-            return new JsonResponse(array("code" => 428, "message"=>"No user found with emailaddress: " . $emailAddress), 428);
-        }
-
-        //Create a new password
-        $passwordLength = 9;
-        $newPassword = self::persistNewPassword($this->encoder, $this->getManager(), $client);
-        $this->emailService->emailNewPasswordToPerson($client, $newPassword);
-
-        $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
-
-        return new JsonResponse(array("code" => 200,
-            "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
     }
 
 
@@ -293,4 +259,6 @@ class AuthService extends AuthServiceBase
 
         return $newPassword;
     }
+
+
 }

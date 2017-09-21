@@ -4,8 +4,13 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Entity\Employee;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Processor;
+use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\ProcessorOutput;
 use AppBundle\Util\RequestUtil;
@@ -51,5 +56,23 @@ class UbnService extends DeclareControllerServiceBase
         $includeNames = true;
         $output = ProcessorOutput::create($processors, $includeNames);
         return new JsonResponse($output, 200);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getAll(Request $request)
+    {
+        if (!($this->getUser() instanceof Employee || $this->getUser() instanceof VwaEmployee))
+        { return ResultUtil::unauthorized(); }
+
+        $activeOnly = RequestUtil::getBooleanQuery($request,QueryParameter::ACTIVE_ONLY,true);
+        $filter = $activeOnly ? ['isActive' => true] : [];
+
+        $ubns = $this->getManager()->getRepository(Location::class)->findBy($filter, []);//['ubn' => 'ASC']);
+        $output = $this->getBaseSerializer()->getDecodedJson($ubns, [JmsGroup::MINIMAL]);
+        return ResultUtil::successResult($output);
     }
 }

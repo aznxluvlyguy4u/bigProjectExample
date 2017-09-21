@@ -45,10 +45,9 @@ class AnimalDetailsOutput
     /**
      * @param ObjectManager|EntityManagerInterface $em
      * @param Animal $animal
-     * @param Location $location
      * @return array
      */
-    public static function create($em, Animal $animal, $location)
+    public static function create(ObjectManager $em, Animal $animal)
     {
         $replacementString = "";
 
@@ -138,13 +137,14 @@ class AnimalDetailsOutput
         $ascendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($em->getConnection(), [$animal->getId()],self::NESTED_GENERATION_LIMIT);
 
         $result = array(
+            JsonInputConstant::UBN => $animal->getUbn(),
             Constant::ULN_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
             Constant::ULN_NUMBER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnNumber(), $replacementString),
             Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode(), $replacementString),
             Constant::PEDIGREE_NUMBER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getPedigreeNumber(), $replacementString),
             JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($animal->getAnimalOrderNumber(), $replacementString),
-            "collar" => array ("color" => Utils::fillNullOrEmptyString($animal->getCollarColor(), $replacementString), 
-                               "number" => Utils::fillNullOrEmptyString($animal->getCollarNumber(), $replacementString)),
+            "collar" => array ("color" => Utils::fillNullOrEmptyString($animal->getCollarColor(), $replacementString),
+                "number" => Utils::fillNullOrEmptyString($animal->getCollarNumber(), $replacementString)),
             "name" => Utils::fillNullOrEmptyString($animal->getName(), $replacementString),
             Constant::DATE_OF_BIRTH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $replacementString),
             "inbred_coefficient" => Utils::fillNullOrEmptyString("", $replacementString),
@@ -187,7 +187,7 @@ class AnimalDetailsOutput
             "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal, $replacementString),
             "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
-            "declare_log" => self::getLog($em, $animal, $location, $replacementString),
+            "declare_log" => self::getLog($em, $animal, $animal->getLocation(), $replacementString),
             "children" => $animalRepository->getOffspringLogDataBySql($animal, $replacementString),
             "ascendants" => ArrayUtil::get($animal->getUln(), $ascendants, []),
         );
