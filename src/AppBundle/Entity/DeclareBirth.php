@@ -580,6 +580,16 @@ class DeclareBirth extends DeclareBase
         return $this->ulnCountryCode;
     }
 
+
+    /**
+     * @return string
+     */
+    public function getUln()
+    {
+        return $this->ulnCountryCode . $this->ulnNumber;
+    }
+
+
     /**
      * Set ulnFather
      *

@@ -3,11 +3,9 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Tag;
-use AppBundle\Entity\TagTransferItemRequest;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\UnitTestData;
@@ -16,6 +14,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class TagTransferTest
@@ -94,13 +93,13 @@ class TagTransferTest extends WebTestCase
     public function testTagTransfersGetters()
     {
         //Get tags-transfers
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_TAGS_TRANSFERS_ENDPOINT . '-history',
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::DECLARE_TAGS_TRANSFERS_ENDPOINT . '-errors',
             array(), array(), $this->defaultHeaders
         );
@@ -132,7 +131,7 @@ class TagTransferTest extends WebTestCase
                         ]
                 ]);
 
-        $this->client->request('POST',
+        $this->client->request(Request::METHOD_POST,
             Endpoint::DECLARE_TAGS_TRANSFERS_ENDPOINT,
             array(),
             array(),

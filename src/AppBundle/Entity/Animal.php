@@ -6,7 +6,9 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -31,7 +33,7 @@ use \DateTime;
  *                           "Ram" : "AppBundle\Entity\Ram",
  *                           "Ewe" : "AppBundle\Entity\Ewe",
  *                        "Neuter" : "AppBundle\Entity\Neuter"},
- *     groups = {"DECLARE","USER_MEASUREMENT","MIXBLUP"})
+ *     groups = {"BASIC","DECLARE","MINIMAL","USER_MEASUREMENT","MIXBLUP"})
  *
  * @package AppBundle\Entity\Animal
  */
@@ -71,6 +73,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"BASIC"})
      */
     protected $pedigreeCountryCode;
 
@@ -84,6 +87,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"BASIC"})
      */
     protected $pedigreeNumber;
 
@@ -104,6 +108,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE"})
      * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"LIVESTOCK"})
      */
     protected $ubnOfBirth;
 
@@ -112,6 +117,7 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Location")
      * @ORM\JoinColumn(name="location_of_birth_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({"LIVESTOCK"})
      */
     protected $locationOfBirth;
 
@@ -122,6 +128,7 @@ abstract class Animal
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({"DECLARE","MIXBLUP","ERROR_DETAILS","TREATMENT_TEMPLATE"})
+     * @JMS\Groups({"MINIMAL","BASIC"})
      */
     protected $dateOfBirth;
 
@@ -132,6 +139,7 @@ abstract class Animal
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({"BASIC"})
      */
     protected $dateOfDeath;
 
@@ -142,6 +150,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({"MINIMAL","BASIC"})
      */
     protected $gender;
 
@@ -286,6 +295,8 @@ abstract class Animal
     /**
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({"LIVESTOCK"})
      */
     protected $location;
 
@@ -294,7 +305,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
-     * @JMS\Groups({"DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","USER_MEASUREMENT"})
+     * @JMS\Groups({"BASIC","DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","USER_MEASUREMENT"})
      */
     protected $isAlive;
 
@@ -304,6 +315,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({"DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN","USER_MEASUREMENT"})
+     * @JMS\Groups({"BASIC","MINIMAL"})
      */
     protected $ulnNumber;
 
@@ -315,6 +327,7 @@ abstract class Animal
      * @Assert\Length(max = 2)
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({"DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN","USER_MEASUREMENT"})
+     * @JMS\Groups({"BASIC","MINIMAL"})
      */
     protected $ulnCountryCode;
 
@@ -322,7 +335,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({"DECLARE","BASIC"})
      */
     protected $animalOrderNumber;
 
@@ -356,7 +369,7 @@ abstract class Animal
 
     /**
      * @var ArrayCollection
-     * 
+     *
      * @ORM\ManyToMany(targetEntity="Tag")
      * @ORM\JoinTable(name="ulns_history",
      *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
@@ -487,7 +500,7 @@ abstract class Animal
      * @ORM\Column(type="integer", nullable=true)
      */
     protected $predicateScore;
-    
+
     /**
      * @var string
      * @JMS\Type("string")
@@ -603,7 +616,8 @@ abstract class Animal
     /**
      * Animal constructor.
      */
-    public function __construct() {
+    public function __construct()
+    {
         $this->arrivals = new ArrayCollection();
 //        $this->children = new ArrayCollection();
         $this->departures = new ArrayCollection();
@@ -717,8 +731,8 @@ abstract class Animal
      */
     public function getPedigreeString($nullFiller = null)
     {
-        if(NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber)) {
-            return $this->pedigreeCountryCode.$this->pedigreeNumber;
+        if (NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber)) {
+            return $this->pedigreeCountryCode . $this->pedigreeNumber;
         } else {
             return $nullFiller;
         }
@@ -752,7 +766,7 @@ abstract class Animal
      */
     public function getUln()
     {
-        if($this->isUlnExists()) {
+        if ($this->isUlnExists()) {
             return $this->ulnCountryCode . $this->ulnNumber;
         } else {
             return null;
@@ -795,7 +809,7 @@ abstract class Animal
      */
     public function setAssignedTag(\AppBundle\Entity\Tag $assignedTag = null)
     {
-        if($assignedTag != null){
+        if ($assignedTag != null) {
             $this->assignedTag = $assignedTag;
             $this->assignedTag->setTagStatus(TagStateType::ASSIGNING);
             $assignedTag->setAnimal($this);
@@ -874,6 +888,23 @@ abstract class Animal
     {
         return $this->gender;
     }
+
+
+    /**
+     * @return string
+     */
+    public function getGenderForAnimalDetails()
+    {
+        switch ($this->getGender()) {
+            case GenderType::MALE:
+                return 'Mannelijk';
+            case GenderType::FEMALE:
+                return 'Vrouwelijk';
+            default:
+                return '';
+        }
+    }
+
 
     /**
      * Set animalType
@@ -990,8 +1021,7 @@ abstract class Animal
     {
         return $this->departures;
     }
-  
-    
+
 
     /**
      * Add import
@@ -1074,7 +1104,7 @@ abstract class Animal
      */
     public function getParentFatherId()
     {
-        if($this->parentFather != null) {
+        if ($this->parentFather != null) {
             return $this->parentFather->getId();
         } else {
             return null;
@@ -1087,7 +1117,7 @@ abstract class Animal
      */
     public function getParentMotherId()
     {
-        if($this->parentMother != null) {
+        if ($this->parentMother != null) {
             return $this->parentMother->getId();
         } else {
             return null;
@@ -1119,7 +1149,7 @@ abstract class Animal
     {
         return $this->parentMother;
     }
-    
+
     /**
      * Set location
      *
@@ -1337,12 +1367,12 @@ abstract class Animal
      */
     public function getDateOfBirthString($format = 'Y-m-d')
     {
-        if($this->dateOfBirth != null) {
+        if ($this->dateOfBirth != null) {
             return $this->dateOfBirth->format($format);
         }
         return null;
     }
-    
+
 
     /**
      * Add flag
@@ -1649,14 +1679,15 @@ abstract class Animal
      */
     public function getUlnHistory()
     {
-            return $this->ulnHistory;
+        return $this->ulnHistory;
     }
 
     /**
      * @param $ulnCountryCode
      * @param $ulnNumber
      */
-    public function replaceUln($ulnCountryCode , $ulnNumber) {
+    public function replaceUln($ulnCountryCode, $ulnNumber)
+    {
 
         //Get current set ulnCountryCode and ulnNumber, add it to the history.
 
@@ -1671,7 +1702,6 @@ abstract class Animal
         $this->setUlnCountryCode($ulnCountryCode);
         $this->setUlnNumber($ulnNumber);
     }
-
 
 
     /**
@@ -1785,6 +1815,43 @@ abstract class Animal
     {
         return $this->bodyFatMeasurements;
     }
+
+
+    /**
+     * @param ArrayCollection $measurements
+     * @return mixed
+     */
+    public function getLatestMeasurement($measurements)
+    {
+        if ($measurements === null || count($measurements) === 0) {
+            return null;
+        }
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("isActive", true))
+            ->orderBy(array("measurementDate" => Criteria::DESC))
+            ->setMaxResults(1);
+        return $measurements->matching($criteria)->first();
+    }
+
+
+    /**
+     * @return float|null
+     */
+    public function getLatestBirthWeightValue()
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("isActive", true))
+            ->andWhere(Criteria::expr()->eq("isBirthWeight", true))
+            ->andWhere(Criteria::expr()->eq("isRevoked", false))
+            ->orderBy(array("measurementDate" => Criteria::DESC))
+            ->setMaxResults(1);
+        /** @var Weight $birthWeight */
+        $birthWeight = $this->weightMeasurements->matching($criteria)->first();
+
+        return $birthWeight ? $birthWeight->getWeight() : null;
+    }
+
 
     /**
      * Add muscleThicknessMeasurement
@@ -1927,6 +1994,16 @@ abstract class Animal
     {
         return $this->breedType;
     }
+
+
+    /**
+     * @return string
+     */
+    public function getDutchBreedType()
+    {
+        return Translation::getDutchUcFirst($this->getBreedType());
+    }
+
 
     /**
      * Set breedCode
@@ -2207,6 +2284,20 @@ abstract class Animal
         $this->ubnOfBirth = trim($ubnOfBirth);
     }
 
+
+    /**
+     * @return Client|null
+     */
+    public function getOwner()
+    {
+        if($this->location instanceof Location) {
+            return $this->location->getOwner();
+        }
+        return null;
+    }
+
+
+
     /**
      * @return Location
      */
@@ -2450,5 +2541,25 @@ abstract class Animal
         $this->wormResistances->remove($wormResistance);
 
         return $this;
+    }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    protected function getEvents()
+    {
+        return new ArrayCollection(
+            array_merge(
+                $this->arrivals->toArray(),
+                $this->births->toArray(),
+                $this->deaths->toArray(),
+                $this->departures->toArray(),
+                $this->declareWeights->toArray(),
+                $this->imports->toArray(),
+                $this->exports->toArray(),
+                $this->tagReplacements->toArray()
+            )
+        );
     }
 }

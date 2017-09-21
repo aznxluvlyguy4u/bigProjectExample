@@ -8,15 +8,18 @@ use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\Employee;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
+use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class AnimalDetailsUpdaterService
 {
@@ -67,19 +70,27 @@ class AnimalDetailsUpdaterService
         $content = RequestUtil::getContentAsArray($request);
         $animal = $this->animalRepository->findAnimalByUlnString($ulnString);
 
-        if($animal == null) {
-            return new JsonResponse(array('code'=> 204,
-                "message" => "For this account, no animal was found with uln: " . $content['uln_country_code'] . $content['uln_number']), 204);
+        if($animal === null) {
+            return ResultUtil::errorResult("For this account, no animal was found with uln: " . $ulnString, Response::HTTP_NO_CONTENT);
+        }
+
+        $user = $this->userService->getUser();
+
+        if(!$user instanceof Employee) {
+            $animalOwner = $animal->getOwner();
+            if ($animalOwner !== $user && $animalOwner !== $user->getEmployer()) {
+                $message = 'Dit dier is op dit moment niet in uw bezit en u bent niet door de huidige eigenaar geautoriseerd,'
+                    .' dus het is niet toegestaan voor u om de gegevens aan te passen.';
+                return ResultUtil::errorResult($message, Response::HTTP_UNAUTHORIZED);
+            }
         }
 
         $this->updateValues($animal, $content);
 
-        $location = $this->userService->getSelectedLocation($request);
-
         //Clear cache for this location, to reflect changes on the livestock
-        $this->cacheService->clearLivestockCacheForLocation($location, $animal);
+        $this->cacheService->clearLivestockCacheForLocation(null, $animal);
 
-        $output = AnimalDetailsOutput::create($this->em, $animal, $animal->getLocation());
+        $output = AnimalDetailsOutput::create($this->em, $animal);
 
         return new JsonResponse($output, 200);
     }

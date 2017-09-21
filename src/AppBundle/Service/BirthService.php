@@ -455,7 +455,13 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                         }
                     }
                 }
+            }
 
+            $this->getManager()->flush();
+
+            /** @var Animal $child */
+            foreach ($childrenToRemove as $child)
+            {
                 //Remove child animal
                 $this->getManager()->remove($child);
             }
@@ -615,7 +621,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $result = [];
         $candidateFathers = $this->getManager()->getRepository(DeclareBirth::class)->getCandidateFathers($mother, $dateOfBirth);
-        $otherCandidateFathers = $this->getManager()->getRepository(Animal::class)->getLiveStock($location, true, false, false, Ram::class);
+        $otherCandidateFathers = $this->getManager()->getRepository(Animal::class)->getLiveStock($location, $this->getCacheService(), true, Ram::class);
         $filteredOtherCandidateFathers = [];
         $suggestedCandidateFathers = [];
         $suggestedCandidateFatherIds = [];
@@ -814,7 +820,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $otherCandidatesResult = [];
         $result = [];
 
-        $motherCandidates = $this->getManager()->getRepository(Animal::class)->getLiveStock($location , true, false, false, Ewe::class);
+        $motherCandidates = $this->getManager()->getRepository(Animal::class)->getLiveStock($location , $this->getCacheService(), true, Ewe::class);
 
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;

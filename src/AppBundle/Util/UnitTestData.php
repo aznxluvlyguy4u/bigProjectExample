@@ -20,9 +20,11 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
+use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Service\CacheService;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -222,6 +224,34 @@ class UnitTestData
 
 
     /**
+     * @param EntityManagerInterface $em
+     * @param string $emailAddress
+     * @param string $firstName
+     * @param string $lastName
+     * @return VwaEmployee
+     */
+    public static function getOrCreateVwaEmployee(EntityManagerInterface $em, $emailAddress,
+                                                  $firstName = 'Billy', $lastName = 'Bob')
+    {
+        $vwaEmployee = $em->getRepository(VwaEmployee::class)->findOneBy(['emailAddress' => $emailAddress]);
+
+        if (!$vwaEmployee) {
+            $vwaEmployee = new VwaEmployee();
+            $vwaEmployee
+                ->setEmailAddress($emailAddress)
+                ->setFirstName($firstName)
+                ->setLastName($lastName)
+                ->setPassword('BLANK')
+            ;
+            $em->persist($vwaEmployee);
+            $em->flush();
+        }
+
+        return $vwaEmployee;
+    }
+
+
+    /**
      * @param Connection $conn
      * @return int
      */
@@ -402,14 +432,16 @@ class UnitTestData
 
     /**
      * @param EntityManagerInterface $em
+     * @param CacheService $cacheService
      * @param Location $location
      * @param $totalAnimalCount
      * @param $gender
      * @return array
      */
-    public static function getAnimalsUlnsBody(EntityManagerInterface $em, Location $location, $totalAnimalCount, $gender = null)
+    public static function getAnimalsUlnsBody(EntityManagerInterface $em, CacheService $cacheService,
+                                              Location $location, $totalAnimalCount, $gender = null)
     {
-        $animals = $em->getRepository(Animal::class)->getLiveStock($location, true,false,false, $gender,false);
+        $animals = $em->getRepository(Animal::class)->getLiveStock($location, $cacheService, true, $gender);
 
         $result = [];
         $animalCount = 0;

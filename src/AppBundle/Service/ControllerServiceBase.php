@@ -49,6 +49,8 @@ abstract class ControllerServiceBase
     /** @var UserService */
     private $userService;
 
+    /** @var string */
+    private $actionLogEditMessage;
 
     public function __construct(BaseSerializer $baseSerializer,
                                 CacheService $cacheService,
@@ -216,6 +218,35 @@ abstract class ControllerServiceBase
         }
 
         return new JsonResponse($response, 401);
+    }
+
+
+    protected function clearActionLogEditMessage()
+    {
+        $this->actionLogEditMessage = '';
+    }
+
+
+    /**
+     * @param string $type
+     * @param string $oldValue
+     * @param string $newValue
+     */
+    protected function updateActionLogEditMessage($type, $oldValue, $newValue)
+    {
+        if ($oldValue !== $newValue) {
+            $prefix = $this->actionLogEditMessage === '' ? '' : ', ';
+            $this->actionLogEditMessage = $this->actionLogEditMessage . $prefix . $type . ': '.$oldValue.' => '.$newValue;
+        }
+    }
+
+
+    /**
+     * @return string
+     */
+    protected function getActionLogEditMessage()
+    {
+        return $this->actionLogEditMessage;
     }
 
 

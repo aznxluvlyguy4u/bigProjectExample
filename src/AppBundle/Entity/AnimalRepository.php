@@ -8,6 +8,9 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Service\BaseSerializer;
+use AppBundle\Service\CacheService;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
@@ -20,7 +23,13 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Connection;
 use Doctrine\Common\Cache\RedisCache;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Join;
+use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Symfony\Component\Cache\Adapter\TraceableAdapter;
+use Doctrine\ORM\Query\Parameter;
 use Symfony\Component\Console\Output\OutputInterface;
 use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 
@@ -31,7 +40,7 @@ use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 class AnimalRepository extends BaseRepository
 {
   const BATCH = 1000;
-  const USE_REDIS_CACHE = false; //TODO activate this when the livestock and historicLivestock redis cache is fixed
+  const USE_REDIS_CACHE = true; //TODO activate this when the livestock and historicLivestock redis cache is fixed
   const LIVESTOCK_CACHE_ID = 'GET_LIVESTOCK_';
   const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
   const CANDIDATE_FATHERS_CACHE_ID = 'GET_CANDIDATE_FATHERS_';
@@ -334,27 +343,20 @@ class AnimalRepository extends BaseRepository
 
   /**
    * @param Location $location
+   * @param CacheService $cacheService
    * @param bool $isAlive
-   * @param bool $isDeparted
-   * @param bool $isExported
    * @param Animal $queryOnlyOnAnimalGenderType
-   * @param bool $prioritizeRedisCache
    * 
    * @return array
    */
   public function getLiveStock(Location $location,
+                               CacheService $cacheService,
                                $isAlive = true,
-                               $isDeparted = false,
-                               $isExported = false,
-                               $queryOnlyOnAnimalGenderType = null,
-                               $prioritizeRedisCache = true
+                               $queryOnlyOnAnimalGenderType = null
   )
   {
     $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID . $location->getId(); //. sha1($location->getId());
     $isAlive = $isAlive ? 'true' : 'false';
-    //unused
-    $isDeparted = $isDeparted ? 'true' : 'false';
-    $isExported = $isExported ? 'true' : 'false';
 
     $em = $this->getEntityManager();
     $livestockAnimalsQueryBuilder = $em->createQueryBuilder();
@@ -371,12 +373,15 @@ class AnimalRepository extends BaseRepository
       switch ($queryOnlyOnAnimalGenderType) {
         case Ewe::class:
           $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'FEMALE'");
+          $cacheId .= '_'.Ewe::getShortClassName();
           break;
         case Ram::class:
           $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'MALE'");
+          $cacheId .= '_'.Ram::getShortClassName();
           break;
         case Neuter::class:
           $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'NEUTER'");
+          $cacheId .= '_'.Neuter::getShortClassName();
           break;
         default:
           break;
@@ -399,10 +404,8 @@ class AnimalRepository extends BaseRepository
 
     $query = $livestockAnimalsQueryBuilder->getQuery();
 
-    if (self::USE_REDIS_CACHE && $prioritizeRedisCache) {
-        $query->useQueryCache(true);
-        $query->setCacheable(true);
-        $query->useResultCache(true, Constant::CACHE_LIVESTOCK_TIME_SPAN, $cacheId);
+    if (self::USE_REDIS_CACHE) {
+        return $cacheService->get($cacheId, $query);
     }
 
     return $query->getResult();
@@ -413,10 +416,12 @@ class AnimalRepository extends BaseRepository
    * Returns historic animals EXCLUDING animals on current location
    *
    * @param Location $location
+   * @param CacheService $cacheService
+   * @param BaseSerializer $serializer
    * @param Ram | Ewe | Neuter $queryOnlyOnAnimalGenderType
    * @return array
    */
-  public function getHistoricLiveStock(Location $location, $queryOnlyOnAnimalGenderType = null)
+  public function getHistoricLiveStock(Location $location, $cacheService, $serializer, $queryOnlyOnAnimalGenderType = null)
   {
     // Null check
     if(!($location instanceof Location)) {
@@ -456,14 +461,17 @@ class AnimalRepository extends BaseRepository
         case Ewe::getClassName():
           $livestockAnimalsGenderExpression = $livestockAnimalQueryBuilder->expr()->eq('animal.gender', "'FEMALE'");
           $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'FEMALE'");
+          $cacheId .= '_'.Ewe::getShortClassName();
           break;
         case Ram::getClassName():
           $livestockAnimalsGenderExpression = $livestockAnimalQueryBuilder->expr()->eq('animal.gender', "'MALE'");
           $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'MALE'");
+          $cacheId .= '_'.Ram::getShortClassName();
           break;
         case Neuter::getClassName():
           $livestockAnimalsGenderExpression = $livestockAnimalQueryBuilder->expr()->eq('animal.gender', "'NEUTER'");
           $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'NEUTER'");
+          $cacheId .= '_'.Neuter::getShortClassName();
           break;
         default:
           break;
@@ -497,7 +505,7 @@ class AnimalRepository extends BaseRepository
     //as Subselect to get only Historic Livestock Animals
     $historicAnimalsQuery =
       $historicAnimalsQueryBuilder
-        ->select('a,r')
+        ->select('a,r,l')
         ->from('AppBundle:AnimalResidence', 'r')
         ->innerJoin('r.animal', 'a', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('r.animal', 'a.id'))
         ->leftJoin('r.location', 'l', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('a.location', 'l.id'))
@@ -509,25 +517,50 @@ class AnimalRepository extends BaseRepository
         ));
 
     $query = $historicAnimalsQuery->getQuery();
-
-    if (self::USE_REDIS_CACHE) {
-        $query->useQueryCache(true);
-        $query->setCacheable(true);
-        $query->useResultCache(true, Constant::CACHE_HISTORIC_LIVESTOCK_TIME_SPAN, $cacheId);
-    }
+    $query->setFetchMode(AnimalResidence::class, 'animal', ClassMetadata::FETCH_EAGER);
+    $query->setFetchMode(Animal::class, 'location', ClassMetadata::FETCH_EAGER);
 
     //Returns a list of AnimalResidences
-    $retrievedHistoricAnimalResidences = $query->getResult();
-    $historicLivestock = [];
+    if (self::USE_REDIS_CACHE) {
+        if ($cacheService->isHit($cacheId)) {
+            $historicLivestock = $serializer->deserializeArrayOfObjects($cacheService->getItem($cacheId), Animal::class);
+        } else {
+            $retrievedHistoricAnimalResidences = $query->getResult();
+            $historicLivestock = $this->getHistoricLivestockFromResidences($retrievedHistoricAnimalResidences);
 
-    //Grab the animals on returned residences
-    /** @var AnimalResidence $historicAnimalResidence */
-    foreach ($retrievedHistoricAnimalResidences as $historicAnimalResidence) {
-      $historicLivestock[$historicAnimalResidence->getAnimal()->getId()] = $historicAnimalResidence->getAnimal();
+            $serializedHistoricLivestock = $serializer->getArrayOfSerializedObjects($historicLivestock, [JmsGroup::BASIC, JmsGroup::LIVESTOCK],true);
+            $cacheService->set($cacheId, $serializedHistoricLivestock);
+        }
+
+    } else {
+        $retrievedHistoricAnimalResidences = $query->getResult();
+        $historicLivestock = $this->getHistoricLivestockFromResidences($retrievedHistoricAnimalResidences);
     }
 
     return $historicLivestock;
   }
+
+
+    /**
+     * @param $retrievedHistoricAnimalResidences
+     * @return array
+     */
+  private function getHistoricLivestockFromResidences($retrievedHistoricAnimalResidences)
+  {
+      $historicLivestock = [];
+
+      //Grab the animals on returned residences
+      /** @var AnimalResidence $historicAnimalResidence */
+      foreach ($retrievedHistoricAnimalResidences as $historicAnimalResidence)
+      {
+          $animalId = $historicAnimalResidence->getAnimal()->getId();
+          if (!key_exists($animalId, $historicLivestock)) {
+              $historicLivestock[$animalId] = $historicAnimalResidence->getAnimal();
+          }
+      }
+      return $historicLivestock;
+  }
+
 
   /**
    * @param Client $client
@@ -1366,5 +1399,62 @@ class AnimalRepository extends BaseRepository
       }
       return null;
   }
+
+
+    /**
+     * @param array $ubns
+     * @param array $ulns
+     * @return array
+     */
+  public function findByUbnsOrUlns(array $ubns = [], $ulns = [])
+  {
+      $qb = $this->getManager()->createQueryBuilder();
+
+      $qb
+          ->select('animal')
+          ->from(Animal::class, 'animal');
+
+      $count = 1;
+      foreach ($ulns as $ulnData) {
+          $ulnCountryCode = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $ulnData);
+          $ulnNumber = ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $ulnData);
+
+          $countryCodeParameter = 'ulnCountryCode'.$count;
+          $numberParameter = 'ulnNumber'.$count;
+
+          $ulnQuery = $qb->expr()->andX(
+              $qb->expr()->eq('animal.ulnCountryCode', ':'.$countryCodeParameter),
+              $qb->expr()->eq('animal.ulnNumber', ':'.$numberParameter)
+          );
+
+          $qb
+              ->orWhere($ulnQuery)
+              ->setParameter($countryCodeParameter, $ulnCountryCode, Type::STRING)
+              ->setParameter($numberParameter, $ulnNumber, Type::STRING)
+          ;
+
+          $count++;
+      }
+
+      $locationsQuery = $this->getManager()->getRepository(Location::class)->getLocationsQueryByUbns($ubns);
+
+      if ($locationsQuery !== null) {
+          $qb->orWhere($qb->expr()->in('animal.location', $locationsQuery->getDQL()));
+
+          /** @var Parameter $parameter */
+          foreach ($locationsQuery->getParameters() as $parameter) {
+              $qb->setParameter($parameter->getName(), $parameter->getValue(), $parameter->getType());
+          }
+      }
+
+      $qb
+          ->orderBy('animal.ulnCountryCode' ,'ASC')
+          ->addOrderBy('animal.ulnNumber', 'ASC');
+
+      $query = $qb->getQuery();
+
+      return $query->getResult();
+  }
+
 
 }

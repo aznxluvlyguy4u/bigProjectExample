@@ -76,16 +76,14 @@ class AdminProfileService extends AuthServiceBase implements AdminProfileAPICont
         $valuesLog = AdminActionLogWriter::editOwnAdminProfile($this->getManager(), $admin, $content);
 
         //Persist updated changes and return the updated values
-        $client = AdminProfile::update($admin, $content);
+        $admin = AdminProfile::update($admin, $content);
         $this->getManager()->persist($admin);
         $this->getManager()->flush();
 
         $outputArray = AdminOverviewOutput::createAdminOverview($admin);
 
         ActionLogWriter::completeActionLog($this->getManager(), $valuesLog);
-        if ($passwordChangeLog) {
-            ActionLogWriter::completeActionLog($this->getManager(), $passwordChangeLog);
-        }
+        ActionLogWriter::completeActionLog($this->getManager(), $passwordChangeLog);
 
         return ResultUtil::successResult($outputArray);
     }
