@@ -40,10 +40,9 @@ class AnimalDetailsOutput
     /**
      * @param ObjectManager $em
      * @param Animal $animal
-     * @param Location $location
      * @return array
      */
-    public static function create(ObjectManager $em, Animal $animal, $location)
+    public static function create(ObjectManager $em, Animal $animal)
     {
         $replacementString = "";
 
@@ -180,7 +179,7 @@ class AnimalDetailsOutput
             "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal, $replacementString),
             "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
-            "declare_log" => self::getLog($em, $animal, $location, $replacementString),
+            "declare_log" => self::getLog($em, $animal, $animal->getLocation(), $replacementString),
             "children" => $animalRepository->getOffspringLogDataBySql($animal, $replacementString),
         );
 

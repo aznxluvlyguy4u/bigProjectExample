@@ -272,9 +272,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         $animal = $animalDetailsValidator->getAnimal();
-        if($location == null) { $location = $animal->getLocation(); }
 
-        $output = AnimalDetailsOutput::create($this->getManager(), $animal, $location);
+        $output = AnimalDetailsOutput::create($this->getManager(), $animal);
         return ResultUtil::successResult($output);
     }
 

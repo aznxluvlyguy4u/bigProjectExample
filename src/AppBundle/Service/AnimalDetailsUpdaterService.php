@@ -72,14 +72,15 @@ class AnimalDetailsUpdaterService
                 "message" => "For this account, no animal was found with uln: " . $content['uln_country_code'] . $content['uln_number']), 204);
         }
 
+        //TODO add validation
+        //$location = $this->userService->getSelectedLocation($request);
+
         $this->updateValues($animal, $content);
 
-        $location = $this->userService->getSelectedLocation($request);
-
         //Clear cache for this location, to reflect changes on the livestock
-        $this->cacheService->clearLivestockCacheForLocation($location, $animal);
+        $this->cacheService->clearLivestockCacheForLocation(null, $animal);
 
-        $output = AnimalDetailsOutput::create($this->em, $animal, $animal->getLocation());
+        $output = AnimalDetailsOutput::create($this->em, $animal);
 
         return new JsonResponse($output, 200);
     }
