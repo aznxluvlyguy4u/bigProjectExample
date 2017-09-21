@@ -192,8 +192,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         /** @var Animal $updatedAnimal */
         $updatedAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, $clazz);
 
-        if($updatedAnimal->getPedigreeCountryCode() != $animal->getPedigreeCountryCode() ||
-            $updatedAnimal->getPedigreeNumber() != $animal->getPedigreeNumber()
+        if($updatedAnimal->getPedigreeCountryCode() !== $animal->getPedigreeCountryCode() ||
+            $updatedAnimal->getPedigreeNumber() !== $animal->getPedigreeNumber()
         ) {
             $oldStn = $animal->getPedigreeCountryCode().$animal->getPedigreeNumber();
             $oldStn = $oldStn == '' ? 'LEEG' : $oldStn;
@@ -203,8 +203,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $this->updateActionLogMessage('stn', $oldStn, $stn);
         }
 
-        if($updatedAnimal->getUlnCountryCode() != $animal->getUlnCountryCode() ||
-            $updatedAnimal->getUlnNumber() != $animal->getUlnNumber()
+        if($updatedAnimal->getUlnCountryCode() !== $animal->getUlnCountryCode() ||
+            $updatedAnimal->getUlnNumber() !== $animal->getUlnNumber()
         ) {
             $oldUln = $animal->getUlnCountryCode().$animal->getUlnNumber();
             $oldUln = $oldUln == '' ? 'LEEG' : $oldUln;
@@ -215,15 +215,15 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $this->updateActionLogMessage('uln', $oldUln, $uln);
         }
 
-        if($updatedAnimal->getNickname() != $animal->getNickname()) {
+        if($updatedAnimal->getNickname() !== $animal->getNickname()) {
             $oldNickName = $animal->getNickname();
             $oldNickName = $oldNickName == '' ? 'LEEG' : $oldNickName;
             $animal->setNickname($updatedAnimal->getNickname());
             $this->updateActionLogMessage('nickname', $oldNickName, $updatedAnimal->getNickname());
         }
 
-        if($updatedAnimal->getCollarColor() != $animal->getCollarColor() ||
-            $updatedAnimal->getCollarNumber() != $animal->getCollarNumber()
+        if($updatedAnimal->getCollarColor() !== $animal->getCollarColor() ||
+            $updatedAnimal->getCollarNumber() !== $animal->getCollarNumber()
         ) {
             $oldCollar = $animal->getCollarColor().$animal->getCollarNumber();
             $oldCollar = $oldCollar == '' ? 'LEEG' : $oldCollar;
@@ -233,14 +233,14 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $this->updateActionLogMessage('halsband', $oldCollar, $collar);
         }
 
-        if($updatedAnimal->getBreedCode() != $animal->getBreedCode()) {
+        if($updatedAnimal->getBreedCode() !== $animal->getBreedCode()) {
             $oldBreedCode = $animal->getBreedCode();
             $oldBreedCode = $oldBreedCode == '' ? 'LEEG' : $oldBreedCode;
             $animal->setBreedCode($updatedAnimal->getBreedCode());
             $this->updateActionLogMessage('rascode', $oldBreedCode, $updatedAnimal->getBreedCode());
         }
 
-        if($updatedAnimal->getScrapieGenotype() != $animal->getScrapieGenotype()) {
+        if($updatedAnimal->getScrapieGenotype() !== $animal->getScrapieGenotype()) {
             $oldScrapieGenotype = $animal->getScrapieGenotype();
             $oldScrapieGenotype = $oldScrapieGenotype == '' ? 'LEEG' : $oldScrapieGenotype;
             $animal->setScrapieGenotype($updatedAnimal->getScrapieGenotype());
@@ -257,7 +257,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $updatedDateOfBirth = $updatedAnimal->getDateOfBirth();
         }
 
-        if($updatedDateOfBirth != $animal->getDateOfBirth()) {
+        if($updatedDateOfBirth !== $animal->getDateOfBirth()) {
             $oldDateOfBirth = $animal->getDateOfBirthString();
             $oldDateOfBirth = $oldDateOfBirth == null ? 'LEEG' : $oldDateOfBirth;
             $animal->setDateOfBirth($updatedDateOfBirth);
@@ -274,7 +274,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $updatedDateOfDeath = $updatedAnimal->getDateOfDeath();
         }
 
-        if($updatedDateOfDeath != $animal->getDateOfDeath()) {
+        if($updatedDateOfDeath !== $animal->getDateOfDeath()) {
             $oldDateOfDeath = $animal->getDateOfDeathString();
             $oldDateOfDeath = $oldDateOfDeath == null ? 'LEEG' : $oldDateOfDeath;
             $animal->setDateOfDeath($updatedDateOfDeath);
@@ -282,14 +282,14 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
 
-        if($updatedAnimal->getIsAlive() != $animal->getIsAlive()) {
+        if($updatedAnimal->getIsAlive() !== $animal->getIsAlive()) {
             $oldIsAlive = StringUtil::getBooleanAsString($animal->getIsAlive());
             $animal->setIsAlive($updatedAnimal->getIsAlive());
             $this->updateActionLogMessage('isLevendStatus', $oldIsAlive, StringUtil::getBooleanAsString($updatedAnimal->getIsAlive()));
         }
 
 
-        if($updatedAnimal->getNote() != $animal->getNote()) {
+        if($updatedAnimal->getNote() !== $animal->getNote()) {
             $oldNote = $animal->getNote();
             $oldNote = $oldNote == '' ? 'LEEG' : $oldNote;
             $animal->setNote($updatedAnimal->getNote());
@@ -297,7 +297,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
         $updatedBreedType = Translation::getEnglish($updatedAnimal->getBreedType());
-        if($updatedBreedType != $animal->getBreedType()) {
+        if($updatedBreedType !== $animal->getBreedType()) {
             $oldBreedType = $updatedAnimal->getBreedType();
             $oldBreedType = $oldBreedType == '' ? 'LEEG' : $oldBreedType;
             $animal->setBreedType($updatedBreedType);
@@ -305,7 +305,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
 
-        if($updatedAnimal->getUbnOfBirth() != $animal->getUbnOfBirth()) {
+        if($updatedAnimal->getUbnOfBirth() !== $animal->getUbnOfBirth()) {
             $oldUbnOfBirth = $animal->getUbnOfBirth();
             $oldUbnOfBirth = $oldUbnOfBirth == '' ? 'LEEG' : $oldUbnOfBirth;
             $animal->setUbnOfBirth($updatedAnimal->getUbnOfBirth());
@@ -330,7 +330,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         if($updatedLocationOfBirthUbn == null && $locationOfBirthUbn != null) {
             $animal->setLocationOfBirth(null);
             $this->updateActionLogMessage('fokkerUbn(LOCATIE)', $locationOfBirthUbn, 'LEEG');
-        } elseif($updatedLocationOfBirthUbn != null && ($locationOfBirthUbn != $updatedLocationOfBirthUbn)) {
+        } elseif($updatedLocationOfBirthUbn !== null && ($locationOfBirthUbn !== $updatedLocationOfBirthUbn)) {
             $locationOfBirth = $this->getManager()->getRepository(Location::class)->findOnePrioritizedByActiveUbn($updatedLocationOfBirthUbn);
             if($locationOfBirth) {
                 $animal->setLocationOfBirth($locationOfBirth);
@@ -356,7 +356,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $pedigreeRegisterId = $animal->getPedigreeRegister()->getId();
             $oldPedigreeRegisterAbbreviation = $animal->getPedigreeRegister()->getAbbreviation();
         }
-        if($updatedPedigreeRegisterId == null && $pedigreeRegisterId != null) {
+        if($updatedPedigreeRegisterId === null && $pedigreeRegisterId !== null) {
             $animal->setPedigreeRegister(null);
             $this->updateActionLogMessage('stamboek', $oldPedigreeRegisterAbbreviation, 'LEEG');
         } elseif($updatedPedigreeRegisterId != null && ($pedigreeRegisterId != $updatedPedigreeRegisterId)) {
