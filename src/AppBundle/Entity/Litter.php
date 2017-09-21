@@ -35,7 +35,9 @@ class Litter extends DeclareNsfoBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $litterDate;
 
@@ -44,7 +46,9 @@ class Litter extends DeclareNsfoBase
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ram")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $animalFather;
 
@@ -53,7 +57,9 @@ class Litter extends DeclareNsfoBase
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ewe")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $animalMother;
 
@@ -72,7 +78,9 @@ class Litter extends DeclareNsfoBase
      *
      * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $stillbornCount;
 
@@ -81,21 +89,27 @@ class Litter extends DeclareNsfoBase
      *
      * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $bornAliveCount;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $isAbortion;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $isPseudoPregnancy;
 
@@ -117,14 +131,18 @@ class Litter extends DeclareNsfoBase
      * @var ArrayCollection
      * @JMS\Type("AppBundle\Entity\DeclareBirth")
      * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="litter", cascade={"persist"})
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $declareBirths;
 
     /**
      * @ORM\Column(type="string", options={"default": "INCOMPLETE"})
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $status;
 

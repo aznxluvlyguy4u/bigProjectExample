@@ -35,7 +35,9 @@ class DeclareTagsTransfer extends DeclareBase
      *      joinColumns={@ORM\JoinColumn(name="declare_tags_transfer_id", referencedColumnName="id")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="tag_transfer_item_request_id", referencedColumnName="id", unique=true)}
      *      )
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $tagTransferRequests;
 
@@ -46,7 +48,9 @@ class DeclareTagsTransfer extends DeclareBase
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $relationNumberAcceptant;
 
@@ -57,7 +61,9 @@ class DeclareTagsTransfer extends DeclareBase
      * @Assert\NotBlank
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $ubnNewOwner;
 
@@ -75,7 +81,9 @@ class DeclareTagsTransfer extends DeclareBase
      * @ORM\JoinColumn(name="declare_tag_transfer_request_message_id", referencedColumnName="id")
      * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $responses;
 

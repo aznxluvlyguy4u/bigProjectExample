@@ -30,7 +30,10 @@ class TreatmentTemplate
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
+     * })
      */
     private $id;
 
@@ -38,7 +41,10 @@ class TreatmentTemplate
      * @var Location
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="treatmentTemplates")
      * @JMS\Type("AppBundle\Entity\Location")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
+     * })
      */
     private $location;
 
@@ -46,7 +52,9 @@ class TreatmentTemplate
      * @var TreatmentType
      * @ORM\ManyToOne(targetEntity="TreatmentType")
      * @JMS\Type("AppBundle\Entity\TreatmentType")
-     * @JMS\Groups({"TREATMENT_TEMPLATE"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE"
+     * })
      */
     private $treatmentType;
 
@@ -55,7 +63,10 @@ class TreatmentTemplate
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @ORM\Column(type="string")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
+     * })
      */
     private $description;
 
@@ -64,7 +75,10 @@ class TreatmentTemplate
      * @ORM\OrderBy({"description" = "ASC"})
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\MedicationOption", mappedBy="treatmentTemplate", cascade={"persist", "remove"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationOption>")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
+     * })
      */
     private $medications;
 
@@ -72,7 +86,10 @@ class TreatmentTemplate
      * @var boolean
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
+     * })
      */
     private $isActive;
 
@@ -82,7 +99,9 @@ class TreatmentTemplate
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"TREATMENT_TEMPLATE"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE"
+     * })
      */
     private $logDate;
 
@@ -115,14 +134,20 @@ class TreatmentTemplate
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @ORM\Column(type="string")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
+     * })
      */
     private $type;
 
     /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("dutchType")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
+     * })
      */
     public function getDutchType() {
         return Translation::getDutchTreatmentType($this->type);
