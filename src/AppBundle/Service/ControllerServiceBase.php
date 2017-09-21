@@ -261,7 +261,7 @@ abstract class ControllerServiceBase
     protected function getAnimalDetailsOutputForUserEnvironment(Animal $animal)
     {
         $output = AnimalDetailsOutput::create($this->getManager(), $animal);
-        return new JsonResponse($output, 200);
+        return ResultUtil::successResult($output);
     }
 
 
