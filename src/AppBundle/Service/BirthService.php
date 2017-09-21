@@ -455,7 +455,13 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                         }
                     }
                 }
+            }
 
+            $this->getManager()->flush();
+
+            /** @var Animal $child */
+            foreach ($childrenToRemove as $child)
+            {
                 //Remove child animal
                 $this->getManager()->remove($child);
             }
