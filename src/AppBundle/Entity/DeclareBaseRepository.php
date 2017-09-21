@@ -29,7 +29,7 @@ class DeclareBaseRepository extends BaseRepository implements DeclareBaseReposit
         if(!($animal instanceof Animal) || !($location instanceof Location)) { return $results; }
         elseif(!is_int($animal->getId())){ return $results; }
 
-        if($animal->getLocation() != $location) { return $results; }
+        if($animal->getLocation() !== $location) { return $results; }
         
         $locationId = $location->getId();
         $animalId = $animal->getId();

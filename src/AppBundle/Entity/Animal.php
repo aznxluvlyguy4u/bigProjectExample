@@ -2207,6 +2207,20 @@ abstract class Animal
         $this->ubnOfBirth = trim($ubnOfBirth);
     }
 
+
+    /**
+     * @return Client|null
+     */
+    public function getOwner()
+    {
+        if($this->location instanceof Location) {
+            return $this->location->getOwner();
+        }
+        return null;
+    }
+
+
+
     /**
      * @return Location
      */

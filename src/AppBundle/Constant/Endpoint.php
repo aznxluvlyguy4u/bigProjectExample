@@ -6,6 +6,7 @@ namespace AppBundle\Constant;
 class Endpoint
 {
     const ACTION_LOG = '/api/v1/log/action';
+    const ANIMALS = '/api/v1/animals';
 
     const DECLARE_ARRIVAL_ENDPOINT = "/api/v1/arrivals";
     const DECLARE_BIRTH_ENDPOINT = "/api/v1/births";
