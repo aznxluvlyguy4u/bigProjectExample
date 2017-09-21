@@ -9,6 +9,7 @@ class Endpoint
     const ADMIN = '/api/v1/admins';
     const ADMIN_AUTH = '/api/v1/admins/auth';
     const ADMIN_PROFILE = '/api/v1/profiles-admin';
+    const ANIMALS = '/api/v1/animals';
     const AUTH = '/api/v1/auth';
 
     const DECLARE_ARRIVAL_ENDPOINT = "/api/v1/arrivals";

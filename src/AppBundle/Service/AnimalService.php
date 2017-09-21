@@ -4,7 +4,6 @@
 namespace AppBundle\Service;
 
 
-use AppBundle\Component\AnimalDetailsUpdater;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -264,35 +263,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      * @param string $ulnString
      * @return JsonResponse
      */
-    function updateAnimalDetails(Request $request, $ulnString)
-    {
-        //Get content to array
-        $content = RequestUtil::getContentAsArray($request);
-
-        /** @var Animal $animal */
-        $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
-
-        if($animal == null) {
-            return ResultUtil::errorResult("For this account, no animal was found with uln: " . $ulnString, 204);
-        }
-
-        AnimalDetailsUpdater::update($this->getManager(), $animal, $content);
-
-        $location = $this->getSelectedLocation($request);
-
-        //Clear cache for this location, to reflect changes on the livestock
-        $this->clearLivestockCacheForLocation($location);
-
-        $output = AnimalDetailsOutput::create($this->getManager(), $animal, $animal->getLocation());
-        return new JsonResponse($output, 200);
-    }
-
-
-    /**
-     * @param Request $request
-     * @param string $ulnString
-     * @return JsonResponse
-     */
     public function getAnimalDetailsByUln(Request $request, $ulnString)
     {
         if ($this->getUser() instanceof VwaEmployee) {
@@ -311,13 +281,12 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         $animal = $animalDetailsValidator->getAnimal();
-        if($location == null) { $location = $animal->getLocation(); }
 
         if (RequestUtil::getBooleanQuery($request, QueryParameter::MINIMAL_OUTPUT, false)) {
             return $this->getBasicAnimalDetailsByUln($ulnString);
         }
 
-        $output = AnimalDetailsOutput::create($this->getManager(), $animal, $location);
+        $output = AnimalDetailsOutput::create($this->getManager(), $animal);
         return ResultUtil::successResult($output);
     }
 
