@@ -255,6 +255,7 @@ class TimeUtil
      */
     public static function getTimeStampForJsonBody($dateTime, $timeZoneHoursOffset = 1)
     {
+        if (!$dateTime) { return null; }
         $timeZoneHours = str_pad($timeZoneHoursOffset,2,'0', STR_PAD_LEFT);
         return $dateTime->format('Y-m-d\TH\:i\:s\+'.$timeZoneHours.':00');
     }
