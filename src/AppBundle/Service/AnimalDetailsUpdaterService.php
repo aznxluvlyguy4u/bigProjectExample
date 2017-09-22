@@ -33,6 +33,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     const LOG_EMPTY = 'LEEG';
 
     const ERROR_ULN_ALREADY_EXISTS = 'Het opgegeven nieuwe uln is al in gebruik bij een ander dier';
+    const ERROR_LOCATION_NOT_FOUND = 'Er is geen locatie gevonden met ubn: ';
 
     /* Parent error messages */
     const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
@@ -271,6 +272,34 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
                 $this->updateActionLogMessage($dutchParentType, $ulnStringCurrentParent, $ulnStringNewParent);
             }
 
+        }
+
+
+        $updateLocation = false;
+        if ($updatedAnimal->getLocation()) {
+            if ($animal->getLocation()) {
+                if ($animal->getLocation()->getUbn() !== $updatedAnimal->getLocation()->getUbn()) {
+                    $updateLocation = true;
+                }
+            } else {
+                $updateLocation = true;
+            }
+        } elseif ($animal->getLocation()) {
+            $this->updateActionLogMessage('ubn', $animal->getLocation()->getUbn(), self::LOG_EMPTY);
+            $animal->setLocation(null);
+        }
+
+        if ($updateLocation) {
+            $ubnNewLocation = $updatedAnimal->getLocation()->getUbn();
+            $newLocation = $this->getManager()->getRepository(Location::class)->findOnePrioritizedByActiveUbn($ubnNewLocation);
+            if ($newLocation === null) {
+                return ResultUtil::errorResult(self::ERROR_LOCATION_NOT_FOUND.$ubnNewLocation, Response::HTTP_PRECONDITION_REQUIRED);
+            }
+
+            $ubnCurrentLocation = $animal->getLocation() ? $animal->getLocation()->getUbn() : self::LOG_EMPTY;
+
+            $this->updateActionLogMessage('ubn', $ubnCurrentLocation, $ubnNewLocation);
+            $animal->setLocation($newLocation);
         }
 
 
