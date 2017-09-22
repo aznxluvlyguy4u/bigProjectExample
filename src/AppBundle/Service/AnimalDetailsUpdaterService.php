@@ -30,13 +30,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AnimalDetailsUpdaterService extends ControllerServiceBase
 {
+    const LOG_EMPTY = 'LEEG';
+
+    const ERROR_ULN_ALREADY_EXISTS = 'Het opgegeven nieuwe uln is al in gebruik bij een ander dier';
+
+    /* Parent error messages */
     const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
     const ERROR_INCORRECT_GENDER = 'ERROR_INCORRECT_GENDER';
     const ERROR_ULN_IDENTICAL_TO_CHILD = 'ERROR_ULN_IDENTICAL_TO_CHILD';
     const ERROR_PARENT_YOUNGER_THAN_CHILD = 'ERROR_PARENT_YOUNGER_THAN_CHILD';
-
-    const LOG_EMPTY = 'LEEG';
-
 
     private $parentErrors = [
         Ram::class => [
@@ -218,7 +220,6 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         $updatedAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, $clazz);
 
 
-
         /* Update Parents */
 
         foreach ([Ram::class, Ewe::class] as $parentClazz)
@@ -287,6 +288,9 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         if($updatedAnimal->getUlnCountryCode() !== $animal->getUlnCountryCode() ||
             $updatedAnimal->getUlnNumber() !== $animal->getUlnNumber()
         ) {
+            if ($this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($updatedAnimal->getUln())) {
+                return ResultUtil::errorResult(self::ERROR_ULN_ALREADY_EXISTS, Response::HTTP_PRECONDITION_REQUIRED);
+            }
             $oldUln = $animal->getUlnCountryCode().$animal->getUlnNumber();
             $oldUln = $oldUln == '' ? 'LEEG' : $oldUln;
             $animal->setUlnCountryCode($updatedAnimal->getUlnCountryCode());
