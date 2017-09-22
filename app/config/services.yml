@@ -570,6 +570,10 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MessageService
 
+    app.pedigree_register:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\PedigreeRegisterService
+
     app.profile:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ProfileService

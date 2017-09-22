@@ -2,13 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\PedigreeRegister;
-use AppBundle\Entity\PedigreeRegisterRepository;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Util\RequestUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -25,6 +18,7 @@ class PedigreeRegisterAPIController extends APIController implements PedigreeReg
    * Get PedigreeRegisters.
    *
    * @ApiDoc(
+   *   section = "Pedigree Register",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -44,18 +38,7 @@ class PedigreeRegisterAPIController extends APIController implements PedigreeReg
    */
   public function getPedigreeRegisters(Request $request)
   {
-    $includeNonNsfoRegisters = RequestUtil::getBooleanQuery($request, JsonInputConstant::INCLUDE_NON_NSFO_REGISTERS);
-    /** @var PedigreeRegisterRepository $repository */
-    $repository = $this->getDoctrine()->getRepository(PedigreeRegister::class);
-
-    if($includeNonNsfoRegisters) {
-      $pedigreeRegisters = $repository->findAll();
-    } else {
-      $pedigreeRegisters = $repository->getNsfoRegisters();
-    }
-
-    $output = $this->getDecodedJson($pedigreeRegisters);
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
+      return $this->get('app.pedigree_register')->getPedigreeRegisters($request);
   }
 
 
