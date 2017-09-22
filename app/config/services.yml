@@ -498,6 +498,10 @@ services:
           - '@app.aws.queueservice.internal'
           - '@app.doctrine.entitygetter'
 
+    app.breed_type:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\BreedTypeService
+
     app.client:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ClientService
