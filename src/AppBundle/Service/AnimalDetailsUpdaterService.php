@@ -58,6 +58,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
 
 
     /** @var string */
+    private $animalIdLogPrefix;
+    /** @var string */
     private $actionLogMessage;
     /** @var Request */
     private $request;
@@ -90,6 +92,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             }
             return ResultUtil::errorResult($errorMessage, Response::HTTP_NOT_FOUND);
         }
+
+        $this->extractAnimalIdData($animal);
 
         if($isAdminEnv) {
             if(!AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::SUPER_ADMIN))
@@ -535,6 +539,14 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     }
 
 
+    /**
+     * @param Animal $animal
+     */
+    private function extractAnimalIdData(Animal $animal)
+    {
+        $this->animalIdLogPrefix = 'animal[id: '.$animal->getId() . ', uln: ' . $animal->getUln().']: ';
+    }
+
 
     private function clearActionLogMessage()
     {
@@ -561,12 +573,12 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     private function saveActionLogMessage()
     {
         ActionLogWriter::editAnimalDetails($this->getManager(), $this->getAccountOwner($this->request),
-            $this->getUser(), $this->actionLogMessage,true);
+            $this->getUser(), $this->animalIdLogPrefix . $this->actionLogMessage,true);
     }
 
 
     private function saveAdminActionLogMessage()
     {
-        ActionLogWriter::updateAnimalDetailsAdminEnvironment($this->getManager(), $this->getUser(), $this->actionLogMessage);
+        ActionLogWriter::updateAnimalDetailsAdminEnvironment($this->getManager(), $this->getUser(), $this->animalIdLogPrefix .$this->actionLogMessage);
     }
 }
