@@ -30,6 +30,30 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AnimalDetailsUpdaterService extends ControllerServiceBase
 {
+    const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
+    const ERROR_INCORRECT_GENDER = 'ERROR_INCORRECT_GENDER';
+    const ERROR_ULN_IDENTICAL_TO_CHILD = 'ERROR_ULN_IDENTICAL_TO_CHILD';
+    const ERROR_PARENT_YOUNGER_THAN_CHILD = 'ERROR_PARENT_YOUNGER_THAN_CHILD';
+
+    const LOG_EMPTY = 'LEEG';
+
+
+    private $parentErrors = [
+        Ram::class => [
+            self::ERROR_NOT_FOUND => 'Geen vader gevonden voor gegeven uln: ',
+            self::ERROR_INCORRECT_GENDER => 'Voor de vader is een dier gevonden dat geen ram is.',
+            self::ERROR_ULN_IDENTICAL_TO_CHILD => 'De vader mag geen uln hebben wat identiek is aan het kind',
+            self::ERROR_PARENT_YOUNGER_THAN_CHILD => 'De geboortedatum van de vader is later dan die van het kind',
+        ],
+        Ewe::class => [
+            self::ERROR_NOT_FOUND => 'Geen moeder gevonden voor gegeven uln: ',
+            self::ERROR_INCORRECT_GENDER => 'Voor de moeder is een dier gevonden dat geen ooi is.',
+            self::ERROR_ULN_IDENTICAL_TO_CHILD => 'De moeder mag geen uln hebben wat identiek is aan het kind',
+            self::ERROR_PARENT_YOUNGER_THAN_CHILD => 'De geboortedatum van de moeder is later dan die van het kind',
+        ]
+    ];
+
+
     /** @var string */
     private $actionLogMessage;
     /** @var Request */
@@ -69,7 +93,10 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             { return AdminValidator::getStandardErrorResponse(); }
 
             //Animal Edit from ADMIN environment
-            $this->updateAsAdmin($animal, $content);
+            $animal = $this->updateAsAdmin($animal, $content);
+            if ($animal instanceof JsonResponse) {
+                return $animal;
+            }
 
             if($animal->getLocation()) {
                 //Clear cache for this location, to reflect changes on the livestock
@@ -165,7 +192,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     /**
      * @param Animal $animal
      * @param Collection $content
-     * @return Animal
+     * @return Animal|JsonResponse
+     * @throws \Exception
      */
     private function updateAsAdmin($animal, Collection $content)
     {
@@ -186,11 +214,64 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             default: return null;
         }
 
-//        $locationArray = ArrayUtil::get(JsonInputConstant::LOCATION, $animalArray);
-//        unset($animalArray[JsonInputConstant::LOCATION]);
-//        $updatedLocation = $locationArray != null ? $this->getBaseSerializer()->deserializeToObject($locationArray, Location::class) : null;
         /** @var Animal $updatedAnimal */
         $updatedAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, $clazz);
+
+
+
+        /* Update Parents */
+
+        foreach ([Ram::class, Ewe::class] as $parentClazz)
+        {
+            $currentParent = $animal->getParent($parentClazz);
+            $newParent = $updatedAnimal->getParent($parentClazz);
+
+            if ($this->hasParentChanged($currentParent, $newParent)) {
+                $ulnStringCurrentParent = $currentParent ? $currentParent->getUln() : self::LOG_EMPTY;
+                if ($newParent) {
+                    $ulnStringNewParent = $newParent->getUln();
+                    if ($animal->getUln() === $ulnStringNewParent) {
+                        return $this->getParentErrorResponse(self::ERROR_ULN_IDENTICAL_TO_CHILD, $parentClazz);
+                    }
+
+                    $parent = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnStringNewParent);
+
+                    if ($parent === null) {
+                        return $this->getParentErrorResponse(self::ERROR_NOT_FOUND, $parentClazz, $ulnStringNewParent);
+                    }
+
+                    if (
+                        ($parentClazz === Ram::class && !($parent instanceof Ram)) ||
+                        ($parentClazz === Ewe::class && !($parent instanceof Ewe))
+                    ) {
+                        return $this->getParentErrorResponse(self::ERROR_INCORRECT_GENDER, $parentClazz);
+                    }
+
+                    if ($animal->getDateOfBirth() && $parent->getDateOfBirth()) {
+                        if ($animal->getDateOfBirth() < $parent->getDateOfBirth()) {
+                            return $this->getParentErrorResponse(self::ERROR_PARENT_YOUNGER_THAN_CHILD, $parentClazz);
+                        }
+                    }
+
+                    $animal->setParent($parent);
+
+                } else {
+                    $ulnStringNewParent = self::LOG_EMPTY;
+                    $animal->removeParent($parentClazz);
+                }
+
+                switch ($parentClazz) {
+                    case Ram::class: $dutchParentType = 'vader'; break;
+                    case Ewe::class: $dutchParentType = 'moeder'; break;
+                    default:
+                        throw new \Exception('Invalid parent type.' ,  428);
+                }
+
+                $this->updateActionLogMessage($dutchParentType, $ulnStringCurrentParent, $ulnStringNewParent);
+            }
+
+        }
+
 
         if($updatedAnimal->getPedigreeCountryCode() !== $animal->getPedigreeCountryCode() ||
             $updatedAnimal->getPedigreeNumber() !== $animal->getPedigreeNumber()
@@ -376,6 +457,48 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
         return $animal;
+    }
+
+
+    /**
+     * @param Animal $currentParent
+     * @param Animal $newParent
+     * @return bool
+     */
+    private function hasParentChanged($currentParent, $newParent)
+    {
+        if ($newParent) {
+            if ($currentParent) {
+                $hasParentChanged = $currentParent->getUln() !== $newParent->getUln();
+            } else {
+                $hasParentChanged = true;
+            }
+
+        } else {
+            $hasParentChanged = $currentParent !== null;
+        }
+
+        return $hasParentChanged;
+    }
+
+
+    /**
+     * @param string $key
+     * @param string $parentClazz
+     * @param string $data
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    private function getParentErrorResponse($key, $parentClazz, $data = '')
+    {
+        if ($parentClazz !== Ewe::class && $parentClazz !== Ram::class) {
+            throw new \Exception('Parent is not a Ram or Ewe', 428);
+        }
+
+        return ResultUtil::errorResult(
+            $this->parentErrors[$parentClazz][$key].$data,
+            Response::HTTP_PRECONDITION_REQUIRED
+        );
     }
 
 

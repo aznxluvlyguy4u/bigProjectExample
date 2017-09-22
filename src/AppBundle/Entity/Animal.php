@@ -1318,6 +1318,56 @@ abstract class Animal
         return $this->parentMother;
     }
 
+
+    /**
+     * @param Ram|Ewe $parent
+     * @return Animal
+     * @throws \Exception
+     */
+    public function setParent($parent)
+    {
+        if ($parent instanceof Ram) {
+            $this->setParentFather($parent);
+        } elseif ($parent instanceof Ewe) {
+            $this->setParentMother($parent);
+        } else {
+            throw new \Exception('parent is not a Ram or Ewe', 428);
+        }
+        return $this;
+    }
+
+
+    /**
+     * @param string $clazz
+     * @return Ewe|Ram
+     * @throws \Exception
+     */
+    public function getParent($clazz)
+    {
+        if ($clazz === Ram::class) {
+            return $this->getParentFather();
+        } elseif ($clazz === Ewe::class) {
+            return $this->getParentMother();
+        }
+        throw new \Exception('parent class is not a Ram or Ewe', 428);
+    }
+
+
+    /**
+     * @param string $clazz
+     * @throws \Exception
+     */
+    public function removeParent($clazz)
+    {
+        if ($clazz === Ram::class) {
+            $this->setParentFather(null);
+        } elseif ($clazz === Ewe::class) {
+            $this->setParentMother(null);
+        }
+        throw new \Exception('parent class is not a Ram or Ewe', 428);
+    }
+
+
     /**
      * Set location
      *

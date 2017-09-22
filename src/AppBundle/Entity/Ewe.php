@@ -530,6 +530,18 @@ class Ewe extends Animal
         return $this->exteriorMeasurements;
     }
 
+
+    /**
+     * @param Ewe|Ram $parent
+     * @return Ewe
+     */
+    public function setParent($parent)
+    {
+        parent::setParent($parent);
+        return $this;
+    }
+
+
     public static function getClassName() {
         return get_called_class();
     }
