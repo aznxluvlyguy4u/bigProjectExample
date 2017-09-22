@@ -32,7 +32,14 @@ use \DateTime;
  *                           "Ram" : "AppBundle\Entity\Ram",
  *                           "Ewe" : "AppBundle\Entity\Ewe",
  *                        "Neuter" : "AppBundle\Entity\Neuter"},
- *     groups = {"ANIMAL_DETAILS","BASIC","DECLARE","MINIMAL","MIXBLUP","USER_MEASUREMENT"})
+ *     groups = {
+ *     "ANIMAL_DETAILS",
+ *     "BASIC",
+ *     "DECLARE",
+ *     "MINIMAL",
+ *     "MIXBLUP",
+ *     "USER_MEASUREMENT"
+ * })
  *
  * @package AppBundle\Entity\Animal
  */

@@ -19,7 +19,10 @@ use JMS\Serializer\Annotation as JMS;
  *                        "CompanyAddress" : "AppBundle\Entity\CompanyAddress",
  *                        "BillingAddress" : "AppBundle\Entity\BillingAddress",
  *                       "LocationAddress" : "AppBundle\Entity\LocationAddress"},
- *     groups = {"BASIC","CONTACT_INFO"})
+ *     groups = {
+ *     "BASIC",
+ *     "CONTACT_INFO"
+ * })
  *
  * @package AppBundle\Entity
  */

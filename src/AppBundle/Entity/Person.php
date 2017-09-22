@@ -26,7 +26,16 @@ use JMS\Serializer\Annotation\Expose;
  *                      "Employee" : "AppBundle\Entity\Employee",
  *                     "Inspector" : "AppBundle\Entity\Inspector",
  *                   "VwaEmployee" : "AppBundle\Entity\VwaEmployee"},
- *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER","ANIMAL_DETAILS","BASIC","CONTACT_INFO","ERROR_DETAILS","USER_MEASUREMENT","VWA"})
+ *     groups = {
+ *     "ACTION_LOG_ADMIN",
+ *     "ACTION_LOG_USER",
+ *     "ANIMAL_DETAILS",
+ *     "BASIC",
+ *     "CONTACT_INFO",
+ *     "ERROR_DETAILS",
+ *     "USER_MEASUREMENT",
+ *     "VWA"
+ * })
  *
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
