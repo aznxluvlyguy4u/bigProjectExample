@@ -45,7 +45,15 @@ use \DateTime;
  *                    "DeclareTagsTransfer" : "AppBundle\Entity\DeclareTagsTransfer",
  *                      "DeclareTagReplace" : "AppBundle\Entity\DeclareTagReplace",
  *                      "RevokeDeclaration" : "AppBundle\Entity\RevokeDeclaration"},
- *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER","BASIC","DECLARE","ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+ *     groups = {
+ *     "ACTION_LOG_ADMIN",
+ *     "ACTION_LOG_USER",
+ *     "BASIC",
+ *     "DECLARE",
+ *     "ERROR_DETAILS",
+ *     "ADMIN_HIDDEN_STATUS",
+ *     "HIDDEN_STATUS"
+ * })
  *
  * @package AppBundle\Entity\DeclareBase
  */

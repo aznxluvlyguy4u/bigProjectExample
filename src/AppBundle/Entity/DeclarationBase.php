@@ -20,7 +20,9 @@ use JMS\Serializer\Annotation as JMS;
  * )
  * @JMS\Discriminator(field = "type", disabled=false, map = {
  *                        "DeclarationDetail" : "AppBundle\Entity\DeclarationDetail"},
- *     groups = {"BASIC"})
+ *     groups = {
+ *     "BASIC"
+ * })
  * 
  * @package AppBundle\Entity\DeclareBase
  */
