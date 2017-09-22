@@ -26,7 +26,18 @@ use JMS\Serializer\Annotation\Expose;
  *                      "Employee" : "AppBundle\Entity\Employee",
  *                     "Inspector" : "AppBundle\Entity\Inspector",
  *                   "VwaEmployee" : "AppBundle\Entity\VwaEmployee"},
- *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER","CONTACT_INFO","ERROR_DETAILS","INVOICE","USER_MEASUREMENT","VWA"})
+ *     groups = {
+ *     "ACTION_LOG_ADMIN",
+ *     "ACTION_LOG_USER",
+ *     "ANIMAL_DETAILS",
+ *     "BASIC",
+ *     "CONTACT_INFO",
+ *     "ERROR_DETAILS",
+ *     "INVOICE",
+ *     "USER_MEASUREMENT",
+ *     "VWA"
+ *  })
+ *
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
@@ -47,7 +58,12 @@ abstract class Person implements UserInterface
    *
    * @ORM\Column(type="string", unique=true, nullable=true)
    * @JMS\Type("string")
-   * @JMS\Groups({"INVOICE","USER_MEASUREMENT","VWA"})
+   * @JMS\Groups({
+   *     "ANIMAL_DETAILS",
+   *     "INVOICE",
+   *     "USER_MEASUREMENT",
+   *     "VWA"
+   * })
    * @Expose
    */
   protected $personId;
@@ -58,7 +74,16 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER","CONTACT_INFO","ERROR_DETAILS","INVOICE","USER_MEASUREMENT","VWA"})
+   * @JMS\Groups({
+   *     "ACTION_LOG_ADMIN",
+   *     "ACTION_LOG_USER",
+   *     "ANIMAL_DETAILS",
+   *     "CONTACT_INFO",
+   *     "ERROR_DETAILS",
+   *     "INVOICE",
+   *     "USER_MEASUREMENT",
+   *     "VWA"
+   * })
    * @Expose
    */
   protected $firstName;
@@ -69,7 +94,16 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER","CONTACT_INFO","ERROR_DETAILS","INVOICE","USER_MEASUREMENT","VWA"})
+   * @JMS\Groups({
+   *     "ACTION_LOG_ADMIN",
+   *     "ACTION_LOG_USER",
+   *     "ANIMAL_DETAILS",
+   *     "CONTACT_INFO",
+   *     "ERROR_DETAILS",
+   *     "INVOICE",
+   *     "USER_MEASUREMENT",
+   *     "VWA"
+   * })
    * @Expose
    */
   protected $lastName;
@@ -80,7 +114,9 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"VWA"})
+   * @JMS\Groups({
+   *     "VWA"
+   * })
    * @Expose
    */
   protected $emailAddress;
@@ -98,9 +134,12 @@ abstract class Person implements UserInterface
      *
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"INVOICE"})
-     * @JMS\Groups({"USER_MEASUREMENT"})
-     * @JMS\Groups({"VWA"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "INVOICE",
+     *     "USER_MEASUREMENT",
+     *     "VWA"
+     * })
      * @Expose
      */
   private $isActive;
@@ -141,7 +180,9 @@ abstract class Person implements UserInterface
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="created_by_id", referencedColumnName="id")
-     * @JMS\Groups({"DETAILS"})
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
      * @Expose
      */
     protected $createdBy;
@@ -152,7 +193,9 @@ abstract class Person implements UserInterface
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="edited_by_id", referencedColumnName="id")
-     * @JMS\Groups({"DETAILS"})
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
      * @Expose
      */
     protected $editedBy;
@@ -163,7 +206,9 @@ abstract class Person implements UserInterface
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="deleted_by_id", referencedColumnName="id")
-     * @JMS\Groups({"DETAILS"})
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
      * @Expose
      */
     protected $deletedBy;
@@ -175,7 +220,9 @@ abstract class Person implements UserInterface
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"DETAILS"})
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
      * @Expose
      */
     protected $creationDate;
@@ -187,7 +234,9 @@ abstract class Person implements UserInterface
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"DETAILS"})
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
      * @Expose
      */
     protected $deleteDate;
@@ -199,7 +248,9 @@ abstract class Person implements UserInterface
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"VWA"})
+     * @JMS\Groups({
+     *     "VWA"
+     * })
      * @Expose
      */
     protected $lastLoginDate;

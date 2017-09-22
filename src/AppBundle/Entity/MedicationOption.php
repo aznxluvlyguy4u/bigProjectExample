@@ -44,7 +44,10 @@ class MedicationOption
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @ORM\Column(type="string")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
+     * })
      */
     private $description;
 
@@ -53,7 +56,10 @@ class MedicationOption
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
-     * @JMS\Groups({"TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN"})
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
+     * })
      * @Assert\NotBlank
      */
     private $dosage;

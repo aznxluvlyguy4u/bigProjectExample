@@ -29,11 +29,10 @@ use \DateTime;
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"Animal" = "Animal", "Ram" = "Ram", "Ewe" = "Ewe", "Neuter" = "Neuter"})
  * @JMS\Discriminator(field = "type", disabled=false, map = {
- *                        "Animal" : "AppBundle\Entity\Animal",
  *                           "Ram" : "AppBundle\Entity\Ram",
  *                           "Ewe" : "AppBundle\Entity\Ewe",
  *                        "Neuter" : "AppBundle\Entity\Neuter"},
- *     groups = {"BASIC","DECLARE","MINIMAL","USER_MEASUREMENT","MIXBLUP"})
+ *     groups = {"ANIMAL_DETAILS","BASIC","DECLARE","MINIMAL","MIXBLUP","USER_MEASUREMENT"})
  *
  * @package AppBundle\Entity\Animal
  */
@@ -47,7 +46,15 @@ abstract class Animal
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP","ERROR_DETAILS","TREATMENT_TEMPLATE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DECLARE",
+     *     "ERROR_DETAILS",
+     *     "MIXBLUP",
+     *     "TREATMENT_TEMPLATE",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $id;
 
@@ -71,9 +78,14 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
-     * @JMS\Groups({"ERROR_DETAILS"})
-     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DECLARE",
+     *     "ERROR_DETAILS",
+     *     "MIXBLUP",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $pedigreeCountryCode;
 
@@ -85,9 +97,14 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 11)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
-     * @JMS\Groups({"ERROR_DETAILS"})
-     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DECLARE",
+     *     "ERROR_DETAILS",
+     *     "MIXBLUP",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $pedigreeNumber;
 
@@ -96,7 +113,10 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE"
+     * })
      */
     protected $name;
 
@@ -106,9 +126,12 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE"})
-     * @JMS\Groups({"ERROR_DETAILS"})
-     * @JMS\Groups({"LIVESTOCK"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE",
+     *     "ERROR_DETAILS",
+     *     "LIVESTOCK"
+     * })
      */
     protected $ubnOfBirth;
 
@@ -117,7 +140,10 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Location")
      * @ORM\JoinColumn(name="location_of_birth_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Location")
-     * @JMS\Groups({"LIVESTOCK"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "LIVESTOCK"
+     * })
      */
     protected $locationOfBirth;
 
@@ -127,8 +153,15 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"DECLARE","MIXBLUP","ERROR_DETAILS","TREATMENT_TEMPLATE"})
-     * @JMS\Groups({"MINIMAL","BASIC"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DECLARE",
+     *     "MINIMAL",
+     *     "MIXBLUP",
+     *     "ERROR_DETAILS",
+     *     "TREATMENT_TEMPLATE"
+     * })
      */
     protected $dateOfBirth;
 
@@ -138,8 +171,11 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"DECLARE"})
-     * @JMS\Groups({"BASIC"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DECLARE"
+     * })
      */
     protected $dateOfDeath;
 
@@ -148,9 +184,15 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
-     * @JMS\Groups({"ERROR_DETAILS"})
-     * @JMS\Groups({"MINIMAL","BASIC"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DECLARE",
+     *     "ERROR_DETAILS",
+     *     "MINIMAL",
+     *     "MIXBLUP",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $gender;
 
@@ -159,7 +201,11 @@ abstract class Animal
      *
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
-     * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Type("AppBundle\Entity\Ram")
+     * @JMS\Groups({
+     *     "PARENTS"
+     * })
+     * @JMS\MaxDepth(depth=1)
      */
     protected $parentFather;
 
@@ -168,7 +214,11 @@ abstract class Animal
      *
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
-     * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Type("AppBundle\Entity\Ewe")
+     * @JMS\Groups({
+     *     "PARENTS"
+     * })
+     * @JMS\MaxDepth(depth=1)
      */
     protected $parentMother;
 
@@ -178,6 +228,10 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="surrogateChildren", cascade={"persist"})
      * @ORM\JoinColumn(name="surrogate_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Groups({
+     *     "PARENTS"
+     * })
+     * @JMS\MaxDepth(depth=1)
      */
     protected $surrogate;
 
@@ -187,8 +241,11 @@ abstract class Animal
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @JMS\Groups({"DECLARE"})
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE",
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $animalType;
 
@@ -197,7 +254,10 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE"
+     * })
      */
     protected $transferState;
 
@@ -206,7 +266,10 @@ abstract class Animal
      *
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE"
+     * })
      */
     protected $animalCategory;
 
@@ -215,7 +278,10 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE"
+     * })
      */
     protected $animalHairColour;
 
@@ -295,8 +361,11 @@ abstract class Animal
     /**
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
-     * @JMS\Groups({"BASIC"})
-     * @JMS\Groups({"LIVESTOCK"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "LIVESTOCK"
+     * })
      */
     protected $location;
 
@@ -305,7 +374,15 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
-     * @JMS\Groups({"BASIC","DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DECLARE",
+     *     "ERROR_DETAILS",
+     *     "MIXBLUP",
+     *     "TREATMENT_TEMPLATE",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $isAlive;
 
@@ -314,8 +391,17 @@ abstract class Animal
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN","USER_MEASUREMENT"})
-     * @JMS\Groups({"BASIC","MINIMAL"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DECLARE",
+     *     "ERROR_DETAILS",
+     *     "MINIMAL",
+     *     "MIXBLUP",
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $ulnNumber;
 
@@ -326,8 +412,17 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"DECLARE","ERROR_DETAILS","MIXBLUP","TREATMENT_TEMPLATE","TREATMENT_TEMPLATE_MIN","USER_MEASUREMENT"})
-     * @JMS\Groups({"BASIC","MINIMAL"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DECLARE",
+     *     "ERROR_DETAILS",
+     *     "MINIMAL",
+     *     "MIXBLUP",
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $ulnCountryCode;
 
@@ -335,35 +430,51 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"DECLARE","BASIC"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DECLARE"
+     * })
      */
     protected $animalOrderNumber;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE"
+     * })
      */
     protected $isImportAnimal;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE"
+     * })
      */
     protected $isExportAnimal;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE"
+     * })
      */
     protected $isDepartedAnimal;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE"
+     * })
      */
     protected $animalCountryOrigin;
 
@@ -437,7 +548,11 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "DECLARE",
+     *     "USER_MEASUREMENT",
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $breed;
 
@@ -445,8 +560,12 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE",
+     *     "ERROR_DETAILS",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $breedType;
 
@@ -454,8 +573,12 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE",
+     *     "ERROR_DETAILS",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $breedCode;
 
@@ -484,6 +607,9 @@ abstract class Animal
     /**
      * @ORM\ManyToOne(targetEntity="Client")
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $breeder;
 
@@ -491,6 +617,9 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $predicate;
 
@@ -498,6 +627,9 @@ abstract class Animal
      * @var integer
      * @JMS\Type("integer")
      * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $predicateScore;
 
@@ -505,7 +637,11 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $scrapieGenotype;
 
@@ -515,6 +651,9 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $blindnessFactor;
 
@@ -523,6 +662,9 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true, options={"default":null})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $myoMax;
 
@@ -531,6 +673,9 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\Litter")
      * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $litter;
 
@@ -546,6 +691,9 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $note;
 
@@ -553,7 +701,12 @@ abstract class Animal
      * @var PedigreeRegister
      * @ORM\ManyToOne(targetEntity="PedigreeRegister", cascade={"persist"})
      * @ORM\JoinColumn(name="pedigree_register_id", referencedColumnName="id")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Type("AppBundle\Entity\PedigreeRegister")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "DECLARE",
+     *     "USER_MEASUREMENT"
+     * })
      */
     protected $pedigreeRegister;
 
@@ -567,6 +720,9 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $birthProgress;
 
@@ -574,6 +730,9 @@ abstract class Animal
      * @var boolean
      * @JMS\Type("boolean")
      * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $lambar;
 
@@ -596,6 +755,9 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $nickname;
 
@@ -603,6 +765,9 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $collarColor;
 
@@ -610,6 +775,9 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     protected $collarNumber;
 
@@ -1149,6 +1317,56 @@ abstract class Animal
     {
         return $this->parentMother;
     }
+
+
+    /**
+     * @param Ram|Ewe $parent
+     * @return Animal
+     * @throws \Exception
+     */
+    public function setParent($parent)
+    {
+        if ($parent instanceof Ram) {
+            $this->setParentFather($parent);
+        } elseif ($parent instanceof Ewe) {
+            $this->setParentMother($parent);
+        } else {
+            throw new \Exception('parent is not a Ram or Ewe', 428);
+        }
+        return $this;
+    }
+
+
+    /**
+     * @param string $clazz
+     * @return Ewe|Ram
+     * @throws \Exception
+     */
+    public function getParent($clazz)
+    {
+        if ($clazz === Ram::class) {
+            return $this->getParentFather();
+        } elseif ($clazz === Ewe::class) {
+            return $this->getParentMother();
+        }
+        throw new \Exception('parent class is not a Ram or Ewe', 428);
+    }
+
+
+    /**
+     * @param string $clazz
+     * @throws \Exception
+     */
+    public function removeParent($clazz)
+    {
+        if ($clazz === Ram::class) {
+            $this->setParentFather(null);
+        } elseif ($clazz === Ewe::class) {
+            $this->setParentMother(null);
+        }
+        throw new \Exception('parent class is not a Ram or Ewe', 428);
+    }
+
 
     /**
      * Set location

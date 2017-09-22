@@ -25,7 +25,11 @@ class PedigreeRegister
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "USER_MEASUREMENT"
+     * })
      * @Expose
      */
     private $id;
@@ -36,6 +40,9 @@ class PedigreeRegister
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      * @Expose
      */
     private $abbreviation;
@@ -54,7 +61,10 @@ class PedigreeRegister
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "USER_MEASUREMENT"
+     * })
      * @Expose
      */
     private $fullName;
@@ -124,7 +134,10 @@ class PedigreeRegister
      * @ORM\Column(type="boolean", nullable=false, options={"default":true})
      * @Assert\NotBlank
      * @JMS\Type("boolean")
-     * @JMS\Groups({"USER_MEASUREMENT"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "USER_MEASUREMENT"
+     * })
      * @Expose
      */
     private $isRegisteredWithNsfo;
@@ -134,9 +147,11 @@ class PedigreeRegister
      * @param string $abbreviation
      * @param string $fullName
      * @param boolean $isRegisteredWithNsfo
+     * @param int $id
      */
-    public function __construct($abbreviation = null, $fullName = null, $isRegisteredWithNsfo)
+    public function __construct($abbreviation = null, $fullName = null, $isRegisteredWithNsfo = true, $id = null)
     {
+        $this->id = $id; //Used for JMS Serializer
         $this->abbreviation = $abbreviation;
         $this->fullName = $fullName;
         $this->isRegisteredWithNsfo = $isRegisteredWithNsfo;

@@ -143,7 +143,7 @@ class UnitTestData
             }
         }
 
-        $sql = "DELETE FROM animal WHERE nickname = '$testLabel' AND name = '$testLabel'";
+        $sql = "DELETE FROM animal WHERE nickname = '$testLabel' OR name = '$testLabel'";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 

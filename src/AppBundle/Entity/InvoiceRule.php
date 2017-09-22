@@ -22,7 +22,9 @@ class InvoiceRule
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      * @JMS\Type("integer")
-     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     protected $id;
 
@@ -32,7 +34,9 @@ class InvoiceRule
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $description;
 
@@ -42,7 +46,9 @@ class InvoiceRule
      * @ORM\Column(type="float")
      * @Assert\NotBlank
      * @JMS\Type("float")
-     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $vatPercentageRate;
 
@@ -52,7 +58,9 @@ class InvoiceRule
      * @ORM\Column(type="float")
      * @Assert\NotBlank
      * @JMS\Type("float")
-     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $priceExclVat;
 
@@ -62,7 +70,9 @@ class InvoiceRule
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $sortOrder;
 
@@ -72,7 +82,9 @@ class InvoiceRule
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $category;
 
@@ -80,7 +92,9 @@ class InvoiceRule
      * @var string
      * @ORM\Column(type="string", name="type")
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $type;
 
@@ -89,7 +103,9 @@ class InvoiceRule
      *
      * @ORM\ManyToOne(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Invoice")
-     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $invoice;
 
@@ -97,7 +113,9 @@ class InvoiceRule
      * @var boolean
      * @ORM\Column(type="boolean", name="is_deleted")
      * @JMS\Type("boolean")
-     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $isDeleted = false;
 

@@ -23,8 +23,12 @@ class Client extends Person
     /**
     * @ORM\Column(type="string", nullable=true)
     * @Assert\Length(max = 20)
-    * @JMS\Type("string")
-    * @JMS\Groups({"ACTION_LOG_ADMIN","ACTION_LOG_USER","INVOICE"})
+    * @JMS\Type("string")=
+    * @JMS\Groups({
+     *     "ACTION_LOG_ADMIN",
+     *     "ACTION_LOG_USER",
+     *     "INVOICE"
+     * })
     * @Expose
     */
     private $relationNumberKeeper;

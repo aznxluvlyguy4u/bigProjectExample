@@ -20,56 +20,72 @@ class InvoiceSenderDetails
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
+     * @JMS\Groups({
+     *     "INVOICE_SENDER_DETAILS"
+     * })
      */
     private $id;
 
     /**
      * @var string
      * @ORM\Column(type="string",name="name", nullable=true)
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
+     * @JMS\Groups({
+     *     "INVOICE_SENDER_DETAILS"
+     * })
      */
     private $name;
 
     /**
      * @var string
      * @ORM\Column(type="string", name="iban")
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
+     * @JMS\Groups({
+     *     "INVOICE_SENDER_DETAILS"
+     * })
      */
     private $iban;
 
     /**
      * @var string
      * @ORM\Column(type="string", name="chamber_of_commerce_number")
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
+     * @JMS\Groups({
+     *     "INVOICE_SENDER_DETAILS"
+     * })
      */
     private $chamberOfCommerceNumber;
 
     /**
      * @var string
      * @ORM\Column(type="string", name="vat_number")
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
+     * @JMS\Groups({
+     *     "INVOICE_SENDER_DETAILS"
+     * })
      */
     private $vatNumber;
 
     /**
      * @var Address
      * @ORM\OneToOne(targetEntity="Address", cascade={"persist"})
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
+     * @JMS\Groups({
+     *     "INVOICE_SENDER_DETAILS"
+     * })
      */
     private $address;
 
     /**
      * @var int
      * @ORM\Column(type="integer", name="payment_deadline_in_days")
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
+     * @JMS\Groups({
+     *     "INVOICE_SENDER_DETAILS"
+     * })
      */
     private $paymentDeadlineInDays;
 
     /**
      * @var bool
      * @ORM\Column(type="boolean", name="is_deleted")
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
+     * @JMS\Groups({
+     *     "INVOICE_SENDER_DETAILS"
+     * })
      */
     private $isDeleted = false;
 

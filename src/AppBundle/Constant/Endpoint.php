@@ -12,6 +12,8 @@ class Endpoint
     const ANIMALS = '/api/v1/animals';
     const AUTH = '/api/v1/auth';
 
+    const BREED_TYPE = '/api/v1/breed-type';
+
     const DECLARE_ARRIVAL_ENDPOINT = "/api/v1/arrivals";
     const DECLARE_BIRTH_ENDPOINT = "/api/v1/births";
     const DECLARE_IMPORT_ENDPOINT = "/api/v1/imports";
@@ -27,6 +29,8 @@ class Endpoint
 
     const MOLLIE_ENDPOINT = "/api/v1/mollie";
 
+    const PEDIGREE_REGISTER = '/api/v1/pedigreeregisters';
+
     const REPORT = '/api/v1/reports';
     const RETRIEVE_ANIMALS = '/api/v1/animals-sync';
     const RETRIEVE_TAGS = '/api/v1/tags-sync';
@@ -35,7 +39,6 @@ class Endpoint
     const UBNS = "/api/v1/ubns";
 
     const TAGS = "/api/v1/tags";
-
     const TREATMENTS = "/api/v1/treatments";
     const TREATMENT_TYPES = "/api/v1/treatment-types";
 

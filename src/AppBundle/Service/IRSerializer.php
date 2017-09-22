@@ -97,6 +97,14 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $this->conn = $entityManager->getConnection();
     }
 
+    /**
+     * @return ObjectManager|EntityManagerInterface
+     */
+    public function getManager()
+    {
+        return $this->entityManager;
+    }
+
 
     /**
      * @param Animal $retrievedAnimal

@@ -32,7 +32,7 @@ use JMS\Serializer\Annotation\Expose;
  *                        "Mate" : "AppBundle\Entity\Mate",
  *               "DeclareWeight" : "AppBundle\Entity\DeclareWeight",
  *                      "Litter" : "AppBundle\Entity\Litter"},
- *     groups = {"ERROR_DETAILS"})
+ *     groups = {"BASIC","ERROR_DETAILS"})
  *
  * @package AppBundle\Entity\DeclareNsfoBase
  */
@@ -45,7 +45,9 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $id;
 
@@ -54,7 +56,9 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @ORM\Column(type="datetime")
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $logDate;
 
@@ -63,7 +67,11 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @ORM\Column(type="string", unique=true, nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $messageId;
 
@@ -72,7 +80,11 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $requestState;
 
@@ -81,7 +93,9 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $relationNumberKeeper;
 
@@ -91,7 +105,9 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $ubn;
 
@@ -100,7 +116,9 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id", nullable=true)
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $actionBy;
 
@@ -127,7 +145,11 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $isHidden;
 
@@ -136,7 +158,11 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $hideForAdmin;
 
@@ -147,7 +173,9 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $isOverwrittenVersion;
 
@@ -156,7 +184,9 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @ORM\ManyToOne(targetEntity="DeclareNsfoBase", inversedBy="olderVersions")
      * @ORM\JoinColumn(name="newest_version_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\DeclareNsfoBase")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $newestVersion;
 
@@ -164,7 +194,9 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @var ArrayCollection
      * @ORM\OneToMany(targetEntity="DeclareNsfoBase", mappedBy="newestVersion")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareNsfoBase>")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $olderVersions;
 

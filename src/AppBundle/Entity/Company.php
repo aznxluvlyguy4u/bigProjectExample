@@ -34,7 +34,10 @@ class Company
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "INVOICE"
+     * })
      */
     private $companyId;
 
@@ -43,7 +46,9 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
-    * @JMS\Groups({"INVOICE"})
+    * @JMS\Groups({
+     *     "INVOICE"
+     * })
     */
     private $debtorNumber;
 
@@ -52,7 +57,10 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
-    * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "INVOICE"
+     * })
     */
     private $companyName;
 
@@ -61,7 +69,9 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
-    * @JMS\Groups({"INVOICE"})
+    * @JMS\Groups({
+     *     "INVOICE"
+     * })
     */
     private $vatNumber;
 
@@ -70,7 +80,9 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
-    * @JMS\Groups({"INVOICE"}) 
+    * @JMS\Groups({
+     *     "INVOICE"
+     * })
     */
     private $chamberOfCommerceNumber;
 
@@ -79,7 +91,9 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
-    * @JMS\Groups({"INVOICE"})
+    * @JMS\Groups({
+     *     "INVOICE"
+     * })
     */
     private $companyRelationNumber;
 
@@ -88,7 +102,9 @@ class Company
     *
     * @ORM\OneToMany(targetEntity="Location", mappedBy="company", cascade={"persist"}, fetch="EAGER")
     * @JMS\Type("AppBundle\Entity\Location")
-    * @JMS\Groups({"INVOICE"}) 
+    * @JMS\Groups({
+     *     "INVOICE"
+     * })
     */
     private $locations;
 
@@ -98,7 +114,10 @@ class Company
     * @Assert\NotBlank
     * @ORM\ManyToOne(targetEntity="Client", inversedBy="companies", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\Client")
-    * @JMS\Groups({"INVOICE"}) 
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "INVOICE"
+     * })
     */
     protected $owner;
 
@@ -148,6 +167,9 @@ class Company
      *
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     private $isActive;
 
@@ -155,7 +177,9 @@ class Company
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Invoice", mappedBy="company")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      * @JMS\Type("ArrayCollection")
      */
     private $invoices;
@@ -223,6 +247,9 @@ class Company
      * @Assert\NotBlank
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     private $isRevealHistoricAnimals;
 

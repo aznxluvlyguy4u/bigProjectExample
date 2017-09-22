@@ -137,11 +137,8 @@ services:
         arguments: ['@doctrine.orm.entity_manager']
 
     app.animal.details.updater:
+        parent: app.abstract_base.controller
         class: AppBundle\Service\AnimalDetailsUpdaterService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@app.cache'
-          - '@app.user'
 
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
@@ -509,6 +506,10 @@ services:
           - '@app.aws.queueservice.internal'
           - '@app.doctrine.entitygetter'
 
+    app.breed_type:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\BreedTypeService
+
     app.client:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ClientService
@@ -605,6 +606,10 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@app.user'
           - '@app.mollie.service'
+
+    app.pedigree_register:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\PedigreeRegisterService
 
     app.profile:
         parent: app.abstract_base.controller

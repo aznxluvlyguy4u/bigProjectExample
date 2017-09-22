@@ -22,7 +22,9 @@ class Invoice
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     protected $id;
 
@@ -30,7 +32,9 @@ class Invoice
      * @var string
      * @Assert\NotBlank()
      * @ORM\Column(type="string",  unique=true, nullable=true)
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $invoiceNumber;
 
@@ -40,7 +44,9 @@ class Invoice
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $invoiceDate;
 
@@ -50,7 +56,9 @@ class Invoice
      * @ORM\Column(type="string", options={"default": "UNPAID"})
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $status;
 
@@ -59,7 +67,9 @@ class Invoice
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $documentUrl;
 
@@ -69,7 +79,9 @@ class Invoice
      * @ORM\OneToMany(targetEntity="InvoiceRule", mappedBy="invoice", cascade={"persist"})
      * @ORM\JoinTable(name="invoice_invoice_rules")
      * @JMS\Type("ArrayCollection")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $invoiceRules;
 
@@ -77,7 +89,9 @@ class Invoice
      * @var float
      * @ORM\Column(type="float", name="total", nullable=true)
      * @JMS\Type("float")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $total;
 
@@ -87,7 +101,9 @@ class Invoice
      * @ORM\ManyToOne(targetEntity="Company", inversedBy="invoices", cascade={"persist"})
      * @ORM\JoinColumn(name="company_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Company")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $company;
 
@@ -95,7 +111,9 @@ class Invoice
      * @var string
      * @ORM\Column(type="string", name="company_local_id", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $companyLocalId;
 
@@ -103,7 +121,9 @@ class Invoice
      * @var string
      * @ORM\Column(type="string", name="company_name", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $companyName;
 
@@ -111,7 +131,9 @@ class Invoice
      * @var string
      * @ORM\Column(type="string", name="company_vat_number", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $companyVatNumber;
 
@@ -119,7 +141,9 @@ class Invoice
      * @var string
      * @ORM\Column(type="string", name="company_debtor_number", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $companyDebtorNumber;
 
@@ -127,7 +151,9 @@ class Invoice
      * @var string
      * @ORM\Column(type="string", name="mollie_id", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $mollieId;
 
@@ -136,7 +162,9 @@ class Invoice
      * @ORM\ManyToOne(targetEntity="InvoiceSenderDetails")
      * @ORM\JoinColumn(name="invoice_invoice_sender_details_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $senderDetails;
 
@@ -144,7 +172,9 @@ class Invoice
      * @var string
      * @ORM\Column(type="string", name="ubn", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $ubn;
 
@@ -153,7 +183,9 @@ class Invoice
      * @var bool
      * @ORM\Column(name="is_deleted", type="boolean")
      * @JMS\Type("boolean")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({
+     *     "INVOICE"
+     * })
      */
     private $isDeleted = false;
 

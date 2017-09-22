@@ -11,6 +11,7 @@ class JsonInputConstant
     //Admins
     const ADMINS = 'admins';
     const ACCESS_LEVEL = 'access_level';
+    const IS_ADMIN_ENV = 'is_admin_env';
 
     //Animal
     const WORK_NUMBER = 'work_number';
@@ -21,7 +22,10 @@ class JsonInputConstant
     const BIRTH_PROGRESS = 'birth_progress';
     const RAM = 'ram';
     const EWE = 'ewe';
+    const NEUTER = 'neuter';
     const EWES = 'ewes';
+    const CHILDREN = 'children';
+    const LITTERS = 'litters';
     const ULN_COUNTRY_CODE = 'uln_country_code';
     const ULN_NUMBER = 'uln_number';
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
@@ -50,6 +54,7 @@ class JsonInputConstant
     const BREEDER_NUMBER = 'breeder_number';
     const ANIMAL_TYPE = 'animal_type';
     const NICKNAME = 'nickname';
+    const ANIMAL_RESIDENCE_HISTORY = 'animal_residence_history';
     const HETEROSIS = 'heterosis';
     const RECOMBINATION = 'recombination';
     const HETEROSIS_LAMB = 'heterosis_lamb';
@@ -70,6 +75,7 @@ class JsonInputConstant
     const RECOVERY_INDICATOR = 'recovery_indicator';
     const ACTION_BY = 'action_by';
     const IS_REMOVED_BY_USER = 'is_removed_by_user';
+    const IS_DUTCH = 'is_dutch';
 
     //Sync
     const IS_RVO_LEADING = 'is_rvo_leading';
@@ -139,6 +145,7 @@ class JsonInputConstant
 
     //Locations
     const LOCATION = 'location';
+    const LOCATION_OF_BIRTH = 'location_of_birth';
     const LOCATIONS = 'locations';
     const PROVINCES = 'provinces';
     const CODES = 'codes';
@@ -246,6 +253,9 @@ class JsonInputConstant
     const BREED_VALUE_FAT = "breed_value_fat";
     const LAMB_MEAT_INDEX = "lamb_meat_index";
     const LAMB_MEAT_INDEX_WITHOUT_ACCURACY = "lamb_meat_index_without_accuracy";
+
+    //PedigreeRegisters
+    const INCLUDE_NON_NSFO_REGISTERS = "include_non_nsfo_registers";
 
     //MiXBLUP
     const PERM_MIL = 'perm_mil';

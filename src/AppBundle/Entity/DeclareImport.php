@@ -36,7 +36,9 @@ class DeclareImport extends DeclareBase
    * @var string
    * @JMS\Type("string")
    * @ORM\Column(type="string", nullable=false)
-   * @JMS\Groups({"ERROR_DETAILS"})
+   * @JMS\Groups({
+   *     "ERROR_DETAILS"
+   * })
    * @Expose
    */
   private $ulnCountryCode;
@@ -45,7 +47,9 @@ class DeclareImport extends DeclareBase
    * @var string
    * @JMS\Type("string")
    * @ORM\Column(type="string", nullable=false)
-   * @JMS\Groups({"ERROR_DETAILS"})
+   * @JMS\Groups({
+   *     "ERROR_DETAILS"
+   * })
    * @Expose
    */
   private $ulnNumber;
@@ -72,7 +76,9 @@ class DeclareImport extends DeclareBase
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $animalType;
@@ -94,7 +100,9 @@ class DeclareImport extends DeclareBase
    * @Assert\Date
    * @Assert\NotBlank
    * @JMS\Type("DateTime")
-   * @JMS\Groups({"ERROR_DETAILS"})
+   * @JMS\Groups({
+   *     "ERROR_DETAILS"
+   * })
    * @Expose
    */
   private $importDate;
@@ -103,7 +111,9 @@ class DeclareImport extends DeclareBase
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
-   * @JMS\Groups({"ERROR_DETAILS"})
+   * @JMS\Groups({
+   *     "ERROR_DETAILS"
+   * })
    * @Expose
    */
   private $animalCountryOrigin;
@@ -111,7 +121,9 @@ class DeclareImport extends DeclareBase
   /**
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
-   * @JMS\Groups({"ERROR_DETAILS"})
+   * @JMS\Groups({
+   *     "ERROR_DETAILS"
+   * })
    * @Expose
    */
   private $animalUlnNumberOrigin;
@@ -132,7 +144,9 @@ class DeclareImport extends DeclareBase
   /**
    * @ORM\Column(type="boolean")
    * @JMS\Type("boolean")
-   * @JMS\Groups({"ERROR_DETAILS"})
+   * @JMS\Groups({
+   *     "ERROR_DETAILS"
+   * })
    * @Expose
    */
   private $isImportAnimal;
@@ -142,7 +156,9 @@ class DeclareImport extends DeclareBase
    * @ORM\JoinColumn(name="declare_import_request_message_id", referencedColumnName="id")
    * @ORM\OrderBy({"logDate" = "ASC"})
    * @JMS\Type("array")
-   * @JMS\Groups({"ERROR_DETAILS"})
+   * @JMS\Groups({
+   *     "ERROR_DETAILS"
+   * })
    * @Expose
    */
   private $responses;
