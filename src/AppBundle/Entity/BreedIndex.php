@@ -23,7 +23,9 @@ use JMS\Serializer\Annotation as JMS;
  *                       "Fertility" : "AppBundle\Entity\FertilityBreedIndex",
  *                        "LambMeat" : "AppBundle\Entity\LambMeatBreedIndex",
  *                  "WormResistance" : "AppBundle\Entity\WormResistanceBreedIndex"},
- *     groups = {"MIXBLUP"})
+ *     groups = {
+ *     "MIXBLUP"
+ * })
  */
 abstract class BreedIndex
 {

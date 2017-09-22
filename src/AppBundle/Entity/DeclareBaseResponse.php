@@ -41,7 +41,9 @@ use \DateTime;
  *      "DeclareTagsTransferResponse" : "AppBundle\Entity\DeclareTagsTransferResponse",
  *      "DeclareTagReplaceResponse" : "AppBundle\Entity\DeclareTagReplaceResponse",
  *      "RevokeDeclarationResponse" : "AppBundle\Entity\RevokeDeclarationResponse"},
- *     groups = {"DECLARE"})
+ *     groups = {
+ *     "DECLARE"
+ * })
  *
  * @package AppBundle\Entity\DeclareBaseResponse
  */
