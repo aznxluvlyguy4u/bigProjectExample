@@ -20,7 +20,7 @@ class BreedTypeAPIController extends APIController implements BreedTypeAPIContro
      * Get BreedTypes.
      *
      * @ApiDoc(
-     *
+     *   section = "Breed Type",
      *   requirements={
      *     {
      *       "name"="AccessToken",
