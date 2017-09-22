@@ -3,6 +3,7 @@
 namespace AppBundle\Enumerator;
 
 use AppBundle\Traits\EnumInfo;
+use AppBundle\Util\Translation;
 
 class BreedType
 {
@@ -18,5 +19,28 @@ class BreedType
     const UNDETERMINED = "UNDETERMINED";
     const EN_MANAGEMENT = "EN_MANAGEMENT";
     const EN_BASIS = "EN_BASIS";
+
+
+    /**
+     * @return array
+     */
+    public static function getAllInDutch()
+    {
+        $results = [];
+        foreach (self::getConstants() as $key => $item) {
+            $results[$key] = Translation::getDutch($item);
+        }
+        return $results;
+    }
+
+
+    /**
+     * @return array
+     */
+    static function getConstants()
+    {
+        $oClass = new \ReflectionClass(__CLASS__);
+        return $oClass->getConstants();
+    }
 
 }

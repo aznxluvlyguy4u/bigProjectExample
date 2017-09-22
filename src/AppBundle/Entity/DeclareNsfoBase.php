@@ -32,7 +32,7 @@ use JMS\Serializer\Annotation\Expose;
  *                        "Mate" : "AppBundle\Entity\Mate",
  *               "DeclareWeight" : "AppBundle\Entity\DeclareWeight",
  *                      "Litter" : "AppBundle\Entity\Litter"},
- *     groups = {"ERROR_DETAILS"})
+ *     groups = {"BASIC","ERROR_DETAILS"})
  *
  * @package AppBundle\Entity\DeclareNsfoBase
  */

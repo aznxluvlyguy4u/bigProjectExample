@@ -34,6 +34,9 @@ class Company
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     private $companyId;
 
@@ -50,6 +53,9 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
     */
     private $companyName;
 
@@ -91,6 +97,9 @@ class Company
     * @Assert\NotBlank
     * @ORM\ManyToOne(targetEntity="Client", inversedBy="companies", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\Client")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
     */
     protected $owner;
 
@@ -140,6 +149,9 @@ class Company
      *
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     private $isActive;
 
@@ -214,6 +226,9 @@ class Company
      * @Assert\NotBlank
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
      */
     private $isRevealHistoricAnimals;
 

@@ -10,7 +10,6 @@ use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\DeclareArrival;
-use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Employee;
@@ -959,6 +958,21 @@ class ActionLogWriter
         $log = new ActionLog($actionBy, $actionBy, UserActionType::VWA_EMPLOYEE_ANIMAL_DETAILS_REPORT_REQUEST,true,
             $description,false,true);
         DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $admin
+     * @param string $description
+     * @return ActionLog
+     */
+    public static function updateAnimalDetailsAdminEnvironment(ObjectManager $om, $admin, $description)
+    {
+        $log = new ActionLog($admin, $admin, UserActionType::ADMIN_ANIMAL_EDIT, true, $description, false);
+        $om->persist($log);
 
         return $log;
     }

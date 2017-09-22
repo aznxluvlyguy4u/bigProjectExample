@@ -26,7 +26,8 @@ use JMS\Serializer\Annotation\Expose;
  *                      "Employee" : "AppBundle\Entity\Employee",
  *                     "Inspector" : "AppBundle\Entity\Inspector",
  *                   "VwaEmployee" : "AppBundle\Entity\VwaEmployee"},
- *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER","CONTACT_INFO","ERROR_DETAILS","USER_MEASUREMENT","VWA"})
+ *     groups = {"ACTION_LOG_ADMIN","ACTION_LOG_USER","ANIMAL_DETAILS","BASIC","CONTACT_INFO","ERROR_DETAILS","USER_MEASUREMENT","VWA"})
+ *
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
@@ -48,6 +49,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string", unique=true, nullable=true)
    * @JMS\Type("string")
    * @JMS\Groups({
+   *     "ANIMAL_DETAILS",
    *     "USER_MEASUREMENT",
    *     "VWA"
    * })
@@ -64,6 +66,7 @@ abstract class Person implements UserInterface
    * @JMS\Groups({
    *     "ACTION_LOG_ADMIN",
    *     "ACTION_LOG_USER",
+   *     "ANIMAL_DETAILS",
    *     "ERROR_DETAILS",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -81,6 +84,7 @@ abstract class Person implements UserInterface
    * @JMS\Groups({
    *     "ACTION_LOG_ADMIN",
    *     "ACTION_LOG_USER",
+   *     "ANIMAL_DETAILS",
    *     "ERROR_DETAILS",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -116,6 +120,7 @@ abstract class Person implements UserInterface
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
      * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
      *     "USER_MEASUREMENT",
      *     "VWA"
      * })

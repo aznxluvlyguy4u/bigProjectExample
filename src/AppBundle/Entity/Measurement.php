@@ -35,7 +35,7 @@ use JMS\Serializer\Annotation as JMS;
  *                       "Weight" : "AppBundle\Entity\Weight",
  *       "PerformanceMeasurement" : "AppBundle\Entity\PerformanceMeasurement",
  *                     "Exterior" : "AppBundle\Entity\Exterior"},
- *     groups = {"USER_MEASUREMENT"})
+ *     groups = {"BASIC","USER_MEASUREMENT"})
  * @package AppBundle\Entity
  */
 abstract class Measurement

@@ -36,6 +36,8 @@ class Litter extends DeclareNsfoBase
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
      *     "ERROR_DETAILS"
      * })
      */
@@ -46,8 +48,11 @@ class Litter extends DeclareNsfoBase
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ram")
+     * @JMS\MaxDepth(depth=2)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ERROR_DETAILS",
+     *     "PARENTS"
      * })
      */
     private $animalFather;
@@ -57,8 +62,11 @@ class Litter extends DeclareNsfoBase
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ewe")
+     * @JMS\MaxDepth(depth=2)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ERROR_DETAILS",
+     *     "PARENTS"
      * })
      */
     private $animalMother;
@@ -79,6 +87,8 @@ class Litter extends DeclareNsfoBase
      * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
      * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
      *     "ERROR_DETAILS"
      * })
      */
@@ -90,6 +100,8 @@ class Litter extends DeclareNsfoBase
      * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
      * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
      *     "ERROR_DETAILS"
      * })
      */
@@ -99,6 +111,8 @@ class Litter extends DeclareNsfoBase
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
      * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
      *     "ERROR_DETAILS"
      * })
      */
@@ -108,6 +122,8 @@ class Litter extends DeclareNsfoBase
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
      * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
      *     "ERROR_DETAILS"
      * })
      */
@@ -141,10 +157,29 @@ class Litter extends DeclareNsfoBase
      * @ORM\Column(type="string", options={"default": "INCOMPLETE"})
      * @JMS\Type("string")
      * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
      *     "ERROR_DETAILS"
      * })
      */
     private $status;
+
+    /**
+     * Get size
+     *
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("n_ling")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC"
+     * })
+     *
+     * @return integer
+     */
+    public function getSize()
+    {
+        return $this->stillbornCount + $this->bornAliveCount;
+    }
 
     /**
      * @var integer
@@ -313,16 +348,6 @@ class Litter extends DeclareNsfoBase
     public function setLitterOrdinal($litterOrdinal)
     {
         $this->litterOrdinal = $litterOrdinal;
-    }
-
-    /**
-     * Get size
-     *
-     * @return integer
-     */
-    public function getSize()
-    {
-        return $this->stillbornCount + $this->bornAliveCount;
     }
 
     /**
@@ -504,7 +529,7 @@ class Litter extends DeclareNsfoBase
     /**
      * Remove Stillborn
      *
-     * @param Animal $child
+     * @param Stillborn $stillborn
      */
     public function removeStillborn(Stillborn $stillborn)
     {
@@ -524,9 +549,9 @@ class Litter extends DeclareNsfoBase
     /**
      * Add declareBirth
      *
-     * @param \AppBundle\Entity\DeclareBirth $birth
+     * @param \AppBundle\Entity\DeclareBirth $declareBirth
      *
-     * @return Animal
+     * @return Litter
      */
     public function addDeclareBirth(\AppBundle\Entity\DeclareBirth $declareBirth)
     {
@@ -538,7 +563,7 @@ class Litter extends DeclareNsfoBase
     /**
      * Remove declareBirth
      *
-     * @param \AppBundle\Entity\DeclareBirth $birth
+     * @param \AppBundle\Entity\DeclareBirth $declareBirth
      */
     public function removeDeclareBirth(\AppBundle\Entity\DeclareBirth $declareBirth)
     {
@@ -602,7 +627,7 @@ class Litter extends DeclareNsfoBase
 
     /**
      * @param int|null $gestationPeriod
-     * @return AnimalCache
+     * @return Litter
      */
     public function setGestationPeriod($gestationPeriod)
     {
@@ -620,7 +645,7 @@ class Litter extends DeclareNsfoBase
 
     /**
      * @param int $birthInterval
-     * @return AnimalCache
+     * @return Litter
      */
     public function setBirthInterval($birthInterval)
     {

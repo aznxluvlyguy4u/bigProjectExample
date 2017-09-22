@@ -64,6 +64,20 @@ class LocationRepository extends BaseRepository
     return $this->findOneBy(['ubn' => $ubn, 'isActive' => true]);
   }
 
+
+  /**
+   * @param $ubn
+   * @return null|Location
+   */
+  public function findOnePrioritizedByActiveUbn($ubn)
+  {
+    $location = $this->findOneByActiveUbn($ubn);
+    if($location) {
+      return $location;
+    }
+    return $this->findOneBy(['ubn' => $ubn]);
+  }
+
   /**
    * @param array $location
    * @return null|object

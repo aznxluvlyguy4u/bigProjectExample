@@ -483,6 +483,18 @@ class Ram extends Animal
         return $this->litters;
     }
 
+
+    /**
+     * @param Ewe|Ram $parent
+     * @return Ram
+     */
+    public function setParent($parent)
+    {
+        parent::setParent($parent);
+        return $this;
+    }
+
+
     public static function getClassName() {
         return get_called_class();
     }

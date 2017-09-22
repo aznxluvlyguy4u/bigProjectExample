@@ -268,7 +268,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   function updateAnimalDetails(Request $request, $ulnString)
   {
-      return $this->get('app.animal.details.updater')->update($request, $ulnString);
+      return $this->get('app.animal.details.updater')->updateAnimalDetails($request, $ulnString);
   }
 
   /**
@@ -306,6 +306,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   {
       return $this->get('app.animal')->getAnimalDetailsByUln($request, $ulnString);
   }
+
 
   /**
    *

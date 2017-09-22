@@ -7,6 +7,7 @@ namespace AppBundle\Util;
 use AppBundle\Enumerator\PedigreeMasterKey;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 class PedigreeUtil
@@ -17,7 +18,7 @@ class PedigreeUtil
     const MOTHER_PARAM = 'm';
     const DEFAULT_MASTER_KEY = 'uln';// PedigreeMasterKey::ULN;
 
-    /** @var ObjectManager */
+    /** @var ObjectManager|EntityManagerInterface */
     private $em;
 
     /** @var array */
@@ -224,6 +225,7 @@ class PedigreeUtil
              .' '.implode(' ', self::joinParents($generationLimit))
              .' WHERE '.SqlUtil::getFilterStringByIdsArray($animalIds, self::CHILD_PARAM.'.id');
         ;
+
         if(count($animalIds) === 1) {
             return $conn->query($sql)->fetch();
         }

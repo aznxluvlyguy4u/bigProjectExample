@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 use AppBundle\Constant\Constant;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\LazyCriteriaCollection;
+use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer;
 
@@ -144,5 +145,17 @@ class BaseSerializer
         $array = json_decode($json, true);
 
         return $array;
+    }
+
+
+    /**
+     * @param array $array
+     * @param $clazz
+     * @param DeserializationContext $context
+     * @return mixed
+     */
+    public function denormalizeToObject(array $array, $clazz, DeserializationContext $context = null)
+    {
+        return $this->jmsSerializer->fromArray($array, $clazz, $context);
     }
 }

@@ -18,6 +18,10 @@ use JMS\Serializer\Annotation as JMS;
  *      "DeclarationDetail" = "DeclarationDetail"
  *   }
  * )
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "DeclarationDetail" : "AppBundle\Entity\DeclarationDetail"},
+ *     groups = {"BASIC"})
+ * 
  * @package AppBundle\Entity\DeclareBase
  */
 abstract class DeclarationBase {
