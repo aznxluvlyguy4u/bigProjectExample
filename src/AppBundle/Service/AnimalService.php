@@ -269,7 +269,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         if($isAdminEnvironment) {
 
-            if(!AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::SUPER_ADMIN))
+            if(!AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::ADMIN))
             { return AdminValidator::getStandardErrorResponse(); }
 
             $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
