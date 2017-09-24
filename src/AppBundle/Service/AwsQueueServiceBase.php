@@ -120,7 +120,7 @@ abstract class AwsQueueServiceBase
 
 
     /**
-     * Send a request message to given Queue.
+     * Send a request message to Queue.
      *
      * @param string $requestId
      * @param string $messageBody
@@ -129,11 +129,40 @@ abstract class AwsQueueServiceBase
      */
     public function send($messageBody, $requestType, $requestId)
     {
+        return $this->sendBase($messageBody, $requestType, $requestId, $this->queueUrl);
+    }
+
+
+    /**
+     * Send a request message to error Queue.
+     *
+     * @param string $requestId
+     * @param string $messageBody
+     * @param string $requestType
+     * @return array|null
+     */
+    public function sendToErrorQueue($messageBody, $requestType, $requestId)
+    {
+        return $this->sendBase($messageBody, $requestType, $requestId, $this->errorQueueUrl);
+    }
+
+
+    /**
+     * Send a request message to given Queue.
+     *
+     * @param string $messageBody
+     * @param string $requestType
+     * @param string $requestId
+     * @param string $queueUrl
+     * @return array|null
+     */
+    private function sendBase($messageBody, $requestType, $requestId, $queueUrl)
+    {
         if($requestId == null && $messageBody == null){
             return null;
         }
 
-        $message = $this->createMessage($this->queueUrl, $messageBody, $requestType);
+        $message = $this->createMessage($queueUrl, $messageBody, $requestType);
         $response = $this->queueService->sendMessage($message);
 
         return $this->responseHandler($response);
@@ -200,11 +229,28 @@ abstract class AwsQueueServiceBase
      */
     public function getNextMessage()
     {
-        $result = $this->queueService->receiveMessage(array(
-            'QueueUrl' => $this->queueUrl
-        ));
+        return $this->getNextMessageBase($this->queueUrl);
+    }
 
-        return $result;
+
+    /**
+     * @return \Aws\Result
+     */
+    public function getNextErrorMessage()
+    {
+        return $this->getNextMessageBase($this->errorQueueUrl);
+    }
+
+
+    /**
+     * @param string $queueUrl
+     * @return \Aws\Result
+     */
+    private function getNextMessageBase($queueUrl)
+    {
+        return $this->queueService->receiveMessage([
+            'QueueUrl' => $queueUrl
+        ]);
     }
 
 
@@ -232,13 +278,35 @@ abstract class AwsQueueServiceBase
      * @param string $receiptHandleOrAwsResult
      * @return \Aws\Result
      */
-    public function deleteMessage($receiptHandleOrAwsResult){
+    public function deleteMessage($receiptHandleOrAwsResult)
+    {
+        return $this->deleteMessageBase($receiptHandleOrAwsResult, $this->queueUrl);
+    }
+
+
+    /**
+     * @param string $receiptHandleOrAwsResult
+     * @return \Aws\Result
+     */
+    public function deleteErrorMessage($receiptHandleOrAwsResult)
+    {
+        return $this->deleteMessageBase($receiptHandleOrAwsResult, $this->errorQueueUrl);
+    }
+
+
+    /**
+     * @param $receiptHandleOrAwsResult
+     * @param string $queueUrl
+     * @return \Aws\Result
+     */
+    private function deleteMessageBase($receiptHandleOrAwsResult, $queueUrl)
+    {
         if($receiptHandleOrAwsResult instanceof \Aws\Result) {
             $receiptHandleOrAwsResult = $receiptHandleOrAwsResult['Messages'][0]['ReceiptHandle'];
         }
 
         return $this->queueService->deleteMessage([
-            'QueueUrl' => $this->queueUrl, // REQUIRED
+            'QueueUrl' => $queueUrl, // REQUIRED
             'ReceiptHandle' => $receiptHandleOrAwsResult, // REQUIRED
         ]);
     }
