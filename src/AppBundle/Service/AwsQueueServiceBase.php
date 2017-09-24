@@ -51,8 +51,10 @@ abstract class AwsQueueServiceBase
      * @param string $version
      * @param string $selectedEnvironment
      * @param string $currentEnvironment
+     * @param boolean $useErrorQueue
      */
-    public function __construct($queueIdPrefix, $accessKeyId, $secretKey, $region, $version, $selectedEnvironment, $currentEnvironment)
+    public function __construct($queueIdPrefix, $accessKeyId, $secretKey, $region, $version,
+                                $selectedEnvironment, $currentEnvironment, $useErrorQueue = true)
     {
         $this->accessKeyId = $accessKeyId;
         $this->secretKey = $secretKey;
@@ -64,7 +66,6 @@ abstract class AwsQueueServiceBase
         if ($currentEnvironment === Environment::TEST) { $selectedEnvironment = $currentEnvironment; }
         $this->selectedEnvironment = $selectedEnvironment;
         $this->queueId = $this->selectQueueIdByEnvironment($queueIdPrefix, $this->selectedEnvironment);
-        $this->errorQueueId = $this->createErrorQueueIdByQueueId($this->queueId);
 
         $sqsConfig = array(
             'region'  => $this->region,
@@ -76,7 +77,11 @@ abstract class AwsQueueServiceBase
         $this->queueService = $sqsClient;
 
         $this->queueUrl = $this->createQueueUrl($this->queueId);
-        $this->errorQueueUrl = $this->createQueueUrl($this->errorQueueId);
+
+        if ($useErrorQueue) {
+            $this->errorQueueId = $this->createErrorQueueIdByQueueId($this->queueId);
+            $this->errorQueueUrl = $this->createQueueUrl($this->errorQueueId);
+        }
     }
 
 
@@ -146,6 +151,7 @@ abstract class AwsQueueServiceBase
      */
     public function sendToErrorQueue($messageBody, $requestType, $requestId)
     {
+        $this->errorQueueNullCheck();
         return $this->sendBase($messageBody, $requestType, $requestId, $this->errorQueueUrl);
     }
 
@@ -243,6 +249,7 @@ abstract class AwsQueueServiceBase
      */
     public function getNextErrorMessage(array $messageAttributeNames = [])
     {
+        $this->errorQueueNullCheck();
         return $this->getNextMessageBase($this->errorQueueUrl, $messageAttributeNames);
     }
 
@@ -297,6 +304,7 @@ abstract class AwsQueueServiceBase
      */
     public function deleteErrorMessage($receiptHandleOrAwsResult)
     {
+        $this->errorQueueNullCheck();
         return $this->deleteMessageBase($receiptHandleOrAwsResult, $this->errorQueueUrl);
     }
 
@@ -343,6 +351,7 @@ abstract class AwsQueueServiceBase
      */
     public function getSizeOfErrorQueue()
     {
+        $this->errorQueueNullCheck();
         return $this->getSizeOfQueueBase($this->errorQueueUrl);
     }
 
@@ -465,6 +474,7 @@ abstract class AwsQueueServiceBase
      */
     public function moveErrorQueueMessagesToPrimaryQueue(array $messageAttributeNames = [self::TaskType, self::MessageId])
     {
+        $this->errorQueueNullCheck();
         $queueSize = $this->getSizeOfErrorQueue();
 
         if ($queueSize === 0) {
@@ -502,6 +512,17 @@ abstract class AwsQueueServiceBase
         }
 
         return $this->getSizeOfErrorQueue() === 0;
+    }
+
+
+    /**
+     * @throws \Exception
+     */
+    private function errorQueueNullCheck()
+    {
+        if($this->errorQueueUrl === null) {
+            throw new \Exception('Error Queue use not initialized', 428);
+        }
     }
 
 
