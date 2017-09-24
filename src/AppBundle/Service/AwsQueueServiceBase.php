@@ -16,6 +16,9 @@ use Aws\Credentials\Credentials;
  */
 abstract class AwsQueueServiceBase
 {
+    const TaskType = 'TaskType';
+    const MessageId = 'MessageId';
+
     /** @var string */
     protected $region;
     /** @var string */
@@ -225,31 +228,35 @@ abstract class AwsQueueServiceBase
 
 
     /**
+     * @param $messageAttributeNames
      * @return \Aws\Result
      */
-    public function getNextMessage()
+    public function getNextMessage(array $messageAttributeNames = [])
     {
-        return $this->getNextMessageBase($this->queueUrl);
+        return $this->getNextMessageBase($this->queueUrl, $messageAttributeNames);
     }
 
 
     /**
+     * @param $messageAttributeNames
      * @return \Aws\Result
      */
-    public function getNextErrorMessage()
+    public function getNextErrorMessage(array $messageAttributeNames = [])
     {
-        return $this->getNextMessageBase($this->errorQueueUrl);
+        return $this->getNextMessageBase($this->errorQueueUrl, $messageAttributeNames);
     }
 
 
     /**
      * @param string $queueUrl
+     * @param $messageAttributeNames
      * @return \Aws\Result
      */
-    private function getNextMessageBase($queueUrl)
+    private function getNextMessageBase($queueUrl, $messageAttributeNames)
     {
         return $this->queueService->receiveMessage([
-            'QueueUrl' => $queueUrl
+            'QueueUrl' => $queueUrl,
+            'MessageAttributeNames' => $messageAttributeNames,
         ]);
     }
 
@@ -375,12 +382,55 @@ abstract class AwsQueueServiceBase
      */
     public static function getMessageBodyFromResponse($response)
     {
-        $jsonBody = $response['Messages'][0]['Body'];
-        if($jsonBody) {
+        $jsonBody = self::getResponseValue($response, 'Body');
+        if(is_string($jsonBody)) {
             return json_decode($jsonBody);
         }
         return null;
     }
+
+
+    /**
+     * @param $response
+     * @return array
+     */
+    public static function getMessageAttributes($response)
+    {
+        $results = [];
+
+        $messageAttributeResults = self::getResponseValue($response, 'MessageAttributes');
+
+        if (is_array($messageAttributeResults)) {
+
+            foreach ($messageAttributeResults as $key => $data)
+            {
+                $stringValue = $data['StringValue'];
+                $dataType = $data['DataType'];
+
+                switch ($dataType)
+                {
+                    case 'String': $results[$key] = strval($stringValue); break;
+                    case 'Number': $results[$key] = strval($stringValue); break;
+                    case 'Binary': $results[$key] = strval($stringValue); break;
+                    default: $results[$key] = strval($stringValue); break;
+                }
+            }
+
+        }
+
+        return $results;
+    }
+
+
+    /**
+     * @param \Aws\Result $response
+     * @return mixed
+     */
+    public static function getResponseValue($response, $key)
+    {
+        return $response['Messages'][0][$key];
+    }
+
 
     /**
      * @return string
