@@ -74,6 +74,7 @@ services:
           - '%aws_sqs_version%' #version
           - '%environment%' #currentEnv
           - '%kernel.environment%'
+          - true
 
     app.aws.queueservice.external:
         class: AppBundle\Service\AwsExternalQueueService
@@ -83,7 +84,7 @@ services:
     app.aws.queueservice.external.test:
         class: AppBundle\Service\AwsExternalTestQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%aws_sqs_queue_exteral_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST }
+        arguments: { index_0: '%aws_sqs_queue_exteral_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
     app.aws.queueservice.internal:
         class: AppBundle\Service\AwsInternalQueueService
@@ -93,17 +94,17 @@ services:
     app.aws.queueservice.internal.test:
         class: AppBundle\Service\AwsInternalTestQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%aws_sqs_queue_interal_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST }
+        arguments: { index_0: '%aws_sqs_queue_interal_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
     app.aws.queueservice.mixblup_input:
         class: AppBundle\Service\MixBlupInputQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%aws_sqs_queue_mixblup_input_prefix%' }
+        arguments: { index_0: '%aws_sqs_queue_mixblup_input_prefix%', index_7: false }
 
     app.aws.queueservice.mixblup_output:
         class: AppBundle\Service\MixBlupOutputQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%aws_sqs_queue_mixblup_output_prefix%' }
+        arguments: { index_0: '%aws_sqs_queue_mixblup_output_prefix%', index_7: false }
 
     app.aws.storageservice:
         class: AppBundle\Service\AWSSimpleStorageService
@@ -592,6 +593,16 @@ services:
           - '@app.request.message_builder'
           - '@app.user'
           - '@app.doctrine.entitygetter'
+
+    app.queue_dashboard:
+        class: AppBundle\Service\QueueDashboardService
+        arguments:
+          - '@app.serializer.base'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@app.aws.queueservice.external'
+          - '@app.aws.queueservice.internal'
 
     app.tag.replace:
         parent: app.abstract_base.declare
