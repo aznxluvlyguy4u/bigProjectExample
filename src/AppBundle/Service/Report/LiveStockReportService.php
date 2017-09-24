@@ -261,7 +261,27 @@ class LiveStockReportService extends ReportServiceBase
             }
         }
 
-        return $results;
+
+        if ($this->content === null) {
+            return $results;
+        }
+
+        //Order results by order in jsonBody
+        $orderedResults = [];
+
+        foreach ($this->content->get(JsonInputConstant::ANIMALS) as $ordinal => $ulnSet) {
+            $uln = $ulnSet[JsonInputConstant::ULN_COUNTRY_CODE] . $ulnSet[JsonInputConstant::ULN_NUMBER];
+
+            foreach ($results as $resultKey => $result)
+            {
+                if ($result['a_uln'] === $uln) {
+                    $orderedResults[$ordinal] = $result;
+                    break;
+                }
+            }
+        }
+
+        return $orderedResults;
     }
 
 
