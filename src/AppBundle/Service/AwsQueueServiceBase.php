@@ -448,4 +448,61 @@ abstract class AwsQueueServiceBase
         return $this->errorQueueId;
     }
 
+
+    /**
+     * @param \Aws\Result $receiptHandleOrAwsResult
+     * @return bool
+     */
+    public static function hasMessage($receiptHandleOrAwsResult)
+    {
+        return $receiptHandleOrAwsResult['Messages'] !== null;
+    }
+
+
+    /**
+     * @param array $messageAttributeNames
+     * @return bool
+     */
+    public function moveErrorQueueMessagesToPrimaryQueue(array $messageAttributeNames = [self::TaskType, self::MessageId])
+    {
+        $queueSize = $this->getSizeOfErrorQueue();
+
+        if ($queueSize === 0) {
+            //Queue is empty
+            return true;
+        }
+
+        for($i = 0; $i <= $queueSize; $i++)
+        {
+            $messageResponse = $this->getNextErrorMessage($messageAttributeNames);
+
+            if (!self::hasMessage($messageResponse)) {
+                //No message found
+                return true;
+            }
+
+            $messageAttributes = AwsQueueServiceBase::getMessageAttributes($messageResponse);
+
+            $taskType = null;
+            $messageId = null;
+            if (is_array($messageAttributes)) {
+                $taskType =  ArrayUtil::get(self::TaskType, $messageAttributes,null);
+                $messageId = ArrayUtil::get(self::MessageId, $messageAttributes,null);
+            }
+
+            $response = $this->send(
+                AwsQueueServiceBase::getResponseValue($messageResponse,'Body'),
+                $taskType,
+                $messageId
+            );
+
+            if (ArrayUtil::get('statusCode', $response) === 200) {
+                $this->deleteErrorMessage($messageResponse);
+            }
+        }
+
+        return $this->getSizeOfErrorQueue() === 0;
+    }
+
+
 }
