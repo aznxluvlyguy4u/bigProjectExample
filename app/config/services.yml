@@ -594,6 +594,16 @@ services:
           - '@app.user'
           - '@app.doctrine.entitygetter'
 
+    app.queue_dashboard:
+        class: AppBundle\Service\QueueDashboardService
+        arguments:
+          - '@app.serializer.base'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@app.aws.queueservice.external'
+          - '@app.aws.queueservice.internal'
+
     app.tag.replace:
         parent: app.abstract_base.declare
         class: AppBundle\Service\TagReplaceService
