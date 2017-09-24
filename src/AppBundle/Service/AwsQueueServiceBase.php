@@ -28,10 +28,14 @@ abstract class AwsQueueServiceBase
     protected $queueService;
     /** @var string */
     protected $queueUrl;
+    /** @var string */
+    protected $errorQueueUrl;
     /** @var Credentials */
     protected $awsCredentials;
     /** @var string */
     protected $queueId;
+    /** @var string */
+    protected $errorQueueId;
     /** @var string */
     protected $selectedEnvironment;
 
@@ -57,6 +61,7 @@ abstract class AwsQueueServiceBase
         if ($currentEnvironment === Environment::TEST) { $selectedEnvironment = $currentEnvironment; }
         $this->selectedEnvironment = $selectedEnvironment;
         $this->queueId = $this->selectQueueIdByEnvironment($queueIdPrefix, $this->selectedEnvironment);
+        $this->errorQueueId = $this->createErrorQueueIdByQueueId($this->queueId);
 
         $sqsConfig = array(
             'region'  => $this->region,
@@ -67,9 +72,19 @@ abstract class AwsQueueServiceBase
         $sqsClient = new SqsClient($sqsConfig);
         $this->queueService = $sqsClient;
 
-        //Setup queue URL
-        $result = $this->queueService->createQueue(array('QueueName' => $this->queueId));
-        $this->queueUrl = $result->get('QueueUrl');
+        $this->queueUrl = $this->createQueueUrl($this->queueId);
+        $this->errorQueueUrl = $this->createQueueUrl($this->errorQueueId);
+    }
+
+
+    /**
+     * @param string $queueId
+     * @return string|null
+     */
+    public function createQueueUrl($queueId)
+    {
+        $result = $this->queueService->createQueue(array('QueueName' => $queueId));
+        return $result->get('QueueUrl');
     }
 
 
@@ -90,6 +105,17 @@ abstract class AwsQueueServiceBase
             case Environment::LOCAL:    return $queueIdPrefix.QueueSuffix::LOCAL;
             default;                    return $queueIdPrefix.QueueSuffix::DEV;
         }
+    }
+
+
+    /**
+     * @param string $queueId
+     * @return string
+     */
+    protected function createErrorQueueIdByQueueId($queueId)
+    {
+        $parts = explode('_', $queueId);
+        return $parts[0].'_error_'.implode('_',array_splice($parts,1));
     }
 
 
@@ -228,9 +254,38 @@ abstract class AwsQueueServiceBase
      */
     public function getSizeOfQueue()
     {
+        return $this->getSizeOfQueueBase($this->queueUrl);
+    }
+
+
+    /**
+     * WARNING!
+     * If this function is used in a while loop to continuously poll for messages in a queue
+     * at least include a wait of 1 second within the loop.
+     * Otherwise you will get a huge bill from Amazon.
+     *
+     * @return int
+     */
+    public function getSizeOfErrorQueue()
+    {
+        return $this->getSizeOfQueueBase($this->errorQueueUrl);
+    }
+
+
+    /**
+     * WARNING!
+     * If this function is used in a while loop to continuously poll for messages in a queue
+     * at least include a wait of 1 second within the loop.
+     * Otherwise you will get a huge bill from Amazon.
+     *
+     * @param string $queueUrl
+     * @return int
+     */
+    private function getSizeOfQueueBase($queueUrl)
+    {
         /** @var AbstractModel $result */
         $result = $this->queueService->getQueueAttributes([
-            'QueueUrl' => $this->queueUrl,
+            'QueueUrl' => $queueUrl,
             'AttributeNames' => [
                 AwsSqs::APPROXIMATE_MESSAGE_NAMESPACE
             ],
@@ -265,6 +320,14 @@ abstract class AwsQueueServiceBase
     public function getQueueId()
     {
         return $this->queueId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getErrorQueueId()
+    {
+        return $this->errorQueueId;
     }
 
 }
