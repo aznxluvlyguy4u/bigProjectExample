@@ -550,6 +550,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             '9: Replace non-alphanumeric symbols in uln_number of animal table (based on symbols found in migration file)', "\n",
             '10: Replace non-digit symbols in ubn_of_birth of animal table ', "\n",
             '11: Replace non-digit symbols in ubn_of_birth of animal_migration_table', "\n",
+            '12: Recalculate breedCodes of all offspring of animal by id or uln', "\n",
             '=====================================', "\n",
             '20: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n\n",
             '================== ANIMAL LOCATION & RESIDENCE ===================', "\n",
@@ -577,6 +578,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 9: $this->getContainer()->get('app.migrator.vsm')->getAnimalTableMigrator()->removeNonAlphaNumericSymbolsFromUlnNumberInAnimalTable(); break;
             case 10: $this->getContainer()->get('app.datafix.ubn')->removeNonDigitsFromUbnOfBirthInAnimalTable($this->cmdUtil); break;
             case 11: $this->getContainer()->get('app.datafix.ubn')->removeNonDigitsFromUbnOfBirthInAnimalMigrationTable($this->cmdUtil); break;
+            case 12: $this->getContainer()->get('app.datafix.breed_code.offspring.recalculation')->recalculateBreedCodesOfOffspringOfGivenAnimalById($this->cmdUtil); break;
 
             case 20: DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirthsWithOptionInput($this->conn, $this->cmdUtil); break;
 
