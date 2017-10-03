@@ -210,6 +210,17 @@ services:
         parent: app.datafix.base.duplicate
         class: AppBundle\Service\DataFix\UbnFixer
 
+    app.datafix.base:
+        abstract: true
+        arguments:
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '%kernel.root_dir%'
+
+    app.datafix.breed_code.offspring.recalculation:
+        parent: app.datafix.base
+        class: AppBundle\Service\DataFix\OffspringBreedCodeRecalculator
 
     app.migrator.vsm:
         class: AppBundle\Service\Migration\VsmMigratorService
