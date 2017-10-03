@@ -125,6 +125,7 @@ class BreedCodeUtil
 
         $sql = "SELECT
                   a.id,
+                  CONCAT(a.uln_country_code, a.uln_number) as uln,
                   a.parent_mother_id,
                   a.parent_father_id,
                   a.breed_code,
@@ -157,7 +158,8 @@ class BreedCodeUtil
 
         if ($recalculate) {
             if($logger) {
-                $logger->notice($animalId . ' old: '.$oldBreedCode . ', new: ' . $newBreedCode);
+                $uln = ArrayUtil::get('uln', $results, '-');
+                $logger->notice('animal_id: ' . $animalId . ', uln: '.$uln . ' | old: '.$oldBreedCode . ', new: ' . $newBreedCode);
             }
             $sql = "UPDATE animal SET breed_code = $newBreedCode WHERE id = $animalId";
             SqlUtil::updateWithCount($conn, $sql);
