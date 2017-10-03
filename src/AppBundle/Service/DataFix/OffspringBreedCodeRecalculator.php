@@ -4,6 +4,8 @@ namespace AppBundle\Service\DataFix;
 
 
 use AppBundle\Util\BreedCodeUtil;
+use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
 
 class OffspringBreedCodeRecalculator extends DataFixServiceBase
@@ -12,6 +14,21 @@ class OffspringBreedCodeRecalculator extends DataFixServiceBase
     private $recalculationCount;
     /** @var array */
     private $animalIdsRecalculatedBreedCodes;
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @return int|null
+     */
+    public function recalculateBreedCodesOfOffspringOfGivenAnimalById(CommandUtil $cmdUtil)
+    {
+        $question = 'Insert id or uln of animal for which the children\'s breedcodes need to be recalculated';
+        $animal = DoctrineUtil::askForAnimalByIdOrUln($cmdUtil, $this->getManager(), $question);
+        $totalRecalculationCount = $this->recursiveRecalculate($animal->getId());
+        $this->getLogger()->notice('Total recalculation count: '.$totalRecalculationCount);
+
+        return $totalRecalculationCount;
+    }
 
 
     private function resetClassVariables()
@@ -43,7 +60,7 @@ class OffspringBreedCodeRecalculator extends DataFixServiceBase
             $recalculateForChildren = true;
 
         } else {
-            $isUpdated = BreedCodeUtil::updateBreedCodeBySql($this->getConnection(), $animalId);
+            $isUpdated = BreedCodeUtil::updateBreedCodeBySql($this->getConnection(), $animalId, $this->getLogger());
             if ($isUpdated) {
                 $this->recalculationCount++;
                 $recalculateForChildren = true;

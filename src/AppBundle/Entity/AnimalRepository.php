@@ -1373,9 +1373,10 @@ class AnimalRepository extends BaseRepository
     {
         if(StringUtil::isStringContains($id, 'NL')) {
             return $this->findAnimalByUlnString($id);
-        } else {
+        } elseif(ctype_digit($id) || is_int($id)) {
             return $this->find($id);
         }
+        return null;
     }
 
 }
