@@ -7,6 +7,7 @@ namespace AppBundle\Util;
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Monolog\Logger;
 
 class BreedCodeUtil
 {
@@ -113,9 +114,10 @@ class BreedCodeUtil
     /**
      * @param Connection $conn
      * @param int $animalId
+     * @param Logger $logger
      * @return bool|null
      */
-    public static function updateBreedCodeBySql(Connection $conn, $animalId)
+    public static function updateBreedCodeBySql(Connection $conn, $animalId, Logger $logger = null)
     {
         if (!is_int($animalId) && !ctype_digit($animalId)) {
             return null;
@@ -144,21 +146,19 @@ class BreedCodeUtil
         $fatherBreedCodeString = ArrayUtil::get('breed_code_mom', $results);
         $motherBreedCodeString = ArrayUtil::get('breed_code_dad', $results);
 
-        if ($fatherBreedCodeString === null || $motherBreedCodeString === null) {
-            return null;
-        }
-
-        $sqlNullValue = "'NULL'";
+        $sqlNullValue = "NULL";
         $newBreedCode = BreedCodeUtil::calculateBreedCodeFromParentBreedCodes($fatherBreedCodeString, $motherBreedCodeString, $sqlNullValue);
         $oldBreedCode = ArrayUtil::get('breed_code', $results, $sqlNullValue);
-        if (is_string($oldBreedCode)) {
+        if (is_string($oldBreedCode) && $oldBreedCode !== $sqlNullValue) {
             $oldBreedCode = "'" . $oldBreedCode . "'";
         }
 
         $recalculate = $newBreedCode !== $oldBreedCode;
 
         if ($recalculate) {
-            dump($animalId . ' old: '.$oldBreedCode . ', new: ' . $newBreedCode);
+            if($logger) {
+                $logger->notice($animalId . ' old: '.$oldBreedCode . ', new: ' . $newBreedCode);
+            }
             $sql = "UPDATE animal SET breed_code = $newBreedCode WHERE id = $animalId";
             SqlUtil::updateWithCount($conn, $sql);
         }
