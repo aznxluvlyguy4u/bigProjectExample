@@ -4,6 +4,7 @@ namespace AppBundle\Service\DataFix;
 
 
 use AppBundle\Util\BreedCodeUtil;
+use AppBundle\Util\CommandUtil;
 use AppBundle\Util\SqlUtil;
 
 class OffspringBreedCodeRecalculator extends DataFixServiceBase
@@ -12,6 +13,12 @@ class OffspringBreedCodeRecalculator extends DataFixServiceBase
     private $recalculationCount;
     /** @var array */
     private $animalIdsRecalculatedBreedCodes;
+
+
+    public function recalculateBreedCodesOfOffspringOfGivenAnimalById(CommandUtil $cmdUtil)
+    {
+
+    }
 
 
     private function resetClassVariables()

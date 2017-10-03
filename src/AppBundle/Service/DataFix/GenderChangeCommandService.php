@@ -3,13 +3,13 @@
 namespace AppBundle\Service\DataFix;
 
 
+use AppBundle\Command\NsfoMainCommand;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AnimalObjectType;
-use AppBundle\Service\CliOptionsService;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\GenderChanger;
@@ -37,7 +37,7 @@ class GenderChangeCommandService extends DuplicateFixerBase
         $this->setCmdUtil($cmdUtil);
 
         //Print intro
-        $cmdUtil->writelnClean(CommandUtil::generateTitle(CliOptionsService::GENDER_CHANGE));
+        $cmdUtil->writelnClean(CommandUtil::generateTitle(NsfoMainCommand::GENDER_CHANGE));
 
         $cmdUtil->writelnClean([DoctrineUtil::getDatabaseHostAndNameString($this->em),'']);
 
