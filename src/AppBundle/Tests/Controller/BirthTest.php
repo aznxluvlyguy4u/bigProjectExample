@@ -282,8 +282,8 @@ class BirthTest extends WebTestCase
                             "nurture_type" => "NONE",
                             "gender" => GenderType::MALE,
                             "birth_progress" => "NO HELP",
-                            "birth_weight" => 0.01,
-                            "tail_length" => 0,
+                            "birth_weight" => 1.01,
+                            "tail_length" => 0.1,
                         ]
                     ],
                     "date_of_birth" => TimeUtil::getTimeStampForJsonBody($eventDate),
