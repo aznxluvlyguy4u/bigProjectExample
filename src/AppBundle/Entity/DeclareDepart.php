@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\StringUtil;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -298,7 +299,7 @@ class DeclareDepart extends DeclareBase
      */
     public function setUbnNewOwner($ubnNewOwner)
     {
-        $this->ubnNewOwner = $ubnNewOwner;
+        $this->ubnNewOwner = StringUtil::removeLeadingZeroes($ubnNewOwner);
 
         return $this;
     }

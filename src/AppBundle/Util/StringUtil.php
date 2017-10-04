@@ -466,4 +466,15 @@ class StringUtil
         return ltrim(strtolower(preg_replace('/[A-Z]([A-Z](?![a-z]))*/', '_$0', $string)), '_');
     }
 
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    public static function removeLeadingZeroes($string)
+    {
+        return ltrim($string, '0');
+    }
+
+    
 }
