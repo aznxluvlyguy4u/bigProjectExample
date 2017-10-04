@@ -69,6 +69,16 @@ abstract class DataFixServiceBase
         return $this->em;
     }
 
+
+    /**
+     * @return \Doctrine\DBAL\Connection
+     */
+    public function getConnection()
+    {
+        return $this->em->getConnection();
+    }
+
+
     /**
      * @return Logger
      */

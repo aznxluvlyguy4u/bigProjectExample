@@ -1457,4 +1457,17 @@ class AnimalRepository extends BaseRepository
   }
 
 
+    /**
+     * @param string|int $id
+     * @return Animal|Ewe|Neuter|Ram|null
+     */
+    public function findAnimalByIdOrUln($id)
+    {
+        if(StringUtil::isStringContains($id, 'NL')) {
+            return $this->findAnimalByUlnString($id);
+        } elseif(ctype_digit($id) || is_int($id)) {
+            return $this->find($id);
+        }
+        return null;
+    }
 }

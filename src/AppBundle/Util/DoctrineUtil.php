@@ -209,4 +209,36 @@ class DoctrineUtil
         $results = $conn->query($sql)->fetchAll();
         return SqlUtil::groupSqlResultsGroupedBySingleVariable('relname', $results)['relname'];
     }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @param EntityManagerInterface $em
+     * @param string $question
+     * @return Animal|\AppBundle\Entity\Ewe|\AppBundle\Entity\Neuter|\AppBundle\Entity\Ram|null
+     */
+    public static function askForAnimalByIdOrUln(CommandUtil $cmdUtil, EntityManagerInterface $em, $question = 'Insert id or uln of animal')
+    {
+        $animalRepository = $em->getRepository(Animal::class);
+        $animal = null;
+
+        do {
+            $id = $cmdUtil->generateQuestion($question, null);
+            if ($id) {
+                $animal = $animalRepository->findAnimalByIdOrUln($id);
+
+                if ($animal) {
+                    DoctrineUtil::printAnimalData($cmdUtil, $animal, '-- Selected Animal --');
+
+                    if(!$cmdUtil->generateConfirmationQuestion('Is this the correct animal? (y/n, default is no)')){
+                        $animal = null;
+                    }
+                } else {
+                    $cmdUtil->writeln('No animal found for given id/uln: '.$id);
+                }
+            }
+        } while (!$animal);
+
+        return $animal;
+    }
 }
