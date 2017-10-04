@@ -211,6 +211,9 @@ services:
         parent: app.datafix.base
         class: AppBundle\Service\DataFix\MissingBirthMeasurementsService
 
+    app.datafix.breed_code.offspring.recalculation:
+        parent: app.datafix.base
+        class: AppBundle\Service\DataFix\OffspringBreedCodeRecalculator
 
     app.migrator.vsm:
         class: AppBundle\Service\Migration\VsmMigratorService

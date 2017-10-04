@@ -6,6 +6,8 @@ namespace AppBundle\Util;
 
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
+use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Monolog\Logger;
 
 class BreedCodeUtil
 {
@@ -108,7 +110,65 @@ class BreedCodeUtil
         return $nullResponse;
     }
 
-    
+
+    /**
+     * @param Connection $conn
+     * @param int $animalId
+     * @param Logger $logger
+     * @return bool|null
+     */
+    public static function updateBreedCodeBySql(Connection $conn, $animalId, Logger $logger = null)
+    {
+        if (!is_int($animalId) && !ctype_digit($animalId)) {
+            return null;
+        }
+
+        $sql = "SELECT
+                  a.id,
+                  CONCAT(a.uln_country_code, a.uln_number) as uln,
+                  a.parent_mother_id,
+                  a.parent_father_id,
+                  a.breed_code,
+                  mom.breed_code as breed_code_mom,
+                  dad.breed_code as breed_code_dad
+                FROM
+                  animal a
+                  LEFT JOIN animal mom ON mom.id = a.parent_mother_id
+                  LEFT JOIN animal dad ON dad.id = a.parent_father_id
+                WHERE a.id = $animalId
+                ";
+
+        $results = $conn->query($sql)->fetch();
+
+        if ($results === null) {
+            return null;
+        }
+
+        $fatherBreedCodeString = ArrayUtil::get('breed_code_mom', $results);
+        $motherBreedCodeString = ArrayUtil::get('breed_code_dad', $results);
+
+        $sqlNullValue = "NULL";
+        $newBreedCode = BreedCodeUtil::calculateBreedCodeFromParentBreedCodes($fatherBreedCodeString, $motherBreedCodeString, $sqlNullValue);
+        $oldBreedCode = ArrayUtil::get('breed_code', $results, $sqlNullValue);
+        if (is_string($oldBreedCode) && $oldBreedCode !== $sqlNullValue) {
+            $oldBreedCode = "'" . $oldBreedCode . "'";
+        }
+
+        $recalculate = $newBreedCode !== $oldBreedCode;
+
+        if ($recalculate) {
+            if($logger) {
+                $uln = ArrayUtil::get('uln', $results, '-');
+                $logger->notice('animal_id: ' . $animalId . ', uln: '.$uln . ' | old: '.$oldBreedCode . ', new: ' . $newBreedCode);
+            }
+            $sql = "UPDATE animal SET breed_code = $newBreedCode WHERE id = $animalId";
+            SqlUtil::updateWithCount($conn, $sql);
+        }
+
+        return $recalculate;
+    }
+
+
     /**
      * @param array $breedCodeParts
      * @return bool
