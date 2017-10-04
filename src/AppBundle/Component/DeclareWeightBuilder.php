@@ -111,6 +111,7 @@ class DeclareWeightBuilder extends NsfoBaseBuilder
         $historicalMate->duplicateValues($declareWeight);
         $historicalMate->setIsOverwrittenVersion(true);
         $declareWeight->getWeightMeasurement()->setIsRevoked(true);
+        $declareWeight->getWeightMeasurement()->setIsActive(false);
 
         //Edit current values
         $declareWeight = self::postBase($client, $loggedInUser, $location, $declareWeight);
