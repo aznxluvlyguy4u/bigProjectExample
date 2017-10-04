@@ -651,6 +651,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                     $weight->setAnimal($child);
                     $weight->setIsBirthWeight(true);
                     $weight->setWeight($birthWeightValue);
+                    $weight->setAnimalIdAndDateByAnimalAndDateTime($child, $dateOfBirth);
                     $child->addWeightMeasurement($weight);
                     $this->entityManager->persist($weight);
                 }
@@ -661,6 +662,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                     $tailLength->setMeasurementDate($dateOfBirth);
                     $tailLength->setAnimal($child);
                     $tailLength->setLength($tailLengthValue);
+                    $tailLength->setAnimalIdAndDateByAnimalAndDateTime($child, $dateOfBirth);
                     $child->addTailLengthMeasurement($tailLength);
                     $this->entityManager->persist($tailLength);
                 }
