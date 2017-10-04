@@ -469,6 +469,9 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $breedCodeChild = BreedCodeUtil::calculateBreedCodeFromParents($father, $mother, null, true);
 
         $children = [];
+        $newWeights = [];
+        $newTailLengths = [];
+
         /** @var array $child */
         foreach ($childrenContent as $child) {
 
@@ -651,9 +654,9 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                     $weight->setAnimal($child);
                     $weight->setIsBirthWeight(true);
                     $weight->setWeight($birthWeightValue);
-                    $weight->setAnimalIdAndDateByAnimalAndDateTime($child, $dateOfBirth);
                     $child->addWeightMeasurement($weight);
                     $this->entityManager->persist($weight);
+                    $newWeights[] = $weight;
                 }
 
                 // Tail Length
@@ -662,9 +665,9 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                     $tailLength->setMeasurementDate($dateOfBirth);
                     $tailLength->setAnimal($child);
                     $tailLength->setLength($tailLengthValue);
-                    $tailLength->setAnimalIdAndDateByAnimalAndDateTime($child, $dateOfBirth);
                     $child->addTailLengthMeasurement($tailLength);
                     $this->entityManager->persist($tailLength);
+                    $newTailLengths[] = $tailLength;
                 }
 
                 $location->getAnimals()->add($child);
@@ -704,6 +707,24 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 if($parent instanceof Animal) {
                     GeneDiversityUpdater::updateByParentId($this->conn, $parent->getId(), false);
                 }
+            }
+
+
+            //The animalIdAndDate values can only be generated after the Animal has been persisted and has a primary key
+            foreach ([$newWeights, $newTailLengths] as $newMeasurements) {
+                /** @var Weight|TailLength $newMeasurement */
+                foreach ($newMeasurements as $newMeasurement) {
+                    $this->getManager()->refresh($newMeasurement);
+                    $newMeasurement->setAnimalIdAndDateByAnimalAndDateTime(
+                        $newMeasurement->getAnimal(),
+                        $newMeasurement->getMeasurementDate()
+                    );
+                    $this->getManager()->persist($newMeasurement);
+                }
+            }
+
+            if (count($newWeights) + count($newTailLengths) > 0) {
+                $this->getManager()->flush();
             }
 
         } catch (UniqueConstraintViolationException $exception) {
