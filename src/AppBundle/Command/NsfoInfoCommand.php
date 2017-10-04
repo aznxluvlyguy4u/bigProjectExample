@@ -14,7 +14,7 @@ class NsfoInfoCommand extends ContainerAwareCommand
     {
         $this
             ->setName('nsfo:info')
-            ->setDescription(CliOptionsService::INFO_SYSTEM_SETTINGS)
+            ->setDescription(NsfoMainCommand::INFO_SYSTEM_SETTINGS)
         ;
     }
 

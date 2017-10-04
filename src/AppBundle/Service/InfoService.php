@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Command\NsfoMainCommand;
 use AppBundle\Enumerator\QueueType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
@@ -68,7 +69,7 @@ class InfoService
     public function printInfo()
     {
         //Print intro
-        $this->writeln(CommandUtil::generateTitle(CliOptionsService::INFO_SYSTEM_SETTINGS));
+        $this->writeln(CommandUtil::generateTitle(NsfoMainCommand::INFO_SYSTEM_SETTINGS));
 
         $this->writeln(['___ ENVIRONMENT ___',
             'kernel.environment: ' . $this->systemEnvironment,
