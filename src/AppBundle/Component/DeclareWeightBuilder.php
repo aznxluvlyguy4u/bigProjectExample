@@ -89,6 +89,7 @@ class DeclareWeightBuilder extends NsfoBaseBuilder
         $weightMeasurement->setWeight($weightValue);
         $weightMeasurement->setIsBirthWeight(false);
         $weightMeasurement->setMeasurementDate($measurementDate);
+        $weightMeasurement->setAnimalIdAndDateByAnimalAndDateTime($animal, $measurementDate);
 
         return $weightMeasurement;
     }
