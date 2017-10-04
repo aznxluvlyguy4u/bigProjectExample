@@ -475,4 +475,15 @@ class StringUtil
         return str_replace('/', '-', base64_encode(random_bytes(128)));
     }
 
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    public static function removeLeadingZeroes($string)
+    {
+        return ltrim($string, '0');
+    }
+
+
 }
