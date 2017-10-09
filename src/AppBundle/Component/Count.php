@@ -384,7 +384,7 @@ class Count
                         if($diff->y == 0 && $diff->m < 6) {
                            $ramUnderSix++;
                         }
-                        if($diff->y == 0 && ($diff->m > 6 && $diff->m < 12)) {
+                        if($diff->y == 0 && ($diff->m >= 6 && $diff->m <= 12)) {
                            $ramBetweenSixAndTwelve++;
                         }
                         if($diff->y > 0) {
@@ -395,7 +395,7 @@ class Count
                         if($diff->y == 0 && $diff->m < 6) {
                             $eweUnderSix++;
                         }
-                        if($diff->y == 0 && ($diff->m > 6 && $diff->m < 12)) {
+                        if($diff->y == 0 && ($diff->m >= 6 && $diff->m <= 12)) {
                             $eweBetweenSixAndTwelve++;
                         }
                         if($diff->y > 0) {
@@ -406,7 +406,7 @@ class Count
                         if($diff->y == 0 && $diff->m < 6) {
                             $neuterUnderSix++;
                         }
-                        if($diff->y == 0 && ($diff->m > 6 && $diff->m < 12)) {
+                        if($diff->y == 0 && ($diff->m >= 6 && $diff->m <= 12)) {
                             $neuterBetweenSixAndTwelve++;
                         }
                         if($diff->y > 0) {
