@@ -202,7 +202,7 @@ class ReportAPIController extends APIController {
 
 
     /**
-     * Generate VWA animal details report by 'file_type' pdf/csv.
+     * Generate VWA animal details report as pdf.
      *
      * ### POST EXAMPLE ###
      *
@@ -239,17 +239,8 @@ class ReportAPIController extends APIController {
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
-     *   parameters={
-     *     {
-     *        "name"="file_type",
-     *        "dataType"="string",
-     *        "required"=false,
-     *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
-     *        "format"="?file_type=csv"
-     *     }
-     *   },
      *   resource = true,
-     *   description = "Generate breed index and breed value overview report by 'file_type' xls/csv."
+     *   description = "Generate VWA animal details report as pdf."
      * )
      * @param Request $request the request object
      * @return JsonResponse
@@ -262,4 +253,53 @@ class ReportAPIController extends APIController {
     }
 
 
+    /**
+     * Generate VWA UBNs overview report as pdf or csv.
+     *
+     * ### POST EXAMPLE ###
+     *
+     *  {
+     *      "result": {
+     *          "locations": [
+     *              {
+     *                  "ubn": "1674459"
+     *              },
+     *              {
+     *                  "ubn": "1245656"
+     *              }
+     *          ]
+     *      }
+     *  }
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="file_type",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
+     *        "format"="?file_type=csv"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate VWA UBNs overview report as pdf or csv."
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/vwa/ubns-overview")
+     * @Method("POST")
+     */
+    public function getUbnsOverviewReport(Request $request)
+    {
+        return $this->get('app.report.vwa.ubns_overview')->getUbnsOverviewReport($request);
+    }
 }

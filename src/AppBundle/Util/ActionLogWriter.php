@@ -964,6 +964,40 @@ class ActionLogWriter
 
 
     /**
+     * @param EntityManagerInterface $em
+     * @param Person $actionBy
+     * @param array $ubns
+     * @param string $fileType
+     * @return ActionLog|JsonResponse
+     */
+    public static function getVwaUbnsOverviewReport(EntityManagerInterface $em, Person $actionBy, array $ubns, $fileType)
+    {
+        $description = '';
+        $categoryPrefix = '';
+        $categoryPrefixSymbol = '; ';
+
+        try {
+            if (count($ubns) > 0) {
+                $description .= 'ubns: ' . implode(', ', $ubns);
+                $categoryPrefix = $categoryPrefixSymbol;
+            }
+
+        } catch (\Exception $exception) {
+            return ResultUtil::errorResult('Incorrect json format', Response::HTTP_BAD_REQUEST);
+        }
+
+
+        $description .= $categoryPrefix . 'fileType: '.$fileType;
+
+        $log = new ActionLog($actionBy, $actionBy, UserActionType::VWA_EMPLOYEE_UBNS_OVERVIEW_REPORT_REQUEST,true,
+            $description,false,true);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
      * @param ObjectManager $om
      * @param Employee $admin
      * @param string $description

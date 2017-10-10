@@ -34,6 +34,7 @@ use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Translation\DataCollectorTranslator;
 
 class LiveStockReportService extends ReportServiceBase
 {
@@ -62,9 +63,9 @@ class LiveStockReportService extends ReportServiceBase
     private $data;
 
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, DataCollectorTranslator $translator, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
+        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
             $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
 
     }

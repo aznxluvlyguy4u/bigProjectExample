@@ -368,6 +368,7 @@ services:
           - '@app.writer.csv_from_sql_results'
           - '@app.user'
           - '@templating'
+          - '@translator'
           - '@knp_snappy.pdf'
           - '%kernel.cache_dir%'
           - '%kernel.root_dir%'
@@ -395,6 +396,10 @@ services:
     app.report.vwa.animal_details:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaAnimalDetailsReportService
+
+    app.report.vwa.ubns_overview:
+        parent: app.report.base
+        class: AppBundle\Service\Report\VwaUbnsOverviewReportService
 
     app.writer.csv_from_sql_results:
         class: AppBundle\Service\CsvFromSqlResultsWriterService
