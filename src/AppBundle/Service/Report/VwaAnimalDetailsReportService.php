@@ -10,6 +10,7 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService;
@@ -83,6 +84,8 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
         if ($log instanceof JsonResponse) {
             return $log;
         }
+
+        $this->translator->setLocale(Locale::NL);
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();

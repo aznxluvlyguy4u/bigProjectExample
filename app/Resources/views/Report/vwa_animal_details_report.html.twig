@@ -10100,7 +10100,7 @@
                                                     <label class="middle">Zwoegerziekte</label>
                                                 </div>
                                                 <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentMaediVisnaStatus : '' }}">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentMaediVisnaStatus|trans|capitalize : '' }}">
                                                 </div>
                                             </div>
 
@@ -10109,7 +10109,7 @@
                                                     <label class="middle">Scrapie</label>
                                                 </div>
                                                 <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentScrapieStatus : '' }}">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentScrapieStatus|trans|capitalize : '' }}">
                                                 </div>
                                             </div>
 
@@ -10118,7 +10118,7 @@
                                                     <label class="middle">CL</label>
                                                 </div>
                                                 <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentCaseousLymphadenitisStatus : '' }}">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentCaseousLymphadenitisStatus|trans|capitalize : '' }}">
                                                 </div>
                                             </div>
 
