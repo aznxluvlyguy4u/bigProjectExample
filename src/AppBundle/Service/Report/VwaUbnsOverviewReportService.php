@@ -106,6 +106,7 @@ class VwaUbnsOverviewReportService extends ReportServiceBase
             }
 
             $locationHealthData[$ubn] = [
+                ReportLabel::UBN => $ubn,
                 ReportLabel::CASEOUS_LYMPHADENITIS_STATUS => $caseousLymphadenitisStatus,
                 ReportLabel::MAEDI_VISNA_STATUS => $maediVisnaStatus,
                 ReportLabel::SCRAPIE_STATUS => $scrapieStatus,
@@ -146,11 +147,9 @@ class VwaUbnsOverviewReportService extends ReportServiceBase
 
     private function getCsvReport()
     {
-        throw new \Exception('Not implemented', Response::HTTP_NOT_IMPLEMENTED);
-
         $this->extension = FileType::CSV;
 
-        $csvData = $this->data;
+        $csvData = $this->data[ReportLabel::LOCATIONS];
 
         return $this->generateFile($this->filename, $csvData,
             self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
