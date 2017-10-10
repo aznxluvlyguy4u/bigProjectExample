@@ -17,7 +17,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
  */
 class ReportAPIController extends APIController {
 
-  const IS_LOCAL_TESTING = false; //To save the generated files locally instead of in the S3 Bucket.
+  const IS_LOCAL_TESTING = true; //To save the generated files locally instead of in the S3 Bucket.
   const DISPLAY_PDF_AS_HTML = false;
   const IS_USE_PROD_VERSION_OUTPUT = true;
 
