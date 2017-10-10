@@ -122,11 +122,11 @@ class VwaUbnsOverviewReportService extends ReportServiceBase
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
         $fileType = $fileType !== FileType::CSV ? FileType::PDF : $fileType;
 
-        //TODO log
-//        $log = ActionLogWriter::getVwaAnimalDetailsReport($this->em, $this->getUser(), $ubns, $fileType);
-//        if ($log instanceof JsonResponse) {
-//            return $log;
-//        }
+        ksort($ubns);
+        $log = ActionLogWriter::getVwaUbnsOverviewReport($this->em, $this->getUser(), array_keys($ubns), $fileType);
+        if ($log instanceof JsonResponse) {
+            return $log;
+        }
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
