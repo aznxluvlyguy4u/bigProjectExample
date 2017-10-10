@@ -9917,14 +9917,14 @@
                                     <div class="info-body">
 
 
-                                        <div class="row">
-                                            <div class="medium-6 columns">
-                                                <label class="middle">Huidig UBN</label>
-                                            </div>
-                                            <div class="medium-6 columns">
-                                                <input type="text" disabled="" value="{{ animal.location ? animal.location.ubn : '' }}" class="ng-untouched ng-pristine ng-valid">
-                                            </div>
-                                        </div>
+                                        {#<div class="row">#}
+                                            {#<div class="medium-6 columns">#}
+                                                {#<label class="middle">Huidig UBN</label>#}
+                                            {#</div>#}
+                                            {#<div class="medium-6 columns">#}
+                                                {#<input type="text" disabled="" value="{{ animal.location ? animal.location.ubn : '' }}" class="ng-untouched ng-pristine ng-valid">#}
+                                            {#</div>#}
+                                        {#</div>#}
 
 
                                         <div class="row">
@@ -9974,7 +9974,17 @@
                                                 <label class="middle">Geboortedatum</label>
                                             </div>
                                             <div class="medium-6 columns">
-                                                <input disabled="" type="text" value="{{ animal.getDateOfBirthString }}">
+                                                <input disabled="" type="text" value="{{ animal.getDateOfBirth is empty ? "" : animal.getDateOfBirth|date('d-m-Y') }}">
+                                            </div>
+                                        </div>
+
+
+                                        <div class="row">
+                                            <div class="medium-6 columns">
+                                                <label class="middle">Sterftedatum</label>
+                                            </div>
+                                            <div class="medium-6 columns">
+                                                <input disabled="" type="text" value="{{ animal.getDateOfDeath is empty ? "" : animal.getDateOfDeath|date('d-m-Y') }}">
                                             </div>
                                         </div>
 
@@ -10032,278 +10042,10 @@
                                 </div>
 
 
-                                <div class="info-container">
-                                    <div class="info-header">
-                                        <div class="col12">
-                                            Metingen
-                                            <span class="hide-for-small-only">
-                            | Laatst bijgewerkt:
-                                                
-                                                <span> --/--/---- --:-- </span>
-                        </span>
-                                        </div>
-                                    </div>
-                                    <div class="info-body">
-
-                                        {% set fat1 = '' %}
-                                        {% set fat2 = '' %}
-                                        {% set fat3 = '' %}
-
-                                        {% if animal.bodyFatMeasurements %}
-
-                                            {% set latestBodyFat = animal.getLatestMeasurement(animal.bodyFatMeasurements) %}
-
-                                            {% if latestBodyFat %}
-
-                                                {% set fat1 = latestBodyFat.fat1 ? latestBodyFat.fat1.fat : '' %}
-                                                {% set fat2 = latestBodyFat.fat2 ? latestBodyFat.fat2.fat : '' %}
-                                                {% set fat3 = latestBodyFat.fat3 ? latestBodyFat.fat3.fat : '' %}
-
-                                            {% endif %}
-
-                                        {% endif %}
-
-
-                                        <div class="row">
-                                            <div class="medium-6 columns">
-                                                <label class="middle"> Vetbedekking 1 </label>
-                                            </div>
-                                            <div class="medium-6 columns">
-                                                <input type="text" disabled="" value="{{ fat1 }}">
-                                            </div>
-                                        </div>
-
-
-                                        <div class="row">
-                                            <div class="medium-6 columns">
-                                                <label class="middle"> Vetbedekking 2 </label>
-                                            </div>
-                                            <div class="medium-6 columns">
-                                                <input type="text" disabled="" value="{{ fat2 }}">
-                                            </div>
-                                        </div>
-
-
-                                        <div class="row">
-                                            <div class="medium-6 columns">
-                                                <label class="middle"> Vetbedekking 3 </label>
-                                            </div>
-                                            <div class="medium-6 columns">
-                                                <input type="text" disabled="" value="{{ fat3 }}">
-                                            </div>
-                                        </div>
-
-
-
-                                        {% set latestMuscleThickness = animal.getLatestMeasurement(animal.muscleThicknessMeasurements) %}
-
-                                        <div class="row">
-                                            <div class="medium-6 columns">
-                                                <label class="middle"> Spierdikte </label>
-                                            </div>
-                                            <div class="medium-6 columns">
-                                                <input type="text" disabled="" value="{{ latestMuscleThickness ? latestMuscleThickness.muscleThickness : '' }}">
-                                            </div>
-                                        </div>
-
-
-
-                                        {% set latestWeight = animal.getLatestMeasurement(animal.weightMeasurements) %}
-
-                                        <div class="row">
-                                            <div class="medium-6 columns">
-                                                <label class="middle"> Scangewicht (kg)</label>
-                                            </div>
-                                            <div class="medium-6 columns">
-                                                <input type="text" disabled="" value="{{ latestWeight ? latestWeight.weight : '' }}">
-                                            </div>
-                                        </div>
-
-
-                                        {% set latestBirthWeight = animal.getLatestBirthWeightValue %}
-
-                                        <div class="row">
-                                            <div class="medium-6 columns">
-                                                <label class="middle"> Geboortegewicht (kg)</label>
-                                            </div>
-                                            <div class="medium-6 columns">
-                                                <input type="text" disabled="" value="{{ latestBirthWeight ? latestBirthWeight : '' }}">
-                                            </div>
-                                        </div>
-
-
-                                        {% set latestTailLength = animal.getLatestMeasurement(animal.tailLengthMeasurements) %}
-
-                                        <div class="row">
-                                            <div class="medium-6 columns">
-                                                <label class="middle"> Staartlengte (cm) </label>
-                                            </div>
-                                            <div class="medium-6 columns">
-                                                <input type="text" disabled="" value="{{ latestTailLength ? latestTailLength.length : '' }}">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                             <div class="medium-6 columns">
 
-
-                                {% set latestExterior = animal.getLatestMeasurement(animal.exteriorMeasurements) %}
-
                                 <div class="info-container">
-                                    <exterior-component>
-                                        <div class="info-header">
-                                            <div class="row">
-                                                <div class="medium-12 columns">
-                                                    Laatste Exterieur | Datum: {{ latestExterior and latestExterior.measurementDate ? latestExterior.measurementDate.format('Y-m-d') : 'Geen metingen' }}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="info-body">
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Soort code</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.kind ? latestExterior.kind : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Kop</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.skull ? latestExterior.skull : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Ontwikkeling</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.progress ? latestExterior.progress : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Bespiering</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.muscularity ? latestExterior.muscularity : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Evenredigheid</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.proportion ? latestExterior.proportion : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Type</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.exteriorType ? latestExterior.exteriorType : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Beenwerk</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.legWork ? latestExterior.legWork : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Vacht</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.fur ? latestExterior.fur : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Algemeen Voorkomen</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.generalAppearance ? latestExterior.generalAppearance : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Hoogte</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.height ? latestExterior.height : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Borstdiepte</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.breastDepth ? latestExterior.breastDepth : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Romplengte</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.torsoLength ? latestExterior.torsoLength : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Aftekeningen</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.markings ? latestExterior.markings : '' }}">
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <div class="medium-6 columns">
-                                                    <label class="middle">Inspecteur</label>
-                                                </div>
-                                                <div class="medium-6 columns">
-                                                    <input disabled="" type="text" value="{{ latestExterior and latestExterior.getInspectorFullName ? latestExterior.getInspectorFullName : '' }}">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        </exterior-component>
-
 
                                     <div class="info-container">
                                         <div class="info-header">
@@ -10320,8 +10062,6 @@
                                                 </div>
                                             </div>
 
-
-
                                             <div class="row">
                                                 <div class="medium-6 columns">
                                                     <label class="middle">Status</label>
@@ -10332,6 +10072,69 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                </div>
+
+
+                                {% set locationHealth = animal.location ? animal.location.LocationHealth : null %}
+
+                                <div class="info-container">
+
+                                    <div class="info-container">
+                                        <div class="info-header">
+                                            Bedrijfsstatus huidig UBN
+                                        </div>
+                                        <div class="info-body">
+
+                                            <div class="row">
+                                                <div class="medium-6 columns">
+                                                    <label class="middle">Huidig UBN</label>
+                                                </div>
+                                                <div class="medium-6 columns">
+                                                    <input type="text" disabled="" value="{{ animal.location ? animal.location.ubn : '' }}" class="ng-untouched ng-pristine ng-valid">
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="medium-6 columns">
+                                                    <label class="middle">Zwoegerziekte</label>
+                                                </div>
+                                                <div class="medium-6 columns">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentMaediVisnaStatus|trans|capitalize : '' }}">
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="medium-6 columns">
+                                                    <label class="middle">Scrapie</label>
+                                                </div>
+                                                <div class="medium-6 columns">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentScrapieStatus|trans|capitalize : '' }}">
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="medium-6 columns">
+                                                    <label class="middle">CL</label>
+                                                </div>
+                                                <div class="medium-6 columns">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentCaseousLymphadenitisStatus|trans|capitalize : '' }}">
+                                                </div>
+                                            </div>
+
+                                            {# CAE only for goats. Currently this is not supported in the NSFO system #}
+                                            <div class="row">
+                                                <div class="medium-6 columns">
+                                                    <label class="middle">CAE</label>
+                                                </div>
+                                                <div class="medium-6 columns">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? '' : '' }}">
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
 

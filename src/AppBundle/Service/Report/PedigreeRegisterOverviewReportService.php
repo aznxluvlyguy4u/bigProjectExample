@@ -25,6 +25,7 @@ use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Translation\DataCollectorTranslator;
 
 /**
  * Class ReportService
@@ -52,10 +53,11 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
-                                UserService $userService, TwigEngine $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                UserService $userService, TwigEngine $templating, DataCollectorTranslator $translator,
+                                GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService,
-            $templating, $knpGenerator, $cacheDir, $rootDir, self::FOLDER);
+            $templating, $translator, $knpGenerator, $cacheDir, $rootDir, self::FOLDER);
 
         $this->em = $em;
         $this->conn = $em->getConnection();

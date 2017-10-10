@@ -77,6 +77,13 @@ class ReportLabel
     const PEDIGREE_REGISTER_NAME = 'pedigreeRegisterName';
     const LIVESTOCK = 'livestock';
 
+    //Location
+    const LOCATIONS = 'locations';
+    const CASEOUS_LYMPHADENITIS_STATUS = 'caseousLymphadenitisStatus';
+    const MAEDI_VISNA_STATUS = 'maediVisnaStatus';
+    const SCRAPIE_STATUS = 'scrapieStatus';
+    const CAE_STATUS = 'caeStatus';
+
     //Measurements
     const EXTERIOR = 'exterior';
     const MEASUREMENT_DATE = 'measurement_date';
