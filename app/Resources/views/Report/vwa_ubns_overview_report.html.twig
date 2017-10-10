@@ -6,6 +6,7 @@
 
     {% set counter = 0 %}
     {% set rowsPerPage = 31 %}
+    {% set columnsPerPage = 1 %}
     {% set locationsCount = variables.locations|length %}
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
@@ -28,13 +29,7 @@
         {% if counter is divisible by (rowsPerPage) %}
 
          {#COLUMN HEADER #}
-            {% if locationsCount - counter <= rowsPerPage %}
-                <table class="single-table">
-            {% elseif counter is divisible by(2*rowsPerPage) %}
-                <table class="table-one">
-            {% elseif counter is divisible by (rowsPerPage) %}
-                <table class="table-two">
-            {% endif %}
+            <table class="single-table">
 
             <tr>
                 <td class="tg-yw4l">UBN</td>
@@ -52,7 +47,7 @@
                 <td class="tg-yw4l">{{ values.maediVisnaStatus }}</td>
                 <td class="tg-yw4l">{{ values.scrapieStatus }}</td>
                 <td class="tg-yw4l">{{ values.caseousLymphadenitisStatus }}</td>
-                <td class="tg-yw4l">{{ values.caeStatus }}</td>
+                <td class="tg-lqy6">{{ values.caeStatus }}</td>
             </tr>
 
         {% set counter = counter + 1 %}
@@ -65,7 +60,7 @@
 
      {#BREAK TO NEW PAGE: WITH HEADER ON NEW PAGE#}
 
-        {% if counter is divisible by (rowsPerPage * 2) and loop.last == false %}
+        {% if counter is divisible by (rowsPerPage * columnsPerPage) and loop.last == false %}
 
             {#necessary to enforce a pagebreak using css#}
         <footer></footer>
@@ -96,16 +91,6 @@
             border-style:solid;
             border-width:1px;
             font-size: 14px;
-        }
-
-        table.table-one {
-            float: left;
-            margin-left: 80px;
-        }
-
-        table.table-two {
-            float: right;
-            margin-right: 80px;
         }
 
         td {
