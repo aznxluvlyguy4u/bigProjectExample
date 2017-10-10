@@ -16,9 +16,12 @@
         <img src="{{ imagesDirectory }}" width="556" height="70" />
     </div>
 
-    {% set title = 'UBNs gezondheidsstatus overzicht voor VWA' %}
+    {% set title = 'UBN gezondheidsstatus overzicht voor VWA' %}
+    {% set subTitle = 'datum: ' ~ "now"|date('d-m-Y H:i:s') %}
 
     <h2>{{ title }}</h2>
+
+    <p>{{ subTitle }}</p>
 
     {# END OF HEADER #}
 
@@ -32,7 +35,7 @@
             <table class="single-table">
 
             <tr>
-                <td class="tg-yw4l">UBN</td>
+                <td class="tg-yw4r">UBN</td>
                 <td class="tg-yw4l">zwoegerziekte</td>
                 <td class="tg-yw4l">scrapie</td>
                 <td class="tg-yw4l">caseous lymphadenitis</td>
@@ -43,7 +46,7 @@
          {#ROW DATA #}
 
             <tr>
-                <td class="tg-yw4l">{{ ubn }}</td>
+                <td class="tg-yw4r">{{ ubn }}</td>
                 <td class="tg-yw4l">{{ values.maediVisnaStatus }}</td>
                 <td class="tg-yw4l">{{ values.scrapieStatus }}</td>
                 <td class="tg-yw4l">{{ values.caseousLymphadenitisStatus }}</td>
@@ -70,6 +73,8 @@
             </div>
 
             <h2>{{ title }}</h2>
+
+            <p>{{ subTitle }}</p>
 
         {% endif %}
 
@@ -106,9 +111,9 @@
 
         .tg td{font-family:SansSerif, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
         .tg th{font-family:SansSerif, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-        .tg .tg-lqy6{text-align:right;vertical-align:top}
-        .tg .tg-ddb2{font-family:serif !important;;text-align:center;vertical-align:top}
-        .tg .tg-yw4l{vertical-align:top}
+        .tg-lqy6{text-align:center;vertical-align:top}
+        .tg-yw4l{vertical-align:top; text-align: center}
+        .tg-yw4r{vertical-align:top; text-align: right}
         @media screen and (max-width: 767px) {
             .tg {width: auto !important;}
             .tg col {width: auto !important;}
