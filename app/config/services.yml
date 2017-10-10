@@ -397,6 +397,10 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaAnimalDetailsReportService
 
+    app.report.vwa.ubns_overview:
+        parent: app.report.base
+        class: AppBundle\Service\Report\VwaUbnsOverviewReportService
+
     app.writer.csv_from_sql_results:
         class: AppBundle\Service\CsvFromSqlResultsWriterService
         arguments:

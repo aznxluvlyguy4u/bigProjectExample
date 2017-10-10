@@ -112,6 +112,7 @@ class ReportServiceBase
         $this->csvWriter = $csvWriter;
         $this->userService = $userService;
         $this->templating = $templating;
+        $this->translator = $translator;
         $this->knpGenerator = $knpGenerator;
         $this->cacheDir = $cacheDir;
         $this->rootDir = $rootDir;
