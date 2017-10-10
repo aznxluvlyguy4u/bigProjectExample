@@ -9917,14 +9917,14 @@
                                     <div class="info-body">
 
 
-                                        <div class="row">
-                                            <div class="medium-6 columns">
-                                                <label class="middle">Huidig UBN</label>
-                                            </div>
-                                            <div class="medium-6 columns">
-                                                <input type="text" disabled="" value="{{ animal.location ? animal.location.ubn : '' }}" class="ng-untouched ng-pristine ng-valid">
-                                            </div>
-                                        </div>
+                                        {#<div class="row">#}
+                                            {#<div class="medium-6 columns">#}
+                                                {#<label class="middle">Huidig UBN</label>#}
+                                            {#</div>#}
+                                            {#<div class="medium-6 columns">#}
+                                                {#<input type="text" disabled="" value="{{ animal.location ? animal.location.ubn : '' }}" class="ng-untouched ng-pristine ng-valid">#}
+                                            {#</div>#}
+                                        {#</div>#}
 
 
                                         <div class="row">
@@ -10047,7 +10047,6 @@
 
                                 <div class="info-container">
 
-
                                     <div class="info-container">
                                         <div class="info-header">
                                             Predicaten en Statussen
@@ -10063,8 +10062,6 @@
                                                 </div>
                                             </div>
 
-
-
                                             <div class="row">
                                                 <div class="medium-6 columns">
                                                     <label class="middle">Status</label>
@@ -10075,6 +10072,69 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                </div>
+
+
+                                {% set locationHealth = animal.location ? animal.location.LocationHealth : null %}
+
+                                <div class="info-container">
+
+                                    <div class="info-container">
+                                        <div class="info-header">
+                                            Bedrijfsstatus huidig UBN
+                                        </div>
+                                        <div class="info-body">
+
+                                            <div class="row">
+                                                <div class="medium-6 columns">
+                                                    <label class="middle">Huidig UBN</label>
+                                                </div>
+                                                <div class="medium-6 columns">
+                                                    <input type="text" disabled="" value="{{ animal.location ? animal.location.ubn : '' }}" class="ng-untouched ng-pristine ng-valid">
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="medium-6 columns">
+                                                    <label class="middle">Zwoegerziekte</label>
+                                                </div>
+                                                <div class="medium-6 columns">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentMaediVisnaStatus : '' }}">
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="medium-6 columns">
+                                                    <label class="middle">Scrapie</label>
+                                                </div>
+                                                <div class="medium-6 columns">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentScrapieStatus : '' }}">
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="medium-6 columns">
+                                                    <label class="middle">CL</label>
+                                                </div>
+                                                <div class="medium-6 columns">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? locationHealth.currentCaseousLymphadenitisStatus : '' }}">
+                                                </div>
+                                            </div>
+
+                                            {# CAE only for goats. Currently this is not supported in the NSFO system #}
+                                            <div class="row">
+                                                <div class="medium-6 columns">
+                                                    <label class="middle">CAE</label>
+                                                </div>
+                                                <div class="medium-6 columns">
+                                                    <input disabled="" type="text" value="{{ locationHealth ? '' : '' }}">
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
 
