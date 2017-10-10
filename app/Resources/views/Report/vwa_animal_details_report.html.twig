@@ -9974,7 +9974,17 @@
                                                 <label class="middle">Geboortedatum</label>
                                             </div>
                                             <div class="medium-6 columns">
-                                                <input disabled="" type="text" value="{{ animal.getDateOfBirthString }}">
+                                                <input disabled="" type="text" value="{{ animal.getDateOfBirth is empty ? "" : animal.getDateOfBirth|date('d-m-Y') }}">
+                                            </div>
+                                        </div>
+
+
+                                        <div class="row">
+                                            <div class="medium-6 columns">
+                                                <label class="middle">Sterftedatum</label>
+                                            </div>
+                                            <div class="medium-6 columns">
+                                                <input disabled="" type="text" value="{{ animal.getDateOfDeath is empty ? "" : animal.getDateOfDeath|date('d-m-Y') }}">
                                             </div>
                                         </div>
 
