@@ -164,7 +164,7 @@ class ReportServiceBase
     protected function generateFile($filenameWithoutExtension, $data, $title, $fileExtension, $uploadToS3)
     {
         $recordCount = count($data);
-        if($recordCount <= 1) {
+        if($recordCount === 0) {
             $code = 428;
             $message = "Data is empty";
             return new JsonResponse(['code' => $code, "message" => $message], $code);
