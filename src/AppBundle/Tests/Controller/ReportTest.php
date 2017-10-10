@@ -37,12 +37,14 @@ class ReportTest extends WebTestCase
     const POST_inbreedingCoefficientReport = 'POST_inbreedingCoefficientReport';
     const POST_livestockReport = 'POST_livestockReport';
     const POST_vwaAnimalDetailsReport = 'POST_vwaAnimalDetailsReport';
+    const POST_vwaUbnsOverviewReport = 'POST_vwaUbnsOverviewReport';
 
     private $endpointSuffixes = [
         self::POST_pedigreeCertificates => '/pedigree-certificates',
         self::POST_inbreedingCoefficientReport => '/inbreeding-coefficients',
         self::POST_livestockReport => '/livestock',
         self::POST_vwaAnimalDetailsReport => '/vwa/animal-details',
+        self::POST_vwaUbnsOverviewReport => '/vwa/ubns-overview',
     ];
 
     /** @var string */
@@ -277,6 +279,49 @@ class ReportTest extends WebTestCase
             array(),
             $this->vwaEmployeeHeaders,
             json_encode($input)
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
+    }
+
+
+    /**
+     * @group post
+     * @group vwa
+     * @group report-vwa-ubns-overview
+     */
+    public function testVwaUbnsOverviewPost()
+    {
+        $input = [
+            "locations" => [
+                [
+                    "ubn" => self::$location->getUbn(),
+                ]
+            ]
+        ];
+        $jsonBody = json_encode($input);
+
+        $this->client->request(Request::METHOD_POST,
+            Endpoint::REPORT . $this->endpointSuffixes[self::POST_vwaUbnsOverviewReport],
+            array(),
+            array(),
+            $this->vwaEmployeeHeaders,
+            $jsonBody
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
+
+
+        $this->client->request(Request::METHOD_POST,
+            Endpoint::REPORT . $this->endpointSuffixes[self::POST_vwaUbnsOverviewReport].'?file_type=csv',
+            array(),
+            array(),
+            $this->vwaEmployeeHeaders,
+            $jsonBody
         );
 
         $response = $this->client->getResponse();
