@@ -81,6 +81,7 @@ class ProductionCacher
                            INNER JOIN litter l ON a.id = l.animal_father_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
                          WHERE date_of_birth NOTNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
+                            AND l.is_abortion = false AND l.is_pseudo_pregnancy = false
                          GROUP BY a.id
                 
                          UNION
@@ -117,6 +118,7 @@ class ProductionCacher
                            INNER JOIN litter l ON a.id = l.animal_mother_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
                          WHERE date_of_birth NOTNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
+                            AND l.is_abortion = false AND l.is_pseudo_pregnancy = false
                          GROUP BY a.id
                          UNION --Below when date of births are null
                 
@@ -143,6 +145,7 @@ class ProductionCacher
                            INNER JOIN litter l ON a.id = l.animal_father_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
                          WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
+                            AND l.is_abortion = false AND l.is_pseudo_pregnancy = false
                          GROUP BY a.id
                 
                          UNION
@@ -170,6 +173,7 @@ class ProductionCacher
                            INNER JOIN litter l ON a.id = l.animal_mother_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
                          WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
+                            AND l.is_abortion = false AND l.is_pseudo_pregnancy = false
                          GROUP BY a.id
                          
                          UNION
@@ -201,6 +205,7 @@ class ProductionCacher
                                           INNER JOIN animal_cache c ON c.animal_id = a.id
                                           LEFT JOIN
                                           ( SELECT * FROM litter WHERE status <> '".RequestStateType::REVOKED."'
+                                            AND is_abortion = false AND is_pseudo_pregnancy = false
                                           )l ON l.animal_father_id = a.id
                                         WHERE a.type = 'Ram' ".$animalIdFilterString."
                                         GROUP BY a.id
@@ -236,6 +241,7 @@ class ProductionCacher
                                           INNER JOIN animal_cache c ON c.animal_id = a.id
                                           LEFT JOIN
                                           ( SELECT * FROM litter WHERE status <> '".RequestStateType::REVOKED."'
+                                            AND is_abortion = false AND is_pseudo_pregnancy = false
                                           )l ON l.animal_mother_id = a.id
                                         WHERE a.type = 'Ewe' ".$animalIdFilterString."
                                         GROUP BY a.id
