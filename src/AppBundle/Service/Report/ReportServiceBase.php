@@ -26,10 +26,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Translation\DataCollectorTranslator;
 
 /**
  * Class ReportServiceBase
@@ -56,7 +56,7 @@ class ReportServiceBase
     protected $userService;
     /** @var TwigEngine */
     protected $templating;
-    /** @var DataCollectorTranslator */
+    /** @var Translator */
     protected $translator;
     /** @var GeneratorInterface */
     protected $knpGenerator;
@@ -93,7 +93,7 @@ class ReportServiceBase
      * @param CsvWriter $csvWriter
      * @param UserService $userService
      * @param TwigEngine $templating
-     * @param DataCollectorTranslator $translator
+     * @param TranslatorInterface $translator
      * @param GeneratorInterface $knpGenerator
      * @param String $folderName
      * @param String $rootDir
@@ -102,7 +102,7 @@ class ReportServiceBase
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
                                 UserService $userService, TwigEngine $templating,
-                                DataCollectorTranslator $translator,
+                                TranslatorInterface $translator,
                                 GeneratorInterface $knpGenerator, $cacheDir, $rootDir, $folderName, $filename = self::DEFAULT_FILENAME)
     {
         $this->em = $em;
