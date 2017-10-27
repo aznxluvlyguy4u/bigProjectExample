@@ -23,8 +23,8 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Translation\DataCollectorTranslator;
 
 class PedigreeCertificateReportService extends ReportServiceBase
 {
@@ -36,7 +36,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
     private $reportResults;
 
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, DataCollectorTranslator $translator, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, TranslatorInterface $translator, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
             $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
