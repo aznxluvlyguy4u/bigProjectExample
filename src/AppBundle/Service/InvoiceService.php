@@ -112,7 +112,7 @@ class InvoiceService extends ControllerServiceBase
         $year = new \DateTime();
         $year = $year->format('Y');
         $number = $this->getManager()->getRepository(Invoice::class)->getInvoicesOfCurrentYear($year);
-        if($number === null) {
+        if($number === null || count($number) == 0) {
             $number = (int)$year * 10000;
             $invoice->setInvoiceNumber($number);
         }
@@ -229,9 +229,8 @@ class InvoiceService extends ControllerServiceBase
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $content = RequestUtil::getContentAsArray($request);
         /** @var InvoiceRule $ruleTemplate */
-        $ruleTemplate = $this->getBaseSerializer()->deserializeToObject($content, InvoiceRule::class);
+        $ruleTemplate = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRule::class);
 
         $ruleTemplate->setInvoice($invoice);
         $this->persistAndFlush($ruleTemplate);
