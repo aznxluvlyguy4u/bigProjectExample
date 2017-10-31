@@ -237,6 +237,6 @@ class ActionLogAPIController extends APIController
      */
     public function getAccountOwnerIds(Request $request)
     {
-        return $this->get('api.action_log')->getAccountOwnerIds();
+        return $this->get('api.action_log')->getAccountOwnerPersonIds();
     }
 }
