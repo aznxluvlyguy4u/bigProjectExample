@@ -13,13 +13,19 @@ class ActionLogRepository extends BaseRepository
 {
 
     /**
-     * @param int $userAccountId
+     * @param int $userAccountPersonId
      * @return array
      */
-    public function getUserActionTypes($userAccountId)
+    public function getUserActionTypes($userAccountPersonId)
     {
-        $filter = is_int($userAccountId) || ctype_digit($userAccountId) ? 'WHERE user_account_id = '.$userAccountId : '';
-        $sql = "SELECT user_action_type FROM action_log $filter GROUP BY user_action_type ORDER BY user_action_type";
+        $filter = is_string($userAccountPersonId) || ctype_alnum($userAccountPersonId) ? "WHERE p.person_id = '".$userAccountPersonId."'" : "";
+        $sql = "
+            SELECT user_action_type
+            FROM action_log
+              LEFT JOIN person p ON p.id = action_log.user_account_id  
+            $filter 
+            GROUP BY user_action_type 
+            ORDER BY user_action_type";
         $results = $this->getConnection()->query($sql)->fetchAll();
         return array_keys(SqlUtil::getSingleValueGroupedSqlResults('user_action_type', $results));
     }
@@ -67,9 +73,9 @@ class ActionLogRepository extends BaseRepository
     /**
      * @return array
      */
-    public function getUserAccountIds()
+    public function getUserAccountPersonIds()
     {
-        $sql = "SELECT p.id, p.first_name, p.last_name
+        $sql = "SELECT p.person_id, p.first_name, p.last_name
                 FROM person p
                 INNER JOIN (
                     SELECT user_account_id FROM action_log
