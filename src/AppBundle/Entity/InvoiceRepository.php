@@ -23,12 +23,15 @@ class InvoiceRepository extends BaseRepository
                     ->where($qb->expr()->andX(
                         $qb->expr()->eq('i.ubn', ':ubn'),
                         $qb->expr()->orX(
-                            $qb->expr()->eq('i.status', InvoiceStatus::UNPAID),
-                            $qb->expr()->eq('i.status', InvoiceStatus::PAID),
-                            $qb->expr()->eq('i.status', InvoiceStatus::CANCELLED)
+                            $qb->expr()->eq('i.status', ':unpaid'),
+                            $qb->expr()->eq('i.status', ':paid'),
+                            $qb->expr()->eq('i.status', ':cancelled')
                             )
                     ))
-                    ->setParameter('ubn', $ubn);
+                    ->setParameter('ubn', $ubn)
+                    ->setParameter('unpaid', InvoiceStatus::UNPAID)
+                    ->setParameter('paid', InvoiceStatus::PAID)
+                    ->setParameter('cancelled', InvoiceStatus::CANCELLED);
         $result = new ArrayCollection($qb->getQuery()->getResult());
         return $result;
     }

@@ -48,9 +48,7 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleTem
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $content = RequestUtil::getContentAsArray($request);
-
-        $rule = $this->getBaseSerializer()->deserializeToObject($content, InvoiceRuleTemplate::class);
+        $rule = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRuleTemplate::class);
         $this->persistAndFlush($rule);
 
         $output = $this->getBaseSerializer()->getDecodedJson($rule, JmsGroup::INVOICE_RULE);
