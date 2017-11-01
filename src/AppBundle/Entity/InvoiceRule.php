@@ -67,7 +67,7 @@ class InvoiceRule
     /**
      * @var integer
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", options={"default":0})
      * @Assert\NotBlank
      * @JMS\Type("integer")
      * @JMS\Groups({
@@ -79,7 +79,7 @@ class InvoiceRule
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", options={"default":"GENERAL"})
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
@@ -90,7 +90,7 @@ class InvoiceRule
 
     /**
      * @var string
-     * @ORM\Column(type="string", name="type")
+     * @ORM\Column(type="string", name="type", options={"default":"custom"})
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE_RULE_TEMPLATE"
@@ -111,7 +111,7 @@ class InvoiceRule
 
     /**
      * @var boolean
-     * @ORM\Column(type="boolean", name="is_deleted")
+     * @ORM\Column(type="boolean", name="is_deleted", options={"default":false})
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "INVOICE_RULE_TEMPLATE"
