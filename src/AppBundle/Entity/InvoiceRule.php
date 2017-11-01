@@ -67,7 +67,7 @@ class InvoiceRule
     /**
      * @var integer
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", options={"default":0})
      * @Assert\NotBlank
      * @JMS\Type("integer")
      * @JMS\Groups({
@@ -79,7 +79,7 @@ class InvoiceRule
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", options={"default":"GENERAL"})
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
