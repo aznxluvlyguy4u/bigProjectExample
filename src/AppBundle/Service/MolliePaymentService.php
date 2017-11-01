@@ -3,7 +3,10 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Constant\Environment;
 use AppBundle\Entity\Invoice;
+use AppBundle\Enumerator\InvoiceStatus;
+use AppBundle\Enumerator\MollieEnums;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,11 +17,20 @@ class MolliePaymentService extends ControllerServiceBase
     /** @var MollieService */
     private $mollieService;
 
-    public function __construct(BaseSerializer $baseSerializer, CacheService $cacheService, EntityManagerInterface $manager, UserService $userService, MollieService $mollieService)
+    private $key;
+
+    public function __construct(BaseSerializer $baseSerializer, CacheService $cacheService, EntityManagerInterface $manager, UserService $userService, MollieService $mollieService, $testApiKey, $prodApiKey, $environment)
     {
         parent::__construct($baseSerializer, $cacheService, $manager, $userService);
 
         $this->mollieService = $mollieService;
+
+        if ($environment == Environment::PROD){
+            $this->key = $prodApiKey;
+        }
+        else {
+            $this->key = $testApiKey;
+        }
     }
 
 
@@ -49,19 +61,20 @@ class MolliePaymentService extends ControllerServiceBase
         $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(['id' => $id]);
         $payment = $this->mollieService->getPayment($invoice);
         switch ($payment->status){
-            case 'paid':
-                $invoice->setStatus("PAID");
+            case MollieEnums::PAID_STATUS:
+                $invoice->setStatus(InvoiceStatus::PAID);
                 break;
 
-            case 'cancelled':
-                $invoice->setStatus("CANCELLED");
+            case MollieEnums::CANCELLED_STATUS:
+                $invoice->setStatus(InvoiceStatus::CANCELLED);
                 break;
 
             default:
-                $invoice->setStatus("CANCELLED");
+                $invoice->setStatus(InvoiceStatus::CANCELLED);
                 break;
         }
         $this->persistAndFlush($invoice);
+        
         return ResultUtil::successResult($payment);
     }
 
@@ -74,7 +87,7 @@ class MolliePaymentService extends ControllerServiceBase
     {
         $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(['id' => $id]);
         $mollie = new \Mollie_API_Client();
-        $mollie->setApiKey("test_CgTemR5kRzGMEnyJfxvCyFV5JV4Ang");
+        $mollie->setApiKey($this->key);
         $payment = $mollie->payments->get($invoice->getMollieId());
         $this->persistAndFlush($invoice);
         return ResultUtil::successResult($payment);

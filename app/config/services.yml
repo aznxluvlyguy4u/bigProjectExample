@@ -615,6 +615,9 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@app.user'
           - '@app.mollie.service'
+          - '%mollie_test_api_key%'
+          - '%mollie_prod_api_key%'
+          - '%environment%'
 
     app.pedigree_register:
         parent: app.abstract_base.controller
