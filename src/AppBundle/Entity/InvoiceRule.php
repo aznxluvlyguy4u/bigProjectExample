@@ -90,7 +90,7 @@ class InvoiceRule
 
     /**
      * @var string
-     * @ORM\Column(type="string", name="type")
+     * @ORM\Column(type="string", name="type", options={"default":"custom"})
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE_RULE_TEMPLATE"
