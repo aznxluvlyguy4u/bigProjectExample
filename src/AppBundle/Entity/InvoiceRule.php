@@ -111,7 +111,7 @@ class InvoiceRule
 
     /**
      * @var boolean
-     * @ORM\Column(type="boolean", name="is_deleted")
+     * @ORM\Column(type="boolean", name="is_deleted", options={"default":false})
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "INVOICE_RULE_TEMPLATE"
