@@ -25,7 +25,7 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleTem
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $repository = $this->getManager()->getRepository(InvoiceRuleTemplate::class);
+        $repository = $this->getManager()->getRepository(InvoiceRuleTemplate::class); //TODO replace with InvoiceRule::class?
         $category = $request->get('category');
         if ($category != null) {
             $rules = $repository->findBy(array('category' => $category));
@@ -48,7 +48,7 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleTem
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $rule = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRuleTemplate::class);
+        $rule = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRuleTemplate::class);  //TODO replace with InvoiceRule::class?
         $this->persistAndFlush($rule);
 
         $output = $this->getBaseSerializer()->getDecodedJson($rule, JmsGroup::INVOICE_RULE);
@@ -68,7 +68,7 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleTem
         $content = RequestUtil::getContentAsArray($request);
 
         /** @var InvoiceRuleTemplate $updatedRule */
-        $updatedRule = $this->getBaseSerializer()->deserializeToObject($content, InvoiceRuleTemplate::class);
+        $updatedRule = $this->getBaseSerializer()->deserializeToObject($content, InvoiceRuleTemplate::class);  //TODO replace with InvoiceRule::class?
         $repository = $this->getManager()->getRepository(InvoiceRuleTemplate::class);
         /** @var InvoiceRuleTemplate $currentRule */
         $currentRule = $repository->find($content['id']);
@@ -92,7 +92,7 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleTem
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $repository = $this->getManager()->getRepository(InvoiceRuleTemplate::class);
+        $repository = $this->getManager()->getRepository(InvoiceRuleTemplate::class);  //TODO replace with InvoiceRule::class?
         $rule = $repository->find($invoiceRule);
 
         if(!$rule) { return ResultUtil::errorResult('THE INVOICE RULE  IS NOT FOUND.', 428); }
