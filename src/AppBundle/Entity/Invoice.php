@@ -180,7 +180,7 @@ class Invoice
 
     /**
      * @var bool
-     * @ORM\Column(name="is_deleted", type="boolean")
+     * @ORM\Column(name="is_deleted", type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "INVOICE"
