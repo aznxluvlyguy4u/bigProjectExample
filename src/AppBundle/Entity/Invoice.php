@@ -159,7 +159,7 @@ class Invoice
     /**
      * @var InvoiceSenderDetails
      * @ORM\ManyToOne(targetEntity="InvoiceSenderDetails")
-     * @ORM\JoinColumn(name="invoice_invoice_sender_details_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="invoice_sender_details_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
      * @JMS\Groups({
      *     "INVOICE"
