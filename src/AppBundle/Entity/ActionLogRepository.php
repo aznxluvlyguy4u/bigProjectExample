@@ -75,7 +75,7 @@ class ActionLogRepository extends BaseRepository
      */
     public function getUserAccountPersonIds()
     {
-        $sql = "SELECT p.person_id, p.first_name, p.last_name
+        $sql = "SELECT p.person_id, p.first_name, p.last_name, p.type, p.email_address, p.is_active
                 FROM person p
                 INNER JOIN (
                     SELECT user_account_id FROM action_log
