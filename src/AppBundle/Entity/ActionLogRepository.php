@@ -54,7 +54,10 @@ class ActionLogRepository extends BaseRepository
         $userActionTypeQuery = $userActionType !== null
             ? $qb->expr()->eq('action_log.userActionType', "'".$userActionType."'") : null;
         $userAccountIdQuery = $userAccountId !== null
-            ? $qb->expr()->eq('action_log.userAccount', $userAccountId) : null;
+            ? $qb->expr()->orX(
+                $qb->expr()->eq('action_log.userAccount', $userAccountId),
+                $qb->expr()->eq('action_log.actionBy', $userAccountId)
+            ): null;
 
         if ($startDateQuery !== null || $endDateQuery !== null || $userActionTypeQuery !== null || $userAccountIdQuery !== null) {
             $qb->where($qb->expr()->andX(
@@ -75,7 +78,7 @@ class ActionLogRepository extends BaseRepository
      */
     public function getUserAccountPersonIds()
     {
-        $sql = "SELECT p.person_id, p.first_name, p.last_name
+        $sql = "SELECT p.person_id, p.first_name, p.last_name, p.type, p.email_address, p.is_active
                 FROM person p
                 INNER JOIN (
                     SELECT user_account_id FROM action_log
