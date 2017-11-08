@@ -54,7 +54,10 @@ class ActionLogRepository extends BaseRepository
         $userActionTypeQuery = $userActionType !== null
             ? $qb->expr()->eq('action_log.userActionType', "'".$userActionType."'") : null;
         $userAccountIdQuery = $userAccountId !== null
-            ? $qb->expr()->eq('action_log.userAccount', $userAccountId) : null;
+            ? $qb->expr()->orX(
+                $qb->expr()->eq('action_log.userAccount', $userAccountId),
+                $qb->expr()->eq('action_log.actionBy', $userAccountId)
+            ): null;
 
         if ($startDateQuery !== null || $endDateQuery !== null || $userActionTypeQuery !== null || $userAccountIdQuery !== null) {
             $qb->where($qb->expr()->andX(
