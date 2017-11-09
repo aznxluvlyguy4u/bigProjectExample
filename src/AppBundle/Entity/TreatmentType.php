@@ -77,6 +77,9 @@ class TreatmentType
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     * })
      */
     private $logDate;
 
@@ -85,6 +88,9 @@ class TreatmentType
      * @ORM\ManyToOne(targetEntity="Employee")
      * @ORM\JoinColumn(name="creation_by", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Employee")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     * })
      */
     private $creationBy;
 
@@ -93,6 +99,9 @@ class TreatmentType
      * @ORM\ManyToOne(targetEntity="Employee")
      * @ORM\JoinColumn(name="edited_by", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Employee")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     * })
      */
     private $editedBy;
 
@@ -101,6 +110,9 @@ class TreatmentType
      * @ORM\ManyToOne(targetEntity="Employee")
      * @ORM\JoinColumn(name="deleted_by", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Employee")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     * })
      */
     private $deletedBy;
 
