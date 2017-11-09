@@ -177,6 +177,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
 
             if ($isSimpleUpdate) {
                 $treatmentTypeInDb->setDescription($newDescription);
+                $treatmentTypeInDb->setLogDate(new \DateTime());
                 $this->getManager()->persist($treatmentTypeInDb);
                 $this->getManager()->flush();
             }
@@ -205,6 +206,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
         if ($treatmentType->isActive() === false) { return Validator::createJsonResponse('Template has already been deactivated', 428); }
 
         $treatmentType->setIsActive(false);
+        $treatmentType->setLogDate(new \DateTime());
         $this->getManager()->persist($treatmentType);
         $this->getManager()->flush();
 
