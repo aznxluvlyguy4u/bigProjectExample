@@ -71,7 +71,7 @@ class UbnService extends DeclareControllerServiceBase
         $activeOnly = RequestUtil::getBooleanQuery($request,QueryParameter::ACTIVE_ONLY,true);
         $filter = $activeOnly ? ['isActive' => true] : [];
 
-        $ubns = $this->getManager()->getRepository(Location::class)->findBy($filter, []);//['ubn' => 'ASC']);
+        $ubns = $this->getManager()->getRepository(Location::class)->findBy($filter, ['ubn' => 'ASC']);
         $output = $this->getBaseSerializer()->getDecodedJson($ubns, [JmsGroup::MINIMAL]);
         return ResultUtil::successResult($output);
     }
