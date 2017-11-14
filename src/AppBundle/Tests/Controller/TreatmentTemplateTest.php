@@ -35,6 +35,8 @@ class TreatmentTemplateTest extends WebTestCase
     const EDIT_location = 'EDIT_location';
     const DELETE_individual = 'DELETE_individual';
     const DELETE_location = 'DELETE_location';
+    const PATCH_individual = 'PATCH_individual';
+    const PATCH_location = 'PATCH_location';
 
     private $endpointSuffixes = [
         self::GET_individualDefault => '/template/individual',
@@ -47,6 +49,8 @@ class TreatmentTemplateTest extends WebTestCase
         self::EDIT_location => '/location/template/',//{templateId}
         self::DELETE_individual => '/individual/template/',//{templateId}
         self::DELETE_location => '/location/template/',//{templateId}
+        self::PATCH_individual => '/individual/template/',//{templateId}
+        self::PATCH_location => '/location/template/',//{templateId}
     ];
 
     /** @var string */
@@ -147,7 +151,7 @@ class TreatmentTemplateTest extends WebTestCase
      * @group cud
      * @group treatment-template-type-cud
      */
-    public function testCreateUpdateDelete()
+    public function testCreateUpdateDeleteReactivate()
     {
         //TODO
     }

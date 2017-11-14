@@ -28,6 +28,9 @@ class MedicationOption
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE"
+     * })
      */
     private $id;
 
