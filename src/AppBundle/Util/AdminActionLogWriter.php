@@ -119,6 +119,29 @@ class AdminActionLogWriter
 
     /**
      * @param ObjectManager $em
+     * @param Client $accountOwner
+     * @param Employee $admin
+     * @param TreatmentTemplate $template
+     * @return ActionLog
+     */
+    public static function reactivateTreatmentTemplate(ObjectManager $em, $accountOwner, $admin, $template)
+    {
+        $description =
+            'id: '.$template->getId()
+            .', type: '.$template->getDutchType()
+            .', ubn: '.$template->getUbn('')
+            .', beschrijving: '.$template->getDescription()
+        ;
+
+        $log = new ActionLog($accountOwner, $admin, UserActionType::TREATMENT_TEMPLATE_REACTIVATE, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $em
      * @param Employee $admin
      * @param Request $request
      * @param TreatmentType $treatmentType

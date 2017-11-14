@@ -134,9 +134,10 @@ class TreatmentServiceBase extends ControllerServiceBase
     /**
      * @param int $templateId
      * @param string $type
+     * @param boolean $ignoreIsActiveState
      * @return JsonResponse|TreatmentTemplate|null|object|string
      */
-    protected function getTemplateByIdAndType($templateId, $type)
+    protected function getTemplateByIdAndType($templateId, $type, $ignoreIsActiveState = false)
     {
         if (!ctype_digit($templateId) && !is_int($templateId)) {
             return Validator::createJsonResponse('TemplateId must be an integer', 428);
@@ -151,7 +152,7 @@ class TreatmentServiceBase extends ControllerServiceBase
                 .' found for id '.$templateId, 428);
         }
 
-        if ($template->isActive() === false) {
+        if ($template->isActive() === false && !$ignoreIsActiveState) {
             return Validator::createJsonResponse('Template has already been deactivated', 428);
         }
         return $template;

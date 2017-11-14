@@ -122,13 +122,13 @@ nelmio_cors:
        '^/api/':
            allow_origin: ['*']
            allow_headers: ['*']
-           allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS']
+           allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS', 'PATCH']
            max_age: 3600
        '^/':
            origin_regex: true
            allow_origin: ['*']
            allow_headers: ['*']
-           allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS']
+           allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS', 'PATCH']
            max_age: 3600
            hosts: ['^api\.']
 
