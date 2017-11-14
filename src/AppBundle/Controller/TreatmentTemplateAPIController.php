@@ -744,4 +744,134 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     }
 
 
+    /**
+     * Reactivate individual treatment templates
+     *
+     * ### Request body ###
+     *
+     *  none
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "UBN",
+     *          "id": 8,
+     *          "description": "Myiasisbehandeling",
+     *          "medications":
+     *          [
+     *              {
+     *                  "description": "ubuntuproven 100%",
+     *                  "dosage": 16.4
+     *              },
+     *              {
+     *                  "description": "genetic recombinator 666%",
+     *                  "dosage": 10000000
+     *              }
+     *          ],
+     *          "is_active": false,
+     *          "type": "LOCATION"
+     *      }
+     *  }
+     *
+     * @ApiDoc(
+     *   section = "Treatment Template",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Reactivate individual treatment templates",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
+     * )
+     * @param Request $request the request object
+     * @param int $templateId
+     * @return JsonResponse
+     * @Route("/individual/template/{templateId}")
+     * @Method("PATCH")
+     */
+    function reactivateIndividualTemplate(Request $request, $templateId) {
+        return $this->get('app.treatment.template')->reactivateIndividualTemplate($request, $templateId);
+    }
+
+
+    /**
+     * Reactivate location treatment templates
+     *
+     * ### Request body ###
+     *
+     *  none
+     *
+     * ### Response body ###
+     *
+     *  {
+     *      "result": {
+     *          "dutchType": "UBN",
+     *          "id": 8,
+     *          "description": "Myiasisbehandeling",
+     *          "medications":
+     *          [
+     *              {
+     *                  "description": "ubuntuproven 100%",
+     *                  "dosage": 16.4
+     *              },
+     *              {
+     *                  "description": "genetic recombinator 666%",
+     *                  "dosage": 10000000
+     *              }
+     *          ],
+     *          "is_active": false,
+     *          "type": "LOCATION"
+     *      }
+     *  }
+     *
+     * @ApiDoc(
+     *   section = "Treatment Template",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Reactivate location treatment templates",
+     *   statusCodes={200="Returned when successful", 428="Returned for invalid input"},
+     *   input="json",
+     *   output="json"
+     * )
+     * @param Request $request the request object
+     * @param int $templateId
+     * @return JsonResponse
+     * @Route("/location/template/{templateId}")
+     * @Method("PATCH")
+     */
+    function reactivateLocationTemplate(Request $request, $templateId) {
+        return $this->get('app.treatment.template')->reactivateLocationTemplate($request, $templateId);
+    }
 }
