@@ -533,7 +533,8 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             [ self::TABLE_NAME => 'ulns_history',           self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'blindness_factor',       self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'predicate',              self::VARIABLE_TYPE => 'animal_id' ],
-            [ self::TABLE_NAME => 'worm_resistance',              self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'tag',                    self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'worm_resistance',        self::VARIABLE_TYPE => 'animal_id' ],
         ];
 
         $mergeResults = $this->mergeColumnValuesInTables($primaryAnimalId, $secondaryAnimalId, $tableNamesByVariableType);
@@ -581,7 +582,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             'parent_father_id', 'parent_mother_id', 'location_id', 'pedigree_country_code', 'pedigree_number', 'name',
             'date_of_birth', 'transfer_state', 'uln_country_code', 'uln_number', 'animal_order_number', 'is_import_animal',
             'is_export_animal', 'is_departed_animal', 'animal_country_origin', 'pedigree_register_id', 'ubn_of_birth', 'location_of_birth_id', 'scrapie_genotype', 'predicate', 'predicate_score', 'nickname', 'blindness_factor',
-            'myo_max', 'collar_color', 'collar_number', 'heterosis', 'recombination', 'updated_gene_diversity'
+            'myo_max', 'collar_color', 'collar_number', 'heterosis', 'recombination', 'updated_gene_diversity', 'tag_id' ,
         ];
 
         foreach ($columnHeaders as $columnHeader) {
