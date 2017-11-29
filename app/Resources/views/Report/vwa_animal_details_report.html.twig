@@ -9893,6 +9893,9 @@
 
 {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
+{% set totalPages = 1 %}
+{# WARNING! if logs are activated and span more than one page, then then pagenumbering will be incorrect #}
+
 {% for animal in variables.animals %}
 
 <div id="livestock" class="content-container">
@@ -9900,7 +9903,7 @@
                 <ul class="breadcrumbs">
                     <li>Dierkaart</li>
                     <li>{{ animal.getUln }}</li>
-                    <li>pagina 1</li>
+                    <li>pagina 1 van {{ totalPages }}</li>
                     <li>{{ "now"|date("d-m-Y") }}</li>
                 </ul>
             </div>
@@ -10141,56 +10144,59 @@
                             <footer>
                             </footer>
 
-                            <div class="row">
-                                <ul class="breadcrumbs">
-                                    <li>Dierkaart</li>
-                                    <li>{{ animal.getUln }}</li>
-                                    <li>pagina 2</li>
-                                </ul>
-                            </div>
+                            {#<div class="row">#}
+                                {#<ul class="breadcrumbs">#}
+                                    {#<li>Dierkaart</li>#}
+                                    {#<li>{{ animal.getUln }}</li>#}
+                                    {#<li>pagina 2 van {{ totalPages }}</li>#}
+                                    {##}
+                            {# WARNING! if logs span more than one page, then then pagenumbering is incorrect #}
+                                    {##}
+                                {#</ul>#}
+                            {#</div>#}
 
-                            {% set language = constant('AppBundle\\Enumerator\\Language::NL') %}
+                            {#{% set language = constant('AppBundle\\Enumerator\\Language::NL') %}#}
 
-                            <div class="row">
-                                <div class="large-12 columns">
-                                    <table class="animal-logs">
-                                        <thead>
-                                        <tr>
-                                            <td>Datum</td>
-                                            <td>Gebeurtenis datum</td>
-                                            <td>Gebeurtenis</td>
-                                            <td>Door</td>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
+                            {#<div class="row">#}
+                                {#<div class="large-12 columns">#}
+                                    {#<table class="animal-logs">#}
+                                        {#<thead>#}
+                                        {#<tr>#}
+                                            {#<td>Datum</td>#}
+                                            {#<td>Gebeurtenis datum</td>#}
+                                            {#<td>Gebeurtenis</td>#}
+                                            {#<td>Door</td>#}
+                                        {#</tr>#}
+                                        {#</thead>#}
+                                        {#<tbody>#}
 
-                                        {% for event in animal.getEvents %}
+                                        {#{% for event in animal.getEvents %}#}
 
-                                        <tr>
-                                            <td>
-                                                <span>{{ event.logDate.format('Y-m-d h:m') }}</span>
-                                            </td>
-                                            <td>
-                                                <span>{{ event.getEventDate }}</span>
-                                            </td>
-                                            <td>
-                                                <span>{{ event.getDeclareLogMessage(language) }}</span></td>
-                                            <td>
-                                                {{ event.actionBy ? event.actionBy.getFullName : '' }}
-                                            </td>
-                                        </tr>
+                                        {#<tr>#}
+                                            {#<td>#}
+                                                {#<span>{{ event.logDate.format('Y-m-d h:m') }}</span>#}
+                                            {#</td>#}
+                                            {#<td>#}
+                                                {#<span>{{ event.getEventDate }}</span>#}
+                                            {#</td>#}
+                                            {#<td>#}
+                                                {#<span>{{ event.getDeclareLogMessage(language) }}</span></td>#}
+                                            {#<td>#}
+                                                {#{{ event.actionBy ? event.actionBy.getFullName : '' }}#}
+                                            {#</td>#}
+                                        {#</tr>#}
 
-                                        {% endfor %}
+                                        {#{% endfor %}#}
 
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                        {#</tbody>#}
+                                    {#</table>#}
+                                {#</div>#}
+                            {#</div>#}
                         </div>
-                    </div>
             </div>
+</div>
 
-    <footer></footer>
+<footer></footer>
 
 {% endfor %}
 
