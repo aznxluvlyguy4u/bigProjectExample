@@ -582,7 +582,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             'parent_father_id', 'parent_mother_id', 'location_id', 'pedigree_country_code', 'pedigree_number', 'name',
             'date_of_birth', 'transfer_state', 'uln_country_code', 'uln_number', 'animal_order_number', 'is_import_animal',
             'is_export_animal', 'is_departed_animal', 'animal_country_origin', 'pedigree_register_id', 'ubn_of_birth', 'location_of_birth_id', 'scrapie_genotype', 'predicate', 'predicate_score', 'nickname', 'blindness_factor',
-            'myo_max', 'collar_color', 'collar_number', 'heterosis', 'recombination', 'updated_gene_diversity', 'tag_id' ,
+            'myo_max', 'collar_color', 'collar_number', 'heterosis', 'recombination', 'updated_gene_diversity' ,
         ];
 
         foreach ($columnHeaders as $columnHeader) {
@@ -649,7 +649,51 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         $secondaryVsmId = $secondaryAnimalResultArray['name'];
         VsmIdGroupRepository::saveVsmIdGroup($this->conn, $primaryVsmId, $secondaryVsmId);
 
+        $this->mergeMissingAnimalValuesWithUniqueValueConstraintsIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray);
+
         return true;
+    }
+
+
+    /**
+     * @param array $primaryAnimalResultArray
+     * @param array $secondaryAnimalResultArray
+     * @return boolean
+     */
+    private function mergeMissingAnimalValuesWithUniqueValueConstraintsIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray)
+    {
+        $animalSqlBeginning = 'UPDATE animal SET ';
+
+        $primaryAnimalSqlMiddle = '';
+        $primaryAnimalSqlEnd = ' WHERE id = '.$primaryAnimalResultArray['id'];
+
+        $secondaryAnimalSqlMiddle = '';
+        $secondaryAnimalSqlEnd = ' WHERE id = '.$secondaryAnimalResultArray['id'];
+
+        /* Keep values of primary animal if filled
+           if empty complement the data with that of the secondary animal */
+
+        $columnHeaders = [
+            'tag_id' => "NULL",
+        ];
+
+        foreach ($columnHeaders as $columnHeader => $emptyValue) {
+            $valuePrimaryValue = $primaryAnimalResultArray[$columnHeader];
+            $valueSecondaryValue = $secondaryAnimalResultArray[$columnHeader];
+
+            if($valuePrimaryValue === null && $valueSecondaryValue !== null) {
+                $primaryAnimalSqlMiddle = $primaryAnimalSqlMiddle.' '.$columnHeader." = '".$valueSecondaryValue."',";
+                $secondaryAnimalSqlMiddle = $secondaryAnimalSqlMiddle.' '.$columnHeader." = ".$emptyValue.",";
+            }
+        }
+
+        if($primaryAnimalSqlMiddle != '') {
+            // Remove values from secondary animal first
+            $this->conn->exec($animalSqlBeginning.rtrim($secondaryAnimalSqlMiddle,',').$secondaryAnimalSqlEnd);
+            $this->conn->exec($animalSqlBeginning.rtrim($primaryAnimalSqlMiddle,',').$primaryAnimalSqlEnd);
+            return true;
+        }
+        return false;
     }
 
 
