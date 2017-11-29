@@ -9894,7 +9894,7 @@
 
 {% set fullUsername = variables.name %}
 
-{% set totalPages = 1 %}
+{% set totalPages = variables.animals|length %}
 {# WARNING! if logs are activated and span more than one page, then then pagenumbering will be incorrect #}
 
 {% for animal in variables.animals %}
@@ -9904,7 +9904,7 @@
                 <ul class="breadcrumbs">
                     <li>DIERKAART</li>
                     <li>{{ animal.getUln }}</li>
-                    <li>PAGINA 1 van {{ totalPages }}</li>
+                    <li>PAGINA {{ loop.index }} van {{ totalPages }}</li>
                     <li>{{ "now"|date("d-m-Y") }}</li>
                     <li>{{ fullUsername }}</li>
                 </ul>
