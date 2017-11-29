@@ -76,6 +76,7 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
 
         $this->data[ReportLabel::ANIMALS] = $animals;
         $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
+        $this->data[ReportLabel::NAME] = $this->getUser()->getFullName();
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
         $fileType = $fileType !== FileType::CSV ? FileType::PDF : $fileType;

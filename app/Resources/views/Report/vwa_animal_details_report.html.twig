@@ -5300,7 +5300,6 @@
             font-size: .6875rem;
             color: #0a0a0a;
             cursor: default;
-            text-transform: uppercase
         }
 
         .breadcrumbs li:not(:last-child):after {
@@ -9893,6 +9892,8 @@
 
 {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
+{% set fullUsername = variables.name %}
+
 {% set totalPages = 1 %}
 {# WARNING! if logs are activated and span more than one page, then then pagenumbering will be incorrect #}
 
@@ -9901,10 +9902,11 @@
 <div id="livestock" class="content-container">
             <div class="row">
                 <ul class="breadcrumbs">
-                    <li>Dierkaart</li>
+                    <li>DIERKAART</li>
                     <li>{{ animal.getUln }}</li>
-                    <li>pagina 1 van {{ totalPages }}</li>
+                    <li>PAGINA 1 van {{ totalPages }}</li>
                     <li>{{ "now"|date("d-m-Y") }}</li>
+                    <li>{{ fullUsername }}</li>
                 </ul>
             </div>
 
@@ -10146,9 +10148,9 @@
 
                             {#<div class="row">#}
                                 {#<ul class="breadcrumbs">#}
-                                    {#<li>Dierkaart</li>#}
+                                    {#<li>DIERKAART</li>#}
                                     {#<li>{{ animal.getUln }}</li>#}
-                                    {#<li>pagina 2 van {{ totalPages }}</li>#}
+                                    {#<li>PAGINA 2 van {{ totalPages }}</li>#}
                                     {##}
                             {# WARNING! if logs span more than one page, then then pagenumbering is incorrect #}
                                     {##}
