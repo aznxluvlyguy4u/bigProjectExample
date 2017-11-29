@@ -9,6 +9,7 @@
     {% set columnsPerPage = 1 %}
     {% set locationsCount = variables.locations|length %}
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+    {% set fullUsername = variables.name %}
 
     {# HEADER #}
 
@@ -16,8 +17,8 @@
         <img src="{{ imagesDirectory }}" width="556" height="70" />
     </div>
 
-    {% set title = 'UBN gezondheidsstatus overzicht voor VWA' %}
-    {% set subTitle = 'datum: ' ~ "now"|date('d-m-Y H:i:s') %}
+    {% set title = 'UBN gezondheidsstatus overzicht voor Derden' %}
+    {% set subTitle = 'datum: ' ~ "now"|date('d-m-Y H:i:s')  ~ ', aangevraagd door: ' ~ fullUsername%}
 
     <h2>{{ title }}</h2>
 
@@ -36,10 +37,10 @@
 
             <tr>
                 <td class="tg-yw4r">UBN</td>
-                <td class="tg-yw4l">zwoegerziekte</td>
-                <td class="tg-yw4l">scrapie</td>
-                <td class="tg-yw4l">caseous lymphadenitis</td>
-                <td class="tg-lqy6">cae</td>
+                <td class="tg-yw4l">Zwoegerziekte</td>
+                <td class="tg-yw4l">Scrapie</td>
+                <td class="tg-yw4l">Caseous Lymphadenitis</td>
+                <td class="tg-lqy6">CAE</td>
             </tr>
         {% endif %}
 

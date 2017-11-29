@@ -67,7 +67,7 @@ class EmailService
             $subjectHeader = Constant::NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER;
 
         } elseif ($person instanceof VwaEmployee) {
-            $subjectHeader = Constant::NEW_VWA_PASSWORD_MAIL_SUBJECT_HEADER;
+            $subjectHeader = Constant::NEW_THIRD_PARTY_PASSWORD_MAIL_SUBJECT_HEADER;
 
         } else {
             $subjectHeader = Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER;
@@ -184,7 +184,7 @@ class EmailService
     {
         //Confirmation message back to the sender
         $message = \Swift_Message::newInstance()
-            ->setSubject(Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER)
+            ->setSubject(Constant::NEW_THIRD_PARTY_PASSWORD_MAIL_SUBJECT_HEADER)
             ->setFrom($this->mailerSourceAddress)
             ->setTo($emailData[JsonInputConstant::EMAIL_ADDRESS])
             ->setBody(
@@ -211,7 +211,7 @@ class EmailService
         if ($person instanceof Employee) {
             $type = 'NSFO Online ADMIN'; //TODO
         } elseif ($person instanceof VwaEmployee) {
-            $type = 'NSFO Online VWA'; //TODO
+            $type = 'NSFO Online Derden'; //TODO
         }
 
         $subjectHeader = $type . ': wachtwoord reset aanvraag';
@@ -249,7 +249,7 @@ class EmailService
     {
         $salutation = 'Beste heer/mevrouw';
         if ($person instanceof Employee) { $salutation = 'Beste admin'; }
-        elseif ($person instanceof VwaEmployee) { $salutation = 'Beste VWA medewerker'; }
+        elseif ($person instanceof VwaEmployee) { $salutation = 'Beste gebruiker'; }
         elseif ($person instanceof Client) { $salutation = 'Beste klant'; }
         return $salutation;
     }
