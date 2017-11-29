@@ -12,6 +12,7 @@ use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Constant\Constant;
+use AppBundle\Service\EmailService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -27,10 +28,13 @@ class LocationHealthUpdater
 {
     /** @var EntityManagerInterface */
     private $em;
+    /** @var EmailService */
+    private $emailService;
 
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, EmailService $emailService)
     {
         $this->em = $em;
+        $this->emailService = $emailService;
     }
 
 
@@ -206,11 +210,13 @@ class LocationHealthUpdater
      */
     private function finalizeLocationHealthMessage($messageObject, $locationHealthDestination, $locationHealthOrigin, $illnesses)
     {
-        $locationHealthMessage = LocationHealthMessageBuilder::finalize($this->em, $messageObject, $illnesses, $locationHealthDestination, $locationHealthOrigin);
+        $locationHealthMessage = LocationHealthMessageBuilder::finalize($messageObject, $illnesses, $locationHealthDestination, $locationHealthOrigin);
 
         //Persist LocationHealthMessage
         $this->em->persist($locationHealthMessage);
         $this->em->flush();
+
+        $this->emailService->sendPossibleSickAnimalArrivalNotificationEmail($locationHealthMessage);
     }
 
     /**

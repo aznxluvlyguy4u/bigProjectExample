@@ -9,6 +9,7 @@ use AppBundle\Constant\Environment;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\VwaEmployee;
 use Symfony\Bridge\Twig\TwigEngine;
@@ -21,15 +22,30 @@ class EmailService
     private $swiftMailer;
     /** @var string */
     private $mailerSourceAddress;
+    /** @var array */
+    private $notificationEmailAddresses;
     /** @var TwigEngine */
     private $templating;
 
-    public function __construct(\Swift_Mailer $swiftMailer, $mailerSourceAddress, TwigEngine $templating, $environment)
+    public function __construct(\Swift_Mailer $swiftMailer,
+                                $mailerSourceAddress,
+                                $notificationEmailAddresses,
+                                TwigEngine $templating,
+                                $environment
+    )
     {
         $this->environment = $environment;
         $this->swiftMailer = $swiftMailer;
         $this->mailerSourceAddress = $mailerSourceAddress;
         $this->templating = $templating;
+
+        if (is_array($notificationEmailAddresses)) {
+            $this->notificationEmailAddresses = $notificationEmailAddresses;
+        } elseif (is_string($notificationEmailAddresses)) {
+            $this->notificationEmailAddresses = [$notificationEmailAddresses];
+        } else {
+            throw new \Exception('notification_email_addresses parameter must be a string or array');
+        }
     }
 
 
@@ -255,4 +271,43 @@ class EmailService
     }
 
 
+    /**
+     * @param LocationHealthMessage $locationHealthMessage
+     * @return bool
+     */
+    public function sendPossibleSickAnimalArrivalNotificationEmail(LocationHealthMessage $locationHealthMessage)
+    {
+        if ($locationHealthMessage === null) {
+            return false;
+        }
+
+        if ($locationHealthMessage->getReasonOfHealthStatusDemotion() === 'DeclareArrival') {
+            $arrivalVerbType = 'aangevoerd';
+            $senderInfo = ' van UBN '.$locationHealthMessage->getUbnPreviousOwner();
+        } else {
+            $arrivalVerbType = 'geimporteerd';
+            $senderInfo = ' vanuit land '.$locationHealthMessage->getAnimalCountryOrigin();
+        } $locationHealthMessage->getUbnPreviousOwner();
+
+        $introMessage = 'Er is een dier '.$arrivalVerbType.' op ' . $locationHealthMessage->getUbnNewOwner() . $senderInfo . '.';
+
+        $message = \Swift_Message::newInstance()
+            ->setSubject(Constant::POSSIBLE_SICK_ANIMAL_ARRIVAL_MAIL_SUBJECT_HEADER)
+            ->setFrom($this->mailerSourceAddress)
+            ->setTo($this->notificationEmailAddresses)
+            ->setBody(
+                $this->templating->render(
+                // app/Resources/views/...
+                    'Notification/possible_sick_animal_arrival_email.html.twig',
+                    [
+                        'locationHealthMessage' => $locationHealthMessage,
+                        'introMessage' => $introMessage,
+                    ]
+                ),
+                'text/html'
+            )
+            ->setSender($this->mailerSourceAddress);
+
+        return $this->swiftMailer->send($message) > 0;
+    }
 }

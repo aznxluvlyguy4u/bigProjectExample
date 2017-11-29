@@ -58,20 +58,15 @@ class LocationHealthMessageBuilder
     }
 
     /**
-     * @param ObjectManager $em
      * @param DeclareArrival|DeclareImport $declareIn
      * @param ArrayCollection $illnesses
      * @param LocationHealth $locationHealthDestination
      * @param LocationHealth|null $locationHealthOrigin
      * @return LocationHealthMessage
      */
-    public static function finalize(ObjectManager $em, $declareIn, ArrayCollection $illnesses, LocationHealth $locationHealthDestination, LocationHealth $locationHealthOrigin = null)
+    public static function finalize($declareIn, ArrayCollection $illnesses, LocationHealth $locationHealthDestination, LocationHealth $locationHealthOrigin = null)
     {
-        $location = $declareIn->getLocation();
-
         $healthMessage = $declareIn->getHealthMessage();
-
-
 
         //Set Illnesses
         $healthMessage->setMaediVisna($illnesses->get(Constant::MAEDI_VISNA));
