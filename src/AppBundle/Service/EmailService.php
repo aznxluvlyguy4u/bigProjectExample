@@ -211,7 +211,7 @@ class EmailService
         if ($person instanceof Employee) {
             $type = 'NSFO Online ADMIN'; //TODO
         } elseif ($person instanceof VwaEmployee) {
-            $type = 'NSFO Online VWA'; //TODO
+            $type = 'NSFO Online Derden'; //TODO
         }
 
         $subjectHeader = $type . ': wachtwoord reset aanvraag';
@@ -249,7 +249,7 @@ class EmailService
     {
         $salutation = 'Beste heer/mevrouw';
         if ($person instanceof Employee) { $salutation = 'Beste admin'; }
-        elseif ($person instanceof VwaEmployee) { $salutation = 'Beste VWA medewerker'; }
+        elseif ($person instanceof VwaEmployee) { $salutation = 'Beste gebruiker'; }
         elseif ($person instanceof Client) { $salutation = 'Beste klant'; }
         return $salutation;
     }
