@@ -67,7 +67,7 @@ class EmailService
             $subjectHeader = Constant::NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER;
 
         } elseif ($person instanceof VwaEmployee) {
-            $subjectHeader = Constant::NEW_VWA_PASSWORD_MAIL_SUBJECT_HEADER;
+            $subjectHeader = Constant::NEW_THIRD_PARTY_PASSWORD_MAIL_SUBJECT_HEADER;
 
         } else {
             $subjectHeader = Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER;
@@ -184,7 +184,7 @@ class EmailService
     {
         //Confirmation message back to the sender
         $message = \Swift_Message::newInstance()
-            ->setSubject(Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER)
+            ->setSubject(Constant::NEW_THIRD_PARTY_PASSWORD_MAIL_SUBJECT_HEADER)
             ->setFrom($this->mailerSourceAddress)
             ->setTo($emailData[JsonInputConstant::EMAIL_ADDRESS])
             ->setBody(
