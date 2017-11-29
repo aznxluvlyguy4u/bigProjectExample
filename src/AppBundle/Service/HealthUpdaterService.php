@@ -3,38 +3,30 @@
 namespace AppBundle\Service;
 
 
-use AppBundle\Component\LocationHealthMessageBuilder;
-use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthMessage;
-use AppBundle\Entity\LocationHealthQueue;
-use AppBundle\Entity\LocationHealthQueueRepository;
-use AppBundle\Entity\LocationHealthRepository;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Util\Finder;
-use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 
 class HealthUpdaterService
 {
-    /** @var ObjectManager */
+    /** @var EntityManagerInterface */
     private $entityManager;
+    /** @var LocationHealthUpdater $locationHealthUpdater */
+    private $locationHealthUpdater;
 
     /**
      * HealthUpdaterService constructor.
-     * @param $entityManager
+     * @param EntityManagerInterface $entityManager
+     * @param LocationHealthUpdater $locationHealthUpdater
      */
-    public function __construct(ObjectManager $entityManager)
+    public function __construct(EntityManagerInterface $entityManager, LocationHealthUpdater $locationHealthUpdater)
     {
         $this->entityManager = $entityManager;
+        $this->locationHealthUpdater = $locationHealthUpdater;
     }
 
 
@@ -78,17 +70,14 @@ class HealthUpdaterService
      */
     private function updateLocationHealthByArrivalOrImport(Location $location, $declareIn, $isDeclareBaseIn)
     {
-        $em = $this->entityManager;
-
         if($declareIn instanceof DeclareArrival) {
-            LocationHealthUpdater::updateByGivenUbnOfOrigin($em, $location, $declareIn, $isDeclareBaseIn);
+            $this->locationHealthUpdater->updateByGivenUbnOfOrigin($location, $declareIn, $isDeclareBaseIn);
 
         } else if ($declareIn instanceof DeclareImport) {
-            LocationHealthUpdater::updateWithoutOriginHealthData($em, $location, $declareIn, $isDeclareBaseIn);
+            $this->locationHealthUpdater->updateWithoutOriginHealthData($location, $declareIn, $isDeclareBaseIn);
 
-        } else {
-            //do nothing
         }
+        // else do nothing
     }
 
     /**
@@ -118,6 +107,7 @@ class HealthUpdaterService
             }
             $em->flush();
 
+            /** @var LocationHealthMessage $locationHealthMessage */
             foreach ($locationHealthMessagesWithNull as $locationHealthMessage) {
                 $messageObject = $locationHealthMessage->getRequest();
 

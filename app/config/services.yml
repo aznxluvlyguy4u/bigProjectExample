@@ -336,6 +336,12 @@ services:
 
     app.health.updater:
         class: AppBundle\Service\HealthUpdaterService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.health.locationhealth.updater'
+
+    app.health.locationhealth.updater:
+        class: AppBundle\Util\LocationHealthUpdater
         arguments: ['@doctrine.orm.entity_manager']
 
     app.authenticator.token:
