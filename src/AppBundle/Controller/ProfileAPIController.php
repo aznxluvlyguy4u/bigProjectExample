@@ -2,14 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\Client;
-use AppBundle\FormInput\CompanyProfile;
-use AppBundle\Output\CompanyProfileOutput;
-use AppBundle\Output\LoginOutput;
-use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\DoctrineUtil;
-use AppBundle\Util\RequestUtil;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
