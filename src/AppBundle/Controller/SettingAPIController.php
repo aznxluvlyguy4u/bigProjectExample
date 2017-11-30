@@ -3,7 +3,6 @@
 namespace AppBundle\Controller;
 
 
-use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;

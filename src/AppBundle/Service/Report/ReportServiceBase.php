@@ -56,7 +56,7 @@ class ReportServiceBase
     protected $userService;
     /** @var TwigEngine */
     protected $templating;
-    /** @var Translator */
+    /** @var TranslatorInterface */
     protected $translator;
     /** @var GeneratorInterface */
     protected $knpGenerator;

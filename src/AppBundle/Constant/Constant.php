@@ -163,6 +163,7 @@ class Constant
     const NEW_THIRD_PARTY_PASSWORD_MAIL_SUBJECT_HEADER = "Uw nieuwe NSFO Online Derden wachtwoord";
     const NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER = "Uw nieuwe NSFO Online ADMIN wachtwoord";
     const CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER = 'NSFO Online Contactformulier Confirmatie';
+    const POSSIBLE_SICK_ANIMAL_ARRIVAL_MAIL_SUBJECT_HEADER = 'Dier van mogelijk ziek UBN melding';
     
     const ENTITY_BASE_PATH = "AppBundle\\Entity\\";
     

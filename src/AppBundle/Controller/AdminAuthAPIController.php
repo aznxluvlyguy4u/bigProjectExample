@@ -9,7 +9,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @Route("/api/v1/admins/auth")

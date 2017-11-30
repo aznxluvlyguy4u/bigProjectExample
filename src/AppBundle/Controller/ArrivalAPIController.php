@@ -2,44 +2,12 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Component\DepartMessageBuilder;
-use AppBundle\Component\LocationHealthMessageBuilder;
-use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\DeclareArrival;
-use AppBundle\Entity\DeclareArrivalRepository;
-use AppBundle\Entity\DeclareArrivalResponse;
-use AppBundle\Entity\DeclareArrivalResponseRepository;
-use AppBundle\Entity\DeclareDepart;
-use AppBundle\Entity\DeclareImport;
-use AppBundle\Entity\DeclareImportResponse;
-use AppBundle\Entity\DeclareImportResponseRepository;
-use AppBundle\Entity\LocationHealthInspection;
-use AppBundle\Entity\Message;
-use AppBundle\Enumerator\MessageType;
-use AppBundle\Enumerator\RecoveryIndicatorType;
-use AppBundle\Output\DeclareArrivalOutput;
-use AppBundle\Entity\Location;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Enumerator\RequestType;
-use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\HealthChecker;
-use AppBundle\Util\LocationHealthUpdater;
-use AppBundle\Util\RequestUtil;
-use AppBundle\Util\StringUtil;
-use AppBundle\Util\Validator;
-use AppBundle\Validation\TagValidator;
-use AppBundle\Validation\UbnValidator;
-use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse as JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use JMS\Serializer\SerializationContext;
 
 /**
  * @Route("/api/v1/arrivals")

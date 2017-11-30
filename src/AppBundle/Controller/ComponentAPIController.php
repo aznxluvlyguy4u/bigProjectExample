@@ -2,13 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\Client;
-use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Output\MenuBarOutput;
-use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
-use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
