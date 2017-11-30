@@ -12,7 +12,9 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\VwaEmployee;
+use AppBundle\Enumerator\Locale;
 use Symfony\Bridge\Twig\TwigEngine;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class EmailService
 {
@@ -26,11 +28,14 @@ class EmailService
     private $notificationEmailAddresses;
     /** @var TwigEngine */
     private $templating;
+    /** @var TranslatorInterface */
+    private $translator;
 
     public function __construct(\Swift_Mailer $swiftMailer,
                                 $mailerSourceAddress,
                                 $notificationEmailAddresses,
                                 TwigEngine $templating,
+                                TranslatorInterface $translator,
                                 $environment
     )
     {
@@ -38,6 +43,7 @@ class EmailService
         $this->swiftMailer = $swiftMailer;
         $this->mailerSourceAddress = $mailerSourceAddress;
         $this->templating = $templating;
+        $this->translator = $translator;
 
         if (is_array($notificationEmailAddresses)) {
             $this->notificationEmailAddresses = $notificationEmailAddresses;
@@ -290,6 +296,8 @@ class EmailService
         } $locationHealthMessage->getUbnPreviousOwner();
 
         $introMessage = 'Er is een dier '.$arrivalVerbType.' op ' . $locationHealthMessage->getUbnNewOwner() . $senderInfo . '.';
+
+        $this->translator->setLocale(Locale::NL);
 
         $message = \Swift_Message::newInstance()
             ->setSubject(Constant::POSSIBLE_SICK_ANIMAL_ARRIVAL_MAIL_SUBJECT_HEADER)

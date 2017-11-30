@@ -439,6 +439,7 @@ services:
           - '%mailer_source_address%'
           - '%notification_email_addresses%'
           - '@templating'
+          - '@translator'
           - '%kernel.environment%'
 
     app.abstract_base.controller:
