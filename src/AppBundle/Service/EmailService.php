@@ -287,20 +287,24 @@ class EmailService
             return false;
         }
 
+        $subjectHeaderData = ' ['.$locationHealthMessage->getUln().', ';
         if ($locationHealthMessage->getReasonOfHealthStatusDemotion() === 'DeclareArrival') {
             $arrivalVerbType = 'aangevoerd';
             $senderInfo = ' van UBN '.$locationHealthMessage->getUbnPreviousOwner();
+            $subjectHeaderData = $subjectHeaderData .'Aanvoer: UBN '.$locationHealthMessage->getUbnPreviousOwner();
         } else {
             $arrivalVerbType = 'geimporteerd';
             $senderInfo = ' vanuit land '.$locationHealthMessage->getAnimalCountryOrigin();
+            $subjectHeaderData = $subjectHeaderData .'Import: '.$locationHealthMessage->getAnimalCountryOrigin();
         } $locationHealthMessage->getUbnPreviousOwner();
 
+        $subjectHeaderData = $subjectHeaderData .' => UBN '.$locationHealthMessage->getUbnNewOwner().']';
         $introMessage = 'Er is een dier '.$arrivalVerbType.' op ' . $locationHealthMessage->getUbnNewOwner() . $senderInfo . '.';
 
         $this->translator->setLocale(Locale::NL);
 
         $message = \Swift_Message::newInstance()
-            ->setSubject(Constant::POSSIBLE_SICK_ANIMAL_ARRIVAL_MAIL_SUBJECT_HEADER)
+            ->setSubject(Constant::POSSIBLE_SICK_ANIMAL_ARRIVAL_MAIL_SUBJECT_HEADER.$subjectHeaderData)
             ->setFrom($this->mailerSourceAddress)
             ->setTo($this->notificationEmailAddresses)
             ->setBody(

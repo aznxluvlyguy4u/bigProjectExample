@@ -480,6 +480,18 @@ class LocationHealthMessage
         return $this->ulnCountryCode;
     }
 
+
+    /**
+     * @param bool $includeSpace
+     * @return string
+     */
+    public function getUln($includeSpace = false)
+    {
+        $spacing = $includeSpace ? ' ' : '';
+        return $this->ulnCountryCode . $spacing . $this->ulnNumber;
+    }
+
+
     /**
      * @return string
      */
