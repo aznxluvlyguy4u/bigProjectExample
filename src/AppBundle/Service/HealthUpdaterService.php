@@ -39,7 +39,7 @@ class HealthUpdaterService
 
         //update locationHealth chronologically
         $isDeclareInBase = true;
-        $this->updateLocationHealthByArrivalOrImport($location, $declareInBase, $isDeclareInBase);
+        $this->updateLocationHealthByArrivalOrImport($location, $declareInBase, $isDeclareInBase, true);
 
         if($declareInBase instanceof DeclareArrival) {
             $criteria = Criteria::create()
@@ -59,7 +59,7 @@ class HealthUpdaterService
         $isDeclareInBase = false;
         foreach($locationHealthMessages as $locationHealthMessage) {
             $declareIn = $locationHealthMessage->getRequest();
-            $this->updateLocationHealthByArrivalOrImport($location, $declareIn, $isDeclareInBase);
+            $this->updateLocationHealthByArrivalOrImport($location, $declareIn, $isDeclareInBase, false);
         }
     }
 
@@ -67,14 +67,18 @@ class HealthUpdaterService
      * @param Location $location
      * @param DeclareArrival|DeclareImport $declareIn
      * @param boolean $isDeclareBaseIn
+     * @param boolean $createLocationHealthMessage
      */
-    private function updateLocationHealthByArrivalOrImport(Location $location, $declareIn, $isDeclareBaseIn)
+    private function updateLocationHealthByArrivalOrImport(Location $location, $declareIn, $isDeclareBaseIn,
+                                                           $createLocationHealthMessage)
     {
         if($declareIn instanceof DeclareArrival) {
-            $this->locationHealthUpdater->updateByGivenUbnOfOrigin($location, $declareIn, $isDeclareBaseIn);
+            $this->locationHealthUpdater->updateByGivenUbnOfOrigin($location, $declareIn, $isDeclareBaseIn,
+                $createLocationHealthMessage);
 
         } else if ($declareIn instanceof DeclareImport) {
-            $this->locationHealthUpdater->updateWithoutOriginHealthData($location, $declareIn, $isDeclareBaseIn);
+            $this->locationHealthUpdater->updateWithoutOriginHealthData($location, $declareIn, $isDeclareBaseIn,
+                $createLocationHealthMessage);
 
         }
         // else do nothing

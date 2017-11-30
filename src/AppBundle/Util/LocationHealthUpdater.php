@@ -42,16 +42,21 @@ class LocationHealthUpdater
      * @param Location $locationOfDestination
      * @param DeclareArrival $declareArrival
      * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
+     * @param boolean $createLocationHealthMessage
      * @return DeclareArrival
      */
     public function updateByGivenUbnOfOrigin(Location $locationOfDestination,
-                                                    DeclareArrival $declareArrival, $isDeclareInBase)
+                                             DeclareArrival $declareArrival,
+                                             $isDeclareInBase,
+                                             $createLocationHealthMessage
+    )
     {
         $ubnPreviousOwner = $declareArrival->getUbnPreviousOwner();
         $checkDate = $declareArrival->getArrivalDate();
 
         $locationOfOrigin = $this->em->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubnPreviousOwner);
-        return self::updateByGivenLocationOfOrigin($declareArrival ,$locationOfDestination, $checkDate, $isDeclareInBase, $locationOfOrigin);
+        return self::updateByGivenLocationOfOrigin($declareArrival ,$locationOfDestination, $checkDate,
+            $isDeclareInBase, $locationOfOrigin, $createLocationHealthMessage);
     }
 
 
@@ -59,12 +64,18 @@ class LocationHealthUpdater
      * @param Location $locationOfDestination
      * @param DeclareImport $declareImport
      * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
+     * @param boolean $createLocationHealthMessage
      * @return DeclareImport
      */
-    public function updateWithoutOriginHealthData(Location $locationOfDestination, DeclareImport $declareImport, $isDeclareInBase)
+    public function updateWithoutOriginHealthData(Location $locationOfDestination,
+                                                  DeclareImport $declareImport,
+                                                  $isDeclareInBase,
+                                                  $createLocationHealthMessage
+    )
     {
         $checkDate = $declareImport->getImportDate();
-        return self::updateByGivenLocationOfOrigin($declareImport, $locationOfDestination, $checkDate, $isDeclareInBase, null);
+        return self::updateByGivenLocationOfOrigin($declareImport, $locationOfDestination, $checkDate,
+            $isDeclareInBase, null, $createLocationHealthMessage);
     }
 
 
@@ -75,16 +86,24 @@ class LocationHealthUpdater
      * @param \DateTime $checkDate
      * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @param Location $locationOfOrigin
+     * @param boolean $createLocationHealthMessage
      * @return DeclareArrival|DeclareImport
      */
-    private function updateByGivenLocationOfOrigin($declareIn, Location $locationOfDestination,
-                                                          \DateTime $checkDate, $isDeclareInBase, $locationOfOrigin = null)
+    private function updateByGivenLocationOfOrigin($declareIn,
+                                                   Location $locationOfDestination,
+                                                   \DateTime $checkDate,
+                                                   $isDeclareInBase,
+                                                   $locationOfOrigin,
+                                                   $createLocationHealthMessage
+    )
     {
         //Initializing the locationHealth if necessary. This is a fail safe. All locations should be created with their own locationHealth.
         $locationOfDestination = $this->persistInitialLocationHealthIfNull($locationOfDestination, $checkDate);
 
-        //Persist a new LocationHealthMessage for declareIn, without the healthValues
-        self::persistNewLocationHealthMessage($declareIn);
+        if ($createLocationHealthMessage) {
+            //Persist a new LocationHealthMessage for declareIn, without the healthValues
+            self::persistNewLocationHealthMessage($declareIn);
+        }
 
         //Hide/Deactivate all illness records after that one. Even for statuses that didn't change to simplify the logic.
         if($isDeclareInBase) {
@@ -159,10 +178,12 @@ class LocationHealthUpdater
         $illnesses->set(Constant::MAEDI_VISNA, $latestMaediVisnaDestination);
         $illnesses->set(Constant::SCRAPIE, $latestScrapieDestination);
 
-        /* The LocationHealthMessage contains the LocationHealth history
-            and must be calculated AFTER the locationHealth has been updated.
-        */
-        $this->finalizeLocationHealthMessage($declareIn, $locationHealthDestination, $locationHealthOrigin, $illnesses);
+        if ($createLocationHealthMessage) {
+            /* The LocationHealthMessage contains the LocationHealth history
+                and must be calculated AFTER the locationHealth has been updated.
+            */
+            $this->finalizeLocationHealthMessage($declareIn, $locationHealthDestination, $locationHealthOrigin, $illnesses);
+        }
 
         return $declareIn;
     }
