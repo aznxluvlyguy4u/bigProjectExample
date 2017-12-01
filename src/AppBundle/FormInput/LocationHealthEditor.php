@@ -56,16 +56,16 @@ class LocationHealthEditor
         $lastScrapieStatus = Utils::fillNullOrEmptyString($lastScrapieStatus, self::defaultScrapieStatus);
         $lastScrapieCheckDate = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_CHECK_DATE);
         $lastReasonOfScrapieEdit = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_REASON_OF_EDIT);
-        
-        $newScrapieStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_STATUS, $content);
-        $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content);
 
-        $newScrapieEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_END_DATE, $content);
+        $newScrapieStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_STATUS, $content);
+        $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content, true);
+
+        $newScrapieEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_END_DATE, $content, true);
         $arrayReasonOfScrapieEdit = trim(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_REASON_OF_EDIT, $content));
         $newReasonOfScrapieEdit = (NullChecker::isNull($arrayReasonOfScrapieEdit) ? null : $arrayReasonOfScrapieEdit);
 
         if($newScrapieCheckDate == null) {
-            $newScrapieCheckDate = new \DateTime('now');
+            $newScrapieCheckDate = new \DateTime('today');
             $scrapieDatesChanged = false; //ignore this check if no date is given
         } else {
             $scrapieDatesChanged = $newScrapieCheckDate != $lastScrapieCheckDate;
@@ -82,14 +82,14 @@ class LocationHealthEditor
         $lastReasonOfMaediVisnaEdit = $latestIllnessStatuses->get(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT);
 
         $newMaediVisnaStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_STATUS, $content);
-        $newMaediVisnaCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $content);
-        $newMaediVisnaEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_END_DATE, $content);
+        $newMaediVisnaCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $content, true);
+        $newMaediVisnaEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_END_DATE, $content, true);
 
         $arrayReasonOfMaediVisnaEdit = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT, $content);
         $newReasonOfMaediVisnaEdit = (NullChecker::isNull($arrayReasonOfMaediVisnaEdit) ? null : $arrayReasonOfMaediVisnaEdit);
 
         if($newMaediVisnaCheckDate == null) {
-            $newMaediVisnaCheckDate = new \DateTime('now');
+            $newMaediVisnaCheckDate = new \DateTime('today');
             $maediVisnaDatesChanged = false; //ignore this check if no date is given
         } else {
             $maediVisnaDatesChanged = $newMaediVisnaCheckDate != $lastMaediVisnaCheckDate;

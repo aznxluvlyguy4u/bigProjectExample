@@ -105,16 +105,16 @@ class LocationHealthUpdater
             self::persistNewLocationHealthMessage($declareIn);
         }
 
-        //Hide/Deactivate all illness records after that one. Even for statuses that didn't change to simplify the logic.
         if($isDeclareInBase) {
-            self::hideAllFollowingIllnesses($this->em, $locationOfDestination, $checkDate);
             //Redo the null check in case all illnesses are made hidden
             $locationOfDestination = $this->persistInitialLocationHealthIfNull($locationOfDestination, $checkDate);
         }
 
         //Get the latest values
         $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination, $this->em); //returns null values if null
+        /** @var MaediVisna $previousMaediVisnaDestination */
         $previousMaediVisnaDestination = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
+        /** @var Scrapie $previousScrapieDestination */
         $previousScrapieDestination = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
 
         $locationHealthDestination = $locationOfDestination->getLocationHealth(); //Null check already done in the first command of this function
@@ -130,12 +130,12 @@ class LocationHealthUpdater
 
         if($locationOfOrigin == null) { //an import or Location that is not in our NSFO database
 
-            if( $previousMaediVisnaDestinationIsHealthy ){
-                $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisna($locationHealthDestination, $checkDate);
+            if($previousMaediVisnaDestinationIsHealthy){
+                $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
-            if( $previousScrapieDestinationIsHealthy ){
-                $latestScrapieDestination = $this->persistNewDefaultScrapie($locationHealthDestination, $checkDate);
+            if($previousScrapieDestinationIsHealthy){
+                $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
             $locationHealthOrigin = null;
@@ -161,11 +161,11 @@ class LocationHealthUpdater
 
 
             if(!$maediVisnaOriginIsHealthy && $previousMaediVisnaDestinationIsHealthy){
-                $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisna($locationHealthDestination, $checkDate);
+                $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
             if(!$scrapieOriginIsHealthy && $previousScrapieDestinationIsHealthy) {
-                $latestScrapieDestination = $this->persistNewDefaultScrapie($locationHealthDestination, $checkDate);
+                $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
             $this->persistTheOverallLocationHealthStatus($locationOfOrigin); //FIXME see function
@@ -213,11 +213,11 @@ class LocationHealthUpdater
         $previousScrapieDestination = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
 
         if($previousMaediVisnaDestination == null){
-            $previousMaediVisnaDestination = $this->persistNewDefaultMaediVisna($locationOfDestination->getLocationHealth(), $checkDate);
+            $previousMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationOfDestination->getLocationHealth(), $checkDate);
             $latestActiveIllnessesDestination->set(Constant::MAEDI_VISNA, $previousMaediVisnaDestination);
         }
         if($previousScrapieDestination == null){
-            $previousScrapieDestination = $this->persistNewDefaultScrapie($locationOfDestination->getLocationHealth(), $checkDate);
+            $previousScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationOfDestination->getLocationHealth(), $checkDate);
             $latestActiveIllnessesDestination->set(Constant::SCRAPIE, $previousScrapieDestination);
         }
         return $latestActiveIllnessesDestination;
@@ -237,29 +237,32 @@ class LocationHealthUpdater
         $this->em->persist($locationHealthMessage);
         $this->em->flush();
 
-        $this->emailService->sendPossibleSickAnimalArrivalNotificationEmail($locationHealthMessage);
+        if ($locationHealthMessage->getCheckForMaediVisna() || $locationHealthMessage->getCheckForScrapie()) {
+            $this->emailService->sendPossibleSickAnimalArrivalNotificationEmail($locationHealthMessage);
+        }
     }
 
     /**
-     * @param Location $locationOfDestination
+     * @param EntityManagerInterface $em
+     * @param Location $location
      * @param \DateTime $checkDate
      * @return Location
      */
-    private function persistNewLocationHealthWithInitialValues(Location $locationOfDestination, $checkDate)
+    public static function persistNewLocationHealthWithInitialValues(EntityManagerInterface $em, Location $location, $checkDate)
     {
         //Create a LocationHealth with a MaediVisna and Scrapie with all statusses set to Under Observation
         $createWithDefaultUnderObservationIllnesses = true;
         $locationHealth = new LocationHealth($createWithDefaultUnderObservationIllnesses, $checkDate);
-        $locationOfDestination->setLocationHealth($locationHealth);
-        $locationHealth->setLocation($locationOfDestination);
+        $location->setLocationHealth($locationHealth);
+        $locationHealth->setLocation($location);
 
-        $this->em->persist($locationHealth->getMaediVisnas()->get(0));
-        $this->em->persist($locationHealth->getScrapies()->get(0));
-        $this->em->persist($locationHealth);
-        $this->em->persist($locationOfDestination);
-        $this->em->flush();
+        $em->persist($locationHealth->getMaediVisnas()->get(0));
+        $em->persist($locationHealth->getScrapies()->get(0));
+        $em->persist($locationHealth);
+        $em->persist($location);
+        $em->flush();
 
-        return $locationOfDestination;
+        return $location;
     }
 
     /**
@@ -267,7 +270,7 @@ class LocationHealthUpdater
      * @param \DateTime $checkDate
      * @return MaediVisna
      */
-    private function persistNewDefaultMaediVisna(LocationHealth $locationHealth, $checkDate)
+    private function persistNewDefaultMaediVisnaAndHideFollowingOnes(LocationHealth $locationHealth, $checkDate)
     {
         $maediVisna = new MaediVisna(MaediVisnaStatus::UNDER_OBSERVATION);
         $maediVisna->setCheckDate($checkDate);
@@ -279,6 +282,8 @@ class LocationHealthUpdater
         $this->em->persist($locationHealth);
         $this->em->flush();
 
+        self::hideAllFollowingMaediVisnas($this->em, $locationHealth->getLocation(), $checkDate);
+
         return $maediVisna;
     }
 
@@ -287,7 +292,7 @@ class LocationHealthUpdater
      * @param \DateTime $checkDate
      * @return Scrapie
      */
-    private function persistNewDefaultScrapie( LocationHealth $locationHealth, $checkDate)
+    private function persistNewDefaultScrapieAndHideFollowingOnes(LocationHealth $locationHealth, $checkDate)
     {
         $scrapie = new Scrapie(ScrapieStatus::UNDER_OBSERVATION);
         $scrapie->setCheckDate($checkDate);
@@ -298,6 +303,8 @@ class LocationHealthUpdater
         $this->em->persist($scrapie);
         $this->em->persist($locationHealth);
         $this->em->flush();
+
+        self::hideAllFollowingScrapies($this->em, $locationHealth->getLocation(), $checkDate);
 
         return $scrapie;
     }
@@ -318,18 +325,18 @@ class LocationHealthUpdater
         $locationHealthDestination = $locationOfDestination->getLocationHealth();
 
         if($locationHealthDestination == null) {
-            $this->persistNewLocationHealthWithInitialValues($locationOfDestination, $checkDate);
+            self::persistNewLocationHealthWithInitialValues($this->em, $locationOfDestination, $checkDate);
 
         } else {
 
             $maediVisnaDestination = Finder::findLatestActiveMaediVisna($locationOfDestination, $this->em);
             if ($maediVisnaDestination == null) {
-                $this->persistNewDefaultMaediVisna($locationHealthDestination, $checkDate);
+                $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
             }
 
             $scrapieDestination = Finder::findLatestActiveScrapie($locationOfDestination, $this->em);
             if ($scrapieDestination == null) {
-                $this->persistNewDefaultScrapie($locationHealthDestination, $checkDate);
+                $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
             }
         }
 
@@ -365,21 +372,10 @@ class LocationHealthUpdater
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
+            ->andWhere(DateCriteria::gt('checkDate', $checkDate))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
         return $criteria;
-    }
-
-    /**
-     * @param ObjectManager $em
-     * @param Location $location
-     * @param \DateTime $checkDate
-     */
-    public static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, \DateTime $checkDate)
-    {
-        self::hideAllFollowingMaediVisnas($em, $location, $checkDate);
-        self::hideAllFollowingScrapies($em, $location, $checkDate);
     }
 
 
