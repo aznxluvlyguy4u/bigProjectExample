@@ -129,7 +129,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         //LocationHealth null value fixes
         $this->healthService->fixLocationHealthMessagesWithNullValues($location);
-        $this->healthService->fixArrivalsAndImportsWithoutLocationHealthMessage($location);
+        $this->healthService->fixIncongruentLocationHealthIllnessValues($location);
 
         $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
 
