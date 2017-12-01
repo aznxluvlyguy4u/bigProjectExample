@@ -365,7 +365,7 @@ class LocationHealthUpdater
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
+            ->andWhere(DateCriteria::gt('checkDate', $checkDate))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
         return $criteria;

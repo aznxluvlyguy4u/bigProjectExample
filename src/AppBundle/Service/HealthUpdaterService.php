@@ -7,6 +7,7 @@ use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealthMessage;
+use AppBundle\Util\DateCriteria;
 use AppBundle\Util\LocationHealthUpdater;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
@@ -43,12 +44,12 @@ class HealthUpdaterService
 
         if($declareInBase instanceof DeclareArrival) {
             $criteria = Criteria::create()
-                ->where(Criteria::expr()->gt('arrivalDate', $declareInBase->getArrivalDate()))
+                ->where(DateCriteria::gt('arrivalDate', $declareInBase->getArrivalDate()))
                 ->andWhere(Criteria::expr()->eq('location', $location))
                 ->orderBy(['arrivalDate' => Criteria::ASC]);
         } else { //DeclareImport
             $criteria = Criteria::create()
-                ->where(Criteria::expr()->gt('arrivalDate', $declareInBase->getImportDate()))
+                ->where(DateCriteria::gt('arrivalDate', $declareInBase->getImportDate()))
                 ->andWhere(Criteria::expr()->eq('location', $location))
                 ->orderBy(['arrivalDate' => Criteria::ASC]);
         }
