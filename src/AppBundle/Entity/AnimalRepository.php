@@ -1379,4 +1379,48 @@ class AnimalRepository extends BaseRepository
         return null;
     }
 
+
+    /**
+     * @param array|string $ulns
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
+     */
+    public function ulnCounts($ulns)
+    {
+        if (is_string($ulns)) {
+            $ulns = [$ulns];
+        } elseif (!is_array($ulns)) {
+            throw new \Exception('Input should be a uln string or array of uln strings');
+        }
+
+        if (count($ulns) === 0) {
+            throw new \Exception('uln string is missing');
+        }
+
+        $ulnsString = "'" . implode("','", $ulns) . "'";
+
+        $sql = "SELECT COUNT(*) as count, CONCAT(uln_country_code, uln_number) as uln
+                FROM animal
+                WHERE CONCAT(uln_country_code, uln_number) IN (
+                  ".$ulnsString."
+                )
+                GROUP BY CONCAT(uln_country_code, uln_number)";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+
+        $counts = [];
+        foreach ($results as $result) {
+            $count = $result['count'];
+            $uln = $result['uln'];
+            $counts[$uln] = $count;
+        }
+
+        foreach ($ulns as $uln) {
+            if (!key_exists($uln, $counts)) {
+                $counts[$uln] = 0;
+            }
+        }
+
+        return $counts;
+    }
 }
