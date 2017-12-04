@@ -6,25 +6,34 @@ namespace AppBundle\Service\DataFix;
 
 use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\VsmIdGroupRepository;
+use AppBundle\Enumerator\ActionType;
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
 use AppBundle\Util\DatabaseDataFixer;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\GenderChangerBySql;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -38,6 +47,8 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class DuplicateAnimalsFixer extends DuplicateFixerBase
 {
+    const MERGE_DUPLICATE_ANIMALS_WITH_TAG_REPLACE_FILENAME = 'merge_duplicate_animals_by_ulns_and_create_tag_replace.csv';
+
     const ULN_DATE_OF_BIRTH_MOTHER = 'uln_date_of_birth_mother';
     const ULN_DATE_OF_BIRTH_FATHER = 'uln_date_of_birth_father';
     const ULN = 'uln';
@@ -1088,5 +1099,179 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         $cmdUtil->setEndTimeAndPrintFinalOverview();
 
         return count($mergedPedigreeNumberByUlns);
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
+     */
+    public function mergeByUlnStringsAndCreateDeclareTagReplace(CommandUtil $cmdUtil)
+    {
+        $this->setCmdUtil($cmdUtil);
+
+        if (!$this->cmdUtil->generateConfirmationQuestion('Continue merging animals by uln from the following file? (y/n, default is no): '.self::MERGE_DUPLICATE_ANIMALS_WITH_TAG_REPLACE_FILENAME)) {
+            return 0;
+        }
+
+        $csvOptions = (new CsvOptions())
+            ->ignoreFirstLine()
+            ->setInputFolder('app/Resources/imports/corrections/')
+            ->setOutputFolder('app/Resources/output/corrections/')
+            ->setFileName(self::MERGE_DUPLICATE_ANIMALS_WITH_TAG_REPLACE_FILENAME)
+            ->setPipeSeparator()
+        ;
+
+        $parsedCsv = CsvParser::parse($csvOptions);
+
+        $ulnCount = count($parsedCsv);
+        if($ulnCount === 0) { return 0; }
+
+        // Validate complete input first
+
+        $tagReplaces = [];
+        $ulns = [];
+
+        foreach ($parsedCsv as $key => $records) {
+            if (count($records) === 0) {
+                continue;
+            }
+
+            if (count($records) < 3) {
+                throw new \Exception('Invalid record :' . implode(',', $records));
+            }
+
+            $ulnOld = $records[0];
+            $ulnNew = $records[1];
+            $replaceDateString = $records[2];
+
+            $ulns[] = $ulnOld;
+            $ulns[] = $ulnNew;
+
+            $csvRow = $key + 1;
+
+            $ulnOldParts = Utils::getUlnFromString($ulnOld);
+            if ($ulnOldParts === null) {
+                throw new \Exception('Invalid original_uln on row '.$csvRow.': '.$ulnOld);
+            }
+
+            $ulnNewParts = Utils::getUlnFromString($ulnNew);
+            if ($ulnNewParts === null) {
+                throw new \Exception('Invalid new_uln on row '.$csvRow.': '.$ulnNew);
+            }
+
+            if (!DateUtil::isFormatDDMMYYYY($replaceDateString) && !DateUtil::isFormatYYYYMMDD($replaceDateString)) {
+                throw new \Exception('Invalid tag_replace_date on row '.$csvRow.': '.$ulnNew);
+            }
+
+            $declareTagReplace = new DeclareTagReplace();
+            $declareTagReplace->setUlnCountryCodeToReplace($ulnOldParts[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
+            $declareTagReplace->setUlnNumberToReplace($ulnOldParts[Constant::ULN_NUMBER_NAMESPACE]);
+            $declareTagReplace->setUlnCountryCodeReplacement($ulnNewParts[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
+            $declareTagReplace->setUlnNumberReplacement($ulnNewParts[Constant::ULN_NUMBER_NAMESPACE]);
+            $declareTagReplace->setReplaceDate(new \DateTime($replaceDateString));
+
+            $declareTagReplace->setAnimalOrderNumberReplacement(StringUtil::getLast5CharactersFromString($ulnNew));
+            $declareTagReplace->setAnimalOrderNumberToReplace(StringUtil::getLast5CharactersFromString($ulnOld));
+            $tagReplaces[] = $declareTagReplace;
+        }
+
+        $ulnCounts = $this->animalRepository->ulnCounts($ulns);
+        $missingUlns = [];
+        $duplicateUlns = [];
+        foreach ($ulnCounts as $uln => $count) {
+           if ($count === 0) {
+               $missingUlns[] = $uln;
+           } elseif ($count > 1) {
+               $duplicateUlns[] = $uln;
+           }
+        }
+
+        $inputErrorMessage = '';
+        if (count($missingUlns) > 0) {
+            $inputErrorMessage .= 'The following '.count($missingUlns).' ulns are missing from the database: '.implode(', ', $missingUlns).'. ';
+        }
+
+        if (count($duplicateUlns) > 0) {
+            $inputErrorMessage .= 'The following '.count($duplicateUlns).' ulns have duplicates in the database: '.implode(', ', $duplicateUlns).'.';
+        }
+
+        if ($inputErrorMessage !== '') {
+            throw new \Exception($inputErrorMessage);
+        }
+
+
+        $alreadyDoneCount = 0;
+        $unmatchedDateOfBirthByUlns = [];
+        $manualGenderFixNecessary = [];
+        $successfulMergesOldByNewUlns = [];
+        $failedMergesOldByNewUlns = [];
+
+        $cmdUtil->setStartTimeAndPrintIt(count($tagReplaces), 1);
+
+        /** @var DeclareTagReplace $tagReplace */
+        foreach ($tagReplaces as $tagReplace) {
+
+            $oldAnimal = $this->animalRepository->findAnimalByUlnString($tagReplace->getUlnToReplace());
+            $newAnimal = $this->animalRepository->findAnimalByUlnString($tagReplace->getUlnReplacement());
+
+            $mergeAnimals = true;
+
+            if (abs(TimeUtil::getDaysBetween($oldAnimal->getDateOfBirth(), $newAnimal->getDateOfBirth())) > 1) {
+
+                $unmatchedDateOfBirthByUlns[$newAnimal->getUln()] = $oldAnimal->getUln();
+
+                $cmdUtil->advanceProgressBar(1, 'errors dateOfBirth|gender: '
+                    .count($unmatchedDateOfBirthByUlns).'|'.count($manualGenderFixNecessary)
+                    .'  merges succeeded|failed: '.$alreadyDoneCount.'|'.count($successfulMergesOldByNewUlns).'|'.count($failedMergesOldByNewUlns));
+
+                continue;
+            }
+
+            // Fix missing genders
+            if (
+                 ($newAnimal->getGender() === GenderType::NEUTER && $oldAnimal->getGender() !== GenderType::NEUTER) ||
+                 ($newAnimal->getGender() === null && $oldAnimal->getGender() !== null)
+                ) {
+                $genderChangeResult = GenderChangerBySql::changeGender($this->conn, $newAnimal->getId(), $oldAnimal->getGender());
+
+                if(!$genderChangeResult) {
+                    $manualGenderFixNecessary[$newAnimal->getUln()] = $oldAnimal->getGender();
+                    $mergeAnimals = false;
+                }
+            }
+
+            if ($mergeAnimals) {
+                $mergeResult = $this->mergeAnimalPairByIds($newAnimal->getId(), $oldAnimal->getId());
+
+                if ($mergeResult) {
+                    $successfulMergesOldByNewUlns[$newAnimal->getUln()] = $oldAnimal->getUln();
+
+                    $tagReplace->setAnimal($newAnimal);
+                    $tagReplace->setRequestId(MessageBuilderBase::getNewRequestId());
+                    $tagReplace->setAction(ActionType::V_MUTATE);
+                    $tagReplace->setRecoveryIndicator(RecoveryIndicatorType::N);
+                    $tagReplace->setRequestState(RequestStateType::IMPORTED);
+                    $tagReplace->setRelationNumberKeeper(RequestStateType::IMPORTED);
+                    $tagReplace->setUbn(RequestStateType::IMPORTED);
+                    $tagReplace->setAnimalType(AnimalType::sheep);
+                    $this->em->persist($tagReplace);
+                    $this->em->flush();
+
+                } else {
+                    $failedMergesOldByNewUlns[$newAnimal->getUln()] = $oldAnimal->getUln();
+                }
+            }
+
+            $cmdUtil->advanceProgressBar(1, 'errors dateOfBirth|gender: '
+                .count($unmatchedDateOfBirthByUlns).'|'.count($manualGenderFixNecessary)
+                .'  merges succeeded|failed: '.count($successfulMergesOldByNewUlns).'|'.count($failedMergesOldByNewUlns));
+        }
+
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        return count($successfulMergesOldByNewUlns);
     }
 }
