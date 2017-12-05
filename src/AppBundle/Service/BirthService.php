@@ -858,7 +858,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             /** @var Animal $child */
             foreach ($children as $child) {
                 if($child->getDateOfBirth()) {
-                    $daysbetweenCurrentBirthAndPreviousBirths = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
+                    $daysbetweenCurrentBirthAndPreviousBirths = abs(TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth));
 
                     if(!($daysbetweenCurrentBirthAndPreviousBirths >= self::MINIMUM_DAYS_BETWEEN_BIRTHS)) {
                         $checkAnimalForMatings = false;
