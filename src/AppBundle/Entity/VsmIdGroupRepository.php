@@ -124,19 +124,26 @@ class VsmIdGroupRepository extends BaseRepository {
         $sql = "SELECT id, primary_vsm_id FROM vsm_id_group WHERE secondary_vsm_id = '".$secondaryVsmId."'";
         $result = $conn->query($sql)->fetch();
 
-        if($result != null) {
-            $id = $result['id'];
-            $currentPrimaryVsmId = $result['primary_vsm_id'];
+        try {
 
-            if($primaryVsmId != $currentPrimaryVsmId) {
-                $sql = "UPDATE vsm_id_group SET primary_vsm_id = '".$primaryVsmId."' WHERE id = ".$id;
+            if($result != null) {
+                $id = $result['id'];
+                $currentPrimaryVsmId = $result['primary_vsm_id'];
+
+                if($primaryVsmId != $currentPrimaryVsmId) {
+                    $sql = "UPDATE vsm_id_group SET primary_vsm_id = '".$primaryVsmId."' WHERE id = ".$id;
+                    $conn->exec($sql);
+                }
+                //Else do nothing
+            } else {
+                $sql = "INSERT INTO vsm_id_group (id, primary_vsm_id, secondary_vsm_id) VALUES (nextval('vsm_id_group_id_seq'), '".$primaryVsmId."', '".$secondaryVsmId."')";
                 $conn->exec($sql);
             }
-            //Else do nothing
-        } else {
-            $sql = "INSERT INTO vsm_id_group (id, primary_vsm_id, secondary_vsm_id) VALUES (nextval('vsm_id_group_id_seq'), '".$primaryVsmId."', '".$secondaryVsmId."')";
-            $conn->exec($sql);
+
+        } catch (\Exception $exception) {
+            return false;
         }
+
 
         return true;
     }

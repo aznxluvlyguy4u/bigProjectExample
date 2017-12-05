@@ -237,25 +237,6 @@ class DeclareTagReplace extends DeclareBase
         return $this->ulnCountryCodeReplacement;
     }
 
-
-    /**
-     * @return string
-     */
-    public function getUlnToReplace()
-    {
-        return $this->ulnCountryCodeToReplace . $this->ulnNumberToReplace;
-    }
-
-
-    /**
-     * @return string
-     */
-    public function getUlnReplacement()
-    {
-        return $this->ulnCountryCodeReplacement . $this->ulnNumberReplacement;
-    }
-
-
     /**
      * Set animalType
      *
@@ -457,5 +438,23 @@ class DeclareTagReplace extends DeclareBase
     public function getAnimalOrderNumberReplacement()
     {
         return $this->animalOrderNumberReplacement;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getUlnToReplace()
+    {
+        return $this->ulnCountryCodeToReplace . $this->ulnNumberToReplace;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getUlnReplacement()
+    {
+        return $this->ulnCountryCodeReplacement . $this->ulnNumberReplacement;
     }
 }

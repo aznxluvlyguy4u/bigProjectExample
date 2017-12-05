@@ -539,4 +539,26 @@ class SqlUtil
         return SqlUtil::createSqlValuesString($values, false, false);
     }
 
+
+    /**
+     * @param int|string|array $ids
+     * @return string
+     * @throws \Exception
+     */
+    public static function getIdsFilterListString($ids)
+    {
+        if (is_int($ids) || ctype_digit($ids)) {
+            $ids = [$ids];
+        } elseif (!is_array($ids)) {
+            throw new \Exception('Input should be an integer, integer string or array of integers');
+        }
+
+        if (count($ids) === 0) {
+            throw new \Exception('Input is missing');
+        }
+
+        return implode(',', $ids);
+    }
+
+
 }
