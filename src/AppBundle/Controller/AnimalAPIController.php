@@ -268,7 +268,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   function updateAnimalDetails(Request $request, $ulnString)
   {
-      return $this->get('app.animal.details.updater')->update($request, $ulnString);
+      return $this->get('app.animal.details.updater')->updateAnimalDetails($request, $ulnString);
   }
 
   /**
@@ -284,6 +284,15 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
    *     }
    *   },
+   *   parameters={
+   *      {
+   *        "name"="minimal_output",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"="set to true to return only the most essential data, it is false by default",
+   *        "format"="?minimal_output=true"
+   *      }
+   *   },
    *   resource = true,
    *   description = "Retrieve an Animal by ULN"
    * )
@@ -297,6 +306,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   {
       return $this->get('app.animal')->getAnimalDetailsByUln($request, $ulnString);
   }
+
 
   /**
    *

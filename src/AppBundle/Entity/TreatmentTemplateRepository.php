@@ -9,33 +9,38 @@ class TreatmentTemplateRepository extends BaseRepository
 
     /**
      * @param Location $location
+     * @param boolean $activeOnly
      * @return array
      */
-    public function findActiveIndividualTypeByLocation($location)
+    public function findIndividualTypeByLocation($location, $activeOnly)
     {
-        return $this->findActiveByLocation($location, TreatmentTypeOption::INDIVIDUAL);
+        return $this->findActiveByLocation($location, TreatmentTypeOption::INDIVIDUAL, $activeOnly);
     }
 
 
     /**
      * @param Location $location
+     * @param boolean $activeOnly
      * @return array
      */
-    public function findActiveLocationTypeByLocation($location)
+    public function findLocationTypeByLocation($location, $activeOnly)
     {
-        return $this->findActiveByLocation($location, TreatmentTypeOption::LOCATION);
+        return $this->findActiveByLocation($location, TreatmentTypeOption::LOCATION, $activeOnly);
     }
 
 
-    public function findActiveByLocation($location, $type)
+    public function findActiveByLocation($location, $type, $activeOnly)
     {
-        return $this->findBy(
+        $filter =
             [
                 'type' => $type,
-                'isActive' => true,
                 'location' => $location,
-            ], [
-            'logDate' => 'DESC'
-        ]);
+            ];
+
+        if ($activeOnly) {
+            $filter['isActive'] = true;
+        }
+
+        return $this->findBy($filter, ['logDate' => 'DESC']);
     }
 }

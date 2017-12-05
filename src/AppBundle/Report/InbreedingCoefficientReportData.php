@@ -11,9 +11,11 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\EweRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\RamRepository;
+use AppBundle\Enumerator\PedigreeMasterKey;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\InbreedingCoefficientOffspring;
+use AppBundle\Util\PedigreeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -27,45 +29,53 @@ class InbreedingCoefficientReportData extends ReportBase
     private $data;
     /** @var array */
     private $csvData;
-    /** @var Ram */
-    private $ram;
-    /** @var EweRepository */
-    private $eweRepository;
-    /** @var RamRepository */
-    private $ramRepository;
+    /** @var array */
+    private $ramData;
+    /** @var array */
+    private $ewesData;
+    /** @var array */
+    private $parentAscendants;
 
     /**
      * InbreedingCoefficientReportData constructor.
      * @param ObjectManager $em
-     * @param ArrayCollection $content
+     * @param array $ramData
+     * @param array $ewesData
+     * @param int $generationOfAscendants
      * @param Client $client
      */
-    public function __construct(ObjectManager $em, ArrayCollection $content, Client $client = null)
+    public function __construct(ObjectManager $em, $ramData, $ewesData, $generationOfAscendants, Client $client = null)
     {
         parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
         
         $this->data = [];
         $this->csvData = [];
 
-        /** @var RamRepository $ramRepository */
-        $this->ramRepository = $this->em->getRepository(Ram::class);
-        /** @var EweRepository $eweRepository */
-        $this->eweRepository = $this->em->getRepository(Ewe::class);
-
-        $ramArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::RAM, $content);
-        $ewesArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::EWES, $content);
+        $this->ramData = $ramData;
+        $this->ewesData = $ewesData;
 
         //Initialize default values
         $this->data[ReportLabel::EWES] = array();
-        $this->generateRamIdValues($ramArray);        
+        $this->generateRamIdValues($this->ramData);
 
-        if($this->ram == null) {
+
+        $parentIds = [];
+        $parentIds[$this->ramData['id']] = $this->ramData['id'];
+        foreach ($this->ewesData as $eweData) {
+            $eweId = $eweData['id'];
+            $parentIds[$eweId] = $eweId;
+        }
+
+        $this->parentAscendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($this->conn, $parentIds, $generationOfAscendants,PedigreeMasterKey::ULN);
+
+
+        if($this->ramData == null) {
             $this->data[ReportLabel::IS_RAM_MISSING] = true;
-            foreach ($ewesArray as $eweArray) { $this->generateDataWithMissingRam($eweArray); }
+            foreach ($this->ewesData as $eweArray) { $this->generateDataWithMissingRam($eweArray); }
             
         } else {
             $this->data[ReportLabel::IS_RAM_MISSING] = false;
-            foreach ($ewesArray as $eweArray) { $this->generateDataForEwe($eweArray); }
+            foreach ($this->ewesData as $eweArray) { $this->generateDataForEwe($eweArray); }
         }
     }
 
@@ -138,22 +148,13 @@ class InbreedingCoefficientReportData extends ReportBase
     private function generateRamIdValues($ramArray)
     {
         $this->data[ReportLabel::RAM] = AnimalArrayReader::getUlnAndPedigreeInArray($ramArray);
-        $this->ram = $this->ramRepository->getRamByArray($ramArray);
 
         if(!array_key_exists(ReportLabel::PEDIGREE, $this->data[ReportLabel::RAM])) {
-            if($this->ram->isPedigreeExists()) {
-                $this->data[ReportLabel::RAM][ReportLabel::PEDIGREE] = $this->ram->getPedigreeCountryCode().$this->ram->getPedigreeNumber();
-            } else {
-                $this->data[ReportLabel::RAM][ReportLabel::PEDIGREE] = self::PEDIGREE_NULL_FILLER;
-            }
+            $this->data[ReportLabel::RAM][ReportLabel::PEDIGREE] = $this->getPedigreeString($ramArray);
         }
 
         if(!array_key_exists(ReportLabel::ULN, $this->data[ReportLabel::RAM])) {
-            if($this->ram->isUlnExists()) {
-                $this->data[ReportLabel::RAM][ReportLabel::ULN] = $this->ram->getUln();
-            } else {
-                $this->data[ReportLabel::RAM][ReportLabel::ULN] = self::ULN_NULL_FILLER;
-            }
+            $this->data[ReportLabel::RAM][ReportLabel::ULN] = AnimalArrayReader::getUlnFromArray($ramArray, self::ULN_NULL_FILLER);
         }
     }
     
@@ -167,13 +168,7 @@ class InbreedingCoefficientReportData extends ReportBase
 
         $this->data[ReportLabel::EWES][$ulnString] = array();
         $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT] = 0;
-
-        $ewe = $this->eweRepository->getEweByArray($eweArray);
-        if($ewe == null) {
-            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = self::PEDIGREE_NULL_FILLER;
-        } else {
-            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = $ewe->getPedigreeString(self::PEDIGREE_NULL_FILLER);
-        }
+        $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = $this->getPedigreeString($eweArray);
     }
 
 
@@ -183,22 +178,38 @@ class InbreedingCoefficientReportData extends ReportBase
     private function generateDataForEwe($eweArray)
     {
         $ulnString = AnimalArrayReader::getIdString($eweArray);
-        $ewe = $this->eweRepository->getEweByArray($eweArray);
 
         $this->data[ReportLabel::EWES][$ulnString] = array();
 
-        if($ewe == null) {
+        if($eweArray == null) {
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT] = 0;
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = self::PEDIGREE_NULL_FILLER;
         } else {
-            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = $ewe->getPedigreeString(self::PEDIGREE_NULL_FILLER);
+            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = $this->getPedigreeString($eweArray);
 
-            $inbreedingCoefficientResult = new InbreedingCoefficientOffspring($this->em, $this->ram->getId(), $ewe->getId());
+            $inbreedingCoefficientResult = new InbreedingCoefficientOffspring($this->em,
+                $this->ramData, $eweArray, [], [], [], $this->parentAscendants);
 
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT] = $inbreedingCoefficientResult->getValue();
         }
     }
-    
+
+
+    /**
+     * @param array $animalArray
+     * @return string
+     */
+    private function getPedigreeString($animalArray)
+    {
+        if (is_array($animalArray)) {
+            $ulnCountryCode = $animalArray['pedigree_country_code'];
+            $ulnNumber = $animalArray['pedigree_number'];
+            if ($ulnCountryCode !== null && $ulnNumber !== null) {
+                return $ulnCountryCode . $ulnNumber;
+            }
+        }
+        return self::PEDIGREE_NULL_FILLER;
+    }
     
     
 }

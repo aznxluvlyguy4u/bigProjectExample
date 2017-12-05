@@ -23,7 +23,9 @@ class BreedIndexCoefficient
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $id;
 
@@ -32,7 +34,9 @@ class BreedIndexCoefficient
      * @ORM\ManyToOne(targetEntity="BreedIndexType")
      * @ORM\JoinColumn(name="breed_index_type_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\BreedIndexType")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $breedIndexType;
 
@@ -41,7 +45,9 @@ class BreedIndexCoefficient
      * @ORM\ManyToOne(targetEntity="BreedValueType")
      * @ORM\JoinColumn(name="breed_value_type_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\BreedValueType")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $breedValueType;
 
@@ -52,7 +58,9 @@ class BreedIndexCoefficient
      * @Assert\NotBlank
      * @ORM\Column(type="float", options={"default":1})
      * @JMS\Type("float")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $c;
 
@@ -63,7 +71,9 @@ class BreedIndexCoefficient
      * @Assert\NotBlank
      * @ORM\Column(type="float", options={"default":1})
      * @JMS\Type("float")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $var;
 
@@ -74,7 +84,9 @@ class BreedIndexCoefficient
      * @Assert\NotBlank
      * @ORM\Column(type="float", options={"default":1})
      * @JMS\Type("float")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $t;
 
@@ -85,7 +97,9 @@ class BreedIndexCoefficient
      * @Assert\NotBlank
      * @ORM\Column(type="datetime")
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $logDate;
 
@@ -96,7 +110,9 @@ class BreedIndexCoefficient
      * @Assert\NotBlank
      * @ORM\Column(type="datetime")
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $startDate;
 
@@ -106,7 +122,9 @@ class BreedIndexCoefficient
      * @Assert\Date
      * @ORM\Column(type="datetime", nullable=true)
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $endDate;
 

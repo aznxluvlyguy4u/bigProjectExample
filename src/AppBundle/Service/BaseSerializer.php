@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 use AppBundle\Constant\Constant;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\LazyCriteriaCollection;
+use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer;
 
@@ -98,6 +99,40 @@ class BaseSerializer
         return $messageObject;
     }
 
+
+    /**
+     * @param array $objects
+     * @param array|string $type
+     * @param bool $enableMaxDepthChecks
+     * @return array
+     */
+    public function getArrayOfSerializedObjects($objects, $type = null, $enableMaxDepthChecks = true)
+    {
+        $serializedObjects = [];
+        foreach ($objects as $object) {
+            $serializedObjects[] = $this->serializeToJSON($object, $type, $enableMaxDepthChecks);
+        }
+        return $serializedObjects;
+    }
+
+
+
+    /**
+     * @param array $jsonSerializedObjects
+     * @param string $messageClassNameSpace
+     * @param string $basePath
+     * @return array
+     */
+    public function deserializeArrayOfObjects($jsonSerializedObjects, $messageClassNameSpace, $basePath = self::ENTITY_NAMESPACE)
+    {
+        $objects = [];
+        foreach ($jsonSerializedObjects as $object) {
+            $objects[] = $this->deserializeToObject($object, $messageClassNameSpace, $basePath);
+        }
+        return $objects;
+    }
+
+
     /**
      * @param $object
      * @param $type array|string The JMS Groups
@@ -110,5 +145,17 @@ class BaseSerializer
         $array = json_decode($json, true);
 
         return $array;
+    }
+
+
+    /**
+     * @param array $array
+     * @param $clazz
+     * @param DeserializationContext $context
+     * @return mixed
+     */
+    public function denormalizeToObject(array $array, $clazz, DeserializationContext $context = null)
+    {
+        return $this->jmsSerializer->fromArray($array, $clazz, $context);
     }
 }

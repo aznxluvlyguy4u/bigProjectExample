@@ -21,7 +21,6 @@ class APIController extends Controller implements APIControllerInterface
   private $services = [
   ];
 
-
   /**
    * TODO remove after merge and refactor open feature branches
    * @param string $controller

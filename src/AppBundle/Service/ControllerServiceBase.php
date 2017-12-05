@@ -7,6 +7,7 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclarationDetail;
@@ -29,8 +30,11 @@ use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Token;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\TokenType;
+use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Util\RequestUtil;
+use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -49,6 +53,8 @@ abstract class ControllerServiceBase
     /** @var UserService */
     private $userService;
 
+    /** @var string */
+    private $actionLogEditMessage;
 
     public function __construct(BaseSerializer $baseSerializer,
                                 CacheService $cacheService,
@@ -216,6 +222,76 @@ abstract class ControllerServiceBase
         }
 
         return new JsonResponse($response, 401);
+    }
+
+
+    protected function clearActionLogEditMessage()
+    {
+        $this->actionLogEditMessage = '';
+    }
+
+
+    /**
+     * @param string $type
+     * @param string $oldValue
+     * @param string $newValue
+     */
+    protected function updateActionLogEditMessage($type, $oldValue, $newValue)
+    {
+        if ($oldValue !== $newValue) {
+            $prefix = $this->actionLogEditMessage === '' ? '' : ', ';
+            $this->actionLogEditMessage = $this->actionLogEditMessage . $prefix . $type . ': '.$oldValue.' => '.$newValue;
+        }
+    }
+
+
+    /**
+     * @return string
+     */
+    protected function getActionLogEditMessage()
+    {
+        return $this->actionLogEditMessage;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return JsonResponse
+     */
+    protected function getAnimalDetailsOutputForUserEnvironment(Animal $animal)
+    {
+        $output = AnimalDetailsOutput::create($this->getManager(), $animal);
+        return ResultUtil::successResult($output);
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return JsonResponse
+     */
+    protected function getAnimalDetailsOutputForAdminEnvironment($animal)
+    {
+        return ResultUtil::successResult($this->getDecodedJsonForAnimalDetailsOutputFromAdminEnvironment($animal));
+    }
+
+
+    /**
+     * @param Animal|Ram|Ewe|Neuter $animal
+     * @return array
+     */
+    private function getDecodedJsonForAnimalDetailsOutputFromAdminEnvironment($animal)
+    {
+        $decodedLitters = [];
+        if($animal instanceof Ram || $animal instanceof Ewe) {
+            $decodedLitters = $this->getBaseSerializer()->getDecodedJson($animal->getLitters(), [JmsGroup::BASIC, JmsGroup::PARENTS]);
+        }
+
+        return [
+            JsonInputConstant::ANIMAL => $this->getBaseSerializer()->getDecodedJson($animal, [JmsGroup::ANIMAL_DETAILS, JmsGroup::PARENTS]),
+            JsonInputConstant::CHILDREN => $this->getBaseSerializer()->getDecodedJson($animal->getChildren(), [JmsGroup::BASIC]),
+            JsonInputConstant::ANIMAL_RESIDENCE_HISTORY => $this->getBaseSerializer()->getDecodedJson($animal->getAnimalResidenceHistory(), [JmsGroup::BASIC]),
+            JsonInputConstant::LITTERS => $decodedLitters,
+        ];
     }
 
 

@@ -34,10 +34,23 @@ class AdminActionLogWriter
     {
         $newMaediVisnaStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_STATUS, $content);
         $newScrapieStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_STATUS, $content);
+        $maediVisnaReasonOfEdit = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT, $content);
+        $scrapieReasonOfEdit = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT, $content);
         $ubn = NullChecker::getUbnFromLocation($location);
         $client = $location->getCompany()->getOwner();
 
-        $description = 'new health statusses for ubn: '.$ubn.'. '.'maedi visna: '.$newMaediVisnaStatus.'. scrapie: '.$newScrapieStatus;
+        if ($maediVisnaReasonOfEdit !== null && $maediVisnaReasonOfEdit !== '') {
+            $maediVisnaReasonOfEdit = ' ('.$maediVisnaReasonOfEdit.')';
+        }
+
+        if ($scrapieReasonOfEdit !== null && $scrapieReasonOfEdit !== '') {
+            $scrapieReasonOfEdit = ' ('.$scrapieReasonOfEdit.')';
+        }
+
+        $description = 'new health statusses for ubn: '.$ubn.'. '
+            .'maedi visna: '.$newMaediVisnaStatus.$maediVisnaReasonOfEdit
+            .'. scrapie: '.$newScrapieStatus. $scrapieReasonOfEdit
+            .'.';
 
         $log = new ActionLog($client, $loggedInAdmin, UserActionType::HEALTH_STATUS_UPDATE, true, $description, self::IS_USER_ENVIRONMENT);
         DoctrineUtil::persistAndFlush($om, $log);
@@ -111,6 +124,29 @@ class AdminActionLogWriter
         ;
 
         $log = new ActionLog($accountOwner, $admin, UserActionType::TREATMENT_TEMPLATE_DELETE, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Client $accountOwner
+     * @param Employee $admin
+     * @param TreatmentTemplate $template
+     * @return ActionLog
+     */
+    public static function reactivateTreatmentTemplate(ObjectManager $em, $accountOwner, $admin, $template)
+    {
+        $description =
+            'id: '.$template->getId()
+            .', type: '.$template->getDutchType()
+            .', ubn: '.$template->getUbn('')
+            .', beschrijving: '.$template->getDescription()
+        ;
+
+        $log = new ActionLog($accountOwner, $admin, UserActionType::TREATMENT_TEMPLATE_REACTIVATE, true, $description, self::IS_USER_ENVIRONMENT);
         DoctrineUtil::persistAndFlush($em, $log);
 
         return $log;

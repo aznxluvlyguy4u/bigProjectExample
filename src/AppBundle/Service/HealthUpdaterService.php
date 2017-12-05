@@ -3,38 +3,34 @@
 namespace AppBundle\Service;
 
 
-use AppBundle\Component\LocationHealthMessageBuilder;
-use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthMessage;
-use AppBundle\Entity\LocationHealthQueue;
-use AppBundle\Entity\LocationHealthQueueRepository;
-use AppBundle\Entity\LocationHealthRepository;
-use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Entity\MaediVisna;
+use AppBundle\Entity\Scrapie;
 use AppBundle\Util\Finder;
-use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 
 class HealthUpdaterService
 {
-    /** @var ObjectManager */
+    /** @var EntityManagerInterface */
     private $entityManager;
+    /** @var LocationHealthUpdater $locationHealthUpdater */
+    private $locationHealthUpdater;
 
     /**
      * HealthUpdaterService constructor.
-     * @param $entityManager
+     * @param EntityManagerInterface $entityManager
+     * @param LocationHealthUpdater $locationHealthUpdater
      */
-    public function __construct(ObjectManager $entityManager)
+    public function __construct(EntityManagerInterface $entityManager, LocationHealthUpdater $locationHealthUpdater)
     {
         $this->entityManager = $entityManager;
+        $this->locationHealthUpdater = $locationHealthUpdater;
     }
 
 
@@ -47,51 +43,44 @@ class HealthUpdaterService
 
         //update locationHealth chronologically
         $isDeclareInBase = true;
-        $this->updateLocationHealthByArrivalOrImport($location, $declareInBase, $isDeclareInBase);
+        $this->updateLocationHealthByArrivalOrImport($location, $declareInBase, $isDeclareInBase, true);
 
-        if($declareInBase instanceof DeclareArrival) {
-            $criteria = Criteria::create()
-                ->where(Criteria::expr()->gt('arrivalDate', $declareInBase->getArrivalDate()))
-                ->andWhere(Criteria::expr()->eq('location', $location))
-                ->orderBy(['arrivalDate' => Criteria::ASC]);
-        } else { //DeclareImport
-            $criteria = Criteria::create()
-                ->where(Criteria::expr()->gt('arrivalDate', $declareInBase->getImportDate()))
-                ->andWhere(Criteria::expr()->eq('location', $location))
-                ->orderBy(['arrivalDate' => Criteria::ASC]);
-        }
-
-        $locationHealthMessages = $this->entityManager->getRepository('AppBundle:LocationHealthMessage')
-            ->matching($criteria);
-
-        $isDeclareInBase = false;
-        foreach($locationHealthMessages as $locationHealthMessage) {
-            $declareIn = $locationHealthMessage->getRequest();
-            $this->updateLocationHealthByArrivalOrImport($location, $declareIn, $isDeclareInBase);
-        }
+        /*
+         * Warning!
+         *
+         * While recursivelyRecalculatingPreviousArrivalsAndImports
+         * will more accurately represent the illness status based on animal residence history,
+         * this will mess up the administrative illness status, and will create a lot of "duplicate" recalculated health history!
+         *
+         * So that code has been deleted. Don't add that stuff again.
+         */
     }
 
     /**
      * @param Location $location
      * @param DeclareArrival|DeclareImport $declareIn
      * @param boolean $isDeclareBaseIn
+     * @param boolean $createLocationHealthMessage
      */
-    private function updateLocationHealthByArrivalOrImport(Location $location, $declareIn, $isDeclareBaseIn)
+    private function updateLocationHealthByArrivalOrImport(Location $location, $declareIn, $isDeclareBaseIn,
+                                                           $createLocationHealthMessage)
     {
-        $em = $this->entityManager;
-
         if($declareIn instanceof DeclareArrival) {
-            LocationHealthUpdater::updateByGivenUbnOfOrigin($em, $location, $declareIn, $isDeclareBaseIn);
+            $this->locationHealthUpdater->updateByGivenUbnOfOrigin($location, $declareIn, $isDeclareBaseIn,
+                $createLocationHealthMessage);
 
         } else if ($declareIn instanceof DeclareImport) {
-            LocationHealthUpdater::updateWithoutOriginHealthData($em, $location, $declareIn, $isDeclareBaseIn);
+            $this->locationHealthUpdater->updateWithoutOriginHealthData($location, $declareIn, $isDeclareBaseIn,
+                $createLocationHealthMessage);
 
-        } else {
-            //do nothing
         }
+        // else do nothing
     }
 
     /**
+     * The issue of LocationHealthMessages without any persisted related illnesses occurs if the LocationHealthUpdate
+     * is suddenly aborted halfway.
+     *
      * @param Location $location
      */
     public function fixLocationHealthMessagesWithNullValues(Location $location)
@@ -118,6 +107,7 @@ class HealthUpdaterService
             }
             $em->flush();
 
+            /** @var LocationHealthMessage $locationHealthMessage */
             foreach ($locationHealthMessagesWithNull as $locationHealthMessage) {
                 $messageObject = $locationHealthMessage->getRequest();
 
@@ -125,47 +115,57 @@ class HealthUpdaterService
                     if($messageObject->getLocation() == null) {
                         $messageObject->setLocation($location);
                     }
-
-                    $this->updateLocationHealth($messageObject);
                 }
             }
 
         }
     }
 
+
     /**
      * @param Location $location
      */
-    public function fixArrivalsAndImportsWithoutLocationHealthMessage(Location $location)
+    public function fixIncongruentLocationHealthIllnessValues(Location $location)
     {
-        $em = $this->entityManager;
-        
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('location', $location))
-            ->andWhere(Criteria::expr()->eq('healthMessage', null))
-            ->orderBy(['arrivalDate' => Criteria::ASC]);
+        //Get the latest values
+        $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($location, $this->entityManager);
+        /** @var MaediVisna $previousMaediVisnaDestination */
+        $latestMaediVisna = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
+        /** @var Scrapie $previousScrapieDestination */
+        $latestScrapie = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
 
-        $arrivalsWithoutLocationHealthMessage = $em->getRepository(DeclareArrival::class)
-            ->matching($criteria);
-
-        if($arrivalsWithoutLocationHealthMessage->count() > 0) {
-            foreach ($arrivalsWithoutLocationHealthMessage as $arrival) {
-                $this->updateLocationHealth($arrival);
-            }
+        if ($location->getLocationHealth() === null) {
+            LocationHealthUpdater::persistNewLocationHealthWithInitialValues($this->entityManager, $location, new \DateTime('today'));
         }
 
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('location', $location))
-            ->andWhere(Criteria::expr()->eq('healthMessage', null))
-            ->orderBy(['importDate' => Criteria::ASC]);
+        $locationHealth = $location->getLocationHealth();
 
-        $importsWithoutLocationHealthMessage = $em->getRepository(DeclareImport::class)
-            ->matching($criteria);
+        $anyValueChanged = false;
+        if ($locationHealth->getCurrentScrapieStatus() !== $latestScrapie->getStatus()) {
+            $locationHealth->setCurrentScrapieStatus($latestScrapie->getStatus());
+            $anyValueChanged = true;
+        }
 
-        if($importsWithoutLocationHealthMessage->count() > 0) {
-            foreach ($importsWithoutLocationHealthMessage as $import) {
-                $this->updateLocationHealth($import);
-            }
+        if ($locationHealth->getCurrentMaediVisnaStatus() !== $latestMaediVisna->getStatus()) {
+            $locationHealth->setCurrentMaediVisnaStatus($latestMaediVisna->getStatus());
+            $anyValueChanged = true;
+        }
+
+        if ($locationHealth->getCurrentScrapieEndDate() !== $latestScrapie->getEndDate()) {
+            $locationHealth->setCurrentScrapieEndDate($latestScrapie->getEndDate());
+            $anyValueChanged = true;
+        }
+
+        if ($locationHealth->getCurrentMaediVisnaEndDate() !== $latestMaediVisna->getEndDate()) {
+            $locationHealth->setCurrentMaediVisnaEndDate($latestMaediVisna->getEndDate());
+            $anyValueChanged = true;
+        }
+
+        if ($anyValueChanged) {
+            $this->entityManager->persist($locationHealth);
+            $this->entityManager->flush();
         }
     }
+
+
 }

@@ -2,23 +2,12 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\DeclareTagsTransfer;
-use AppBundle\Entity\DeclareTagsTransferRepository;
-use AppBundle\Entity\Tag;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Enumerator\TagStateType;
-use AppBundle\Output\DeclareReplaceTagsOutput;
-use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\RequestUtil;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Enumerator\RequestType;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use AppBundle\Constant\Constant;
 
 /**
  * Class TagsReplaceAPI

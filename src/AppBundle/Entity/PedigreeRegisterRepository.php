@@ -29,5 +29,14 @@ class PedigreeRegisterRepository extends BaseRepository {
         
         return $result == false ? null : $result['full_name'];
     }
+
+
+    /**
+     * @return array
+     */
+    public function getNsfoRegisters()
+    {
+        return $this->findBy(['isRegisteredWithNsfo' => true], ['abbreviation' => 'ASC']);
+    }
     
 }

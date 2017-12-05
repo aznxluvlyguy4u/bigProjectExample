@@ -100,4 +100,17 @@ class PersonRepository extends BaseRepository
     }
     return $id;
   }
+
+
+    /**
+     * @param string $personId
+     * @return int|null
+     */
+  public function getIdByPersonId($personId)
+  {
+      if (!ctype_alnum($personId) && !is_string($personId)) { return null; }
+      $sql = "SELECT id FROM person WHERE person_id = '".$personId."'";
+      $result = $this->getConnection()->query($sql)->fetch();
+      return $result == null ? null : intval(ArrayUtil::get('id', $result));
+  }
 }

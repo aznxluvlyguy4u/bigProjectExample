@@ -439,9 +439,10 @@ class SqlUtil
 
     /**
      * @param array $results
+     * @param string $alias
      * @return string
      */
-    public static function getUlnQueryFilter(array $results)
+    public static function getUlnQueryFilter(array $results, $alias = '')
     {
         $filterString = '';
         $prefix = '';
@@ -450,8 +451,8 @@ class SqlUtil
             $ulnCountryCode = $result[JsonInputConstant::ULN_COUNTRY_CODE];
             $ulnNumber = $result[JsonInputConstant::ULN_NUMBER];
 
-            $filterString = $filterString . $prefix . '(uln_country_code = \''.$ulnCountryCode
-                                                    .'\' AND uln_number = \''.$ulnNumber.'\')';
+            $filterString = $filterString . $prefix . '('.$alias.'uln_country_code = \''.$ulnCountryCode
+                                                    .'\' AND '.$alias.'uln_number = \''.$ulnNumber.'\')';
             $prefix = ' OR ';
         }
         return $filterString;

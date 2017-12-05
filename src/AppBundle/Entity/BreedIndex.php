@@ -23,7 +23,9 @@ use JMS\Serializer\Annotation as JMS;
  *                       "Fertility" : "AppBundle\Entity\FertilityBreedIndex",
  *                        "LambMeat" : "AppBundle\Entity\LambMeatBreedIndex",
  *                  "WormResistance" : "AppBundle\Entity\WormResistanceBreedIndex"},
- *     groups = {"MIXBLUP"})
+ *     groups = {
+ *     "MIXBLUP"
+ * })
  */
 abstract class BreedIndex
 {
@@ -35,7 +37,9 @@ abstract class BreedIndex
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $id;
 
@@ -44,7 +48,9 @@ abstract class BreedIndex
      * @ORM\ManyToOne(targetEntity="Animal")
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Animal")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $animal;
 
@@ -55,7 +61,9 @@ abstract class BreedIndex
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $logDate;
 
@@ -66,7 +74,9 @@ abstract class BreedIndex
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $generationDate;
 
@@ -76,7 +86,9 @@ abstract class BreedIndex
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $index;
 
@@ -86,7 +98,9 @@ abstract class BreedIndex
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $accuracy;
 
@@ -96,7 +110,9 @@ abstract class BreedIndex
      * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
      * @Assert\NotBlank
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $ranking;
 

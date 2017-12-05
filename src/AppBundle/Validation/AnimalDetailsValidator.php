@@ -16,6 +16,9 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class AnimalDetailsValidator extends BaseValidator
 {
+    const ERROR_UNAUTHORIZED_FOR_ANIMAL = "Animal does not belong to this ubn, or is not a Historic Animal that was made public";
+    const ERROR_NON_EXISTENT_ANIMAL = "Animal does not exist in our world :(";
+    const ERROR_NON_PUBLIC_ANIMAL = "The current owner has not made this animal public";
 
     /** @var ObjectManager */
     private $em;
@@ -50,12 +53,12 @@ class AnimalDetailsValidator extends BaseValidator
                     $this->isInputValid = Validator::isAnimalPublicForLocation($this->em, $this->animal, $location);
 
                     if($this->isInputValid == false) {
-                        $this->errors[] = "Animal does not belong to this ubn, or is not a Historic Animal that was made public";
+                        $this->errors[] = self::ERROR_UNAUTHORIZED_FOR_ANIMAL;
 
                         if($this->animal == null) {
-                            $this->errors[] = "Animal does not exist in our world :(";
+                            $this->errors[] = self::ERROR_NON_EXISTENT_ANIMAL;
                         } elseif(!$this->animal->isAnimalPublic()){
-                            $this->errors[] = "The current owner has not made this animal public";
+                            $this->errors[] = self::ERROR_NON_PUBLIC_ANIMAL;
                         }
                     }
                 }

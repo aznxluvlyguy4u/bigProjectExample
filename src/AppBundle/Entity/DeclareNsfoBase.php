@@ -3,6 +3,8 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\MessageBuilderBase;
+use AppBundle\Constant\DeclareLogMessage;
+use AppBundle\Enumerator\Language;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -30,11 +32,14 @@ use JMS\Serializer\Annotation\Expose;
  *                        "Mate" : "AppBundle\Entity\Mate",
  *               "DeclareWeight" : "AppBundle\Entity\DeclareWeight",
  *                      "Litter" : "AppBundle\Entity\Litter"},
- *     groups = {"ERROR_DETAILS"})
+ *     groups = {
+ *     "BASIC",
+ *     "ERROR_DETAILS"
+ * })
  *
  * @package AppBundle\Entity\DeclareNsfoBase
  */
-abstract class DeclareNsfoBase
+abstract class DeclareNsfoBase implements DeclareLogInterface
 {
     use EntityClassInfo;
 
@@ -43,7 +48,9 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $id;
 
@@ -52,7 +59,9 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="datetime")
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $logDate;
 
@@ -61,7 +70,11 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string", unique=true, nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $messageId;
 
@@ -70,7 +83,11 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $requestState;
 
@@ -79,7 +96,9 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $relationNumberKeeper;
 
@@ -89,7 +108,9 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $ubn;
 
@@ -98,7 +119,9 @@ abstract class DeclareNsfoBase
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id", nullable=true)
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $actionBy;
 
@@ -125,7 +148,11 @@ abstract class DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $isHidden;
 
@@ -134,7 +161,11 @@ abstract class DeclareNsfoBase
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS","ADMIN_HIDDEN_STATUS","HIDDEN_STATUS"})
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
      */
     protected $hideForAdmin;
 
@@ -145,7 +176,9 @@ abstract class DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $isOverwrittenVersion;
 
@@ -154,7 +187,9 @@ abstract class DeclareNsfoBase
      * @ORM\ManyToOne(targetEntity="DeclareNsfoBase", inversedBy="olderVersions")
      * @ORM\JoinColumn(name="newest_version_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\DeclareNsfoBase")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $newestVersion;
 
@@ -162,7 +197,9 @@ abstract class DeclareNsfoBase
      * @var ArrayCollection
      * @ORM\OneToMany(targetEntity="DeclareNsfoBase", mappedBy="newestVersion")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareNsfoBase>")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $olderVersions;
 
@@ -487,6 +524,57 @@ abstract class DeclareNsfoBase
         $this->setIsHidden($nsfoMessage->getIsHidden());
         $this->setIsOverwrittenVersion($nsfoMessage->getIsOverwrittenVersion());
         $this->setNewestVersion($nsfoMessage->getNewestVersion());
+    }
+
+
+    /**
+     * @param int $language
+     * @return string
+     */
+    function getDeclareLogMessage($language = Language::EN)
+    {
+        switch ($this::getShortClassName()) {
+            case Mate::getShortClassName():
+                return Language::getValue($language, DeclareLogMessage::MATING_REPORTED);
+                break;
+            case DeclareWeight::getShortClassName():
+                /** @var DeclareWeight $this */
+                return Language::getValue($language, DeclareLogMessage::WEIGHT_REPORTED). ' ' . strval($this->getWeight()) . ' Kg';
+                break;
+        }
+        return DeclareLogInterface::DECLARE_LOG_MESSAGE_NULL_RESPONSE;
+    }
+
+
+    /**
+     * @return string
+     */
+    function getEventDate()
+    {
+        $eventDateString = '';
+
+        switch ($this::getShortClassName())
+        {
+            case Mate::getShortClassName():
+                /** @var Mate $this */
+                if ($this->getStartDate()) {
+                    $eventDateString .= $this->getStartDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                }
+                if ($this->getEndDate()) {
+                    if ($eventDateString !== '') {
+                        $eventDateString .= ' - ';
+                    }
+                    $eventDateString .= $this->getEndDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                }
+                break;
+
+            case DeclareWeight::getShortClassName():
+                /** @var DeclareWeight $this */
+                $eventDateString = $this->getMeasurementDate() ? $this->getMeasurementDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT) : $eventDateString;
+                break;
+        }
+
+        return $eventDateString !== '' ? $eventDateString : DeclareLogInterface::EVENT_DATE_NULL_RESPONSE;
     }
 
 

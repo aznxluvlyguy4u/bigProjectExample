@@ -34,7 +34,9 @@ class DeclareBirth extends DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $ulnNumber;
@@ -43,7 +45,9 @@ class DeclareBirth extends DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $ulnCountryCode;
@@ -52,7 +56,9 @@ class DeclareBirth extends DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $gender;
@@ -60,7 +66,9 @@ class DeclareBirth extends DeclareBase
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $ulnFather;
@@ -68,7 +76,9 @@ class DeclareBirth extends DeclareBase
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $ulnCountryCodeFather;
@@ -77,7 +87,9 @@ class DeclareBirth extends DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $ulnMother;
@@ -86,7 +98,9 @@ class DeclareBirth extends DeclareBase
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $ulnCountryCodeMother;
@@ -95,7 +109,9 @@ class DeclareBirth extends DeclareBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $ulnSurrogate;
@@ -104,7 +120,9 @@ class DeclareBirth extends DeclareBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $ulnCountryCodeSurrogate;
@@ -120,7 +138,9 @@ class DeclareBirth extends DeclareBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $isAborted;
@@ -129,7 +149,9 @@ class DeclareBirth extends DeclareBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $isPseudoPregnancy;
@@ -138,7 +160,9 @@ class DeclareBirth extends DeclareBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $hasLambar;
@@ -152,7 +176,9 @@ class DeclareBirth extends DeclareBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime<'Y-m-d TH:i:s'>")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $dateOfBirth;
@@ -161,7 +187,9 @@ class DeclareBirth extends DeclareBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 100)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $birthType;
@@ -171,7 +199,9 @@ class DeclareBirth extends DeclareBase
      *
      * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $litterSize;
@@ -181,7 +211,9 @@ class DeclareBirth extends DeclareBase
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $birthWeight;
@@ -191,7 +223,9 @@ class DeclareBirth extends DeclareBase
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $birthTailLength;
@@ -208,7 +242,9 @@ class DeclareBirth extends DeclareBase
      * @ORM\JoinColumn(name="declare_birth_request_message_id", referencedColumnName="id")
      * @ORM\OrderBy({"logDate" = "ASC"})
      * @JMS\Type("array")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $responses;
@@ -579,6 +615,16 @@ class DeclareBirth extends DeclareBase
     {
         return $this->ulnCountryCode;
     }
+
+
+    /**
+     * @return string
+     */
+    public function getUln()
+    {
+        return $this->ulnCountryCode . $this->ulnNumber;
+    }
+
 
     /**
      * Set ulnFather

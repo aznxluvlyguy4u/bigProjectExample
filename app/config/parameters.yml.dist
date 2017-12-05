@@ -19,6 +19,7 @@ parameters:
     mailer_port: ~
     mailer_encryption: ~
     mailer_source_address: ~
+    notification_email_addresses: ~
 
     secret: ThisTokenIsNotSoSecretChangeIt
     aws_access_key_id: ~

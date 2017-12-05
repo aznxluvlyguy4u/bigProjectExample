@@ -6,8 +6,10 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\TreatmentTemplateAPIControllerInterface;
 use AppBundle\Entity\MedicationOption;
 use AppBundle\Entity\TreatmentTemplate;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\AdminActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
@@ -27,7 +29,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
      */
     function getIndividualDefaultTemplates(Request $request)
     {
-        $templates = $this->treatmentTemplateRepository->findActiveIndividualTypeByLocation(null);
+        $activeOnly = RequestUtil::getBooleanQuery($request, QueryParameter::ACTIVE_ONLY, true);
+        $templates = $this->treatmentTemplateRepository->findIndividualTypeByLocation(null, $activeOnly);
         $output = $this->getBaseSerializer()->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
@@ -46,7 +49,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $clientValidation = $this->validateIfLocationBelongsToClient($location);
         if ($clientValidation instanceof JsonResponse) { return $clientValidation; }
 
-        $templates = $this->treatmentTemplateRepository->findActiveIndividualTypeByLocation($location);
+        $activeOnly = RequestUtil::getBooleanQuery($request, QueryParameter::ACTIVE_ONLY, true);
+        $templates = $this->treatmentTemplateRepository->findIndividualTypeByLocation($location, $activeOnly);
         $output = $this->getBaseSerializer()->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
@@ -58,7 +62,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
      */
     function getLocationDefaultTemplates(Request $request)
     {
-        $templates = $this->treatmentTemplateRepository->findActiveLocationTypeByLocation(null);
+        $activeOnly = RequestUtil::getBooleanQuery($request, QueryParameter::ACTIVE_ONLY, true);
+        $templates = $this->treatmentTemplateRepository->findLocationTypeByLocation(null, $activeOnly);
         $output = $this->getBaseSerializer()->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
@@ -77,7 +82,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $clientValidation = $this->validateIfLocationBelongsToClient($location);
         if ($clientValidation instanceof JsonResponse) { return $clientValidation; }
 
-        $templates = $this->treatmentTemplateRepository->findActiveLocationTypeByLocation($location);
+        $activeOnly = RequestUtil::getBooleanQuery($request, QueryParameter::ACTIVE_ONLY, true);
+        $templates = $this->treatmentTemplateRepository->findLocationTypeByLocation($location, $activeOnly);
         $output = $this->getBaseSerializer()->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
@@ -389,6 +395,52 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $this->getManager()->flush();
 
         AdminActionLogWriter::deleteTreatmentTemplate($this->getManager(), $template->getLocationOwner(), $admin, $template);
+
+        $output = $this->getBaseSerializer()->getDecodedJson($template, $this->getJmsGroupByQuery($request));
+        return ResultUtil::successResult($output);
+    }
+
+
+    /**
+     * @param Request $request
+     * @param $templateId
+     * @return JsonResponse
+     */
+    function reactivateIndividualTemplate(Request $request, $templateId)
+    {
+        return $this->reactivateTemplate($request, $templateId,TreatmentTypeOption::INDIVIDUAL);
+    }
+
+    /**
+     * @param Request $request
+     * @param $templateId
+     * @return JsonResponse
+     */
+    function reactivateLocationTemplate(Request $request, $templateId)
+    {
+        return $this->reactivateTemplate($request, $templateId, TreatmentTypeOption::LOCATION);
+    }
+
+
+    /**
+     * @param $request
+     * @param $templateId
+     * @param $type
+     * @return JsonResponse
+     */
+    private function reactivateTemplate($request, $templateId, $type)
+    {
+        $admin = $this->getEmployee();
+        if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
+
+        $template = $this->getTemplateByIdAndType($templateId, $type, true);
+        if ($template instanceof JsonResponse) { return $template; }
+
+        $template->setIsActive(true);
+        $this->getManager()->persist($template);
+        $this->getManager()->flush();
+
+        AdminActionLogWriter::reactivateTreatmentTemplate($this->getManager(), $template->getLocationOwner(), $admin, $template);
 
         $output = $this->getBaseSerializer()->getDecodedJson($template, $this->getJmsGroupByQuery($request));
         return ResultUtil::successResult($output);

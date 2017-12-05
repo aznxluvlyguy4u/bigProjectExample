@@ -8,6 +8,7 @@ use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Count;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Client;
@@ -21,15 +22,19 @@ use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\RequestUtil;
+use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\TwigOutputUtil;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Bridge\Twig\TwigEngine;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Templating\EngineInterface;
 
 class LiveStockReportService extends ReportServiceBase
 {
@@ -52,13 +57,15 @@ class LiveStockReportService extends ReportServiceBase
     /** @var Location */
     private $location;
 
+    /** @var ArrayCollection */
+    private $content;
     /** @var array */
     private $data;
 
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, TranslatorInterface $translator, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating,
+        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
             $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
 
     }
@@ -73,6 +80,10 @@ class LiveStockReportService extends ReportServiceBase
         $this->client = $this->userService->getAccountOwner($request);
         $this->location = $this->userService->getSelectedLocation($request);
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
+        $this->content = RequestUtil::getContentAsArray($request, true, null);
+
+        $validationResult = $this->validateContent();
+        if ($validationResult instanceof JsonResponse) { return $validationResult; }
 
         $this->getPdfReportData();
         $this->filename = self::FILE_NAME_REPORT_TYPE.'_'.$this->location->getUbn();
@@ -85,21 +96,55 @@ class LiveStockReportService extends ReportServiceBase
     }
 
 
-    private function getPdfReport()
+    /**
+     * @return JsonResponse|bool
+     */
+    private function validateContent()
     {
-        $html = $this->renderView(self::TWIG_FILE, ['variables' => $this->data]);
-        $this->extension = FileType::PDF;
+        if ($this->content === null) { return true; }
 
-        if(ReportAPIController::IS_LOCAL_TESTING) {
-            //Save pdf in local cache
-            return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($this->getCacheDirFilename(), $html, TwigOutputUtil::pdfLandscapeOptions())], 200);
+        if (!$this->content->containsKey(JsonInputConstant::ANIMALS)) {
+            //if 'animals' key is missing, process as default full livestock report
+            $this->content = null;
+            return true;
         }
 
-        $pdfOutput = $this->knpGenerator->getOutputFromHtml($html,TwigOutputUtil::pdfLandscapeOptions());
+        $animalUlns = $this->content->get(JsonInputConstant::ANIMALS);
 
-        $url = $this->storageService->uploadPdf($pdfOutput, $this->getS3Key());
+        $mandatoryKeys = [
+            JsonInputConstant::ULN_COUNTRY_CODE,
+            JsonInputConstant::ULN_NUMBER,
+            ];
 
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+        foreach ($animalUlns as $animalUln)
+        {
+            foreach ($mandatoryKeys as $mandatoryKey) {
+                if (!key_exists($mandatoryKey, $animalUln)) {
+                    return ResultUtil::errorResult("'".$mandatoryKey."' key is missing", 428);
+                }
+            }
+        }
+
+        //TODO Validate if animals belong to current livestock
+        $isValidLivestockAnimal = true;
+
+        //TODO Validate if animals belong to historic livestock
+        $isValidHistoricLiveStockAnimal = true;
+
+        if (!$isValidLivestockAnimal && !$isValidHistoricLiveStockAnimal) {
+            return ResultUtil::errorResult('List contains animals not on current nor historic livestock list of ubn', 428);
+        }
+
+        return true;
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    private function getPdfReport()
+    {
+        return $this->getPdfReportBase(self::TWIG_FILE, $this->data, true);
     }
 
 
@@ -157,7 +202,13 @@ class LiveStockReportService extends ReportServiceBase
      */
     private function retrieveLiveStockData()
     {
-        $results = StoredProcedure::getProcedure($this->conn, StoredProcedure::GET_LIVESTOCK_REPORT, [$this->location->getId()]);
+        if ($this->content !== null) {
+            $matchLocationOfSelectedAnimals = false; //This ensures inclusion of historic animals
+            $sql = StoredProcedure::createLiveStockReportSqlBase($this->location->getId(), $this->content->get(JsonInputConstant::ANIMALS), $matchLocationOfSelectedAnimals);
+            $results = $this->conn->query($sql)->fetchAll();
+        } else {
+            $results = StoredProcedure::getProcedure($this->conn, StoredProcedure::GET_LIVESTOCK_REPORT, [$this->location->getId()]);
+        }
 
         $keys = array_keys($results);
         foreach ($keys as $key) {
@@ -211,7 +262,27 @@ class LiveStockReportService extends ReportServiceBase
             }
         }
 
-        return $results;
+
+        if ($this->content === null) {
+            return $results;
+        }
+
+        //Order results by order in jsonBody
+        $orderedResults = [];
+
+        foreach ($this->content->get(JsonInputConstant::ANIMALS) as $ordinal => $ulnSet) {
+            $uln = $ulnSet[JsonInputConstant::ULN_COUNTRY_CODE] . $ulnSet[JsonInputConstant::ULN_NUMBER];
+
+            foreach ($results as $resultKey => $result)
+            {
+                if ($result['a_uln'] === $uln) {
+                    $orderedResults[$ordinal] = $result;
+                    break;
+                }
+            }
+        }
+
+        return $orderedResults;
     }
 
 

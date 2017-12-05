@@ -4,7 +4,9 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -28,7 +30,9 @@ class Neuter extends Animal
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({
+     *     "DECLARE"
+     * })
      */
     private $objectType;
 
@@ -368,5 +372,22 @@ class Neuter extends Animal
 
     public static function getClassName() {
         return get_called_class();
+    }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getEvents()
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->orX(
+                Criteria::expr()->eq('requestState', "'".RequestStateType::FINISHED."'"),
+                Criteria::expr()->eq('requestState', "'".RequestStateType::FINISHED_WITH_WARNING."'")
+            ))
+            ->orderBy(array("logDate" => Criteria::DESC))
+        ;
+
+        return parent::getEvents()->matching($criteria);
     }
 }

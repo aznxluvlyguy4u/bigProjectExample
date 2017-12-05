@@ -6,6 +6,7 @@ namespace AppBundle\Util;
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
 class InbreedingCoefficientOffspring
@@ -30,9 +31,6 @@ class InbreedingCoefficientOffspring
     private $childrenSearchArray;
 
     /** @var array */
-    private $originalChildrenSearchArray;
-
-    /** @var array */
     private $closedLoopPaths;
 
     /** @var array */
@@ -41,11 +39,14 @@ class InbreedingCoefficientOffspring
     /** @var float */
     private $inbreedingCoefficient;
 
-    /** @var int */
-    private $fatherId;
-
-    /** @var int */
-    private $motherId;
+    /** @var array */
+    private $ramData;
+    /** @var array */
+    private $eweData;
+    /** @var array */
+    private $animalDataById;
+    /** @var array */
+    private $ascendants;
 
     /** @var array */
     private $paths;
@@ -53,23 +54,27 @@ class InbreedingCoefficientOffspring
     /**
      * InbreedingCoefficientOffspring constructor.
      * @param ObjectManager $em
-     * @param int $fatherId
-     * @param int $motherId
+     * @param array $ramData
+     * @param array $eweData
      * @param array $parentSearchArray
-     * @param array $originalChildrenSearchArray
+     * @param array $childrenSearchArray
+     * @param array $animalDataById
+     * @param array $ascendants
      */
-    public function __construct(ObjectManager $em, $fatherId, $motherId, $parentSearchArray = array(), $originalChildrenSearchArray = array())
+    public function __construct(ObjectManager $em, $ramData, $eweData, $parentSearchArray = [], $childrenSearchArray = [],
+                                $animalDataById, $ascendants = [])
     {
         $this->em = $em;
         $this->animalRepository = $em->getRepository(Animal::class);
-        $this->fatherId = $fatherId;
-        $this->motherId = $motherId;
+        $this->ramData = $ramData;
+        $this->eweData = $eweData;
+        $this->ascendants = $ascendants;
 
         $this->closedLoopPaths = array();
         $this->commonAncestorsInbreedingCoefficient = array();
-        $this->childrenSearchArray = array();
+        $this->childrenSearchArray = $childrenSearchArray;
+        $this->animalDataById = [];
         $this->parentSearchArray = $parentSearchArray;
-        $this->originalChildrenSearchArray = $originalChildrenSearchArray;
 
         $this->run();
     }
@@ -107,16 +112,23 @@ class InbreedingCoefficientOffspring
      */
     private function run()
     {
-        if($this->fatherId == null || $this->motherId == null) {
+        if($this->ramData == null || $this->eweData == null) {
             return self::NO_INBREEDING;
         }
 
         // 1. Set parent and child searchArray values for hypothetical child
         $this->setSearchArrayValuesOfChild();
 
-        // 2. Traverse parents and create search arrays
-        $this->addParents($this->fatherId, self::GENERATION_DIRECT_PARENTS);
-        $this->addParents($this->motherId, self::GENERATION_DIRECT_PARENTS);
+        if (
+            count($this->animalDataById) === 0 ||
+            count($this->childrenSearchArray) === 0 ||
+            count($this->parentSearchArray) === 0)
+        {
+            // 2. Traverse parents and create search arrays
+            foreach ($this->ascendants as $ascendantsSet) {
+                $this->fillAnimalByIdAndChildrenAndParentSearchArrays($ascendantsSet);
+            }
+        }
 
         // 3. Find closed loop paths and
         // 4. Recursively calculate the inbreeding coefficients of the common ancestors
@@ -149,70 +161,52 @@ class InbreedingCoefficientOffspring
 
     private function setSearchArrayValuesOfChild()
     {
-        $this->initializeChildrenSearchArrayKey($this->fatherId);
-        $this->initializeChildrenSearchArrayKey($this->motherId);
-        $this->childrenSearchArray[$this->fatherId][self::CHILD_ID] = self::CHILD_ID;
-        $this->childrenSearchArray[$this->motherId][self::CHILD_ID] = self::CHILD_ID;
+        $fatherId = $this->ramData['id'];
+        $motherId = $this->eweData['id'];
+
+        $this->initializeChildrenSearchArrayKey($fatherId);
+        $this->initializeChildrenSearchArrayKey($motherId);
+        $this->childrenSearchArray[$fatherId][self::CHILD_ID] = self::CHILD_ID;
+        $this->childrenSearchArray[$motherId][self::CHILD_ID] = self::CHILD_ID;
 
         $this->initializeParentSearchArrayKey(self::CHILD_ID);
-        $this->parentSearchArray[self::CHILD_ID][$this->fatherId] = $this->fatherId;
-        $this->parentSearchArray[self::CHILD_ID][$this->motherId] = $this->motherId;
+        $this->parentSearchArray[self::CHILD_ID][$fatherId] = $fatherId;
+        $this->parentSearchArray[self::CHILD_ID][$motherId] = $motherId;
     }
 
 
     /**
-     * Recursively add the previous generations of ascendants.
-     *
-     * @param int $animalId
-     * @param int $generation
+     * @param $ascendantsSet
      */
-    private function addParents($animalId = null, $generation)
+    private function fillAnimalByIdAndChildrenAndParentSearchArrays($ascendantsSet)
     {
-        // Check if inside recursive loop or not
-        if(empty($this->originalChildrenSearchArray)) {
-
-            if($generation < self::GENERATION_OF_ASCENDANTS && $animalId != null) {
-
-                $motherId = $this->animalRepository->getMotherId($animalId);
-                $fatherId = $this->animalRepository->getFatherId($animalId);
-
-                $this->addToChildrenSearchArrays($animalId, $motherId);
-                $this->addToChildrenSearchArrays($animalId, $fatherId);
-                $this->addToParentsSearchArrays($animalId, $motherId);
-                $this->addToParentsSearchArrays($animalId, $fatherId);
-
-                $generation++;
-
-                //Recursive loop for both parents AFTER increasing the generationCount
-                $this->addParents($motherId, $generation);
-                $this->addParents($fatherId, $generation);
-            }
-
-        } else {
-
-            if($generation < self::GENERATION_OF_ASCENDANTS && $animalId != null) {
-
-                $motherId = $this->animalRepository->getMotherId($animalId);
-                $fatherId = $this->animalRepository->getFatherId($animalId);
-
-                if(array_key_exists($fatherId, $this->originalChildrenSearchArray)){
-                    $this->addToChildrenSearchArrays($animalId, $fatherId);
-                }
-
-                if(array_key_exists($motherId, $this->originalChildrenSearchArray)){
-                    $this->addToChildrenSearchArrays($animalId, $motherId);
-                }
-
-                $generation++;
-
-                //Recursive loop for both parents AFTER increasing the generationCount
-                $this->addParents($motherId, $generation);
-                $this->addParents($fatherId, $generation);
-            }
-
+        if (!is_array($ascendantsSet) || count($ascendantsSet) === 0) {
+            return;
         }
 
+        $animalId = ArrayUtil::get('id', $ascendantsSet, null);
 
+        if (is_int($animalId) && is_array($ascendantsSet)) {
+            if (!key_exists($animalId, $this->animalDataById)) {
+
+                foreach (array_keys($ascendantsSet) as $key) {
+                    if ($key !== 'father' && $key !== 'mother') {
+                        $this->animalDataById[$animalId][$key] = $ascendantsSet[$key];
+                    }
+                }
+            }
+        }
+
+        foreach (['father','mother'] as $parentKey) {
+
+            $parentArray = ArrayUtil::get($parentKey, $ascendantsSet, []);
+            $parentId = ArrayUtil::get('id', $parentArray);
+
+            $this->addToChildrenSearchArrays($animalId, $parentId);
+            $this->addToParentsSearchArrays($animalId, $parentId);
+
+            $this->fillAnimalByIdAndChildrenAndParentSearchArrays($parentArray);
+        }
     }
 
 
@@ -223,7 +217,7 @@ class InbreedingCoefficientOffspring
     private function addToChildrenSearchArrays($childId, $parentId)
     {
         //Set parent and children
-        if($parentId != null) {
+        if($parentId !== null && $childId !== null) {
             $this->initializeChildrenSearchArrayKey($parentId);
             $this->childrenSearchArray[$parentId][$childId] = $childId;
         }
@@ -237,7 +231,7 @@ class InbreedingCoefficientOffspring
     private function addToParentsSearchArrays($childId, $parentId)
     {
         //Set parent and children
-        if($parentId != null) {
+        if($parentId != null && $childId !== null) {
             $this->initializeParentSearchArrayKey($childId);
             $this->parentSearchArray[$childId][$parentId] = $parentId;
         }
@@ -286,9 +280,19 @@ class InbreedingCoefficientOffspring
         {
             if(count($this->childrenSearchArray[$animalId]) > 1) {
                 $this->getClosedLoopPathsOfAnimal($animalId);
-                //Calculate the inbreeding coefficients of all common ancestors
-                $commonAncestorInbreedingCoefficientResult = new InbreedingCoefficient($this->em, $animalId, $this->parentSearchArray, $this->childrenSearchArray);
-                $this->commonAncestorsInbreedingCoefficient[$animalId] = $commonAncestorInbreedingCoefficientResult->getValue();
+
+                if (key_exists($animalId, $this->animalDataById)) {
+                    //Calculate the inbreeding coefficients of all common ancestors
+                    $commonAncestorInbreedingCoefficientResult =
+                        new InbreedingCoefficient(
+                            $this->em,
+                            $this->animalDataById[$animalId],
+                            $this->parentSearchArray,
+                            $this->childrenSearchArray,
+                            $this->animalDataById
+                    );
+                    $this->commonAncestorsInbreedingCoefficient[$animalId] = $commonAncestorInbreedingCoefficientResult->getValue();
+                }
             }
         }
     }
@@ -386,23 +390,18 @@ class InbreedingCoefficient
     /**
      * InbreedingCoefficient constructor.
      * @param ObjectManager $em
-     * @param int $animalId
+     * @param array $animalData
+     * @param array $parentSearchArray
+     * @param array $childrenSearchArray
+     * @param array $animalDataById
      */
-    public function __construct(ObjectManager $em, $animalId, $parentSearchArray = array(), $childrenSearchArray = array())
+    public function __construct(ObjectManager $em, $animalData, $parentSearchArray, $childrenSearchArray, $animalDataById)
     {
-        /** @var AnimalRepository $animalRepository */
-        $animalRepository = $em->getRepository(Animal::class);
-        $fatherId = $animalRepository->getFatherId($animalId);
-        $motherId = $animalRepository->getMotherId($animalId);
+        $ramData = ArrayUtil::get('father', $animalData, []);
+        $eweData = ArrayUtil::get('mother', $animalData, []);
 
-        //If searchArray is passed, then only return parentIds if the searchArray contains them.
-        if(array_key_exists($animalId, $parentSearchArray)) {
-            $parentArray = $parentSearchArray[$animalId];
-            $fatherId = $this->getParentIdInParentArray($fatherId, $parentArray);
-            $motherId = $this->getParentIdInParentArray($motherId, $parentArray);
-        }
-
-        $this->inbreedingCoefficientOffspring = new InbreedingCoefficientOffspring($em, $fatherId, $motherId, $parentSearchArray, $childrenSearchArray);
+        $this->inbreedingCoefficientOffspring = new InbreedingCoefficientOffspring($em, $ramData, $eweData,
+            $parentSearchArray, $childrenSearchArray, $animalDataById);
     }
 
     /**
@@ -413,22 +412,4 @@ class InbreedingCoefficient
         return $this->inbreedingCoefficientOffspring->getValue();
     }
 
-
-    /**
-     * @param int $parentId
-     * @param array $parentArray
-     * @return int|null
-     */
-    private function getParentIdInParentArray($parentId, $parentArray)
-    {
-        if(!is_int($parentId)) {
-            return null;
-
-        } elseif(array_key_exists($parentId, $parentArray)) {
-           return $parentId;
-
-        } else {
-            return null;
-        }
-    }
 }

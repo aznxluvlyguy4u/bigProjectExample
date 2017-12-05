@@ -3,7 +3,10 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\Types\Type;
 
 /**
  * Class LocationRepository
@@ -59,6 +62,20 @@ class LocationRepository extends BaseRepository
   public function findOneByActiveUbn($ubn)
   {
     return $this->findOneBy(['ubn' => $ubn, 'isActive' => true]);
+  }
+
+
+  /**
+   * @param $ubn
+   * @return null|Location
+   */
+  public function findOnePrioritizedByActiveUbn($ubn)
+  {
+    $location = $this->findOneByActiveUbn($ubn);
+    if($location) {
+      return $location;
+    }
+    return $this->findOneBy(['ubn' => $ubn]);
   }
 
   /**
@@ -138,5 +155,36 @@ class LocationRepository extends BaseRepository
                 WHERE l.is_active = TRUE AND c.is_active = TRUE
                 ORDER BY count DESC LIMIT ".$limit;
     return $this->getConnection()->query($sql)->fetchAll();
+  }
+
+
+    /**
+     * @param array $ubns
+     * @return \Doctrine\ORM\Query|null
+     */
+  public function getLocationsQueryByUbns(array $ubns = [])
+  {
+      if (count($ubns) === 0) { return null; }
+
+      $qb = $this->getManager()->createQueryBuilder();
+
+      $qb
+          ->select('location')
+          ->from(Location::class, 'location')
+      ;
+
+      $count = 1;
+      foreach ($ubns as $ubn) {
+
+          $ubnQuery = $qb->expr()->andX(
+              $qb->expr()->eq('location.ubn', ':ubn'.$count),
+              $qb->expr()->eq('location.isActive', StringUtil::getBooleanAsString(true))
+          );
+
+          $qb->orWhere($ubnQuery);
+          $qb->setParameter('ubn'.$count++, $ubn, Type::STRING);
+      }
+
+      return $qb->getQuery();
   }
 }

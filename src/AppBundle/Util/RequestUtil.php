@@ -13,14 +13,20 @@ class RequestUtil
 {
     /**
      * @param Request $request
+     * @param bool $allowEmptyContent
+     * @param null $emptyContentResponse
      * @return ArrayCollection
      */
-    public static function getContentAsArray(Request $request)
+    public static function getContentAsArray(Request $request, $allowEmptyContent = false, $emptyContentResponse = null)
     {
         $content = $request->getContent();
 
         if(empty($content)){
-            throw new BadRequestHttpException("Content is empty");
+            if ($allowEmptyContent) {
+                return $emptyContentResponse;
+            } else {
+                throw new BadRequestHttpException("Content is empty");
+            }
         }
 
         return new ArrayCollection(json_decode($content, true));

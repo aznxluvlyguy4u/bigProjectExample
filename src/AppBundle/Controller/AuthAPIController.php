@@ -2,13 +2,13 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Enumerator\DashboardType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @Route("/api/v1/auth")
@@ -143,7 +143,7 @@ class AuthAPIController extends APIController {
    */
   public function resetPassword(Request $request)
   {
-      return $this->get('app.security.auth')->resetPassword($request);
+      return $this->get('app.security.auth')->passwordResetRequest($request, DashboardType::CLIENT);
   }
 
   /**
@@ -188,5 +188,66 @@ class AuthAPIController extends APIController {
       return $this->get('app.security.auth')->validateUbnInHeader($request);
   }
 
+
+    /**
+     * Request password reset and get reset token by email.
+     *
+     * ### Request body ###
+     *
+     *  {
+     *      "dashboard_type":"admin/client/vwa",
+     *      "email_address":"example@example.com"
+     *  }
+     *
+     * @ApiDoc(
+     *   section = "Auth",
+     *   requirements={
+     *     {
+     *       "name"="Authorization header",
+     *       "dataType"="string",
+     *       "requirement"="Base64 encoded",
+     *       "description"="Basic Authentication header with a Base64 encoded secret, semicolon separated value, with delimiter"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Request password reset and get reset token by email"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/password-reset-token")
+     * @Method("POST")
+     */
+    public function passwordResetRequest(Request $request)
+    {
+        return $this->get('app.security.auth')->passwordResetRequest($request);
+    }
+
+
+    /**
+     * Confirm password reset and get new password by email.
+     *
+     * @ApiDoc(
+     *   section = "Auth",
+     *   requirements={
+     *     {
+     *       "name"="Authorization header",
+     *       "dataType"="string",
+     *       "requirement"="Base64 encoded",
+     *       "description"="Basic Authentication header with a Base64 encoded secret, semicolon separated value, with delimiter"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Request password reset and get reset token by email"
+     * )
+     *
+     * @param Request $request the request object
+     * @return string
+     * @Route("/password-reset-token/{resetToken}")
+     * @Method("GET")
+     */
+    public function passwordResetConfirmation(Request $request, $resetToken)
+    {
+        return $this->get('app.security.auth')->passwordResetConfirmation($resetToken);
+    }
 
 }

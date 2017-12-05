@@ -4,17 +4,14 @@
 namespace AppBundle\Enumerator;
 
 
+use AppBundle\Traits\EnumInfo;
+
 class DutchGender
 {
+    use EnumInfo;
+
     const RAM = 'Ram';
     const EWE = 'Ooi';
     const NEUTER = 'Onbekend';
 
-    /**
-     * @return array
-     */
-    static function getConstants() {
-        $oClass = new \ReflectionClass(__CLASS__);
-        return $oClass->getConstants();
-    }
 }

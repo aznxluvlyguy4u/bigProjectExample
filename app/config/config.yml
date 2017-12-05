@@ -11,7 +11,7 @@ parameters:
 
 framework:
     #esi:             ~
-    #translator:      { fallbacks: ["%locale%"] }
+    translator:      { fallbacks: ["%locale%"] }
     secret:          "%secret%"
     router:
         resource: "%kernel.root_dir%/config/routing.yml"
@@ -122,13 +122,13 @@ nelmio_cors:
        '^/api/':
            allow_origin: ['*']
            allow_headers: ['*']
-           allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS']
+           allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS', 'PATCH']
            max_age: 3600
        '^/':
            origin_regex: true
            allow_origin: ['*']
            allow_headers: ['*']
-           allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS']
+           allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS', 'PATCH']
            max_age: 3600
            hosts: ['^api\.']
 

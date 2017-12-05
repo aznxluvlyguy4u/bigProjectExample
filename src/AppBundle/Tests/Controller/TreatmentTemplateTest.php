@@ -4,20 +4,17 @@ namespace AppBundle\Tests\Controller;
 
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\TreatmentType;
 use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\TreatmentTypeOption;
-use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\ResultUtil;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Faker;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use Faker;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class TreatmentTemplateTest
@@ -38,6 +35,8 @@ class TreatmentTemplateTest extends WebTestCase
     const EDIT_location = 'EDIT_location';
     const DELETE_individual = 'DELETE_individual';
     const DELETE_location = 'DELETE_location';
+    const PATCH_individual = 'PATCH_individual';
+    const PATCH_location = 'PATCH_location';
 
     private $endpointSuffixes = [
         self::GET_individualDefault => '/template/individual',
@@ -50,6 +49,8 @@ class TreatmentTemplateTest extends WebTestCase
         self::EDIT_location => '/location/template/',//{templateId}
         self::DELETE_individual => '/individual/template/',//{templateId}
         self::DELETE_location => '/location/template/',//{templateId}
+        self::PATCH_individual => '/individual/template/',//{templateId}
+        self::PATCH_location => '/location/template/',//{templateId}
     ];
 
     /** @var string */
@@ -88,11 +89,7 @@ class TreatmentTemplateTest extends WebTestCase
         self::$faker = Faker\Factory::create();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$accessTokenCode = UnitTestData::getRandomAdminAccessTokenCode(self::$em,AccessLevelType::SUPER_ADMIN);
@@ -125,25 +122,25 @@ class TreatmentTemplateTest extends WebTestCase
      */
     public function testGet()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_individualDefault],
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_individual] . self::$location->getUbn(),
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_locationDefault],
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::TREATMENTS . $this->endpointSuffixes[self::GET_location] . self::$location->getUbn(),
             array(), array(), $this->defaultHeaders
         );
@@ -154,7 +151,7 @@ class TreatmentTemplateTest extends WebTestCase
      * @group cud
      * @group treatment-template-type-cud
      */
-    public function testCreateUpdateDelete()
+    public function testCreateUpdateDeleteReactivate()
     {
         //TODO
     }

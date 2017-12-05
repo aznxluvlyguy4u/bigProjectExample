@@ -16,3 +16,8 @@ swiftmailer:
     disable_delivery: true
 
 liip_functional_test: ~
+
+security:
+    firewalls:
+        secured_area:
+            http_basic: ~

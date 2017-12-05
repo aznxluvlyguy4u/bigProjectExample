@@ -28,8 +28,11 @@ use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedValueUtil;
+use AppBundle\Util\PedigreeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 
 /**
@@ -37,8 +40,10 @@ use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
  */
 class AnimalDetailsOutput
 {
+    const NESTED_GENERATION_LIMIT = 4;
+
     /**
-     * @param ObjectManager $em
+     * @param ObjectManager|EntityManagerInterface $em
      * @param Animal $animal
      * @return array
      */
@@ -129,6 +134,8 @@ class AnimalDetailsOutput
             }
         }
 
+        $ascendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($em->getConnection(), [$animal->getId()],self::NESTED_GENERATION_LIMIT);
+
         $result = array(
             JsonInputConstant::UBN => $animal->getUbn(),
             Constant::ULN_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
@@ -136,8 +143,8 @@ class AnimalDetailsOutput
             Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode(), $replacementString),
             Constant::PEDIGREE_NUMBER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getPedigreeNumber(), $replacementString),
             JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($animal->getAnimalOrderNumber(), $replacementString),
-            "collar" => array ("color" => Utils::fillNullOrEmptyString($animal->getCollarColor(), $replacementString), 
-                               "number" => Utils::fillNullOrEmptyString($animal->getCollarNumber(), $replacementString)),
+            "collar" => array ("color" => Utils::fillNullOrEmptyString($animal->getCollarColor(), $replacementString),
+                "number" => Utils::fillNullOrEmptyString($animal->getCollarNumber(), $replacementString)),
             "name" => Utils::fillNullOrEmptyString($animal->getName(), $replacementString),
             Constant::DATE_OF_BIRTH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $replacementString),
             "inbred_coefficient" => Utils::fillNullOrEmptyString("", $replacementString),
@@ -182,6 +189,7 @@ class AnimalDetailsOutput
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
             "declare_log" => self::getLog($em, $animal, $animal->getLocation(), $replacementString),
             "children" => $animalRepository->getOffspringLogDataBySql($animal, $replacementString),
+            "ascendants" => ArrayUtil::get($animal->getUln(), $ascendants, []),
         );
 
         return $result;
@@ -212,9 +220,7 @@ class AnimalDetailsOutput
      */
     private static function getLog(ObjectManager $em, Animal $animal, $location, $replacementText)
     {
-        /** @var DeclareBaseRepository $declareBaseRepository */
-        $declareBaseRepository = $em->getRepository(DeclareBase::class);
-        return $declareBaseRepository->getLog($animal, $location, $replacementText);
+        return $em->getRepository(DeclareBase::class)->getLog($animal, $location, $replacementText);
     }
 
 }

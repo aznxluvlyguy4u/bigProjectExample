@@ -17,9 +17,13 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\DiscriminatorMap({"CompanyAddress" = "CompanyAddress", "BillingAddress" = "BillingAddress", "LocationAddress" = "LocationAddress"})
  * @JMS\Discriminator(field = "type", disabled=false, map = {
  *                        "CompanyAddress" : "AppBundle\Entity\CompanyAddress",
- *                           "BillingAddress" : "AppBundle\Entity\BillingAddress",
- *                        "LocationAddress" : "AppBundle\Entity\LocationAddress"},
- *     groups = {"CONTACT_INFO"})
+ *                        "BillingAddress" : "AppBundle\Entity\BillingAddress",
+ *                       "LocationAddress" : "AppBundle\Entity\LocationAddress"},
+ *     groups = {
+ *     "BASIC",
+ *     "CONTACT_INFO"
+ * })
+ *
  * @package AppBundle\Entity
  */
 abstract class Address

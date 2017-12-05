@@ -4,7 +4,6 @@ namespace AppBundle\Tests\Controller;
 
 
 use AppBundle\Constant\Endpoint;
-use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\UnitTestData;
@@ -13,6 +12,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class ActionLogTest
@@ -66,11 +66,7 @@ class ActionLogTest extends WebTestCase
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$accessTokenCode = UnitTestData::getRandomAdminAccessTokenCode(self::$em,AccessLevelType::SUPER_ADMIN);
@@ -99,7 +95,7 @@ class ActionLogTest extends WebTestCase
      */
     public function testGet()
     {
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::ACTION_LOG . $this->endpointSuffixes[self::GET]
             .'?start_date=2016-09-10&end_date=2017-09-05&user_action_type=DECLARE_EXPORT&user_account_id=628',
             array(), array(), $this->defaultHeaders
@@ -108,7 +104,7 @@ class ActionLogTest extends WebTestCase
 
 
         if (self::TEST_GETTING_ALL_ACTION_LOGS) {
-            $this->client->request('GET',
+            $this->client->request(Request::METHOD_GET,
                 Endpoint::ACTION_LOG . $this->endpointSuffixes[self::GET],
                 array(), array(), $this->defaultHeaders
             );
@@ -116,14 +112,14 @@ class ActionLogTest extends WebTestCase
         }
 
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::ACTION_LOG . $this->endpointSuffixes[self::GET_actionAccountOwners],
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
 
-        $this->client->request('GET',
+        $this->client->request(Request::METHOD_GET,
             Endpoint::ACTION_LOG . $this->endpointSuffixes[self::GET_actionTypes]
             .'?user_account_id=628',
             array(), array(), $this->defaultHeaders

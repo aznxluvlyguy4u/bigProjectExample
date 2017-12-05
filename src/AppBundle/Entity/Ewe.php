@@ -3,7 +3,9 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use AppBundle\Enumerator\AnimalType;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -528,7 +530,51 @@ class Ewe extends Animal
         return $this->exteriorMeasurements;
     }
 
+
+    /**
+     * @param Ewe|Ram $parent
+     * @return Ewe
+     */
+    public function setParent($parent)
+    {
+        parent::setParent($parent);
+        return $this;
+    }
+
+
     public static function getClassName() {
         return get_called_class();
+    }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getEvents()
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->orX(
+                Criteria::expr()->eq('requestState', RequestStateType::FINISHED),
+                Criteria::expr()->eq('requestState', RequestStateType::FINISHED_WITH_WARNING)
+            ))
+            ->orderBy(array("logDate" => Criteria::DESC))
+        ;
+
+        $declareBirths = [];
+
+        /** @var Litter $litter */
+        foreach ($this->litters as $litter) {//dump($litter->getChildren());die;
+            foreach ($litter->getDeclareBirths() as $birth) {
+                $declareBirths[] = $birth;
+            }
+        }
+
+        return (new ArrayCollection(
+            array_merge(
+                parent::getEvents()->toArray(),
+                $this->matings->toArray(),
+                $declareBirths //TODO check if births are properly included
+            )
+        ))->matching($criteria);
     }
 }

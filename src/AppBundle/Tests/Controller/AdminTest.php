@@ -3,7 +3,7 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\Constant;
-use AppBundle\Constant\TestConstant;
+use AppBundle\Constant\Endpoint;
 use AppBundle\Entity\Employee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Service\IRSerializer;
@@ -17,6 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class AdminTest
@@ -25,9 +26,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 class AdminTest extends WebTestCase
 {
-
-    const DECLARE_ADMIN_ENDPOINT = "/api/v1/admins";
-
     const GET_getAdmins = 'GET_getAdmins';
     const GET_getAccessLevelTypes = 'GET_getAccessLevelTypes';
     const POST_createAdmin = 'POST_createAdmin';
@@ -81,11 +79,7 @@ class AdminTest extends WebTestCase
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$accessTokenCode = UnitTestData::getRandomAdminAccessTokenCode(self::$em, AccessLevelType::SUPER_ADMIN);
 
@@ -114,15 +108,15 @@ class AdminTest extends WebTestCase
      */
     public function testAdminsGetters()
     {
-        $this->client->request('GET',
-            $this::DECLARE_ADMIN_ENDPOINT . $this->endpointSuffixes[self::GET_getAdmins],
+        $this->client->request(Request::METHOD_GET,
+            Endpoint::ADMIN . $this->endpointSuffixes[self::GET_getAdmins],
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
 
 
-        $this->client->request('GET',
-            $this::DECLARE_ADMIN_ENDPOINT . $this->endpointSuffixes[self::GET_getAccessLevelTypes],
+        $this->client->request(Request::METHOD_GET,
+            Endpoint::ADMIN . $this->endpointSuffixes[self::GET_getAccessLevelTypes],
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);
@@ -148,8 +142,8 @@ class AdminTest extends WebTestCase
                     "access_level" => self::$employee->getAccessLevel(),
                 ]);
 
-        $this->client->request('POST',
-            $this::DECLARE_ADMIN_ENDPOINT . $this->endpointSuffixes[self::POST_createAdmin],
+        $this->client->request(Request::METHOD_POST,
+            Endpoint::ADMIN . $this->endpointSuffixes[self::POST_createAdmin],
             array(),
             array(),
             $this->defaultHeaders,
@@ -188,8 +182,8 @@ class AdminTest extends WebTestCase
                         "access_level" => $newAccessLevel,
                     ]);
 
-            $this->client->request('PUT',
-                $this::DECLARE_ADMIN_ENDPOINT . $this->endpointSuffixes[self::PUT_editAdmin],
+            $this->client->request(Request::METHOD_PUT,
+                Endpoint::ADMIN . $this->endpointSuffixes[self::PUT_editAdmin],
                 array(),
                 array(),
                 $this->defaultHeaders,
@@ -219,8 +213,8 @@ class AdminTest extends WebTestCase
                         "person_id" => $personId,
                     ]);
 
-            $this->client->request('PUT',
-                $this::DECLARE_ADMIN_ENDPOINT . $this->endpointSuffixes[self::PUT_deactivateAdmin],
+            $this->client->request(Request::METHOD_PUT,
+                Endpoint::ADMIN . $this->endpointSuffixes[self::PUT_deactivateAdmin],
                 array(),
                 array(),
                 $this->defaultHeaders,

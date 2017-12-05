@@ -70,7 +70,9 @@ class BreedValueGeneticBase
      * @ORM\ManyToOne(targetEntity="BreedValueType")
      * @ORM\JoinColumn(name="breed_value_type_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\BreedValueType")
-     * @JMS\Groups({"MIXBLUP"})
+     * @JMS\Groups({
+     *     "MIXBLUP"
+     * })
      */
     private $breedValueType;
 

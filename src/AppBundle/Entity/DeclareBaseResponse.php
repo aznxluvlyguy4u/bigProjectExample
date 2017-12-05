@@ -41,7 +41,9 @@ use \DateTime;
  *      "DeclareTagsTransferResponse" : "AppBundle\Entity\DeclareTagsTransferResponse",
  *      "DeclareTagReplaceResponse" : "AppBundle\Entity\DeclareTagReplaceResponse",
  *      "RevokeDeclarationResponse" : "AppBundle\Entity\RevokeDeclarationResponse"},
- *     groups = {"DECLARE"})
+ *     groups = {
+ *     "DECLARE"
+ * })
  *
  * @package AppBundle\Entity\DeclareBaseResponse
  */
@@ -76,7 +78,9 @@ abstract class DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $messageNumber;
 
@@ -85,7 +89,9 @@ abstract class DeclareBaseResponse
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $logDate;
 
@@ -93,7 +99,9 @@ abstract class DeclareBaseResponse
      * @var string;
      *
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $errorCode;
 
@@ -101,7 +109,9 @@ abstract class DeclareBaseResponse
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $errorMessage;
 
@@ -110,7 +120,9 @@ abstract class DeclareBaseResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $errorKindIndicator;
 
@@ -119,7 +131,9 @@ abstract class DeclareBaseResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
-     * @JMS\Groups({"ERROR_DETAILS"})
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $successIndicator;
 

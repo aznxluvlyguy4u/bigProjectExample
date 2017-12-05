@@ -2,7 +2,7 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\Constant\TestConstant;
+use AppBundle\Constant\Endpoint;
 use AppBundle\Entity\Location;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Util\UnitTestData;
@@ -11,6 +11,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class TagTest
@@ -20,7 +21,6 @@ use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 class TagTest extends WebTestCase
 {
 
-    const DECLARE_TAG_ENDPOINT = "/api/v1/tags";
     /** @var string */
     static private $accessTokenCode;
     /** @var Location */
@@ -55,11 +55,7 @@ class TagTest extends WebTestCase
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
-        $isLocalTestDatabase = Validator::isLocalTestDatabase(self::$em);
-        if (!$isLocalTestDatabase) {
-            dump(TestConstant::TEST_DB_ERROR_MESSAGE);
-            die;
-        }
+        Validator::isTestDatabase(self::$em);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
@@ -90,8 +86,8 @@ class TagTest extends WebTestCase
      */
     public function testTagsGetters()
     {
-        $this->client->request('GET',
-            $this::DECLARE_TAG_ENDPOINT,
+        $this->client->request(Request::METHOD_GET,
+            Endpoint::TAGS,
             array(), array(), $this->defaultHeaders
         );
         $this->assertStatusCode(200, $this->client);

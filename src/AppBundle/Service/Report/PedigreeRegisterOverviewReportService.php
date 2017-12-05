@@ -23,7 +23,8 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
+use Symfony\Bridge\Twig\TwigEngine;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -45,17 +46,18 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
      * @param AWSSimpleStorageService $storageService
      * @param CsvWriter $csvWriter
      * @param UserService $userService
-     * @param EngineInterface $templating
+     * @param TwigEngine $templating
      * @param GeneratorInterface $knpGenerator
      * @param string $cacheDir
      * @param string $rootDir
      */
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
-                                UserService $userService, EngineInterface $templating, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                UserService $userService, TwigEngine $templating, TranslatorInterface $translator,
+                                GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService,
-            $templating, $knpGenerator, $cacheDir, $rootDir, self::FOLDER);
+            $templating, $translator, $knpGenerator, $cacheDir, $rootDir, self::FOLDER);
 
         $this->em = $em;
         $this->conn = $em->getConnection();

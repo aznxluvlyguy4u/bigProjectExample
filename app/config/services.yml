@@ -74,6 +74,7 @@ services:
           - '%aws_sqs_version%' #version
           - '%environment%' #currentEnv
           - '%kernel.environment%'
+          - true
 
     app.aws.queueservice.external:
         class: AppBundle\Service\AwsExternalQueueService
@@ -83,7 +84,7 @@ services:
     app.aws.queueservice.external.test:
         class: AppBundle\Service\AwsExternalTestQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%aws_sqs_queue_exteral_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST }
+        arguments: { index_0: '%aws_sqs_queue_exteral_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
     app.aws.queueservice.internal:
         class: AppBundle\Service\AwsInternalQueueService
@@ -93,17 +94,17 @@ services:
     app.aws.queueservice.internal.test:
         class: AppBundle\Service\AwsInternalTestQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%aws_sqs_queue_interal_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST }
+        arguments: { index_0: '%aws_sqs_queue_interal_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
     app.aws.queueservice.mixblup_input:
         class: AppBundle\Service\MixBlupInputQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%aws_sqs_queue_mixblup_input_prefix%' }
+        arguments: { index_0: '%aws_sqs_queue_mixblup_input_prefix%', index_7: false }
 
     app.aws.queueservice.mixblup_output:
         class: AppBundle\Service\MixBlupOutputQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%aws_sqs_queue_mixblup_output_prefix%' }
+        arguments: { index_0: '%aws_sqs_queue_mixblup_output_prefix%', index_7: false }
 
     app.aws.storageservice:
         class: AppBundle\Service\AWSSimpleStorageService
@@ -114,6 +115,7 @@ services:
           - '%aws_s3_version%'
           - '%aws_s3_bucket%'
           - '%environment%'
+          - '%kernel.environment%'
 
     app.doctrine.entitygetter:
         class: AppBundle\Service\EntityGetter
@@ -128,11 +130,8 @@ services:
         arguments: ['@doctrine.orm.entity_manager']
 
     app.animal.details.updater:
+        parent: app.abstract_base.controller
         class: AppBundle\Service\AnimalDetailsUpdaterService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@app.cache'
-          - '@app.user'
 
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
@@ -338,7 +337,15 @@ services:
 
     app.health.updater:
         class: AppBundle\Service\HealthUpdaterService
-        arguments: ['@doctrine.orm.entity_manager']
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.health.locationhealth.updater'
+
+    app.health.locationhealth.updater:
+        class: AppBundle\Util\LocationHealthUpdater
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.email'
 
     app.authenticator.token:
         class: AppBundle\Component\Authentication\TokenAuthenticator
@@ -351,7 +358,7 @@ services:
     app.cache:
         class: AppBundle\Service\CacheService
         arguments:
-          - '@snc_redis.sncredis'
+          - '%redis_host%'
 
     app.user:
         class: AppBundle\Service\UserService
@@ -370,6 +377,7 @@ services:
           - '@app.writer.csv_from_sql_results'
           - '@app.user'
           - '@templating'
+          - '@translator'
           - '@knp_snappy.pdf'
           - '%kernel.cache_dir%'
           - '%kernel.root_dir%'
@@ -393,6 +401,14 @@ services:
     app.report.inbreeding_coefficient:
         parent: app.report.base
         class: AppBundle\Service\Report\InbreedingCoefficientReportService
+
+    app.report.vwa.animal_details:
+        parent: app.report.base
+        class: AppBundle\Service\Report\VwaAnimalDetailsReportService
+
+    app.report.vwa.ubns_overview:
+        parent: app.report.base
+        class: AppBundle\Service\Report\VwaUbnsOverviewReportService
 
     app.writer.csv_from_sql_results:
         class: AppBundle\Service\CsvFromSqlResultsWriterService
@@ -422,7 +438,9 @@ services:
         arguments:
           - '@mailer'
           - '%mailer_source_address%'
+          - '%notification_email_addresses%'
           - '@templating'
+          - '@translator'
           - '%kernel.environment%'
 
     app.abstract_base.controller:
@@ -442,6 +460,7 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@app.user'
           - '@security.password_encoder'
+          - '@templating'
 
     app.security.auth:
         parent: app.abstract_base.auth
@@ -498,6 +517,10 @@ services:
           - '@logger'
           - '@app.aws.queueservice.internal'
           - '@app.doctrine.entitygetter'
+
+    app.breed_type:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\BreedTypeService
 
     app.client:
         parent: app.abstract_base.controller
@@ -571,6 +594,10 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MessageService
 
+    app.pedigree_register:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\PedigreeRegisterService
+
     app.profile:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ProfileService
@@ -585,6 +612,16 @@ services:
           - '@app.request.message_builder'
           - '@app.user'
           - '@app.doctrine.entitygetter'
+
+    app.queue_dashboard:
+        class: AppBundle\Service\QueueDashboardService
+        arguments:
+          - '@app.serializer.base'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@app.aws.queueservice.external'
+          - '@app.aws.queueservice.internal'
 
     app.tag.replace:
         parent: app.abstract_base.declare
@@ -605,6 +642,10 @@ services:
     app.ubn:
         parent: app.abstract_base.declare
         class: AppBundle\Service\UbnService
+
+    app.vwa.employee:
+        parent: app.abstract_base.auth
+        class: AppBundle\Service\VwaEmployeeService
 
     app.weight:
         parent: app.abstract_base.controller

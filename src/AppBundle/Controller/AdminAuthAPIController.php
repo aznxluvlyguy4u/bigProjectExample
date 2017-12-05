@@ -2,13 +2,13 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Enumerator\DashboardType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @Route("/api/v1/admins/auth")
@@ -54,7 +54,7 @@ class AdminAuthAPIController extends APIController {
    */
   public function resetPassword(Request $request)
   {
-      return $this->get('app.security.admin_auth')->resetPassword($request);
+      return $this->get('app.security.admin_auth')->passwordResetRequest($request, DashboardType::ADMIN);
   }
 
 }

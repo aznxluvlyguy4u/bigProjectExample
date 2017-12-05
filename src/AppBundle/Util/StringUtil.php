@@ -468,6 +468,15 @@ class StringUtil
 
 
     /**
+     * @return string
+     */
+    public static function getResetToken()
+    {
+        return str_replace('/', '-', base64_encode(random_bytes(128)));
+    }
+
+
+    /**
      * @param string $string
      * @return string
      */
@@ -476,5 +485,5 @@ class StringUtil
         return ltrim($string, '0');
     }
 
-    
+
 }
