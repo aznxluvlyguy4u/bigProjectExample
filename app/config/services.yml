@@ -207,13 +207,14 @@ services:
           - '@logger'
           - '%kernel.root_dir%'
 
+    app.datafix.breed_code.offspring.recalculation:
+        parent: app.datafix.base
+        class: AppBundle\Service\DataFix\OffspringBreedCodeRecalculator
+
     app.datafix.birth.measurements.missing:
         parent: app.datafix.base
         class: AppBundle\Service\DataFix\MissingBirthMeasurementsService
 
-    app.datafix.breed_code.offspring.recalculation:
-        parent: app.datafix.base
-        class: AppBundle\Service\DataFix\OffspringBreedCodeRecalculator
 
     app.migrator.vsm:
         class: AppBundle\Service\Migration\VsmMigratorService
@@ -344,7 +345,15 @@ services:
 
     app.health.updater:
         class: AppBundle\Service\HealthUpdaterService
-        arguments: ['@doctrine.orm.entity_manager']
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.health.locationhealth.updater'
+
+    app.health.locationhealth.updater:
+        class: AppBundle\Util\LocationHealthUpdater
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.email'
 
     app.authenticator.token:
         class: AppBundle\Component\Authentication\TokenAuthenticator
@@ -437,7 +446,9 @@ services:
         arguments:
           - '@mailer'
           - '%mailer_source_address%'
+          - '%notification_email_addresses%'
           - '@templating'
+          - '@translator'
           - '%kernel.environment%'
 
     app.abstract_base.controller:

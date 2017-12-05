@@ -512,7 +512,8 @@ class NsfoMainCommand extends ContainerAwareCommand
             '3: Merge two animals by primaryKeys', "\n",
             '4: Merge two animals where one is missing leading zeroes', "\n",
             '5: Fix duplicate animals due to tagReplace error', "\n",
-            '6: Merge two animals by uln (primary) and pedigreeNumber (secondary) csv correction file', "\n\n",
+            '6: Merge two animals by uln (primary) and pedigreeNumber (secondary) csv correction file', "\n",
+            '7: Merge two animals by ulns in correction file and create tag replace', "\n\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -525,6 +526,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 4: $duplicateAnimalsFixer->mergeImportedAnimalsMissingLeadingZeroes($this->cmdUtil); break;
             case 5: $duplicateAnimalsFixer->fixDuplicateDueToTagReplaceError($this->cmdUtil); break;
             case 6: $duplicateAnimalsFixer->mergePrimaryUlnWithSecondaryPedigreeNumberFromCsvFile($this->cmdUtil); break;
+            case 7: $duplicateAnimalsFixer->mergeByUlnStringsAndCreateDeclareTagReplace($this->cmdUtil); break;
             default: $this->writeLn('Exit menu'); return;
         }
         $this->fixDuplicateAnimalsOptions();
@@ -551,6 +553,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             '10: Replace non-digit symbols in ubn_of_birth of animal table ', "\n",
             '11: Replace non-digit symbols in ubn_of_birth of animal_migration_table', "\n",
             '12: Recalculate breedCodes of all offspring of animal by id or uln', "\n",
+            '13: Set null boolean values in animal to false for is_departed_animal, is_import_animal, is_export_animal', "\n",
             '=====================================', "\n",
             '20: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n\n",
             '================== ANIMAL LOCATION & RESIDENCE ===================', "\n",
@@ -579,6 +582,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 10: $this->getContainer()->get('app.datafix.ubn')->removeNonDigitsFromUbnOfBirthInAnimalTable($this->cmdUtil); break;
             case 11: $this->getContainer()->get('app.datafix.ubn')->removeNonDigitsFromUbnOfBirthInAnimalMigrationTable($this->cmdUtil); break;
             case 12: $this->getContainer()->get('app.datafix.breed_code.offspring.recalculation')->recalculateBreedCodesOfOffspringOfGivenAnimalById($this->cmdUtil); break;
+            case 13: DatabaseDataFixer::setAnimalTransferStateNullBooleansAsFalse($this->conn, null, $this->cmdUtil); break;
 
             case 20: DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirthsWithOptionInput($this->conn, $this->cmdUtil); break;
 

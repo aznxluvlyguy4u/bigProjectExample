@@ -577,15 +577,20 @@ class Utils
     /**
      * @param string $key
      * @param ArrayCollection $array
+     * @param bool $removeTime
      * @return mixed|null
      */
-    public static function getNullCheckedArrayCollectionDateValue($key, ArrayCollection $array)
+    public static function getNullCheckedArrayCollectionDateValue($key, ArrayCollection $array, $removeTime = false)
     {
         if($array === null || $key === null) { return null; }
 
         $dateString = self::getNullCheckedArrayCollectionValue($key, $array);
         if($dateString !== null) {
-            return new \DateTime($dateString);
+            $date = new \DateTime($dateString);
+            if ($removeTime) {
+                return new \DateTime($date->format('Y-m-d'));
+            }
+            return $date;
         } else {
             return null;
         }

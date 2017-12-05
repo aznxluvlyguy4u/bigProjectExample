@@ -6,25 +6,35 @@ namespace AppBundle\Service\DataFix;
 
 use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\VsmIdGroupRepository;
+use AppBundle\Enumerator\ActionType;
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\BreedType;
+use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvParser;
 use AppBundle\Util\DatabaseDataFixer;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\GenderChangerBySql;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -38,6 +48,8 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class DuplicateAnimalsFixer extends DuplicateFixerBase
 {
+    const MERGE_DUPLICATE_ANIMALS_WITH_TAG_REPLACE_FILENAME = 'merge_duplicate_animals_by_ulns_and_create_tag_replace.csv';
+
     const ULN_DATE_OF_BIRTH_MOTHER = 'uln_date_of_birth_mother';
     const ULN_DATE_OF_BIRTH_FATHER = 'uln_date_of_birth_father';
     const ULN = 'uln';
@@ -205,17 +217,25 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         //Only continue if animals actually exist for both animalIds
         if($primaryAnimalResultArray == null || $secondaryAnimalResultArray == null) { return false; }
 
-        /* 2. merge values */
+        $animalIds = [$primaryAnimalId, $secondaryAnimalId];
+
+        /* 2. Fix incongruous gender tables */
+        DatabaseDataFixer::fixGenderTables($this->conn,null, $animalIds);
+
+        /* 3. Fix null transferState booleans in animals */
+        DatabaseDataFixer::setAnimalTransferStateNullBooleansAsFalse($this->conn, $animalIds,null);
+
+        /* 4. merge values */
         $isAnimalIdMergeSuccessFul = $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
         $isAnimalValueMergeSuccessFul = $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray);
 
-        /* 3 Remove unnecessary duplicate */
+        /* 5. Remove unnecessary duplicate */
         if($isAnimalIdMergeSuccessFul && $isAnimalValueMergeSuccessFul) {
             $this->animalRepository->deleteAnimalsById($secondaryAnimalId);
             return true;
         }
         
-        /* 4 Double check animalOrderNumbers */
+        /* 6. Double check animalOrderNumbers */
         DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, null);
         
         return false;
@@ -533,7 +553,8 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             [ self::TABLE_NAME => 'ulns_history',           self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'blindness_factor',       self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'predicate',              self::VARIABLE_TYPE => 'animal_id' ],
-            [ self::TABLE_NAME => 'worm_resistance',              self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'tag',                    self::VARIABLE_TYPE => 'animal_id' ],
+            [ self::TABLE_NAME => 'worm_resistance',        self::VARIABLE_TYPE => 'animal_id' ],
         ];
 
         $mergeResults = $this->mergeColumnValuesInTables($primaryAnimalId, $secondaryAnimalId, $tableNamesByVariableType);
@@ -578,18 +599,52 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
            if empty complement the data with that of the secondary animal */
 
         $columnHeaders = [
-            'parent_father_id', 'parent_mother_id', 'location_id', 'pedigree_country_code', 'pedigree_number', 'name',
-            'date_of_birth', 'transfer_state', 'uln_country_code', 'uln_number', 'animal_order_number', 'is_import_animal',
-            'is_export_animal', 'is_departed_animal', 'animal_country_origin', 'pedigree_register_id', 'ubn_of_birth', 'location_of_birth_id', 'scrapie_genotype', 'predicate', 'predicate_score', 'nickname', 'blindness_factor',
-            'myo_max', 'collar_color', 'collar_number', 'heterosis', 'recombination', 'updated_gene_diversity'
+            'parent_father_id' => ColumnType::INTEGER,
+            'parent_mother_id' => ColumnType::INTEGER,
+            'location_id' => ColumnType::INTEGER,
+            'pedigree_country_code' => ColumnType::STRING,
+            'pedigree_number' => ColumnType::STRING,
+            'name' => ColumnType::STRING,
+            'date_of_birth' => ColumnType::DATETIME,
+            'transfer_state' => ColumnType::STRING,
+            'uln_country_code' => ColumnType::STRING,
+            'uln_number' => ColumnType::STRING,
+            'animal_order_number' => ColumnType::STRING,
+            'is_import_animal' => ColumnType::BOOLEAN,
+            'is_export_animal' => ColumnType::BOOLEAN,
+            'is_departed_animal' => ColumnType::BOOLEAN,
+            'animal_country_origin' => ColumnType::STRING,
+            'pedigree_register_id' => ColumnType::INTEGER,
+            'ubn_of_birth' => ColumnType::STRING,
+            'location_of_birth_id' => ColumnType::INTEGER,
+            'scrapie_genotype' => ColumnType::STRING,
+            'predicate' => ColumnType::STRING,
+            'predicate_score' => ColumnType::INTEGER,
+            'nickname' => ColumnType::STRING,
+            'blindness_factor' => ColumnType::STRING,
+            'myo_max' => ColumnType::STRING,
+            'collar_color' => ColumnType::STRING,
+            'collar_number' => ColumnType::STRING,
+            'heterosis' => ColumnType::FLOAT,
+            'recombination' => ColumnType::FLOAT,
+            'updated_gene_diversity' => ColumnType::BOOLEAN,
         ];
 
-        foreach ($columnHeaders as $columnHeader) {
+        foreach ($columnHeaders as $columnHeader => $columnType) {
             $valuePrimaryValue = $primaryAnimalResultArray[$columnHeader];
             $valueSecondaryValue = $secondaryAnimalResultArray[$columnHeader];
 
             if($valuePrimaryValue === null && $valueSecondaryValue !== null) {
-                $animalSqlMiddle = $animalSqlMiddle.' '.$columnHeader." = '".$valueSecondaryValue."',";
+                switch ($columnType) {
+                    case ColumnType::BOOLEAN:   $newValue = StringUtil::getBooleanAsString($valueSecondaryValue, "NULL"); break;
+                    case ColumnType::INTEGER:   $newValue = $valueSecondaryValue; break;
+                    case ColumnType::FLOAT:     $newValue = "'".$valueSecondaryValue."'"; break;
+                    case ColumnType::STRING:    $newValue = "'".$valueSecondaryValue."'"; break;
+                    case ColumnType::DATETIME:  $newValue = "'".$valueSecondaryValue."'"; break;
+                    default:                    $newValue = "'".$valueSecondaryValue."'"; break;
+                }
+
+                $animalSqlMiddle = $animalSqlMiddle.' '.$columnHeader." = ".$newValue.",";
             }
         }
 
@@ -648,7 +703,51 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         $secondaryVsmId = $secondaryAnimalResultArray['name'];
         VsmIdGroupRepository::saveVsmIdGroup($this->conn, $primaryVsmId, $secondaryVsmId);
 
+        $this->mergeMissingAnimalValuesWithUniqueValueConstraintsIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray);
+
         return true;
+    }
+
+
+    /**
+     * @param array $primaryAnimalResultArray
+     * @param array $secondaryAnimalResultArray
+     * @return boolean
+     */
+    private function mergeMissingAnimalValuesWithUniqueValueConstraintsIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray)
+    {
+        $animalSqlBeginning = 'UPDATE animal SET ';
+
+        $primaryAnimalSqlMiddle = '';
+        $primaryAnimalSqlEnd = ' WHERE id = '.$primaryAnimalResultArray['id'];
+
+        $secondaryAnimalSqlMiddle = '';
+        $secondaryAnimalSqlEnd = ' WHERE id = '.$secondaryAnimalResultArray['id'];
+
+        /* Keep values of primary animal if filled
+           if empty complement the data with that of the secondary animal */
+
+        $columnHeaders = [
+            'tag_id' => "NULL",
+        ];
+
+        foreach ($columnHeaders as $columnHeader => $emptyValue) {
+            $valuePrimaryValue = $primaryAnimalResultArray[$columnHeader];
+            $valueSecondaryValue = $secondaryAnimalResultArray[$columnHeader];
+
+            if($valuePrimaryValue === null && $valueSecondaryValue !== null) {
+                $primaryAnimalSqlMiddle = $primaryAnimalSqlMiddle.' '.$columnHeader." = '".$valueSecondaryValue."',";
+                $secondaryAnimalSqlMiddle = $secondaryAnimalSqlMiddle.' '.$columnHeader." = ".$emptyValue.",";
+            }
+        }
+
+        if($primaryAnimalSqlMiddle != '') {
+            // Remove values from secondary animal first
+            $this->conn->exec($animalSqlBeginning.rtrim($secondaryAnimalSqlMiddle,',').$secondaryAnimalSqlEnd);
+            $this->conn->exec($animalSqlBeginning.rtrim($primaryAnimalSqlMiddle,',').$primaryAnimalSqlEnd);
+            return true;
+        }
+        return false;
     }
 
 
@@ -1043,5 +1142,179 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         $cmdUtil->setEndTimeAndPrintFinalOverview();
 
         return count($mergedPedigreeNumberByUlns);
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
+     */
+    public function mergeByUlnStringsAndCreateDeclareTagReplace(CommandUtil $cmdUtil)
+    {
+        $this->setCmdUtil($cmdUtil);
+
+        if (!$this->cmdUtil->generateConfirmationQuestion('Continue merging animals by uln from the following file? (y/n, default is no): '.self::MERGE_DUPLICATE_ANIMALS_WITH_TAG_REPLACE_FILENAME)) {
+            return 0;
+        }
+
+        $csvOptions = (new CsvOptions())
+            ->ignoreFirstLine()
+            ->setInputFolder('app/Resources/imports/corrections/')
+            ->setOutputFolder('app/Resources/output/corrections/')
+            ->setFileName(self::MERGE_DUPLICATE_ANIMALS_WITH_TAG_REPLACE_FILENAME)
+            ->setPipeSeparator()
+        ;
+
+        $parsedCsv = CsvParser::parse($csvOptions);
+
+        $ulnCount = count($parsedCsv);
+        if($ulnCount === 0) { return 0; }
+
+        // Validate complete input first
+
+        $tagReplaces = [];
+        $ulns = [];
+
+        foreach ($parsedCsv as $key => $records) {
+            if (count($records) === 0) {
+                continue;
+            }
+
+            if (count($records) < 3) {
+                throw new \Exception('Invalid record :' . implode(',', $records));
+            }
+
+            $ulnOld = $records[0];
+            $ulnNew = $records[1];
+            $replaceDateString = $records[2];
+
+            $ulns[] = $ulnOld;
+            $ulns[] = $ulnNew;
+
+            $csvRow = $key + 1;
+
+            $ulnOldParts = Utils::getUlnFromString($ulnOld);
+            if ($ulnOldParts === null) {
+                throw new \Exception('Invalid original_uln on row '.$csvRow.': '.$ulnOld);
+            }
+
+            $ulnNewParts = Utils::getUlnFromString($ulnNew);
+            if ($ulnNewParts === null) {
+                throw new \Exception('Invalid new_uln on row '.$csvRow.': '.$ulnNew);
+            }
+
+            if (!DateUtil::isFormatDDMMYYYY($replaceDateString) && !DateUtil::isFormatYYYYMMDD($replaceDateString)) {
+                throw new \Exception('Invalid tag_replace_date on row '.$csvRow.': '.$ulnNew);
+            }
+
+            $declareTagReplace = new DeclareTagReplace();
+            $declareTagReplace->setUlnCountryCodeToReplace($ulnOldParts[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
+            $declareTagReplace->setUlnNumberToReplace($ulnOldParts[Constant::ULN_NUMBER_NAMESPACE]);
+            $declareTagReplace->setUlnCountryCodeReplacement($ulnNewParts[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
+            $declareTagReplace->setUlnNumberReplacement($ulnNewParts[Constant::ULN_NUMBER_NAMESPACE]);
+            $declareTagReplace->setReplaceDate(new \DateTime($replaceDateString));
+
+            $declareTagReplace->setAnimalOrderNumberReplacement(StringUtil::getLast5CharactersFromString($ulnNew));
+            $declareTagReplace->setAnimalOrderNumberToReplace(StringUtil::getLast5CharactersFromString($ulnOld));
+            $tagReplaces[] = $declareTagReplace;
+        }
+
+        $ulnCounts = $this->animalRepository->ulnCounts($ulns);
+        $missingUlns = [];
+        $duplicateUlns = [];
+        foreach ($ulnCounts as $uln => $count) {
+           if ($count === 0) {
+               $missingUlns[] = $uln;
+           } elseif ($count > 1) {
+               $duplicateUlns[] = $uln;
+           }
+        }
+
+        $inputErrorMessage = '';
+        if (count($missingUlns) > 0) {
+            $inputErrorMessage .= 'The following '.count($missingUlns).' ulns are missing from the database: '.implode(', ', $missingUlns).'. ';
+        }
+
+        if (count($duplicateUlns) > 0) {
+            $inputErrorMessage .= 'The following '.count($duplicateUlns).' ulns have duplicates in the database: '.implode(', ', $duplicateUlns).'.';
+        }
+
+        if ($inputErrorMessage !== '') {
+            throw new \Exception($inputErrorMessage);
+        }
+
+
+        $alreadyDoneCount = 0;
+        $unmatchedDateOfBirthByUlns = [];
+        $manualGenderFixNecessary = [];
+        $successfulMergesOldByNewUlns = [];
+        $failedMergesOldByNewUlns = [];
+
+        $cmdUtil->setStartTimeAndPrintIt(count($tagReplaces), 1);
+
+        /** @var DeclareTagReplace $tagReplace */
+        foreach ($tagReplaces as $tagReplace) {
+
+            $oldAnimal = $this->animalRepository->findAnimalByUlnString($tagReplace->getUlnToReplace());
+            $newAnimal = $this->animalRepository->findAnimalByUlnString($tagReplace->getUlnReplacement());
+
+            $mergeAnimals = true;
+
+            if (abs(TimeUtil::getDaysBetween($oldAnimal->getDateOfBirth(), $newAnimal->getDateOfBirth())) > 1) {
+
+                $unmatchedDateOfBirthByUlns[$newAnimal->getUln()] = $oldAnimal->getUln();
+
+                $cmdUtil->advanceProgressBar(1, 'errors dateOfBirth|gender: '
+                    .count($unmatchedDateOfBirthByUlns).'|'.count($manualGenderFixNecessary)
+                    .'  merges succeeded|failed: '.$alreadyDoneCount.'|'.count($successfulMergesOldByNewUlns).'|'.count($failedMergesOldByNewUlns));
+
+                continue;
+            }
+
+            // Fix missing genders
+            if (
+                 ($newAnimal->getGender() === GenderType::NEUTER && $oldAnimal->getGender() !== GenderType::NEUTER) ||
+                 ($newAnimal->getGender() === null && $oldAnimal->getGender() !== null)
+                ) {
+                $genderChangeResult = GenderChangerBySql::changeGender($this->conn, $newAnimal->getId(), $oldAnimal->getGender());
+
+                if(!$genderChangeResult) {
+                    $manualGenderFixNecessary[$newAnimal->getUln()] = $oldAnimal->getGender();
+                    $mergeAnimals = false;
+                }
+            }
+
+            if ($mergeAnimals) {
+                $mergeResult = $this->mergeAnimalPairByIds($newAnimal->getId(), $oldAnimal->getId());
+
+                if ($mergeResult) {
+                    $successfulMergesOldByNewUlns[$newAnimal->getUln()] = $oldAnimal->getUln();
+
+                    $tagReplace->setAnimal($newAnimal);
+                    $tagReplace->setRequestId(MessageBuilderBase::getNewRequestId());
+                    $tagReplace->setAction(ActionType::V_MUTATE);
+                    $tagReplace->setRecoveryIndicator(RecoveryIndicatorType::N);
+                    $tagReplace->setRequestState(RequestStateType::IMPORTED);
+                    $tagReplace->setRelationNumberKeeper(RequestStateType::IMPORTED);
+                    $tagReplace->setUbn(RequestStateType::IMPORTED);
+                    $tagReplace->setAnimalType(AnimalType::sheep);
+                    $this->em->persist($tagReplace);
+                    $this->em->flush();
+
+                } else {
+                    $failedMergesOldByNewUlns[$newAnimal->getUln()] = $oldAnimal->getUln();
+                }
+            }
+
+            $cmdUtil->advanceProgressBar(1, 'errors dateOfBirth|gender: '
+                .count($unmatchedDateOfBirthByUlns).'|'.count($manualGenderFixNecessary)
+                .'  merges succeeded|failed: '.count($successfulMergesOldByNewUlns).'|'.count($failedMergesOldByNewUlns));
+        }
+
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        return count($successfulMergesOldByNewUlns);
     }
 }

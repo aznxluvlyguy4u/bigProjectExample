@@ -2,33 +2,11 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Company;
-use AppBundle\Entity\CompanyAddress;
-use AppBundle\Entity\CompanyNote;
-use AppBundle\Entity\BillingAddress;
-use AppBundle\Entity\CompanyRepository;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationAddress;
-use AppBundle\Output\CompanyNoteOutput;
-use AppBundle\Output\CompanyOutput;
-use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\RequestUtil;
-use AppBundle\Validation\AdminValidator;
-use AppBundle\Validation\CompanyValidator;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Doctrine\ORM\Query;
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 
 /**
  * @Route("/api/v1/companies")
@@ -63,7 +41,7 @@ class CompanyAPIController extends APIController
 
     /**
      * @param Request $request   the request object
-     * @param Company $companyId
+     * @param string $companyId
      *
      * @return JsonResponse
      * @Route("/{companyId}")
@@ -75,7 +53,7 @@ class CompanyAPIController extends APIController
     }
 
     /**
-     * @var Company $company
+     * @param string $companyId
      * @param Request $request the request object
      *
      * @return JsonResponse
@@ -89,7 +67,7 @@ class CompanyAPIController extends APIController
 
     /**
      * @param Request $request   the request object
-     * @param Company $companyId
+     * @param string $companyId
      *
      * @return JsonResponse
      * @Route("/{companyId}/status")
@@ -102,7 +80,7 @@ class CompanyAPIController extends APIController
 
     /**
      * @param Request $request   the request object
-     * @param String  $companyId
+     * @param string $companyId
      *
      * @return JsonResponse
      * @Route("/{companyId}/details")
@@ -115,7 +93,7 @@ class CompanyAPIController extends APIController
 
     /**
      * @param Request $request   the request object
-     * @param String  $companyId
+     * @param string $companyId
      *
      * @return JsonResponse
      * @Route("/{companyId}/notes")
@@ -128,7 +106,7 @@ class CompanyAPIController extends APIController
 
     /**
      * @param Request $request   the request object
-     * @param String  $companyId
+     * @param string $companyId
      *
      * @return JsonResponse
      * @Route("/{companyId}/notes")

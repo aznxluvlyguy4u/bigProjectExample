@@ -2,18 +2,11 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\Client;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Output\ClientOverviewOutput;
-use AppBundle\Validation\AdminValidator;
-use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Validator\Constraints\Collection;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 
 /**

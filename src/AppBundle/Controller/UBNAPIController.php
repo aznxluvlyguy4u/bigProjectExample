@@ -7,7 +7,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Enumerator\RequestType;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 
 /**

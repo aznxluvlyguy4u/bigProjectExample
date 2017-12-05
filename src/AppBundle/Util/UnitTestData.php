@@ -33,6 +33,9 @@ class UnitTestData
 {
     const UBN = '1674459';
 
+    const ULN_NUMBER_LENGTH = 12;
+    const ULN_NUMBER_KEYSPACE = '0123456789';
+
     const ULN_COUNTRY_CODE = 'XZ';
     const UBN_OF_BIRTH = '1674459';
     const BREEDER_NUMBER = '00756';
@@ -173,12 +176,15 @@ class UnitTestData
      * @param Location $location
      * @param string $ulnNumber
      * @param string $tagStatus
+     * @param \DateTime|string|null $orderDate
      * @return Tag
      */
     public static function createTag(EntityManagerInterface $em,
                                      Location $location,
                                      $ulnNumber = self::TAG_ULN_NUMBER,
-                                     $tagStatus = TagStateType::UNASSIGNED)
+                                     $tagStatus = TagStateType::UNASSIGNED,
+                                     $orderDate = null
+    )
     {
         $tag = $em->getRepository(Tag::class)->findOneBy(
             ['ulnCountryCode' => self::ULN_COUNTRY_CODE, 'ulnNumber' => $ulnNumber]);
@@ -209,7 +215,13 @@ class UnitTestData
         $tag->setUlnNumber($ulnNumber);
         $tag->setAnimalOrderNumber($animalOrderNumber);
         $tag->setTagStatus($tagStatus);
-        $tag->setOrderDate(new \DateTime());
+
+        if (is_string($orderDate)) {
+            $orderDate = new \DateTime($orderDate);
+        } elseif ($orderDate === null) {
+            $orderDate = new \DateTime();
+        }
+        $tag->setOrderDate($orderDate);
 
         $tag->setLocation($location);
         $tag->setOwner($location->getOwner());

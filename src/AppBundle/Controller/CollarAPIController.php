@@ -2,11 +2,9 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Constant\Constant;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
@@ -33,7 +31,7 @@ class CollarAPIController extends APIController implements CollarAPIControllerIn
    *   description = "Retrieve a list of Collar colour codes"
    * )
    * @param Request $request the request object
-   * @return Response
+   * @return JsonResponse
    * @Route("")
    * @Method("GET")
    */
