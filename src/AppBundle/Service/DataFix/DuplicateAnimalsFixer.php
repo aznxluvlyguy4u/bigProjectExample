@@ -216,17 +216,20 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         //Only continue if animals actually exist for both animalIds
         if($primaryAnimalResultArray == null || $secondaryAnimalResultArray == null) { return false; }
 
-        /* 2. merge values */
+        /* 2 Fix incongruous gender tables */
+        DatabaseDataFixer::fixGenderTables($this->conn,null, [$primaryAnimalId, $secondaryAnimalId]);
+
+        /* 3. merge values */
         $isAnimalIdMergeSuccessFul = $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
         $isAnimalValueMergeSuccessFul = $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray);
 
-        /* 3 Remove unnecessary duplicate */
+        /* 4 Remove unnecessary duplicate */
         if($isAnimalIdMergeSuccessFul && $isAnimalValueMergeSuccessFul) {
             $this->animalRepository->deleteAnimalsById($secondaryAnimalId);
             return true;
         }
         
-        /* 4 Double check animalOrderNumbers */
+        /* 5 Double check animalOrderNumbers */
         DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, null);
         
         return false;

@@ -66,38 +66,87 @@ class DatabaseDataFixer
 
 
     /**
-     * @param Connection $conn
-     * @param CommandUtil $cmdUtil
-     * @throws \Doctrine\DBAL\DBALException
+     * @param string|int|array|null $ids
+     * @return string
+     * @throws \Exception
      */
-    public static function fixGenderTables(Connection $conn, CommandUtil $cmdUtil)
+    private static function sqlInconguentRecordsFilter($ids)
     {
-        $cmdUtil->writeln('Fixing incongruent genders vs Ewe/Ram/Neuter records ...');
+        return $ids === null ? '' : ' AND animal.id IN ('. SqlUtil::getIdsFilterListString($ids) .')';
+    }
+
+
+    /**
+     * @param string|int|array|null $ids
+     * @return string
+     * @throws \Exception
+     */
+    private static function sqlIncongruentRamRecords($ids = null)
+    {
+        return "SELECT animal.id, ram.object_type, animal.type FROM animal INNER JOIN ram ON animal.id = ram.id WHERE ram.object_type <> animal.type".self::sqlInconguentRecordsFilter($ids);
+    }
+
+
+    /**
+     * @param string|int|array|null $ids
+     * @return string
+     * @throws \Exception
+     */
+    private static function sqlIncongruentEweRecords($ids = null)
+    {
+        return "SELECT animal.id, ewe.object_type, animal.type FROM animal INNER JOIN ewe ON animal.id = ewe.id WHERE ewe.object_type <> animal.type".self::sqlInconguentRecordsFilter($ids);;
+    }
+
+
+    /**
+     * @param string|int|array|null $ids
+     * @return string
+     * @throws \Exception
+     */
+    private static function sqlIncongruentNeuterRecords($ids = null)
+    {
+        return "SELECT animal.id, neuter.object_type, animal.type FROM animal INNER JOIN neuter ON animal.id = neuter.id WHERE neuter.object_type <> animal.type".self::sqlInconguentRecordsFilter($ids);;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|null $cmdUtil
+     * @param integer|string|array|null $ids
+     * @throws \Exception
+     */
+    public static function fixGenderTables(Connection $conn, $cmdUtil, $ids = null)
+    {
+        if ($cmdUtil !== null) {
+            $cmdUtil->writeln('Fixing incongruent genders vs Ewe/Ram/Neuter records ...');
+        }
 
         /* Diagnosis */
 
-        $sql = "SELECT animal.id, ram.object_type, animal.type FROM animal INNER JOIN ram ON animal.id = ram.id WHERE ram.object_type <> animal.type";
-        $resultsRam = $conn->query($sql)->fetchAll();
+        $resultsRam = $conn->query(self::sqlIncongruentRamRecords($ids))->fetchAll();
         self::printDiagnosisResultsOfFixGenderTables($cmdUtil, $resultsRam, 'Ram');
 
-        $sql = "SELECT animal.id, ewe.object_type, animal.type FROM animal INNER JOIN ewe ON animal.id = ewe.id WHERE ewe.object_type <> animal.type";
-        $resultsEwe = $conn->query($sql)->fetchAll();
+        $resultsEwe = $conn->query(self::sqlIncongruentEweRecords($ids))->fetchAll();
         self::printDiagnosisResultsOfFixGenderTables($cmdUtil, $resultsEwe, 'Ewe');
 
-        $sql = "SELECT animal.id, neuter.object_type, animal.type FROM animal INNER JOIN neuter ON animal.id = neuter.id WHERE neuter.object_type <> animal.type";
-        $resultsNeuter = $conn->query($sql)->fetchAll();
+        $resultsNeuter = $conn->query(self::sqlIncongruentNeuterRecords($ids))->fetchAll();
         self::printDiagnosisResultsOfFixGenderTables($cmdUtil, $resultsNeuter, 'Neuter');
 
-        $cmdUtil->writeln([' ', 'NOTE! RERUN THIS COMMAND AFTER EVERY DUPLICATE KEY VIOLATION ERROR' ,' ']);
+        if ($cmdUtil !== null) {
+            $cmdUtil->writeln([' ', 'NOTE! RERUN THIS COMMAND AFTER EVERY DUPLICATE KEY VIOLATION ERROR' ,' ']);
 
-        $cmdUtil->setStartTimeAndPrintIt(count($resultsRam) + count($resultsEwe) + count($resultsNeuter), 1);
+            $cmdUtil->setStartTimeAndPrintIt(count($resultsRam) + count($resultsEwe) + count($resultsNeuter), 1);
+        }
 
         if(count($resultsRam) > 0) {
             /* Fix animals incorrectly being a Ram */
             foreach($resultsRam as $ramResult) {
                 $id = $ramResult['id'];
                 self::genderTableFixSqlCommand($conn, $id, 'ram', $ramResult['type']);
-                $cmdUtil->advanceProgressBar(1, 'Incorrect Ram with id: '.$id.'');
+
+                if ($cmdUtil !== null) {
+                    $cmdUtil->advanceProgressBar(1, 'Incorrect Ram with id: '.$id.'');
+                }
             }
         }
 
@@ -106,7 +155,10 @@ class DatabaseDataFixer
             foreach($resultsEwe as $eweResult) {
                 $id = $eweResult['id'];
                 self::genderTableFixSqlCommand($conn, $id, 'ewe', $eweResult['type']);
-                $cmdUtil->advanceProgressBar(1, 'Incorrect Ewe with id: '.$id.'');
+
+                if ($cmdUtil !== null) {
+                    $cmdUtil->advanceProgressBar(1, 'Incorrect Ewe with id: '.$id.'');
+                }
             }
         }
 
@@ -116,11 +168,15 @@ class DatabaseDataFixer
             foreach($resultsNeuter as $neuterResult) {
                 $id = $neuterResult['id'];
                 self::genderTableFixSqlCommand($conn, $id, 'neuter', $neuterResult['type']);
-                $cmdUtil->advanceProgressBar(1, 'Incorrect Neuter with id: '.$id.'');
+                if ($cmdUtil !== null) {
+                    $cmdUtil->advanceProgressBar(1, 'Incorrect Neuter with id: '.$id.'');
+                }
             }
         }
-        
-        $cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        if ($cmdUtil !== null) {
+            $cmdUtil->setEndTimeAndPrintFinalOverview();
+        }
 
         self::fillMissingAnimalChildTableRecords($conn, $cmdUtil);
     }
@@ -153,6 +209,10 @@ class DatabaseDataFixer
      */
     private static function printDiagnosisResultsOfFixGenderTables($cmdUtilOrOutput, $results, $entityType)
     {
+        if ($cmdUtilOrOutput === null) {
+            return;
+        }
+
         $neuterCount = 0;
         $eweCount = 0;
         $ramCount = 0;
@@ -195,7 +255,9 @@ class DatabaseDataFixer
 
         foreach (['Neuter', 'Ram', 'Ewe'] as $objectType) {
             $table = strtolower($objectType);
-            $cmdUtilOrOutput->writeln('Filling missing '.$table.' records based on existing animal records ... ');
+            if ($cmdUtilOrOutput !== null) {
+                $cmdUtilOrOutput->writeln('Filling missing '.$table.' records based on existing animal records ... ');
+            }
 
             $sql = "INSERT INTO $table (id, object_type)
                   SELECT a.id, '$objectType' as object_type FROM animal a
@@ -205,7 +267,9 @@ class DatabaseDataFixer
             $totalUpdateCount += $updateCount;
 
             $countPrefix = $updateCount === 0 ? 'No' : $updateCount ;
-            $cmdUtilOrOutput->writeln($countPrefix.' records inserted into '.$table.' table');
+            if ($cmdUtilOrOutput !== null) {
+                $cmdUtilOrOutput->writeln($countPrefix.' records inserted into '.$table.' table');
+            }
         }
 
         return $totalUpdateCount;
