@@ -749,4 +749,37 @@ class DatabaseDataFixer
 
         return $updateCount;
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param int|string|array|null $ids
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
+     */
+    public static function setAnimalTransferStateNullBooleansAsFalse(Connection $conn, $ids = null, $cmdUtilOrOutput)
+    {
+        $columns = [
+            'is_departed_animal',
+            'is_export_animal',
+            'is_import_animal',
+        ];
+
+        $filter = self::sqlInconguentRecordsFilter($ids);
+
+        $totalUpdateCount = 0;
+        foreach ($columns as $column) {
+            $sql = "UPDATE animal SET ".$column." = FALSE WHERE ".$column." ISNULL".$filter;
+            $totalUpdateCount += SqlUtil::updateWithCount($conn, $sql);
+        }
+
+        if ($cmdUtilOrOutput instanceof CommandUtil || $cmdUtilOrOutput instanceof OutputInterface) {
+            $count = $totalUpdateCount === 0 ? 'No' : $totalUpdateCount;
+            $cmdUtilOrOutput->writeln($count . ' boolean values in animal have been set to FALSE from NULL');
+        }
+
+        return $totalUpdateCount;
+    }
 }

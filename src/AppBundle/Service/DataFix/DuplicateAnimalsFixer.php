@@ -18,6 +18,7 @@ use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\BreedType;
+use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
@@ -216,20 +217,25 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         //Only continue if animals actually exist for both animalIds
         if($primaryAnimalResultArray == null || $secondaryAnimalResultArray == null) { return false; }
 
-        /* 2 Fix incongruous gender tables */
-        DatabaseDataFixer::fixGenderTables($this->conn,null, [$primaryAnimalId, $secondaryAnimalId]);
+        $animalIds = [$primaryAnimalId, $secondaryAnimalId];
 
-        /* 3. merge values */
+        /* 2. Fix incongruous gender tables */
+        DatabaseDataFixer::fixGenderTables($this->conn,null, $animalIds);
+
+        /* 3. Fix null transferState booleans in animals */
+        DatabaseDataFixer::setAnimalTransferStateNullBooleansAsFalse($this->conn, $animalIds,null);
+
+        /* 4. merge values */
         $isAnimalIdMergeSuccessFul = $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
         $isAnimalValueMergeSuccessFul = $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray);
 
-        /* 4 Remove unnecessary duplicate */
+        /* 5. Remove unnecessary duplicate */
         if($isAnimalIdMergeSuccessFul && $isAnimalValueMergeSuccessFul) {
             $this->animalRepository->deleteAnimalsById($secondaryAnimalId);
             return true;
         }
         
-        /* 5 Double check animalOrderNumbers */
+        /* 6. Double check animalOrderNumbers */
         DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, null);
         
         return false;
@@ -593,18 +599,52 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
            if empty complement the data with that of the secondary animal */
 
         $columnHeaders = [
-            'parent_father_id', 'parent_mother_id', 'location_id', 'pedigree_country_code', 'pedigree_number', 'name',
-            'date_of_birth', 'transfer_state', 'uln_country_code', 'uln_number', 'animal_order_number', 'is_import_animal',
-            'is_export_animal', 'is_departed_animal', 'animal_country_origin', 'pedigree_register_id', 'ubn_of_birth', 'location_of_birth_id', 'scrapie_genotype', 'predicate', 'predicate_score', 'nickname', 'blindness_factor',
-            'myo_max', 'collar_color', 'collar_number', 'heterosis', 'recombination', 'updated_gene_diversity' ,
+            'parent_father_id' => ColumnType::INTEGER,
+            'parent_mother_id' => ColumnType::INTEGER,
+            'location_id' => ColumnType::INTEGER,
+            'pedigree_country_code' => ColumnType::STRING,
+            'pedigree_number' => ColumnType::STRING,
+            'name' => ColumnType::STRING,
+            'date_of_birth' => ColumnType::DATETIME,
+            'transfer_state' => ColumnType::STRING,
+            'uln_country_code' => ColumnType::STRING,
+            'uln_number' => ColumnType::STRING,
+            'animal_order_number' => ColumnType::STRING,
+            'is_import_animal' => ColumnType::BOOLEAN,
+            'is_export_animal' => ColumnType::BOOLEAN,
+            'is_departed_animal' => ColumnType::BOOLEAN,
+            'animal_country_origin' => ColumnType::STRING,
+            'pedigree_register_id' => ColumnType::INTEGER,
+            'ubn_of_birth' => ColumnType::STRING,
+            'location_of_birth_id' => ColumnType::INTEGER,
+            'scrapie_genotype' => ColumnType::STRING,
+            'predicate' => ColumnType::STRING,
+            'predicate_score' => ColumnType::INTEGER,
+            'nickname' => ColumnType::STRING,
+            'blindness_factor' => ColumnType::STRING,
+            'myo_max' => ColumnType::STRING,
+            'collar_color' => ColumnType::STRING,
+            'collar_number' => ColumnType::STRING,
+            'heterosis' => ColumnType::FLOAT,
+            'recombination' => ColumnType::FLOAT,
+            'updated_gene_diversity' => ColumnType::BOOLEAN,
         ];
 
-        foreach ($columnHeaders as $columnHeader) {
+        foreach ($columnHeaders as $columnHeader => $columnType) {
             $valuePrimaryValue = $primaryAnimalResultArray[$columnHeader];
             $valueSecondaryValue = $secondaryAnimalResultArray[$columnHeader];
 
             if($valuePrimaryValue === null && $valueSecondaryValue !== null) {
-                $animalSqlMiddle = $animalSqlMiddle.' '.$columnHeader." = '".$valueSecondaryValue."',";
+                switch ($columnType) {
+                    case ColumnType::BOOLEAN:   $newValue = StringUtil::getBooleanAsString($valueSecondaryValue, "NULL"); break;
+                    case ColumnType::INTEGER:   $newValue = $valueSecondaryValue; break;
+                    case ColumnType::FLOAT:     $newValue = "'".$valueSecondaryValue."'"; break;
+                    case ColumnType::STRING:    $newValue = "'".$valueSecondaryValue."'"; break;
+                    case ColumnType::DATETIME:  $newValue = "'".$valueSecondaryValue."'"; break;
+                    default:                    $newValue = "'".$valueSecondaryValue."'"; break;
+                }
+
+                $animalSqlMiddle = $animalSqlMiddle.' '.$columnHeader." = ".$newValue.",";
             }
         }
 
