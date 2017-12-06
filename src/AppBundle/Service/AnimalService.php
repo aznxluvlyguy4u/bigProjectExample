@@ -22,6 +22,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -170,6 +171,14 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         if($client == null) { return ResultUtil::errorResult('Client cannot be null', 428); }
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
+        $isRvoLeading = $content !== null && $content->get(JsonInputConstant::IS_RVO_LEADING) === true;
+        if ($isRvoLeading) {
+            if (!AdminValidator::isAdmin($loggedInUser, AccessLevelType::SUPER_ADMIN)) {
+                // Only a SuperAdmin is allowed to force an RVO Leading animal sync
+                return ResultUtil::errorResult('Alleen een Superbeheerder (SuperAdmin) mag een RVO leidende dier sync melden', Response::HTTP_UNAUTHORIZED);
+            }
+        }
+
         //Convert the array into an object and add the mandatory values retrieved from the database
         $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
 
@@ -178,6 +187,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($messageObject);
+
+        if ($isRvoLeading) {
+            AdminActionLogWriter::rvoLeadingAnimalSync($this->getManager(), $client, $messageObject);
+        }
 
         return ResultUtil::successResult($messageArray);
     }
