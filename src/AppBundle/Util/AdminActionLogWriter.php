@@ -12,16 +12,31 @@ use AppBundle\Entity\Exterior;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\Person;
+use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Entity\TreatmentType;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class AdminActionLogWriter
 {
     const IS_USER_ENVIRONMENT = false;
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Client $client
+     * @param RetrieveAnimals $retrieveAnimals
+     */
+    public static function rvoLeadingAnimalSync(EntityManagerInterface $em, Client $client, RetrieveAnimals $retrieveAnimals)
+    {
+        $log = new ActionLog($client, $retrieveAnimals->getActionBy(), UserActionType::RVO_LEADING_ANIMAL_SYNC, true, $retrieveAnimals->getUbn(), self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($em, $log);
+    }
+
 
     /**
      * @param ObjectManager $om
