@@ -11,6 +11,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class RetrieveAnimals
+ * @ORM\Table(name="retrieve_animals",indexes={
+ *     @ORM\Index(name="retrieve_animals_idx", columns={"location_id", "log_date", "is_rvo_leading"})
+ * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveAnimalsRepository")
  * @package AppBundle\Entity
  */
