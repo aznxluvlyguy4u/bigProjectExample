@@ -35,6 +35,12 @@ interface AnimalAPIControllerInterface
    * @param Request $request
    * @return jsonResponse
    */
+  function getLatestRvoLeadingRetrieveAnimals(Request $request);
+
+  /**
+   * @param Request $request
+   * @return jsonResponse
+   */
   function createAnimalDetails(Request $request);
 
   /**
