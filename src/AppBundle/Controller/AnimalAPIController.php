@@ -218,6 +218,33 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
 
+    /**
+     * Get latest RVO leading RetrieveAnimal request for logged in ubn.
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get latest RVO leading RetrieveAnimal request for logged in ubn"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-sync/rvo-leading")
+     * @Method("GET")
+     */
+  public function getLatestRvoLeadingRetrieveAnimals(Request $request)
+  {
+      return $this->get('app.animal')->getLatestRvoLeadingRetrieveAnimals($request);
+  }
+
+
   /**
    * Create a RetrieveAnimalDetails request
    *

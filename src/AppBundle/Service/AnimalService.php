@@ -13,6 +13,7 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
@@ -153,6 +154,22 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     public function getAllRams(Request $request)
     {
         return ResultUtil::successResult($this->getManager()->getRepository(Animal::class)->getAllRams());
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     */
+    function getLatestRvoLeadingRetrieveAnimals(Request $request)
+    {
+        $location = $this->getSelectedLocation($request);
+        $retrieveAnimals = $this->getManager()->getRepository(RetrieveAnimals::class)
+            ->getLatestRvoLeadingRetrieveAnimals($location);
+
+        $this->getBaseSerializer()->getDecodedJson($retrieveAnimals,[JmsGroup::BASIC]);
+
+        return ResultUtil::successResult($retrieveAnimals);
     }
 
 

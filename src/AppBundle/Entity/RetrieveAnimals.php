@@ -11,6 +11,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class RetrieveAnimals
+ * @ORM\Table(name="retrieve_animals",indexes={
+ *     @ORM\Index(name="retrieve_animals_idx", columns={"location_id", "log_date", "is_rvo_leading"})
+ * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveAnimalsRepository")
  * @package AppBundle\Entity
  */
@@ -22,6 +25,9 @@ class RetrieveAnimals
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $id;
 
@@ -30,6 +36,9 @@ class RetrieveAnimals
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $logDate;
 
@@ -38,6 +47,9 @@ class RetrieveAnimals
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $requestId;
 
@@ -46,6 +58,9 @@ class RetrieveAnimals
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $messageId;
 
@@ -53,6 +68,9 @@ class RetrieveAnimals
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $requestState;
 
@@ -61,6 +79,9 @@ class RetrieveAnimals
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $relationNumberKeeper;
 
@@ -71,6 +92,9 @@ class RetrieveAnimals
      * @Assert\NotBlank
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $ubn;
 
@@ -79,6 +103,7 @@ class RetrieveAnimals
      * @ORM\ManyToOne(targetEntity="Location")
      * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Exclude()
      */
     private $location;
 
@@ -94,6 +119,9 @@ class RetrieveAnimals
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $actionBy;
 
@@ -102,6 +130,9 @@ class RetrieveAnimals
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @Assert\NotBlank
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $isRvoLeading;
 
@@ -109,6 +140,9 @@ class RetrieveAnimals
      * @var integer
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $currentAnimalsCount;
 
@@ -116,6 +150,9 @@ class RetrieveAnimals
      * @var integer
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $retrievedAnimalsCount;
 
@@ -123,6 +160,9 @@ class RetrieveAnimals
      * @var integer
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $newAnimalsCount;
 
@@ -130,6 +170,9 @@ class RetrieveAnimals
      * @var integer
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $blockedNewAnimalsCount;
 
@@ -137,6 +180,9 @@ class RetrieveAnimals
      * @var integer
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
      */
     private $removedAnimalsCount;
 
