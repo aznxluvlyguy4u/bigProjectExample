@@ -158,7 +158,9 @@ class LiveStockReportService extends ReportServiceBase
         $keysToIgnore = [
             'a_uln_without_order_number',
             'f_uln_without_order_number',
+            'f_animal_order_number',
             'm_uln_without_order_number',
+            'm_animal_order_number',
             'a_lamb_meat_index',
             'f_lamb_meat_index',
             'm_lamb_meat_index',
