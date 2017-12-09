@@ -43,9 +43,6 @@ class LiveStockReportService extends ReportServiceBase
     const TWIG_FILE = 'Report/livestock_report.html.twig';
 
 
-    //Options
-    const SHOW_PREDICATE_IN_REPORT = false;
-
     const FILE_NAME_REPORT_TYPE = 'stallijst';
     const PEDIGREE_NULL_FILLER = '-';
     const ULN_NULL_FILLER = '-';
@@ -299,15 +296,16 @@ class LiveStockReportService extends ReportServiceBase
             $results[$key]['f_breed_value_litter_size'] = BreedFormat::formatBreedValue($results[$key]['f_breed_value_litter_size_value'], $results[$key]['f_breed_value_litter_size_accuracy']);
 
 
-            if(self::SHOW_PREDICATE_IN_REPORT) {
-                $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
-                $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
-                $results[$key]['m_predicate'] = DisplayUtil::parsePredicateString($results[$key]['m_predicate_value'], $results[$key]['m_predicate_score']);
-            } else {
-                $results[$key]['a_predicate'] = null;
-                $results[$key]['f_predicate'] = null;
-                $results[$key]['m_predicate'] = null;
-            }
+            // Format Predicate values
+            $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
+            $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
+            $results[$key]['m_predicate'] = DisplayUtil::parsePredicateString($results[$key]['m_predicate_value'], $results[$key]['m_predicate_score']);
+            unset($results[$key]['a_predicate_value']);
+            unset($results[$key]['f_predicate_value']);
+            unset($results[$key]['m_predicate_value']);
+            unset($results[$key]['a_predicate_score']);
+            unset($results[$key]['f_predicate_score']);
+            unset($results[$key]['m_predicate_score']);
         }
 
 
