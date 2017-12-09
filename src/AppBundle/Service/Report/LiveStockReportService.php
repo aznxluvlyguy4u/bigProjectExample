@@ -50,6 +50,9 @@ class LiveStockReportService extends ReportServiceBase
     const EWE_LETTER = 'O';
     const RAM_LETTER = 'R';
 
+    const BREED_VALUE_PRECISION = 2;
+    const BREED_ACCURACY_PRECISION = 2;
+
     /** @var Client */
     private $client;
     /** @var Location */
@@ -243,6 +246,26 @@ class LiveStockReportService extends ReportServiceBase
 
 
     /**
+     * @param float $value
+     * @return float
+     */
+    private function roundBreedValue($value)
+    {
+        return round($value, self::BREED_VALUE_PRECISION);
+    }
+
+
+    /**
+     * @param float $accuracy
+     * @return float
+     */
+    private function roundBreedAccuracy($accuracy)
+    {
+        return round($accuracy, self::BREED_ACCURACY_PRECISION);
+    }
+
+
+    /**
      * @return array
      */
     private function retrieveLiveStockData()
@@ -306,6 +329,50 @@ class LiveStockReportService extends ReportServiceBase
             unset($results[$key]['a_predicate_score']);
             unset($results[$key]['f_predicate_score']);
             unset($results[$key]['m_predicate_score']);
+
+
+            // Round breed values
+            $breedValueKeys = [
+                'a_breed_value_litter_size_value' => true,
+                'a_breed_value_litter_size_accuracy' => false,
+                'm_breed_value_litter_size_value' => true,
+                'm_breed_value_litter_size_accuracy' => false,
+                'f_breed_value_litter_size_value' => true,
+                'f_breed_value_litter_size_accuracy' => false,
+                'a_breed_value_growth_value' => true,
+                'a_breed_value_growth_accuracy' => false,
+                'm_breed_value_growth_value' => true,
+                'm_breed_value_growth_accuracy' => false,
+                'f_breed_value_growth_value' => true,
+                'f_breed_value_growth_accuracy' => false,
+                'a_breed_value_muscle_thickness_value' => true,
+                'a_breed_value_muscle_thickness_accuracy' => false,
+                'm_breed_value_muscle_thickness_value' => true,
+                'm_breed_value_muscle_thickness_accuracy' => false,
+                'f_breed_value_muscle_thickness_value' => true,
+                'f_breed_value_muscle_thickness_accuracy' => false,
+                'a_breed_value_fat_value' => true,
+                'a_breed_value_fat_accuracy' => false,
+                'm_breed_value_fat_value' => true,
+                'm_breed_value_fat_accuracy' => false,
+                'f_breed_value_fat_value' => true,
+                'f_breed_value_fat_accuracy' => false,
+                'a_lamb_meat_index_value' => true,
+                'a_lamb_meat_accuracy' => false,
+                'm_lamb_meat_index_value' => true,
+                'm_lamb_meat_accuracy' => false,
+                'f_lamb_meat_index_value' => true,
+                'f_lamb_meat_accuracy' => false,
+            ];
+
+            foreach ($breedValueKeys as $breedValueKey => $isValue) {
+                if ($isValue) {
+                    $results[$key][$breedValueKey] = $this->roundBreedValue($results[$key][$breedValueKey]);
+                } else {
+                    $results[$key][$breedValueKey] = $this->roundBreedAccuracy($results[$key][$breedValueKey]);
+                }
+            }
+
         }
 
 
