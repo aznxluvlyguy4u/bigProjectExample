@@ -15,6 +15,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService;
@@ -84,6 +85,8 @@ class LiveStockReportService extends ReportServiceBase
 
         $validationResult = $this->validateContent();
         if ($validationResult instanceof JsonResponse) { return $validationResult; }
+
+        $this->setLocaleFromQueryParameter($request);
 
         $this->getPdfReportData();
         $this->filename = self::FILE_NAME_REPORT_TYPE.'_'.$this->location->getUbn();
@@ -177,10 +180,53 @@ class LiveStockReportService extends ReportServiceBase
         ];
 
         $csvData = $this->unsetNestedKeys($this->data[ReportLabel::ANIMALS], $keysToIgnore);
+        $csvData = $this->translateColumnHeaders($csvData);
 
         return $this->generateFile($this->filename, $csvData,
             self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
         );
+    }
+
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    private function trans($value)
+    {
+        return $this->translator->trans($value);
+    }
+
+
+    private function translateColumnHeaders($csvData)
+    {
+        if ($this->translator->getLocale() === Locale::EN) {
+            return $csvData;
+        }
+
+        foreach ($csvData as $item => $records) {
+            foreach ($records as $columnHeader => $value) {
+
+                $prefix = mb_substr($columnHeader, 0, 2);
+                $upperSuffix = strtoupper(mb_substr($columnHeader, 2, strlen($columnHeader)-2));
+
+                switch ($prefix) {
+                    case 'a_': $translatedColumnHeader = $this->trans('A') . '_' . $this->trans($upperSuffix); break;
+                    case 'f_': $translatedColumnHeader = $this->trans('F') . '_' . $this->trans($upperSuffix); break;
+                    case 'm_': $translatedColumnHeader = $this->trans('M') . '_' . $this->trans($upperSuffix); break;
+                    default: $translatedColumnHeader = $this->trans(strtoupper($columnHeader)); break;
+                }
+
+                $translatedColumnHeader = strtr(strtolower($translatedColumnHeader), [' ' => '_']);
+
+                if ($columnHeader !== $translatedColumnHeader) {
+                    $csvData[$item][strtolower($translatedColumnHeader)] = $value;
+                    unset($csvData[$item][$columnHeader]);
+                }
+            }
+        }
+
+        return $csvData;
     }
 
 

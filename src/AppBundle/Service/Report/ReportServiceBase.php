@@ -9,6 +9,8 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\Locale;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Report\ReportBase;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
@@ -17,6 +19,7 @@ use AppBundle\Service\UserService;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\TwigOutputUtil;
 use AppBundle\Validation\AdminValidator;
@@ -77,6 +80,8 @@ class ReportServiceBase
     protected $folderName;
     /** @var string */
     protected $extension;
+    /** @var string */
+    protected $language;
 
     /** @var array */
     protected $inputErrors;
@@ -130,6 +135,16 @@ class ReportServiceBase
 
         $this->fs = new Filesystem();
         $this->inputErrors = [];
+    }
+
+
+    /**
+     * @param Request $request
+     */
+    protected function setLocaleFromQueryParameter(Request $request)
+    {
+        $this->language = $request->query->get(QueryParameter::LANGUAGE, Locale::NL);
+        $this->translator->setLocale($this->language);
     }
 
 
@@ -286,15 +301,17 @@ class ReportServiceBase
 
     /**
      * @param array $arraySets
-     * @param string $keyPrefix
      * @param array $keysToIgnore
+     * @param array $customKeyTranslation
+     * @param string $keyPrefix
      * @return array
      */
-    protected function convertNestedArraySetsToSqlResultFormat(array $arraySets, $keysToIgnore = [], $keyPrefix = '')
+    protected function convertNestedArraySetsToSqlResultFormat(array $arraySets, $keysToIgnore = [],
+                                                               array $customKeyTranslation = [], $keyPrefix = '')
     {
         $result = [];
         foreach ($arraySets as $arraySet) {
-            $result[] = $this->convertNestedArrayToSqlResultFormat($arraySet, $keysToIgnore, $keyPrefix);
+            $result[] = $this->convertNestedArrayToSqlResultFormat($arraySet, $keysToIgnore, $keyPrefix, $customKeyTranslation);
         }
         $this->purgeConvertedResult();
 
@@ -320,17 +337,35 @@ class ReportServiceBase
     }
 
 
+    /**
+     * @param array $array
+     * @return array
+     */
+    protected function translateKeysInFlatArray(array $array)
+    {
+        foreach ($array as $key => $value) {
+            $translatedKey = $this->translateKey($key);
+            if ($translatedKey != $key) {
+                $array[$translatedKey] = $value;
+                unset($array[$key]);
+            }
+        }
+        return $array;
+    }
+
+
 
     /**
      * @param array $array
      * @param string $keyPrefix
+     * @param array $customKeyTranslation
      * @param array $keysToIgnore
      * @param string $semiColonReplacement
      * @param boolean $purgeResult
      * @return array
      * @throws \Exception
      */
-    protected function convertNestedArrayToSqlResultFormat(array $array, $keysToIgnore = [], $keyPrefix = '', $semiColonReplacement = ',', $purgeResult = true)
+    protected function convertNestedArrayToSqlResultFormat(array $array, $keysToIgnore = [], $keyPrefix = '', array $customKeyTranslation = [], $semiColonReplacement = ',', $purgeResult = true)
     {
         $keySeparator = '_';
 
@@ -342,10 +377,16 @@ class ReportServiceBase
                 continue;
             }
 
+            if (key_exists($key, $customKeyTranslation)) {
+                $key = $customKeyTranslation[$key];
+            }
+
+            $key = $this->translateKey($key);
+
             $keyForResult = $keyPrefix !== '' ? $keyPrefix.$keySeparator.$key : $key;
 
             if (is_array($item)) {
-                self::convertNestedArrayToSqlResultFormat($item, $keysToIgnore, $keyForResult, $semiColonReplacement,false);
+                self::convertNestedArrayToSqlResultFormat($item, $keysToIgnore, $keyForResult, $customKeyTranslation, $semiColonReplacement,false);
 
             } elseif (is_string($item)) {
 
@@ -357,6 +398,30 @@ class ReportServiceBase
         }
 
         return $this->convertedResult;
+    }
+
+
+    /**
+     * @param string $key
+     * @return string
+     */
+    protected function translateKey($key)
+    {
+        // Translate concatenated parent strings, like: fm, mm, fff, mfmfmfmf
+        if (strlen($key) > 1 && StringUtil::onlyContainsChars(['f', 'm'], $key)) {
+            $chars = str_split($key, 1);
+
+            $result = '';
+            $prefix = '';
+            foreach ($chars as $char) {
+                $result .= $prefix . $this->translateKey($char);
+                $prefix = '_';
+            }
+
+            return $result;
+        }
+
+        return strtr(strtolower($this->translator->trans(strtoupper($key))), [' ' => '_']);
     }
 
 
