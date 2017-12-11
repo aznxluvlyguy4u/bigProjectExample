@@ -468,6 +468,19 @@ class StringUtil
 
 
     /**
+     * @param array $needles
+     * @param $haystack
+     * @return bool
+     */
+    public static function onlyContainsChars(array $needles, $haystack)
+    {
+        $regex = '((' . implode('|', $needles) . ')+)';
+        preg_match($regex, $haystack, $matches);
+        return in_array($haystack, $matches);
+    }
+
+
+    /**
      * @return string
      */
     public static function getResetToken()

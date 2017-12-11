@@ -41,6 +41,13 @@ class ReportAPIController extends APIController {
    *        "required"=false,
    *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
    *        "format"="?file_type=csv"
+   *     },
+   *     {
+   *        "name"="language",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+   *        "format"="?language=en"
    *     }
    *   },
    *   resource = true,
@@ -77,6 +84,13 @@ class ReportAPIController extends APIController {
    *        "required"=false,
    *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
    *        "format"="?file_type=csv"
+   *     },
+   *     {
+   *        "name"="language",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+   *        "format"="?language=en"
    *     }
    *   },
    *   resource = true,
@@ -113,6 +127,13 @@ class ReportAPIController extends APIController {
    *        "required"=false,
    *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
    *        "format"="?file_type=csv"
+   *     },
+   *     {
+   *        "name"="language",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+   *        "format"="?language=en"
    *     }
    *   },
    *   resource = true,

@@ -102,7 +102,9 @@ class InbreedingCoefficientReportService extends ReportServiceBase
             return ResultUtil::errorResult('',Response::HTTP_BAD_REQUEST, $this->inputErrors);
         }
 
-        $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->ramData, $this->ewesData,
+        $this->setLocaleFromQueryParameter($request);
+
+        $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->translator, $this->ramData, $this->ewesData,
             $this->generationOfAscendants, $client);
 
         if ($fileType === FileType::CSV) {

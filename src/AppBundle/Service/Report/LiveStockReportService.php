@@ -15,6 +15,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService;
@@ -42,15 +43,15 @@ class LiveStockReportService extends ReportServiceBase
     const TWIG_FILE = 'Report/livestock_report.html.twig';
 
 
-    //Options
-    const SHOW_PREDICATE_IN_REPORT = false;
-
     const FILE_NAME_REPORT_TYPE = 'stallijst';
     const PEDIGREE_NULL_FILLER = '-';
     const ULN_NULL_FILLER = '-';
     const NEUTER_STRING = '-';
     const EWE_LETTER = 'O';
     const RAM_LETTER = 'R';
+
+    const BREED_VALUE_PRECISION = 2;
+    const BREED_ACCURACY_PRECISION = 2;
 
     /** @var Client */
     private $client;
@@ -84,6 +85,8 @@ class LiveStockReportService extends ReportServiceBase
 
         $validationResult = $this->validateContent();
         if ($validationResult instanceof JsonResponse) { return $validationResult; }
+
+        $this->setLocaleFromQueryParameter($request);
 
         $this->getPdfReportData();
         $this->filename = self::FILE_NAME_REPORT_TYPE.'_'.$this->location->getUbn();
@@ -155,7 +158,9 @@ class LiveStockReportService extends ReportServiceBase
         $keysToIgnore = [
             'a_uln_without_order_number',
             'f_uln_without_order_number',
+            'f_animal_order_number',
             'm_uln_without_order_number',
+            'm_animal_order_number',
             'a_lamb_meat_index',
             'f_lamb_meat_index',
             'm_lamb_meat_index',
@@ -177,10 +182,53 @@ class LiveStockReportService extends ReportServiceBase
         ];
 
         $csvData = $this->unsetNestedKeys($this->data[ReportLabel::ANIMALS], $keysToIgnore);
+        $csvData = $this->translateColumnHeaders($csvData);
 
         return $this->generateFile($this->filename, $csvData,
             self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
         );
+    }
+
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    private function trans($value)
+    {
+        return $this->translator->trans($value);
+    }
+
+
+    private function translateColumnHeaders($csvData)
+    {
+        if ($this->translator->getLocale() === Locale::EN) {
+            return $csvData;
+        }
+
+        foreach ($csvData as $item => $records) {
+            foreach ($records as $columnHeader => $value) {
+
+                $prefix = mb_substr($columnHeader, 0, 2);
+                $upperSuffix = strtoupper(mb_substr($columnHeader, 2, strlen($columnHeader)-2));
+
+                switch ($prefix) {
+                    case 'a_': $translatedColumnHeader = $this->trans('A') . '_' . $this->trans($upperSuffix); break;
+                    case 'f_': $translatedColumnHeader = $this->trans('F') . '_' . $this->trans($upperSuffix); break;
+                    case 'm_': $translatedColumnHeader = $this->trans('M') . '_' . $this->trans($upperSuffix); break;
+                    default: $translatedColumnHeader = $this->trans(strtoupper($columnHeader)); break;
+                }
+
+                $translatedColumnHeader = strtr(strtolower($translatedColumnHeader), [' ' => '_']);
+
+                if ($columnHeader !== $translatedColumnHeader) {
+                    $csvData[$item][strtolower($translatedColumnHeader)] = $value;
+                    unset($csvData[$item][$columnHeader]);
+                }
+            }
+        }
+
+        return $csvData;
     }
 
 
@@ -194,6 +242,26 @@ class LiveStockReportService extends ReportServiceBase
         $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($this->em, $this->location, true);
         $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
         $this->data[ReportLabel::ANIMALS] = $this->retrieveLiveStockData();
+    }
+
+
+    /**
+     * @param float $value
+     * @return float
+     */
+    private function roundBreedValue($value)
+    {
+        return round($value, self::BREED_VALUE_PRECISION);
+    }
+
+
+    /**
+     * @param float $accuracy
+     * @return float
+     */
+    private function roundBreedAccuracy($accuracy)
+    {
+        return round($accuracy, self::BREED_ACCURACY_PRECISION);
     }
 
 
@@ -251,15 +319,60 @@ class LiveStockReportService extends ReportServiceBase
             $results[$key]['f_breed_value_litter_size'] = BreedFormat::formatBreedValue($results[$key]['f_breed_value_litter_size_value'], $results[$key]['f_breed_value_litter_size_accuracy']);
 
 
-            if(self::SHOW_PREDICATE_IN_REPORT) {
-                $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
-                $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
-                $results[$key]['m_predicate'] = DisplayUtil::parsePredicateString($results[$key]['m_predicate_value'], $results[$key]['m_predicate_score']);
-            } else {
-                $results[$key]['a_predicate'] = null;
-                $results[$key]['f_predicate'] = null;
-                $results[$key]['m_predicate'] = null;
+            // Format Predicate values
+            $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
+            $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
+            $results[$key]['m_predicate'] = DisplayUtil::parsePredicateString($results[$key]['m_predicate_value'], $results[$key]['m_predicate_score']);
+            unset($results[$key]['a_predicate_value']);
+            unset($results[$key]['f_predicate_value']);
+            unset($results[$key]['m_predicate_value']);
+            unset($results[$key]['a_predicate_score']);
+            unset($results[$key]['f_predicate_score']);
+            unset($results[$key]['m_predicate_score']);
+
+
+            // Round breed values
+            $breedValueKeys = [
+                'a_breed_value_litter_size_value' => true,
+                'a_breed_value_litter_size_accuracy' => false,
+                'm_breed_value_litter_size_value' => true,
+                'm_breed_value_litter_size_accuracy' => false,
+                'f_breed_value_litter_size_value' => true,
+                'f_breed_value_litter_size_accuracy' => false,
+                'a_breed_value_growth_value' => true,
+                'a_breed_value_growth_accuracy' => false,
+                'm_breed_value_growth_value' => true,
+                'm_breed_value_growth_accuracy' => false,
+                'f_breed_value_growth_value' => true,
+                'f_breed_value_growth_accuracy' => false,
+                'a_breed_value_muscle_thickness_value' => true,
+                'a_breed_value_muscle_thickness_accuracy' => false,
+                'm_breed_value_muscle_thickness_value' => true,
+                'm_breed_value_muscle_thickness_accuracy' => false,
+                'f_breed_value_muscle_thickness_value' => true,
+                'f_breed_value_muscle_thickness_accuracy' => false,
+                'a_breed_value_fat_value' => true,
+                'a_breed_value_fat_accuracy' => false,
+                'm_breed_value_fat_value' => true,
+                'm_breed_value_fat_accuracy' => false,
+                'f_breed_value_fat_value' => true,
+                'f_breed_value_fat_accuracy' => false,
+                'a_lamb_meat_index_value' => true,
+                'a_lamb_meat_accuracy' => false,
+                'm_lamb_meat_index_value' => true,
+                'm_lamb_meat_accuracy' => false,
+                'f_lamb_meat_index_value' => true,
+                'f_lamb_meat_accuracy' => false,
+            ];
+
+            foreach ($breedValueKeys as $breedValueKey => $isValue) {
+                if ($isValue) {
+                    $results[$key][$breedValueKey] = $this->roundBreedValue($results[$key][$breedValueKey]);
+                } else {
+                    $results[$key][$breedValueKey] = $this->roundBreedAccuracy($results[$key][$breedValueKey]);
+                }
             }
+
         }
 
 
