@@ -405,7 +405,7 @@ services:
           - '%kernel.root_dir%'
 
     app.report.livestock:
-        parent: app.report.base
+        parent: app.report.breedvalues.base
         class: AppBundle\Service\Report\LiveStockReportService
 
     app.report.pedigree_certificates:

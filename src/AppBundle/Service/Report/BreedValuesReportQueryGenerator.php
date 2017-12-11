@@ -4,6 +4,7 @@
 namespace AppBundle\Service\Report;
 
 
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -296,6 +297,124 @@ class BreedValuesReportQueryGenerator
             WHERE
                 a.location_id NOTNULL
                 $this->animalShouldHaveAtleastOneExistingBreedValueFilter";
+
+        return $sql;
+    }
+
+
+    /**
+     * @param int $locationId
+     * @param array $ulnFilter
+     * @param bool $matchLocationIdOfSelectedAnimals
+     * @param bool $concatBreedValuesAndAccuracies
+     * @param bool $includeAnimalsWithoutAnyBreedValues
+     * @return string
+     * @throws DBALException
+     */
+    public function createLiveStockReportQuery($locationId,
+                                                 array $ulnFilter = [],
+                                                 $matchLocationIdOfSelectedAnimals = false,
+                                                 $concatBreedValuesAndAccuracies = true,
+                                                 $includeAnimalsWithoutAnyBreedValues = true
+    )
+    {
+        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues);
+
+        $filterString = "WHERE a.is_alive = true AND a.location_id = ".$locationId." ORDER BY a.animal_order_number ASC";
+
+        $ulnCount = count($ulnFilter);
+        if ($ulnCount > 0) {
+            $filterString = "WHERE ".SqlUtil::getUlnQueryFilter($ulnFilter, 'a.');
+
+            if ($matchLocationIdOfSelectedAnimals) {
+                $filterString = $filterString ." a.location_id = ".$locationId;
+            }
+        }
+
+        $filterString .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
+
+        $sql = "SELECT DISTINCT 
+                    CONCAT(a.uln_country_code, a.uln_number) as a_uln,
+                    CONCAT(a.pedigree_country_code, a.pedigree_number) as a_stn,
+                    CONCAT(mom.uln_country_code, mom.uln_number) as m_uln,
+                    CONCAT(mom.pedigree_country_code, mom.pedigree_number) as m_stn,
+                    CONCAT(dad.uln_country_code, dad.uln_number) as f_uln,
+                    CONCAT(dad.pedigree_country_code, dad.pedigree_number) as f_stn,
+                    -- gender.dutch as gender,
+                    a.gender as gender,
+                    a.animal_order_number as a_animal_order_number,
+                    to_char(a.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as a_date_of_birth,
+                    to_char(mom.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as m_date_of_birth,
+                    to_char(dad.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as f_date_of_birth,
+                    
+                    c.dutch_breed_status as breed_status,
+                    a.breed_code as a_breed_code,
+                    c_mom.dutch_breed_status as m_breed_status,
+                    mom.breed_code as m_breed_code,
+                    c_dad.dutch_breed_status as f_breed_status, 
+                    dad.breed_code as f_breed_code,
+
+                    a.scrapie_genotype as a_scrapie_genotype,
+                    mom.scrapie_genotype as m_scrapie_genotype,
+                    dad.scrapie_genotype as f_scrapie_genotype,
+
+                    c.n_ling as a_n_ling,
+                    c_mom.n_ling as m_n_ling,
+                    c_dad.n_ling as f_n_ling,
+                    a.predicate as a_predicate_value,
+                    mom.predicate as m_predicate_value,
+                    dad.predicate as f_predicate_value,
+                    a.predicate_score as a_predicate_score,
+                    mom.predicate_score as m_predicate_score,
+                    dad.predicate_score as f_predicate_score,
+                    c.muscularity as a_muscularity,
+                    c_mom.muscularity as m_muscularity,
+                    c_dad.muscularity as f_muscularity,
+                    c.general_appearance as a_general_appearance,
+                    c_mom.general_appearance as m_general_appearance,
+                    c_dad.general_appearance as f_general_appearance,
+
+                NULLIF(CONCAT(
+                     COALESCE(CAST(c.production_age AS TEXT), '-'),'/',
+                     COALESCE(CAST(c.litter_count AS TEXT), '-'),'/',
+                     COALESCE(CAST(c.total_offspring_count AS TEXT), '-'),'/',
+                     COALESCE(CAST(c.born_alive_offspring_count AS TEXT), '-'),
+                     production_asterisk.mark
+                 ),'-/-/-/-') as production,
+
+                NULLIF(CONCAT(
+                         COALESCE(CAST(c_dad.production_age AS TEXT), '-'),'/',
+                         COALESCE(CAST(c_dad.litter_count AS TEXT), '-'),'/',
+                         COALESCE(CAST(c_dad.total_offspring_count AS TEXT), '-'),'/',
+                         COALESCE(CAST(c_dad.born_alive_offspring_count AS TEXT), '-'),
+                         production_asterisk_dad.mark
+                     ),'-/-/-/-') as f_production,
+
+
+                NULLIF(CONCAT(
+                         COALESCE(CAST(c_mom.production_age AS TEXT), '-'),'/',
+                         COALESCE(CAST(c_mom.litter_count AS TEXT), '-'),'/',
+                         COALESCE(CAST(c_mom.total_offspring_count AS TEXT), '-'),'/',
+                         COALESCE(CAST(c_mom.born_alive_offspring_count AS TEXT), '-'),
+                         production_asterisk_mom.mark
+                     ),'-/-/-/-') as m_production,
+                  
+                  --BREED VALUES
+                  ".$this->breedValuesSelectQueryPart."
+                  
+              FROM animal a
+                LEFT JOIN animal mom ON a.parent_mother_id = mom.id
+                LEFT JOIN animal dad ON a.parent_father_id = dad.id
+                LEFT JOIN animal_cache c ON a.id = c.animal_id
+                LEFT JOIN animal_cache c_mom ON mom.id = c_mom.animal_id
+                LEFT JOIN animal_cache c_dad ON dad.id = c_dad.animal_id
+                LEFT JOIN result_table_breed_grades bg ON a.id = bg.animal_id
+                -- LEFT JOIN (VALUES ".SqlUtil::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
+                LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk(bool_val, mark) ON c.gave_birth_as_one_year_old = production_asterisk.bool_val
+                LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk_dad(bool_val, mark) ON c_dad.gave_birth_as_one_year_old = production_asterisk_dad.bool_val
+                LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk_mom(bool_val, mark) ON c_mom.gave_birth_as_one_year_old = production_asterisk_mom.bool_val
+                ".$this->breedValuesPlusSignsQueryJoinPart."
+            ".$filterString;
 
         return $sql;
     }
