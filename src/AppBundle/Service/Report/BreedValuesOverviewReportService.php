@@ -14,7 +14,6 @@ use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
@@ -25,40 +24,12 @@ use Symfony\Component\HttpFoundation\Request;
 class BreedValuesOverviewReportService extends ReportServiceWithBreedValuesBase
 {
     const TITLE = 'Fokwaardenoverzicht alle huidige dieren';
-    const FILENAME = 'Fokwaardenoverzicht_alle_huidige_dieren';
+    const FILENAME_PART_1 = 'breed values overview';
+    const FILENAME_PART_2 = 'all current animals';
+    const FILENAME = 'breed values overview all current animals';
     const KEYWORDS = "nsfo fokwaarden dieren overzicht";
     const DESCRIPTION = "Fokwaardenoverzicht van alle dieren op huidige stallijsten met minstens 1 fokwaarde";
-    const FOLDER = '/pedigree_register_reports/';
-
-    /**
-     * PedigreeRegisterOverviewReportService constructor.
-     * @param ObjectManager|EntityManagerInterface $em
-     * @param ExcelService $excelService
-     * @param Logger $logger
-     * @param AWSSimpleStorageService $storageService
-     * @param CsvWriter $csvWriter
-     * @param UserService $userService
-     * @param TwigEngine $templating
-     * @param TranslatorInterface $translator
-     * @param GeneratorInterface $knpGenerator
-     * @param string $cacheDir
-     * @param string $rootDir
-     */
-    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter, UserService $userService, TwigEngine $templating,
-                                TranslatorInterface $translator,
-                                GeneratorInterface $knpGenerator,
-                                BreedValuesReportQueryGenerator $breedValuesReportQueryGenerator,
-                                $cacheDir, $rootDir)
-    {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator, $breedValuesReportQueryGenerator, $cacheDir, $rootDir, self::FOLDER, self::FILENAME);
-
-        $this->excelService
-            ->setKeywords(self::KEYWORDS)
-            ->setDescription(self::DESCRIPTION)
-        ;
-    }
+    const FOLDER_NAME = '/pedigree_register_reports/';
 
 
     /**
@@ -73,9 +44,17 @@ class BreedValuesOverviewReportService extends ReportServiceWithBreedValuesBase
         }
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::XLS);
-        $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, true);
+        $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, !$this->outputReportsToCacheFolderForLocalTesting);
         $concatBreedValuesAndAccuracies = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
         $includeAllLiveStockAnimals = RequestUtil::getBooleanQuery($request,QueryParameter::INCLUDE_ALL_LIVESTOCK_ANIMALS, false);
+
+        $this->excelService
+            ->setKeywords(self::KEYWORDS)
+            ->setDescription(self::DESCRIPTION)
+        ;
+
+        $this->filename = $this->translate(self::FILENAME_PART_1).'_'.$this->translate(self::FILENAME_PART_2);
+        $this->folderName = self::FOLDER_NAME;
 
         $this->setLocaleFromQueryParameter($request);
 

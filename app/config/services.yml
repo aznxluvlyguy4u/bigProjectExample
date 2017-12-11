@@ -386,6 +386,8 @@ services:
           - '@knp_snappy.pdf'
           - '%kernel.cache_dir%'
           - '%kernel.root_dir%'
+          - '%output_reports_to_cache_folder_for_local_testing%'
+          - '%display_report_pdf_output_as_html%'
 
     app.report.breedvalues.base:
         abstract: true
@@ -403,6 +405,8 @@ services:
           - '@app.report.generator.query.breed_values'
           - '%kernel.cache_dir%'
           - '%kernel.root_dir%'
+          - '%output_reports_to_cache_folder_for_local_testing%'
+          - '%display_report_pdf_output_as_html%'
 
     app.report.livestock:
         parent: app.report.breedvalues.base

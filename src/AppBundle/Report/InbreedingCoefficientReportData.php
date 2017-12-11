@@ -110,11 +110,11 @@ class InbreedingCoefficientReportData extends ReportBase
             $ramStn = ArrayUtil::get(ReportLabel::PEDIGREE, $ramData, $ramStn);
         }
 
-        $ramKey = strtolower($this->translator->trans(strtoupper(ReportLabel::RAM)));
-        $eweKey = strtolower($this->translator->trans(strtoupper(ReportLabel::EWE)));
-        $ulnKey = strtolower($this->translator->trans(strtoupper(ReportLabel::ULN)));
-        $stnKey = strtolower($this->translator->trans(strtoupper(ReportLabel::STN)));
-        $inbreedingCoefficientKey = strtolower(
+        $ramKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::RAM)));
+        $eweKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::EWE)));
+        $ulnKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::ULN)));
+        $stnKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::STN)));
+        $inbreedingCoefficientKey = mb_strtolower(
             strtr($this->translator->trans(strtoupper(ReportLabel::INBREEDING_COEFFICIENT)),
                 ['Ë' => 'E', ' ' => '_'])
         );

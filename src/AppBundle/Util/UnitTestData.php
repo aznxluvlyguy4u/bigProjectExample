@@ -20,6 +20,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
+use AppBundle\Entity\Token;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\BreedType;
@@ -298,6 +299,36 @@ class UnitTestData
 
         $choice = rand(1, count($tokenCodes) - 1);
         return $tokenCodes[$choice]['code'];
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param string $accessLevel
+     * @return Token|null|object
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getRandomGhostToken(EntityManagerInterface $em, $accessLevel = AccessLevelType::ADMIN)
+    {
+        $sql = "SELECT token.id as id 
+                FROM employee 
+                    INNER JOIN token ON employee.id = token.admin_id
+                    INNER JOIN person ON employee.id = person.id
+                WHERE token.type = 'GHOST' 
+                  AND person.is_active = TRUE
+                  AND employee.access_level = '" . $accessLevel . "'
+                  ";
+        $tokenIds = $em->getConnection()->query($sql)->fetchAll();
+
+        //null check
+        if (count($tokenIds) == 0) {
+            return null;
+        }
+
+        $choice = rand(1, count($tokenIds) - 1);
+        $tokenId = $tokenIds[$choice]['id'];
+
+        return $em->getRepository(Token::class)->find($tokenId);
     }
 
 

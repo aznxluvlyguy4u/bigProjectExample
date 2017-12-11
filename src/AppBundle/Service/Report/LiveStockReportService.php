@@ -9,17 +9,12 @@ use AppBundle\Component\Count;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
-use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\QueryParameter;
-use AppBundle\Service\AWSSimpleStorageService;
-use AppBundle\Service\CsvFromSqlResultsWriterService;
-use AppBundle\Service\ExcelService;
-use AppBundle\Service\UserService;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
@@ -28,21 +23,18 @@ use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Persistence\ObjectManager;
-use Knp\Snappy\GeneratorInterface;
-use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bridge\Twig\TwigEngine;
-use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class LiveStockReportService extends ReportServiceWithBreedValuesBase
 {
     const TITLE = 'livestock_report';
     const TWIG_FILE = 'Report/livestock_report.html.twig';
+    const FOLDER_NAME = self::TITLE;
+    const FILENAME = self::TITLE;
 
     const CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT = false;
 
-    const FILE_NAME_REPORT_TYPE = 'stallijst';
+    const FILE_NAME_REPORT_TYPE = 'LIVESTOCK';
     const PEDIGREE_NULL_FILLER = '-';
     const ULN_NULL_FILLER = '-';
     const NEUTER_STRING = '-';
@@ -63,19 +55,6 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
     /** @var string */
     private $fileType;
 
-    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter,
-                                UserService $userService, TwigEngine $templating, TranslatorInterface $translator,
-                                GeneratorInterface $knpGenerator,
-                                BreedValuesReportQueryGenerator $breedValuesReportQueryGenerator,
-                                $cacheDir, $rootDir
-    )
-    {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator, $breedValuesReportQueryGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
-
-    }
-
 
     /**
      * @param Request $request
@@ -94,7 +73,8 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
 
         $this->setLocaleFromQueryParameter($request);
 
-        $this->filename = self::FILE_NAME_REPORT_TYPE.'_'.$this->location->getUbn();
+        $this->filename = $this->trans(self::FILE_NAME_REPORT_TYPE).'_'.$this->location->getUbn();
+        $this->folderName = self::FOLDER_NAME;
 
         $this->getReportData();
 
@@ -193,7 +173,7 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
         $csvData = $this->moveBreedValueColumnsToEndArray($csvData);
 
         return $this->generateFile($this->filename, $csvData,
-            self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
+            self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
         );
     }
 

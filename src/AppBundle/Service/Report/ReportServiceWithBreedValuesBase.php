@@ -19,14 +19,17 @@ class ReportServiceWithBreedValuesBase extends ReportServiceBase
     protected $breedValuesReportQueryGenerator;
 
     public function __construct(EntityManagerInterface $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter, UserService $userService, TwigEngine $templating,
+                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter, UserService $userService,
+                                TwigEngine $templating,
                                 TranslatorInterface $translator,
                                 GeneratorInterface $knpGenerator,
                                 BreedValuesReportQueryGenerator $breedValuesReportQueryGenerator,
-                                $cacheDir, $rootDir, $folderName, $filename)
+                                $cacheDir, $rootDir, $outputReportsToCacheFolderForLocalTesting,
+                                $displayReportPdfOutputAsHtml
+    )
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator,$cacheDir, $rootDir, $folderName, $filename);
+            $knpGenerator,$cacheDir, $rootDir, $outputReportsToCacheFolderForLocalTesting, $displayReportPdfOutputAsHtml);
 
         $this->breedValuesReportQueryGenerator = $breedValuesReportQueryGenerator;
     }

@@ -35,7 +35,10 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class VwaUbnsOverviewReportService extends ReportServiceBase
 {
-    const TITLE = 'vwa_nsfo_ubn_overzicht';
+    const TITLE = 'nsfo third party ubn overview';
+    const FOLDER_NAME = self::TITLE;
+    const FILENAME = self::TITLE;
+
     const TWIG_FILE = 'Report/vwa_ubns_overview_report.html.twig';
 
     const BLANK_STATUS = '';
@@ -44,13 +47,6 @@ class VwaUbnsOverviewReportService extends ReportServiceBase
 
     /** @var array */
     private $data;
-
-    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, TranslatorInterface $translator, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
-    {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
-    }
 
 
     /**
@@ -85,7 +81,8 @@ class VwaUbnsOverviewReportService extends ReportServiceBase
             return ResultUtil::errorResult(self::ERROR_UBNS_NOT_FOUND . implode(', ', $incorrectUbns),Response::HTTP_BAD_REQUEST);
         }
 
-        $this->translator->setLocale(Locale::NL);
+        $this->filename = $this->translate(self::FILENAME);
+        $this->folderName = $this->translate(self::FOLDER_NAME);
 
         $locationHealthData = [];
         /** @var Location $location */
@@ -151,7 +148,7 @@ class VwaUbnsOverviewReportService extends ReportServiceBase
         $csvData = $this->data[ReportLabel::LOCATIONS];
 
         return $this->generateFile($this->filename, $csvData,
-            self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
+            self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
         );
     }
 
@@ -165,6 +162,6 @@ class VwaUbnsOverviewReportService extends ReportServiceBase
         if ($status === null) {
             return self::BLANK_STATUS;
         }
-        return ucfirst(strtolower($this->translator->trans($status)));
+        return ucfirst(mb_strtolower($this->translator->trans($status)));
     }
 }
