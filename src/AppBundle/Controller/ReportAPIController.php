@@ -17,7 +17,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
  */
 class ReportAPIController extends APIController {
 
-  const IS_LOCAL_TESTING = false; //To save the generated files locally instead of in the S3 Bucket.
+  const IS_LOCAL_TESTING = true; //To save the generated files locally instead of in the S3 Bucket.
   const DISPLAY_PDF_AS_HTML = false;
   const IS_USE_PROD_VERSION_OUTPUT = true;
 
@@ -134,6 +134,13 @@ class ReportAPIController extends APIController {
    *        "required"=false,
    *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
    *        "format"="?language=en"
+   *     },
+   *     {
+   *        "name"="concat_value_and_accuracy",
+   *        "dataType"="boolean",
+   *        "required"=false,
+   *        "description"="Choose if the value and accuracy breedValue numbers should be combined into one column. false is default",
+   *        "format"="?concat_value_and_accuracy=true"
    *     }
    *   },
    *   resource = true,

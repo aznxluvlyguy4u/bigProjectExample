@@ -7,7 +7,6 @@ namespace AppBundle\Service\Report;
 use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Count;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\ReportAPIController;
@@ -28,7 +27,6 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
-use AppBundle\Util\TwigOutputUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
@@ -37,11 +35,12 @@ use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-class LiveStockReportService extends ReportServiceBase
+class LiveStockReportService extends ReportServiceWithBreedValuesBase
 {
     const TITLE = 'livestock_report';
     const TWIG_FILE = 'Report/livestock_report.html.twig';
 
+    const CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT = false;
 
     const FILE_NAME_REPORT_TYPE = 'stallijst';
     const PEDIGREE_NULL_FILLER = '-';
@@ -49,9 +48,6 @@ class LiveStockReportService extends ReportServiceBase
     const NEUTER_STRING = '-';
     const EWE_LETTER = 'O';
     const RAM_LETTER = 'R';
-
-    const BREED_VALUE_PRECISION = 2;
-    const BREED_ACCURACY_PRECISION = 2;
 
     /** @var Client */
     private $client;
@@ -62,12 +58,21 @@ class LiveStockReportService extends ReportServiceBase
     private $content;
     /** @var array */
     private $data;
+    /** @var bool */
+    private $concatValueAndAccuracy;
+    /** @var string */
+    private $fileType;
 
     public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, TranslatorInterface $translator, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
+                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter,
+                                UserService $userService, TwigEngine $templating, TranslatorInterface $translator,
+                                GeneratorInterface $knpGenerator,
+                                BreedValuesReportQueryGenerator $breedValuesReportQueryGenerator,
+                                $cacheDir, $rootDir
+    )
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
+            $knpGenerator, $breedValuesReportQueryGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
 
     }
 
@@ -80,7 +85,8 @@ class LiveStockReportService extends ReportServiceBase
     {
         $this->client = $this->userService->getAccountOwner($request);
         $this->location = $this->userService->getSelectedLocation($request);
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
+        $this->fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
+        $this->concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT);
         $this->content = RequestUtil::getContentAsArray($request, true, null);
 
         $validationResult = $this->validateContent();
@@ -88,10 +94,11 @@ class LiveStockReportService extends ReportServiceBase
 
         $this->setLocaleFromQueryParameter($request);
 
-        $this->getPdfReportData();
         $this->filename = self::FILE_NAME_REPORT_TYPE.'_'.$this->location->getUbn();
 
-        if ($fileType === FileType::CSV) {
+        $this->getReportData();
+
+        if ($this->fileType === FileType::CSV) {
             return $this->getCsvReport();
         }
 
@@ -181,8 +188,9 @@ class LiveStockReportService extends ReportServiceBase
             'm_gave_birth_as_one_year_old',
         ];
 
-        $csvData = $this->unsetNestedKeys($this->data[ReportLabel::ANIMALS], $keysToIgnore);
+        $csvData = $this->unsetNestedKeys($this->data, $keysToIgnore);
         $csvData = $this->translateColumnHeaders($csvData);
+        $csvData = $this->moveBreedValueColumnsToEndArray($csvData);
 
         return $this->generateFile($this->filename, $csvData,
             self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
@@ -232,43 +240,27 @@ class LiveStockReportService extends ReportServiceBase
     }
 
 
-    private function getPdfReportData()
+    private function getReportData()
     {
-        $this->data = [];
-        $this->data[ReportLabel::DATE] = TimeUtil::getTimeStampToday('d-m-Y');
-        $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO
-        $this->data[ReportLabel::UBN] = $this->location->getUbn();
-        $this->data[ReportLabel::NAME.'_and_'.ReportLabel::ADDRESS] = $this->parseNameAddressString();
-        $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($this->em, $this->location, true);
-        $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
-        $this->data[ReportLabel::ANIMALS] = $this->retrieveLiveStockData();
-    }
-
-
-    /**
-     * @param float $value
-     * @return float
-     */
-    private function roundBreedValue($value)
-    {
-        return round($value, self::BREED_VALUE_PRECISION);
-    }
-
-
-    /**
-     * @param float $accuracy
-     * @return float
-     */
-    private function roundBreedAccuracy($accuracy)
-    {
-        return round($accuracy, self::BREED_ACCURACY_PRECISION);
+        if ($this->fileType === FileType::CSV) {
+            $this->data = $this->retrieveLiveStockDataForCsv();
+        } else {
+            $this->data = [];
+            $this->data[ReportLabel::DATE] = TimeUtil::getTimeStampToday('d-m-Y');
+            $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO
+            $this->data[ReportLabel::UBN] = $this->location->getUbn();
+            $this->data[ReportLabel::NAME.'_and_'.ReportLabel::ADDRESS] = $this->parseNameAddressString();
+            $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($this->em, $this->location, true);
+            $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
+            $this->data[ReportLabel::ANIMALS] = $this->retrieveLiveStockDataForPdf();
+        }
     }
 
 
     /**
      * @return array
      */
-    private function retrieveLiveStockData()
+    private function retrieveLiveStockDataForPdf()
     {
         if ($this->content !== null) {
             $matchLocationOfSelectedAnimals = false; //This ensures inclusion of historic animals
@@ -330,52 +322,94 @@ class LiveStockReportService extends ReportServiceBase
             unset($results[$key]['f_predicate_score']);
             unset($results[$key]['m_predicate_score']);
 
+        }
 
-            // Round breed values
-            $breedValueKeys = [
-                'a_breed_value_litter_size_value' => true,
-                'a_breed_value_litter_size_accuracy' => false,
-                'm_breed_value_litter_size_value' => true,
-                'm_breed_value_litter_size_accuracy' => false,
-                'f_breed_value_litter_size_value' => true,
-                'f_breed_value_litter_size_accuracy' => false,
-                'a_breed_value_growth_value' => true,
-                'a_breed_value_growth_accuracy' => false,
-                'm_breed_value_growth_value' => true,
-                'm_breed_value_growth_accuracy' => false,
-                'f_breed_value_growth_value' => true,
-                'f_breed_value_growth_accuracy' => false,
-                'a_breed_value_muscle_thickness_value' => true,
-                'a_breed_value_muscle_thickness_accuracy' => false,
-                'm_breed_value_muscle_thickness_value' => true,
-                'm_breed_value_muscle_thickness_accuracy' => false,
-                'f_breed_value_muscle_thickness_value' => true,
-                'f_breed_value_muscle_thickness_accuracy' => false,
-                'a_breed_value_fat_value' => true,
-                'a_breed_value_fat_accuracy' => false,
-                'm_breed_value_fat_value' => true,
-                'm_breed_value_fat_accuracy' => false,
-                'f_breed_value_fat_value' => true,
-                'f_breed_value_fat_accuracy' => false,
-                'a_lamb_meat_index_value' => true,
-                'a_lamb_meat_accuracy' => false,
-                'm_lamb_meat_index_value' => true,
-                'm_lamb_meat_accuracy' => false,
-                'f_lamb_meat_index_value' => true,
-                'f_lamb_meat_accuracy' => false,
-            ];
+        return $this->orderSqlResultsByOrderOfAnimalsInJsonBody($results);
+    }
 
-            foreach ($breedValueKeys as $breedValueKey => $isValue) {
-                if ($isValue) {
-                    $results[$key][$breedValueKey] = $this->roundBreedValue($results[$key][$breedValueKey]);
-                } else {
-                    $results[$key][$breedValueKey] = $this->roundBreedAccuracy($results[$key][$breedValueKey]);
+
+    /**
+     * @return array
+     */
+    private function retrieveLiveStockDataForCsv()
+    {
+        $animals = [];
+        $matchLocationOfSelectedAnimals = true;
+
+        if ($this->content !== null) {
+            $matchLocationOfSelectedAnimals = false; //This ensures inclusion of historic animals
+            $animals = $this->content->get(JsonInputConstant::ANIMALS);
+        }
+
+        $sql = $this->breedValuesReportQueryGenerator->createLiveStockReportQuery(
+            $this->location->getId(),
+            $animals,
+            $matchLocationOfSelectedAnimals,
+            $this->concatValueAndAccuracy,
+            true
+        );
+
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $keys = array_keys($results);
+        foreach ($keys as $key) {
+
+            $results[$key]['gender'] = $this->getGenderLetter($results[$key]['gender']);
+
+            $results[$key]['a_n_ling'] = str_replace('-ling', '', $results[$key]['a_n_ling']);
+            $results[$key]['f_n_ling'] = str_replace('-ling', '', $results[$key]['f_n_ling']);
+            $results[$key]['m_n_ling'] = str_replace('-ling', '', $results[$key]['m_n_ling']);
+
+            // Format Predicate values
+            $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
+            $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
+            $results[$key]['m_predicate'] = DisplayUtil::parsePredicateString($results[$key]['m_predicate_value'], $results[$key]['m_predicate_score']);
+            unset($results[$key]['a_predicate_value']);
+            unset($results[$key]['f_predicate_value']);
+            unset($results[$key]['m_predicate_value']);
+            unset($results[$key]['a_predicate_score']);
+            unset($results[$key]['f_predicate_score']);
+            unset($results[$key]['m_predicate_score']);
+
+        }
+
+        return $this->orderSqlResultsByOrderOfAnimalsInJsonBody($results);
+    }
+
+
+    /**
+     * @param array $results
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function moveBreedValueColumnsToEndArray(array $results)
+    {
+        $availableBreedColumnValues = $this->getAvailableBreedValueColumns($results);
+
+        $keys = array_keys($results);
+        foreach ($keys as $key) {
+
+            // Place the breedValues at the end of the csv file
+            foreach ($availableBreedColumnValues as $availableBreedColumnValue) {
+                if (key_exists($availableBreedColumnValue, $results[$key])) {
+                    $value = $results[$key][$availableBreedColumnValue];
+                    unset($results[$key][$availableBreedColumnValue]);
+                    $results[$key][$availableBreedColumnValue] = $value;
                 }
             }
 
         }
 
+        return $results;
+    }
 
+
+    /**
+     * @param array $results
+     * @return array
+     */
+    private function orderSqlResultsByOrderOfAnimalsInJsonBody(array $results)
+    {
         if ($this->content === null) {
             return $results;
         }
@@ -396,6 +430,42 @@ class LiveStockReportService extends ReportServiceBase
         }
 
         return $orderedResults;
+    }
+
+
+    /**
+     * @param array $csvResults
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function getAvailableBreedValueColumns(array $csvResults)
+    {
+        if (count($csvResults) === 0) {
+            return [];
+        }
+
+        $allPossibleBreedCodeNames = [];
+
+        $allCsvColumns = array_keys(reset($csvResults));
+
+        $allBreedCodeNames = [];
+        $sql = "SELECT nl FROM breed_value_type;";
+        foreach ($this->conn->query($sql)->fetchAll() as $value) {
+            $columnName = strtolower($value['nl']);
+            $allBreedCodeNames[$columnName] = $columnName;
+            if (!$this->concatValueAndAccuracy) {
+                $accuracyColumnName = $columnName . BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX;
+                $allBreedCodeNames[$accuracyColumnName] = $accuracyColumnName;
+            }
+        }
+
+        foreach ($allCsvColumns as $columnName) {
+            if (key_exists($columnName, $allBreedCodeNames)) {
+                $allPossibleBreedCodeNames[$columnName] = $columnName;
+            }
+        }
+
+        return $allPossibleBreedCodeNames;
     }
 
 
