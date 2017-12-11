@@ -34,18 +34,14 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class VwaAnimalDetailsReportService extends ReportServiceBase
 {
-    const TITLE = 'vwa_nsfo_dieroverzicht';
+    const TITLE = 'nsfo third party animal overview';
+    const FOLDER_NAME = self::TITLE;
+    const FILENAME = self::TITLE;
+
     const TWIG_FILE = 'Report/vwa_animal_details_report.html.twig';
 
     /** @var array */
     private $data;
-
-    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, TranslatorInterface $translator, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
-    {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
-    }
 
 
     /**
@@ -86,7 +82,8 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
             return $log;
         }
 
-        $this->translator->setLocale(Locale::NL);
+        $this->filename = $this->translate(self::FILENAME);
+        $this->folderName = $this->translate(self::FOLDER_NAME);
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
@@ -114,7 +111,7 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
         $csvData = $this->data;
 
         return $this->generateFile($this->filename, $csvData,
-            self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
+            self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
         );
     }
 }

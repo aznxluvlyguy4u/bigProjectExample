@@ -5,12 +5,10 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Enumerator\QueryParameter;
-use AppBundle\Enumerator\QueryType;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
@@ -19,7 +17,6 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
@@ -36,38 +33,7 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
     const TITLE_PREFIX = 'Overzicht dieren van ';
     const KEYWORDS = "nsfo fokwaarden dieren overzicht";
     const DESCRIPTION = "Overzicht van dieren van stamboek inclusief benodigde metingen en fokwaarden";
-    const FOLDER = '/pedigree_register_reports/';
-
-    /**
-     * PedigreeRegisterOverviewReportService constructor.
-     * @param ObjectManager|EntityManagerInterface $em
-     * @param ExcelService $excelService
-     * @param Logger $logger
-     * @param AWSSimpleStorageService $storageService
-     * @param CsvWriter $csvWriter
-     * @param UserService $userService
-     * @param TwigEngine $templating
-     * @param GeneratorInterface $knpGenerator
-     * @param string $cacheDir
-     * @param string $rootDir
-     */
-    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
-                                UserService $userService, TwigEngine $templating, TranslatorInterface $translator,
-                                GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
-    {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService,
-            $templating, $translator, $knpGenerator, $cacheDir, $rootDir, self::FOLDER);
-
-        $this->em = $em;
-        $this->conn = $em->getConnection();
-        $this->logger = $logger;
-
-        $this->excelService
-            ->setKeywords(self::KEYWORDS)
-            ->setDescription(self::DESCRIPTION)
-            ;
-    }
+    const FOLDER_NAME = '/pedigree_register_reports/';
 
 
     /**
@@ -82,7 +48,12 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
 
         $type = $request->query->get(QueryParameter::TYPE_QUERY);
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
-        $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, true);
+        $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, !$this->outputReportsToCacheFolderForLocalTesting);
+
+        $this->excelService
+            ->setKeywords(self::KEYWORDS)
+            ->setDescription(self::DESCRIPTION)
+        ;
 
         return $this->generateFileByType($type, $uploadToS3, $fileType);
     }
@@ -97,8 +68,9 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
     public function generateFileByType($type, $uploadToS3, $fileType)
     {
         $timestamp = TimeUtil::getTimeStampNowForFiles();
-        $cfFilename = 'nsfo_cf_overzicht_'.TimeUtil::getTimeStampNowForFiles();
-        $ntsTsnhLaxFilename = 'nsfo_nts_tsnh_lax_overzicht_'.$timestamp;
+        $overviewLabel = $this->translate('overview');
+        $cfFilename = 'nsfo_cf_'.$overviewLabel.'_'.TimeUtil::getTimeStampNowForFiles();
+        $ntsTsnhLaxFilename = 'nsfo_nts_tsnh_lax_'.$overviewLabel.'_'.$timestamp;
 
         $this->logger->notice('Retrieve '.$type.' data ... ');
 

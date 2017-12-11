@@ -301,8 +301,6 @@ class EmailService
         $subjectHeaderData = $subjectHeaderData .' => UBN '.$locationHealthMessage->getUbnNewOwner().']';
         $introMessage = 'Er is een dier '.$arrivalVerbType.' op ' . $locationHealthMessage->getUbnNewOwner() . $senderInfo . '.';
 
-        $this->translator->setLocale(Locale::NL);
-
         $message = \Swift_Message::newInstance()
             ->setSubject($this->getEnvironmentSubjectPrefix()
                 .Constant::POSSIBLE_SICK_ANIMAL_ARRIVAL_MAIL_SUBJECT_HEADER.$subjectHeaderData)

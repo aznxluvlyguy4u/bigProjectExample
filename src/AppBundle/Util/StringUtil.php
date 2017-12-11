@@ -272,6 +272,29 @@ class StringUtil
 
 
     /**
+     * @param string|bool $value
+     * @param bool $defaultValue
+     * @return bool
+     */
+    public static function getStringAsBoolean($value, $defaultValue)
+    {
+        if (is_string($value)) {
+
+            $value = trim(strtolower($value));
+            if ($defaultValue) {
+                return $value !== 'false';
+            }
+            return $value === 'true';
+
+        } elseif (is_bool($value)) {
+            return $value;
+        }
+
+        return $defaultValue;
+    }
+
+
+    /**
      * @param mixed $value
      * @param boolean $wrapNonNullInQuotes
      * @return string
