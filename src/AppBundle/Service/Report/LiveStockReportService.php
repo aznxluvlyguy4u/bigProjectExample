@@ -7,7 +7,6 @@ namespace AppBundle\Service\Report;
 use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Count;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\ReportAPIController;
@@ -28,7 +27,6 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
-use AppBundle\Util\TwigOutputUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Knp\Snappy\GeneratorInterface;
@@ -192,6 +190,7 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
 
         $csvData = $this->unsetNestedKeys($this->data, $keysToIgnore);
         $csvData = $this->translateColumnHeaders($csvData);
+        $csvData = $this->moveBreedValueColumnsToEndArray($csvData);
 
         return $this->generateFile($this->filename, $csvData,
             self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
@@ -381,6 +380,33 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
     /**
      * @param array $results
      * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function moveBreedValueColumnsToEndArray(array $results)
+    {
+        $availableBreedColumnValues = $this->getAvailableBreedValueColumns($results);
+
+        $keys = array_keys($results);
+        foreach ($keys as $key) {
+
+            // Place the breedValues at the end of the csv file
+            foreach ($availableBreedColumnValues as $availableBreedColumnValue) {
+                if (key_exists($availableBreedColumnValue, $results[$key])) {
+                    $value = $results[$key][$availableBreedColumnValue];
+                    unset($results[$key][$availableBreedColumnValue]);
+                    $results[$key][$availableBreedColumnValue] = $value;
+                }
+            }
+
+        }
+
+        return $results;
+    }
+
+
+    /**
+     * @param array $results
+     * @return array
      */
     private function orderSqlResultsByOrderOfAnimalsInJsonBody(array $results)
     {
@@ -404,6 +430,42 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
         }
 
         return $orderedResults;
+    }
+
+
+    /**
+     * @param array $csvResults
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function getAvailableBreedValueColumns(array $csvResults)
+    {
+        if (count($csvResults) === 0) {
+            return [];
+        }
+
+        $allPossibleBreedCodeNames = [];
+
+        $allCsvColumns = array_keys(reset($csvResults));
+
+        $allBreedCodeNames = [];
+        $sql = "SELECT nl FROM breed_value_type;";
+        foreach ($this->conn->query($sql)->fetchAll() as $value) {
+            $columnName = strtolower($value['nl']);
+            $allBreedCodeNames[$columnName] = $columnName;
+            if (!$this->concatValueAndAccuracy) {
+                $accuracyColumnName = $columnName . BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX;
+                $allBreedCodeNames[$accuracyColumnName] = $accuracyColumnName;
+            }
+        }
+
+        foreach ($allCsvColumns as $columnName) {
+            if (key_exists($columnName, $allBreedCodeNames)) {
+                $allPossibleBreedCodeNames[$columnName] = $columnName;
+            }
+        }
+
+        return $allPossibleBreedCodeNames;
     }
 
 
