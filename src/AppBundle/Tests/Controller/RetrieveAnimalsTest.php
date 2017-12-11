@@ -6,6 +6,8 @@ namespace AppBundle\Tests\Controller;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\Token;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\UnitTestData;
 use AppBundle\Util\Validator;
@@ -25,6 +27,8 @@ class RetrieveAnimalsTest extends WebTestCase
 {
     /** @var string */
     static private $accessTokenCode;
+    /** @var Token */
+    static private $superAdminGhostToken;
     /** @var Location */
     static private $location;
     /** @var EntityManagerInterface|ObjectManager */
@@ -33,6 +37,8 @@ class RetrieveAnimalsTest extends WebTestCase
     private $client;
     /** @var array */
     private $defaultHeaders;
+    /** @var array */
+    private $superAdminHeaders;
 
 
     /**
@@ -58,6 +64,8 @@ class RetrieveAnimalsTest extends WebTestCase
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
+
+        self::$superAdminGhostToken = UnitTestData::getRandomGhostToken(self::$em, AccessLevelType::SUPER_ADMIN);
     }
 
 
@@ -76,6 +84,12 @@ class RetrieveAnimalsTest extends WebTestCase
         $this->defaultHeaders = array(
             'CONTENT_TYPE' => 'application/json',
             'HTTP_ACCESSTOKEN' => self::$accessTokenCode,
+        );
+
+        $this->superAdminHeaders = array(
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_ACCESSTOKEN' => self::$superAdminGhostToken->getAdmin()->getAccessToken(),
+            'HTTP_GHOSTTOKEN' => self::$superAdminGhostToken->getCode(),
         );
     }
 
@@ -124,7 +138,7 @@ class RetrieveAnimalsTest extends WebTestCase
             Endpoint::RETRIEVE_ANIMALS,
             array(),
             array(),
-            $this->defaultHeaders,
+            $this->superAdminHeaders,
             $json
         );
 
