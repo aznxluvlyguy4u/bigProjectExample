@@ -212,6 +212,21 @@ class DoctrineUtil
 
 
     /**
+     * @param Connection $conn
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getColumnNames(Connection $conn, $tableName)
+    {
+        $sql = "select column_name, data_type
+                from information_schema.columns
+                where table_name = '".$tableName."';";
+        $results = $conn->query($sql)->fetchAll();
+        return SqlUtil::groupSqlResultsOfKey1ByKey2('data_type','column_name',$results);
+    }
+
+
+    /**
      * @param CommandUtil $cmdUtil
      * @param EntityManagerInterface $em
      * @param string $question

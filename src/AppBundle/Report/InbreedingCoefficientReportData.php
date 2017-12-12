@@ -18,6 +18,7 @@ use AppBundle\Util\InbreedingCoefficientOffspring;
 use AppBundle\Util\PedigreeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class InbreedingCoefficientReportData extends ReportBase
 {
@@ -35,19 +36,23 @@ class InbreedingCoefficientReportData extends ReportBase
     private $ewesData;
     /** @var array */
     private $parentAscendants;
+    /** @var TranslatorInterface */
+    protected $translator;
 
     /**
      * InbreedingCoefficientReportData constructor.
      * @param ObjectManager $em
+     * @param $translator
      * @param array $ramData
      * @param array $ewesData
      * @param int $generationOfAscendants
      * @param Client $client
      */
-    public function __construct(ObjectManager $em, $ramData, $ewesData, $generationOfAscendants, Client $client = null)
+    public function __construct(ObjectManager $em, $translator, $ramData, $ewesData, $generationOfAscendants, Client $client = null)
     {
         parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
-        
+        $this->translator = $translator;
+
         $this->data = [];
         $this->csvData = [];
 
@@ -105,41 +110,30 @@ class InbreedingCoefficientReportData extends ReportBase
             $ramStn = ArrayUtil::get(ReportLabel::PEDIGREE, $ramData, $ramStn);
         }
 
+        $ramKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::RAM)));
+        $eweKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::EWE)));
+        $ulnKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::ULN)));
+        $stnKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::STN)));
+        $inbreedingCoefficientKey = mb_strtolower(
+            strtr($this->translator->trans(strtoupper(ReportLabel::INBREEDING_COEFFICIENT)),
+                ['Ë' => 'E', ' ' => '_'])
+        );
+
         $csvOutput = [];
         foreach (ArrayUtil::get(ReportLabel::EWES, $this->data, []) as $eweUln => $eweData) {
             $eweStn = ArrayUtil::get(ReportLabel::PEDIGREE, $eweData, $nullReplacement);
             $inbreedingCoefficient = ArrayUtil::get(ReportLabel::INBREEDING_COEFFICIENT, $eweData, $nullReplacement);
 
             $csvOutput[] = [
-                $this->getCsvKey(ReportLabel::RAM.ReportLabel::ULN) => $ramUln,
-                $this->getCsvKey(ReportLabel::RAM.ReportLabel::STN) => $ramStn,
-                $this->getCsvKey(ReportLabel::EWE.ReportLabel::ULN) => $eweUln,
-                $this->getCsvKey(ReportLabel::EWE.ReportLabel::STN) => $eweStn,
-                $this->getCsvKey(ReportLabel::INBREEDING_COEFFICIENT) => $inbreedingCoefficient,
+                $ramKey.'_'.$ulnKey => $ramUln,
+                $ramKey.'_'.$stnKey => $ramStn,
+                $eweKey.'_'.$ulnKey => $eweUln,
+                $eweKey.'_'.$stnKey => $eweStn,
+                $inbreedingCoefficientKey => $inbreedingCoefficient,
             ];
         }
         return $csvOutput;
     }
-
-
-    /**
-     * @param string $reportLabel
-     * @return string
-     */
-    private function getCsvKey($reportLabel)
-    {
-        $dutchLabels = [
-            ReportLabel::RAM.ReportLabel::ULN => ReportLabel::RAM.'_'.ReportLabel::ULN,
-            ReportLabel::RAM.ReportLabel::STN => ReportLabel::RAM.'_'.ReportLabel::STN,
-            ReportLabel::EWE.ReportLabel::ULN => ReportLabel::EWE.'_'.ReportLabel::ULN,
-            ReportLabel::EWE.ReportLabel::STN => ReportLabel::EWE.'_'.ReportLabel::STN,
-            ReportLabel::INBREEDING_COEFFICIENT => 'inteeltcoëfficiënt',
-        ];
-
-        return $dutchLabels[$reportLabel];
-    }
-
-
 
 
     /**

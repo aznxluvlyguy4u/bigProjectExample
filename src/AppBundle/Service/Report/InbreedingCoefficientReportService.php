@@ -38,7 +38,10 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     const GENERATION_OF_ASCENDANTS = 7;
     const MAX_GENERATION_OF_ASCENDANTS = 8;
 
-    const TITLE = 'inbreeding_coefficient_report';
+    const TITLE = 'inbreeding coefficient report';
+    const FOLDER_NAME = self::TITLE;
+    const FILENAME = self::TITLE;
+
     const TWIG_FILE = 'Report/inbreeding_coefficient_report.html.twig';
 
     const PEDIGREE_NULL_FILLER = '-';
@@ -78,13 +81,6 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     /** @var InbreedingCoefficientReportData */
     private $reportResults;
 
-    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, TranslatorInterface $translator, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
-    {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
-    }
-
 
     /**
      * @param Request $request
@@ -102,7 +98,12 @@ class InbreedingCoefficientReportService extends ReportServiceBase
             return ResultUtil::errorResult('',Response::HTTP_BAD_REQUEST, $this->inputErrors);
         }
 
-        $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->ramData, $this->ewesData,
+        $this->setLocaleFromQueryParameter($request);
+
+        $this->filename = strtr($this->translate(self::TITLE), ['ë' => 'e']);
+        $this->folderName = self::FOLDER_NAME;
+
+        $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->translator, $this->ramData, $this->ewesData,
             $this->generationOfAscendants, $client);
 
         if ($fileType === FileType::CSV) {
@@ -342,7 +343,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     private function getCsvReport()
     {
         return $this->generateFile($this->filename,
-            $this->reportResults->getCsvData(),self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
+            $this->reportResults->getCsvData(),self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
         );
     }
 

@@ -19,9 +19,11 @@ use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
+use AppBundle\Enumerator\TagStateType;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 
 
 /**
@@ -30,6 +32,9 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class Count
 {
+    const FREE = 'free';
+    const USED = 'used';
+
     /**
      * @param ObjectManager $em
      * @param Location $location
@@ -139,20 +144,41 @@ class Count
             return 0;
         }
     }
-    
+
 
     /**
-     * @param ObjectManager $em
+     * @param EntityManagerInterface $em
      * @param int $clientId
-     * @param int $locationId
+     * @param int|null $locationId if set to null than all tags linked to the clientId are used for the counts
      * @return int
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public static function getUnassignedTagsCount(ObjectManager $em, $clientId, $locationId)
+    public static function getTagsCount(EntityManagerInterface $em, $clientId, $locationId)
     {
-        if(!is_int($clientId) || !is_int($locationId)) { return 0; }
-        $sql = "SELECT COUNT(*) FROM tag WHERE owner_id = ".$clientId." AND tag.location_id = ".$locationId." AND tag_status = 'UNASSIGNED'";
-        $result = $em->getConnection()->query($sql)->fetch();
-        return $result == false || $result == null ? 0 : $result['count'];
+        if(!is_int($clientId)) { return 0; }
+
+        $locationIdFilter = '';
+        if (is_int($locationId)) {
+            $locationIdFilter = " AND tag.location_id = ".$locationId." ";
+        }
+
+        $sql = "SELECT COUNT(*), '".self::FREE."' as type 
+                FROM tag 
+                WHERE owner_id = ".$clientId." ".$locationIdFilter." 
+                    AND tag_status = '".TagStateType::UNASSIGNED."'
+                UNION
+                SELECT COUNT(*), '".self::USED."' as type 
+                FROM tag 
+                WHERE owner_id = ".$clientId." ".$locationIdFilter." 
+                    AND tag_status <> '".TagStateType::UNASSIGNED."'";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        $counts = [];
+        foreach ($results as $result) {
+            $counts[$result['type']] = $result['count'];
+        }
+
+        return $counts;
     }
     
 

@@ -7,19 +7,14 @@ namespace AppBundle\Service\Report;
 use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Count;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
-use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\QueryParameter;
-use AppBundle\Service\AWSSimpleStorageService;
-use AppBundle\Service\CsvFromSqlResultsWriterService;
-use AppBundle\Service\ExcelService;
-use AppBundle\Service\UserService;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
@@ -27,25 +22,19 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
-use AppBundle\Util\TwigOutputUtil;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Persistence\ObjectManager;
-use Knp\Snappy\GeneratorInterface;
-use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bridge\Twig\TwigEngine;
-use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-class LiveStockReportService extends ReportServiceBase
+class LiveStockReportService extends ReportServiceWithBreedValuesBase
 {
     const TITLE = 'livestock_report';
     const TWIG_FILE = 'Report/livestock_report.html.twig';
+    const FOLDER_NAME = self::TITLE;
+    const FILENAME = self::TITLE;
 
+    const CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT = false;
 
-    //Options
-    const SHOW_PREDICATE_IN_REPORT = false;
-
-    const FILE_NAME_REPORT_TYPE = 'stallijst';
+    const FILE_NAME_REPORT_TYPE = 'LIVESTOCK';
     const PEDIGREE_NULL_FILLER = '-';
     const ULN_NULL_FILLER = '-';
     const NEUTER_STRING = '-';
@@ -61,14 +50,10 @@ class LiveStockReportService extends ReportServiceBase
     private $content;
     /** @var array */
     private $data;
-
-    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, TranslatorInterface $translator, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
-    {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
-
-    }
+    /** @var bool */
+    private $concatValueAndAccuracy;
+    /** @var string */
+    private $fileType;
 
 
     /**
@@ -79,16 +64,21 @@ class LiveStockReportService extends ReportServiceBase
     {
         $this->client = $this->userService->getAccountOwner($request);
         $this->location = $this->userService->getSelectedLocation($request);
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
+        $this->fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
+        $this->concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT);
         $this->content = RequestUtil::getContentAsArray($request, true, null);
 
         $validationResult = $this->validateContent();
         if ($validationResult instanceof JsonResponse) { return $validationResult; }
 
-        $this->getPdfReportData();
-        $this->filename = self::FILE_NAME_REPORT_TYPE.'_'.$this->location->getUbn();
+        $this->setLocaleFromQueryParameter($request);
 
-        if ($fileType === FileType::CSV) {
+        $this->filename = $this->trans(self::FILE_NAME_REPORT_TYPE).'_'.$this->location->getUbn();
+        $this->folderName = self::FOLDER_NAME;
+
+        $this->getReportData();
+
+        if ($this->fileType === FileType::CSV) {
             return $this->getCsvReport();
         }
 
@@ -155,7 +145,9 @@ class LiveStockReportService extends ReportServiceBase
         $keysToIgnore = [
             'a_uln_without_order_number',
             'f_uln_without_order_number',
+            'f_animal_order_number',
             'm_uln_without_order_number',
+            'm_animal_order_number',
             'a_lamb_meat_index',
             'f_lamb_meat_index',
             'm_lamb_meat_index',
@@ -176,31 +168,79 @@ class LiveStockReportService extends ReportServiceBase
             'm_gave_birth_as_one_year_old',
         ];
 
-        $csvData = $this->unsetNestedKeys($this->data[ReportLabel::ANIMALS], $keysToIgnore);
+        $csvData = $this->unsetNestedKeys($this->data, $keysToIgnore);
+        $csvData = $this->translateColumnHeaders($csvData);
+        $csvData = $this->moveBreedValueColumnsToEndArray($csvData);
 
         return $this->generateFile($this->filename, $csvData,
-            self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
+            self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
         );
     }
 
 
-    private function getPdfReportData()
+    /**
+     * @param string $value
+     * @return string
+     */
+    private function trans($value)
     {
-        $this->data = [];
-        $this->data[ReportLabel::DATE] = TimeUtil::getTimeStampToday('d-m-Y');
-        $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO
-        $this->data[ReportLabel::UBN] = $this->location->getUbn();
-        $this->data[ReportLabel::NAME.'_and_'.ReportLabel::ADDRESS] = $this->parseNameAddressString();
-        $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($this->em, $this->location, true);
-        $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
-        $this->data[ReportLabel::ANIMALS] = $this->retrieveLiveStockData();
+        return $this->translator->trans($value);
+    }
+
+
+    private function translateColumnHeaders($csvData)
+    {
+        if ($this->translator->getLocale() === Locale::EN) {
+            return $csvData;
+        }
+
+        foreach ($csvData as $item => $records) {
+            foreach ($records as $columnHeader => $value) {
+
+                $prefix = mb_substr($columnHeader, 0, 2);
+                $upperSuffix = strtoupper(mb_substr($columnHeader, 2, strlen($columnHeader)-2));
+
+                switch ($prefix) {
+                    case 'a_': $translatedColumnHeader = $this->trans('A') . '_' . $this->trans($upperSuffix); break;
+                    case 'f_': $translatedColumnHeader = $this->trans('F') . '_' . $this->trans($upperSuffix); break;
+                    case 'm_': $translatedColumnHeader = $this->trans('M') . '_' . $this->trans($upperSuffix); break;
+                    default: $translatedColumnHeader = $this->trans(strtoupper($columnHeader)); break;
+                }
+
+                $translatedColumnHeader = strtr(strtolower($translatedColumnHeader), [' ' => '_']);
+
+                if ($columnHeader !== $translatedColumnHeader) {
+                    $csvData[$item][strtolower($translatedColumnHeader)] = $value;
+                    unset($csvData[$item][$columnHeader]);
+                }
+            }
+        }
+
+        return $csvData;
+    }
+
+
+    private function getReportData()
+    {
+        if ($this->fileType === FileType::CSV) {
+            $this->data = $this->retrieveLiveStockDataForCsv();
+        } else {
+            $this->data = [];
+            $this->data[ReportLabel::DATE] = TimeUtil::getTimeStampToday('d-m-Y');
+            $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO
+            $this->data[ReportLabel::UBN] = $this->location->getUbn();
+            $this->data[ReportLabel::NAME.'_and_'.ReportLabel::ADDRESS] = $this->parseNameAddressString();
+            $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($this->em, $this->location, true);
+            $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
+            $this->data[ReportLabel::ANIMALS] = $this->retrieveLiveStockDataForPdf();
+        }
     }
 
 
     /**
      * @return array
      */
-    private function retrieveLiveStockData()
+    private function retrieveLiveStockDataForPdf()
     {
         if ($this->content !== null) {
             $matchLocationOfSelectedAnimals = false; //This ensures inclusion of historic animals
@@ -251,18 +291,105 @@ class LiveStockReportService extends ReportServiceBase
             $results[$key]['f_breed_value_litter_size'] = BreedFormat::formatBreedValue($results[$key]['f_breed_value_litter_size_value'], $results[$key]['f_breed_value_litter_size_accuracy']);
 
 
-            if(self::SHOW_PREDICATE_IN_REPORT) {
-                $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
-                $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
-                $results[$key]['m_predicate'] = DisplayUtil::parsePredicateString($results[$key]['m_predicate_value'], $results[$key]['m_predicate_score']);
-            } else {
-                $results[$key]['a_predicate'] = null;
-                $results[$key]['f_predicate'] = null;
-                $results[$key]['m_predicate'] = null;
-            }
+            // Format Predicate values
+            $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
+            $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
+            $results[$key]['m_predicate'] = DisplayUtil::parsePredicateString($results[$key]['m_predicate_value'], $results[$key]['m_predicate_score']);
+            unset($results[$key]['a_predicate_value']);
+            unset($results[$key]['f_predicate_value']);
+            unset($results[$key]['m_predicate_value']);
+            unset($results[$key]['a_predicate_score']);
+            unset($results[$key]['f_predicate_score']);
+            unset($results[$key]['m_predicate_score']);
+
         }
 
+        return $this->orderSqlResultsByOrderOfAnimalsInJsonBody($results);
+    }
 
+
+    /**
+     * @return array
+     */
+    private function retrieveLiveStockDataForCsv()
+    {
+        $animals = [];
+        $matchLocationOfSelectedAnimals = true;
+
+        if ($this->content !== null) {
+            $matchLocationOfSelectedAnimals = false; //This ensures inclusion of historic animals
+            $animals = $this->content->get(JsonInputConstant::ANIMALS);
+        }
+
+        $sql = $this->breedValuesReportQueryGenerator->createLiveStockReportQuery(
+            $this->location->getId(),
+            $animals,
+            $matchLocationOfSelectedAnimals,
+            $this->concatValueAndAccuracy,
+            true
+        );
+
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $keys = array_keys($results);
+        foreach ($keys as $key) {
+
+            $results[$key]['gender'] = $this->getGenderLetter($results[$key]['gender']);
+
+            $results[$key]['a_n_ling'] = str_replace('-ling', '', $results[$key]['a_n_ling']);
+            $results[$key]['f_n_ling'] = str_replace('-ling', '', $results[$key]['f_n_ling']);
+            $results[$key]['m_n_ling'] = str_replace('-ling', '', $results[$key]['m_n_ling']);
+
+            // Format Predicate values
+            $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
+            $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
+            $results[$key]['m_predicate'] = DisplayUtil::parsePredicateString($results[$key]['m_predicate_value'], $results[$key]['m_predicate_score']);
+            unset($results[$key]['a_predicate_value']);
+            unset($results[$key]['f_predicate_value']);
+            unset($results[$key]['m_predicate_value']);
+            unset($results[$key]['a_predicate_score']);
+            unset($results[$key]['f_predicate_score']);
+            unset($results[$key]['m_predicate_score']);
+
+        }
+
+        return $this->orderSqlResultsByOrderOfAnimalsInJsonBody($results);
+    }
+
+
+    /**
+     * @param array $results
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function moveBreedValueColumnsToEndArray(array $results)
+    {
+        $availableBreedColumnValues = $this->getAvailableBreedValueColumns($results);
+
+        $keys = array_keys($results);
+        foreach ($keys as $key) {
+
+            // Place the breedValues at the end of the csv file
+            foreach ($availableBreedColumnValues as $availableBreedColumnValue) {
+                if (key_exists($availableBreedColumnValue, $results[$key])) {
+                    $value = $results[$key][$availableBreedColumnValue];
+                    unset($results[$key][$availableBreedColumnValue]);
+                    $results[$key][$availableBreedColumnValue] = $value;
+                }
+            }
+
+        }
+
+        return $results;
+    }
+
+
+    /**
+     * @param array $results
+     * @return array
+     */
+    private function orderSqlResultsByOrderOfAnimalsInJsonBody(array $results)
+    {
         if ($this->content === null) {
             return $results;
         }
@@ -283,6 +410,42 @@ class LiveStockReportService extends ReportServiceBase
         }
 
         return $orderedResults;
+    }
+
+
+    /**
+     * @param array $csvResults
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function getAvailableBreedValueColumns(array $csvResults)
+    {
+        if (count($csvResults) === 0) {
+            return [];
+        }
+
+        $allPossibleBreedCodeNames = [];
+
+        $allCsvColumns = array_keys(reset($csvResults));
+
+        $allBreedCodeNames = [];
+        $sql = "SELECT nl FROM breed_value_type;";
+        foreach ($this->conn->query($sql)->fetchAll() as $value) {
+            $columnName = strtolower($value['nl']);
+            $allBreedCodeNames[$columnName] = $columnName;
+            if (!$this->concatValueAndAccuracy) {
+                $accuracyColumnName = $columnName . BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX;
+                $allBreedCodeNames[$accuracyColumnName] = $accuracyColumnName;
+            }
+        }
+
+        foreach ($allCsvColumns as $columnName) {
+            if (key_exists($columnName, $allBreedCodeNames)) {
+                $allPossibleBreedCodeNames[$columnName] = $columnName;
+            }
+        }
+
+        return $allPossibleBreedCodeNames;
     }
 
 

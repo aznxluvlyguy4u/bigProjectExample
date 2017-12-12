@@ -5,10 +5,10 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Constant\Constant;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Report\PedigreeCertificates;
 use AppBundle\Service\AWSSimpleStorageService;
@@ -16,7 +16,6 @@ use AppBundle\Service\CsvFromSqlResultsWriterService;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\RequestUtil;
-use AppBundle\Util\TwigOutputUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\UlnValidator;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -28,19 +27,14 @@ use Symfony\Component\HttpFoundation\Request;
 
 class PedigreeCertificateReportService extends ReportServiceBase
 {
-    const TITLE = 'pedigree_certificates_report';
+    const TITLE = 'pedigree certificates report';
     const TWIG_FILE = 'Report/pedigree_certificates.html.twig';
     const TWIG_FILE_BETA = 'Report/pedigree_certificates_beta.html.twig';
+    const FOLDER_NAME = self::TITLE;
+    const FILENAME = self::TITLE;
 
     /** @var PedigreeCertificates */
     private $reportResults;
-
-    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
-                                AWSSimpleStorageService $storageService, CsvFromSqlResultsWriterService $csvWriter, UserService $userService, TwigEngine $templating, TranslatorInterface $translator, GeneratorInterface $knpGenerator, $cacheDir, $rootDir)
-    {
-        parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator, $cacheDir, $rootDir, self::TITLE, self::TITLE);
-    }
 
 
     /**
@@ -63,6 +57,11 @@ class PedigreeCertificateReportService extends ReportServiceBase
         if(!$ulnValidator->getIsUlnSetValid()) {
             return $ulnValidator->createArrivalJsonErrorResponse();
         }
+
+        $this->filename = $this->translate(self::FILENAME);
+        $this->folderName = self::FOLDER_NAME;
+
+        $this->setLocaleFromQueryParameter($request);
 
         $this->reportResults = new PedigreeCertificates($this->em, $content, $client, $location);
 
@@ -106,10 +105,15 @@ class PedigreeCertificateReportService extends ReportServiceBase
             'litterSize',
             'litterCount',
         ];
-        $csvData = $this->convertNestedArraySetsToSqlResultFormat($this->reportResults->getReports(), $keysToIgnore);
+
+        $customKeysToTranslate = [
+            'pedigree' => 'stn'
+        ];
+
+        $csvData = $this->convertNestedArraySetsToSqlResultFormat($this->reportResults->getReports(), $keysToIgnore, $customKeysToTranslate);
 
         return $this->generateFile($this->filename,
-            $csvData,self::TITLE,FileType::CSV,!ReportAPIController::IS_LOCAL_TESTING
+            $csvData,self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
         );
     }
 

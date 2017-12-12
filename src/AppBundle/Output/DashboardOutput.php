@@ -11,6 +11,8 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\DBALException;
+use Doctrine\ORM\EntityManagerInterface;
 
 
 /**
@@ -22,14 +24,15 @@ class DashboardOutput extends Output
      * @param Client $client
      * @param ArrayCollection $declarationLogDate
      * @param Location $location
-     * @param ObjectManager $em
+     * @param EntityManagerInterface $em
      * @return array
+     * @throws DBALException
      */
-    public static function create(ObjectManager $em, Client $client, ArrayCollection $declarationLogDate, $location)
+    public static function create(EntityManagerInterface $em, Client $client, ArrayCollection $declarationLogDate, $location)
     {
         $liveStockCount = Count::getLiveStockCountLocation($em, $location);
         $errorCounts = Count::getErrorCountDeclarationsPerLocation($em, $location);
-        $unassignedTagsCount = Count::getUnassignedTagsCount($em, $client->getId(), $location->getId());
+        $tagCounts = Count::getTagsCount($em, $client->getId(), $location->getId());
 
         self:: setUbnAndLocationHealthValues($em, $location);
 
@@ -99,7 +102,8 @@ class DashboardOutput extends Output
                   "tag_transfer" =>
                   array(
                       "date_last_declaration" => $declarationLogDate->get(RequestType::DECLARE_TAGS_TRANSFER_ENTITY),
-                      "unassigned_tags" => $unassignedTagsCount
+                      "unassigned_tags" => $tagCounts[Count::FREE],
+                      "used_tags" => $tagCounts[Count::USED],
                   )
         );
 

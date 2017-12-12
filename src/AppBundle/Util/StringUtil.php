@@ -272,6 +272,29 @@ class StringUtil
 
 
     /**
+     * @param string|bool $value
+     * @param bool $defaultValue
+     * @return bool
+     */
+    public static function getStringAsBoolean($value, $defaultValue)
+    {
+        if (is_string($value)) {
+
+            $value = trim(strtolower($value));
+            if ($defaultValue) {
+                return $value !== 'false';
+            }
+            return $value === 'true';
+
+        } elseif (is_bool($value)) {
+            return $value;
+        }
+
+        return $defaultValue;
+    }
+
+
+    /**
      * @param mixed $value
      * @param boolean $wrapNonNullInQuotes
      * @return string
@@ -464,6 +487,19 @@ class StringUtil
     public static function convertCamelCaseToSnakeCase($string)
     {
         return ltrim(strtolower(preg_replace('/[A-Z]([A-Z](?![a-z]))*/', '_$0', $string)), '_');
+    }
+
+
+    /**
+     * @param array $needles
+     * @param $haystack
+     * @return bool
+     */
+    public static function onlyContainsChars(array $needles, $haystack)
+    {
+        $regex = '((' . implode('|', $needles) . ')+)';
+        preg_match($regex, $haystack, $matches);
+        return in_array($haystack, $matches);
     }
 
 

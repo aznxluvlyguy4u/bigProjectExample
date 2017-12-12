@@ -47,3 +47,8 @@ parameters:
     web_prod_host_url: ~
 
     test_email: ~
+
+    locale: en
+
+    output_reports_to_cache_folder_for_local_testing: false
+    display_report_pdf_output_as_html: false

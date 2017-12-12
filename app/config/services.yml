@@ -374,6 +374,11 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@security.token_storage'
 
+    app.report.generator.query.breed_values:
+        class: AppBundle\Service\Report\BreedValuesReportQueryGenerator
+        arguments:
+          - '@doctrine.orm.entity_manager'
+
     app.report.base:
         abstract: true
         arguments:
@@ -389,9 +394,30 @@ services:
           - '@knp_snappy.pdf'
           - '%kernel.cache_dir%'
           - '%kernel.root_dir%'
+          - '%output_reports_to_cache_folder_for_local_testing%'
+          - '%display_report_pdf_output_as_html%'
+
+    app.report.breedvalues.base:
+        abstract: true
+        arguments:
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
+          - '@doctrine.orm.entity_manager'
+          - '@app.excel.service'
+          - '@logger'
+          - '@app.aws.storageservice'
+          - '@app.writer.csv_from_sql_results'
+          - '@app.user'
+          - '@templating'
+          - '@translator'
+          - '@knp_snappy.pdf'
+          - '@app.report.generator.query.breed_values'
+          - '%kernel.cache_dir%'
+          - '%kernel.root_dir%'
+          - '%output_reports_to_cache_folder_for_local_testing%'
+          - '%display_report_pdf_output_as_html%'
 
     app.report.livestock:
-        parent: app.report.base
+        parent: app.report.breedvalues.base
         class: AppBundle\Service\Report\LiveStockReportService
 
     app.report.pedigree_certificates:
@@ -403,7 +429,7 @@ services:
         class: AppBundle\Service\Report\PedigreeRegisterOverviewReportService
 
     app.report.breed_values_overview:
-        parent: app.report.base
+        parent: app.report.breedvalues.base
         class: AppBundle\Service\Report\BreedValuesOverviewReportService
 
     app.report.inbreeding_coefficient:

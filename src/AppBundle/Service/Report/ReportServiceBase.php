@@ -6,21 +6,18 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Person;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Report\ReportBase;
+use AppBundle\Enumerator\Locale;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\FilesystemUtil;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\TwigOutputUtil;
-use AppBundle\Validation\AdminValidator;
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
@@ -40,9 +37,10 @@ class ReportServiceBase
     const EXCEL_TYPE = 'Excel2007';
     const CREATOR = 'NSFO';
     const DEFAULT_EXTENSION = FileType::PDF;
-    const DEFAULT_FILENAME = 'NFSO_Report';
+    const FILENAME = 'NFSO_Report';
+    const FOLDER_NAME = ReportServiceBase::FILENAME;
 
-    /** @var ObjectManager|EntityManagerInterface */
+    /** @var EntityManagerInterface */
     protected $em;
     /** @var Connection */
     protected $conn;
@@ -68,6 +66,10 @@ class ReportServiceBase
     protected $cacheDir;
     /** @var string */
     protected $rootDir;
+    /** @var boolean */
+    protected $outputReportsToCacheFolderForLocalTesting;
+    /** @var boolean */
+    protected $displayReportPdfOutputAsHtml;
 
     /** @var string */
     protected $folderPath;
@@ -77,6 +79,8 @@ class ReportServiceBase
     protected $folderName;
     /** @var string */
     protected $extension;
+    /** @var string */
+    protected $language;
 
     /** @var array */
     protected $inputErrors;
@@ -84,26 +88,14 @@ class ReportServiceBase
     /** @var array */
     protected $convertedResult;
 
-    /**
-     * PedigreeRegisterOverviewReportService constructor.
-     * @param ObjectManager|EntityManagerInterface $em
-     * @param ExcelService $excelService
-     * @param Logger $logger
-     * @param AWSSimpleStorageService $storageService
-     * @param CsvWriter $csvWriter
-     * @param UserService $userService
-     * @param TwigEngine $templating
-     * @param TranslatorInterface $translator
-     * @param GeneratorInterface $knpGenerator
-     * @param String $folderName
-     * @param String $rootDir
-     * @param String $filename
-     */
-    public function __construct(ObjectManager $em, ExcelService $excelService, Logger $logger,
+    public function __construct(EntityManagerInterface $em, ExcelService $excelService, Logger $logger,
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
                                 UserService $userService, TwigEngine $templating,
                                 TranslatorInterface $translator,
-                                GeneratorInterface $knpGenerator, $cacheDir, $rootDir, $folderName, $filename = self::DEFAULT_FILENAME)
+                                GeneratorInterface $knpGenerator, $cacheDir, $rootDir,
+                                $outputReportsToCacheFolderForLocalTesting,
+                                $displayReportPdfOutputAsHtml
+    )
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -119,17 +111,47 @@ class ReportServiceBase
 
         $this->excelService = $excelService;
         $this->excelService
-            ->setFolderName($folderName)
+            ->setFolderName(self::FOLDER_NAME)
             ->setCreator(self::CREATOR)
             ->setExcelFileType(self::EXCEL_TYPE)
         ;
 
         $this->extension = self::DEFAULT_EXTENSION;
-        $this->folderPath = $folderName;
-        $this->filename = $filename;
+        $this->folderPath = self::FOLDER_NAME;
+        $this->filename = self::FILENAME;
 
         $this->fs = new Filesystem();
         $this->inputErrors = [];
+
+        $this->outputReportsToCacheFolderForLocalTesting = StringUtil::getStringAsBoolean($outputReportsToCacheFolderForLocalTesting, false);
+        $this->displayReportPdfOutputAsHtml = StringUtil::getStringAsBoolean($displayReportPdfOutputAsHtml, false);
+    }
+
+
+    /**
+     * @param string $value
+     * @param bool $replaceSpacesWithUnderScores
+     * @return string
+     */
+    protected function translate($value, $replaceSpacesWithUnderScores = true)
+    {
+        $translated = mb_strtolower($this->translator->trans(strtoupper($value)));
+
+        if ($replaceSpacesWithUnderScores) {
+            return strtr($translated, [' ' => '_']);
+        }
+
+        return $translated;
+    }
+
+
+    /**
+     * @param Request $request
+     */
+    protected function setLocaleFromQueryParameter(Request $request)
+    {
+        $this->language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
+        $this->translator->setLocale($this->language);
     }
 
 
@@ -248,7 +270,7 @@ class ReportServiceBase
     {
         $html = $this->renderView($twigFile, ['variables' => $data]);
 
-        if (ReportAPIController::DISPLAY_PDF_AS_HTML) {
+        if ($this->displayReportPdfOutputAsHtml) {
             $response = new Response($html);
             $response->headers->set('Content-Type', 'text/html');
             return $response;
@@ -258,7 +280,7 @@ class ReportServiceBase
 
         $pdfOptions = $isLandscape ? TwigOutputUtil::pdfLandscapeOptions() : TwigOutputUtil::pdfPortraitOptions();
 
-        if(ReportAPIController::IS_LOCAL_TESTING) {
+        if($this->outputReportsToCacheFolderForLocalTesting) {
             //Save pdf in local cache
             return ResultUtil::successResult($this->saveFileLocally($this->getCacheDirFilename(), $html, $pdfOptions));
         }
@@ -286,15 +308,17 @@ class ReportServiceBase
 
     /**
      * @param array $arraySets
-     * @param string $keyPrefix
      * @param array $keysToIgnore
+     * @param array $customKeyTranslation
+     * @param string $keyPrefix
      * @return array
      */
-    protected function convertNestedArraySetsToSqlResultFormat(array $arraySets, $keysToIgnore = [], $keyPrefix = '')
+    protected function convertNestedArraySetsToSqlResultFormat(array $arraySets, $keysToIgnore = [],
+                                                               array $customKeyTranslation = [], $keyPrefix = '')
     {
         $result = [];
         foreach ($arraySets as $arraySet) {
-            $result[] = $this->convertNestedArrayToSqlResultFormat($arraySet, $keysToIgnore, $keyPrefix);
+            $result[] = $this->convertNestedArrayToSqlResultFormat($arraySet, $keysToIgnore, $keyPrefix, $customKeyTranslation);
         }
         $this->purgeConvertedResult();
 
@@ -320,17 +344,35 @@ class ReportServiceBase
     }
 
 
+    /**
+     * @param array $array
+     * @return array
+     */
+    protected function translateKeysInFlatArray(array $array)
+    {
+        foreach ($array as $key => $value) {
+            $translatedKey = $this->translateKey($key);
+            if ($translatedKey != $key) {
+                $array[$translatedKey] = $value;
+                unset($array[$key]);
+            }
+        }
+        return $array;
+    }
+
+
 
     /**
      * @param array $array
      * @param string $keyPrefix
+     * @param array $customKeyTranslation
      * @param array $keysToIgnore
      * @param string $semiColonReplacement
      * @param boolean $purgeResult
      * @return array
      * @throws \Exception
      */
-    protected function convertNestedArrayToSqlResultFormat(array $array, $keysToIgnore = [], $keyPrefix = '', $semiColonReplacement = ',', $purgeResult = true)
+    protected function convertNestedArrayToSqlResultFormat(array $array, $keysToIgnore = [], $keyPrefix = '', array $customKeyTranslation = [], $semiColonReplacement = ',', $purgeResult = true)
     {
         $keySeparator = '_';
 
@@ -342,10 +384,16 @@ class ReportServiceBase
                 continue;
             }
 
+            if (key_exists($key, $customKeyTranslation)) {
+                $key = $customKeyTranslation[$key];
+            }
+
+            $key = $this->translateKey($key);
+
             $keyForResult = $keyPrefix !== '' ? $keyPrefix.$keySeparator.$key : $key;
 
             if (is_array($item)) {
-                self::convertNestedArrayToSqlResultFormat($item, $keysToIgnore, $keyForResult, $semiColonReplacement,false);
+                self::convertNestedArrayToSqlResultFormat($item, $keysToIgnore, $keyForResult, $customKeyTranslation, $semiColonReplacement,false);
 
             } elseif (is_string($item)) {
 
@@ -357,6 +405,30 @@ class ReportServiceBase
         }
 
         return $this->convertedResult;
+    }
+
+
+    /**
+     * @param string $key
+     * @return string
+     */
+    protected function translateKey($key)
+    {
+        // Translate concatenated parent strings, like: fm, mm, fff, mfmfmfmf
+        if (strlen($key) > 1 && StringUtil::onlyContainsChars(['f', 'm'], $key)) {
+            $chars = str_split($key, 1);
+
+            $result = '';
+            $prefix = '';
+            foreach ($chars as $char) {
+                $result .= $prefix . $this->translateKey($char);
+                $prefix = '_';
+            }
+
+            return $result;
+        }
+
+        return strtr(mb_strtolower($this->translator->trans(strtoupper($key))), [' ' => '_']);
     }
 
 

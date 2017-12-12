@@ -301,10 +301,9 @@ class EmailService
         $subjectHeaderData = $subjectHeaderData .' => UBN '.$locationHealthMessage->getUbnNewOwner().']';
         $introMessage = 'Er is een dier '.$arrivalVerbType.' op ' . $locationHealthMessage->getUbnNewOwner() . $senderInfo . '.';
 
-        $this->translator->setLocale(Locale::NL);
-
         $message = \Swift_Message::newInstance()
-            ->setSubject(Constant::POSSIBLE_SICK_ANIMAL_ARRIVAL_MAIL_SUBJECT_HEADER.$subjectHeaderData)
+            ->setSubject($this->getEnvironmentSubjectPrefix()
+                .Constant::POSSIBLE_SICK_ANIMAL_ARRIVAL_MAIL_SUBJECT_HEADER.$subjectHeaderData)
             ->setFrom($this->mailerSourceAddress)
             ->setTo($this->notificationEmailAddresses)
             ->setBody(
@@ -321,5 +320,23 @@ class EmailService
             ->setSender($this->mailerSourceAddress);
 
         return $this->swiftMailer->send($message) > 0;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getEnvironmentSubjectPrefix()
+    {
+        switch ($this->environment) {
+            case Environment::PROD: return '';
+            case Environment::STAGE: $envString = 'STAGING'; break;
+            case Environment::DEV: $envString = 'DEV ENV'; break;
+            case Environment::LOCAL: $envString = 'LOCAL ENV'; break;
+            case Environment::TEST: $envString = 'TESTING'; break;
+            default: $envString = strtoupper($this->environment);
+        }
+
+        return '[' . $envString .'] ';
     }
 }

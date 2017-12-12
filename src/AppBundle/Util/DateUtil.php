@@ -7,6 +7,7 @@ namespace AppBundle\Util;
 class DateUtil
 {
     const DATE_STRING_FORMAT_FILENAME = 'Y-m-d_H\hi\ms\s';
+    const DEFAULT_SQL_DATE_STRING_FORMAT = 'DD-MM-YYYY';
 
     /**
      * Regex for YYYY-MM-DD, where MM and DD can also be one digit in length
