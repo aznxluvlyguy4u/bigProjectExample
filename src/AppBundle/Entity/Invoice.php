@@ -55,7 +55,7 @@ class Invoice
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $documentUrl;
