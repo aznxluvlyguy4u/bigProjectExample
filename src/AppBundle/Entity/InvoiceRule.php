@@ -17,9 +17,13 @@ class InvoiceRule
     use EntityClassInfo;
 
     /**
+     * @var int
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     protected $id;
 
@@ -29,40 +33,104 @@ class InvoiceRule
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $description;
 
     /**
-     * @var string
+     * @var float
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="float")
      * @Assert\NotBlank
-     * @JMS\Type("integer")
+     * @JMS\Type("float")
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $vatPercentageRate;
 
     /**
-     * @var string
+     * @var float
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="float")
      * @Assert\NotBlank
-     * @JMS\Type("integer")
+     * @JMS\Type("float")
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $priceExclVat;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
+     */
+    private $sortOrder;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", options={"default":"GENERAL"})
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
+     */
+    private $category;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", name="type", options={"default":"custom"})
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
+     */
+    private $type;
 
     /**
      * @var Invoice
      *
      * @ORM\ManyToOne(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
-     * @JMS\Type("array")
+     * @JMS\Type("AppBundle\Entity\Invoice")
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
      */
     private $invoice;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", name="is_deleted", options={"default":false})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "INVOICE_RULE_TEMPLATE"
+     * })
+     */
+    private $isDeleted = false;
 
     /**
      * InvoiceRule constructor.
      */
     public function __construct()
     {
+    }
+
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
     }
 
     /**
@@ -75,14 +143,16 @@ class InvoiceRule
 
     /**
      * @param string $description
+     * @return InvoiceRule
      */
     public function setDescription($description)
     {
         $this->description = $description;
+        return $this;
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getVatPercentageRate()
     {
@@ -90,15 +160,17 @@ class InvoiceRule
     }
 
     /**
-     * @param string $vatPercentageRate
+     * @param float $vatPercentageRate
+     * @return InvoiceRule
      */
     public function setVatPercentageRate($vatPercentageRate)
     {
         $this->vatPercentageRate = $vatPercentageRate;
+        return $this;
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getPriceExclVat()
     {
@@ -106,11 +178,67 @@ class InvoiceRule
     }
 
     /**
-     * @param string $priceExclVat
+     * @param float $priceExclVat
+     * @return InvoiceRule
      */
     public function setPriceExclVat($priceExclVat)
     {
         $this->priceExclVat = $priceExclVat;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSortOrder()
+    {
+        return $this->sortOrder;
+    }
+
+    /**
+     * @param int $sortOrder
+     * @return InvoiceRule
+     */
+    public function setSortOrder($sortOrder)
+    {
+        $this->sortOrder = $sortOrder;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCategory()
+    {
+        return $this->category;
+    }
+
+    /**
+     * @param string $category
+     * @return InvoiceRule
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     * @return InvoiceRule
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+        return $this;
     }
 
     /**
@@ -123,9 +251,31 @@ class InvoiceRule
 
     /**
      * @param Invoice $invoice
+     * @return InvoiceRule
      */
     public function setInvoice($invoice)
     {
         $this->invoice = $invoice;
+        return $this;
     }
+
+    /**
+     * @return bool
+     */
+    public function isDeleted()
+    {
+        return $this->isDeleted;
+    }
+
+    /**
+     * @param bool $isDeleted
+     * @return InvoiceRule
+     */
+    public function setIsDeleted($isDeleted)
+    {
+        $this->isDeleted = $isDeleted;
+        return $this;
+    }
+
+
 }
