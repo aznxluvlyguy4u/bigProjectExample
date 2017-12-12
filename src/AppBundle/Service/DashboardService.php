@@ -11,6 +11,7 @@ use AppBundle\Output\AdminDashboardOutput;
 use AppBundle\Output\DashboardOutput;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
+use Doctrine\DBAL\DBALException;
 use Symfony\Component\HttpFoundation\Request;
 
 class DashboardService extends ControllerServiceBase
@@ -18,6 +19,7 @@ class DashboardService extends ControllerServiceBase
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws DBALException
      */
     public function getDashBoard(Request $request)
     {
