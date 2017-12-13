@@ -775,11 +775,46 @@ class DatabaseDataFixer
             $totalUpdateCount += SqlUtil::updateWithCount($conn, $sql);
         }
 
-        if ($cmdUtilOrOutput instanceof CommandUtil || $cmdUtilOrOutput instanceof OutputInterface) {
-            $count = $totalUpdateCount === 0 ? 'No' : $totalUpdateCount;
-            $cmdUtilOrOutput->writeln($count . ' boolean values in animal have been set to FALSE from NULL');
-        }
+        self::writeCount($cmdUtilOrOutput, $totalUpdateCount, 'boolean values in animal have been set to FALSE from NULL');
 
         return $totalUpdateCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function removeTimeFromCheckDates(Connection $conn, $cmdUtilOrOutput)
+    {
+        $queries = [
+            "UPDATE scrapie SET check_date = DATE(check_date) WHERE check_date <> DATE(check_date)",
+            "UPDATE maedi_visna SET check_date = DATE(check_date) WHERE check_date <> DATE(check_date)",
+        ];
+
+        $totalUpdateCount = 0;
+        foreach ($queries as $sql) {
+            $totalUpdateCount += SqlUtil::updateWithCount($conn, $sql);
+        }
+
+        self::writeCount($cmdUtilOrOutput, $totalUpdateCount, 'checkdate time values have been removed');
+
+        return $totalUpdateCount;
+    }
+
+
+    /**
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
+     * @param int $count
+     * @param string $message
+     */
+    private static function writeCount($cmdUtilOrOutput, $count, $message)
+    {
+        if ($cmdUtilOrOutput instanceof CommandUtil || $cmdUtilOrOutput instanceof OutputInterface) {
+            $count = $count === 0 ? 'No' : $count;
+            $cmdUtilOrOutput->writeln($count . ' '. $message);
+        }
     }
 }
