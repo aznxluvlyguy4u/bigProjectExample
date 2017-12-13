@@ -10,7 +10,7 @@ namespace AppBundle\Enumerator;
  */
 class MaediVisnaStatus
 {
-    const FREE_1_YEAR = 'FREE 1 YEAR'; const FREE_2_YEAR = 'FREE 2 YEARS'; //TODO these two are maybe not necessary. Verify.
+    const FREE_1_YEAR = 'FREE 1 YEAR'; const FREE_2_YEAR = 'FREE 2 YEAR';
 
     const FREE = 'FREE'; //vrij
     const UNDER_OBSERVATION = 'UNDER OBSERVATION'; //in observatie
