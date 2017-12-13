@@ -2,12 +2,16 @@
 
 namespace AppBundle\Enumerator;
 
+use AppBundle\Traits\EnumInfo;
+
 /**
  * Class FootRot
  * @package AppBundle\Enumerator
  */
 class FootRot
 {
+    use EnumInfo;
+
     const NOT_SUSPECT_1 = 'NOT SUSPECT LEVEL 1';
     const NOT_SUSPECT_2 = 'NOT SUSPECT LEVEL 2';
     const NOT_SUSPECT_3 = 'NOT SUSPECT LEVEL 3';
