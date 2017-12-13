@@ -2,6 +2,8 @@
 
 namespace AppBundle\Enumerator;
 
+use AppBundle\Traits\EnumInfo;
+
 /**
  * CL (CLA)
  *
@@ -10,6 +12,8 @@ namespace AppBundle\Enumerator;
  */
 class CaseousLymphadenitisStatus
 {
+    use EnumInfo;
+
     const FREE_1_YEAR = 'FREE 1 YEAR'; const FREE_2_YEAR = 'FREE 2 YEARS'; //TODO these two are maybe not necessary. Verify.
 
     const FREE = 'FREE'; //vrij

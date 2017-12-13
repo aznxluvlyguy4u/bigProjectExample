@@ -258,6 +258,54 @@ class StringUtil
 
 
     /**
+     * @param string $str1
+     * @param string $str2
+     * @param array $ignoreChars
+     * @param bool $ignoreCapitalization
+     * @return bool
+     */
+    public static function equals($str1, $str2, $ignoreChars = [], $ignoreCapitalization = false)
+    {
+        if ($ignoreCapitalization) {
+            $str1 = mb_strtolower($str1);
+            $str2 = mb_strtolower($str2);
+        }
+
+        if (count($ignoreChars) > 0) {
+
+            $replacements = [];
+            foreach ($ignoreChars as $char) {
+                $replacements[$char] = '';
+                $replacements[$char] = '';
+            }
+
+            $str1 = strtr($str1, $replacements);
+            $str2 = strtr($str2, $replacements);
+        }
+
+        return $str1 === $str2;
+    }
+
+
+    /**
+     * @param string $needle
+     * @param array $haystack
+     * @param array $ignoreChars
+     * @param bool $ignoreCapitalization
+     * @return bool
+     */
+    public static function equalsAtLeastOneInSet($needle, array $haystack, $ignoreChars = [], $ignoreCapitalization = false)
+    {
+        foreach ($haystack as $value) {
+            if (self::equals($needle, $value, $ignoreChars, $ignoreCapitalization)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /**
      * @param boolean $boolean
      * @param string $nullString
      * @return string
@@ -519,6 +567,16 @@ class StringUtil
     public static function removeLeadingZeroes($string)
     {
         return ltrim($string, '0');
+    }
+
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    public static function replaceUnderscoresWithSpaces($string)
+    {
+        return strtr($string, ['_' => ' ']);
     }
 
 

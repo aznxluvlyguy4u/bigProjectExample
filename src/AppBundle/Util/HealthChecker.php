@@ -18,13 +18,32 @@ use Doctrine\DBAL\Types\DecimalType;
 
 class HealthChecker
 {
+    private static $ignoreHealthStatusChars = [' ', '_'];
+
+
+    /**
+     * @param string $needle
+     * @param array $haystack
+     * @return bool
+     */
+    private static function verifyHealthStatus($needle, array $haystack)
+    {
+        return StringUtil::equalsAtLeastOneInSet($needle, $haystack, self::$ignoreHealthStatusChars,true);
+    }
+
+
     /**
      * @param string $scrapieStatus
      * @return bool
      */
     public static function verifyIsScrapieStatusHealthy($scrapieStatus)
     {
-        return $scrapieStatus == ScrapieStatus::RESISTANT || $scrapieStatus == ScrapieStatus::FREE;
+        return self::verifyHealthStatus($scrapieStatus,
+            [
+                ScrapieStatus::RESISTANT,
+                ScrapieStatus::FREE,
+            ]
+        );
     }
 
     /**
@@ -33,10 +52,14 @@ class HealthChecker
      */
     public static function verifyIsMaediVisnaStatusHealthy($maediVisnaStatus)
     {
-        return $maediVisnaStatus == MaediVisnaStatus::FREE_1_YEAR
-            || $maediVisnaStatus == MaediVisnaStatus::FREE_2_YEAR
-            || $maediVisnaStatus == MaediVisnaStatus::FREE
-            || $maediVisnaStatus == MaediVisnaStatus::STATUS_KNOWN_BY_AHD;
+        return self::verifyHealthStatus($maediVisnaStatus,
+            [
+                MaediVisnaStatus::FREE_1_YEAR,
+                MaediVisnaStatus::FREE_2_YEAR,
+                MaediVisnaStatus::FREE,
+                MaediVisnaStatus::STATUS_KNOWN_BY_AHD,
+            ]
+        );
     }
 
     /**
