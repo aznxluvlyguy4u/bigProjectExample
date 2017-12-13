@@ -13,6 +13,7 @@ use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\Finder;
 use AppBundle\Util\LocationHealthUpdater;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Validator\Constraints\DateTime;
@@ -57,7 +58,8 @@ class LocationHealthEditor
         $lastScrapieCheckDate = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_CHECK_DATE);
         $lastReasonOfScrapieEdit = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_REASON_OF_EDIT);
 
-        $newScrapieStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_STATUS, $content);
+        $newScrapieStatus = StringUtil::replaceUnderscoresWithSpaces(
+            Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_STATUS, $content));
         $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content, true);
 
         $newScrapieEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_END_DATE, $content, true);
@@ -81,7 +83,8 @@ class LocationHealthEditor
         $lastMaediVisnaCheckDate = $latestIllnessStatuses->get(JsonInputConstant::MAEDI_VISNA_CHECK_DATE);
         $lastReasonOfMaediVisnaEdit = $latestIllnessStatuses->get(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT);
 
-        $newMaediVisnaStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_STATUS, $content);
+        $newMaediVisnaStatus = StringUtil::replaceUnderscoresWithSpaces(
+            Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_STATUS, $content));
         $newMaediVisnaCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $content, true);
         $newMaediVisnaEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_END_DATE, $content, true);
 
