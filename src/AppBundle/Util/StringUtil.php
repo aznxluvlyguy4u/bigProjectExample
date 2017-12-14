@@ -580,4 +580,12 @@ class StringUtil
     }
 
 
+    /**
+     * @param string $string
+     * @return string
+     */
+    public static function replaceSpacesWithUnderscores($string)
+    {
+        return strtr($string, [' ' => '_']);
+    }
 }

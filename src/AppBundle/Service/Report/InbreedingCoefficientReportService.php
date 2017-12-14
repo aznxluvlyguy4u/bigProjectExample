@@ -9,6 +9,7 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\PedigreeMasterKey;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Report\InbreedingCoefficientReportData;
@@ -22,6 +23,7 @@ use AppBundle\Util\PedigreeUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -81,6 +83,16 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     /** @var InbreedingCoefficientReportData */
     private $reportResults;
 
+    /** @var array */
+    private static $customReportFilenames = [
+        Locale::NL => 'inteeltcoeffient rapportage',
+    ];
+
+    /** @var array */
+    private static $customReportFolderNames = [
+        Locale::NL => 'inteeltcoeffient rapportage',
+    ];
+
 
     /**
      * @param Request $request
@@ -100,8 +112,8 @@ class InbreedingCoefficientReportService extends ReportServiceBase
 
         $this->setLocaleFromQueryParameter($request);
 
-        $this->filename = strtr($this->translate(self::TITLE), ['ë' => 'e']);
-        $this->folderName = self::FOLDER_NAME;
+        $this->setFileName();
+        $this->setFolderName();
 
         $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->translator, $this->ramData, $this->ewesData,
             $this->generationOfAscendants, $client);
@@ -111,6 +123,28 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         }
 
         return $this->getPdfReport();
+    }
+
+
+    private function setFileName()
+    {
+        switch ($this->translator->getLocale()) {
+            case Locale::NL: $this->filename = self::$customReportFilenames[Locale::NL]; break;
+            default: $this->filename = $this->translate(self::FILENAME);
+        }
+
+        $this->filename = StringUtil::replaceSpacesWithUnderscores($this->filename);
+    }
+
+
+    private function setFolderName()
+    {
+        switch ($this->translator->getLocale()) {
+            case Locale::NL: $this->folderName = self::$customReportFolderNames[Locale::NL]; break;
+            default: $this->folderName = $this->translate(self::FOLDER_NAME);
+        }
+
+        $this->folderName = StringUtil::replaceSpacesWithUnderscores($this->folderName);
     }
 
 
