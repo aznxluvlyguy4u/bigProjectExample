@@ -25,7 +25,7 @@ class HealthEditValidator
     const RESPONSE_EMPTY_INPUT_SCRAPIE_STATUS = "SCRAPIE STATUS CANNOT BE EMPTY";
     const RESPONSE_INVALID_INPUT_SCRAPIE_STATUS = "SCRAPIE STATUS WAS NOT FOUND IN THE ACCEPTED STATUS LIST";
     const RESPONSE_INVALID_INPUT_MAEDI_VISNA_CHECK_DATE = "MAEDI VISNA CHECK DATE CANNOT BE IN THE PAST";
-    const RESPONSE_INVALID_INPUT_SCRAPIE_CHECK_DATE = "SCRAPIE CHECK DATE CANNOT BE IN THE PAST";
+    const RESPONSE_INVALID_INPUT_SCRAPIE_CHECK_DATE = "SCRAPIE CHECK DATE CANNOT BE IN THE FUTURE";
 
     const EMPTY_MAEDI_VISNA_STATUS = 'EMPTY MAEDI VISNA STATUS';
     const EMPTY_SCRAPIE_STATUS = 'EMPTY SCRAPIE STATUS';
@@ -79,8 +79,8 @@ class HealthEditValidator
         $scrapieStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_STATUS, $content);
         $maediVisnaStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_STATUS, $content);
 
-        $scrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content);
-        $maediVisnaCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $content);
+        $scrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content, true);
+        $maediVisnaCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $content, true);
 
         $this->validateMaediVisnaStatus($maediVisnaStatus);
         $this->validateScrapieStatus($scrapieStatus);
@@ -146,7 +146,7 @@ class HealthEditValidator
     private function validateScrapieCheckDate($scrapieCheckDate)
     {
         if($scrapieCheckDate != null) {
-            if($scrapieCheckDate < $this->today) {
+            if($scrapieCheckDate > $this->today) {
                 $this->isValid = false;
                 $this->errors[JsonInputConstant::SCRAPIE_CHECK_DATE] = self::RESPONSE_INVALID_INPUT_SCRAPIE_CHECK_DATE;
             }
