@@ -3,19 +3,18 @@
 namespace AppBundle\Validation;
 
 
-use AppBundle\Component\Utils;
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
+use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Validator\Constraints\IsNull;
 
 class UlnValidator
 {
@@ -259,13 +258,7 @@ class UlnValidator
             $message = self::MISSING_INPUT_MESSAGE;
         }
 
-        $result = array(
-            Constant::CODE_NAMESPACE => $code,
-            Constant::MESSAGE_NAMESPACE => $message,
-            Constant::ULN_NAMESPACE => $uln,
-            );
-
-        return new JsonResponse($result, $code);
+        return ResultUtil::errorResult($message, $code, $uln);
     }
 
 

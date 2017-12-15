@@ -32,12 +32,23 @@ class ResultUtil
     public static function errorResult($message, $code, $errors = array())
     {
         //Success message
-        if($errors == null || sizeof($errors) == 0){
+        if($errors == null || sizeof($errors) == 0) {
             $result = array(
                 Constant::MESSAGE_NAMESPACE => $message,
                 Constant::CODE_NAMESPACE => $code);
 
             //Error message
+
+        } elseif (!is_array($errors)) {
+
+            return new JsonResponse([
+                JsonInputConstant::RESULT => [
+                    Constant::CODE_NAMESPACE => $code,
+                    Constant::MESSAGE_NAMESPACE => $message,
+                    Constant::DATA => $errors,
+                ]
+            ], $code);
+
         } else {
             $result = array();
             foreach ($errors as $errorMessage) {
