@@ -7,6 +7,7 @@ class JmsGroup
 {
     const ACTION_LOG_ADMIN = 'ACTION_LOG_ADMIN';
     const ACTION_LOG_USER = 'ACTION_LOG_USER';
+    const ADDRESS = 'ADDRESS';
     const ADMIN_HIDDEN_STATUS = 'ADMIN_HIDDEN_STATUS';
     const ANIMAL_DETAILS = 'ANIMAL_DETAILS';
 
@@ -29,6 +30,7 @@ class JmsGroup
     const TREATMENT_TEMPLATE = 'TREATMENT_TEMPLATE';
     const TREATMENT_TEMPLATE_MIN = 'TREATMENT_TEMPLATE_MIN';
 
+    const UBN = 'UBN';
     const USER_MEASUREMENT = 'USER_MEASUREMENT';
 
     const VWA = 'VWA';

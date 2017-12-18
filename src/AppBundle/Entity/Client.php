@@ -26,7 +26,8 @@ class Client extends Person
     * @JMS\Type("string")
     * @JMS\Groups({
      *     "ACTION_LOG_ADMIN",
-     *     "ACTION_LOG_USER"
+     *     "ACTION_LOG_USER",
+     *     "BASIC"
      * })
     * @Expose
     */
@@ -47,6 +48,11 @@ class Client extends Person
     *
     * @ORM\OneToMany(targetEntity="Company", mappedBy="owner", cascade={"persist"})
     * @JMS\Type("array")
+    * @JMS\Groups({
+    *    "ADDRESS",
+    *    "UBN"
+    * })
+    * @Expose
     *
     */
     private $companies;
