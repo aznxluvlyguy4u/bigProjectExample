@@ -9,6 +9,7 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\PedigreeMasterKey;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Report\InbreedingCoefficientReportData;
@@ -22,6 +23,7 @@ use AppBundle\Util\PedigreeUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -81,6 +83,16 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     /** @var InbreedingCoefficientReportData */
     private $reportResults;
 
+    /** @var array */
+    private static $customReportFilenames = [
+        Locale::NL => 'inteeltcoeffient rapportage',
+    ];
+
+    /** @var array */
+    private static $customReportFolderNames = [
+        Locale::NL => 'inteeltcoeffient rapportage',
+    ];
+
 
     /**
      * @param Request $request
@@ -100,8 +112,8 @@ class InbreedingCoefficientReportService extends ReportServiceBase
 
         $this->setLocaleFromQueryParameter($request);
 
-        $this->filename = strtr($this->translate(self::TITLE), ['ë' => 'e']);
-        $this->folderName = self::FOLDER_NAME;
+        $this->setFileName();
+        $this->setFolderName();
 
         $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->translator, $this->ramData, $this->ewesData,
             $this->generationOfAscendants, $client);
@@ -111,6 +123,28 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         }
 
         return $this->getPdfReport();
+    }
+
+
+    private function setFileName()
+    {
+        switch ($this->translator->getLocale()) {
+            case Locale::NL: $this->filename = self::$customReportFilenames[Locale::NL]; break;
+            default: $this->filename = $this->translate(self::FILENAME);
+        }
+
+        $this->filename = StringUtil::replaceSpacesWithUnderscores($this->filename);
+    }
+
+
+    private function setFolderName()
+    {
+        switch ($this->translator->getLocale()) {
+            case Locale::NL: $this->folderName = self::$customReportFolderNames[Locale::NL]; break;
+            default: $this->folderName = $this->translate(self::FOLDER_NAME);
+        }
+
+        $this->folderName = StringUtil::replaceSpacesWithUnderscores($this->folderName);
     }
 
 
@@ -132,7 +166,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         $this->validateRamArray($ramArray);
 
         if(self::MAX_EWES_COUNT > 0 && count($ewesArray) > self::MAX_EWES_COUNT) {
-            $this->inputErrors[] = self::EWES_COUNT_EXCEEDS_MAX;
+            $this->inputErrors[] = $this->translateErrorMessages(self::EWES_COUNT_EXCEEDS_MAX);
             return;
         }
 
@@ -148,7 +182,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         if (is_int($input) || ctype_digit($input)) {
             $this->generationOfAscendants = intval($input);
             if ($this->generationOfAscendants > self::MAX_GENERATION_OF_ASCENDANTS) {
-                $this->inputErrors[] = self::MAX_GENERATIONS_LIMIT_EXCEEDED;
+                $this->inputErrors[] = $this->translateErrorMessages(self::MAX_GENERATIONS_LIMIT_EXCEEDED);
                 return;
             }
         } else {
@@ -166,7 +200,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         //First validate if uln or pedigree exists
         $containsUlnOrPedigree = NullChecker::arrayContainsUlnOrPedigree($ramArray);
         if(!$containsUlnOrPedigree) {
-            $this->inputErrors[] = self::RAM_MISSING_INPUT;
+            $this->inputErrors[] = $this->translateErrorMessages(self::RAM_MISSING_INPUT);
             return;
         }
 
@@ -177,7 +211,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
 
             $isUlnFormatValid = Validator::verifyUlnFormat($ulnString);
             if(!$isUlnFormatValid) {
-                $this->inputErrors[] = self::RAM_ULN_FORMAT_INCORRECT . ': '.$ulnString;
+                $this->inputErrors[] = $this->translateErrorMessages(self::RAM_ULN_FORMAT_INCORRECT) . ': '.$ulnString;
                 return;
             }
 
@@ -188,7 +222,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
             $results = $this->conn->query($sql)->fetchAll();
 
             if (count($results) === 0) {
-                $this->inputErrors[] = self::RAM_ULN_NOT_FOUND. ': '.$ulnString;
+                $this->inputErrors[] = $this->translateErrorMessages(self::RAM_ULN_NOT_FOUND). ': '.$ulnString;
                 return;
             }
 
@@ -199,7 +233,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
                 }
             }
 
-            $this->inputErrors[] = self::RAM_ULN_FOUND_BUT_NOT_MALE. ': '.$ulnString;
+            $this->inputErrors[] = $this->translateErrorMessages(self::RAM_ULN_FOUND_BUT_NOT_MALE). ': '.$ulnString;
             return;
 
         } else {
@@ -218,7 +252,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
                 $results = $this->conn->query($sql)->fetchAll();
 
                 if (count($results) === 0) {
-                    $this->inputErrors[] = self::RAM_PEDIGREE_NOT_FOUND . ': ' . $pedigreeCode;
+                    $this->inputErrors[] = $this->translateErrorMessages(self::RAM_PEDIGREE_NOT_FOUND) . ': ' . $pedigreeCode;
                     return;
                 }
 
@@ -229,11 +263,11 @@ class InbreedingCoefficientReportService extends ReportServiceBase
                     }
                 }
 
-                $this->inputErrors[] = self::RAM_PEDIGREE_FOUND_BUT_NOT_MALE. ': ' . $pedigreeCode;
+                $this->inputErrors[] = $this->translateErrorMessages(self::RAM_PEDIGREE_FOUND_BUT_NOT_MALE). ': ' . $pedigreeCode;
                 return;
 
             } else {
-                $this->inputErrors[] = self::RAM_PEDIGREE_NOT_FOUND;
+                $this->inputErrors[] = $this->translateErrorMessages(self::RAM_PEDIGREE_NOT_FOUND);
             }
         }
     }
@@ -251,14 +285,14 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         {
             $ulnString = NullChecker::getUlnStringFromArray($eweArray, null);
             if($ulnString == null) {
-                $this->inputErrors[] = self::EWE_MISSING_INPUT;
+                $this->inputErrors[] = $this->translateErrorMessages(self::EWE_MISSING_INPUT);
                 return false;
             }
 
 
             $isUlnFormatValid = Validator::verifyUlnFormat($ulnString);
             if(!$isUlnFormatValid) {
-                $this->inputErrors[] = self::EWE_ULN_FORMAT_INCORRECT . ': '.$ulnString;
+                $this->inputErrors[] = $this->translateErrorMessages(self::EWE_ULN_FORMAT_INCORRECT) . ': '.$ulnString;
             }
 
             $requestedEweUlnStrings[$ulnString] = $ulnString;
@@ -297,7 +331,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         //Check if any found uln only belong to non Ewes
         foreach ($nonEweUlns as $nonEweUln) {
             if (!key_exists($nonEweUln, $foundUlns)) {
-                $this->inputErrors[] = self::EWE_FOUND_BUT_NOT_EWE. ': '.$nonEweUln;
+                $this->inputErrors[] = $this->translateErrorMessages(self::EWE_FOUND_BUT_NOT_EWE). ': '.$nonEweUln;
             }
         }
 
@@ -306,7 +340,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         foreach ($requestedEweUlnStrings as $requestedEweUlnString)
         {
             if (!key_exists($requestedEweUlnString, $foundUlns)) {
-                $this->inputErrors[] = self::EWE_NO_ANIMAL_FOUND. ': '.$requestedEweUlnString;
+                $this->inputErrors[] = $this->translateErrorMessages(self::EWE_NO_ANIMAL_FOUND). ': '.$requestedEweUlnString;
             }
         }
 
@@ -318,7 +352,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
             $clientId = $this->getUser()->getId();
             foreach ($this->ewesData as $ulnString => $eweData)
             if ($clientId !== $eweData['owner_id']) {
-                $this->inputErrors[] = self::EWE_NOT_OF_CLIENT . ': ' .$ulnString;
+                $this->inputErrors[] = $this->translateErrorMessages(self::EWE_NOT_OF_CLIENT) . ': ' .$ulnString;
             }
         }
     }

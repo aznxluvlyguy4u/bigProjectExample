@@ -131,17 +131,33 @@ class ReportServiceBase
     /**
      * @param string $value
      * @param bool $replaceSpacesWithUnderScores
+     * @param bool $capitalizeFirstLetter
      * @return string
      */
-    protected function translate($value, $replaceSpacesWithUnderScores = true)
+    protected function translate($value, $replaceSpacesWithUnderScores = true, $capitalizeFirstLetter = false)
     {
         $translated = mb_strtolower($this->translator->trans(strtoupper($value)));
+        if ($capitalizeFirstLetter) {
+            $translated = ucfirst($translated);
+        }
 
         if ($replaceSpacesWithUnderScores) {
             return strtr($translated, [' ' => '_']);
         }
 
         return $translated;
+    }
+
+
+    /**
+     * @param string $message
+     * @return string
+     */
+    protected function translateErrorMessages($message)
+    {
+        if ($message == null) { return ''; }
+
+        return $this->translate($message, false, true);
     }
 
 

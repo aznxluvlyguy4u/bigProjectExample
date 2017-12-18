@@ -97,6 +97,8 @@ class LocationHealthUpdater
                                                    $createLocationHealthMessage
     )
     {
+        $checkDate = TimeUtil::getDayOfDateTime($checkDate);
+
         //Initializing the locationHealth if necessary. This is a fail safe. All locations should be created with their own locationHealth.
         $locationOfDestination = $this->persistInitialLocationHealthIfNull($locationOfDestination, $checkDate);
 

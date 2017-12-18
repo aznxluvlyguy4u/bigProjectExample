@@ -18,9 +18,10 @@ class InvoiceRule
     use EntityClassInfo;
 
     /**
+     * @var int
      * @ORM\Column(type="integer")
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Type("integer")
      * @JMS\Groups({
      *     "INVOICE_RULE_TEMPLATE"
@@ -144,6 +145,14 @@ class InvoiceRule
     }
 
     /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
      * @return string
      */
     public function getDescription()
@@ -153,14 +162,20 @@ class InvoiceRule
 
     /**
      * @param string $description
+     * @return InvoiceRule
      */
     public function setDescription($description)
     {
         $this->description = $description;
+        return $this;
     }
 
     /**
+<<<<<<< HEAD
      * @return int
+=======
+     * @return float
+>>>>>>> development
      */
     public function getVatPercentageRate()
     {
@@ -168,15 +183,25 @@ class InvoiceRule
     }
 
     /**
+<<<<<<< HEAD
      * @param int $vatPercentageRate
+=======
+     * @param float $vatPercentageRate
+     * @return InvoiceRule
+>>>>>>> development
      */
     public function setVatPercentageRate($vatPercentageRate)
     {
         $this->vatPercentageRate = $vatPercentageRate;
+        return $this;
     }
 
     /**
+<<<<<<< HEAD
      * @return int
+=======
+     * @return float
+>>>>>>> development
      */
     public function getPriceExclVat()
     {
@@ -184,11 +209,71 @@ class InvoiceRule
     }
 
     /**
+<<<<<<< HEAD
      * @param int $priceExclVat
+=======
+     * @param float $priceExclVat
+     * @return InvoiceRule
+>>>>>>> development
      */
     public function setPriceExclVat($priceExclVat)
     {
         $this->priceExclVat = $priceExclVat;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSortOrder()
+    {
+        return $this->sortOrder;
+    }
+
+    /**
+     * @param int $sortOrder
+     * @return InvoiceRule
+     */
+    public function setSortOrder($sortOrder)
+    {
+        $this->sortOrder = $sortOrder;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCategory()
+    {
+        return $this->category;
+    }
+
+    /**
+     * @param string $category
+     * @return InvoiceRule
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     * @return InvoiceRule
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+        return $this;
     }
 
     /**
@@ -265,13 +350,16 @@ class InvoiceRule
 
     /**
      * @param Invoice $invoice
+     * @return InvoiceRule
      */
     public function setInvoice($invoice)
     {
         $this->invoice = $invoice;
+        return $this;
     }
 
     /**
+<<<<<<< HEAD
      * TODO Find a better way to clone values (excluding the id) than using custom getters and setters
      * @param InvoiceRule $invoiceRuleTemplate
      */
@@ -281,4 +369,24 @@ class InvoiceRule
         $this->setPriceExclVat($invoiceRuleTemplate->getPriceExclVat());
         $this->setVatPercentageRate($invoiceRuleTemplate->getVatPercentageRate());
     }
+=======
+     * @return bool
+     */
+    public function isDeleted()
+    {
+        return $this->isDeleted;
+    }
+
+    /**
+     * @param bool $isDeleted
+     * @return InvoiceRule
+     */
+    public function setIsDeleted($isDeleted)
+    {
+        $this->isDeleted = $isDeleted;
+        return $this;
+    }
+
+
+>>>>>>> development
 }
