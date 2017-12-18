@@ -43,6 +43,9 @@ abstract class Address
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $streetName;
 
@@ -52,6 +55,9 @@ abstract class Address
    * @ORM\Column(type="integer")
    * @Assert\NotBlank
    * @JMS\Type("integer")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $addressNumber;
 
@@ -60,6 +66,9 @@ abstract class Address
    *
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $addressNumberSuffix;
 
@@ -71,6 +80,9 @@ abstract class Address
    * @Assert\Regex("/([0-9]{4}[A-Z]{2})\b/")
    * @Assert\Length(max = 6)
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $postalCode;
 
@@ -80,6 +92,9 @@ abstract class Address
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $city;
 
@@ -89,6 +104,9 @@ abstract class Address
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $country;
 
@@ -97,6 +115,9 @@ abstract class Address
    *
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $state;
 

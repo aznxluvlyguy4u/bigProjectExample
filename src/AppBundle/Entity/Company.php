@@ -45,6 +45,10 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
+     *  @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "UBN"
+     * })
     */
     private $debtorNumber;
 
@@ -54,7 +58,8 @@ class Company
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "UBN"
      * })
     */
     private $companyName;
@@ -88,6 +93,9 @@ class Company
     *
     * @ORM\OneToMany(targetEntity="Location", mappedBy="company", cascade={"persist"}, fetch="EAGER")
     * @JMS\Type("AppBundle\Entity\Location")
+    * @JMS\Groups({
+    *     "UBN"
+    * })
     */
     private $locations;
 
@@ -109,6 +117,9 @@ class Company
     * @Assert\NotBlank
     * @ORM\OneToOne(targetEntity="CompanyAddress", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\CompanyAddress")
+    * @JMS\Groups({
+    *     "UBN"
+    * })
     */
     private $address;
 

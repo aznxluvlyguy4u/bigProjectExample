@@ -10,7 +10,11 @@ services:
 
     api.action_log:
         class: AppBundle\Service\ActionLogService
-        arguments: ['@doctrine.orm.entity_manager', '@app.serializer.ir','@app.user']
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.ir'
+          - '@app.user'
+          - '@app.cache'
 
     app.cli.gender_changer:
         class: AppBundle\Service\DataFix\GenderChangeCommandService

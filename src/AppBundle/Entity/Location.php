@@ -60,7 +60,8 @@ class Location
    *     "LIVESTOCK",
    *     "MINIMAL",
    *     "TREATMENT_TEMPLATE",
-   *     "TREATMENT_TEMPLATE_MIN"
+   *     "TREATMENT_TEMPLATE_MIN",
+   *     "UBN"
    * })
    * @Expose
    */
