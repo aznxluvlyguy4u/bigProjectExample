@@ -48,10 +48,9 @@ class DashboardOutput extends Output
                     "location_health_status" => self::$locationHealthStatus,
                     //maedi_visna is zwoegerziekte
                       "maedi_visna_status" => self::$maediVisnaStatus,
-                      "maedi_visna_end_date" => self::$maediVisnaEndDate,
+                      "maedi_visna_check_date" => self::$maediVisnaCheckDate,
                       "scrapie_status" => self::$scrapieStatus,
-                      "scrapie_end_date" => self::$scrapieEndDate,
-                      "check_date" => self::$checkDate
+                      "scrapie_check_date" => self::$scrapieCheckDate,
                   ),
                   "livestock" =>
                   array(
