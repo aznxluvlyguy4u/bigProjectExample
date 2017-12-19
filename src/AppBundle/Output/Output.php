@@ -43,9 +43,6 @@ abstract class Output
     /** @var \DateTime */
     static protected $scrapieCheckDate;
 
-    /** @var \DateTime */
-    static protected $checkDate;
-
     /** @var string */
     static protected $maediVisnaReasonOfEdit;
 
@@ -95,7 +92,6 @@ abstract class Output
             self::$maediVisnaCheckDate = "";
             self::$scrapieEndDate = "";
             self::$scrapieCheckDate = "";
-            self::$checkDate = "";
             self::$scrapieReasonOfEdit = "";
             self::$maediVisnaReasonOfEdit = "";
         }
