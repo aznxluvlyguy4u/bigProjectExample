@@ -106,7 +106,7 @@ class LocationHealthEditor
         //Only create a new Scrapie if there was any change in the values
         if($scrapieStatusChanged || $scrapieDatesChanged || $scrapieReasonOfEditChanged) {
             //First hide the obsolete scrapies
-            LocationHealthUpdater::hideAllFollowingScrapies($em, $location, $newMaediVisnaCheckDate);
+            LocationHealthUpdater::hideAllFollowingScrapies($em, $location, $newScrapieCheckDate);
 
             $scrapie = new Scrapie($newScrapieStatus);
             $scrapie->setCheckDate($newScrapieCheckDate);
