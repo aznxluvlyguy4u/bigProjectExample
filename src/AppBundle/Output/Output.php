@@ -5,6 +5,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Enumerator\MaediVisnaStatus;
+use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\Finder;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -73,7 +75,7 @@ abstract class Output
             self::$locationHealthStatus = self::$locationHealth->getLocationHealthStatus();
 
             $lastScrapie = Finder::findLatestActiveScrapie($location, $em);
-            if($lastScrapie != null) {
+            if($lastScrapie != null && $lastScrapie->getStatus() !== ScrapieStatus::BLANK) {
                 self::$scrapieStatus = $lastScrapie->getStatus();
                 self::$scrapieCheckDate = $lastScrapie->getCheckDate();
                 self::$scrapieEndDate = $lastScrapie->getEndDate();
@@ -81,7 +83,7 @@ abstract class Output
             }
 
             $lastMaediVisna = Finder::findLatestActiveMaediVisna($location, $em);
-            if($lastMaediVisna != null) {
+            if($lastMaediVisna != null && $lastMaediVisna->getStatus() !== MaediVisnaStatus::BLANK) {
                 self::$maediVisnaStatus = $lastMaediVisna->getStatus();
                 self::$maediVisnaCheckDate = $lastMaediVisna->getCheckDate();
                 self::$maediVisnaEndDate = $lastMaediVisna->getEndDate();

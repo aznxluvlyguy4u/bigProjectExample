@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Traits\EntityClassInfo;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;

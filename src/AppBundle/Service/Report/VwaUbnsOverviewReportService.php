@@ -95,7 +95,7 @@ class VwaUbnsOverviewReportService extends ReportServiceBase
             $caeStatus = self::BLANK_STATUS; //Only for goats. Currently not supported.
             if ($locationHealth) {
                 $caseousLymphadenitisStatus = $this->editStatus($locationHealth->getCurrentCaseousLymphadenitisStatus());
-                $maediVisnaStatus = $this->editStatus($locationHealth->getCurrentCaseousLymphadenitisStatus());
+                $maediVisnaStatus = $this->editStatus($locationHealth->getCurrentMaediVisnaStatus());
                 $scrapieStatus = $this->editStatus($locationHealth->getCurrentScrapieStatus());
                 $caeStatus = self::BLANK_STATUS; //Only for goats. Currently not supported.
             }
@@ -162,6 +162,9 @@ class VwaUbnsOverviewReportService extends ReportServiceBase
         if ($status === null) {
             return self::BLANK_STATUS;
         }
-        return ucfirst(mb_strtolower($this->translator->trans($status)));
+
+        $translatedValue = ucfirst(mb_strtolower($this->translator->trans($status)));
+
+        return $translatedValue === '-' ? self::BLANK_STATUS : $translatedValue;
     }
 }
