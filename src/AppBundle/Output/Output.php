@@ -49,6 +49,9 @@ abstract class Output
     /** @var string */
     static protected $scrapieReasonOfEdit;
 
+    /** @var boolean */
+    static protected $animalHealthSubscription;
+
     /**
      * @param Location $location
      */
@@ -57,14 +60,16 @@ abstract class Output
         if($location != null) {
             self::$ubn = $location->getUbn();
             self::$locationHealth = $location->getLocationHealth();
+            self::$animalHealthSubscription = $location->getAnimalHealthSubscription();
 
         } else {
             self::$ubn = null;
             self::$locationHealth = null;
+            self::$animalHealthSubscription = false;
         }
         
 
-        if(self::$locationHealth != null) {
+        if(self::$locationHealth != null && self::$animalHealthSubscription) {
             self::$locationHealthStatus = self::$locationHealth->getLocationHealthStatus();
 
             $lastScrapie = Finder::findLatestActiveScrapie($location, $em);
