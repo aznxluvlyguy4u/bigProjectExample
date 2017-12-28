@@ -14,6 +14,8 @@ class MaediVisnaStatus
 {
     use EnumInfo;
 
+    const BLANK = 'BLANK';
+
     const FREE_1_YEAR = 'FREE 1 YEAR'; const FREE_2_YEAR = 'FREE 2 YEAR';
 
     const FREE = 'FREE'; //vrij

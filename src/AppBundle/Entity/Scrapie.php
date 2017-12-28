@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Traits\EntityClassInfo;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -184,6 +185,14 @@ class Scrapie
     public function getStatus()
     {
         return $this->status;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isStatusBlank()
+    {
+        return $this->status === null || $this->status === ScrapieStatus::BLANK;
     }
 
     /**

@@ -142,6 +142,7 @@ class JsonInputConstant
     const SCRAPIE_END_DATE = 'scrapie_end_date';
     const MAEDI_VISNA_REASON_OF_EDIT = 'maedi_visna_reason_of_edit';
     const SCRAPIE_REASON_OF_EDIT = 'scrapie_reason_of_edit';
+    const ANIMAL_HEALTH_SUBSCRIPTION = 'animal_health_subscription';
 
     //Locations
     const LOCATION = 'location';

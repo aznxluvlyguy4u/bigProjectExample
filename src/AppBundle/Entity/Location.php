@@ -1084,4 +1084,13 @@ class Location
         }
         return null;
     }
+
+
+    /**
+     * @return bool
+     */
+    public function getAnimalHealthSubscription()
+    {
+        return $this->company ? $this->company->getAnimalHealthSubscription() : false;
+    }
 }
