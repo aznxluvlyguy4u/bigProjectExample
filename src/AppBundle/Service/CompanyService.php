@@ -234,7 +234,7 @@ class CompanyService extends AuthServiceBase
         //This information is necessary to show the most up to date information on the PedigreeCertificates
         $this->getManager()->getRepository(Animal::class)->updateLocationOfBirthByCompany($company);
 
-        return ResultUtil::successResult('ok');
+        return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
     }
 
 
@@ -544,7 +544,7 @@ class CompanyService extends AuthServiceBase
 
         $this->getManager()->getRepository(Animal::class)->updateLocationOfBirthByCompany($company);
 
-        return ResultUtil::successResult('ok');
+        return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
     }
 
 
