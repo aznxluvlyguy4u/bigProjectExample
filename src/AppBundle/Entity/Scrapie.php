@@ -188,6 +188,14 @@ class Scrapie
     }
 
     /**
+     * @return bool
+     */
+    public function isStatusBlank()
+    {
+        return $this->status === null || $this->status === ScrapieStatus::BLANK;
+    }
+
+    /**
      * Set endDate
      *
      * @param \DateTime $endDate

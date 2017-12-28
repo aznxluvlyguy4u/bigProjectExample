@@ -633,4 +633,13 @@ class LocationHealth
     {
         $this->scrapies->removeElement($scrapy);
     }
+
+
+    /**
+     * @return bool
+     */
+    public function getAnimalHealthSubscription()
+    {
+        return $this->getLocation() ? $this->getLocation()->getAnimalHealthSubscription() : false;
+    }
 }
