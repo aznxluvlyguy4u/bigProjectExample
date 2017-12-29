@@ -641,6 +641,7 @@ services:
           - '@app.serializer.ir'
           - '@app.request.message_builder'
           - '@app.user'
+          - '@translator'
           - '@app.doctrine.entitygetter'
 
     app.queue_dashboard:

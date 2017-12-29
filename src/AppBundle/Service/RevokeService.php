@@ -26,12 +26,15 @@ use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Translation\TranslatorInterface;
 
 
 class RevokeService extends DeclareControllerServiceBase implements RevokeAPIControllerInterface
 {
     /** @var EntityGetter */
     private $entityGetter;
+    /** @var TranslatorInterface */
+    private $translator;
 
     public function __construct(AwsExternalQueueService $externalQueueService,
                                 CacheService $cacheService,
@@ -39,11 +42,13 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
                                 IRSerializer $irSerializer,
                                 RequestMessageBuilder $requestMessageBuilder,
                                 UserService $userService,
+                                TranslatorInterface $translator,
                                 EntityGetter $entityGetter)
     {
         parent::__construct($externalQueueService, $cacheService, $manager, $irSerializer, $requestMessageBuilder, $userService);
 
         $this->entityGetter = $entityGetter;
+        $this->translator = $translator;
     }
 
 
@@ -61,7 +66,10 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
         //Validate if there is a message_number. It is mandatory for IenR
         $validation = $this->hasMessageNumber($content);
         if(!$validation['isValid']) {
-            return new JsonResponse($validation[Constant::MESSAGE_NAMESPACE], $validation[Constant::CODE_NAMESPACE]);
+            return ResultUtil::errorResult(
+                $validation[Constant::MESSAGE_NAMESPACE][Constant::MESSAGE_NAMESPACE],
+                $validation[Constant::CODE_NAMESPACE]
+            );
         }
 
         //Convert the array into an object and add the mandatory values retrieved from the database
@@ -94,7 +102,7 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
         $isValid = false;
         $messageNumber = null;
         $code = 428;
-        $messageBody = 'THERE IS NO VALUE GIVEN FOR THE MESSAGE NUMBER';
+        $messageBody = ucfirst(strtolower($this->translator->trans('THE MESSAGE NUMBER IS MISSING AND THEREFORE THE DECLARE CANNOT BE REVOKED')) . '.');
 
         if($content->containsKey(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE)) {
             $messageNumber = $content->get(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE);
