@@ -294,56 +294,56 @@ abstract class Animal
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareArrival")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareArrival>")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal")
      */
     protected $arrivals;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareDepart")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareDepart>")
      * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="animal", cascade={"persist"})
      */
     protected $departures;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareImport")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareImport>")
      * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="animal")
      */
     protected $imports;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareExport")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareExport>")
      * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="animal", cascade={"persist"})
      */
     protected $exports;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareBirth>")
      * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist","remove"})
      */
     protected $births;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareLoss")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareLoss>")
      * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="animal", cascade={"persist"})
      */
     protected $deaths;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareAnimalFlag")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareAnimalFlag>")
      * @ORM\OneToMany(targetEntity="DeclareAnimalFlag", mappedBy="animal", cascade={"persist"})
      */
     protected $flags;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareTagReplace")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareTagReplace>")
      * @ORM\OneToMany(targetEntity="DeclareTagReplace", mappedBy="animal", cascade={"persist"})
      */
     protected $tagReplacements;
@@ -351,7 +351,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @JMS\Type("AppBundle\Entity\DeclareWeight")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareWeight>")
      * @ORM\OneToMany(targetEntity="DeclareWeight", mappedBy="animal")
      */
     protected $declareWeights;
@@ -502,7 +502,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="animal", cascade={"persist", "remove"})
      * @ORM\OrderBy({"startDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\AnimalResidence")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalResidence>")
      */
     protected $animalResidenceHistory;
 
@@ -511,7 +511,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="BodyFat", mappedBy="animal", cascade={"persist"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\BodyFat")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\BodyFat>")
      */
     protected $bodyFatMeasurements;
 
@@ -520,7 +520,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="MuscleThickness", mappedBy="animal", cascade={"persist"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\MuscleThickness")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\MuscleThickness>")
      */
     protected $muscleThicknessMeasurements;
 
@@ -529,7 +529,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="TailLength", mappedBy="animal", cascade={"persist","remove"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\TailLength")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TailLength>")
      */
     protected $tailLengthMeasurements;
 
@@ -538,7 +538,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="Weight", mappedBy="animal", cascade={"persist", "remove"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\Weight")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Weight>")
      */
     protected $weightMeasurements;
 
@@ -547,7 +547,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="Exterior", mappedBy="animal", cascade={"persist"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\Exterior")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Exterior>")
      */
     protected $exteriorMeasurements;
 
@@ -691,6 +691,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="GenderHistoryItem", mappedBy="animal", cascade={"persist"})
      * @ORM\JoinColumn(name="gender_history_id", referencedColumnName="id")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\GenderHistoryItem>")
      */
     protected $genderHistory;
 
@@ -720,6 +721,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      * @ORM\OneToMany(targetEntity="WormResistance", mappedBy="animal", cascade={"persist"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\WormResistance>")
      */
     protected $wormResistances;
 
@@ -746,7 +748,7 @@ abstract class Animal
     /**
      * @var ResultTableBreedGrades
      * @ORM\OneToOne(targetEntity="ResultTableBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
-     * @JMS\Type("AppBundle\Entity\ResultTableBreedGrades")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\ResultTableBreedGrades>")
      */
     protected $latestBreedGrades;
 

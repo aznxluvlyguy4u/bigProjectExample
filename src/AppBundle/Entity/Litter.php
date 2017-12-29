@@ -131,7 +131,7 @@ class Litter extends DeclareNsfoBase
 
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="litter", cascade={"persist"})
-     * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      */
     private $children;
 
@@ -139,13 +139,13 @@ class Litter extends DeclareNsfoBase
      * @var ArrayCollection
      * 
      * @ORM\OneToMany(targetEntity="Stillborn", mappedBy="litter", cascade={"persist"})
-     * @JMS\Type("AppBundle\Entity\Stillborn")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Stillborn>")
      */
     private $stillborns;
 
     /**
      * @var ArrayCollection
-     * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareBirth>")
      * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="litter", cascade={"persist"})
      * @JMS\Groups({
      *     "ERROR_DETAILS"

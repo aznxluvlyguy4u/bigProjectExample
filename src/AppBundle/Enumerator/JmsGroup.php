@@ -23,6 +23,8 @@ class JmsGroup
     const HIDDEN_STATUS = 'HIDDEN_STATUS';
 
     const LIVESTOCK = 'LIVESTOCK';
+
+    const MATINGS = 'MATINGS';
     const MINIMAL = 'MINIMAL';
 
     const PARENTS = 'PARENTS';

@@ -86,7 +86,8 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @JMS\Groups({
      *     "ADMIN_HIDDEN_STATUS",
      *     "ERROR_DETAILS",
-     *     "HIDDEN_STATUS"
+     *     "HIDDEN_STATUS",
+     *     "MATINGS"
      * })
      */
     protected $requestState;

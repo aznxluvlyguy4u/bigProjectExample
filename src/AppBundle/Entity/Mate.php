@@ -27,6 +27,9 @@ class Mate extends DeclareNsfoBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "MATINGS"
+     * })
      */
     private $startDate;
 
@@ -39,6 +42,9 @@ class Mate extends DeclareNsfoBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "MATINGS"
+     * })
      */
     private $endDate;
 
@@ -77,6 +83,9 @@ class Mate extends DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "MATINGS"
+     * })
      */
     private $pmsg;
 
@@ -84,6 +93,9 @@ class Mate extends DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "MATINGS"
+     * })
      */
     private $ki;
 
