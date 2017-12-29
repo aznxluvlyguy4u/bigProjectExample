@@ -720,14 +720,14 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $otherCandidatesResult = [];
         $result = [];
 
-        $surrogateMotherCandidates = $this->getManager()->getRepository(DeclareBirth::class)->getCandidateSurrogateMothers($location , $mother);
+        $surrogateMotherCandidates = $this->getManager()->getRepository(DeclareBirth::class)->getCandidateSurrogateMothers($location, $mother);
 
         $offsetDateFromNow = $dateOfBirth->modify('-' . self::SURROGATE_MOTHER_OFFSET_DAYS .'days');
 
         /** @var Ewe $animal */
         foreach ($surrogateMotherCandidates as $animal) {
 
-            //Check if surrogate mother candidate has given birth to childeren within the last 6 months
+            //Check if surrogate mother candidate has given birth to children within the last 6 months
             if($animal->getChildren()->count() == 0) {
                 if(self::SHOW_OTHER_SURROGATE_MOTHERS) {
                     $otherCandidatesResult[] = [
@@ -748,11 +748,11 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 continue;
             }
 
-            $childeren = $animal->getChildren();
+            $children = $animal->getChildren();
             $addToOtherCandidates = true;
 
             /** @var Animal $child */
-            foreach ($childeren as $child) {
+            foreach ($children as $child) {
                 if($child->getDateOfBirth()) {
                     //Add as a true candidate surrogate to list
                     if(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {

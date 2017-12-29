@@ -392,10 +392,9 @@ class AnimalRepository extends BaseRepository
      * @param Location $location
      * @param bool $isAlive
      * @param string $queryOnlyOnAnimalGenderType
-     * @param boolean $returnDQL
-     * @return \Doctrine\ORM\Query | string
+     * @return QueryBuilder
      */
-  private function getLivestockQuery(Location $location, $isAlive = true, $queryOnlyOnAnimalGenderType = null, $returnDQL = false)
+  public function getLivestockQueryBuilder(Location $location, $isAlive = true, $queryOnlyOnAnimalGenderType = null)
   {
       $livestockAnimalsQueryBuilder = $this->getManager()->createQueryBuilder();
 
@@ -414,6 +413,21 @@ class AnimalRepository extends BaseRepository
                   )),
               $livestockAnimalsQueryBuilder->expr()->eq('animal.location', $location->getId())
           ));
+
+      return $livestockAnimalsQueryBuilder;
+  }
+
+
+    /**
+     * @param Location $location
+     * @param bool $isAlive
+     * @param string $queryOnlyOnAnimalGenderType
+     * @param boolean $returnDQL
+     * @return \Doctrine\ORM\Query | string
+     */
+  private function getLivestockQuery(Location $location, $isAlive = true, $queryOnlyOnAnimalGenderType = null, $returnDQL = false)
+  {
+      $livestockAnimalsQueryBuilder = $this->getLivestockQueryBuilder($location, $isAlive, $queryOnlyOnAnimalGenderType);
 
       $livestockAnimalQuery = $livestockAnimalsQueryBuilder->getQuery();
 
