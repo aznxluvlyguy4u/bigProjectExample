@@ -68,24 +68,6 @@ class CacheService
 
     /**
      * @param string $cacheId
-     * @param Query $query
-     * @return mixed
-     */
-    public function get($cacheId, $query)
-    {
-        $queryCache = $this->getRedisAdapter()->getItem($cacheId);
-        if(!$queryCache->isHit()) {
-            $queryCache->set($query->getResult());
-            $queryCache->expiresAfter(self::CACHE_LIFETIME_IN_SECONDS);
-            $this->getRedisAdapter()->save($queryCache);
-        }
-        $queryCache = $this->getRedisAdapter()->getItem($cacheId);
-        return $queryCache->get();
-    }
-
-
-    /**
-     * @param string $cacheId
      * @return bool
      */
     public function isHit($cacheId)
@@ -118,6 +100,19 @@ class CacheService
     }
 
 
+    /**
+     * @param string|array $cacheId as cacheId or array of cacheIds
+     * @return bool
+     */
+    public function delete($cacheId)
+    {
+        if (is_array($cacheId)) {
+            return $this->getRedisAdapter()->deleteItems($cacheId);
+        } else {
+            return $this->getRedisAdapter()->deleteItem($cacheId);
+        }
+    }
+
 
     /**
      * Clears the redis cache for the Livestock of a given location , to reflect changes of animals on Livestock.
@@ -145,5 +140,15 @@ class CacheService
                 $historicCacheId . '_' . Neuter::getShortClassName(),
             ]);
         }
+    }
+
+
+    /**
+     * @param array $extraJmsGroups
+     * @return string
+     */
+    public static function getJmsGroupsSuffix(array $extraJmsGroups = [])
+    {
+        return count($extraJmsGroups) > 0 ? implode('-', $extraJmsGroups) : '';
     }
 }
