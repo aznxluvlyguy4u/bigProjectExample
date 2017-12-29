@@ -25,6 +25,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Stillborn;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
@@ -621,7 +622,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $result = [];
         $candidateFathers = $this->getManager()->getRepository(DeclareBirth::class)->getCandidateFathers($mother, $dateOfBirth);
-        $otherCandidateFathers = $this->getManager()->getRepository(Animal::class)->getLiveStock($location, $this->getCacheService(), true, Ram::class);
+        $otherCandidateFathers = $this->getManager()->getRepository(Animal::class)
+            ->getLiveStock($location, $this->getCacheService(), $this->getBaseSerializer(),true, Ram::class);
         $filteredOtherCandidateFathers = [];
         $suggestedCandidateFathers = [];
         $suggestedCandidateFatherIds = [];
@@ -820,7 +822,9 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $otherCandidatesResult = [];
         $result = [];
 
-        $motherCandidates = $this->getManager()->getRepository(Animal::class)->getLiveStock($location , $this->getCacheService(), true, Ewe::class);
+        $motherCandidates = $this->getManager()->getRepository(Animal::class)
+            ->getLiveStock($location , $this->getCacheService(), $this->getBaseSerializer(), true,
+                Ewe::class, [JmsGroup::MATINGS]);
 
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;
@@ -828,7 +832,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         //Animal has no registered matings, thus it is not a true candidate
         /** @var Ewe $animal */
         foreach ($motherCandidates as $animal) {
-            if($animal->getMatings()->count() == 0 ) {
+
+            if($animal->getMatings()->count() === 0) {
                 if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
                     $otherCandidatesResult[] = [
                         JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),

@@ -25,6 +25,7 @@ use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -476,15 +477,17 @@ class UnitTestData
     /**
      * @param EntityManagerInterface $em
      * @param CacheService $cacheService
+     * @param BaseSerializer $baseSerializer
      * @param Location $location
      * @param $totalAnimalCount
      * @param $gender
      * @return array
      */
     public static function getAnimalsUlnsBody(EntityManagerInterface $em, CacheService $cacheService,
+                                              BaseSerializer $baseSerializer,
                                               Location $location, $totalAnimalCount, $gender = null)
     {
-        $animals = $em->getRepository(Animal::class)->getLiveStock($location, $cacheService, true, $gender);
+        $animals = $em->getRepository(Animal::class)->getLiveStock($location, $cacheService, $baseSerializer, true, $gender);
 
         $result = [];
         $animalCount = 0;

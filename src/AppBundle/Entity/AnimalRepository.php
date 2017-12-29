@@ -346,25 +346,45 @@ class AnimalRepository extends BaseRepository
   /**
    * @param Location $location
    * @param CacheService $cacheService
+   * @param BaseSerializer $serializer
    * @param bool $isAlive
    * @param Animal $queryOnlyOnAnimalGenderType
-   * 
+   * @param array $extraJmsGroups
+   *
    * @return array
    */
   public function getLiveStock(Location $location,
                                CacheService $cacheService,
+                               BaseSerializer $serializer,
                                $isAlive = true,
-                               $queryOnlyOnAnimalGenderType = null
+                               $queryOnlyOnAnimalGenderType = null,
+                               array $extraJmsGroups = []
   )
   {
-    $cacheId = $this->getLivestockCacheId($location, $queryOnlyOnAnimalGenderType);
+    $cacheId = $this->getLivestockCacheId($location, $queryOnlyOnAnimalGenderType, $extraJmsGroups);
     $query = $this->getLivestockQuery($location, $isAlive, $queryOnlyOnAnimalGenderType, false);
 
+    $clazz = $queryOnlyOnAnimalGenderType === null ? Animal::class : $queryOnlyOnAnimalGenderType;
+
+    //Returns a list of AnimalResidences
     if (self::USE_REDIS_CACHE) {
-        return $cacheService->get($cacheId, $query);
+        if ($cacheService->isHit($cacheId)) {
+            $animals = $serializer->deserializeArrayOfObjects($cacheService->getItem($cacheId), $clazz);
+        } else {
+            $animals = $query->getResult();
+
+            $standardJmsGroups = [JmsGroup::BASIC, JmsGroup::LIVESTOCK];
+            $jmsGroups = count($extraJmsGroups) > 0 ? ArrayUtil::concatArrayValues([$extraJmsGroups, $standardJmsGroups], true): $standardJmsGroups;
+
+            $serializedAnimals = $serializer->getArrayOfSerializedObjects($animals, $jmsGroups,true);
+            $cacheService->set($cacheId, $serializedAnimals);
+        }
+
+    } else {
+        $animals = $query->getResult();
     }
 
-    return $query->getResult();
+    return $animals;
   }
 
 
@@ -443,11 +463,17 @@ class AnimalRepository extends BaseRepository
     /**
      * @param Location $location
      * @param string $queryOnlyOnAnimalGenderType
+     * @param array $extraJmsGroups
      * @return string
      */
-    private function getLivestockCacheId(Location $location, $queryOnlyOnAnimalGenderType = null)
+    private function getLivestockCacheId(Location $location, $queryOnlyOnAnimalGenderType = null, $extraJmsGroups = [])
     {
-        return AnimalRepository::LIVESTOCK_CACHE_ID . $location->getId() . $this->getGenderSuffix($queryOnlyOnAnimalGenderType);
+        return
+            AnimalRepository::LIVESTOCK_CACHE_ID .
+            $location->getId() .
+            $this->getGenderSuffix($queryOnlyOnAnimalGenderType) .
+            CacheService::getJmsGroupsSuffix($extraJmsGroups)
+        ;
     }
 
 
@@ -456,9 +482,14 @@ class AnimalRepository extends BaseRepository
      * @param string $queryOnlyOnAnimalGenderType
      * @return string
      */
-    private function getHistoricLivestockCacheId(Location $location, $queryOnlyOnAnimalGenderType = null)
+    private function getHistoricLivestockCacheId(Location $location, $queryOnlyOnAnimalGenderType = null, $extraJmsGroups)
     {
-        return AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID . $location->getId() . $this->getGenderSuffix($queryOnlyOnAnimalGenderType);
+        return
+            AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID .
+            $location->getId() .
+            $this->getGenderSuffix($queryOnlyOnAnimalGenderType) .
+            CacheService::getJmsGroupsSuffix($extraJmsGroups)
+        ;
     }
 
 
