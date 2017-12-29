@@ -480,9 +480,10 @@ class AnimalRepository extends BaseRepository
     /**
      * @param Location $location
      * @param string $queryOnlyOnAnimalGenderType
+     * @param array $extraJmsGroups
      * @return string
      */
-    private function getHistoricLivestockCacheId(Location $location, $queryOnlyOnAnimalGenderType = null, $extraJmsGroups)
+    private function getHistoricLivestockCacheId(Location $location, $queryOnlyOnAnimalGenderType = null, $extraJmsGroups = [])
     {
         return
             AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID .
