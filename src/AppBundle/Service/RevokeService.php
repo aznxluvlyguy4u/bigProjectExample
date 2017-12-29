@@ -10,8 +10,10 @@ use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Controller\RevokeAPIControllerInterface;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareWeight;
+use AppBundle\Entity\Mate;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -133,6 +135,10 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
         if($nsfoDeclaration instanceof DeclareWeight) {
             AnimalCacher::cacheWeightByAnimal($this->getManager(), $nsfoDeclaration->getAnimal());
+        }
+
+        if($nsfoDeclaration instanceof Mate) {
+            $this->getManager()->getRepository(Animal::class)->purgeCandidateMothersCache($nsfoDeclaration->getLocation(), $this->getCacheService());
         }
 
         $log = ActionLogWriter::completeActionLog($this->getManager(), $log);

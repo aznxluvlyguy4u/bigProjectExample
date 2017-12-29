@@ -614,6 +614,48 @@ class AnimalRepository extends BaseRepository
   }
 
 
+
+  public function getCandidateMothersForBirth(Location $location, CacheService $cacheService, BaseSerializer $serializer)
+  {
+      return $this->getManager()->getRepository(Animal::class)
+          ->getLiveStock($location , $cacheService, $serializer, true,
+              Ewe::class, $this->getExtraJmsGroupsForCandidateMothers());
+  }
+
+
+    /**
+     * @return array
+     */
+  private function getExtraJmsGroupsForCandidateMothers()
+  {
+      return [JmsGroup::MATINGS];
+  }
+
+
+    /**
+     * @param Location $location
+     * @param CacheService $cacheService
+     * @return boolean
+     */
+  public function purgeCandidateMothersCache(Location $location, CacheService $cacheService)
+  {
+      if ($location) {
+          return $cacheService->delete($this->getCandidateMothersCacheId($location));
+      }
+      return false;
+  }
+
+
+    /**
+     * @param Location $location
+     * @return string
+     */
+  private function getCandidateMothersCacheId(Location $location)
+  {
+      return $this->getLivestockCacheId($location, Ewe::class, $this->getExtraJmsGroupsForCandidateMothers());
+  }
+
+
   /**
    * @param Client $client
    * @param string $ulnString

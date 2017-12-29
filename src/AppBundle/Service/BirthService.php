@@ -823,8 +823,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $result = [];
 
         $motherCandidates = $this->getManager()->getRepository(Animal::class)
-            ->getLiveStock($location , $this->getCacheService(), $this->getBaseSerializer(), true,
-                Ewe::class, [JmsGroup::MATINGS]);
+            ->getCandidateMothersForBirth($location, $this->getCacheService(), $this->getBaseSerializer())
+        ;
 
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;
