@@ -100,6 +100,19 @@ class CacheService
     }
 
 
+    /**
+     * @param string|array $cacheId as cacheId or array of cacheIds
+     * @return bool
+     */
+    public function delete($cacheId)
+    {
+        if (is_array($cacheId)) {
+            return $this->getRedisAdapter()->deleteItems($cacheId);
+        } else {
+            return $this->getRedisAdapter()->deleteItem($cacheId);
+        }
+    }
+
 
     /**
      * Clears the redis cache for the Livestock of a given location , to reflect changes of animals on Livestock.
