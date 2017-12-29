@@ -830,6 +830,13 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
             /** @var Mate $mating */
             foreach ($matings as $mating) {
+                if ($mating->getRequestState() === RequestStateType::REVOKED) {
+                    if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
+                        $otherCandidatesResult[] = $this->getAnimalResult($animal, $location);
+                    }
+                    continue;
+                }
+
                 $lowerboundPregnancyDays = self::MEDIAN_PREGNANCY_DAYS - self::MATING_DAYS_OFFSET;
                 $upperboundPregnancyDays = self::MEDIAN_PREGNANCY_DAYS + self::MATING_DAYS_OFFSET;
 
