@@ -132,11 +132,11 @@ class LocationHealthUpdater
 
         if($locationOfOrigin == null) { //an import or Location that is not in our NSFO database
 
-            if($previousMaediVisnaDestinationIsHealthy){
+            if(!$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
                 $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
-            if($previousScrapieDestinationIsHealthy){
+            if(!$previousScrapieDestination->isStatusBlank() && $previousScrapieDestinationIsHealthy){
                 $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
@@ -162,11 +162,11 @@ class LocationHealthUpdater
             }
 
 
-            if(!$maediVisnaOriginIsHealthy && $previousMaediVisnaDestinationIsHealthy){
+            if(!$maediVisnaOriginIsHealthy && !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
                 $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
-            if(!$scrapieOriginIsHealthy && $previousScrapieDestinationIsHealthy) {
+            if(!$scrapieOriginIsHealthy && !$previousScrapieDestination->isStatusBlank() && $previousScrapieDestinationIsHealthy) {
                 $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
@@ -274,7 +274,12 @@ class LocationHealthUpdater
      */
     private function persistNewDefaultMaediVisnaAndHideFollowingOnes(LocationHealth $locationHealth, $checkDate)
     {
-        $maediVisna = new MaediVisna(MaediVisnaStatus::UNDER_OBSERVATION);
+        if ($locationHealth->getAnimalHealthSubscription()) {
+            $maediVisna = new MaediVisna(MaediVisnaStatus::UNDER_OBSERVATION);
+        } else {
+            $maediVisna = new MaediVisna(MaediVisnaStatus::BLANK);
+        }
+
         $maediVisna->setCheckDate($checkDate);
         $maediVisna->setLocationHealth($locationHealth);
         $locationHealth->addMaediVisna($maediVisna);
@@ -296,7 +301,12 @@ class LocationHealthUpdater
      */
     private function persistNewDefaultScrapieAndHideFollowingOnes(LocationHealth $locationHealth, $checkDate)
     {
-        $scrapie = new Scrapie(ScrapieStatus::UNDER_OBSERVATION);
+        if ($locationHealth->getAnimalHealthSubscription()) {
+            $scrapie = new Scrapie(ScrapieStatus::UNDER_OBSERVATION);
+        } else {
+            $scrapie = new Scrapie(ScrapieStatus::BLANK);
+        }
+
         $scrapie->setCheckDate($checkDate);
         $scrapie->setLocationHealth($locationHealth);
         $locationHealth->addScrapie($scrapie);

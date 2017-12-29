@@ -127,9 +127,11 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             return $pedigreeValidation->get(Constant::RESPONSE);
         }
 
-        //LocationHealth null value fixes
-        $this->healthService->fixLocationHealthMessagesWithNullValues($location);
-        $this->healthService->fixIncongruentLocationHealthIllnessValues($location);
+        if ($location->getAnimalHealthSubscription()) {
+            //LocationHealth null value fixes
+            $this->healthService->fixLocationHealthMessagesWithNullValues($location);
+            $this->healthService->fixIncongruentLocationHealthIllnessValues($location);
+        }
 
         $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
 
@@ -203,8 +205,10 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->saveNewestDeclareVersion($content, $messageObject);
 
-        //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
-        $this->healthService->updateLocationHealth($messageObject);
+        if ($location->getAnimalHealthSubscription()) {
+            //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
+            $this->healthService->updateLocationHealth($messageObject);
+        }
 
         if ($departLog) { $this->persist($departLog); }
         ActionLogWriter::completeActionLog($this->getManager(), $arrivalOrImportLog);

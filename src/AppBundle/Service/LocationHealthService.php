@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\HealthAPIControllerInterface;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
@@ -62,18 +63,44 @@ class LocationHealthService extends ControllerServiceBase implements HealthAPICo
             return ResultUtil::errorResult("No Location found with ubn: " . $ubn, 428);
         }
 
-        $content = RequestUtil::getContentAsArray($request);
-
-        //Status and check date validation
-        $healthEditValidator = new HealthEditValidator($this->getManager(), $content);
-        if(!$healthEditValidator->getIsValid()) {
-            return $healthEditValidator->createJsonResponse();
+        $company = $location->getCompany();
+        if ($company === null) {
+            return ResultUtil::errorResult("No Company found for location with ubn: " . $ubn, 428);
         }
 
-        $location = LocationHealthEditor::edit($this->getManager(), $location, $content); //includes persisting changes
+        $content = RequestUtil::getContentAsArray($request);
 
-        $outputArray = HealthOutput::create($this->getManager(), $location);
-        $log = AdminActionLogWriter::updateHealthStatus($this->getManager(), $admin, $location, $content);
+        $updateHealthStatusValues = true;
+        if ($content->containsKey(JsonInputConstant::ANIMAL_HEALTH_SUBSCRIPTION)) {
+            $newAnimalHealthSubscription = $content->get(JsonInputConstant::ANIMAL_HEALTH_SUBSCRIPTION);
+
+            if ($company->getAnimalHealthSubscription() != $newAnimalHealthSubscription) {
+                $company->setAnimalHealthSubscription($newAnimalHealthSubscription);
+                $this->getManager()->persist($company);
+                $this->getManager()->flush();
+
+                AdminActionLogWriter::updateAnimalHealthSubscription($this->getManager(), $admin, $company);
+            }
+
+            if (!$newAnimalHealthSubscription) {
+                $updateHealthStatusValues = false;
+            }
+        }
+
+
+        if ($updateHealthStatusValues) {
+            //Status and check date validation
+            $healthEditValidator = new HealthEditValidator($this->getManager(), $content);
+            if(!$healthEditValidator->getIsValid()) {
+                return $healthEditValidator->createJsonResponse();
+            }
+
+            $location = LocationHealthEditor::edit($this->getManager(), $location, $content); //includes persisting changes
+            AdminActionLogWriter::updateHealthStatus($this->getManager(), $admin, $location, $content);
+        }
+
+
+        $outputArray = HealthOutput::createCompanyHealth($this->getManager(), $company);
 
         return ResultUtil::successResult($outputArray);
     }

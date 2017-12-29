@@ -10,6 +10,7 @@ use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\Finder;
 use AppBundle\Util\LocationHealthUpdater;
 use AppBundle\Util\NullChecker;
@@ -58,11 +59,21 @@ class LocationHealthEditor
         $lastScrapieCheckDate = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_CHECK_DATE);
         $lastReasonOfScrapieEdit = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_REASON_OF_EDIT);
 
-        $newScrapieStatus = StringUtil::replaceUnderscoresWithSpaces(
-            Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_STATUS, $content));
-        $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content, true);
+        if ($content->containsKey(JsonInputConstant::SCRAPIE_STATUS)) {
+            $newScrapieStatus = StringUtil::replaceUnderscoresWithSpaces(
+                Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_STATUS, $content));
+        } else {
+            $newScrapieStatus = ScrapieStatus::BLANK;
+        }
 
-        $newScrapieEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_END_DATE, $content, true);
+        if (strtoupper($newScrapieStatus) === ScrapieStatus::BLANK) {
+            $newScrapieCheckDate = DateUtil::endOfTime();
+            $newScrapieEndDate = DateUtil::endOfTime();
+        } else {
+            $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content, true);
+            $newScrapieEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_END_DATE, $content, true);
+        }
+
         $arrayReasonOfScrapieEdit = trim(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_REASON_OF_EDIT, $content));
         $newReasonOfScrapieEdit = (NullChecker::isNull($arrayReasonOfScrapieEdit) ? null : $arrayReasonOfScrapieEdit);
 
@@ -83,10 +94,20 @@ class LocationHealthEditor
         $lastMaediVisnaCheckDate = $latestIllnessStatuses->get(JsonInputConstant::MAEDI_VISNA_CHECK_DATE);
         $lastReasonOfMaediVisnaEdit = $latestIllnessStatuses->get(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT);
 
-        $newMaediVisnaStatus = StringUtil::replaceUnderscoresWithSpaces(
-            Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_STATUS, $content));
-        $newMaediVisnaCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $content, true);
-        $newMaediVisnaEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_END_DATE, $content, true);
+        if ($content->containsKey(JsonInputConstant::MAEDI_VISNA_STATUS)) {
+            $newMaediVisnaStatus = StringUtil::replaceUnderscoresWithSpaces(
+                Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_STATUS, $content));
+        } else {
+            $newMaediVisnaStatus = MaediVisnaStatus::BLANK;
+        }
+
+        if (strtoupper($newMaediVisnaStatus) === MaediVisnaStatus::BLANK) {
+            $newMaediVisnaCheckDate = DateUtil::endOfTime();
+            $newMaediVisnaEndDate = DateUtil::endOfTime();
+        } else {
+            $newMaediVisnaCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $content, true);
+            $newMaediVisnaEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_END_DATE, $content, true);
+        }
 
         $arrayReasonOfMaediVisnaEdit = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT, $content);
         $newReasonOfMaediVisnaEdit = (NullChecker::isNull($arrayReasonOfMaediVisnaEdit) ? null : $arrayReasonOfMaediVisnaEdit);
