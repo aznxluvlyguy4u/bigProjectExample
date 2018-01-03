@@ -448,7 +448,7 @@ services:
 
 
     app.declare.error_message:
-        parent: app.abstract_base.controller
+        parent: app.abstract_base.controller.include_translator
         class: AppBundle\Service\ErrorMessageService
 
     app.treatment:
@@ -480,6 +480,15 @@ services:
           - '@app.cache'
           - '@doctrine.orm.entity_manager'
           - '@app.user'
+
+    app.abstract_base.controller.include_translator:
+        abstract: true
+        arguments:
+          - '@app.serializer.base'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@translator'
 
     app.abstract_base.auth:
         abstract: true

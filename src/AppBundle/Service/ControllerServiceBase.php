@@ -39,6 +39,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class ControllerServiceBase
@@ -52,6 +53,8 @@ abstract class ControllerServiceBase
     private $cacheService;
     /** @var UserService */
     private $userService;
+    /** @var TranslatorInterface */
+    protected $translator;
 
     /** @var string */
     private $actionLogEditMessage;

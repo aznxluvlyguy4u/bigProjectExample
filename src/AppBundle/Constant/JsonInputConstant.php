@@ -76,6 +76,11 @@ class JsonInputConstant
     const ACTION_BY = 'action_by';
     const IS_REMOVED_BY_USER = 'is_removed_by_user';
     const IS_DUTCH = 'is_dutch';
+    const IS_MULTI_EDIT = 'is_multi_edit';
+    const EDITS = 'edits';
+    const SUCCESSFUL_EDITS = 'successful_edits';
+    const SUCCESS_COUNT = 'success_count';
+    const ERROR_COUNT = 'error_count';
 
     //Sync
     const IS_RVO_LEADING = 'is_rvo_leading';

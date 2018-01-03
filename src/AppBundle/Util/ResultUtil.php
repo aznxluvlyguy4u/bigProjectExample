@@ -24,6 +24,21 @@ class ResultUtil
 
 
     /**
+     * @param $result
+     * @param string $message
+     * @param $code
+     * @return JsonResponse
+     */
+    public static function multiEditErrorResult($result, $message, $code)
+    {
+        return new JsonResponse([
+            Constant::RESULT_NAMESPACE => $result,
+            Constant::MESSAGE_NAMESPACE => $message,
+        ], $code);
+    }
+
+
+    /**
      * @param string $message
      * @param int $code The HTTP code
      * @param array $errors
