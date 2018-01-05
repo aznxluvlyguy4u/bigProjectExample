@@ -272,6 +272,54 @@ class Location
     private $isActive;
 
     /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("owner")
+     * @JMS\Groups({
+     *     "GHOST_LOGIN"
+     * })
+     * @JMS\Type("AppBundle\Entity\Client")
+     */
+    public function getOwner()
+    {
+        if($this->company != null) {
+            return $this->getCompany()->getOwner();
+        }
+        return null;
+    }
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("users")
+     * @JMS\Groups({
+     *     "GHOST_LOGIN"
+     * })
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Person>")
+     */
+    public function getCompanyUsers() {
+        if($this->company != null) {
+            return $this->getCompany()->getCompanyUsers();
+        }
+        return new ArrayCollection();
+    }
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("has_ghost_login")
+     * @JMS\Groups({
+     *     "GHOST_LOGIN"
+     * })
+     * @JMS\Type("boolean")
+     * @return boolean
+     */
+    public function hasGhostLoginOption() {
+        if (!$this->isActive || !$this->getCompany() || !$this->getCompany()->isActive()) {
+            return false;
+        }
+
+        return $this->getOwner() !== null || count($this->getCompanyUsers()) > 0;
+    }
+
+    /**
     * Constructor
     */
   public function __construct()
@@ -1074,15 +1122,6 @@ class Location
     public function setIsActive($isActive)
     {
         $this->isActive = $isActive;
-    }
-
-
-    public function getOwner()
-    {
-        if($this->company != null) {
-            return $this->getCompany()->getOwner();
-        }
-        return null;
     }
 
 

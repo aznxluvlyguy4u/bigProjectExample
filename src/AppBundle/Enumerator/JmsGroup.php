@@ -20,6 +20,8 @@ class JmsGroup
 
     const ERROR_DETAILS = 'ERROR_DETAILS';
 
+    const GHOST_LOGIN = 'GHOST_LOGIN';
+
     const HIDDEN_STATUS = 'HIDDEN_STATUS';
 
     const LIVESTOCK = 'LIVESTOCK';

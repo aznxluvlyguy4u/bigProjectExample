@@ -34,6 +34,7 @@ use JMS\Serializer\Annotation\Expose;
  *     "BASIC",
  *     "CONTACT_INFO",
  *     "ERROR_DETAILS",
+ *     "GHOST_LOGIN",
  *     "TREATMENT_TEMPLATE",
  *     "UBN",
  *     "USER_MEASUREMENT",
@@ -63,6 +64,7 @@ abstract class Person implements UserInterface
    * @JMS\Groups({
    *     "ANIMAL_DETAILS",
    *     "BASIC",
+   *     "GHOST_LOGIN",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -83,6 +85,7 @@ abstract class Person implements UserInterface
    *     "ANIMAL_DETAILS",
    *     "BASIC",
    *     "ERROR_DETAILS",
+   *     "GHOST_LOGIN",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -103,6 +106,7 @@ abstract class Person implements UserInterface
    *     "ANIMAL_DETAILS",
    *     "BASIC",
    *     "ERROR_DETAILS",
+   *     "GHOST_LOGIN",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -119,6 +123,7 @@ abstract class Person implements UserInterface
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "BASIC",
+   *     "GHOST_LOGIN",
    *     "VWA"
    * })
    * @Expose

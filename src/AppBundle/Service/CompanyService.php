@@ -236,6 +236,8 @@ class CompanyService extends AuthServiceBase
         //This information is necessary to show the most up to date information on the PedigreeCertificates
         $this->getManager()->getRepository(Animal::class)->updateLocationOfBirthByCompany($company);
 
+        $this->getCacheService()->delete(UbnService::getAllUbnCacheIds());
+
         return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
     }
 
@@ -550,6 +552,8 @@ class CompanyService extends AuthServiceBase
 
         $this->getManager()->getRepository(Animal::class)->updateLocationOfBirthByCompany($company);
 
+        $this->getCacheService()->delete(UbnService::getAllUbnCacheIds());
+
         return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
     }
 
@@ -584,6 +588,8 @@ class CompanyService extends AuthServiceBase
         $this->getManager()->flush();
 
         $log = ActionLogWriter::activeStatusCompany($this->getManager(), $isActive, $company, $admin);
+
+        $this->getCacheService()->delete(UbnService::getAllUbnCacheIds());
 
         return ResultUtil::successResult('ok');
     }

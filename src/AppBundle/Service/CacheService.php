@@ -151,4 +151,24 @@ class CacheService
     {
         return count($extraJmsGroups) > 0 ? implode('-', $extraJmsGroups) : '';
     }
+
+
+    /**
+     * @param array $filter is treated as an associative array
+     * @return string
+     */
+    public static function getFilterSuffix(array $filter = [])
+    {
+        if (count($filter) === 0) {
+            return '';
+        }
+
+        $implodedString = '';
+        $prefix = '';
+        foreach ($filter as $key => $value) {
+            $implodedString .= $prefix . $key .'='.$value;
+            $prefix = ',';
+        }
+        return $implodedString;
+    }
 }

@@ -106,7 +106,8 @@ class Company
     * @ORM\ManyToOne(targetEntity="Client", inversedBy="companies", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\Client")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "GHOST_LOGIN"
      * })
     */
     protected $owner;
@@ -178,7 +179,10 @@ class Company
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Client", mappedBy="employer", cascade={"persist"})
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Person>")
+     * @JMS\Groups({
+     *     "GHOST_LOGIN"
+     * })
      */
     private $companyUsers;
 
