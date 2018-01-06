@@ -202,6 +202,7 @@ class StoredProcedure
              b.log_date,
              b.ubn,
              b.type,
+             b.hide_failed_message,
              declareType.dutch as dutch_type,
              NULLIF(TRIM(CONCAT(a.first_name,' ',a.last_name)), '') as action_by,
              COALESCE(e.access_level, 'CLIENT') as action_by_type,";
