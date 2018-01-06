@@ -36,11 +36,11 @@ class DeclareExportResponseRepository extends BaseRepository {
         $sql = "SELECT b.request_id, log_date, a.uln_country_code, a.uln_number,
                   pedigree_country_code, pedigree_number, is_export_animal,
                   export_date as depart_date, reason_of_export as reason_of_depart, request_state, 
-                  r.message_number
+                  r.message_number, r.error_code, r.error_message
                 FROM declare_base b
                   INNER JOIN declare_export a ON a.id = b.id
                   LEFT JOIN (
-                    SELECT y.request_id, y.message_number
+                    SELECT y.request_id, y.message_number, y.error_code, y.error_message
                     FROM declare_base_response y
                       INNER JOIN (
                                    SELECT request_id, MAX(log_date) as log_date

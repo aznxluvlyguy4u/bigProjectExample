@@ -36,11 +36,11 @@ class DeclareImportResponseRepository extends BaseRepository {
         $sql = "SELECT b.request_id, log_date, a.uln_country_code, a.uln_number,
                   pedigree_country_code, pedigree_number, is_import_animal,
                   import_date as arrival_date, animal_country_origin as country_origin, animal_uln_number_origin, request_state, 
-                  r.message_number
+                  r.message_number, r.error_code, r.error_message
                 FROM declare_base b
                   INNER JOIN declare_import a ON a.id = b.id
                   LEFT JOIN (
-                    SELECT y.request_id, y.message_number
+                    SELECT y.request_id, y.message_number, y.error_code, y.error_message
                     FROM declare_base_response y
                       INNER JOIN (
                                    SELECT request_id, MAX(log_date) as log_date
