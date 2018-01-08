@@ -129,7 +129,7 @@ class LocationHealthInspection
      *
      * @ORM\OneToMany(targetEntity="LocationHealthInspectionDirection", mappedBy="inspection")
      * @ORM\OrderBy({"directionDate" = "DESC"})
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\LocationHealthInspectionDirection>")
      */
     private $directions;
 
@@ -141,7 +141,7 @@ class LocationHealthInspection
      *     joinColumns={@ORM\JoinColumn(name="location_health_inspection_id", referencedColumnName="id")},
      *     inverseJoinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")}
      * )
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      */
     private $animals;
 
@@ -149,7 +149,7 @@ class LocationHealthInspection
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="LocationHealthInspectionResult", mappedBy="inspection")
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\LocationHealthInspectionResult>")
      */
     private $results;
 

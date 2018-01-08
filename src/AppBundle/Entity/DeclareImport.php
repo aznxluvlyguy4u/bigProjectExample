@@ -155,7 +155,7 @@ class DeclareImport extends DeclareBase
    * @ORM\OneToMany(targetEntity="DeclareImportResponse", mappedBy="declareImportRequestMessage", cascade={"persist"})
    * @ORM\JoinColumn(name="declare_import_request_message_id", referencedColumnName="id")
    * @ORM\OrderBy({"logDate" = "ASC"})
-   * @JMS\Type("array")
+   * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareImportResponse>")
    * @JMS\Groups({
    *     "ERROR_DETAILS"
    * })

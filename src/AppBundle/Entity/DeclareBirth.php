@@ -241,7 +241,7 @@ class DeclareBirth extends DeclareBase
      * @ORM\OneToMany(targetEntity="DeclareBirthResponse", mappedBy="declareBirthRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_birth_request_message_id", referencedColumnName="id")
      * @ORM\OrderBy({"logDate" = "ASC"})
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareBirthResponse>")
      * @JMS\Groups({
      *     "ERROR_DETAILS"
      * })

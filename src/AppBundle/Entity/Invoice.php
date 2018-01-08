@@ -64,7 +64,7 @@ class Invoice
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="InvoiceRule", mappedBy="invoice")
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\InvoiceRule>")
      */
     private $invoiceRules;
 
@@ -81,6 +81,7 @@ class Invoice
      */
     public function __construct()
     {
+        $this->invoiceRules = new ArrayCollection();
     }
 
     /**

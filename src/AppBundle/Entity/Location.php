@@ -236,7 +236,7 @@ class Location
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Tag", mappedBy="location", cascade={"persist"})
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Tag>")
      */
     private $tags;
 

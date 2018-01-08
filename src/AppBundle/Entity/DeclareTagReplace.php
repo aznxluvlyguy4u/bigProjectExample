@@ -116,7 +116,7 @@ class DeclareTagReplace extends DeclareBase
      * @ORM\OneToMany(targetEntity="DeclareTagReplaceResponse", mappedBy="declareTagReplaceRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_tag_replace_request_message_id", referencedColumnName="id")
      * @ORM\OrderBy({"logDate" = "ASC"})
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareTagReplaceResponse>")
      * @JMS\Groups({
      *     "ERROR_DETAILS"
      * })

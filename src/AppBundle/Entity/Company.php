@@ -171,7 +171,7 @@ class Company
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Invoice", mappedBy="company")
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Invoice>")
      */
     private $invoices;
 
@@ -190,7 +190,7 @@ class Company
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Pedigree", mappedBy="company")
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Pedigree>")
      */
     private $pedigrees;
 
@@ -230,7 +230,7 @@ class Company
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="CompanyNote", mappedBy="company")
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\CompanyNote>")
      */
     private $notes;
 
@@ -255,6 +255,9 @@ class Company
     $this->locations = new ArrayCollection();
     $this->companyUsers = new ArrayCollection();
     $this->setCompanyId(Utils::generateTokenCode());
+    $this->notes = new ArrayCollection();
+    $this->pedigrees = new ArrayCollection();
+    $this->invoices = new ArrayCollection();
   }
 
     /**

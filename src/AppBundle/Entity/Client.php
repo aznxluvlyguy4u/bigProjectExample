@@ -47,7 +47,7 @@ class Client extends Person
     * @var ArrayCollection
     *
     * @ORM\OneToMany(targetEntity="Company", mappedBy="owner", cascade={"persist"})
-    * @JMS\Type("array")
+    * @JMS\Type("ArrayCollection<AppBundle\Entity\Company>")
     * @JMS\Groups({
     *    "ADDRESS",
     *    "UBN"
@@ -69,7 +69,7 @@ class Client extends Person
     * @var ArrayCollection
     *
     * @ORM\OneToMany(targetEntity="Tag", mappedBy="owner", cascade={"persist"})
-    * @JMS\Type("array")
+    * @JMS\Type("ArrayCollection<AppBundle\Entity\Tag>")
     */
     private $tags;
 
