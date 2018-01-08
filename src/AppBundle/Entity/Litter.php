@@ -140,6 +140,9 @@ class Litter extends DeclareNsfoBase
      * 
      * @ORM\OneToMany(targetEntity="Stillborn", mappedBy="litter", cascade={"persist"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Stillborn>")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $stillborns;
 

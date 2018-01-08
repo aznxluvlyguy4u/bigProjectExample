@@ -42,7 +42,8 @@ class Stillborn
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "DECLARE"
+     *     "DECLARE",
+     *     "ERROR_DETAILS"
      * })
      */
     private $gender;
@@ -51,6 +52,9 @@ class Stillborn
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $birthProgress;
 
@@ -59,6 +63,9 @@ class Stillborn
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $weight;
 
@@ -67,6 +74,9 @@ class Stillborn
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $tailLength;
 

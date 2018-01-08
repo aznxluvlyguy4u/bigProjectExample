@@ -26,6 +26,9 @@ class DeclareBirth extends DeclareBase
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births")
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      * @Expose
      */
     private $animal;

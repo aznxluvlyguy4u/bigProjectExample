@@ -730,7 +730,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ERROR_DETAILS"
      * })
      */
     protected $birthProgress;
