@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -728,4 +729,22 @@ class Litter extends DeclareNsfoBase
     }
 
 
+    /**
+     * @param int $bornAliveCount
+     * @param int $stillbornCount
+     * @return Litter
+     */
+    public static function getNewImportedLitter($bornAliveCount, $stillbornCount)
+    {
+        $litter = new Litter();
+        $litter->setRequestState(RequestStateType::IMPORTED);
+        $litter->setStatus(RequestStateType::IMPORTED);
+        $litter->setIsAbortion(false);
+        $litter->setIsPseudoPregnancy(false);
+
+        $litter->setBornAliveCount($bornAliveCount);
+        $litter->setStillbornCount($stillbornCount);
+
+        return $litter;
+    }
 }
