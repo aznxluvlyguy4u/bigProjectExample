@@ -225,6 +225,7 @@ class StoredProcedure
 
         $motherLabel = StringUtil::replaceSpacesWithUnderscores(strtolower($translator->trans('MOTHER')));
         $fatherLabel = StringUtil::replaceSpacesWithUnderscores(strtolower($translator->trans('FATHER')));
+        $amountLabel = StringUtil::replaceSpacesWithUnderscores(strtolower($translator->trans('AMOUNT')));
 
         $sql = "SELECT
                  $selectBase
@@ -326,12 +327,21 @@ class StoredProcedure
                  $selectBase
                  b.log_date as event_date,
                  d.ubn_new_owner as related_ubn,
-                 null as declare_info,
+                 CONCAT('$amountLabel: ', COALESCE(counts.tag_count, 0)) as declare_info,
                  null as non_ir_request_id,
                  b.hide_for_admin
                FROM declare_base b
                  INNER JOIN declare_tags_transfer d ON b.id = d.id
                  $joinBase
+                 LEFT JOIN (
+                  SELECT d.id, COUNT(d.id) as tag_count
+                  FROM declare_base b
+                         INNER JOIN declare_tags_transfer d ON b.id = d.id
+                         INNER JOIN transfer_requests rs ON rs.declare_tags_transfer_id = d.id
+                  WHERE
+                    $whereBase
+                  GROUP BY d.id
+                  )counts ON counts.id = d.id
                WHERE
                  $whereBase
 
