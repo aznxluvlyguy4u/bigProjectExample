@@ -35,17 +35,6 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
 {
     const MULTI_EDIT_BATCH_SIZE = 100;
 
-    public function __construct(BaseSerializer $baseSerializer,
-                                CacheService $cacheService,
-                                EntityManagerInterface $manager,
-                                UserService $userService,
-                                TranslatorInterface $translator
-    )
-    {
-        parent::__construct($baseSerializer, $cacheService, $manager, $userService);
-        $this->translator = $translator;
-    }
-
     /**
      * @param Request $request
      * @return JsonResponse

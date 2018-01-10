@@ -33,22 +33,15 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 {
     /** @var EntityGetter */
     private $entityGetter;
-    /** @var TranslatorInterface */
-    private $translator;
 
-    public function __construct(AwsExternalQueueService $externalQueueService,
-                                CacheService $cacheService,
-                                EntityManagerInterface $manager,
-                                IRSerializer $irSerializer,
-                                RequestMessageBuilder $requestMessageBuilder,
-                                UserService $userService,
-                                TranslatorInterface $translator,
-                                EntityGetter $entityGetter)
+    /**
+     * @required
+     *
+     * @param EntityGetter $entityGetter
+     */
+    public function setEntityGetter($entityGetter)
     {
-        parent::__construct($externalQueueService, $cacheService, $manager, $irSerializer, $requestMessageBuilder, $userService);
-
         $this->entityGetter = $entityGetter;
-        $this->translator = $translator;
     }
 
 

@@ -40,18 +40,33 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     /** @var string */
     private $environment;
 
-    public function __construct(AwsExternalQueueService $externalQueueService,
-                                CacheService $cacheService,
-                                EntityManagerInterface $manager,
-                                IRSerializer $irSerializer,
-                                RequestMessageBuilder $requestMessageBuilder,
-                                UserService $userService, HealthUpdaterService $healthService,
-                                AnimalLocationHistoryService $animalLocationHistoryService,
-                                $environment)
+    /**
+     * @required
+     *
+     * @param HealthUpdaterService $healthService
+     */
+    public function setHealthUpdaterService(HealthUpdaterService $healthService)
     {
-        parent::__construct($externalQueueService, $cacheService, $manager, $irSerializer, $requestMessageBuilder, $userService);
         $this->healthService = $healthService;
+    }
+
+    /**
+     * @required
+     *
+     * @param AnimalLocationHistoryService $animalLocationHistoryService
+     */
+    public function setAnimalLocationHistoryService(AnimalLocationHistoryService $animalLocationHistoryService)
+    {
         $this->animalLocationHistoryService = $animalLocationHistoryService;
+    }
+
+    /**
+     * @required
+     *
+     * @param string $environment
+     */
+    public function setEnvironment($environment)
+    {
         $this->environment = $environment;
     }
 

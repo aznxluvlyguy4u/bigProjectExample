@@ -34,7 +34,7 @@ class TagTransferService extends DeclareControllerServiceBase
         $log = ActionLogWriter::declareTagTransferPost($this->getManager(), $client, $loggedInUser, $content);
 
         //Validate if ubn is in database and retrieve the relationNumberKeeper owning that ubn
-        $ubnVerification = $this->isUbnValid($content->get(Constant::UBN_NEW_OWNER_NAMESPACE));
+        $ubnVerification = $this->isUbnNewOwnerValid($content->get(Constant::UBN_NEW_OWNER_NAMESPACE), $location);
         if(!$ubnVerification['isValid']) {
             $code = $ubnVerification[Constant::CODE_NAMESPACE];
             $message = $ubnVerification[Constant::MESSAGE_NAMESPACE];
@@ -68,10 +68,11 @@ class TagTransferService extends DeclareControllerServiceBase
 
 
     /**
-     * @param string $ubn
+     * @param string $ubnNewOwner
+     * @param Location $loggedInLocation
      * @return array
      */
-    public function isUbnValid($ubn)
+    public function isUbnNewOwnerValid($ubnNewOwner, Location $loggedInLocation)
     {
         //Default values
         $isValid = false;
@@ -79,14 +80,25 @@ class TagTransferService extends DeclareControllerServiceBase
         $code = 428;
         $message = 'THE UBN IS NOT REGISTERED AT NSFO';
 
-        $location = $this->getManager()->getRepository(Location::class)->findOneByActiveUbn($ubn);
+        $locationNewOwner = $this->getManager()->getRepository(Location::class)->findOneByActiveUbn($ubnNewOwner);
 
-        if($location != null) {
+        if ($locationNewOwner != null) {
+
             $isValid = true;
-            //'relationNumberKeeper' is an obligatory field in Client, so no need to verify if that field exists or not.
-            $relationNumberKeeper = $location->getCompany()->getOwner()->getRelationNumberKeeper();
-            $code = 200;
-            $message = 'UBN IS VALID';
+            if ($loggedInLocation && $loggedInLocation->getUbn()) {
+                if ($loggedInLocation->getUbn() === $locationNewOwner->getUbn()) {
+                    $isValid = false;
+                    $message = $this->translator->trans('UBN NEW OWNER CANNOT BE SAME AS LOGGED IN UBN');
+                }
+            }
+
+            if ($isValid) {
+                //'relationNumberKeeper' is an obligatory field in Client, so no need to verify if that field exists or not.
+                $relationNumberKeeper = $locationNewOwner->getCompany()->getOwner()->getRelationNumberKeeper();
+                $code = 200;
+                $message = 'UBN IS VALID';
+            }
+
         } //else just use the default values
 
         return array('isValid' => $isValid,

@@ -62,14 +62,35 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     /** @var Logger */
     private $logger;
 
-    public function __construct(AwsExternalQueueService $externalQueueService, CacheService $cacheService, EntityManagerInterface $manager, IRSerializer $irSerializer, RequestMessageBuilder $requestMessageBuilder, UserService $userService,
-                                Logger $logger,
-                                AwsInternalQueueService $internalQueueService,
-                                EntityGetter $entityGetter)
+    /**
+     * @required load at start up
+     *
+     * @param EntityGetter $entityGetter
+     */
+    public function setEntityGetter(EntityGetter $entityGetter)
     {
-        parent::__construct($externalQueueService, $cacheService, $manager, $irSerializer, $requestMessageBuilder, $userService);
         $this->entityGetter = $entityGetter;
+    }
+
+
+    /**
+     * @required load at start up
+     *
+     * @param Logger $logger
+     */
+    public function setLogger(Logger $logger)
+    {
         $this->logger = $logger;
+    }
+
+
+    /**
+     * @required load at start up
+     *
+     * @param AwsInternalQueueService $internalQueueService
+     */
+    public function setInternalQueueService(AwsInternalQueueService $internalQueueService)
+    {
         $this->internalQueueService = $internalQueueService;
     }
 

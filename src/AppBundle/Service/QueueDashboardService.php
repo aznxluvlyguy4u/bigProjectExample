@@ -19,21 +19,28 @@ class QueueDashboardService extends ControllerServiceBase implements QueueDashbo
     const INTERNAL = 'internal';
     const INTERNAL_ERROR = 'internal_error';
 
-    /** @var $externalQueueService */
+    /** @var AwsExternalQueueService */
     private $externalQueueService;
     /** @var AwsInternalQueueService */
     private $internalQueueService;
 
-    public function __construct(BaseSerializer $baseSerializer,
-                                CacheService $cacheService,
-                                EntityManagerInterface $manager,
-                                UserService $userService,
-                                AwsExternalQueueService $externalQueueService,
-                                AwsInternalQueueService $internalQueueService)
+    /**
+     * @required
+     *
+     * @param AwsExternalQueueService $externalQueueService
+     */
+    public function setExternalQueueService(AwsExternalQueueService $externalQueueService)
     {
-        parent::__construct($baseSerializer, $cacheService, $manager, $userService);
-
         $this->externalQueueService = $externalQueueService;
+    }
+
+    /**
+     * @required
+     *
+     * @param AwsInternalQueueService $internalQueueService
+     */
+    public function setInternalQueueService(AwsInternalQueueService $internalQueueService)
+    {
         $this->internalQueueService = $internalQueueService;
     }
 

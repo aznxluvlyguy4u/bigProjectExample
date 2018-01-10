@@ -62,12 +62,15 @@ abstract class ControllerServiceBase
     public function __construct(BaseSerializer $baseSerializer,
                                 CacheService $cacheService,
                                 EntityManagerInterface $manager,
-                                UserService $userService)
+                                UserService $userService,
+                                TranslatorInterface $translator
+    )
     {
         $this->baseSerializer = $baseSerializer;
         $this->cacheService = $cacheService;
         $this->manager = $manager;
         $this->userService = $userService;
+        $this->translator = $translator;
     }
 
 
