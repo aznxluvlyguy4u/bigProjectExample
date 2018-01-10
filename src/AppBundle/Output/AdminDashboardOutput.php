@@ -2,35 +2,58 @@
 
 namespace AppBundle\Output;
 
-use AppBundle\Entity\Invoice;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationHealthInspection;
-use Doctrine\Common\Persistence\ObjectManager;
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\Company;
-use Doctrine\ORM\Query;
+use AppBundle\Util\StoredProcedure;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class AdminDashboardOutput
 {
-    public static function createAdminDashboard(ObjectManager $em)
+    /**
+     * @param EntityManagerInterface $em
+     * @param TranslatorInterface $translator
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function createAdminDashboard(EntityManagerInterface $em, TranslatorInterface $translator)
     {
-        $results = array();
+        $sql =
+            "SELECT
+              'clients' AS key, --Companies
+              COUNT(id) AS amount
+            FROM company
+            WHERE is_active = true
+            
+            UNION
+            
+            SELECT
+              'invoices' AS key,
+              COUNT(id) AS amount
+            FROM invoice
+            WHERE status = 'UNPAID'
+            
+            UNION
+            
+            SELECT
+              'requested_inspections' AS key,
+              COUNT(id) AS amount
+            FROM location_health_inspection WHERE status = 'ANNOUNCED'
+            
+            UNION
+             
+             SELECT
+              'open_error_messages' AS key,
+              COUNT(*) as amount
+              FROM (". StoredProcedure::getErrorMessagesSqlQuery($translator, false, true).")v 
+              ";
 
-        // Companies
-        $sql = 'SELECT COUNT(\'id\') AS amount FROM company WHERE is_active = true';
-        $result = $em->getConnection()->query($sql)->fetch();
-        $results['clients'] = $result['amount'];
+        $results = $em->getConnection()->query($sql)->fetchAll();
 
-        // Invoices
-        $sql = 'SELECT COUNT(\'id\') AS amount FROM invoice WHERE status = \'UNPAID\'';
-        $result = $em->getConnection()->query($sql)->fetch();
-        $results['invoices'] = $result['amount'];
+        $output = [];
 
-        // Inspections
-        $sql = 'SELECT COUNT(\'id\') AS amount FROM location_health_inspection WHERE status = \'ANNOUNCED\'';
-        $result = $em->getConnection()->query($sql)->fetch();
-        $results['requested_inspections'] = $result['amount'];
+        foreach ($results as $result) {
+            $output[$result['key']] = $result['amount'];
+        }
 
-        return $results;
+        return $output;
     }
 }

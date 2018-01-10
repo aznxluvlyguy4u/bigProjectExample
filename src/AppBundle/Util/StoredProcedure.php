@@ -199,6 +199,41 @@ class StoredProcedure
      */
     public static function createErrorMessages(Connection $conn, TranslatorInterface $translator)
     {
+        $parameters = [
+            'showHidden' => 'BOOLEAN',
+        ];
+
+        $declareStatement =
+            "  option1 BOOLEAN;
+               option2 BOOLEAN;";
+
+        $beginStatement =
+            "IF showHidden = TRUE THEN
+                option1 = true;
+                option2 = false;
+             ELSE
+                option1 = false;
+                option2 = false;
+             END IF;";
+
+        $sql = self::getErrorMessagesSqlQuery($translator, true);
+
+        self::createOrUpdateProcedureBase($conn, self::GET_ERROR_MESSAGES, $sql, $parameters,
+            $declareStatement, $beginStatement);
+    }
+
+
+    /**
+     * @param TranslatorInterface $translator
+     * @param boolean $isStoredProcedureSql
+     * @param boolean $onlyReturnNonHiddenForAdminIfRegularSql
+     * @return string
+     */
+    public static function getErrorMessagesSqlQuery(TranslatorInterface $translator,
+                                                    $isStoredProcedureSql,
+                                                    $onlyReturnNonHiddenForAdminIfRegularSql = true
+    )
+    {
         $selectBase =
             "b.request_id,
              b.request_state,
@@ -215,13 +250,28 @@ class StoredProcedure
              LEFT JOIN employee e ON e.id = a.id
              LEFT JOIN (VALUES ".SqlUtil::declareIRTranslationValues().") AS declareType(english, dutch) ON b.type = declareType.english";
 
+
+        if ($isStoredProcedureSql) {
+
+            $hiddenForAdminFilter = " AND (
+                   b.hide_for_admin = option1
+                   OR b.hide_for_admin = option2
+                 ) ";
+
+            $hiddenForAdminFilterInNsfoBase = " AND (
+                   nsfo_b.hide_for_admin = option1
+                   OR nsfo_b.hide_for_admin = option2
+                 ) ";
+
+        } else {
+            $hiddenForAdminFilter = $onlyReturnNonHiddenForAdminIfRegularSql ? ' AND b.hide_for_admin = false ' : ' ';
+            $hiddenForAdminFilterInNsfoBase = $onlyReturnNonHiddenForAdminIfRegularSql ? ' AND nsfo_b.hide_for_admin = false ' : ' ';
+        }
+
         $whereBase =
             "b.request_state = '".RequestStateType::FAILED."' AND
              b.newest_version_id ISNULL --only return latest version
-             AND (
-                   b.hide_for_admin = option1
-                   OR b.hide_for_admin = option2
-                 )";
+             ".$hiddenForAdminFilter;
 
         $motherLabel = StringUtil::replaceSpacesWithUnderscores(strtolower($translator->trans('MOTHER')));
         $fatherLabel = StringUtil::replaceSpacesWithUnderscores(strtolower($translator->trans('FATHER')));
@@ -244,19 +294,13 @@ class StoredProcedure
                WHERE
                   b.request_state = '".RequestStateType::FAILED."' AND
                   nsfo_b.newest_version_id ISNULL --only return latest version of litter
-                  AND (
-                        b.hide_for_admin = option1
-                        OR b.hide_for_admin = option2
-                      )
+                  $hiddenForAdminFilter
                   AND (
                         nsfo_b.request_state = '" . RequestStateType::FAILED . "' OR
                         nsfo_b.request_state = '" . RequestStateType::OPEN . "' OR
                         l.status = '" . RequestStateType::INCOMPLETE . "'
                       )
-                  AND (
-                        nsfo_b.hide_for_admin = option1
-                        OR nsfo_b.hide_for_admin = option2
-                      )
+                  $hiddenForAdminFilterInNsfoBase
 
                UNION
 
@@ -347,25 +391,6 @@ class StoredProcedure
 
                ORDER BY log_date DESC";
 
-        $parameters = [
-            'showHidden' => 'BOOLEAN',
-        ];
-
-        $declareStatement =
-            "  option1 BOOLEAN;
-               option2 BOOLEAN;";
-
-        $beginStatement =
-            "IF showHidden = TRUE THEN
-                option1 = true;
-                option2 = false;
-             ELSE
-                option1 = false;
-                option2 = false;
-             END IF;";
-
-        self::createOrUpdateProcedureBase($conn, self::GET_ERROR_MESSAGES, $sql, $parameters,
-            $declareStatement, $beginStatement);
+        return $sql;
     }
-
 }
