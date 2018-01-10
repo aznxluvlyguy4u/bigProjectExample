@@ -7,6 +7,7 @@ namespace AppBundle\Util;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class StoredProcedure
 {
@@ -77,13 +78,14 @@ class StoredProcedure
 
     /**
      * @param Connection $conn
+     * @param TranslatorInterface $translator
      * @param $functionName
      */
-    public static function createOrUpdateProcedure(Connection $conn, $functionName)
+    public static function createOrUpdateProcedure(Connection $conn, TranslatorInterface $translator, $functionName)
     {
         switch ($functionName) {
             case self::GET_LIVESTOCK_REPORT: self::createLiveStockReport($conn); break;
-            case self::GET_ERROR_MESSAGES: self::createErrorMessages($conn); break;
+            case self::GET_ERROR_MESSAGES: self::createErrorMessages($conn, $translator); break;
             default: break;
         }
     }
@@ -192,9 +194,10 @@ class StoredProcedure
 
 
     /**
+     * @param TranslatorInterface $translator
      * @param Connection $conn
      */
-    public static function createErrorMessages(Connection $conn)
+    public static function createErrorMessages(Connection $conn, TranslatorInterface $translator)
     {
         $selectBase =
             "b.request_id,
@@ -220,11 +223,16 @@ class StoredProcedure
                    OR b.hide_for_admin = option2
                  )";
 
+        $motherLabel = StringUtil::replaceSpacesWithUnderscores(strtolower($translator->trans('MOTHER')));
+        $fatherLabel = StringUtil::replaceSpacesWithUnderscores(strtolower($translator->trans('FATHER')));
+
         $sql = "SELECT
                  $selectBase
                  d.date_of_birth as event_date,
                  null as related_ubn,
-                 CONCAT(uln_country_code, uln_number) as declare_info,
+                 CONCAT(uln_country_code, uln_number,
+                 ', $motherLabel: ', uln_country_code_mother, uln_mother,
+                  ', $fatherLabel: ',uln_country_code_father, uln_father) as declare_info,
                  nsfo_b.message_id as non_ir_request_id,
                  nsfo_b.hide_for_admin
                FROM declare_base b

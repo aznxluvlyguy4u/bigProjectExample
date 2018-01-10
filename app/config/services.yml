@@ -267,6 +267,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
+          - '@translator'
 
     app.migrator.client:
         class: AppBundle\Service\Migration\ClientMigrator

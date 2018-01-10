@@ -9,6 +9,7 @@ use AppBundle\Util\StoredProcedure;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class StoredProcedureInitializer
 {
@@ -18,12 +19,18 @@ class StoredProcedureInitializer
     private $conn;
     /** @var Logger */
     private $logger;
+    /** @var TranslatorInterface */
+    private $translator;
 
-    public function __construct(EntityManagerInterface $em, Logger $logger)
+    public function __construct(EntityManagerInterface $em,
+                                Logger $logger,
+                                TranslatorInterface $translator
+    )
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
         $this->logger = $logger;
+        $this->translator = $translator;
     }
 
 
@@ -35,7 +42,7 @@ class StoredProcedureInitializer
         foreach (StoredProcedure::getConstants() as $routineName)
         {
             if (!key_exists($routineName, $currentStoredProcedures) || $overwriteOldVersions) {
-                StoredProcedure::createOrUpdateProcedure($this->conn, $routineName);
+                StoredProcedure::createOrUpdateProcedure($this->conn, $this->translator, $routineName);
                 $updateCount++;
             }
         }
