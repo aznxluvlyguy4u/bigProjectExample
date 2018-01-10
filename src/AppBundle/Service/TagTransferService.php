@@ -78,7 +78,7 @@ class TagTransferService extends DeclareControllerServiceBase
         $isValid = false;
         $relationNumberKeeper = null;
         $code = 428;
-        $message = 'THE UBN IS NOT REGISTERED AT NSFO';
+        $message = ucfirst(strtolower($this->translator->trans('THE UBN IS NOT REGISTERED AT NSFO')));
 
         $locationNewOwner = $this->getManager()->getRepository(Location::class)->findOneByActiveUbn($ubnNewOwner);
 
@@ -88,7 +88,7 @@ class TagTransferService extends DeclareControllerServiceBase
             if ($loggedInLocation && $loggedInLocation->getUbn()) {
                 if ($loggedInLocation->getUbn() === $locationNewOwner->getUbn()) {
                     $isValid = false;
-                    $message = $this->translator->trans('UBN NEW OWNER CANNOT BE SAME AS LOGGED IN UBN');
+                    $message = ucfirst(strtolower($this->translator->trans('UBN NEW OWNER CANNOT BE SAME AS LOGGED IN UBN')));
                 }
             }
 
