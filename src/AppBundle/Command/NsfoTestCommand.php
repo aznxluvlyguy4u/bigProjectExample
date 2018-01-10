@@ -9,7 +9,6 @@ use AppBundle\Entity\LocationRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
-use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -119,7 +118,6 @@ class NsfoTestCommand extends ContainerAwareCommand
         /*
          * Insert your custom test here
          */
-        StoredProcedure::createErrorMessages($this->conn);
     }
 
 
