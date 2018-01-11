@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
@@ -72,50 +73,77 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $plainTextInput = $content->get(JsonInputConstant::PLAIN_TEXT_INPUT);
         $separator = $content->get(JsonInputConstant::SEPARATOR);
 
-        $ulnsWithMissingAnimals = [];
-        $stnsWithMissingAnimals = [];
         $incorrectInputs = [];
-        $totalFoundAnimals = [];
+
+        $ulnPartsArray = [];
+        $stnPartsArray = [];
+
+        $validUlns = [];
+        $validStns = [];
 
         $parts = explode($separator, $plainTextInput);
         foreach ($parts as $part) {
             $ulnOrStnString = StringUtil::removeSpaces($part);
-            $animalsResult = $this->getManager()->getRepository(Animal::class)
-                ->findAnimalsByUlnOrStnString($ulnOrStnString, true);
 
-            $inputType = $animalsResult[JsonInputConstant::TYPE];
-            $animals = $animalsResult[JsonInputConstant::ANIMALS];
+            if (Validator::verifyUlnFormat($ulnOrStnString, false)) {
+                $ulnParts = Utils::getUlnFromString($ulnOrStnString);
+                $ulnPartsArray[] = $ulnParts;
+                $validUlns[$ulnOrStnString] = $ulnOrStnString;
 
-            if ($inputType === ReportLabel::INVALID) {
+            } elseif (Validator::verifyPedigreeCountryCodeAndNumberFormat($ulnOrStnString, false)) {
+                $stnParts = Utils::getStnFromString($ulnOrStnString);
+                $stnPartsArray[] = $stnParts;
+                $validStns[$ulnOrStnString] = $ulnOrStnString;
+
+            } else {
                 $incorrectInputs[] = trim($part);
-                continue;
-            }
-
-            if (count($animals) === 0) {
-                if ($inputType === ReportLabel::ULN) {
-                    $ulnsWithMissingAnimals[] = $ulnOrStnString;
-
-                } elseif ($inputType === ReportLabel::STN) {
-                    $stnsWithMissingAnimals[] = $ulnOrStnString;
-
-                } else {
-                    $incorrectInputs[] = trim($part);
-                }
-
-                continue;
-            }
-
-            /** @var Animal $animal */
-            foreach ($animals as $animal) {
-                $serializedAnimal = $this->getDecodedJsonOfAnimalWithParents(
-                    $animal,
-                    [JmsGroup::ANIMALS_BATCH_EDIT],
-                    true,
-                    true
-                );
-                $totalFoundAnimals[$animal->getId()] = $serializedAnimal;
             }
         }
+
+        try {
+            $animals = $this->getManager()->getRepository(Animal::class)->findAnimalsByUlnOrStnParts($ulnPartsArray, $stnPartsArray);
+        } catch (\Exception $exception) {
+            return ResultUtil::errorResult($exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $foundUlns = [];
+        $foundStns = [];
+
+        $totalFoundAnimals = [];
+
+        /** @var Animal $animal */
+        foreach ($animals as $animal) {
+            $serializedAnimal = $this->getDecodedJsonOfAnimalWithParents(
+                $animal,
+                [JmsGroup::ANIMALS_BATCH_EDIT],
+                true,
+                true
+            );
+            $totalFoundAnimals[$animal->getId()] = $serializedAnimal;
+
+            $uln = $animal->getPedigreeString();
+            $foundStns[$uln] = $uln;
+
+            $stn = $animal->getUln();
+            $foundUlns[$stn] = $stn;
+        }
+
+
+        $ulnsWithMissingAnimals = [];
+        $stnsWithMissingAnimals = [];
+
+        foreach ($validStns as $stn) {
+            if (!key_exists($stn, $foundStns)) {
+                $stnsWithMissingAnimals[] = $stn;
+            }
+        }
+
+        foreach ($validUlns as $uln) {
+            if (!key_exists($uln, $foundUlns)) {
+                $ulnsWithMissingAnimals[] = $uln;
+            }
+        }
+
 
         return ResultUtil::successResult([
             JsonInputConstant::ANIMALS => array_values($totalFoundAnimals),
