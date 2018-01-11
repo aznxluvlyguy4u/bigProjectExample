@@ -222,7 +222,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
         /** @var Animal $updatedAnimal */
-        $updatedAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, $clazz);
+        $updatedAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, $clazz, false);
 
 
         /* Update Parents */
