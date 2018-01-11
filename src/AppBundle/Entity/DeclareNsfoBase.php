@@ -33,6 +33,7 @@ use JMS\Serializer\Annotation\Expose;
  *               "DeclareWeight" : "AppBundle\Entity\DeclareWeight",
  *                      "Litter" : "AppBundle\Entity\Litter"},
  *     groups = {
+ *     "ANIMALS_BATCH_EDIT",
  *     "BASIC",
  *     "ERROR_DETAILS"
  * })

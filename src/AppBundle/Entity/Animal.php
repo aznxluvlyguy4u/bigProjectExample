@@ -34,10 +34,12 @@ use \DateTime;
  *                        "Neuter" : "AppBundle\Entity\Neuter"},
  *     groups = {
  *     "ANIMAL_DETAILS",
+ *     "ANIMALS_BATCH_EDIT",
  *     "BASIC",
  *     "DECLARE",
  *     "MINIMAL",
  *     "MIXBLUP",
+ *     "PARENT_DATA",
  *     "USER_MEASUREMENT"
  * })
  *
