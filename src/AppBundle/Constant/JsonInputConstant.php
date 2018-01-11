@@ -69,6 +69,8 @@ class JsonInputConstant
     const SEPARATOR = 'separator';
     const ULNS_WITHOUT_FOUND_ANIMALS = 'ulns_without_found_animals';
     const STNS_WITHOUT_FOUND_ANIMALS = 'stns_without_found_animals';
+    const FOUND_ULNS = 'found_ulns';
+    const FOUND_STNS = 'found_stns';
 
     //Request & Response
     const ERROR_CODE = 'error_code';

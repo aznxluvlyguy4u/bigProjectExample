@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Criteria\AnimalCriteria;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\GenderType;
@@ -49,6 +50,7 @@ class AnimalRepository extends BaseRepository
   const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
   const CANDIDATE_FATHERS_CACHE_ID = 'GET_CANDIDATE_FATHERS_';
   const CANDIDATE_SURROGATES_CACHE_ID = 'GET_CANDIDATE_SURROGATES_';
+  const ANIMAL_ALIAS = 'animal';
 
   /**
    * @param $Id
@@ -798,6 +800,19 @@ class AnimalRepository extends BaseRepository
 
 
     /**
+     * @param array $ids
+     * @param bool $onlyReturnQuery
+     * @return array|\Doctrine\ORM\Query
+     * @throws \Doctrine\ORM\Query\QueryException
+     */
+    public function findByIds(array $ids = [], $onlyReturnQuery = false)
+    {
+        $qb = $this->createQueryBuilder(self::ANIMAL_ALIAS)->addCriteria(AnimalCriteria::byIds($ids));
+        return $this->returnQueryOrResult($qb, $onlyReturnQuery);
+    }
+
+
+    /**
      * @param array $ulnPartsArray
      * @param array $stnPartsArray
      * @param bool $onlyReturnQuery
@@ -807,75 +822,11 @@ class AnimalRepository extends BaseRepository
      */
     public function findAnimalsByUlnOrStnParts(array $ulnPartsArray = [], array $stnPartsArray = [], $onlyReturnQuery = false)
     {
-        $animalAlias = 'animal';
-
-        $qb = $this->createQueryBuilder($animalAlias)
-            ->addCriteria(self::getAnimalQueryBuilderFilterByUlnsOrStnParts($ulnPartsArray, $stnPartsArray, $animalAlias))
+        $qb = $this->createQueryBuilder(self::ANIMAL_ALIAS)
+            ->addCriteria(AnimalCriteria::byUlnOrStnParts($ulnPartsArray, $stnPartsArray, self::ANIMAL_ALIAS))
         ;
-
-        $query = $qb->getQuery();
-
-        if ($onlyReturnQuery) {
-            return $query;
-        }
-
-        return $query->getResult();
+        return $this->returnQueryOrResult($qb, $onlyReturnQuery);
     }
-
-
-    /**
-     * @param array $ulnPartsArray
-     * @param array $stnPartsArray
-     * @param string $animalKey
-     * @return Criteria
-     * @throws \Exception
-     */
-    public static function getAnimalQueryBuilderFilterByUlnsOrStnParts(array $ulnPartsArray = [], array $stnPartsArray = [], $animalKey = 'animal')
-    {
-        $criteria = Criteria::create();
-
-        foreach ($ulnPartsArray as $ulnParts) {
-            $ulnCountryCode = ArrayUtil::get(Constant::ULN_COUNTRY_CODE_NAMESPACE, $ulnParts, null);
-            $ulnNumber = ArrayUtil::get(Constant::ULN_NUMBER_NAMESPACE, $ulnParts, null);
-
-            if ($ulnCountryCode === null) {
-                throw new \Exception(Constant::ULN_COUNTRY_CODE_NAMESPACE, ' key is missing from array');
-            }
-            if ($ulnNumber === null) {
-                throw new \Exception(Constant::ULN_NUMBER_NAMESPACE, ' key is missing from array');
-            }
-
-            $criteria->orWhere(
-                Criteria::expr()->andX(
-                    Criteria::expr()->eq($animalKey.'.ulnCountryCode', $ulnCountryCode),
-                    Criteria::expr()->eq($animalKey.'.ulnNumber', $ulnNumber)
-                )
-            );
-        }
-
-
-        foreach ($stnPartsArray as $stnParts) {
-            $pedigreeCountryCode = ArrayUtil::get(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $stnParts, null);
-            $pedigreeNumber = ArrayUtil::get(Constant::PEDIGREE_NUMBER_NAMESPACE, $stnParts, null);
-
-            if ($pedigreeCountryCode === null) {
-                throw new \Exception(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, ' key is missing from array');
-            }
-            if ($pedigreeNumber === null) {
-                throw new \Exception(Constant::PEDIGREE_NUMBER_NAMESPACE, ' key is missing from array');
-            }
-
-            $criteria->orWhere(
-                Criteria::expr()->andX(
-                    Criteria::expr()->eq($animalKey . '.pedigreeCountryCode', $pedigreeCountryCode),
-                    Criteria::expr()->eq($animalKey . '.pedigreeNumber', $pedigreeNumber)
-                )
-            );
-        }
-
-        return $criteria;
-    }
-
 
 
   public function getAnimalByUlnOrPedigree($content)

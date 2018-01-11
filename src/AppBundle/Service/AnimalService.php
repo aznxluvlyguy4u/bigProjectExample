@@ -106,6 +106,35 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return ResultUtil::errorResult($exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
+        $serializedAnimalsOutput = self::getSerializedAnimalsInBatchEditFormat($this, $animals);
+
+        $ulnsWithMissingAnimals = [];
+        $stnsWithMissingAnimals = [];
+
+        foreach ($validStns as $stn) {
+            if (!key_exists($stn, $serializedAnimalsOutput[JsonInputConstant::FOUND_STNS])) {
+                $stnsWithMissingAnimals[] = $stn;
+            }
+        }
+
+        foreach ($validUlns as $uln) {
+            if (!key_exists($uln, $serializedAnimalsOutput[JsonInputConstant::FOUND_ULNS])) {
+                $ulnsWithMissingAnimals[] = $uln;
+            }
+        }
+
+
+        return ResultUtil::successResult([
+            JsonInputConstant::ANIMALS => $serializedAnimalsOutput[JsonInputConstant::ANIMALS],
+            JsonInputConstant::ULNS_WITHOUT_FOUND_ANIMALS => $ulnsWithMissingAnimals,
+            JsonInputConstant::STNS_WITHOUT_FOUND_ANIMALS => $stnsWithMissingAnimals,
+            ReportLabel::INVALID => $incorrectInputs,
+        ]);
+    }
+
+
+    public static function getSerializedAnimalsInBatchEditFormat(ControllerServiceBase $controllerServiceBase, array $animals = [])
+    {
         $foundUlns = [];
         $foundStns = [];
 
@@ -113,13 +142,13 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         /** @var Animal $animal */
         foreach ($animals as $animal) {
-            $serializedAnimal = $this->getDecodedJsonOfAnimalWithParents(
+            $serializedAnimal = $controllerServiceBase->getDecodedJsonOfAnimalWithParents(
                 $animal,
                 [JmsGroup::ANIMALS_BATCH_EDIT],
                 true,
                 true
             );
-            $totalFoundAnimals[$animal->getId()] = $serializedAnimal;
+            $totalFoundAnimals[] = $serializedAnimal;
 
             $uln = $animal->getPedigreeString();
             $foundStns[$uln] = $uln;
@@ -128,29 +157,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $foundUlns[$stn] = $stn;
         }
 
-
-        $ulnsWithMissingAnimals = [];
-        $stnsWithMissingAnimals = [];
-
-        foreach ($validStns as $stn) {
-            if (!key_exists($stn, $foundStns)) {
-                $stnsWithMissingAnimals[] = $stn;
-            }
-        }
-
-        foreach ($validUlns as $uln) {
-            if (!key_exists($uln, $foundUlns)) {
-                $ulnsWithMissingAnimals[] = $uln;
-            }
-        }
-
-
-        return ResultUtil::successResult([
-            JsonInputConstant::ANIMALS => array_values($totalFoundAnimals),
-            JsonInputConstant::ULNS_WITHOUT_FOUND_ANIMALS => $ulnsWithMissingAnimals,
-            JsonInputConstant::STNS_WITHOUT_FOUND_ANIMALS => $stnsWithMissingAnimals,
-            ReportLabel::INVALID => $incorrectInputs,
-        ]);
+        return [
+            JsonInputConstant::ANIMALS =>  $totalFoundAnimals,
+            JsonInputConstant::FOUND_ULNS => $foundUlns,
+            JsonInputConstant::FOUND_STNS => $foundStns,
+        ];
     }
 
 
