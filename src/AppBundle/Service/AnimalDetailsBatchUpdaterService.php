@@ -36,20 +36,29 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             }
         }
 
+        $inputOnlyValidationResult = $this->validateForDuplicateValuesWithinRequestBody($animalsWithNewValues);
+        if ($inputOnlyValidationResult instanceof JsonResponse) {
+            return $inputOnlyValidationResult;
+        }
+
         try {
-            $currentAnimals = $this->getManager()->getRepository(Animal::class)->findByIds($ids);
+            $currentAnimalsResult = $this->getManager()->getRepository(Animal::class)->findByIds($ids, true);
         } catch (\Exception $exception) {
-            return ResultUtil::errorResult($exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return ResultUtil::errorResult('BAD REQUEST', Response::HTTP_BAD_REQUEST);
         }
 
-        $firstValidationResult = $this->validateForDuplicateValuesWithinRequestBody($animalsWithNewValues);
-        if ($firstValidationResult instanceof JsonResponse) {
-            return $firstValidationResult;
+        $inputWithDatabaseValuesValidationResult = $this->validateInputWithDatabaseValues($animalsWithNewValues, $currentAnimalsResult);
+        if ($inputWithDatabaseValuesValidationResult instanceof JsonResponse) {
+            return $inputWithDatabaseValuesValidationResult;
         }
 
 
+        // TODO update changed values
 
-        $serializedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $currentAnimals);
+        // TODO log changes
+
+
+        $serializedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $currentAnimalsResult);
 
         return ResultUtil::successResult([
             JsonInputConstant::ANIMALS => $serializedAnimalsOutput[JsonInputConstant::ANIMALS]
@@ -111,10 +120,37 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             }
         }
 
-        if ($errorMessage !== '') {
-            return ResultUtil::errorResult($errorMessage, Response::HTTP_PRECONDITION_REQUIRED);
+        return $errorMessage !== '' ? ResultUtil::errorResult($errorMessage, Response::HTTP_PRECONDITION_REQUIRED) : true;
+    }
+
+
+    /**
+     * @param Animal[] $animalsWithNewValues
+     * @param Animal[] $currentAnimalsResult
+     * @return JsonResponse|bool
+     */
+    private function validateInputWithDatabaseValues(array $animalsWithNewValues, array $currentAnimalsResult)
+    {
+        //TODO validate for duplicate ulns inside the database
+
+        //TODO validate for duplicate stns inside the database
+
+        $idsNotFound = [];
+        /** @var  $animalsWithNewValue */
+        foreach ($animalsWithNewValues as $animalsWithNewValue)
+        {
+            if (!key_exists($animalsWithNewValue->getId(), $currentAnimalsResult)) {
+                $idsNotFound[$animalsWithNewValue->getId()] = $animalsWithNewValue->getId();
+            }
         }
 
-        return true;
+        $errorMessage = '';
+        $prefix = '';
+        if (count($idsNotFound) > 0) {
+            $errorMessage .= $prefix . $this->translateUcFirstLower('THE FOLLOWING IDS WERE NOT FOUND IN THE DATABASE') . ': '.implode(', ', $idsNotFound).'.';
+            $prefix = ' ';
+        }
+
+        return $errorMessage !== '' ? ResultUtil::errorResult($errorMessage, Response::HTTP_PRECONDITION_REQUIRED) : true;
     }
 }

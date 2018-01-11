@@ -801,13 +801,29 @@ class AnimalRepository extends BaseRepository
 
     /**
      * @param array $ids
+     * @param bool $useIdAsKey
      * @param bool $onlyReturnQuery
      * @return array|\Doctrine\ORM\Query
      * @throws \Doctrine\ORM\Query\QueryException
      */
-    public function findByIds(array $ids = [], $onlyReturnQuery = false)
+    public function findByIds(array $ids = [], $useIdAsKey = false, $onlyReturnQuery = false)
     {
         $qb = $this->createQueryBuilder(self::ANIMAL_ALIAS)->addCriteria(AnimalCriteria::byIds($ids));
+
+        if ($useIdAsKey && $onlyReturnQuery === false) {
+             $animals = $this->returnQueryOrResult($qb, false);
+             $resultWithIdAsKeys = [];
+             /**
+              * @var int $key
+              * @var Animal $animal
+              */
+            foreach ($animals as $key => $animal) {
+                 $resultWithIdAsKeys[$animal->getId()] = $animal;
+            }
+            $animals = null;
+            return $resultWithIdAsKeys;
+        }
+
         return $this->returnQueryOrResult($qb, $onlyReturnQuery);
     }
 
