@@ -6,6 +6,7 @@ use AppBundle\Component\Count;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\GenderType;
@@ -19,6 +20,7 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -721,6 +723,78 @@ class AnimalRepository extends BaseRepository
     $uln = Utils::getUlnFromString($ulnString);
     return $this->findByUlnCountryCodeAndNumber($uln[Constant::ULN_COUNTRY_CODE_NAMESPACE], $uln[Constant::ULN_NUMBER_NAMESPACE] );
   }
+
+
+    /**
+     * @param string $ulnString
+     * @return Animal[]|Ram[]|array
+     */
+    public function findAnimalsByUlnString($ulnString)
+    {
+        $ulnParts = Utils::getUlnFromString($ulnString);
+
+        if ($ulnParts === null) {
+            return [];
+        }
+
+        return $this->findBy(
+            [
+                'ulnCountryCode' => $ulnParts[Constant::ULN_COUNTRY_CODE_NAMESPACE],
+                'ulnNumber' => $ulnParts[Constant::ULN_NUMBER_NAMESPACE],
+            ]);
+    }
+
+
+    /**
+     * @param string $stnString
+     * @return Animal[]|Ram[]|array
+     */
+    public function findAnimalsByStnString($stnString)
+    {
+        $stnParts = Utils::getStnFromString($stnString);
+
+        if ($stnParts === null) {
+            return [];
+        }
+
+        return $this->findBy(
+            [
+                'pedigreeCountryCode' => $stnParts[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE],
+                'pedigreeNumber' => $stnParts[Constant::PEDIGREE_NUMBER_NAMESPACE],
+            ]);
+    }
+
+
+    /**
+     * @param string $ulnOrStnString
+     * @param bool $includeInputType
+     * @return Animal[]|Ram[]|array
+     */
+    public function findAnimalsByUlnOrStnString($ulnOrStnString, $includeInputType = false)
+    {
+        $ulnOrStnString = StringUtil::removeSpaces($ulnOrStnString);
+
+        $animals = [];
+        $inputType = ReportLabel::INVALID;
+
+        if (Validator::verifyUlnFormat($ulnOrStnString, false)) {
+            $animals = $this->findAnimalsByUlnString($ulnOrStnString);
+            $inputType = ReportLabel::ULN;
+
+        } elseif (Validator::verifyPedigreeCountryCodeAndNumberFormat($ulnOrStnString, false)) {
+            $animals = $this->findAnimalsByStnString($ulnOrStnString);
+            $inputType = ReportLabel::STN;
+        }
+
+        if ($includeInputType) {
+            return [
+                JsonInputConstant::ANIMALS => $animals,
+                JsonInputConstant::TYPE => $inputType,
+            ];
+        }
+
+        return $animals;
+    }
 
 
   public function getAnimalByUlnOrPedigree($content)

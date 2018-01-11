@@ -370,4 +370,50 @@ abstract class ControllerServiceBase
     {
         return $this->userService->getSelectedUbn($request);
     }
+
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    protected function translateUcFirstLower($string)
+    {
+        return ucfirst(strtolower($this->translator->trans($string)));
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param array $jmsGroups
+     * @param boolean $enableMaxDepthChecks
+     * @param boolean $includeParentsInLitter
+     * @return array
+     */
+    public function getDecodedJsonOfAnimalWithParents(Animal $animal, array $jmsGroups = [], $enableMaxDepthChecks, $includeParentsInLitter = false)
+    {
+        $serializedAnimal = $this->getBaseSerializer()->getDecodedJson($animal, $jmsGroups, $enableMaxDepthChecks);
+
+        if ($animal->getParentFather() !== null) {
+            $serializedAnimal['parent_father'] = $this->getBaseSerializer()->getDecodedJson($animal->getParentFather(), [JmsGroup::PARENT_DATA]);
+        }
+        if ($animal->getParentMother() !== null) {
+            $serializedAnimal['parent_mother'] = $this->getBaseSerializer()->getDecodedJson($animal->getParentMother(), [JmsGroup::PARENT_DATA]);
+        }
+        if ($animal->getSurrogate() !== null) {
+            $serializedAnimal['surrogate'] = $this->getBaseSerializer()->getDecodedJson($animal->getSurrogate(), [JmsGroup::PARENT_DATA]);
+        }
+
+        $litter = $animal->getLitter();
+        if ($includeParentsInLitter && $litter !== null) {
+            if ($litter->getAnimalFather() !== null) {
+                $serializedAnimal['litter']['animal_father'] = $this->getBaseSerializer()->getDecodedJson($litter->getAnimalFather(), [JmsGroup::PARENT_DATA]);
+            }
+            if ($litter->getAnimalMother() !== null) {
+                $serializedAnimal['litter']['animal_mother'] = $this->getBaseSerializer()->getDecodedJson($litter->getAnimalMother(), [JmsGroup::PARENT_DATA]);
+            }
+        }
+
+        return $serializedAnimal;
+    }
+
 }

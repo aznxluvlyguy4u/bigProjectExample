@@ -7,6 +7,7 @@ class JsonInputConstant
 {
     const ID = 'id';
     const DASHBOARD_TYPE = 'dashboard_type';
+    const PLAIN_TEXT_INPUT = 'plain_text_input';
 
     //Admins
     const ADMINS = 'admins';
@@ -65,6 +66,9 @@ class JsonInputConstant
     const EXCLUDE_MOTHER = 'exclude_mother';
     const EXCLUDE_FATHER = 'exclude_father';
     const GENERATIONS = 'generations';
+    const SEPARATOR = 'separator';
+    const ULNS_WITHOUT_FOUND_ANIMALS = 'ulns_without_found_animals';
+    const STNS_WITHOUT_FOUND_ANIMALS = 'stns_without_found_animals';
 
     //Request & Response
     const ERROR_CODE = 'error_code';

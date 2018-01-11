@@ -10,6 +10,7 @@ class JmsGroup
     const ADDRESS = 'ADDRESS';
     const ADMIN_HIDDEN_STATUS = 'ADMIN_HIDDEN_STATUS';
     const ANIMAL_DETAILS = 'ANIMAL_DETAILS';
+    const ANIMALS_BATCH_EDIT = 'ANIMALS_BATCH_EDIT';
 
     const BASIC = 'BASIC';
 
@@ -30,6 +31,7 @@ class JmsGroup
     const MINIMAL = 'MINIMAL';
 
     const PARENTS = 'PARENTS';
+    const PARENT_DATA = 'PARENT_DATA';
 
     const TREATMENT_TEMPLATE = 'TREATMENT_TEMPLATE';
     const TREATMENT_TEMPLATE_MIN = 'TREATMENT_TEMPLATE_MIN';

@@ -41,6 +41,7 @@ class Location
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC"
      * })
      * @Expose
@@ -56,6 +57,7 @@ class Location
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ANIMAL_DETAILS",
+   *     "ANIMALS_BATCH_EDIT",
    *     "BASIC",
    *     "LIVESTOCK",
    *     "MINIMAL",
@@ -177,7 +179,8 @@ class Location
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
    * @JMS\Type("AppBundle\Entity\Company")
    * @JMS\Groups({
-   *     "ANIMAL_DETAILS"
+   *     "ANIMAL_DETAILS",
+   *     "ANIMALS_BATCH_EDIT",
    * })
    * @JMS\MaxDepth(depth=2)
    * @Expose
@@ -263,6 +266,7 @@ class Location
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "MINIMAL",
      *     "TREATMENT_TEMPLATE"

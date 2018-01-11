@@ -35,7 +35,8 @@ class Company
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      * })
      */
     private $companyId;
@@ -59,6 +60,7 @@ class Company
     * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "UBN"
      * })
     */

@@ -55,10 +55,12 @@ abstract class Animal
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "MIXBLUP",
+     *     "PARENT_DATA",
      *     "TREATMENT_TEMPLATE",
      *     "USER_MEASUREMENT"
      * })
@@ -70,6 +72,9 @@ abstract class Animal
      * @ORM\Column(type="datetime", options={"default":"CURRENT_TIMESTAMP"}, nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "ANIMALS_BATCH_EDIT"
+     * })
      */
     protected $creationDate;
 
@@ -87,10 +92,12 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "MIXBLUP",
+     *     "PARENT_DATA",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -106,10 +113,12 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "MIXBLUP",
+     *     "PARENT_DATA",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -122,7 +131,9 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "DECLARE"
+     *     "ANIMALS_BATCH_EDIT",
+     *     "DECLARE",
+     *     "PARENT_DATA"
      * })
      */
     protected $name;
@@ -135,6 +146,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK"
@@ -149,6 +161,7 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "LIVESTOCK"
      * })
      */
@@ -162,6 +175,7 @@ abstract class Animal
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "MINIMAL",
@@ -180,6 +194,7 @@ abstract class Animal
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE"
      * })
@@ -193,6 +208,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
@@ -263,6 +279,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE"
      * })
      */
@@ -287,6 +304,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE"
      * })
      */
@@ -370,6 +388,7 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "LIVESTOCK"
      * })
@@ -383,6 +402,7 @@ abstract class Animal
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
@@ -400,11 +420,13 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "MINIMAL",
      *     "MIXBLUP",
+     *     "PARENT_DATA",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "USER_MEASUREMENT"
@@ -421,11 +443,13 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "MINIMAL",
      *     "MIXBLUP",
+     *     "PARENT_DATA",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "USER_MEASUREMENT"
@@ -480,6 +504,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE"
      * })
      */
@@ -569,6 +594,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "USER_MEASUREMENT"
@@ -582,6 +608,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "USER_MEASUREMENT"
@@ -625,7 +652,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $predicate;
@@ -635,7 +663,8 @@ abstract class Animal
      * @JMS\Type("integer")
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $predicateScore;
@@ -646,6 +675,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "USER_MEASUREMENT"
      * })
@@ -659,7 +689,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $blindnessFactor;
@@ -670,7 +701,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true, options={"default":null})
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $myoMax;
@@ -681,7 +713,8 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $litter;
@@ -700,7 +733,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $note;
@@ -712,6 +746,7 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\PedigreeRegister")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "USER_MEASUREMENT"
      * })
@@ -731,6 +766,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "ERROR_DETAILS"
      * })
      */
@@ -741,7 +777,8 @@ abstract class Animal
      * @JMS\Type("boolean")
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $lambar;
@@ -766,7 +803,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $nickname;
@@ -776,7 +814,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $collarColor;
@@ -786,7 +825,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $collarNumber;

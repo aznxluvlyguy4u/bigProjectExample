@@ -584,6 +584,16 @@ class StringUtil
      * @param string $string
      * @return string
      */
+    public static function removeSpaces($string)
+    {
+        return strtr($string, [' ' => '']);
+    }
+
+
+    /**
+     * @param string $string
+     * @return string
+     */
     public static function replaceSpacesWithUnderscores($string)
     {
         return strtr($string, [' ' => '_']);

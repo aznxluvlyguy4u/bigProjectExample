@@ -21,4 +21,6 @@ class QueryParameter
     const USER_ACTION_TYPE = 'user_action_type';
     const USER_ACCOUNT_ID = 'user_account_id';
     const LANGUAGE = 'language';
+    const PLAIN_TEXT_INPUT = 'plain_text_input';
+    const ASSOCIATIVE_ARRAY_OUTPUT = 'associative_array_output';
 }

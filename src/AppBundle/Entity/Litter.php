@@ -89,6 +89,7 @@ class Litter extends DeclareNsfoBase
      * @JMS\Type("integer")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "ERROR_DETAILS"
      * })
@@ -102,6 +103,7 @@ class Litter extends DeclareNsfoBase
      * @JMS\Type("integer")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "ERROR_DETAILS"
      * })
@@ -175,6 +177,7 @@ class Litter extends DeclareNsfoBase
      * @JMS\SerializedName("n_ling")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC"
      * })
      *

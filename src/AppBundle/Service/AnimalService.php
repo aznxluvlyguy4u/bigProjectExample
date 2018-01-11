@@ -7,6 +7,7 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\AnimalAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
@@ -27,6 +28,8 @@ use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\StringUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -35,6 +38,125 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
 {
+
+    /**
+     * @param Request $request
+     * @return JsonResponse|bool
+     */
+    public function getAnimals(Request $request)
+    {
+        if (RequestUtil::getBooleanQuery($request, QueryParameter::PLAIN_TEXT_INPUT, true)) {
+            return $this->getAnimalsByPlainTextInput($request);
+        }
+
+        return $this->getAllAnimalsByTypeOrState($request);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse|bool
+     */
+    private function getAnimalsByPlainTextInput(Request $request)
+    {
+        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+            AdminValidator::getStandardErrorResponse();
+        }
+
+        $validationResult = $this->validateAnimalsByPlainTextInputRequest($request);
+        if ($validationResult instanceof JsonResponse) {
+            return $validationResult;
+        }
+
+        $content = RequestUtil::getContentAsArray($request);
+        $plainTextInput = $content->get(JsonInputConstant::PLAIN_TEXT_INPUT);
+        $separator = $content->get(JsonInputConstant::SEPARATOR);
+
+        $ulnsWithMissingAnimals = [];
+        $stnsWithMissingAnimals = [];
+        $incorrectInputs = [];
+        $totalFoundAnimals = [];
+
+        $parts = explode($separator, $plainTextInput);
+        foreach ($parts as $part) {
+            $ulnOrStnString = StringUtil::removeSpaces($part);
+            $animalsResult = $this->getManager()->getRepository(Animal::class)
+                ->findAnimalsByUlnOrStnString($ulnOrStnString, true);
+
+            $inputType = $animalsResult[JsonInputConstant::TYPE];
+            $animals = $animalsResult[JsonInputConstant::ANIMALS];
+
+            if ($inputType === ReportLabel::INVALID) {
+                $incorrectInputs[] = trim($part);
+                continue;
+            }
+
+            if (count($animals) === 0) {
+                if ($inputType === ReportLabel::ULN) {
+                    $ulnsWithMissingAnimals[] = $ulnOrStnString;
+
+                } elseif ($inputType === ReportLabel::STN) {
+                    $stnsWithMissingAnimals[] = $ulnOrStnString;
+
+                } else {
+                    $incorrectInputs[] = trim($part);
+                }
+
+                continue;
+            }
+
+            /** @var Animal $animal */
+            foreach ($animals as $animal) {
+                $serializedAnimal = $this->getDecodedJsonOfAnimalWithParents(
+                    $animal,
+                    [JmsGroup::ANIMALS_BATCH_EDIT],
+                    true,
+                    true
+                );
+                $totalFoundAnimals[$animal->getId()] = $serializedAnimal;
+            }
+        }
+
+        return ResultUtil::successResult([
+            JsonInputConstant::ANIMALS => array_values($totalFoundAnimals),
+            JsonInputConstant::ULNS_WITHOUT_FOUND_ANIMALS => $ulnsWithMissingAnimals,
+            JsonInputConstant::STNS_WITHOUT_FOUND_ANIMALS => $stnsWithMissingAnimals,
+            ReportLabel::INVALID => $incorrectInputs,
+        ]);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse|bool
+     */
+    private function validateAnimalsByPlainTextInputRequest(Request $request)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+
+        if ($content === null) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('CONTENT IS MISSING.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        $errorMessage = '';
+        $errorMessagePrefix = '';
+
+        if ($content->get(JsonInputConstant::PLAIN_TEXT_INPUT) === null) {
+            $errorMessage .= $errorMessagePrefix . $this->translateUcFirstLower('THE PLAIN_TEXT_INPUT FIELD IS MISSING.');
+            $errorMessagePrefix = ' ';
+        }
+
+        if ($content->get(JsonInputConstant::SEPARATOR) === null) {
+            $errorMessage .= $errorMessagePrefix . $this->translateUcFirstLower('THE SEPARATOR FIELD IS MISSING.');
+        }
+
+        if ($errorMessage !== '') {
+            return ResultUtil::errorResult($errorMessage, Response::HTTP_BAD_REQUEST);
+        }
+
+        return true;
+    }
+
 
     /**
      * @param Request $request

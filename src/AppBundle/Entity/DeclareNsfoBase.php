@@ -49,6 +49,7 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
+     *     "ANIMALS_BATCH_EDIT",
      *     "ERROR_DETAILS"
      * })
      */
