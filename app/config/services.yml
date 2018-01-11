@@ -137,6 +137,9 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\AnimalDetailsUpdaterService
 
+    AppBundle\Service\AnimalDetailsBatchUpdaterService:
+        parent: app.abstract_base.controller
+
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
         arguments: ['@doctrine.orm.entity_manager']

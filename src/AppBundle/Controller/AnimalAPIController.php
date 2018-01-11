@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\AnimalDetailsBatchUpdaterService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -334,6 +335,34 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   {
       return $this->get('app.animal.details.updater')->updateAnimalDetails($request, $ulnString);
   }
+
+
+    /**
+     * Batch update animal details
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Batch update animal details"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-details")
+     * @Method("PUT")
+     */
+    function batchUpdateAnimalDetails(Request $request)
+    {
+        return $this->get(AnimalDetailsBatchUpdaterService::class)->updateAnimalDetails($request);
+    }
+
 
   /**
    * Get Animal Details by ULN. For example NL100029511721
