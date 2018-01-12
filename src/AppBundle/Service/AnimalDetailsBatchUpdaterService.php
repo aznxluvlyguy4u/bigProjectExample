@@ -51,6 +51,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         try {
             $currentAnimalsResult = $this->getManager()->getRepository(Animal::class)->findByIds($ids, true);
         } catch (\Exception $exception) {
+            $this->getLogger()->error($exception->getMessage());
+            $this->getLogger()->error($exception->getTraceAsString());
             return ResultUtil::errorResult('BAD REQUEST', Response::HTTP_BAD_REQUEST);
         }
 
@@ -60,16 +62,75 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         }
 
 
+
+        $this->getManager()->getConnection()->beginTransaction();
+        $this->getManager()->getConnection()->setAutoCommit(false);
+
+        try {
+
+            $updateAnimalResults = $this->updateValues($animalsWithNewValues, $currentAnimalsResult);
+            if ($updateAnimalResults instanceof JsonResponse) {
+                $this->getManager()->getConnection()->rollBack();
+                return $updateAnimalResults;
+            }
+
+            $this->logChanges();
+
+            $serializedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults);
+
+            $this->getManager()->getConnection()->commit();
+
+            return ResultUtil::successResult([
+                JsonInputConstant::ANIMALS => $serializedAnimalsOutput[JsonInputConstant::ANIMALS]
+            ]);
+
+        } catch (\Exception $exception) {
+
+            try {
+                $this->getManager()->getConnection()->rollBack();
+            } catch (\Exception $rollBackException) {
+                $this->getLogger()->error($rollBackException->getTraceAsString());
+            }
+
+            $this->getLogger()->error($exception->getTraceAsString());
+
+            $errorMessage =
+                $this->translateUcFirstLower('SOMETHING WENT WRONG WHEN PERSISTING THE CHANGES') .'. '.
+                $this->translateUcFirstLower('THE CHANGES WERE NOT SAVED') .'. '
+            ;
+            return ResultUtil::errorResult($errorMessage, Response::HTTP_INTERNAL_SERVER_ERROR);
+
+        }
+    }
+
+
+    /**
+     * @param Animal[] $animalsWithNewValues
+     * @param Animal[] $retrievedAnimals
+     * @return Animal[]|JsonResponse
+     */
+    private function updateValues(array $animalsWithNewValues, array $retrievedAnimals)
+    {
         // TODO update changed values
 
+        foreach ($animalsWithNewValues as $animalsWithNewValue) {
+            $animalId = $animalsWithNewValue->getId();
+            $retrievedAnimal = ArrayUtil::get($animalId, $retrievedAnimals);
+
+            if ($retrievedAnimal === null) {
+                return ResultUtil::errorResult('VALIDATE ANIMAL IDS A BEGINNING OF CALL', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+
+        }
+
+        return $retrievedAnimals;
+    }
+
+
+    private function logChanges()
+    {
         // TODO log changes
-
-
-        $serializedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $currentAnimalsResult);
-
-        return ResultUtil::successResult([
-            JsonInputConstant::ANIMALS => $serializedAnimalsOutput[JsonInputConstant::ANIMALS]
-        ]);
     }
 
 
