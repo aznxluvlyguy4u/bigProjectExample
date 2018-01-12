@@ -34,6 +34,8 @@ use Symfony\Component\HttpFoundation\Response;
 class Validator
 {
     const DEFAULT_MIN_PASSWORD_LENGTH = 6;
+    const ULN_NUMBER_LENGTH = 12;
+    const ULN_COUNTRY_CODE_LENGTH = 2;
 
 
     /**
@@ -84,16 +86,15 @@ class Validator
             $pregMatch = "/([A-Z]{2})+([0-9]{8,12})/";
         }
 
-        return preg_match($pregMatch,$ulnString);
+        return preg_match($pregMatch,$ulnString) && strlen($ulnString) === self::ULN_COUNTRY_CODE_LENGTH + self::ULN_NUMBER_LENGTH;
     }
 
 
     public static function verifyUlnNumberFormat($ulnNumber)
     {
-        $ulnLength = 12;
         $pregMatch = "/([0-9]{12})/";
 
-        return preg_match($pregMatch,$ulnNumber) && strlen($ulnNumber) == $ulnLength;
+        return preg_match($pregMatch,$ulnNumber) && strlen($ulnNumber) === self::ULN_NUMBER_LENGTH;
     }
 
 
