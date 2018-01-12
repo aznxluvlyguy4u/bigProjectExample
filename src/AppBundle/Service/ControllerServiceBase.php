@@ -38,6 +38,7 @@ use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -55,6 +56,8 @@ abstract class ControllerServiceBase
     private $userService;
     /** @var TranslatorInterface */
     protected $translator;
+    /** @var Logger */
+    private $logger;
 
     /** @var string */
     private $actionLogEditMessage;
@@ -63,7 +66,8 @@ abstract class ControllerServiceBase
                                 CacheService $cacheService,
                                 EntityManagerInterface $manager,
                                 UserService $userService,
-                                TranslatorInterface $translator
+                                TranslatorInterface $translator,
+                                Logger $logger
     )
     {
         $this->baseSerializer = $baseSerializer;
@@ -71,6 +75,7 @@ abstract class ControllerServiceBase
         $this->manager = $manager;
         $this->userService = $userService;
         $this->translator = $translator;
+        $this->logger = $logger;
     }
 
 
@@ -101,6 +106,14 @@ abstract class ControllerServiceBase
     }
 
 
+    /**
+     * @return Logger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
+    }
+
 
     /**
      * Clears the redis cache for the Livestock of a given location , to reflect changes of animals on Livestock.
@@ -120,6 +133,9 @@ abstract class ControllerServiceBase
     {
         return $this->cacheService;
     }
+
+
+
 
 
     /**
