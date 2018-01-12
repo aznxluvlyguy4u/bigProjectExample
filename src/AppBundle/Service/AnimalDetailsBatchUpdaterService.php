@@ -7,8 +7,10 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\Validator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -120,7 +122,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             }
         }
 
-        return $errorMessage !== '' ? ResultUtil::errorResult($errorMessage, Response::HTTP_PRECONDITION_REQUIRED) : true;
+        return $this->validationResult($errorMessage);
     }
 
 
@@ -131,18 +133,42 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      */
     private function validateInputWithDatabaseValues(array $animalsWithNewValues, array $currentAnimalsResult)
     {
-        //TODO validate for duplicate ulns inside the database
+        $newUlnsByAnimalId = [];
+        $newStnsByAnimalId = [];
 
-        //TODO validate for duplicate stns inside the database
+        $newUlnsWithInvalidFormatByAnimalId = [];
+        $newStnsWithInvalidFormatByAnimalId = [];
 
         $idsNotFound = [];
         /** @var  $animalsWithNewValue */
         foreach ($animalsWithNewValues as $animalsWithNewValue)
         {
-            if (!key_exists($animalsWithNewValue->getId(), $currentAnimalsResult)) {
-                $idsNotFound[$animalsWithNewValue->getId()] = $animalsWithNewValue->getId();
+            $animalId = $animalsWithNewValue->getId();
+            if (!key_exists($animalId, $currentAnimalsResult)) {
+                $idsNotFound[$animalId] = $animalId;
+            }
+
+            $currentAnimal = $currentAnimalsResult[$animalId];
+
+            $newUln = $animalsWithNewValue->getUln();
+            if ($currentAnimal->getUln() !== $newUln) {
+                if (Validator::verifyUlnFormat($newUln, false)) {
+                    $newUlnsByAnimalId[$animalId] = $newUln;
+                } else {
+                    $newUlnsWithInvalidFormatByAnimalId[$animalId] = $newUln;
+                }
+            }
+
+            $newStn = $animalsWithNewValue->getPedigreeString();
+            if ($currentAnimal->getPedigreeString() !== $newStn) {
+                if (Validator::verifyPedigreeCountryCodeAndNumberFormat($newStn, false)) {
+                    $newStnsByAnimalId[$animalId] = $newStn;
+                } else {
+                    $newStnsWithInvalidFormatByAnimalId[$animalId] = $newStn;
+                }
             }
         }
+
 
         $errorMessage = '';
         $prefix = '';
@@ -151,6 +177,41 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $prefix = ' ';
         }
 
+        if (count($newUlnsWithInvalidFormatByAnimalId) > 0) {
+            $errorMessage .= $prefix . $this->translateUcFirstLower('THE FOLLOWING ULNS HAVE AN INCORRECT FORMAT') . ': '.ArrayUtil::implode($newUlnsWithInvalidFormatByAnimalId).'.';
+            $prefix = ' ';
+        }
+
+        if (count($newStnsWithInvalidFormatByAnimalId) > 0) {
+            $errorMessage .= $prefix . $this->translateUcFirstLower('THE FOLLOWING STNS HAVE AN INCORRECT FORMAT') . ': '.ArrayUtil::implode($newStnsWithInvalidFormatByAnimalId).'.';
+            $prefix = ' ';
+        }
+
+        $validationResult1 = $this->validationResult($errorMessage);
+        if ($validationResult1 instanceof JsonResponse) {
+            return $validationResult1;
+        }
+
+
+        //TODO validate for duplicate ulns inside the database
+
+
+
+        //TODO validate for duplicate stns inside the database
+
+
+
+
+        return $this->validationResult($errorMessage);
+    }
+
+
+    /**
+     * @param string $errorMessage
+     * @return JsonResponse|bool
+     */
+    private function validationResult($errorMessage = '')
+    {
         return $errorMessage !== '' ? ResultUtil::errorResult($errorMessage, Response::HTTP_PRECONDITION_REQUIRED) : true;
     }
 }
