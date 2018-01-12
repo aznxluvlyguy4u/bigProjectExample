@@ -43,6 +43,11 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             return $inputOnlyValidationResult;
         }
 
+        $inputValidationValidationResult = $this->validateFormat($animalsWithNewValues);
+        if ($inputValidationValidationResult instanceof JsonResponse) {
+            return $inputValidationValidationResult;
+        }
+
         try {
             $currentAnimalsResult = $this->getManager()->getRepository(Animal::class)->findByIds($ids, true);
         } catch (\Exception $exception) {
@@ -111,13 +116,70 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         $prefix = '';
         foreach ($duplicateValuesSets as $typeKey => $duplicateValues) {
             if (count($duplicateValues) > 0) {
+
                 switch ($typeKey) {
                     case JsonInputConstant::ULN: $errorMessageKey = 'THE FOLLOWING DUPLICATE ULNS WERE INSERTED'; break;
                     case JsonInputConstant::STN: $errorMessageKey = 'THE FOLLOWING DUPLICATE PEDIGREE NUMBERS WERE INSERTED'; break;
                     case JsonInputConstant::ID: $errorMessageKey = 'THE FOLLOWING DUPLICATE IDS WERE INSERTED'; break;
-                    default: break;
+                    default: $errorMessageKey = null; break;
                 }
+                if ($errorMessageKey === null) {
+                    continue;
+                }
+
                 $errorMessage .= $prefix . $this->translateUcFirstLower($errorMessageKey) . ': '.implode(', ', $duplicateValues).'.';
+                $prefix = ' ';
+            }
+        }
+
+        return $this->validationResult($errorMessage);
+    }
+
+
+    /**
+     * @param Animal[] $animalsWithNewValues
+     * @return JsonResponse|bool
+     */
+    private function validateFormat(array $animalsWithNewValues = [])
+    {
+        $incorrectFormatSets = [
+            JsonInputConstant::UBN => [],
+            JsonInputConstant::BREED_TYPE => [],
+            JsonInputConstant::BLINDNESS_FACTOR => [],
+        ];
+
+        foreach ($animalsWithNewValues as $animalsWithNewValue) {
+            $animalId = $animalsWithNewValue->getId();
+            if ($animalsWithNewValue->getUbn() !== null) {
+                if (!Validator::hasValidUbnFormat($animalsWithNewValue->getUbn())) {
+                    $incorrectFormatSets[JsonInputConstant::UBN][$animalId] = $animalsWithNewValue->getUbn();
+                }
+            }
+
+            if (!Validator::hasValidBreedType($animalsWithNewValue->getBreedType(), true)) {
+                $incorrectFormatSets[JsonInputConstant::BREED_TYPE][$animalId] = $animalsWithNewValue->getBreedType();
+            }
+
+            if (!Validator::hasValidBlindnessFactorType($animalsWithNewValue->getBlindnessFactor(), true)) {
+                $incorrectFormatSets[JsonInputConstant::BLINDNESS_FACTOR][$animalId] = $animalsWithNewValue->getBlindnessFactor();
+            }
+        }
+
+        $errorMessage = '';
+        $prefix = '';
+        foreach ($incorrectFormatSets as $typeKey => $incorrectFormatSet) {
+            if (count($incorrectFormatSet) > 0) {
+                switch ($typeKey) {
+                    case JsonInputConstant::UBN: $errorMessageKey = 'THE FOLLOWING UBNS HAVE AN INCORRECT FORMAT'; break;
+                    case JsonInputConstant::BREED_TYPE: $errorMessageKey = 'THE FOLLOWING BREED TYPES HAVE AN INCORRECT FORMAT'; break;
+                    case JsonInputConstant::BLINDNESS_FACTOR: $errorMessageKey = 'THE FOLLOWING BLINDNESS FACTORS HAVE AN INCORRECT FORMAT'; break;
+                    default: $errorMessageKey = null; break;
+                }
+                if ($errorMessageKey === null) {
+                    continue;
+                }
+
+                $errorMessage .= $prefix . $this->translateUcFirstLower($errorMessageKey) . ': '.implode(', ', $incorrectFormatSet).'.';
                 $prefix = ' ';
             }
         }

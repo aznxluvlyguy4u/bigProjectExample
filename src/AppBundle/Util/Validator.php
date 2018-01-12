@@ -21,6 +21,8 @@ use AppBundle\Entity\Mate;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Token;
+use AppBundle\Enumerator\BlindnessFactorType;
+use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\NullChecker;
@@ -37,6 +39,10 @@ class Validator
     const ULN_NUMBER_LENGTH = 12;
     const ULN_COUNTRY_CODE_LENGTH = 2;
 
+    /** @var array */
+    private static $validBreedTypes = [];
+    /** @var array */
+    private static $validBlindFactors = [];
 
     /**
      * @param float $number
@@ -542,6 +548,44 @@ class Validator
         }
 
         return $sum%10 == 0;
+    }
+
+
+    /**
+     * @param string $breedType
+     * @param bool $allowEmpty
+     * @return bool
+     */
+    public static function hasValidBreedType($breedType, $allowEmpty = true)
+    {
+        if (count(self::$validBreedTypes) === 0) {
+            self::$validBreedTypes = BreedType::getConstants();
+        }
+
+        if ($breedType === null) {
+            return $allowEmpty;
+        }
+
+        return key_exists($breedType, self::$validBreedTypes);
+    }
+
+
+    /**
+     * @param string $blindnessFactor
+     * @param bool $allowEmpty
+     * @return bool
+     */
+    public static function hasValidBlindnessFactorType($blindnessFactor, $allowEmpty = true)
+    {
+        if (count(self::$validBlindFactors) === 0) {
+            self::$validBlindFactors = BlindnessFactorType::getConstants();
+        }
+
+        if ($blindnessFactor === null) {
+            return $allowEmpty;
+        }
+
+        return key_exists($blindnessFactor, self::$validBlindFactors);
     }
 
 
