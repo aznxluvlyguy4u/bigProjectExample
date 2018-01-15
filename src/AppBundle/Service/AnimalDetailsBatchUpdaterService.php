@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
@@ -39,6 +40,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     private $retrievedLocationsByLocationId;
     /** @var PedigreeRegister[] */
     private $retrievedPedigreeRegistersById;
+    /** @var array */
+    private $parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated;
 
     /* Parent error messages */
     const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
@@ -132,12 +135,6 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 $this->getManager()->getConnection()->rollBack();
             }
 
-            $serializedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults);
-
-            return ResultUtil::successResult([
-                JsonInputConstant::ANIMALS => $serializedAnimalsOutput[JsonInputConstant::ANIMALS]
-            ]);
-
         } catch (\Exception $exception) {
 
             try {
@@ -155,7 +152,39 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             return ResultUtil::errorResult($errorMessage, Response::HTTP_INTERNAL_SERVER_ERROR);
 
         }
+
+        $updateIndirectValuesResult = $this->updateIndirectSecondaryValues();
+        if ($updateAnimalResults instanceof JsonResponse) {
+            return $updateIndirectValuesResult;
+        }
+
+        $serializedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults);
+
+        return ResultUtil::successResult([
+            JsonInputConstant::ANIMALS => $serializedAnimalsOutput[JsonInputConstant::ANIMALS]
+        ]);
     }
+
+
+    /**
+     * @return JsonResponse|true
+     */
+    private function updateIndirectSecondaryValues()
+    {
+        try {
+            $isBreedCodeUpdated = count($this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated) > 0;
+            if($isBreedCodeUpdated) {
+                //Update heterosis and recombination values of parent and children if breedCode of parent was changed
+                GeneDiversityUpdater::updateByParentIds($this->getConnection(), $this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated);
+            }
+        } catch (\Exception $exception) {
+            $this->getLogger()->error($exception->getTraceAsString(), $exception->getCode());
+            return ResultUtil::errorResult('SOMETHING WENT WRONG WHILE UPDATING THE BREED CODES, BUT THE PRIMARY VALUES WERE CORRECTLY UPDATED', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return true;
+    }
+
 
 
     /**
@@ -280,7 +309,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      */
     private function updateValues(array $animalsWithNewValues, array $retrievedAnimals)
     {
-        $this->clearActionLogMessages();
+        $this->initializeUpdateValues();
 
         foreach ($animalsWithNewValues as $animalsWithNewValue) {
             $animalId = $animalsWithNewValue->getId();
@@ -442,6 +471,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $oldBreedCode = $retrievedAnimal->getBreedCode();
             $retrievedAnimal->setBreedCode($animalsWithNewValue->getBreedCode());
             $this->updateCurrentActionLogMessage('rascode', $oldBreedCode, $animalsWithNewValue->getBreedCode());
+            $this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated[] = $retrievedAnimal->getId();
         }
 
         if($animalsWithNewValue->getScrapieGenotype() !== $retrievedAnimal->getScrapieGenotype()) {
@@ -738,8 +768,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     }
 
 
-    private function clearActionLogMessages()
+    private function initializeUpdateValues()
     {
+        $this->$this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated = [];
         $this->anyValueWasUpdated = false;
         $this->clearCurrentActionLogMessage();
     }
