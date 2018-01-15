@@ -504,6 +504,27 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $this->updateCurrentActionLogMessage('blindfactor', $oldBlindnessFactor, $newBlindnessFactor);
         }
 
+        $newMyoMax = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getMyoMax());
+        $oldMyoMax = $retrievedAnimal->getMyoMax();
+        if($oldMyoMax !== $newMyoMax) {
+            $retrievedAnimal->setMyoMax($newMyoMax);
+            $this->updateCurrentActionLogMessage('MyoMax', $oldMyoMax, $newMyoMax);
+        }
+
+        $newPredicate = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getPredicate());
+        $oldPredicate = $retrievedAnimal->getPredicate();
+        if($oldPredicate !== $newPredicate) {
+            $retrievedAnimal->setPredicate($newPredicate);
+            $this->updateCurrentActionLogMessage('Predikaat', $oldPredicate, $newPredicate);
+        }
+
+        $newPredicateScore = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getPredicateScore());
+        $oldPredicateScore = $retrievedAnimal->getPredicateScore();
+        if($oldPredicateScore !== $newPredicateScore) {
+            $retrievedAnimal->setPredicateScore($newPredicateScore);
+            $this->updateCurrentActionLogMessage('PredikaatScore', $oldPredicateScore, $newPredicateScore);
+        }
+
         $newCollarColar = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getCollarColor());
         $newCollarNumber = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getCollarNumber());
         if($retrievedAnimal->getCollarColor() !== $newCollarColar ||
