@@ -42,7 +42,8 @@ class Location
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
-     *     "BASIC"
+     *     "BASIC",
+     *     "MINIMAL"
      * })
      * @Expose
      */
