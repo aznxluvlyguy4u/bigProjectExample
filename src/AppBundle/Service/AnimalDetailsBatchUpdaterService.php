@@ -874,6 +874,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      */
     private function getLocationByLocationId($locationId)
     {
+        if ($this->retrievedLocationsByLocationId === null) {
+            $this->retrievedLocationsByLocationId = [];
+        }
+
         if (!key_exists($locationId, $this->retrievedLocationsByLocationId)) {
             $this->retrievedLocationsByLocationId[$locationId] = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $locationId]);
         }
@@ -888,6 +892,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      */
     private function getPedigreeRegisterById($pedigreeRegisterId)
     {
+        if ($this->retrievedPedigreeRegistersById === null) {
+            $this->retrievedPedigreeRegistersById = [];
+        }
+        
         if (!key_exists($pedigreeRegisterId, $this->retrievedPedigreeRegistersById)) {
             $this->retrievedPedigreeRegistersById[$pedigreeRegisterId] = $this->getManager()->getRepository(PedigreeRegister::class)->find($pedigreeRegisterId);
         }
