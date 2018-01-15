@@ -246,34 +246,34 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                             continue;
                         }
 
-                        $parent = ArrayUtil::get($newParentId, $this->newParentsById);
-                        if ($parent === null) {
-                            $parent = $this->getManager()->getRepository(Animal::class)->find($newParentId);
+                        $retrievedParent = ArrayUtil::get($newParentId, $this->newParentsById);
+                        if ($retrievedParent === null) {
+                            $retrievedParent = $this->getManager()->getRepository(Animal::class)->find($newParentId);
                         }
 
-                        if ($parent === null) {
+                        if ($retrievedParent === null) {
                             $parentIdsWithoutFoundAnimals[$newParentId] = $parentClazz;
                             $errorSets[self::ERROR_NOT_FOUND][$newParentId] = $parentClazz;
                             continue;
                         }
 
                         if (
-                            ($parentClazz === Ram::class && !($parent instanceof Ram)) ||
-                            ($parentClazz === Ewe::class && !($parent instanceof Ewe))
+                            ($parentClazz === Ram::class && !($retrievedParent instanceof Ram)) ||
+                            ($parentClazz === Ewe::class && !($retrievedParent instanceof Ewe))
                         ) {
                             $errorSets[self::ERROR_INCORRECT_GENDER][$newParentId] = $parentClazz;
                             continue;
                         }
 
-                        if ($retrievedAnimal->getDateOfBirth() && $parent->getDateOfBirth()) {
-                            if ($retrievedAnimal->getDateOfBirth() < $parent->getDateOfBirth()) {
+                        if ($retrievedAnimal->getDateOfBirth() && $retrievedParent->getDateOfBirth()) {
+                            if ($retrievedAnimal->getDateOfBirth() < $retrievedParent->getDateOfBirth()) {
                                 $errorSets[self::ERROR_PARENT_YOUNGER_THAN_CHILD][$newParentId] = $parentClazz;
                                 continue;
                             }
                         }
 
                         // Parent is valid!
-                        $this->newParentsById[$newParentId] = $newParent;
+                        $this->newParentsById[$newParentId] = $retrievedParent;
                     }
                 }
 
