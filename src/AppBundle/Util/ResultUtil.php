@@ -39,6 +39,24 @@ class ResultUtil
 
 
     /**
+     * @return JsonResponse
+     */
+    public static function internalServerError()
+    {
+        return ResultUtil::errorResult('INTERNAL SERVER ERROR', Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    public static function badRequest()
+    {
+        return ResultUtil::errorResult('BAD REQUEST', Response::HTTP_BAD_REQUEST);
+    }
+
+
+    /**
      * @param string $message
      * @param int $code The HTTP code
      * @param array $errors

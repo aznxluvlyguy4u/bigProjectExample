@@ -116,6 +116,16 @@ abstract class ControllerServiceBase
 
 
     /**
+     * @param \Exception $exception
+     */
+    public function logExceptionAsError($exception)
+    {
+        $this->getLogger()->error($exception->getMessage());
+        $this->getLogger()->error($exception->getTraceAsString());
+    }
+
+
+    /**
      * Clears the redis cache for the Livestock of a given location , to reflect changes of animals on Livestock.
      *
      * @param Location $location

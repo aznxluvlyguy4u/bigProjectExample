@@ -115,9 +115,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             }
 
         } catch (\Exception $exception) {
-            $this->getLogger()->error($exception->getMessage());
-            $this->getLogger()->error($exception->getTraceAsString());
-            return ResultUtil::errorResult('BAD REQUEST', Response::HTTP_BAD_REQUEST);
+            $this->logExceptionAsError($exception);
+            return ResultUtil::badRequest();
         }
 
         $inputWithDatabaseValuesValidationResult = $this->validateInputWithDatabaseValues($animalsWithNewValues, $currentAnimalsResult);
@@ -150,10 +149,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             try {
                 $this->getManager()->getConnection()->rollBack();
             } catch (\Exception $rollBackException) {
-                $this->getLogger()->error($rollBackException->getTraceAsString());
+                $this->logExceptionAsError($rollBackException);
             }
 
-            $this->getLogger()->error($exception->getTraceAsString());
+            $this->logExceptionAsError($exception);
 
             $errorMessage =
                 $this->translateUcFirstLower('SOMETHING WENT WRONG WHEN PERSISTING THE CHANGES') .'. '.
@@ -194,7 +193,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 GeneDiversityUpdater::updateByParentIds($this->getConnection(), $this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated);
             }
         } catch (\Exception $exception) {
-            $this->getLogger()->error($exception->getTraceAsString());
+            $this->logExceptionAsError($exception);
             return ResultUtil::errorResult('SOMETHING WENT WRONG WHILE UPDATING THE BREED CODES, BUT THE PRIMARY VALUES WERE CORRECTLY UPDATED', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -350,8 +349,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 }
 
             } catch (\Exception $exception) {
-                $this->getLogger()->error($exception->getTraceAsString());
-                return ResultUtil::errorResult('SOMETHING WENT WRONG', Response::HTTP_INTERNAL_SERVER_ERROR);
+                $this->logExceptionAsError($exception);
+                return ResultUtil::internalServerError();
             }
 
         }
