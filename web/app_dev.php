@@ -27,7 +27,7 @@ $loader = require __DIR__.'/../app/autoload.php';
 Debug::enable();
 
 $kernel = new AppKernel('dev', true);
-$kernel->loadClassCache();
+// $kernel->loadClassCache(); depreciated since php 7
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);
 $response->send();
