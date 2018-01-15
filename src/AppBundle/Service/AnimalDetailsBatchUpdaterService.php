@@ -490,6 +490,20 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $this->updateCurrentActionLogMessage('nickname', $oldNickName, $newNickName);
         }
 
+        $newName = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getName());
+        if($retrievedAnimal->getName() !== $newName) {
+            $oldName = $retrievedAnimal->getName();
+            $retrievedAnimal->setName($newName);
+            $this->updateCurrentActionLogMessage('aiind', $oldName, $newName);
+        }
+
+        $newBlindnessFactor = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getBlindnessFactor());
+        if($retrievedAnimal->getBlindnessFactor() !== $newBlindnessFactor) {
+            $oldBlindnessFactor = $retrievedAnimal->getBlindnessFactor();
+            $retrievedAnimal->setBlindnessFactor($newBlindnessFactor);
+            $this->updateCurrentActionLogMessage('blindfactor', $oldBlindnessFactor, $newBlindnessFactor);
+        }
+
         $newCollarColar = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getCollarColor());
         $newCollarNumber = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getCollarNumber());
         if($retrievedAnimal->getCollarColor() !== $newCollarColar ||
