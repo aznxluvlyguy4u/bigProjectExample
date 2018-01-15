@@ -394,7 +394,10 @@ abstract class ControllerServiceBase
      */
     protected function translateUcFirstLower($string)
     {
-        return ucfirst(strtolower($this->translator->trans($string)));
+        return strtr(ucfirst(strtolower($this->translator->trans($string))), [
+            'ubn' => 'UBN',
+            'uln' => 'ULN'
+        ]);
     }
 
 
