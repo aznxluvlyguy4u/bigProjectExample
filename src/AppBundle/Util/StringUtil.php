@@ -608,4 +608,14 @@ class StringUtil
     {
         return strtoupper(substr($string, 0, 1));
     }
+
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    public static function convertEmptyStringToNull($string)
+    {
+        return $string === '' ? null : $string;
+    }
 }

@@ -461,14 +461,16 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             }
 
         }
-        
 
-        if($animalsWithNewValue->getPedigreeCountryCode() !== $retrievedAnimal->getPedigreeCountryCode() ||
-            $animalsWithNewValue->getPedigreeNumber() !== $retrievedAnimal->getPedigreeNumber()
+
+        $newPedigreeCountryCode = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getPedigreeCountryCode());
+        $newPedigreeNumber = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getPedigreeNumber());
+        if($retrievedAnimal->getPedigreeCountryCode() !== $newPedigreeCountryCode ||
+            $retrievedAnimal->getPedigreeNumber() !== $newPedigreeNumber
         ) {
             $oldStn = $retrievedAnimal->getPedigreeString();
-            $retrievedAnimal->setPedigreeCountryCode($animalsWithNewValue->getPedigreeCountryCode());
-            $retrievedAnimal->setPedigreeNumber($animalsWithNewValue->getPedigreeNumber());
+            $retrievedAnimal->setPedigreeCountryCode($newPedigreeCountryCode);
+            $retrievedAnimal->setPedigreeNumber($newPedigreeNumber);
             $this->updateCurrentActionLogMessage('stn', $oldStn, $animalsWithNewValue->getPedigreeString());
         }
 
@@ -482,34 +484,39 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $this->updateCurrentActionLogMessage('uln', $oldUln, $animalsWithNewValue->getUln());
         }
 
-        if($animalsWithNewValue->getNickname() !== $retrievedAnimal->getNickname()) {
+        $newNickName = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getNickname());
+        if($retrievedAnimal->getNickname() !== $newNickName) {
             $oldNickName = $retrievedAnimal->getNickname();
-            $retrievedAnimal->setNickname($animalsWithNewValue->getNickname());
-            $this->updateCurrentActionLogMessage('nickname', $oldNickName, $animalsWithNewValue->getNickname());
+            $retrievedAnimal->setNickname($newNickName);
+            $this->updateCurrentActionLogMessage('nickname', $oldNickName, $newNickName);
         }
 
-        if($animalsWithNewValue->getCollarColor() !== $retrievedAnimal->getCollarColor() ||
-            $animalsWithNewValue->getCollarNumber() !== $retrievedAnimal->getCollarNumber()
+        $newCollarColar = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getCollarColor());
+        $newCollarNumber = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getCollarNumber());
+        if($retrievedAnimal->getCollarColor() !== $newCollarColar ||
+            $retrievedAnimal->getCollarNumber() !== $newCollarNumber
         ) {
             $oldCollar = $retrievedAnimal->getCollarColorAndNumber();
-            $retrievedAnimal->setCollarColor($animalsWithNewValue->getCollarColor());
-            $retrievedAnimal->setCollarNumber($animalsWithNewValue->getCollarNumber());
+            $retrievedAnimal->setCollarColor($newCollarColar);
+            $retrievedAnimal->setCollarNumber($newCollarNumber);
             $this->updateCurrentActionLogMessage('halsband', $oldCollar, $animalsWithNewValue->getCollarColorAndNumber());
         }
 
         $breedCodeWasUpdated = false;
-        if($animalsWithNewValue->getBreedCode() !== $retrievedAnimal->getBreedCode()) {
+        $newBreedCode = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getBreedCode());
+        if($retrievedAnimal->getBreedCode() !== $newBreedCode) {
             $oldBreedCode = $retrievedAnimal->getBreedCode();
-            $retrievedAnimal->setBreedCode($animalsWithNewValue->getBreedCode());
-            $this->updateCurrentActionLogMessage('rascode', $oldBreedCode, $animalsWithNewValue->getBreedCode());
+            $retrievedAnimal->setBreedCode($newBreedCode);
+            $this->updateCurrentActionLogMessage('rascode', $oldBreedCode, $newBreedCode);
             $breedCodeWasUpdated = true;
             $this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated[] = $retrievedAnimal->getId();
         }
 
-        if($animalsWithNewValue->getScrapieGenotype() !== $retrievedAnimal->getScrapieGenotype()) {
+        $newScrapieGenotype = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getScrapieGenotype());
+        if($retrievedAnimal->getScrapieGenotype() !== $newScrapieGenotype) {
             $oldScrapieGenotype = $retrievedAnimal->getScrapieGenotype();
-            $retrievedAnimal->setScrapieGenotype($animalsWithNewValue->getScrapieGenotype());
-            $this->updateCurrentActionLogMessage('scrapieGenotype', $oldScrapieGenotype, $animalsWithNewValue->getScrapieGenotype());
+            $retrievedAnimal->setScrapieGenotype($newScrapieGenotype);
+            $this->updateCurrentActionLogMessage('scrapieGenotype', $oldScrapieGenotype, $newScrapieGenotype);
         }
 
 
@@ -552,24 +559,28 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         }
 
 
-        if($animalsWithNewValue->getNote() !== $retrievedAnimal->getNote()) {
+        $newNote = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getNote());
+        if($retrievedAnimal->getNote() !== $newNote) {
             $oldNote = $retrievedAnimal->getNote();
-            $retrievedAnimal->setNote($animalsWithNewValue->getNote());
-            $this->updateCurrentActionLogMessage('notitie', $oldNote, $animalsWithNewValue->getNote());
+            $retrievedAnimal->setNote($newNote);
+            $this->updateCurrentActionLogMessage('notitie', $oldNote, $newNote);
         }
 
-        $updatedBreedType = Translation::getEnglish($animalsWithNewValue->getBreedType());
+
+        $updatedBreedType = $animalsWithNewValue->getBreedType() == '' || $animalsWithNewValue->getBreedType() == null ? null
+            : Translation::getEnglish($animalsWithNewValue->getBreedType());
         if($updatedBreedType !== $retrievedAnimal->getBreedType()) {
-            $oldBreedType = $animalsWithNewValue->getBreedType();
+            $oldBreedType = $retrievedAnimal->getBreedType();
             $retrievedAnimal->setBreedType($updatedBreedType);
             $this->updateCurrentActionLogMessage('rasStatus', $oldBreedType, $updatedBreedType);
         }
 
 
-        if($animalsWithNewValue->getUbnOfBirth() !== $retrievedAnimal->getUbnOfBirth()) {
+        $newUbnOfBirthNumberOnly = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getUbnOfBirth());
+        if($retrievedAnimal->getUbnOfBirth() !== $newUbnOfBirthNumberOnly) {
             $oldUbnOfBirth = $retrievedAnimal->getUbnOfBirth();
-            $retrievedAnimal->setUbnOfBirth($animalsWithNewValue->getUbnOfBirth());
-            $this->updateCurrentActionLogMessage('fokkerUbn(alleen nummer)', $oldUbnOfBirth, $animalsWithNewValue->getUbnOfBirth());
+            $retrievedAnimal->setUbnOfBirth($newUbnOfBirthNumberOnly);
+            $this->updateCurrentActionLogMessage('fokkerUbn(alleen nummer)', $oldUbnOfBirth, $newUbnOfBirthNumberOnly);
         }
 
 
@@ -847,8 +858,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     private function updateCurrentActionLogMessage($type, $oldValue, $newValue)
     {
         if ($oldValue !== $newValue) {
-            $oldValue = $oldValue == '' ? $this->getEmptyLabel() : $oldValue;
-            $newValue = $newValue == '' ? $this->getEmptyLabel() : $newValue;
+            $oldValue = $oldValue == '' || $oldValue == null ? $this->getEmptyLabel() : $oldValue;
+            $newValue = $newValue == '' || $newValue == null ? $this->getEmptyLabel() : $newValue;
 
             $prefix = $this->currentActionLogMessage === '' ? '' : ', ';
             $this->currentActionLogMessage .= $prefix . $type . ': '.$oldValue.' => '.$newValue;

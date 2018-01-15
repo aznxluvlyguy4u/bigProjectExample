@@ -169,8 +169,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         //Collar color & number
         if($content->containsKey('collar')) {
             $collar = $content->get('collar');
-            $newCollarNumber = ArrayUtil::get('number',$collar);
-            $newCollarColor = ArrayUtil::get('color',$collar);
+            $newCollarNumber = StringUtil::convertEmptyStringToNull(ArrayUtil::get('number',$collar));
+            $newCollarColor = StringUtil::convertEmptyStringToNull(ArrayUtil::get('color',$collar));
 
             $oldCollarColor = $animal->getCollarColor();
             $oldCollarNumber = $animal->getCollarNumber();
