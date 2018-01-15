@@ -7,15 +7,60 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\QueryType;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Translation;
 use AppBundle\Util\Validator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 {
+    /** @var string */
+    private $currentActionLogMessage;
+    /** @var string */
+    private $currentAnimalIdLogPrefix;
+    /** @var boolean */
+    private $anyValueWasUpdated;
+    /** @var boolean */
+    private $anyCurrentAnimalValueWasUpdated;
+    /** @var Ram|Ewe[] */
+    private $newParentsById;
+    /** @var Location[] */
+    private $retrievedLocationsByLocationId;
+    /** @var PedigreeRegister[] */
+    private $retrievedPedigreeRegistersById;
+
+    /* Parent error messages */
+    const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
+    const ERROR_INCORRECT_GENDER = 'ERROR_INCORRECT_GENDER';
+    const ERROR_PARENT_IDENTICAL_TO_CHILD = 'ERROR_PARENT_IDENTICAL_TO_CHILD';
+    const ERROR_PARENT_YOUNGER_THAN_CHILD = 'ERROR_PARENT_YOUNGER_THAN_CHILD';
+
+    private $parentErrors = [
+        Ram::class => [
+            self::ERROR_NOT_FOUND => 'NO FATHER FOUND FOR GIVEN ULN',
+            self::ERROR_INCORRECT_GENDER => 'ANIMAL FOUND FOR FATHER BUT IS NOT A RAM',
+            self::ERROR_PARENT_IDENTICAL_TO_CHILD => 'FATHER CANNOT BE IDENTICAL TO THE CHILD',
+            self::ERROR_PARENT_YOUNGER_THAN_CHILD => 'THE BIRTH DATE OF THE FATHER IS AFTER THAT OF THE CHILD',
+        ],
+        Ewe::class => [
+            self::ERROR_NOT_FOUND => 'NO MOTHER FOUND FOR GIVEN ULN',
+            self::ERROR_INCORRECT_GENDER => 'ANIMAL FOUND FOR MOTHER BUT IS NOT A RAM',
+            self::ERROR_PARENT_IDENTICAL_TO_CHILD => 'MOTHER CANNOT BE IDENTICAL TO THE CHILD',
+            self::ERROR_PARENT_YOUNGER_THAN_CHILD => 'THE BIRTH DATE OF THE MOTHER IS AFTER THAT OF THE CHILD',
+        ]
+    ];
+
     /**
      * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
@@ -50,6 +95,12 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
         try {
             $currentAnimalsResult = $this->getManager()->getRepository(Animal::class)->findByIds($ids, true);
+
+            $parentValidationResult = $this->validateAndRetrieveNewParents($animalsWithNewValues, $currentAnimalsResult);
+            if ($parentValidationResult instanceof JsonResponse) {
+                return $parentValidationResult;
+            }
+
         } catch (\Exception $exception) {
             $this->getLogger()->error($exception->getMessage());
             $this->getLogger()->error($exception->getTraceAsString());
@@ -74,11 +125,14 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 return $updateAnimalResults;
             }
 
-            $this->logChanges();
+            if ($this->anyValueWasUpdated) {
+                $this->getManager()->flush();
+                $this->getManager()->getConnection()->commit();
+            } else {
+                $this->getManager()->getConnection()->rollBack();
+            }
 
             $serializedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults);
-
-            $this->getManager()->getConnection()->commit();
 
             return ResultUtil::successResult([
                 JsonInputConstant::ANIMALS => $serializedAnimalsOutput[JsonInputConstant::ANIMALS]
@@ -107,20 +161,142 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     /**
      * @param Animal[] $animalsWithNewValues
      * @param Animal[] $retrievedAnimals
-     * @return Animal[]|JsonResponse
+     * @return JsonResponse
+     * @throws \Exception
      */
-    private function updateValues(array $animalsWithNewValues, array $retrievedAnimals)
+    private function validateAndRetrieveNewParents(array $animalsWithNewValues, array $retrievedAnimals)
     {
-        // TODO update changed values
+        $this->newParentsById = [];
+
+        $errorSets = [
+            self::ERROR_PARENT_IDENTICAL_TO_CHILD => [],
+            self::ERROR_NOT_FOUND => [],
+            self::ERROR_INCORRECT_GENDER => [],
+            self::ERROR_PARENT_YOUNGER_THAN_CHILD => [],
+        ];
 
         foreach ($animalsWithNewValues as $animalsWithNewValue) {
             $animalId = $animalsWithNewValue->getId();
+            /** @var Animal $retrievedAnimal */
             $retrievedAnimal = ArrayUtil::get($animalId, $retrievedAnimals);
 
             if ($retrievedAnimal === null) {
                 return ResultUtil::errorResult('VALIDATE ANIMAL IDS A BEGINNING OF CALL', Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
+            foreach ([Ram::class, Ewe::class] as $parentClazz)
+            {
+                $currentParent = $retrievedAnimal->getParent($parentClazz);
+                $newParent = $animalsWithNewValue->getParent($parentClazz);
+                $newParentId = $newParent->getId();
+
+                if ($this->hasParentChanged($currentParent, $newParent)) {
+                    if ($newParent) {
+                        if ($retrievedAnimal->getId() === $newParentId) {
+                            $errorSets[self::ERROR_PARENT_IDENTICAL_TO_CHILD][$newParentId] = $parentClazz;
+                            continue;
+                        }
+
+                        if (key_exists($newParentId, $errorSets[self::ERROR_NOT_FOUND])) {
+                            //Error is already processed
+                            continue;
+                        }
+
+                        $parent = ArrayUtil::get($newParentId, $this->newParentsById);
+                        if ($parent === null) {
+                            $parent = $this->getManager()->getRepository(Animal::class)->find($newParentId);
+                        }
+
+                        if ($parent === null) {
+                            $parentIdsWithoutFoundAnimals[$newParentId] = $parentClazz;
+                            $errorSets[self::ERROR_NOT_FOUND][$newParentId] = $parentClazz;
+                            continue;
+                        }
+
+                        if (
+                            ($parentClazz === Ram::class && !($parent instanceof Ram)) ||
+                            ($parentClazz === Ewe::class && !($parent instanceof Ewe))
+                        ) {
+                            $errorSets[self::ERROR_INCORRECT_GENDER][$newParentId] = $parentClazz;
+                            continue;
+                        }
+
+                        if ($retrievedAnimal->getDateOfBirth() && $parent->getDateOfBirth()) {
+                            if ($retrievedAnimal->getDateOfBirth() < $parent->getDateOfBirth()) {
+                                $errorSets[self::ERROR_PARENT_YOUNGER_THAN_CHILD][$newParentId] = $parentClazz;
+                                continue;
+                            }
+                        }
+
+                        // Parent is valid!
+                        $this->newParentsById[$newParentId] = $newParent;
+                    }
+                }
+
+            }
+        }
+
+        $totalErrorMessage = '';
+        $prefix = '';
+        foreach ($errorSets as $typeKey => $errorSet) {
+            if (count($errorSet) > 0) {
+
+                foreach ($errorSet as $newParentId => $parentClazz) {
+
+                    if ($parentClazz === Ram::class) {
+                        $parentLabelId = 'father_id';
+                    } elseif ($parentClazz === Ewe::class) {
+                        $parentLabelId = 'mother_id';
+                    } else {
+                        throw new \Exception('$parentClazz must be Ram::class or Ewe::class');
+                    }
+
+                    switch ($typeKey) {
+                        case self::ERROR_NOT_FOUND: $data = '['.$parentLabelId.': '.$newParentId.']'; break;
+                        case self::ERROR_PARENT_IDENTICAL_TO_CHILD: $data = ''; break;
+                        case self::ERROR_INCORRECT_GENDER: $data = '[child_id: '.$retrievedAnimal->getId().']'; break;
+                        case self::ERROR_PARENT_YOUNGER_THAN_CHILD: $data = ''; break;
+                        default: $data = ''; break;
+                    }
+
+                    $errorMessage = $this->getParentErrorResponse($newParentId, $parentClazz, $data);
+
+                    $totalErrorMessage .= $prefix . $errorMessage;
+                    $prefix = ' ';
+                }
+
+            }
+        }
+
+        return $this->validationResult($totalErrorMessage);
+
+    }
+
+
+    /**
+     * @param Animal[] $animalsWithNewValues
+     * @param Animal[] $retrievedAnimals
+     * @return Animal[]|JsonResponse
+     */
+    private function updateValues(array $animalsWithNewValues, array $retrievedAnimals)
+    {
+        $this->clearActionLogMessages();
+
+        foreach ($animalsWithNewValues as $animalsWithNewValue) {
+            $animalId = $animalsWithNewValue->getId();
+            $retrievedAnimal = ArrayUtil::get($animalId, $retrievedAnimals);
+
+            if ($retrievedAnimal === null) {
+                return ResultUtil::errorResult('VALIDATE ANIMAL IDS AT BEGINNING OF CALL', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            try {
+                $updatedAnimal = $this->updateValueSingleAnimal($animalsWithNewValue, $retrievedAnimal);
+                $retrievedAnimals[$animalId] = $updatedAnimal;
+            } catch (\Exception $exception) {
+                $this->getLogger()->error($exception->getTraceAsString(), $exception->getCode());
+                return ResultUtil::errorResult('SOMETHING WENT WRONG', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
 
         }
 
@@ -128,9 +304,516 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     }
 
 
-    private function logChanges()
+    /**
+     * @return string
+     */
+    private function getEmptyLabel()
     {
-        // TODO log changes
+        return $this->translator->trans('EMPTY');
+    }
+
+
+    /**
+     * @param string $ubn
+     * @param string $locationId
+     * @return string
+     */
+    private function getNoLocationFoundForUbnErrorMessage($ubn, $locationId)
+    {
+        return $this->translateUcFirstLower('NO LOCATION FOUND FOR UBN').': '.$ubn.' (locationId: '.$locationId.')';
+    }
+
+
+    /**
+     * @param int $pedigreeRegisterId
+     * @return string
+     */
+    private function getNoPedigreeRegisterFoundErrorMessage($pedigreeRegisterId)
+    {
+        return $this->translateUcFirstLower('NO PEDIGREE REGISTER FOUND WITH ID').': '.$pedigreeRegisterId;
+    }
+
+
+    /**
+     * @param string $key
+     * @param string $parentClazz
+     * @param string $data
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    private function getParentErrorResponse($key, $parentClazz, $data = '')
+    {
+        if ($parentClazz !== Ewe::class && $parentClazz !== Ram::class) {
+            throw new \Exception('Parent is not a Ram or Ewe', 428);
+        }
+
+        $ending = $data === '' ? '.': ': '.$data;
+
+        return ResultUtil::errorResult(
+            $this->translateUcFirstLower($this->parentErrors[$parentClazz][$key]).$ending,
+            Response::HTTP_PRECONDITION_REQUIRED
+        );
+    }
+
+
+    /**
+     * @param Animal $animalsWithNewValue
+     * @param Animal $retrievedAnimal
+     * @return Animal|JsonResponse
+     * @throws \Exception
+     */
+    private function updateValueSingleAnimal(Animal $animalsWithNewValue, Animal $retrievedAnimal)
+    {
+        $this->clearCurrentActionLogMessage();
+        $this->extractCurrentAnimalIdData($retrievedAnimal);
+
+        /* Update Parents */
+
+        foreach ([Ram::class, Ewe::class] as $parentClazz)
+        {
+            $currentParent = $retrievedAnimal->getParent($parentClazz);
+            $newParent = $animalsWithNewValue->getParent($parentClazz);
+
+            if ($this->hasParentChanged($currentParent, $newParent)) {
+                $ulnStringCurrentParent = $currentParent ? $currentParent->getUln() : $this->getEmptyLabel();
+                if ($newParent && $newParent->getId()) {
+                    /** @var Ram|Ewe $retrievedNewParent */
+                    $retrievedNewParent = ArrayUtil::get($newParent->getId(), $this->newParentsById);
+                    if ($retrievedNewParent === null) {
+                        return ResultUtil::errorResult('RETRIEVE PARENTS DURING PARENT VALIDATION', Response::HTTP_INTERNAL_SERVER_ERROR);
+                    }
+
+                    $retrievedAnimal->setParent($retrievedNewParent);
+                    $ulnStringNewParent = $retrievedNewParent->getUln();
+
+                } else {
+                    $ulnStringNewParent = $this->getEmptyLabel();
+                    $retrievedAnimal->removeParent($parentClazz);
+                }
+
+                switch ($parentClazz) {
+                    case Ram::class: $dutchParentType = $this->translateUcFirstLower('FATHER'); break;
+                    case Ewe::class: $dutchParentType = $this->translateUcFirstLower('MOTHER'); break;
+                    default:
+                        return ResultUtil::errorResult('INVALID PARENT TYPE', Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+
+                $this->updateCurrentActionLogMessage($dutchParentType, $ulnStringCurrentParent, $ulnStringNewParent);
+            }
+
+        }
+        
+
+        if($animalsWithNewValue->getPedigreeCountryCode() !== $retrievedAnimal->getPedigreeCountryCode() ||
+            $animalsWithNewValue->getPedigreeNumber() !== $retrievedAnimal->getPedigreeNumber()
+        ) {
+            $oldStn = $retrievedAnimal->getPedigreeString();
+            $retrievedAnimal->setPedigreeCountryCode($animalsWithNewValue->getPedigreeCountryCode());
+            $retrievedAnimal->setPedigreeNumber($animalsWithNewValue->getPedigreeNumber());
+            $this->updateCurrentActionLogMessage('stn', $oldStn, $animalsWithNewValue->getPedigreeString());
+        }
+
+        if($animalsWithNewValue->getUlnCountryCode() !== $retrievedAnimal->getUlnCountryCode() ||
+            $animalsWithNewValue->getUlnNumber() !== $retrievedAnimal->getUlnNumber()
+        ) {
+            $oldUln = $retrievedAnimal->getUln();
+            $retrievedAnimal->setUlnCountryCode($animalsWithNewValue->getUlnCountryCode());
+            $retrievedAnimal->setUlnNumber($animalsWithNewValue->getUlnNumber());
+            $retrievedAnimal->setAnimalOrderNumber(StringUtil::getLast5CharactersFromString($animalsWithNewValue->getUlnNumber()));
+            $this->updateCurrentActionLogMessage('uln', $oldUln, $animalsWithNewValue->getUln());
+        }
+
+        if($animalsWithNewValue->getNickname() !== $retrievedAnimal->getNickname()) {
+            $oldNickName = $retrievedAnimal->getNickname();
+            $retrievedAnimal->setNickname($animalsWithNewValue->getNickname());
+            $this->updateCurrentActionLogMessage('nickname', $oldNickName, $animalsWithNewValue->getNickname());
+        }
+
+        if($animalsWithNewValue->getCollarColor() !== $retrievedAnimal->getCollarColor() ||
+            $animalsWithNewValue->getCollarNumber() !== $retrievedAnimal->getCollarNumber()
+        ) {
+            $oldCollar = $retrievedAnimal->getCollarColorAndNumber();
+            $retrievedAnimal->setCollarColor($animalsWithNewValue->getCollarColor());
+            $retrievedAnimal->setCollarNumber($animalsWithNewValue->getCollarNumber());
+            $this->updateCurrentActionLogMessage('halsband', $oldCollar, $animalsWithNewValue->getCollarColorAndNumber());
+        }
+
+        if($animalsWithNewValue->getBreedCode() !== $retrievedAnimal->getBreedCode()) {
+            $oldBreedCode = $retrievedAnimal->getBreedCode();
+            $retrievedAnimal->setBreedCode($animalsWithNewValue->getBreedCode());
+            $this->updateCurrentActionLogMessage('rascode', $oldBreedCode, $animalsWithNewValue->getBreedCode());
+        }
+
+        if($animalsWithNewValue->getScrapieGenotype() !== $retrievedAnimal->getScrapieGenotype()) {
+            $oldScrapieGenotype = $retrievedAnimal->getScrapieGenotype();
+            $retrievedAnimal->setScrapieGenotype($animalsWithNewValue->getScrapieGenotype());
+            $this->updateCurrentActionLogMessage('scrapieGenotype', $oldScrapieGenotype, $animalsWithNewValue->getScrapieGenotype());
+        }
+
+
+        if(is_string($animalsWithNewValue->getDateOfBirth())) {
+            $updatedDateOfBirth = TimeUtil::getDayOfDateTime(new \DateTime($animalsWithNewValue->getDateOfBirth()));
+            $animalsWithNewValue->setDateOfBirth($updatedDateOfBirth);
+        } elseif ($animalsWithNewValue->getDateOfBirth() == null) {
+            $updatedDateOfBirth = null;
+        } else {
+            $updatedDateOfBirth = $animalsWithNewValue->getDateOfBirth();
+        }
+
+        if($updatedDateOfBirth !== $retrievedAnimal->getDateOfBirth()) {
+            $oldDateOfBirthString = $retrievedAnimal->getDateOfBirthString();
+            $retrievedAnimal->setDateOfBirth($updatedDateOfBirth);
+            $this->updateCurrentActionLogMessage('geboorteDatum', $oldDateOfBirthString, $retrievedAnimal->getDateOfBirthString());
+        }
+
+
+        if(is_string($animalsWithNewValue->getDateOfDeath())) {
+            $updatedDateOfDeath = TimeUtil::getDayOfDateTime(new \DateTime($animalsWithNewValue->getDateOfDeath()));
+            $animalsWithNewValue->setDateOfDeath($updatedDateOfDeath);
+        } elseif ($animalsWithNewValue->getDateOfDeath() == null) {
+            $updatedDateOfDeath = null;
+        } else {
+            $updatedDateOfDeath = $animalsWithNewValue->getDateOfDeath();
+        }
+
+        if($updatedDateOfDeath !== $retrievedAnimal->getDateOfDeath()) {
+            $oldDateOfDeathString = $retrievedAnimal->getDateOfDeathString();
+            $retrievedAnimal->setDateOfDeath($updatedDateOfDeath);
+            $this->updateCurrentActionLogMessage('sterfteDatum', $oldDateOfDeathString, $retrievedAnimal->getDateOfDeathString());
+        }
+
+
+        if($animalsWithNewValue->getIsAlive() !== $retrievedAnimal->getIsAlive()) {
+            $oldIsAliveString = StringUtil::getBooleanAsString($retrievedAnimal->getIsAlive());
+            $retrievedAnimal->setIsAlive($animalsWithNewValue->getIsAlive());
+            $this->updateCurrentActionLogMessage('isLevendStatus', $oldIsAliveString, StringUtil::getBooleanAsString($animalsWithNewValue->getIsAlive()));
+        }
+
+
+        if($animalsWithNewValue->getNote() !== $retrievedAnimal->getNote()) {
+            $oldNote = $retrievedAnimal->getNote();
+            $retrievedAnimal->setNote($animalsWithNewValue->getNote());
+            $this->updateCurrentActionLogMessage('notitie', $oldNote, $animalsWithNewValue->getNote());
+        }
+
+        $updatedBreedType = Translation::getEnglish($animalsWithNewValue->getBreedType());
+        if($updatedBreedType !== $retrievedAnimal->getBreedType()) {
+            $oldBreedType = $animalsWithNewValue->getBreedType();
+            $retrievedAnimal->setBreedType($updatedBreedType);
+            $this->updateCurrentActionLogMessage('rasStatus', $oldBreedType, $updatedBreedType);
+        }
+
+
+        if($animalsWithNewValue->getUbnOfBirth() !== $retrievedAnimal->getUbnOfBirth()) {
+            $oldUbnOfBirth = $retrievedAnimal->getUbnOfBirth();
+            $retrievedAnimal->setUbnOfBirth($animalsWithNewValue->getUbnOfBirth());
+            $this->updateCurrentActionLogMessage('fokkerUbn(alleen nummer)', $oldUbnOfBirth, $animalsWithNewValue->getUbnOfBirth());
+        }
+
+
+
+        $actionLogLabelLocation = 'ubn';
+        $currentLocation = $retrievedAnimal->getLocation();
+        $newLocation = $animalsWithNewValue->getLocation();
+        $locationAction = self::locationUpdateActionByLocationIdCheck($currentLocation, $newLocation);
+        switch ($locationAction) {
+
+            case QueryType::DELETE:
+                $this->updateCurrentActionLogMessage($actionLogLabelLocation, $currentLocation->getUbn(), $this->getEmptyLabel());
+                $retrievedAnimal->setLocation(null);
+                break;
+
+            case QueryType::UPDATE:
+                $ubnNewLocation = $newLocation->getUbn();
+                $newLocationId = $newLocation->getLocationId();
+                $newLocation = $this->getLocationByLocationId($newLocationId);
+
+                if ($newLocation === null) {
+                    return ResultUtil::errorResult($this->getNoLocationFoundForUbnErrorMessage($ubnNewLocation, $newLocationId), Response::HTTP_PRECONDITION_REQUIRED);
+                }
+
+                $ubnCurrentLocation = $currentLocation ? $currentLocation->getUbn() : $this->getEmptyLabel();
+
+                if ($currentLocation && $currentLocation->getUbn() === $ubnNewLocation &&
+                    $currentLocation->getLocationId() !== $newLocationId) {
+
+                    $this->updateCurrentActionLogMessage($actionLogLabelLocation.'(locationId)',
+                        $ubnCurrentLocation.'('.$currentLocation->getLocationId().')',
+                        $ubnNewLocation.'('.$newLocationId.')');
+
+                } else {
+                    $this->updateCurrentActionLogMessage($actionLogLabelLocation, $ubnCurrentLocation, $ubnNewLocation);
+                }
+
+                $retrievedAnimal->setLocation($newLocation);
+                break;
+
+            default:
+                break;
+        }
+
+
+
+
+        $actionLogLabelLocationOfBirth = 'fokkerUbn[LOCATIE]';
+        $currentLocationOfBirth = $retrievedAnimal->getLocationOfBirth();
+        $newLocationOfBirth = $animalsWithNewValue->getLocationOfBirth();
+        $locationOfBirthAction = self::locationUpdateActionByLocationIdCheck($currentLocationOfBirth, $newLocationOfBirth);
+        switch ($locationOfBirthAction) {
+
+            case QueryType::DELETE:
+                $this->updateCurrentActionLogMessage($actionLogLabelLocationOfBirth, $currentLocationOfBirth->getUbn(), $this->getEmptyLabel());
+                $retrievedAnimal->setLocationOfBirth(null);
+                break;
+
+            case QueryType::UPDATE:
+                $ubnNewLocationOfBirth = $newLocationOfBirth->getUbn();
+                $newLocationOfBirthId = $newLocationOfBirth->getLocationId();
+                $newLocationOfBirth = $this->getLocationByLocationId($newLocationOfBirthId);
+
+                if ($newLocationOfBirth === null) {
+                    return ResultUtil::errorResult($this->getNoLocationFoundForUbnErrorMessage($ubnNewLocationOfBirth, $newLocationOfBirthId), Response::HTTP_PRECONDITION_REQUIRED);
+                }
+
+                $ubnCurrentLocationOfBirth = $currentLocationOfBirth ? $currentLocationOfBirth->getUbn() : $this->getEmptyLabel();
+
+                if ($currentLocationOfBirth && $currentLocationOfBirth->getUbn() === $ubnNewLocationOfBirth &&
+                    $currentLocationOfBirth->getLocationId() !== $newLocationOfBirthId) {
+
+                    $this->updateCurrentActionLogMessage($actionLogLabelLocationOfBirth.'(locationId)',
+                        $ubnCurrentLocationOfBirth.'('.$currentLocationOfBirth->getLocationId().')',
+                        $ubnNewLocationOfBirth.'('.$newLocationOfBirthId.')');
+
+                } else {
+                    $this->updateCurrentActionLogMessage($actionLogLabelLocationOfBirth, $ubnCurrentLocationOfBirth, $ubnNewLocationOfBirth);
+                }
+
+                $retrievedAnimal->setLocationOfBirth($newLocationOfBirth);
+                break;
+
+            default:
+                break;
+        }
+
+
+        $actionLogLabelPedigreeRegister = 'stamboek';
+        $currentPedigreeRegister = $retrievedAnimal->getPedigreeRegister();
+        $newPedigreeRegister = $animalsWithNewValue->getPedigreeRegister();
+        $pedigreeRegisterAction = self::objectUpdateActionByIdCheck($currentPedigreeRegister, $newPedigreeRegister);
+        switch ($pedigreeRegisterAction) {
+
+            case QueryType::DELETE:
+                $this->updateCurrentActionLogMessage($actionLogLabelPedigreeRegister, $currentPedigreeRegister->getAbbreviation(), $this->getEmptyLabel());
+                $retrievedAnimal->setPedigreeRegister(null);
+                break;
+
+            case QueryType::UPDATE:
+                $newPedigreeRegisterAbbreviation = $newPedigreeRegister->getAbbreviation();
+                $newPedigreeRegisterId = $newPedigreeRegister->getId();
+                $newPedigreeRegister = $this->getPedigreeRegisterById($newPedigreeRegisterId);
+
+                if ($newPedigreeRegister === null) {
+                    return ResultUtil::errorResult($this->getNoPedigreeRegisterFoundErrorMessage($newPedigreeRegisterId), Response::HTTP_PRECONDITION_REQUIRED);
+                }
+
+                $currentPedigreeRegisterAbbreviation = $currentPedigreeRegister ? $currentPedigreeRegister->getAbbreviation() : $this->getEmptyLabel();
+                $this->updateCurrentActionLogMessage($actionLogLabelPedigreeRegister, $currentPedigreeRegisterAbbreviation, $newPedigreeRegisterAbbreviation);
+
+                $retrievedAnimal->setPedigreeRegister($newPedigreeRegister);
+                break;
+
+            default:
+                break;
+        }
+
+
+        if($this->anyCurrentAnimalValueWasUpdated) {
+            $this->closeCurrentActionLogMessage();
+            $this->getManager()->persist($retrievedAnimal);
+        }
+
+        return $retrievedAnimal;
+    }
+
+
+    /**
+     * @param Location $location
+     * @return bool
+     */
+    private static function isSerializedLocationNotNull(Location $location)
+    {
+        if ($location) {
+            return is_string($location->getLocationId());
+        }
+        return false;
+    }
+
+
+    /**
+     * @param Location $currentLocation
+     * @param Location $newLocation
+     * @return null|string
+     */
+    private static function locationUpdateActionByLocationIdCheck(Location $currentLocation, Location $newLocation)
+    {
+        if (self::isSerializedLocationNotNull($newLocation)) {
+            if (self::isSerializedLocationNotNull($currentLocation)) {
+                if ($newLocation->getLocationId() !== $currentLocation->getLocationId()) {
+                    return QueryType::UPDATE;
+                }
+
+            } else {
+                return QueryType::UPDATE;
+            }
+
+        } else {
+            if (self::isSerializedLocationNotNull($currentLocation)) {
+                return QueryType::DELETE;
+            }
+        }
+        
+        return null;
+    }
+
+
+    /**
+     * @param PedigreeRegister $object
+     * @return bool
+     */
+    private static function isSerializedObjectWithIdNotNull($object)
+    {
+        if ($object) {
+            return is_int($object->getId()) || ctype_digit($object);
+        }
+        return false;
+    }
+
+
+    /**
+     * @param PedigreeRegister $currentObject
+     * @param PedigreeRegister $newObject
+     * @return null|string
+     */
+    private static function objectUpdateActionByIdCheck($currentObject, $newObject)
+    {
+        if (self::isSerializedObjectWithIdNotNull($newObject)) {
+            if (self::isSerializedObjectWithIdNotNull($currentObject)) {
+                if ($newObject->getId() !== $currentObject->getId()) {
+                    return QueryType::UPDATE;
+                }
+
+            } else {
+                return QueryType::UPDATE;
+            }
+
+        } else {
+            if (self::isSerializedObjectWithIdNotNull($currentObject)) {
+                return QueryType::DELETE;
+            }
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @param Animal $currentParent
+     * @param Animal $newParent
+     * @return bool
+     */
+    private function hasParentChanged($currentParent, $newParent)
+    {
+        if ($newParent) {
+            if ($currentParent) {
+                $hasParentChanged = $currentParent->getId() !== $newParent->getId();
+            } else {
+                $hasParentChanged = true;
+            }
+
+        } else {
+            $hasParentChanged = $currentParent !== null;
+        }
+
+        return $hasParentChanged;
+    }
+
+
+    private function clearActionLogMessages()
+    {
+        $this->anyValueWasUpdated = false;
+        $this->clearCurrentActionLogMessage();
+    }
+
+
+    private function clearCurrentActionLogMessage()
+    {
+        $this->currentActionLogMessage = '';
+        $this->anyCurrentAnimalValueWasUpdated = false;
+    }
+
+
+    /**
+     * @param Animal $animal
+     */
+    private function extractCurrentAnimalIdData(Animal $animal)
+    {
+        $this->currentAnimalIdLogPrefix = 'animal[id: '.$animal->getId() . ', uln: ' . $animal->getUln().']: ';
+    }
+
+
+    private function closeCurrentActionLogMessage()
+    {
+        if ($this->anyCurrentAnimalValueWasUpdated) {
+            ActionLogWriter::updateAnimalDetailsAdminEnvironment($this->getManager(), $this->getUser(), $this->currentAnimalIdLogPrefix .$this->currentActionLogMessage);
+        }
+        $this->clearCurrentActionLogMessage();
+    }
+
+
+    /**
+     * @param $type
+     * @param $oldValue
+     * @param $newValue
+     */
+    private function updateCurrentActionLogMessage($type, $oldValue, $newValue)
+    {
+        if ($oldValue !== $newValue) {
+            $oldValue = $oldValue == '' ? $this->getEmptyLabel() : $oldValue;
+            $newValue = $newValue == '' ? $this->getEmptyLabel() : $newValue;
+
+            $prefix = $this->currentActionLogMessage === '' ? '' : ', ';
+            $this->currentActionLogMessage .= $prefix . $type . ': '.$oldValue.' => '.$newValue;
+            $this->anyCurrentAnimalValueWasUpdated = true;
+            $this->anyValueWasUpdated = true;
+        }
+    }
+
+
+    /**
+     * @param string $locationId
+     * @return Location
+     */
+    private function getLocationByLocationId($locationId)
+    {
+        if (!key_exists($locationId, $this->retrievedLocationsByLocationId)) {
+            $this->retrievedLocationsByLocationId[$locationId] = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $locationId]);
+        }
+
+        return $this->retrievedLocationsByLocationId[$locationId];
+    }
+
+
+    /**
+     * @param string $pedigreeRegisterId
+     * @return PedigreeRegister
+     */
+    private function getPedigreeRegisterById($pedigreeRegisterId)
+    {
+        if (!key_exists($pedigreeRegisterId, $this->retrievedPedigreeRegistersById)) {
+            $this->retrievedPedigreeRegistersById[$pedigreeRegisterId] = $this->getManager()->getRepository(PedigreeRegister::class)->find($pedigreeRegisterId);
+        }
+
+        return $this->retrievedPedigreeRegistersById[$pedigreeRegisterId];
     }
 
 
@@ -316,11 +999,15 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         }
 
 
-        //TODO validate for duplicate ulns inside the database
+        //TODO validate for duplicate ulns inside the database AND only allow them if ULN values are swapped in set of 2
 
 
+//        if ($this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($animalsWithNewValue->getUln())) {
+//            return ResultUtil::errorResult($this->translateUcFirstLower('GIVEN ULN ALREADY USED BY ANOTHER ANIMAL').': '.$animalsWithNewValue->getUln(), Response::HTTP_PRECONDITION_REQUIRED);
+//        }
 
-        //TODO validate for duplicate stns inside the database
+
+        //TODO validate for duplicate stns inside the database AND only allow them in STN values are swapped in set of 2
 
 
 
