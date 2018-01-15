@@ -438,7 +438,7 @@ class DeclareArrival extends DeclareBase
      */
     public function setUlnCountryCode($ulnCountryCode)
     {
-        $this->ulnCountryCode = trim(strtoupper($ulnCountryCode));
+        $this->ulnCountryCode = StringUtil::trimAndStringToUpperIfNotNull($ulnCountryCode);
     }
 
     /**
@@ -454,7 +454,7 @@ class DeclareArrival extends DeclareBase
      */
     public function setUlnNumber($ulnNumber)
     {
-        $this->ulnNumber = trim($ulnNumber);
+        $this->ulnNumber = StringUtil::trimIfNotNull($ulnNumber);
     }
 
     /**
@@ -470,7 +470,7 @@ class DeclareArrival extends DeclareBase
      */
     public function setPedigreeCountryCode($pedigreeCountryCode)
     {
-        $this->pedigreeCountryCode = trim(strtoupper($pedigreeCountryCode));
+        $this->pedigreeCountryCode = StringUtil::trimAndStringToUpperIfNotNull($pedigreeCountryCode);
     }
 
     /**
@@ -486,7 +486,7 @@ class DeclareArrival extends DeclareBase
      */
     public function setPedigreeNumber($pedigreeNumber)
     {
-        $this->pedigreeNumber = trim($pedigreeNumber);
+        $this->pedigreeNumber = StringUtil::trimIfNotNull($pedigreeNumber);
     }
 
     /**

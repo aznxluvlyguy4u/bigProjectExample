@@ -6,6 +6,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -905,7 +906,7 @@ abstract class Animal
      */
     public function setPedigreeCountryCode($pedigreeCountryCode)
     {
-        $this->pedigreeCountryCode = trim(strtoupper($pedigreeCountryCode));
+        $this->pedigreeCountryCode = StringUtil::trimAndStringToUpperIfNotNull($pedigreeCountryCode);
 
         return $this;
     }
@@ -929,7 +930,7 @@ abstract class Animal
      */
     public function setPedigreeNumber($pedigreeNumber)
     {
-        $this->pedigreeNumber = trim($pedigreeNumber);
+        $this->pedigreeNumber = StringUtil::trimIfNotNull($pedigreeNumber);
 
         return $this;
     }
@@ -1070,7 +1071,7 @@ abstract class Animal
      */
     public function setName($name)
     {
-        $this->name = trim($name);
+        $this->name = StringUtil::trimIfNotNull($name);
 
         return $this;
     }
@@ -1094,7 +1095,7 @@ abstract class Animal
      */
     public function setGender($gender)
     {
-        $this->gender = trim($gender);
+        $this->gender = StringUtil::trimIfNotNull($gender);
 
         return $this;
     }
@@ -1477,7 +1478,7 @@ abstract class Animal
      */
     public function setUlnNumber($ulnNumber)
     {
-        $this->ulnNumber = trim($ulnNumber);
+        $this->ulnNumber = StringUtil::trimIfNotNull($ulnNumber);
 
         return $this;
     }
@@ -1491,7 +1492,7 @@ abstract class Animal
      */
     public function setUlnCountryCode($ulnCountryCode)
     {
-        $this->ulnCountryCode = trim(strtoupper($ulnCountryCode));
+        $this->ulnCountryCode = StringUtil::trimAndStringToUpperIfNotNull($ulnCountryCode);
 
         return $this;
     }
@@ -1505,7 +1506,7 @@ abstract class Animal
      */
     public function setAnimalOrderNumber($animalOrderNumber)
     {
-        $this->animalOrderNumber = trim($animalOrderNumber);
+        $this->animalOrderNumber = StringUtil::trimIfNotNull($animalOrderNumber);
 
         return $this;
     }
@@ -1859,7 +1860,7 @@ abstract class Animal
      */
     public function setAnimalCountryOrigin($animalCountryOrigin)
     {
-        $this->animalCountryOrigin = trim($animalCountryOrigin);
+        $this->animalCountryOrigin = StringUtil::trimIfNotNull($animalCountryOrigin);
 
         return $this;
     }
@@ -1887,7 +1888,7 @@ abstract class Animal
      */
     public function setTransferState($transferState)
     {
-        $this->transferState = trim($transferState);
+        $this->transferState = StringUtil::trimIfNotNull($transferState);
     }
 
     /**
@@ -2238,7 +2239,7 @@ abstract class Animal
      */
     public function setBreed($breed)
     {
-        $this->breed = trim($breed);
+        $this->breed = StringUtil::trimIfNotNull($breed);
     }
 
     /**
@@ -2250,7 +2251,7 @@ abstract class Animal
      */
     public function setBreedType($breedType)
     {
-        $this->breedType = trim($breedType);
+        $this->breedType = StringUtil::trimIfNotNull($breedType);
 
         return $this;
     }
@@ -2284,7 +2285,7 @@ abstract class Animal
      */
     public function setBreedCode($breedCode)
     {
-        $this->breedCode = trim($breedCode);
+        $this->breedCode = StringUtil::trimIfNotNull($breedCode);
 
         return $this;
     }
@@ -2394,7 +2395,7 @@ abstract class Animal
      */
     public function setScrapieGenotype($scrapieGenotype)
     {
-        $this->scrapieGenotype = trim($scrapieGenotype);
+        $this->scrapieGenotype = StringUtil::trimIfNotNull($scrapieGenotype);
 
         return $this;
     }
@@ -2551,7 +2552,7 @@ abstract class Animal
      */
     public function setUbnOfBirth($ubnOfBirth)
     {
-        $this->ubnOfBirth = trim($ubnOfBirth);
+        $this->ubnOfBirth = StringUtil::trimIfNotNull($ubnOfBirth);
     }
 
 

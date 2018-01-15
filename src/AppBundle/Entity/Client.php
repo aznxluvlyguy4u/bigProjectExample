@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\StringUtil;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -115,7 +116,7 @@ class Client extends Person
     */
     public function setRelationNumberKeeper($relationNumberKeeper)
     {
-    $this->relationNumberKeeper = trim($relationNumberKeeper);
+    $this->relationNumberKeeper = StringUtil::trimIfNotNull($relationNumberKeeper);
 
     return $this;
     }
@@ -200,7 +201,7 @@ class Client extends Person
     */
     public function setUsername($username)
     {
-    $this->username = trim($username);
+    $this->username = StringUtil::trimIfNotNull($username);
 
     return $this;
     }

@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -297,7 +298,7 @@ class Company
      */
     public function setCompanyName($companyName)
     {
-        $this->companyName = trim($companyName);
+        $this->companyName = StringUtil::trimIfNotNull($companyName);
 
         return $this;
     }
@@ -440,7 +441,7 @@ class Company
      */
     public function setVatNumber($vatNumber)
     {
-        $this->vatNumber = trim($vatNumber);
+        $this->vatNumber = StringUtil::trimIfNotNull($vatNumber);
     }
 
     /**
@@ -456,7 +457,7 @@ class Company
      */
     public function setChamberOfCommerceNumber($chamberOfCommerceNumber)
     {
-        $this->chamberOfCommerceNumber = trim($chamberOfCommerceNumber);
+        $this->chamberOfCommerceNumber = StringUtil::trimIfNotNull($chamberOfCommerceNumber);
     }
 
     /**
@@ -472,7 +473,7 @@ class Company
      */
     public function setCompanyRelationNumber($companyRelationNumber)
     {
-        $this->companyRelationNumber = trim($companyRelationNumber);
+        $this->companyRelationNumber = StringUtil::trimIfNotNull($companyRelationNumber);
     }
 
     /**
@@ -488,7 +489,7 @@ class Company
      */
     public function setTelephoneNumber($telephoneNumber)
     {
-        $this->telephoneNumber = trim($telephoneNumber);
+        $this->telephoneNumber = StringUtil::trimIfNotNull($telephoneNumber);
     }
 
     /**
@@ -504,7 +505,7 @@ class Company
      */
     public function setVeterinarianDapNumber($veterinarianDapNumber)
     {
-        $this->veterinarianDapNumber = trim($veterinarianDapNumber);
+        $this->veterinarianDapNumber = StringUtil::trimIfNotNull($veterinarianDapNumber);
     }
 
     /**
@@ -520,7 +521,7 @@ class Company
      */
     public function setVeterinarianCompanyName($veterinarianCompanyName)
     {
-        $this->veterinarianCompanyName = trim($veterinarianCompanyName);
+        $this->veterinarianCompanyName = StringUtil::trimIfNotNull($veterinarianCompanyName);
     }
 
     /**
@@ -536,7 +537,7 @@ class Company
      */
     public function setVeterinarianTelephoneNumber($veterinarianTelephoneNumber)
     {
-        $this->veterinarianTelephoneNumber = trim($veterinarianTelephoneNumber);
+        $this->veterinarianTelephoneNumber = StringUtil::trimIfNotNull($veterinarianTelephoneNumber);
     }
 
     /**
@@ -552,7 +553,7 @@ class Company
      */
     public function setVeterinarianEmailAddress($veterinarianEmailAddress)
     {
-        $this->veterinarianEmailAddress = trim(strtolower($veterinarianEmailAddress));
+        $this->veterinarianEmailAddress = StringUtil::trimIfNotNull(strtolower($veterinarianEmailAddress));
     }
 
 
@@ -570,7 +571,7 @@ class Company
      */
     public function setDebtorNumber($debtorNumber)
     {
-        $this->debtorNumber = trim($debtorNumber);
+        $this->debtorNumber = StringUtil::trimIfNotNull($debtorNumber);
     }
 
     /**

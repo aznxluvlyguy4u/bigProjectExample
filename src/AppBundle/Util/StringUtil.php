@@ -618,4 +618,24 @@ class StringUtil
     {
         return $string === '' ? null : $string;
     }
+
+
+    /**
+     * @param string|null $string
+     * @return null|string
+     */
+    public static function trimIfNotNull($string)
+    {
+        return $string === null ? null : trim($string);
+    }
+
+
+    /**
+     * @param string|null $string
+     * @return null|string
+     */
+    public static function trimAndStringToUpperIfNotNull($string)
+    {
+        return $string === null ? null : trim(strtoupper($string));
+    }
 }

@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\StringUtil;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -370,7 +371,7 @@ class MaediVisna
      */
     public function setReasonOfEdit($reasonOfEdit)
     {
-        $this->reasonOfEdit = trim($reasonOfEdit);
+        $this->reasonOfEdit = StringUtil::trimIfNotNull($reasonOfEdit);
     }
     
     
