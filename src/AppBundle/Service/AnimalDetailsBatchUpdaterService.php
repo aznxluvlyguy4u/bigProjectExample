@@ -1047,10 +1047,12 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
             $newStn = $animalsWithNewValue->getPedigreeString();
             if ($currentAnimal->getPedigreeString() !== $newStn) {
-                if (Validator::verifyPedigreeCountryCodeAndNumberFormat($newStn, false)) {
-                    $newStnsByAnimalId[$animalId] = $newStn;
-                } else {
-                    $newStnsWithInvalidFormatByAnimalId[$animalId] = $newStn;
+                if ($newStn !== '' && $newStn !== null) {
+                    if (Validator::verifyPedigreeCountryCodeAndNumberFormat($newStn, false)) {
+                        $newStnsByAnimalId[$animalId] = $newStn;
+                    } else {
+                        $newStnsWithInvalidFormatByAnimalId[$animalId] = $newStn;
+                    }
                 }
             }
         }
