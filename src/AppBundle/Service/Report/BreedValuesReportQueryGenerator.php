@@ -347,11 +347,11 @@ class BreedValuesReportQueryGenerator
                     to_char(mom.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as m_date_of_birth,
                     to_char(dad.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as f_date_of_birth,
                     
-                    c.dutch_breed_status as breed_status,
+                    a_breed_types.dutch_first_letter as a_dutch_breed_status,
                     a.breed_code as a_breed_code,
-                    c_mom.dutch_breed_status as m_breed_status,
+                    mom_breed_types.dutch_first_letter as m_dutch_breed_status,
                     mom.breed_code as m_breed_code,
-                    c_dad.dutch_breed_status as f_breed_status, 
+                    dad_breed_types.dutch_first_letter as f_dutch_breed_status, 
                     dad.breed_code as f_breed_code,
 
                     a.scrapie_genotype as a_scrapie_genotype,
@@ -410,6 +410,9 @@ class BreedValuesReportQueryGenerator
                 LEFT JOIN animal_cache c_dad ON dad.id = c_dad.animal_id
                 LEFT JOIN result_table_breed_grades bg ON a.id = bg.animal_id
                 -- LEFT JOIN (VALUES ".SqlUtil::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
+                LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS a_breed_types(english, dutch_first_letter) ON a.breed_type = a_breed_types.english
+                LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS mom_breed_types(english, dutch_first_letter) ON mom.breed_type = mom_breed_types.english
+                LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS dad_breed_types(english, dutch_first_letter) ON dad.breed_type = dad_breed_types.english
                 LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk(bool_val, mark) ON c.gave_birth_as_one_year_old = production_asterisk.bool_val
                 LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk_dad(bool_val, mark) ON c_dad.gave_birth_as_one_year_old = production_asterisk_dad.bool_val
                 LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk_mom(bool_val, mark) ON c_mom.gave_birth_as_one_year_old = production_asterisk_mom.bool_val

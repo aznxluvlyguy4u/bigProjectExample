@@ -598,4 +598,14 @@ class StringUtil
     {
         return strtr($string, [' ' => '_']);
     }
+
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    public static function getCapitalizedFirstLetter($string)
+    {
+        return strtoupper(substr($string, 0, 1));
+    }
 }
