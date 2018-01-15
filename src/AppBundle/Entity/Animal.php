@@ -2700,6 +2700,14 @@ abstract class Animal
     }
 
 
+    /**
+     * @return string
+     */
+    public function getCollarColorAndNumber()
+    {
+        return $this->collarColor.$this->collarNumber;
+    }
+
 
     /**
      * @return string
