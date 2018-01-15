@@ -670,25 +670,25 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
         $actionLogLabelPedigreeRegister = 'stamboek';
         $currentPedigreeRegister = $retrievedAnimal->getPedigreeRegister();
+        $currentPedigreeRegisterAbbreviation = $currentPedigreeRegister ? $currentPedigreeRegister->getAbbreviation() : $this->getEmptyLabel();
         $newPedigreeRegister = $animalsWithNewValue->getPedigreeRegister();
         $pedigreeRegisterAction = self::objectUpdateActionByIdCheck($currentPedigreeRegister, $newPedigreeRegister);
         switch ($pedigreeRegisterAction) {
 
             case QueryType::DELETE:
-                $this->updateCurrentActionLogMessage($actionLogLabelPedigreeRegister, $currentPedigreeRegister->getAbbreviation(), $this->getEmptyLabel());
+                $this->updateCurrentActionLogMessage($actionLogLabelPedigreeRegister, $currentPedigreeRegisterAbbreviation, $this->getEmptyLabel());
                 $retrievedAnimal->setPedigreeRegister(null);
                 break;
 
             case QueryType::UPDATE:
-                $newPedigreeRegisterAbbreviation = $newPedigreeRegister->getAbbreviation();
                 $newPedigreeRegisterId = $newPedigreeRegister->getId();
                 $newPedigreeRegister = $this->getPedigreeRegisterById($newPedigreeRegisterId);
+                $newPedigreeRegisterAbbreviation = $newPedigreeRegister->getAbbreviation();
 
                 if ($newPedigreeRegister === null) {
                     return ResultUtil::errorResult($this->getNoPedigreeRegisterFoundErrorMessage($newPedigreeRegisterId), Response::HTTP_PRECONDITION_REQUIRED);
                 }
 
-                $currentPedigreeRegisterAbbreviation = $currentPedigreeRegister ? $currentPedigreeRegister->getAbbreviation() : $this->getEmptyLabel();
                 $this->updateCurrentActionLogMessage($actionLogLabelPedigreeRegister, $currentPedigreeRegisterAbbreviation, $newPedigreeRegisterAbbreviation);
 
                 $retrievedAnimal->setPedigreeRegister($newPedigreeRegister);
@@ -761,7 +761,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     private static function isSerializedObjectWithIdNotNull($object)
     {
         if ($object) {
-            return is_int($object->getId()) || ctype_digit($object);
+            return is_int($object->getId()) || ctype_digit($object->getId());
         }
         return false;
     }
