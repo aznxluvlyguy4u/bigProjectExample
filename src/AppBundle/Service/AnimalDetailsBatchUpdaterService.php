@@ -21,6 +21,7 @@ use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Util\Validator;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -71,7 +72,16 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     public function updateAnimalDetails(Request $request)
     {
         $content = RequestUtil::getContentAsArray($request);
+        return $this->updateAnimalDetailsByArrayCollection($content);
+    }
 
+
+    /**
+     * @param ArrayCollection $content
+     * @return JsonResponse|true
+     */
+    public function updateAnimalDetailsByArrayCollection(ArrayCollection $content)
+    {
         $animalsArray = $content->get(JsonInputConstant::ANIMALS);
 
         /** @var Animal[] $animalsWithNewValues */
@@ -153,15 +163,21 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
         }
 
+        $successfulUpdateOfSecondaryValues = true;
         $updateIndirectValuesResult = $this->updateIndirectSecondaryValues();
-        if ($updateAnimalResults instanceof JsonResponse) {
-            return $updateIndirectValuesResult;
+        if ($updateIndirectValuesResult instanceof JsonResponse) {
+            $successfulUpdateOfSecondaryValues = false;
         }
 
-        $serializedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults);
+        $serializedUpdatedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults[JsonInputConstant::UPDATED])[JsonInputConstant::ANIMALS];
+        $serializedNonUpdatedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults[JsonInputConstant::NOT_UPDATED])[JsonInputConstant::ANIMALS];
 
         return ResultUtil::successResult([
-            JsonInputConstant::ANIMALS => $serializedAnimalsOutput[JsonInputConstant::ANIMALS]
+            JsonInputConstant::ANIMALS => [
+                    JsonInputConstant::UPDATED => $serializedUpdatedAnimalsOutput,
+                    JsonInputConstant::NOT_UPDATED => $serializedNonUpdatedAnimalsOutput,
+                ],
+            JsonInputConstant::SUCCESSFUL_UPDATE_SECONDARY_VALUES => $successfulUpdateOfSecondaryValues,
         ]);
     }
 
@@ -305,11 +321,14 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     /**
      * @param Animal[] $animalsWithNewValues
      * @param Animal[] $retrievedAnimals
-     * @return Animal[]|JsonResponse
+     * @return array|JsonResponse
      */
     private function updateValues(array $animalsWithNewValues, array $retrievedAnimals)
     {
         $this->initializeUpdateValues();
+
+        $updatedAnimals = [];
+        $nonUpdatedAnimals = [];
 
         foreach ($animalsWithNewValues as $animalsWithNewValue) {
             $animalId = $animalsWithNewValue->getId();
@@ -320,8 +339,16 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             }
 
             try {
-                $updatedAnimal = $this->updateValueSingleAnimal($animalsWithNewValue, $retrievedAnimal);
-                $retrievedAnimals[$animalId] = $updatedAnimal;
+                $updatedAnimalResult = $this->updateValueSingleAnimal($animalsWithNewValue, $retrievedAnimal);
+                /** @var Animal $retrievedAndUpdatedAnimal */
+                $retrievedAndUpdatedAnimal = $updatedAnimalResult[JsonInputConstant::ANIMAL];
+
+                if ($updatedAnimalResult[JsonInputConstant::UPDATED]) {
+                    $updatedAnimals[$animalId] = $retrievedAndUpdatedAnimal;
+                } else {
+                    $nonUpdatedAnimals[$animalId] = $retrievedAndUpdatedAnimal;
+                }
+
             } catch (\Exception $exception) {
                 $this->getLogger()->error($exception->getTraceAsString(), $exception->getCode());
                 return ResultUtil::errorResult('SOMETHING WENT WRONG', Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -329,7 +356,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
         }
 
-        return $retrievedAnimals;
+        return [
+            JsonInputConstant::UPDATED => $updatedAnimals,
+            JsonInputConstant::NOT_UPDATED => $nonUpdatedAnimals,
+        ];
     }
 
 
@@ -388,7 +418,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     /**
      * @param Animal $animalsWithNewValue
      * @param Animal $retrievedAnimal
-     * @return Animal|JsonResponse
+     * @return array|JsonResponse
      * @throws \Exception
      */
     private function updateValueSingleAnimal(Animal $animalsWithNewValue, Animal $retrievedAnimal)
@@ -467,10 +497,12 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $this->updateCurrentActionLogMessage('halsband', $oldCollar, $animalsWithNewValue->getCollarColorAndNumber());
         }
 
+        $breedCodeWasUpdated = false;
         if($animalsWithNewValue->getBreedCode() !== $retrievedAnimal->getBreedCode()) {
             $oldBreedCode = $retrievedAnimal->getBreedCode();
             $retrievedAnimal->setBreedCode($animalsWithNewValue->getBreedCode());
             $this->updateCurrentActionLogMessage('rascode', $oldBreedCode, $animalsWithNewValue->getBreedCode());
+            $breedCodeWasUpdated = true;
             $this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated[] = $retrievedAnimal->getId();
         }
 
@@ -657,12 +689,18 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         }
 
 
+        $isUpdated = false;
         if($this->anyCurrentAnimalValueWasUpdated) {
             $this->closeCurrentActionLogMessage();
             $this->getManager()->persist($retrievedAnimal);
+            $isUpdated = true;
         }
 
-        return $retrievedAnimal;
+        return [
+            JsonInputConstant::ANIMAL => $retrievedAnimal,
+            JsonInputConstant::UPDATED => $isUpdated,
+            JsonInputConstant::BREED_CODE_UPDATED => $breedCodeWasUpdated,
+        ];
     }
 
 
@@ -670,7 +708,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      * @param Location $location
      * @return bool
      */
-    private static function isSerializedLocationNotNull(Location $location)
+    private static function isSerializedLocationNotNull($location)
     {
         if ($location) {
             return is_string($location->getLocationId());
@@ -684,7 +722,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      * @param Location $newLocation
      * @return null|string
      */
-    private static function locationUpdateActionByLocationIdCheck(Location $currentLocation, Location $newLocation)
+    private static function locationUpdateActionByLocationIdCheck($currentLocation, $newLocation)
     {
         if (self::isSerializedLocationNotNull($newLocation)) {
             if (self::isSerializedLocationNotNull($currentLocation)) {
@@ -770,7 +808,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
     private function initializeUpdateValues()
     {
-        $this->$this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated = [];
+        $this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated = [];
         $this->anyValueWasUpdated = false;
         $this->clearCurrentActionLogMessage();
     }

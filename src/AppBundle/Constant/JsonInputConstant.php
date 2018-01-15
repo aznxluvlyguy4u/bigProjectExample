@@ -8,6 +8,9 @@ class JsonInputConstant
     const ID = 'id';
     const DASHBOARD_TYPE = 'dashboard_type';
     const PLAIN_TEXT_INPUT = 'plain_text_input';
+    const UPDATED = 'updated';
+    const NOT_UPDATED = 'not_updated';
+    const SUCCESSFUL_UPDATE_SECONDARY_VALUES = 'successful_update_secondary_values';
 
     //Admins
     const ADMINS = 'admins';
@@ -71,6 +74,7 @@ class JsonInputConstant
     const STNS_WITHOUT_FOUND_ANIMALS = 'stns_without_found_animals';
     const FOUND_ULNS = 'found_ulns';
     const FOUND_STNS = 'found_stns';
+    const BREED_CODE_UPDATED = 'breed_code_updated';
 
     //Request & Response
     const ERROR_CODE = 'error_code';

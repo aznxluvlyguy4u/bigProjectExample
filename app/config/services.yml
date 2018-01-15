@@ -136,6 +136,10 @@ services:
     app.animal.details.updater:
         parent: app.abstract_base.controller
         class: AppBundle\Service\AnimalDetailsUpdaterService
+        calls:
+          - method: setAnimalDetailsBatchUpdater
+            arguments:
+              - '@AppBundle\Service\AnimalDetailsBatchUpdaterService'
 
     AppBundle\Service\AnimalDetailsBatchUpdaterService:
         parent: app.abstract_base.controller
