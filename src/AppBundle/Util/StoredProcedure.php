@@ -119,7 +119,11 @@ class StoredProcedure
                   a.breed_code as a_breed_code, m.breed_code as m_breed_code, f.breed_code as f_breed_code,
                   a.scrapie_genotype as a_scrapie_genotype, m.scrapie_genotype as m_scrapie_genotype, f.scrapie_genotype as f_scrapie_genotype,
                   a.breed_code as a_breed_code, m.breed_code as m_breed_code, f.breed_code as f_breed_code,
-                  ac.dutch_breed_status as a_dutch_breed_status, mc.dutch_breed_status as m_dutch_breed_status, fc.dutch_breed_status as f_dutch_breed_status,
+                  
+                  a_breed_types.dutch_first_letter as a_dutch_breed_status,
+                  mom_breed_types.dutch_first_letter as m_dutch_breed_status,
+                  dad_breed_types.dutch_first_letter as f_dutch_breed_status, 
+                  
                   ac.n_ling as a_n_ling, mc.n_ling as m_n_ling, fc.n_ling as f_n_ling,
                   a.predicate as a_predicate_value, m.predicate as m_predicate_value, f.predicate as f_predicate_value,
                   a.predicate_score as a_predicate_score, m.predicate_score as m_predicate_score, f.predicate_score as f_predicate_score,
@@ -161,6 +165,9 @@ class StoredProcedure
     LEFT JOIN result_table_breed_grades ab ON a.id = ab.animal_id
     LEFT JOIN result_table_breed_grades mb ON m.id = mb.animal_id
     LEFT JOIN result_table_breed_grades fb ON f.id = fb.animal_id
+    LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS a_breed_types(english, dutch_first_letter) ON a.breed_type = a_breed_types.english
+    LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS mom_breed_types(english, dutch_first_letter) ON m.breed_type = mom_breed_types.english
+    LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS dad_breed_types(english, dutch_first_letter) ON f.breed_type = dad_breed_types.english
   ".$filterString;
 
         return $sql;

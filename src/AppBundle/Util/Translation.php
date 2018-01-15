@@ -36,7 +36,7 @@ class Translation
      */
     public static function getFirstLetterTranslatedBreedType($breedType)
     {
-        return strtoupper(substr(self::getDutch($breedType), 0, 1));
+        return StringUtil::getCapitalizedFirstLetter(self::getDutch($breedType));
     }
 
     /**

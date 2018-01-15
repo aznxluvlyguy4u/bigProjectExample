@@ -523,6 +523,20 @@ class SqlUtil
     /**
      * @return string
      */
+    public static function breedTypeFirstLetterOnlyTranslationValues()
+    {
+        $translatedFirstLettersByOriginalBreedType = [];
+        foreach (BreedTypeDutch::getConstants() as $key => $value) {
+            $translatedFirstLettersByOriginalBreedType[$key] = StringUtil::getCapitalizedFirstLetter($value);
+        }
+
+        return SqlUtil::createSqlValuesString($translatedFirstLettersByOriginalBreedType, false, true);
+    }
+
+
+    /**
+     * @return string
+     */
     public static function genderTranslationValues()
     {
         return SqlUtil::createSqlValuesString(DutchGender::getConstants(), true, true);
