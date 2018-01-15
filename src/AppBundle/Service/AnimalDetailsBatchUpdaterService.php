@@ -194,7 +194,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 GeneDiversityUpdater::updateByParentIds($this->getConnection(), $this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated);
             }
         } catch (\Exception $exception) {
-            $this->getLogger()->error($exception->getTraceAsString(), $exception->getCode());
+            $this->getLogger()->error($exception->getTraceAsString());
             return ResultUtil::errorResult('SOMETHING WENT WRONG WHILE UPDATING THE BREED CODES, BUT THE PRIMARY VALUES WERE CORRECTLY UPDATED', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -350,7 +350,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 }
 
             } catch (\Exception $exception) {
-                $this->getLogger()->error($exception->getTraceAsString(), $exception->getCode());
+                $this->getLogger()->error($exception->getTraceAsString());
                 return ResultUtil::errorResult('SOMETHING WENT WRONG', Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
