@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
@@ -44,6 +45,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     private $retrievedPedigreeRegistersById;
     /** @var array */
     private $parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated;
+    /** @var array */
+    private $parentValidationErrorSets;
 
     /* Parent error messages */
     const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
@@ -213,7 +216,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     {
         $this->newParentsById = [];
 
-        $errorSets = [
+        $this->parentValidationErrorSets = [
             self::ERROR_PARENT_IDENTICAL_TO_CHILD => [],
             self::ERROR_NOT_FOUND => [],
             self::ERROR_INCORRECT_GENDER => [],
@@ -229,82 +232,43 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 return ResultUtil::errorResult('VALIDATE ANIMAL IDS A BEGINNING OF CALL', Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
-            foreach ([Ram::class, Ewe::class] as $parentClazz)
+            foreach ([Ram::class, Ewe::class] as $parentType)
             {
-                $currentParent = $retrievedAnimal->getParent($parentClazz);
-                $newParent = $animalsWithNewValue->getParent($parentClazz);
-                $newParentId = $newParent->getId();
+                $currentParent = $retrievedAnimal->getParent($parentType);
+                $newParent = $animalsWithNewValue->getParent($parentType);
 
-                if ($this->hasParentChanged($currentParent, $newParent)) {
-                    if ($newParent) {
-                        if ($retrievedAnimal->getId() === $newParentId) {
-                            $errorSets[self::ERROR_PARENT_IDENTICAL_TO_CHILD][$newParentId] = $parentClazz;
-                            continue;
-                        }
-
-                        if (key_exists($newParentId, $errorSets[self::ERROR_NOT_FOUND])) {
-                            //Error is already processed
-                            continue;
-                        }
-
-                        $retrievedParent = ArrayUtil::get($newParentId, $this->newParentsById);
-                        if ($retrievedParent === null) {
-                            $retrievedParent = $this->getManager()->getRepository(Animal::class)->find($newParentId);
-                        }
-
-                        if ($retrievedParent === null) {
-                            $parentIdsWithoutFoundAnimals[$newParentId] = $parentClazz;
-                            $errorSets[self::ERROR_NOT_FOUND][$newParentId] = $parentClazz;
-                            continue;
-                        }
-
-                        if (
-                            ($parentClazz === Ram::class && !($retrievedParent instanceof Ram)) ||
-                            ($parentClazz === Ewe::class && !($retrievedParent instanceof Ewe))
-                        ) {
-                            $errorSets[self::ERROR_INCORRECT_GENDER][$newParentId] = $parentClazz;
-                            continue;
-                        }
-
-                        if ($retrievedAnimal->getDateOfBirth() && $retrievedParent->getDateOfBirth()) {
-                            if ($retrievedAnimal->getDateOfBirth() < $retrievedParent->getDateOfBirth()) {
-                                $errorSets[self::ERROR_PARENT_YOUNGER_THAN_CHILD][$newParentId] = $parentClazz;
-                                continue;
-                            }
-                        }
-
-                        // Parent is valid!
-                        $this->newParentsById[$newParentId] = $retrievedParent;
-                    }
-                }
-
+                $this->validateSingeParent($retrievedAnimal, $newParent, $currentParent, $parentType);
             }
+
+            $this->validateSingeParent($retrievedAnimal, $animalsWithNewValue->getSurrogate(), $retrievedAnimal->getSurrogate(), Constant::SURROGATE_NAMESPACE);
         }
 
         $totalErrorMessage = '';
         $prefix = '';
-        foreach ($errorSets as $typeKey => $errorSet) {
+        foreach ($this->parentValidationErrorSets as $typeKey => $errorSet) {
             if (count($errorSet) > 0) {
 
-                foreach ($errorSet as $newParentId => $parentClazz) {
+                foreach ($errorSet as $newParentId => $parentType) {
 
-                    if ($parentClazz === Ram::class) {
+                    if ($parentType === Ram::class) {
                         $parentLabelId = 'father_id';
-                    } elseif ($parentClazz === Ewe::class) {
+                    } elseif ($parentType === Ewe::class) {
                         $parentLabelId = 'mother_id';
+                    } elseif ($parentType === Constant::SURROGATE_NAMESPACE) {
+                        $parentLabelId = 'surrogate_id';
                     } else {
-                        throw new \Exception('$parentClazz must be Ram::class or Ewe::class');
+                        throw new \Exception('$parentTeyp must be Ram::class or Ewe::class or surrogate');
                     }
 
                     switch ($typeKey) {
                         case self::ERROR_NOT_FOUND: $data = '['.$parentLabelId.': '.$newParentId.']'; break;
                         case self::ERROR_PARENT_IDENTICAL_TO_CHILD: $data = ''; break;
-                        case self::ERROR_INCORRECT_GENDER: $data = '[child_id: '.$retrievedAnimal->getId().']'; break;
+                        case self::ERROR_INCORRECT_GENDER: $data = '['.$parentLabelId.': '.$newParentId.']'; break;
                         case self::ERROR_PARENT_YOUNGER_THAN_CHILD: $data = ''; break;
                         default: $data = ''; break;
                     }
 
-                    $errorMessage = $this->getParentErrorResponse($newParentId, $parentClazz, $data);
+                    $errorMessage = $this->getParentErrorResponse($newParentId, $parentType, $data);
 
                     $totalErrorMessage .= $prefix . $errorMessage;
                     $prefix = ' ';
@@ -315,6 +279,61 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
         return $this->validationResult($totalErrorMessage);
 
+    }
+
+
+    /**
+     * @param Animal $retrievedAnimal
+     * @param Animal $serializedNewParent
+     * @param Animal $retrievedCurrentParent
+     * @param string $parentType
+     */
+    private function validateSingeParent($retrievedAnimal, $serializedNewParent, $retrievedCurrentParent, $parentType)
+    {
+        if ($this->hasParentChanged($retrievedCurrentParent, $serializedNewParent)) {
+            if ($serializedNewParent) {
+
+                $newParentId = $serializedNewParent->getId();
+                if ($retrievedAnimal->getId() === $newParentId) {
+                    $this->parentValidationErrorSets[self::ERROR_PARENT_IDENTICAL_TO_CHILD][$newParentId] = $parentType;
+                    return;
+                }
+
+                if (key_exists($newParentId, $this->parentValidationErrorSets[self::ERROR_NOT_FOUND])) {
+                    //Error is already processed
+                    return;
+                }
+
+                $retrievedParent = ArrayUtil::get($newParentId, $this->newParentsById);
+                if ($retrievedParent === null) {
+                    $retrievedParent = $this->getManager()->getRepository(Animal::class)->find($newParentId);
+                }
+
+                if ($retrievedParent === null) {
+                    $parentIdsWithoutFoundAnimals[$newParentId] = $parentType;
+                    $this->parentValidationErrorSets[self::ERROR_NOT_FOUND][$newParentId] = $parentType;
+                    return;
+                }
+
+                if (
+                    ($parentType === Ram::class && !($retrievedParent instanceof Ram)) ||
+                    ($parentType === Ewe::class && !($retrievedParent instanceof Ewe))
+                ) {
+                    $this->parentValidationErrorSets[self::ERROR_INCORRECT_GENDER][$newParentId] = $parentType;
+                    return;
+                }
+
+                if ($retrievedAnimal->getDateOfBirth() && $retrievedParent->getDateOfBirth()) {
+                    if ($retrievedAnimal->getDateOfBirth() < $retrievedParent->getDateOfBirth()) {
+                        $this->parentValidationErrorSets[self::ERROR_PARENT_YOUNGER_THAN_CHILD][$newParentId] = $parentType;
+                        return;
+                    }
+                }
+
+                // Parent is valid!
+                $this->newParentsById[$newParentId] = $retrievedParent;
+            }
+        }
     }
 
 
@@ -460,6 +479,34 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 $this->updateCurrentActionLogMessage($dutchParentType, $ulnStringCurrentParent, $ulnStringNewParent);
             }
 
+        }
+
+
+        /* Update Surrogate */
+
+        $currentSurrogate = $retrievedAnimal->getSurrogate();
+        $newSurrogate = $animalsWithNewValue->getSurrogate();
+
+        if ($this->hasParentChanged($currentSurrogate, $newSurrogate)) {
+            $ulnStringCurrentSurrogate = $currentSurrogate ? $currentSurrogate->getUln() : $this->getEmptyLabel();
+            if ($newSurrogate && $newSurrogate->getId()) {
+                /** @var Ram|Ewe $retrievedNewParent */
+                $retrievedNewSurrogate = ArrayUtil::get($newSurrogate->getId(), $this->newParentsById);
+                if ($retrievedNewSurrogate === null) {
+                    return ResultUtil::errorResult('RETRIEVE PARENTS DURING PARENT VALIDATION', Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+
+                $retrievedAnimal->setSurrogate($retrievedNewSurrogate);
+                $ulnStringNewSurrogate = $retrievedNewSurrogate->getUln();
+
+            } else {
+                $ulnStringNewSurrogate = $this->getEmptyLabel();
+                $retrievedAnimal->setSurrogate(null);
+            }
+
+            $surrogateLabel = $this->translateUcFirstLower('SURROGATE MOTHER');
+
+            $this->updateCurrentActionLogMessage($surrogateLabel, $ulnStringCurrentSurrogate, $ulnStringNewSurrogate);
         }
 
 
