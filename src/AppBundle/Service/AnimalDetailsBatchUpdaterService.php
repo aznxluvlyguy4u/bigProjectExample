@@ -656,6 +656,14 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         }
 
 
+        $newBirthProgress = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getBirthProgress());
+        $oldBirthProgress = $retrievedAnimal->getBirthProgress();
+        if($oldBirthProgress !== $newBirthProgress) {
+            $retrievedAnimal->setBirthProgress($newBirthProgress);
+            $this->updateCurrentActionLogMessage('geboorteverloop', $oldBirthProgress, $newBirthProgress);
+        }
+
+
         $updatedBreedType = $animalsWithNewValue->getBreedType() == '' || $animalsWithNewValue->getBreedType() == null ? null
             : Translation::getEnglish($animalsWithNewValue->getBreedType());
         if($updatedBreedType !== $retrievedAnimal->getBreedType()) {
@@ -1067,6 +1075,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             JsonInputConstant::UBN => [],
             JsonInputConstant::BREED_TYPE => [],
             JsonInputConstant::BLINDNESS_FACTOR => [],
+            JsonInputConstant::BIRTH_PROGRESS => [],
         ];
 
         foreach ($animalsWithNewValues as $animalsWithNewValue) {
@@ -1084,6 +1093,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             if (!Validator::hasValidBlindnessFactorType($animalsWithNewValue->getBlindnessFactor(), true)) {
                 $incorrectFormatSets[JsonInputConstant::BLINDNESS_FACTOR][$animalId] = $animalsWithNewValue->getBlindnessFactor();
             }
+
+            if (!Validator::hasValidBirthProgressType($this->getManager(), $animalsWithNewValue->getBirthProgress(), true)) {
+                $incorrectFormatSets[JsonInputConstant::BIRTH_PROGRESS][$animalId] = $animalsWithNewValue->getBirthProgress();
+            }
         }
 
         $errorMessage = '';
@@ -1094,6 +1107,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                     case JsonInputConstant::UBN: $errorMessageKey = 'THE FOLLOWING UBNS HAVE AN INCORRECT FORMAT'; break;
                     case JsonInputConstant::BREED_TYPE: $errorMessageKey = 'THE FOLLOWING BREED TYPES HAVE AN INCORRECT FORMAT'; break;
                     case JsonInputConstant::BLINDNESS_FACTOR: $errorMessageKey = 'THE FOLLOWING BLINDNESS FACTORS HAVE AN INCORRECT FORMAT'; break;
+                    case JsonInputConstant::BIRTH_PROGRESS: $errorMessageKey = 'THE FOLLOWING BIRTH PROGESSES HAVE AN INCORRECT FORMAT'; break;
                     default: $errorMessageKey = null; break;
                 }
                 if ($errorMessageKey === null) {

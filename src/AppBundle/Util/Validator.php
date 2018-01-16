@@ -8,6 +8,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\TestConstant;
+use AppBundle\Entity\BirthProgress;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Animal;
@@ -43,6 +44,8 @@ class Validator
     private static $validBreedTypes = [];
     /** @var array */
     private static $validBlindFactors = [];
+    /** @var array */
+    private static $validBirthProgresses = [];
 
     /**
      * @param float $number
@@ -586,6 +589,28 @@ class Validator
         }
 
         return key_exists($blindnessFactor, self::$validBlindFactors);
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param string $birthProgress
+     * @param bool $allowEmpty
+     * @return bool
+     */
+    public static function hasValidBirthProgressType(EntityManagerInterface $em, $birthProgress, $allowEmpty = true)
+    {
+        if ($birthProgress === null) {
+            return $allowEmpty;
+        }
+
+        // Only retrieve data if at least one birth progress to be checked is not null
+
+        if (count(self::$validBirthProgresses) === 0) {
+            self::$validBirthProgresses = $em->getRepository(BirthProgress::class)->getAllDescriptions();
+        }
+
+        return key_exists($birthProgress, self::$validBirthProgresses);
     }
 
 
