@@ -173,6 +173,7 @@ class JsonInputConstant
 
     //Location / UBN
     const UBN = 'ubn';
+    const UBNS = 'ubns';
 
     //Messages
     const MESSAGE_ID = 'message_id';

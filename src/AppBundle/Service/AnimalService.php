@@ -73,6 +73,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $plainTextInput = $content->get(JsonInputConstant::PLAIN_TEXT_INPUT);
         $separator = $content->get(JsonInputConstant::SEPARATOR);
 
+        $ubns = [];
+        if ($content->containsKey(JsonInputConstant::UBNS)) {
+            $ubns = $content->get(JsonInputConstant::UBNS);
+        }
+
         $incorrectInputs = [];
 
         $ulnPartsArray = [];
@@ -101,7 +106,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         try {
-            $animals = $this->getManager()->getRepository(Animal::class)->findAnimalsByUlnOrStnParts($ulnPartsArray, $stnPartsArray);
+            $animals = $this->getManager()->getRepository(Animal::class)
+                ->findAnimalsByUlnPartsOrStnPartsOrUbns($ulnPartsArray, $stnPartsArray, $ubns);
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }

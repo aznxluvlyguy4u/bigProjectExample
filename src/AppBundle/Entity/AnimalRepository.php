@@ -831,16 +831,30 @@ class AnimalRepository extends BaseRepository
     /**
      * @param array $ulnPartsArray
      * @param array $stnPartsArray
+     * @param array $ubns
      * @param bool $onlyReturnQuery
      * @return array|\Doctrine\ORM\Query
      * @throws \Doctrine\ORM\Query\QueryException
      * @throws \Exception
      */
-    public function findAnimalsByUlnOrStnParts(array $ulnPartsArray = [], array $stnPartsArray = [], $onlyReturnQuery = false)
+    public function findAnimalsByUlnPartsOrStnPartsOrUbns(array $ulnPartsArray = [], array $stnPartsArray = [],
+                                                          array $ubns = [], $onlyReturnQuery = false)
     {
         $qb = $this->createQueryBuilder(self::ANIMAL_ALIAS)
             ->addCriteria(AnimalCriteria::byUlnOrStnParts($ulnPartsArray, $stnPartsArray, self::ANIMAL_ALIAS))
         ;
+
+        $locationsQuery = $this->getManager()->getRepository(Location::class)->getLocationsQueryByUbns($ubns);
+
+        if ($locationsQuery !== null) {
+            $qb->orWhere($qb->expr()->in('animal.location', $locationsQuery->getDQL()));
+
+            /** @var Parameter $parameter */
+            foreach ($locationsQuery->getParameters() as $parameter) {
+                $qb->setParameter($parameter->getName(), $parameter->getValue(), $parameter->getType());
+            }
+        }
+
         return $this->returnQueryOrResult($qb, $onlyReturnQuery);
     }
 
