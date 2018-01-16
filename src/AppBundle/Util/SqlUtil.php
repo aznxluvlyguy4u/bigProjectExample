@@ -575,4 +575,18 @@ class SqlUtil
     }
 
 
+    /**
+     * @param array $values
+     * @param bool $quoteIndividualValues
+     * @return string
+     */
+    public static function getFilterListString($values, $quoteIndividualValues = false)
+    {
+        $glue = $quoteIndividualValues ? "','" : ',';
+        $prefixAndSuffix = $quoteIndividualValues ? "'" : '';
+
+        return $prefixAndSuffix . implode($glue, $values) . $prefixAndSuffix;
+    }
+
+
 }

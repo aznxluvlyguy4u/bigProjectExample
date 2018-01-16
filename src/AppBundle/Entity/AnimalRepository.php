@@ -1733,4 +1733,43 @@ class AnimalRepository extends BaseRepository
     }
 
 
+    /**
+     * @param array $ulns
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getDuplicateCountsByUln(array $ulns = [])
+    {
+        if (count($ulns) === 0) {
+            return [];
+        }
+
+        $sql = "SELECT COUNT(*) as count, CONCAT(uln_country_code, uln_number) as uln
+                FROM animal
+                  WHERE CONCAT(uln_country_code, uln_number) IN (".SqlUtil::getFilterListString($ulns, true).") 
+                GROUP BY CONCAT(uln_country_code, uln_number) HAVING COUNT(*) > 1";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        return SqlUtil::groupSqlResultsOfKey1ByKey2('count', 'uln', $results,true, false);
+    }
+
+
+    /**
+     * @param array $stns
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getDuplicateCountsByStn(array $stns = [])
+    {
+        if (count($stns) === 0) {
+            return [];
+        }
+
+        $sql = "SELECT COUNT(*) as count, CONCAT(pedigree_country_code, pedigree_number) as stn
+                FROM animal
+                  WHERE CONCAT(pedigree_country_code, pedigree_number) IN (".SqlUtil::getFilterListString($stns, true).") 
+                GROUP BY CONCAT(pedigree_country_code, pedigree_number) HAVING COUNT(*) > 1";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        return SqlUtil::groupSqlResultsOfKey1ByKey2('count', 'stn', $results,true, false);
+    }
+    
 }

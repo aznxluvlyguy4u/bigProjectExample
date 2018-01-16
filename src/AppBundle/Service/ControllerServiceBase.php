@@ -406,7 +406,8 @@ abstract class ControllerServiceBase
     {
         return strtr(ucfirst(strtolower($this->translator->trans($string))), [
             'ubn' => 'UBN',
-            'uln' => 'ULN'
+            'uln' => 'ULN',
+            'ulns' => 'ULNs'
         ]);
     }
 

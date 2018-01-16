@@ -17,6 +17,7 @@ use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
@@ -984,9 +985,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             if (count($duplicateValues) > 0) {
 
                 switch ($typeKey) {
-                    case JsonInputConstant::ULN: $errorMessageKey = 'THE FOLLOWING DUPLICATE ULNS WERE INSERTED'; break;
-                    case JsonInputConstant::STN: $errorMessageKey = 'THE FOLLOWING DUPLICATE PEDIGREE NUMBERS WERE INSERTED'; break;
-                    case JsonInputConstant::ID: $errorMessageKey = 'THE FOLLOWING DUPLICATE IDS WERE INSERTED'; break;
+                    case JsonInputConstant::ULN: $errorMessageKey = 'THE FOLLOWING ULNS WERE INSERTED MULTIPLE TIMES'; break;
+                    case JsonInputConstant::STN: $errorMessageKey = 'THE FOLLOWING PEDIGREE NUMBERS WERE INSERTED MULTIPLE TIMES'; break;
+                    case JsonInputConstant::ID: $errorMessageKey = 'THE FOLLOWING IDS WERE INSERTED MULTIPLE TIMES'; break;
                     default: $errorMessageKey = null; break;
                 }
                 if ($errorMessageKey === null) {
@@ -1117,26 +1118,247 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $prefix = ' ';
         }
 
-        $validationResult1 = $this->validationResult($errorMessage);
-        if ($validationResult1 instanceof JsonResponse) {
-            return $validationResult1;
+
+        $validateNewUlnsResult = $this->validateNewUlns($newUlnsByAnimalId, $currentAnimalsResult);
+        if ($validateNewUlnsResult instanceof JsonResponse) {
+            return $validateNewUlnsResult;
+        } elseif (is_string($validateNewUlnsResult)) {
+            $errorMessage .= $prefix . $validateNewUlnsResult;
+            $prefix = ' ';
         }
 
 
-        //TODO validate for duplicate ulns inside the database AND only allow them if ULN values are swapped in set of 2
-
-
-//        if ($this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($animalsWithNewValue->getUln())) {
-//            return ResultUtil::errorResult($this->translateUcFirstLower('GIVEN ULN ALREADY USED BY ANOTHER ANIMAL').': '.$animalsWithNewValue->getUln(), Response::HTTP_PRECONDITION_REQUIRED);
-//        }
-
-
-        //TODO validate for duplicate stns inside the database AND only allow them in STN values are swapped in set of 2
-
-
+        $validateNewStnsResult = $this->validateNewStns($newStnsByAnimalId, $currentAnimalsResult);
+        if ($validateNewStnsResult instanceof JsonResponse) {
+            return $validateNewStnsResult;
+        } elseif (is_string($validateNewStnsResult)) {
+            $errorMessage .= $prefix . $validateNewStnsResult;
+            $prefix = ' ';
+        }
 
 
         return $this->validationResult($errorMessage);
+    }
+
+
+    /**
+     * @param array $newUlnsByAnimalId
+     * @param Animal[] $currentAnimalsResult
+     * @return bool|string|JsonResponse
+     */
+    private function validateNewUlns(array $newUlnsByAnimalId = [], array $currentAnimalsResult = [])
+    {
+        if (count($newUlnsByAnimalId) === 0) {
+            return true;
+        }
+
+        try {
+            $duplicateCountByDuplicateUlns = $this->getManager()->getRepository(Animal::class)->getDuplicateCountsByUln($newUlnsByAnimalId);
+
+            if (count($duplicateCountByDuplicateUlns) > 0) {
+                $errorMessage = $this->translateUcFirstLower('THE FOLLOWING NEW ULNS ALREADY BELONG TO MORE THAN ONE ANIMAL').': ';
+                $prefix = '';
+                foreach ($duplicateCountByDuplicateUlns as $uln => $duplicateCount) {
+                    $errorMessage .= $prefix . $uln . '['.$duplicateCount.'x]';
+                    $prefix = ', ';
+                }
+                return ResultUtil::errorResult($errorMessage, Response::HTTP_BAD_REQUEST);
+            }
+
+        } catch (\Exception $exception) {
+            $this->logExceptionAsError($exception);
+            return ResultUtil::errorResult('EXISTING DUPLICATE ULNS CHECK ERROR', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+
+        try {
+            $newAnimalIdsByNewUln = $this->returnOnlyAlreadyExistingAnimalIdByUln($newUlnsByAnimalId);
+
+            $currentAnimalIdsBynewUln = array_flip($newUlnsByAnimalId);
+        } catch (\Exception $exception) {
+            $this->logExceptionAsError($exception);
+            return ResultUtil::errorResult('CURRENT ANIMALS UNABLE TO BE RETRIEVED BY CURRENT NEW ULNS', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+
+        /*
+         * Only allow using ulns of already existing animals if the two animals swap both their ulns at the same time.
+         *
+         * Verify if following allowed situation is occuring if animal A new uln is already in current use by another animal:
+         *
+         * Animal A - currentId_animalA    :   newUln_animalB = currentUln_animalA
+         *
+         * Animal B - currentId_animalB    :   newUln_animalA = currentUln_animalB
+         *
+         */
+
+        $validUlns = [];
+        $invalidUlns = [];
+
+        foreach ($newAnimalIdsByNewUln as $newUlnAnimalA_currentUlnAnimalB => $currentIdAnimalB) {
+            if (key_exists($newUlnAnimalA_currentUlnAnimalB, $validUlns)) {
+                continue;
+            }
+
+            try {
+                /**
+                 * @var Animal $currentAnimalA
+                 * @var Animal $currentAnimalB
+                 */
+                $currentAnimalB = ArrayUtil::get($currentIdAnimalB, $currentAnimalsResult);
+
+                $currentIdAnimalA = ArrayUtil::get($newUlnAnimalA_currentUlnAnimalB, $currentAnimalIdsBynewUln);
+                $currentAnimalA = $currentIdAnimalA === null ? null : ArrayUtil::get($currentIdAnimalA, $currentAnimalsResult);
+
+            } catch (\Exception $exception) {
+                $this->logExceptionAsError($exception);
+                return ResultUtil::errorResult('CURRENT ANIMALS WERE NOT PROPERLY RETRIEVED', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            if ($currentAnimalA && $currentAnimalB) {
+
+                $newUlnAnimalB = ArrayUtil::get($currentIdAnimalB, $newUlnsByAnimalId);
+
+                if ($newUlnAnimalB) {
+                    $currentUln_animalA = $currentAnimalA->getUln();
+
+                    if ($currentUln_animalA === $newUlnAnimalB) {
+                        // Ulns are properly swapped
+                        $validUlns[$newUlnAnimalB] = $newUlnAnimalB;
+                        $validUlns[$newUlnAnimalA_currentUlnAnimalB] = $newUlnAnimalA_currentUlnAnimalB;
+                        continue;
+                    }
+                }
+
+            }
+
+            $invalidUlns[$newUlnAnimalA_currentUlnAnimalB] = $newUlnAnimalA_currentUlnAnimalB;
+        }
+
+        if (count($invalidUlns) === 0) {
+            return true;
+        }
+
+        $errorMessage =
+            $this->translateUcFirstLower('THE FOLLOWING ULNS ARE ALREADY IN USE BY OTHER ANIMALS')
+            .': '.implode(', ', $invalidUlns) . '. '.
+            $this->translateUcFirstLower('USING USED ULNS IS ONLY ALLOWED IF THE ULN IS ONLY USED BY ONE ANIMAL AND IF ULNS ARE SIMULTANEOUSLY SWAPPED BETWEEN TWO ANIMALS') .'.';
+
+        return $errorMessage;
+    }
+
+
+    /**
+     * @param array $setOfUniqueUlns
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function returnOnlyAlreadyExistingAnimalIdByUln(array $setOfUniqueUlns = [])
+    {
+        $sql = "SELECT id, CONCAT(uln_country_code, uln_number) as uln 
+                FROM animal 
+                WHERE CONCAT(uln_country_code, uln_number) 
+                  IN (".SqlUtil::getFilterListString($setOfUniqueUlns, true).")";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        return SqlUtil::groupSqlResultsOfKey1ByKey2('id', 'uln', $results,true, false);
+    }
+
+
+    /**
+     * @param array $newStnsByAnimalId
+     * @param Animal[] $currentAnimalsResult
+     * @return bool|string|JsonResponse
+     */
+    private function validateNewStns(array $newStnsByAnimalId = [], array $currentAnimalsResult = [])
+    {
+        if (count($newStnsByAnimalId) === 0) {
+            return true;
+        }
+
+        try {
+            $duplicateCountByDuplicateStns = $this->getManager()->getRepository(Animal::class)->getDuplicateCountsByStn($newStnsByAnimalId);
+
+            if (count($duplicateCountByDuplicateStns) > 0) {
+                $errorMessage = $this->translateUcFirstLower('THE FOLLOWING NEW PEDIGREE NUMBERS ALREADY BELONG TO MORE THAN ONE ANIMAL').': ';
+                $prefix = '';
+                foreach ($duplicateCountByDuplicateStns as $stn => $duplicateCount) {
+                    $errorMessage .= $prefix . $stn . '['.$duplicateCount.'x]';
+                    $prefix = ', ';
+                }
+                return ResultUtil::errorResult($errorMessage, Response::HTTP_BAD_REQUEST);
+            }
+
+        } catch (\Exception $exception) {
+            $this->logExceptionAsError($exception);
+            return ResultUtil::errorResult('EXISTING DUPLICATE STNS CHECK ERROR', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+
+        try {
+            $currentAnimalIdsByNewStn = $this->returnOnlyAlreadyExistingAnimalIdByStn($newStnsByAnimalId);
+        } catch (\Exception $exception) {
+            $this->logExceptionAsError($exception);
+            return ResultUtil::errorResult('CURRENT ANIMALS UNABLE TO BE RETRIEVED BY CURRENT NEW STNS', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+
+        /*
+         * New stn is invalid if it is already in use by another animal
+         */
+
+        $invalidNewStnsByCurrentAnimalId = [];
+
+        foreach ($currentAnimalIdsByNewStn as $newStnAnimalA_currentStnAnimalB => $currentIdAnimalA) {
+
+            try {
+                /**
+                 * @var Animal $currentAnimalA
+                 */
+                $currentAnimalA = ArrayUtil::get($currentIdAnimalA, $currentAnimalsResult);
+            } catch (\Exception $exception) {
+                $this->logExceptionAsError($exception);
+                return ResultUtil::errorResult('CURRENT ANIMALS WERE NOT PROPERLY RETRIEVED', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $isInvalid = false;
+            if ($currentAnimalA) {
+                if ($currentAnimalA->getPedigreeString() !== $newStnAnimalA_currentStnAnimalB) {
+                    $isInvalid = true;
+                }
+            } else {
+                $isInvalid = true;
+            }
+
+            if ($isInvalid) {
+                $invalidNewStnsByCurrentAnimalId[$currentIdAnimalA] = $newStnAnimalA_currentStnAnimalB;
+            }
+        }
+
+        if (count($invalidNewStnsByCurrentAnimalId) === 0) {
+            return true;
+        }
+
+        $errorMessage =
+            $this->translateUcFirstLower('THE FOLLOWING STNS ARE ALREADY IN USE BY OTHER ANIMALS')
+            .': '.implode(', ', $invalidNewStnsByCurrentAnimalId) . '. '
+        ;
+        return $errorMessage;
+    }
+
+
+    /**
+     * @param array $setOfUniqueStns
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function returnOnlyAlreadyExistingAnimalIdByStn(array $setOfUniqueStns = [])
+    {
+        $sql = "SELECT id, CONCAT(pedigree_country_code, pedigree_number) as stn 
+                FROM animal 
+                WHERE CONCAT(pedigree_country_code, pedigree_number) 
+                  IN (".SqlUtil::getFilterListString($setOfUniqueStns, true).")";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        return SqlUtil::groupSqlResultsOfKey1ByKey2('id', 'stn', $results,true, false);
     }
 
 
