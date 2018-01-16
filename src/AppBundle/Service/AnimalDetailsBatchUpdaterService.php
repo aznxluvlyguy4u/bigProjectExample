@@ -641,6 +641,13 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         }
 
 
+        if($animalsWithNewValue->getLambar() !== $retrievedAnimal->getLambar()) {
+            $oldLambarString = StringUtil::getBooleanAsString($retrievedAnimal->getLambar());
+            $retrievedAnimal->setLambar($animalsWithNewValue->getLambar());
+            $this->updateCurrentActionLogMessage('lambar', $oldLambarString, StringUtil::getBooleanAsString($animalsWithNewValue->getLambar()));
+        }
+
+
         $newNote = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getNote());
         if($retrievedAnimal->getNote() !== $newNote) {
             $oldNote = $retrievedAnimal->getNote();
