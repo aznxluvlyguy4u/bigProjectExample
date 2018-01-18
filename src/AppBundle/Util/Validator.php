@@ -37,7 +37,8 @@ use Symfony\Component\HttpFoundation\Response;
 class Validator
 {
     const DEFAULT_MIN_PASSWORD_LENGTH = 6;
-    const ULN_NUMBER_LENGTH = 12;
+    const MAX_ULN_NUMBER_LENGTH = 12;
+    const MIN_ULN_NUMBER_LENGTH = 8;
     const ULN_COUNTRY_CODE_LENGTH = 2;
 
     /** @var array */
@@ -90,20 +91,24 @@ class Validator
     public static function verifyUlnFormat($ulnString, $includesSpaceBetweenCountryCodeAndNumber = false)
     {
         if($includesSpaceBetweenCountryCodeAndNumber) {
-            $pregMatch = "/([A-Z]{2})+[ ]+([0-9]{8,12})/";
+            $pregMatch = "/([A-Z]{2})+[ ]+".Regex::getUlnNumberRegex()."/";
         } else {
-            $pregMatch = "/([A-Z]{2})+([0-9]{8,12})/";
+            $pregMatch = "/([A-Z]{2})+".Regex::getUlnNumberRegex()."/";
         }
 
-        return preg_match($pregMatch,$ulnString) && strlen($ulnString) === self::ULN_COUNTRY_CODE_LENGTH + self::ULN_NUMBER_LENGTH;
+        return preg_match($pregMatch,$ulnString)
+            && (self::ULN_COUNTRY_CODE_LENGTH + self::MIN_ULN_NUMBER_LENGTH) <= strlen($ulnString)
+            && strlen($ulnString) <= (self::ULN_COUNTRY_CODE_LENGTH + self::MAX_ULN_NUMBER_LENGTH);
     }
 
 
     public static function verifyUlnNumberFormat($ulnNumber)
     {
-        $pregMatch = "/([0-9]{12})/";
+        $pregMatch = "/".Regex::getUlnNumberRegex()."/";
 
-        return preg_match($pregMatch,$ulnNumber) && strlen($ulnNumber) === self::ULN_NUMBER_LENGTH;
+        return preg_match($pregMatch,$ulnNumber)
+            && self::MIN_ULN_NUMBER_LENGTH <= strlen($ulnNumber)
+            && strlen($ulnNumber) <= self::MAX_ULN_NUMBER_LENGTH;
     }
 
 
