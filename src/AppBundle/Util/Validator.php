@@ -91,9 +91,9 @@ class Validator
     public static function verifyUlnFormat($ulnString, $includesSpaceBetweenCountryCodeAndNumber = false)
     {
         if($includesSpaceBetweenCountryCodeAndNumber) {
-            $pregMatch = "/([A-Z]{2})+[ ]+".Regex::getUlnNumberRegex()."/";
+            $pregMatch = "/(".Regex::countryCode().")+[ ]+".Regex::ulnNumber()."/";
         } else {
-            $pregMatch = "/([A-Z]{2})+".Regex::getUlnNumberRegex()."/";
+            $pregMatch = "/(".Regex::countryCode().")+".Regex::ulnNumber()."/";
         }
 
         return preg_match($pregMatch,$ulnString)
@@ -104,7 +104,7 @@ class Validator
 
     public static function verifyUlnNumberFormat($ulnNumber)
     {
-        $pregMatch = "/".Regex::getUlnNumberRegex()."/";
+        $pregMatch = "/".Regex::ulnNumber()."/";
 
         return preg_match($pregMatch,$ulnNumber)
             && self::MIN_ULN_NUMBER_LENGTH <= strlen($ulnNumber)
@@ -135,7 +135,7 @@ class Validator
     public static function verifyPedigreeNumberFormat($pedigreeNumber)
     {
         $numberLengthIncludingDash = 11;
-        return preg_match("/([A-Z0-9]{5}[-][a-zA-Z0-9]{5})/",$pedigreeNumber)
+        return preg_match("/(".Regex::pedigreeNumber().")/",$pedigreeNumber)
         && strlen($pedigreeNumber) == $numberLengthIncludingDash;
     }
 
@@ -149,10 +149,10 @@ class Validator
     {
         if($includesSpaceBetweenCountryCodeAndNumber) {
             $numberLengthIncludingDash = 14;
-            $pregMatch = "/([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{5})/";
+            $pregMatch = "/(".Regex::countryCode()."[ ]".Regex::pedigreeNumber().")/";
         } else {
             $numberLengthIncludingDash = 13;
-            $pregMatch = "/([A-Z]{2}[A-Z0-9]{5}[-][a-zA-Z0-9]{5})/";
+            $pregMatch = "/(".Regex::countryCode().Regex::pedigreeNumber().")/";
         }
         return preg_match($pregMatch,$stn) && strlen($stn) == $numberLengthIncludingDash;
     }
