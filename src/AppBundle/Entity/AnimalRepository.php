@@ -840,18 +840,29 @@ class AnimalRepository extends BaseRepository
     public function findAnimalsByUlnPartsOrStnPartsOrUbns(array $ulnPartsArray = [], array $stnPartsArray = [],
                                                           array $ubns = [], $onlyReturnQuery = false)
     {
+        if (count($ulnPartsArray) === 0 && count($stnPartsArray) === 0) {
+            if ($onlyReturnQuery = true) {
+                return [];
+            } else {
+                // TODO return a proper empty result is only query is requested
+                return null;
+            }
+        }
+
         $qb = $this->createQueryBuilder(self::ANIMAL_ALIAS)
             ->addCriteria(AnimalCriteria::byUlnOrStnParts($ulnPartsArray, $stnPartsArray, self::ANIMAL_ALIAS))
         ;
 
-        $locationsQuery = $this->getManager()->getRepository(Location::class)->getLocationsQueryByUbns($ubns);
+        if (count($ubns) > 0) {
+            $locationsQuery = $this->getManager()->getRepository(Location::class)->getLocationsQueryByUbns($ubns);
 
-        if ($locationsQuery !== null) {
-            $qb->orWhere($qb->expr()->in('animal.location', $locationsQuery->getDQL()));
+            if ($locationsQuery !== null) {
+                $qb->orWhere($qb->expr()->in('animal.location', $locationsQuery->getDQL()));
 
-            /** @var Parameter $parameter */
-            foreach ($locationsQuery->getParameters() as $parameter) {
-                $qb->setParameter($parameter->getName(), $parameter->getValue(), $parameter->getType());
+                /** @var Parameter $parameter */
+                foreach ($locationsQuery->getParameters() as $parameter) {
+                    $qb->setParameter($parameter->getName(), $parameter->getValue(), $parameter->getType());
+                }
             }
         }
 
