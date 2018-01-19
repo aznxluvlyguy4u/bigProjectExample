@@ -100,6 +100,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             }
         }
 
+        $animalsWithNewValues = $this->cleanUpInputValues($animalsWithNewValues);
+
         $inputOnlyValidationResult = $this->validateForDuplicateValuesWithinRequestBody($animalsWithNewValues);
         if ($inputOnlyValidationResult instanceof JsonResponse) {
             return $inputOnlyValidationResult;
@@ -202,6 +204,36 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         }
 
         return true;
+    }
+
+
+    /**
+     * @param Animal[] $animalsWithNewValues
+     * @return Animal[]
+     */
+    private function cleanUpInputValues(array $animalsWithNewValues = [])
+    {
+        foreach ($animalsWithNewValues as $key => $animalsWithNewValue) {
+            if ($animalsWithNewValue->getBirthProgress() === '') {
+                $animalsWithNewValue->setBirthProgress(null);
+            }
+
+            if ($animalsWithNewValue->getBreedType() === '') {
+                $animalsWithNewValue->setBreedType(null);
+            }
+
+            if ($animalsWithNewValue->getCollarColor() === '') {
+                $animalsWithNewValue->setCollarColor(null);
+            }
+
+            if ($animalsWithNewValue->getCollarNumber() === '') {
+                $animalsWithNewValue->setCollarNumber(null);
+            }
+
+            $animalsWithNewValues[$key] = $animalsWithNewValue;
+        }
+
+        return $animalsWithNewValues;
     }
 
 
