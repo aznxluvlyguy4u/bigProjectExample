@@ -238,6 +238,38 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 $animalsWithNewValue->setParentFather(null);
             }
 
+            if ($animalsWithNewValue->getSurrogate() && $animalsWithNewValue->getSurrogate()->getId() === null) {
+                $animalsWithNewValue->setSurrogate(null);
+            }
+
+            if ($animalsWithNewValue->getLocation() && $animalsWithNewValue->getLocation()->getLocationId() === null) {
+                $animalsWithNewValue->setLocation(null);
+            }
+
+            if ($animalsWithNewValue->getLocationOfBirth() && $animalsWithNewValue->getLocationOfBirth()->getLocationId() === null) {
+                $animalsWithNewValue->setLocationOfBirth(null);
+            }
+
+            if ($animalsWithNewValue->getPedigreeRegister() && $animalsWithNewValue->getPedigreeRegister()->getId() === null) {
+                $animalsWithNewValue->setPedigreeRegister(null);
+            }
+
+            if ($animalsWithNewValue->getLitter()) {
+                if ($animalsWithNewValue->getLitter()->getId() === null) {
+                    $animalsWithNewValue->setLitter(null);
+                } else {
+                    if ($animalsWithNewValue->getLitter()->getAnimalMother()
+                        && $animalsWithNewValue->getLitter()->getAnimalMother()->getId() === null) {
+                        $animalsWithNewValue->getLitter()->setAnimalMother(null);
+                    }
+
+                    if ($animalsWithNewValue->getLitter()->getAnimalFather()
+                        && $animalsWithNewValue->getLitter()->getAnimalFather()->getId() === null) {
+                        $animalsWithNewValue->getLitter()->setAnimalFather(null);
+                    }
+                }
+            }
+
             $animalsWithNewValues[$key] = $animalsWithNewValue;
         }
 
@@ -399,6 +431,11 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
             try {
                 $updatedAnimalResult = $this->updateValueSingleAnimal($animalsWithNewValue, $retrievedAnimal);
+
+                if ($updatedAnimalResult instanceof JsonResponse) {
+                    return $updatedAnimalResult;
+                }
+
                 /** @var Animal $retrievedAndUpdatedAnimal */
                 $retrievedAndUpdatedAnimal = $updatedAnimalResult[JsonInputConstant::ANIMAL];
 
