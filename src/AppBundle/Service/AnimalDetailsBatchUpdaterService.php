@@ -274,6 +274,14 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 }
             }
 
+            if ($animalsWithNewValue->getPredicate() === '') {
+                $animalsWithNewValue->setPredicate(null);
+            }
+
+            if ($animalsWithNewValue->getPredicateScore() === '' || $animalsWithNewValue->getPredicateScore() === 0) {
+                $animalsWithNewValue->setPredicateScore(null);
+            }
+
             $animalsWithNewValues[$key] = $animalsWithNewValue;
         }
 
