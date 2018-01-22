@@ -222,6 +222,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 $animalsWithNewValue->setBreedType(null);
             }
 
+            if ($animalsWithNewValue->getBlindnessFactor() === '') {
+                $animalsWithNewValue->setBlindnessFactor(null);
+            }
+
             if ($animalsWithNewValue->getCollarColor() === '') {
                 $animalsWithNewValue->setCollarColor(null);
             }
