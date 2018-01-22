@@ -230,6 +230,14 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 $animalsWithNewValue->setCollarNumber(null);
             }
 
+            if ($animalsWithNewValue->getParentMotherId() === null) {
+                $animalsWithNewValue->setParentMother(null);
+            }
+
+            if ($animalsWithNewValue->getParentFatherId() === null) {
+                $animalsWithNewValue->setParentFather(null);
+            }
+
             $animalsWithNewValues[$key] = $animalsWithNewValue;
         }
 
@@ -261,7 +269,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $retrievedAnimal = ArrayUtil::get($animalId, $retrievedAnimals);
 
             if ($retrievedAnimal === null) {
-                return ResultUtil::errorResult('VALIDATE ANIMAL IDS A BEGINNING OF CALL', Response::HTTP_INTERNAL_SERVER_ERROR);
+                return ResultUtil::errorResult('VALIDATE ANIMAL IDS AT BEGINNING OF CALL', Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             foreach ([Ram::class, Ewe::class] as $parentType)
