@@ -172,28 +172,33 @@ class AnimalDetailsTest extends WebTestCase
         $response = $this->client->getResponse();
         $data = json_decode($response->getContent(), true);
         $this->assertStatusCode(Response::HTTP_OK, $this->client);
+    }
 
 
+    /**
+     * @group put
+     * @group animal-put
+     * @group animal-details-put
+     */
+    public function testEditByAdminInSingleEditMode()
+    {
         $json =
             json_encode(
                 [
                     "is_admin_env" => true,
                     "animal" => [
+                        "id" => self::$ram->getId(),
                         "pedigree_country_code" => self::$ram->getPedigreeCountryCode(),
                         "pedigree_number" => self::$ram->getPedigreeNumber(),
                         "name" => self::$ram->getName(),
                         "nickname" => self::$ram->getNickname(),
                         "ubn_of_birth" => self::$ram->getUbn(),
                         "date_of_birth" => TimeUtil::getTimeStampForJsonBody(self::$ram->getDateOfBirth()),
-//                        "parent_father" => [
-//                            "uln_number" => "561720000381",
-//                            "uln_country_code" => "DK",
-//                            "type" => "Ram"
-//                        ],
                         "parent_mother" => [
-                            "uln_number" => self::$ewe->getUlnNumber(),
-                            "uln_country_code" => self::$ewe->getUlnCountryCode(),
-                            "type" => "Ewe"
+                            "id" => self::$ram->getParentMotherId(),
+                        ],
+                        "parent_father" => [
+                            "id" => self::$ram->getParentFatherId(),
                         ],
                         "location" => [
                             "ubn" => self::$otherLocation->getUbn(),
