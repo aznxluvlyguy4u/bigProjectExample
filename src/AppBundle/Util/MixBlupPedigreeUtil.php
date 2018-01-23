@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Util;
+use AppBundle\Component\MixBlup\WormResistanceDataFile;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
@@ -124,8 +125,11 @@ class MixBlupPedigreeUtil
             case MixBlupType::LAMB_MEAT_INDEX:
                 $sql = LambMeatIndexDataFile::getSqlQueryRelatedAnimals();
                 break;
+            case MixBlupType::WORM:
+                $sql = WormResistanceDataFile::getSqlQueryRelatedAnimals();
+                break;
             default:
-                throw new \Exception('Unsupported MixBlupType fro filtered animalIds');
+                throw new \Exception('Unsupported MixBlupType for filtered animalIds');
                 break;
         }
         
@@ -243,7 +247,7 @@ class MixBlupPedigreeUtil
     /**
      * @return array
      */
-    public function getWormOptimizedSet()
+    public function getWormResistanceOptimizedSet()
     {
         return $this->getOptimizedSet(MixBlupType::WORM);
     }

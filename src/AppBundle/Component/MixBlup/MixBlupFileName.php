@@ -37,6 +37,8 @@ class MixBlupFileName
     public static function getLambMeatIndexDataFileName() { return self::getDataFileName(MixBlupType::LAMB_MEAT_INDEX); }
     /** @return string */
     public static function getFertilityDataFileName() { return self::getDataFileName(MixBlupType::FERTILITY); }
+    /** @return string */
+    public static function getWormResistanceDataFileName() { return self::getDataFileName(MixBlupType::WORM); }
 
     /** @return string */
     public static function getExteriorPedigreeFileName() { return self::getPedigreeFileName(MixBlupType::EXTERIOR); }
@@ -44,4 +46,6 @@ class MixBlupFileName
     public static function getLambMeatIndexPedigreeFileName() { return self::getPedigreeFileName(MixBlupType::LAMB_MEAT_INDEX); }
     /** @return string */
     public static function getFertilityPedigreeFileName() { return self::getPedigreeFileName(MixBlupType::FERTILITY); }
+    /** @return string */
+    public static function getWormResistancePedigreeFileName() { return self::getPedigreeFileName(MixBlupType::WORM); }
 }
