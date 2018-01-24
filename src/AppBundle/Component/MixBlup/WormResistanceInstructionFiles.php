@@ -62,7 +62,7 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
         $start[] = ' JaarBedr   A #jaar en ubn van geboorte'; //year and ubn of birth
 
         $measurementValues = [
-            ' Behandeld  I #0(nee)/1(ja), -1(onbekend/leeg)?',
+            ' Behandeld  I #0(nee)/1(ja), -99(onbekend/leeg)?',
             ' LnFEC      T #Natuurlijke logaritme uit de eitelling.  = epg?',
             ' SIgA       T #IgA bepaling in Schotland',
             ' NZIgA      T #IgA bepaling in Nieuw Zeeland',

@@ -285,4 +285,13 @@ class JsonInputConstant
 
     //DataImport
     const ENTITY_ALREADY_EXISTS = 'entity_already_exists';
+
+    //WormResistance
+    const TREATED_FOR_SAMPLES = 'treated_for_samples';
+    const EPG = 'epg';
+    const S_IGA_GLASGOW = 's_iga_glasgow';
+    const CARLA_IGA_NZ = 'carla_iga_nz';
+    const CLASS_CARLA_IGA_NZ = 'class_carla_iga_nz';
+    const SAMPLE_PERIOD = 'sample_period';
+    const YEAR = 'year';
 }

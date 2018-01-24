@@ -18,7 +18,7 @@ class WormResistanceInputProcess extends MixBlupInputProcessBase implements MixB
      */
     public function __construct(EntityManagerInterface $em, $outputFolderPath, Logger $logger)
     {
-        parent::__construct($em, $outputFolderPath, $logger, MixBlupType::LAMB_MEAT_INDEX);
+        parent::__construct($em, $outputFolderPath, $logger, MixBlupType::WORM);
     }
 
 
