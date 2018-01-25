@@ -62,12 +62,12 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
         $start[] = ' JaarBedr   A #jaar en ubn van geboorte'; //year and ubn of birth
 
         $measurementValues = [
-            ' Behandeld  I #0(nee)/1(ja), -99(onbekend/leeg)?',
-            ' LnFEC      T #Natuurlijke logaritme uit de eitelling.  = epg?',
+            ' Behandeld  R #0(nee)/1(ja), default = '.WormResistanceDataFile::IS_TREATED_DEFAULT_VALUE,
+            ' LnFEC      T #Natuurlijke logaritme uit de eitelling = epg',
             ' SIgA       T #IgA bepaling in Schotland',
             ' NZIgA      T #IgA bepaling in Nieuw Zeeland',
             ' NZclass    T #Klasse op basis van IgA bepaling in Nieuw Zeeland. None detected, Medium, Trace, Low, High, -99?',
-            ' Periode    I #vroege of late monstername binnen seizoen. 1/2',
+            ' Periode    I #vroege of late monstername binnen seizoen. 1/2, default = '.WormResistanceDataFile::SAMPLE_PERIOD_DEFAULT_VALUE,
         ];
 
         $lastDataRecords = [

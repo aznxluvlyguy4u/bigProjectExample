@@ -13,6 +13,9 @@ use Doctrine\DBAL\Connection;
 
 class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataFileInterface
 {
+    const IS_TREATED_DEFAULT_VALUE = '0';
+    const SAMPLE_PERIOD_DEFAULT_VALUE = '1';
+
     const EPG_DECIMALS = 0;
     const S_IGA_DECIMALS = 5;
     const CARLA_IGA_DECIMALS = 5;
@@ -42,12 +45,10 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
             $formattedSamplePeriod = self::getFormattedSamplePeriod($data);
 
             if($parsedBreedCode != null
-                && $formattedIsTreated != null
                 && $formattedLnFEC != null
                 && $formattedSIgA != null
                 && $formattedNZIgA != null
                 && $formattedNZclass != null
-                && $formattedSamplePeriod != null
             ) {
 
                 $formattedUln = MixBlupSetting::INCLUDE_ULNS ? self::getFormattedUln($data) : '';
@@ -138,16 +139,11 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      */
     private static function getFormattedIsTreated(array $data)
     {
-        $allowNull = true;
-        if (!$allowNull && $data[JsonInputConstant::TREATED_FOR_SAMPLES] === null) {
-            return null;
-        }
-
         return self::getFormattedBooleanValueAsIntegerStringFromData(
             $data,
             JsonInputConstant::TREATED_FOR_SAMPLES,
             true,
-            MixBlupInstructionFileBase::MISSING_REPLACEMENT // TODO -99?
+            self::IS_TREATED_DEFAULT_VALUE
         );
     }
 
@@ -281,17 +277,12 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      */
     private static function getFormattedSamplePeriod(array $data)
     {
-        $allowNull = true;
-        if (!$allowNull && $data[JsonInputConstant::SAMPLE_PERIOD] === null) {
-            return null;
-        }
-
         return self::getFormattedValueFromData(
             $data,
             3,
             JsonInputConstant::SAMPLE_PERIOD,
             true,
-            MixBlupInstructionFileBase::MISSING_REPLACEMENT
+            self::SAMPLE_PERIOD_DEFAULT_VALUE
         );
     }
 
