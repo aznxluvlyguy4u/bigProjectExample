@@ -72,6 +72,14 @@ class WormResistance
 
 
     /**
+     * @var int
+     * @JMS\Type("integer")
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $treatmentUbn;
+
+
+    /**
      * Behandeld voor monsteren
      *
      * @var boolean
@@ -413,6 +421,26 @@ class WormResistance
         $this->isActive = $isActive;
         return $this;
     }
+
+
+    /**
+     * @return int
+     */
+    public function getTreatmentUbn()
+    {
+        return $this->treatmentUbn;
+    }
+
+    /**
+     * @param int $treatmentUbn
+     * @return WormResistance
+     */
+    public function setTreatmentUbn($treatmentUbn)
+    {
+        $this->treatmentUbn = $treatmentUbn;
+        return $this;
+    }
+
 
 
 }
