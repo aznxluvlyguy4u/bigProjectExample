@@ -9,6 +9,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\MixblupNzClassEnum;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\DsvWriterUtil;
 use Doctrine\DBAL\Connection;
 
 class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataFileInterface
@@ -27,6 +28,11 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
     private static $nzClassTranslationArray = [];
 
+    private static $epgFormattedNullFiller;
+    private static $sIgaFormattedNullFiller;
+    private static $nzIgaFormattedNullFiller;
+    private static $nzClassFormattedNullFiller;
+
     /**
      * @inheritDoc
      */
@@ -37,42 +43,84 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
         $results = [];
         foreach ($conn->query(self::getSqlQueryForBaseValues())->fetchAll() as $data) {
             $parsedBreedCode = self::parseBreedCode($data);
+            if (!$parsedBreedCode) {
+                continue;
+            }
+
             $formattedIsTreated = self::getFormattedIsTreated($data);
-            $formattedLnFEC = self::getFormattedLnFEC($data);
-            $formattedSIgA = self::getFormattedSIgA($data);
-            $formattedNZIgA = self::getFormattedNZIgA($data);
-            $formattedNZclass = self::getFormattedNZclass($data);
             $formattedSamplePeriod = self::getFormattedSamplePeriod($data);
 
-            if($parsedBreedCode != null
-                && $formattedLnFEC != null
-                && $formattedSIgA != null
-                && $formattedNZIgA != null
-                && $formattedNZclass != null
-            ) {
+            $formattedUln = MixBlupSetting::INCLUDE_ULNS ? self::getFormattedUln($data) : '';
 
-                $formattedUln = MixBlupSetting::INCLUDE_ULNS ? self::getFormattedUln($data) : '';
+            $recordBase =
+                $formattedUln.
+                self::getFormattedAnimalId($data).
+                self::getFormattedGenderFromType($data).
+                self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
+                $parsedBreedCode.
+                self::getFormattedHeterosis($data).
+                self::getFormattedRecombination($data).
+                $formattedIsTreated
+            ;
+
+            $recordEnd =
+                $formattedSamplePeriod.
+                self::getFormattedUbnOfBirthWithoutPadding($data)
+            ;
+
+
+            // Records divided up by traits (kenmerken). LnFEC=EPG, SIgA, NZIgA
+            $formattedLnFEC = self::getFormattedLnFEC($data);
+
+            if(self::isLnFECNotNull($data)) {
 
                 $record =
-                    $formattedUln.
-                    self::getFormattedAnimalId($data).
-                    self::getFormattedGenderFromType($data).
-                    self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
-                    $parsedBreedCode.
-                    self::getFormattedHeterosis($data).
-                    self::getFormattedRecombination($data).
-                    $formattedIsTreated.
+                    $recordBase.
                     $formattedLnFEC.
-                    $formattedSIgA.
-                    $formattedNZIgA.
-                    $formattedNZclass.
-                    $formattedSamplePeriod.
-                    self::getFormattedUbnOfBirthWithoutPadding($data)
+                    self::getFormattedSIgANullFiller().
+                    self::getFormattedNZIgANullFiller().
+                    self::getFormattedNZClassNullFiller().
+                    $recordEnd
                 ;
 
-                $results[$data[JsonInputConstant::ANIMAL_ID]] = $record;
+                $results[] = $record;
+            }
+
+
+            if(self::isSIgANotNull($data)) {
+
+                 $record =
+                    $recordBase.
+                    self::getFormattedLnFECNullFiller().
+                    self::getFormattedSIgA($data).
+                    self::getFormattedNZIgANullFiller().
+                    self::getFormattedNZClassNullFiller().
+                    $recordEnd
+                ;
+
+                $results[] = $record;
+            }
+
+
+            if(self::isNZIgANotNull($data)) {
+
+                $record =
+                    $recordBase.
+                    $formattedLnFEC.
+                    self::getFormattedSIgANullFiller().
+                    self::getFormattedNZIgA($data).
+                    self::getFormattedNZclass($data).
+                    $recordEnd
+                ;
+
+                $results[] = $record;
             }
         }
+
+        self::$epgFormattedNullFiller = null;
+        self::$sIgaFormattedNullFiller = null;
+        self::$nzIgaFormattedNullFiller = null;
+        self::$nzClassFormattedNullFiller = null;
 
         return $results;
     }
@@ -150,15 +198,40 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
     /**
      * @param array $data
+     * @return bool
+     */
+    private static function isLnFECNotNull(array $data)
+    {
+        return ArrayUtil::get(JsonInputConstant::EPG, $data) !== null;
+    }
+
+
+    /**
+     * @param array $data
+     * @return bool
+     */
+    private static function isSIgANotNull(array $data)
+    {
+        return ArrayUtil::get(JsonInputConstant::S_IGA_GLASGOW, $data) !== null;
+    }
+
+
+    /**
+     * @param array $data
+     * @return bool
+     */
+    private static function isNZIgANotNull(array $data)
+    {
+        return ArrayUtil::get(JsonInputConstant::CARLA_IGA_NZ, $data) !== null;
+    }
+
+
+    /**
+     * @param array $data
      * @return string
      */
     private static function getFormattedLnFEC(array $data)
     {
-        $allowNull = true;
-        if (!$allowNull && $data[JsonInputConstant::EPG] === null) {
-            return null;
-        }
-
         return self::getFormattedValueFromData(
             $data,
             self::LN_FEC_COLUMN_WIDTH,
@@ -166,6 +239,21 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
             true,
             MixBlupInstructionFileBase::MISSING_REPLACEMENT
         );
+    }
+
+    /**
+     * @return string
+     */
+    private static function getFormattedLnFECNullFiller()
+    {
+        if (self::$epgFormattedNullFiller === null) {
+            self::$epgFormattedNullFiller = DsvWriterUtil::pad(
+                MixBlupInstructionFileBase::MISSING_REPLACEMENT,
+                self::LN_FEC_COLUMN_WIDTH,
+                true
+            );
+        }
+        return self::$epgFormattedNullFiller;
     }
 
 
@@ -191,6 +279,22 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
 
     /**
+     * @return string
+     */
+    private static function getFormattedSIgANullFiller()
+    {
+        if (self::$sIgaFormattedNullFiller === null) {
+            self::$sIgaFormattedNullFiller = DsvWriterUtil::pad(
+                MixBlupInstructionFileBase::MISSING_REPLACEMENT,
+                self::NZ_S_IGA_COLUMN_WIDTH,
+                true
+            );
+        }
+        return self::$sIgaFormattedNullFiller;
+    }
+
+
+    /**
      * @param array $data
      * @return string
      */
@@ -208,6 +312,22 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
             true,
             MixBlupInstructionFileBase::MISSING_REPLACEMENT
         );
+    }
+
+
+    /**
+     * @return string
+     */
+    private static function getFormattedNZIgANullFiller()
+    {
+        if (self::$nzIgaFormattedNullFiller === null) {
+            self::$nzIgaFormattedNullFiller = DsvWriterUtil::pad(
+                MixBlupInstructionFileBase::MISSING_REPLACEMENT,
+                self::NZ_IGA_COLUMN_WIDTH,
+                true
+            );
+        }
+        return self::$nzIgaFormattedNullFiller;
     }
 
 
@@ -235,6 +355,22 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
 
     /**
+     * @return string
+     */
+    private static function getFormattedNZClassNullFiller()
+    {
+        if (self::$nzClassFormattedNullFiller === null) {
+            self::$nzClassFormattedNullFiller = DsvWriterUtil::pad(
+                MixBlupInstructionFileBase::MISSING_REPLACEMENT,
+                self::NZ_CLASS_COLUMN_WIDTH,
+                true
+            );
+        }
+        return self::$nzClassFormattedNullFiller;
+    }
+
+
+    /**
      * @param array $data
      * @return array
      */
@@ -257,8 +393,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
         if (count(self::$nzClassTranslationArray) === 0) {
             self::$nzClassTranslationArray = array_flip(MixblupNzClassEnum::getConstants());
         }
-
-        //TODO verify these value mappings
 
         switch (strtoupper($classCarlaIgaNz)) {
             case MixblupNzClassEnum::NONE_DETECTED: return 0;
