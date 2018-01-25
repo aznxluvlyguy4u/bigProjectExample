@@ -206,6 +206,7 @@ class JsonInputConstant
     const INSPECTOR_FIRST_NAME = 'inspector_first_name';
     const INSPECTOR_LAST_NAME = 'inspector_last_name';
     const YEAR_AND_UBN_OF_BIRTH = 'year_and_ubn_of_birth';
+    const YEAR_AND_UBN_OF_TREATMENT = 'year_and_ubn_of_treatment';
 
     //Weight measurements
     const WEIGHT_MEASUREMENTS = 'weight_measurements';

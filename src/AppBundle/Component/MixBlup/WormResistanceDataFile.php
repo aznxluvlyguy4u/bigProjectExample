@@ -35,6 +35,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
     static function generateDataFile(Connection $conn)
     {
         $dynamicColumnWidths = self::dynamicColumnWidths($conn);
+        $yearAndUbnDynamicColumnWidth = $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH];
 
         $results = [];
         foreach ($conn->query(self::getSqlQueryForBaseValues())->fetchAll() as $data) {
@@ -52,7 +53,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                 $formattedUln.
                 self::getFormattedAnimalId($data).
                 self::getFormattedGenderFromType($data).
-                self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
+                self::getFormattedYearAndUbnOfTreatment($data, $yearAndUbnDynamicColumnWidth).
                 $parsedBreedCode.
                 self::getFormattedHeterosis($data).
                 self::getFormattedRecombination($data).
@@ -136,7 +137,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
             $returnValuesString =
                 "a.id as ".JsonInputConstant::ANIMAL_ID.",
                  CONCAT(a.uln_country_code, a.uln_number) as ".JsonInputConstant::ULN.", a.".JsonInputConstant::TYPE.",
-                 CONCAT(DATE_PART('year', a.date_of_birth),'_', a.ubn_of_birth) as ".JsonInputConstant::YEAR_AND_UBN_OF_BIRTH.",
+                 CONCAT(w.year,'_', w.treatment_ubn) as ".JsonInputConstant::YEAR_AND_UBN_OF_TREATMENT.",
                  a.".JsonInputConstant::BREED_CODE.",
                  a.".JsonInputConstant::UBN_OF_BIRTH.",
                  a.".JsonInputConstant::HETEROSIS.",
@@ -167,8 +168,19 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
     {
         return "DATE_PART('year', NOW()) - $yearOfMeasurement <= ".MixBlupSetting::MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS."
                   AND a.gender <> '".GenderType::NEUTER."'
-                  AND a.date_of_birth NOTNULL AND a.ubn_of_birth NOTNULL
+                  AND w.year NOTNULL AND w.treatment_ubn NOTNULL
                   AND a.breed_code NOTNULL";
+    }
+
+
+    /**
+     * @param array $data
+     * @param int $columnWidth
+     * @return string
+     */
+    private static function getFormattedYearAndUbnOfTreatment($data, $columnWidth)
+    {
+        return self::getFormattedYearAndUbnOfBirth($data, $columnWidth, JsonInputConstant::YEAR_AND_UBN_OF_TREATMENT);
     }
 
 
