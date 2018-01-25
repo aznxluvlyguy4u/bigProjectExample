@@ -103,6 +103,37 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         $this->sqlBatchProcessor
             ->end()
             ->purgeAllSets();
+
+        $this->fillEmptyTreatmentUbnsWithCurrentUbns();
+    }
+
+
+    private function fillEmptyTreatmentUbnsWithCurrentUbns()
+    {
+        try {
+            $sql = "UPDATE worm_resistance SET treatment_ubn = v.new_treatment_ubn
+                FROM (
+                  SELECT
+                    w.id,
+                --     w.animal_id,
+                --     w.treatment_ubn,
+                --     a.ubn_of_birth,
+                --     l.ubn as current_ubn,
+                    COALESCE(w.treatment_ubn, CAST(a.ubn_of_birth AS INTEGER), CAST(l.ubn AS INTEGER)) as new_treatment_ubn
+                  FROM worm_resistance w
+                    INNER JOIN animal a ON w.animal_id = a.id
+                    LEFT JOIN location l ON a.location_id = l.id
+                  WHERE w.treatment_ubn ISNULL AND (a.ubn_of_birth NOTNULL OR l.ubn NOTNULL)
+                ) AS v(w_id, new_treatment_ubn) WHERE worm_resistance.id = v.w_id";
+            $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+            $updateCountText = $updateCount === 0 ? 'No' : $updateCount;
+            $this->writeLn($updateCountText . ' empty treatment ubns where filled using ubnOfBirths or currentUbns');
+
+        } catch (\Exception $exception) {
+            $this->writeLn('An error occured trying to fill the empty TreatmentUbns.');
+            $this->writeLn($exception->getMessage());
+            $this->writeLn($exception->getTraceAsString());
+        }
     }
 
 
