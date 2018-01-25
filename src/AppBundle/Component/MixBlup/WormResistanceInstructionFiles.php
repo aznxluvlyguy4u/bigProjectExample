@@ -95,13 +95,13 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
         $jaarBedr = self::jaarBedrijf($isRelani);
 
         $lnFecTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld Periode';
-        $siGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld';
+        $siGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse';
         $nSiGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld Periode';
 
         return [
             'LnFEC' => ' LnFEC    ~ '.$jaarBedr.$lnFecTraits.' !RANDOM G(ID)',
-            'SIgA' => ' LnFEC    ~ '.$jaarBedr.$siGaTraits.' !RANDOM G(ID)',
-            'NZIgA' => ' LnFEC    ~ '.$jaarBedr.$nSiGaTraits.' !RANDOM G(ID)',
+            'SIgA' =>  ' SIgA     ~ '.$jaarBedr.$siGaTraits.' !RANDOM G(ID)',
+            'NZIgA' => ' NZIgA    ~ '.$jaarBedr.$nSiGaTraits.' !RANDOM G(ID)',
         ];
     }
 }
