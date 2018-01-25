@@ -48,7 +48,7 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         $this->animalIdsByUniqueStn = $this->animalRepository->getAnimalPrimaryKeysByUniqueStnArray();
 
         $this->writeLn('Get current WormResistance records search array ...');
-        $sql = "SELECT CONCAT(animal_id,'|',year) as key FROM worm_resistance";
+        $sql = "SELECT CONCAT(animal_id,'|',year,sample_period) as key FROM worm_resistance";
         $currentRecords = SqlUtil::getSingleValueGroupedSqlResults(
             'key', $this->conn->query($sql)->fetchAll(), false, true);
 
@@ -85,7 +85,7 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
 
             $animalId = $this->getAnimalId($record);
 
-            if ($animalId === null || key_exists($animalId.'|'.$year, $currentRecords)) {
+            if ($animalId === null || key_exists($animalId.'|'.$year.$record[16], $currentRecords)) {
                 $insertBatchSet->incrementSkippedCount();
                 continue;
             }
@@ -93,7 +93,6 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
             $insertBatchSet->appendValuesString("(".$animalId . ",NOW()," . $sampleDateString . "," . $year . ","
                 . $treatedForSamples . "," . $epg . "," . $sIgaGlasgow . ","
                 . $carlaIgaNz . "," . $classCarlaIgaNz . "," . $samplePeriod . ")");
-            $insertBatchSet->incrementBatchCount();
 
 
             $this->sqlBatchProcessor
