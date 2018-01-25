@@ -66,7 +66,6 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
             ' LnFEC      T #Natuurlijke logaritme uit de eitelling = epg',
             ' SIgA       T #IgA bepaling in Schotland',
             ' NZIgA      T #IgA bepaling in Nieuw Zeeland',
-            ' NZclass    T #Klasse op basis van IgA bepaling in Nieuw Zeeland. None detected, Medium, Trace, Low, High, leeg/default = -99',
             ' Periode    I #vroege of late monstername binnen seizoen. 1/2, default = '.WormResistanceDataFile::SAMPLE_PERIOD_DEFAULT_VALUE,
         ];
 

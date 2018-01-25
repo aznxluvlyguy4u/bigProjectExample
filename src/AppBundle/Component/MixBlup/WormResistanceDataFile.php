@@ -6,7 +6,6 @@ namespace AppBundle\Component\MixBlup;
 
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
-use AppBundle\Enumerator\MixblupNzClassEnum;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DsvWriterUtil;
@@ -26,12 +25,9 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
     const NZ_S_IGA_COLUMN_WIDTH = 9;
     const LN_FEC_COLUMN_WIDTH = 5;
 
-    private static $nzClassTranslationArray = [];
-
     private static $epgFormattedNullFiller;
     private static $sIgaFormattedNullFiller;
     private static $nzIgaFormattedNullFiller;
-    private static $nzClassFormattedNullFiller;
 
     /**
      * @inheritDoc
@@ -78,7 +74,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                     self::getFormattedLnFECNullFiller().
                     self::getFormattedSIgA($data).
                     self::getFormattedNZIgANullFiller().
-                    self::getFormattedNZClassNullFiller().
                     $recordEnd
                 ;
 
@@ -95,7 +90,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                     $formattedLnFEC.
                     self::getFormattedSIgANullFiller().
                     self::getFormattedNZIgA($data).
-                    self::getFormattedNZclass($data).
                     $recordEnd
                 ;
 
@@ -108,7 +102,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                     $formattedLnFEC.
                     self::getFormattedSIgANullFiller().
                     self::getFormattedNZIgANullFiller().
-                    self::getFormattedNZClassNullFiller().
                     $recordEnd
                 ;
 
@@ -120,7 +113,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
         self::$epgFormattedNullFiller = null;
         self::$sIgaFormattedNullFiller = null;
         self::$nzIgaFormattedNullFiller = null;
-        self::$nzClassFormattedNullFiller = null;
 
         return $results;
     }
@@ -153,7 +145,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                  ROUND(CAST(w.epg AS NUMERIC), ".self::EPG_DECIMALS.") as ".JsonInputConstant::EPG.",
                  ROUND(CAST(w.s_iga_glasgow AS NUMERIC), ".self::S_IGA_DECIMALS.") as ".JsonInputConstant::S_IGA_GLASGOW.",
                  ROUND(CAST( w.carla_iga_nz AS NUMERIC), ".self::CARLA_IGA_DECIMALS.") as ".JsonInputConstant::CARLA_IGA_NZ.",
-                 w.".JsonInputConstant::CLASS_CARLA_IGA_NZ.",
                  w.".JsonInputConstant::SAMPLE_PERIOD.",
                  w.".JsonInputConstant::YEAR."";
         }
@@ -318,75 +309,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
             );
         }
         return self::$nzIgaFormattedNullFiller;
-    }
-
-
-    /**
-     * @param array $data
-     * @return string
-     */
-    private static function getFormattedNZclass(array $data)
-    {
-        $data = self::translateNZclassInData($data);
-
-        return self::getFormattedValueFromData(
-            $data,
-            self::NZ_CLASS_COLUMN_WIDTH,
-            JsonInputConstant::CLASS_CARLA_IGA_NZ,
-            true,
-            MixBlupInstructionFileBase::MISSING_REPLACEMENT
-        );
-    }
-
-
-    /**
-     * @return string
-     */
-    private static function getFormattedNZClassNullFiller()
-    {
-        if (self::$nzClassFormattedNullFiller === null) {
-            self::$nzClassFormattedNullFiller = DsvWriterUtil::pad(
-                MixBlupInstructionFileBase::MISSING_REPLACEMENT,
-                self::NZ_CLASS_COLUMN_WIDTH,
-                true
-            );
-        }
-        return self::$nzClassFormattedNullFiller;
-    }
-
-
-    /**
-     * @param array $data
-     * @return array
-     */
-    private static function translateNZclassInData(array $data)
-    {
-        $classCarlaIgaNz = ArrayUtil::get(JsonInputConstant::CLASS_CARLA_IGA_NZ, $data);
-
-        $data[JsonInputConstant::CLASS_CARLA_IGA_NZ] = self::translateNZclassDatabaseValueToMixblupValue($classCarlaIgaNz);
-
-        return $data;
-    }
-
-
-    /**
-     * @param string $classCarlaIgaNz
-     * @return mixed|null
-     */
-    public static function translateNZclassDatabaseValueToMixblupValue($classCarlaIgaNz)
-    {
-        if (count(self::$nzClassTranslationArray) === 0) {
-            self::$nzClassTranslationArray = array_flip(MixblupNzClassEnum::getConstants());
-        }
-
-        switch (strtoupper($classCarlaIgaNz)) {
-            case MixblupNzClassEnum::NONE_DETECTED: return 0;
-            case MixblupNzClassEnum::TRACE:         return 1;
-            case MixblupNzClassEnum::LOW:           return 2;
-            case MixblupNzClassEnum::MEDIUM:        return 3;
-            case MixblupNzClassEnum::HIGH:          return 4;
-            default:                                return MixBlupInstructionFileBase::MISSING_REPLACEMENT;
-        }
     }
 
 
