@@ -59,7 +59,7 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         ;
 
         $insertBatchSet->setSqlQueryBase("INSERT INTO worm_resistance (animal_id, log_date, sampling_date, year,
-                 treated_for_samples, epg, s_iga_glasgow, carla_iga_nz, class_carla_iga_nz, sample_period) VALUES ");
+                 treated_for_samples, epg, s_iga_glasgow, carla_iga_nz, class_carla_iga_nz, sample_period, treatment_ubn) VALUES ");
 
         $this->data = $this->parseCSV(self::WORM_RESISTANCE);
         $this->sqlBatchProcessor->start(count($this->data));
@@ -74,7 +74,7 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
             $sampleDateString = $this->parseDateString($record[6]); //Date YYYY-MM-DD
             $year = $this->parseYear($record[7]); //int
             //$companyName = $record[8]; //int
-            //$ubn = $record[9]; //int
+            $treatmentUbn = $this->parseUbn($record[9]); //int
             //$animalOrderNumber = $record[10]; //int
             $treatedForSamples = $this->getTreatedForSamples($record[11]); //nee/ja/null/''
             $epg = $this->getEpg($record[12]); //int MAX 30000
@@ -92,7 +92,7 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
 
             $insertBatchSet->appendValuesString("(".$animalId . ",NOW()," . $sampleDateString . "," . $year . ","
                 . $treatedForSamples . "," . $epg . "," . $sIgaGlasgow . ","
-                . $carlaIgaNz . "," . $classCarlaIgaNz . "," . $samplePeriod . ")");
+                . $carlaIgaNz . "," . $classCarlaIgaNz . "," . $samplePeriod . "," . $treatmentUbn . ")");
 
 
             $this->sqlBatchProcessor
@@ -147,6 +147,19 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         }
         $float = str_replace(',','.', $float);
         return SqlUtil::getNullCheckedValueForSqlQuery($float, true);
+    }
+
+
+    /**
+     * @param $ubn
+     * @return string
+     */
+    private function parseUbn($ubn)
+    {
+        if (ctype_digit($ubn) || is_int($ubn)) {
+            return SqlUtil::getNullCheckedValueForSqlQuery($ubn, false);
+        }
+        return SqlUtil::NULL;
     }
 
 
