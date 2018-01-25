@@ -70,22 +70,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
 
             // Records divided up by traits (kenmerken). LnFEC=EPG, SIgA, NZIgA
-            $formattedLnFEC = self::getFormattedLnFEC($data);
-
-            if(self::isLnFECNotNull($data)) {
-
-                $record =
-                    $recordBase.
-                    $formattedLnFEC.
-                    self::getFormattedSIgANullFiller().
-                    self::getFormattedNZIgANullFiller().
-                    self::getFormattedNZClassNullFiller().
-                    $recordEnd
-                ;
-
-                $results[] = $record;
-            }
-
 
             if(self::isSIgANotNull($data)) {
 
@@ -102,6 +86,8 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
             }
 
 
+            $formattedLnFEC = self::getFormattedLnFEC($data); // includes null filler
+
             if(self::isNZIgANotNull($data)) {
 
                 $record =
@@ -114,6 +100,20 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                 ;
 
                 $results[] = $record;
+
+            } elseif(self::isLnFECNotNull($data)) {
+
+                $record =
+                    $recordBase.
+                    $formattedLnFEC.
+                    self::getFormattedSIgANullFiller().
+                    self::getFormattedNZIgANullFiller().
+                    self::getFormattedNZClassNullFiller().
+                    $recordEnd
+                ;
+
+                $results[] = $record;
+
             }
         }
 
@@ -263,11 +263,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      */
     private static function getFormattedSIgA(array $data)
     {
-        $allowNull = true;
-        if (!$allowNull && $data[JsonInputConstant::S_IGA_GLASGOW] === null) {
-            return null;
-        }
-
         return self::getFormattedValueFromData(
             $data,
             self::NZ_S_IGA_COLUMN_WIDTH,
@@ -300,11 +295,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      */
     private static function getFormattedNZIgA(array $data)
     {
-        $allowNull = true;
-        if (!$allowNull && $data[JsonInputConstant::CARLA_IGA_NZ] === null) {
-            return null;
-        }
-
         return self::getFormattedValueFromData(
             $data,
             self::NZ_IGA_COLUMN_WIDTH,
@@ -337,11 +327,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      */
     private static function getFormattedNZclass(array $data)
     {
-        $allowNull = true;
-        if (!$allowNull && $data[JsonInputConstant::CLASS_CARLA_IGA_NZ] === null) {
-            return null;
-        }
-
         $data = self::translateNZclassInData($data);
 
         return self::getFormattedValueFromData(
