@@ -394,7 +394,7 @@ class AnimalRepository extends BaseRepository
 
     /**
      * @param Location $location
-     * @param bool $isAlive
+     * @param bool $isAlive set to null to ignore isAlive status
      * @param string $queryOnlyOnAnimalGenderType
      * @return QueryBuilder
      */
@@ -402,14 +402,18 @@ class AnimalRepository extends BaseRepository
   {
       $livestockAnimalsQueryBuilder = $this->getManager()->createQueryBuilder();
 
-      $isAlive = $isAlive ? 'true' : 'false';
+      $isAliveFilter = null;
+      if ($isAlive !== null) {
+          $isAlive = $isAlive ? 'true' : 'false';
+          $isAliveFilter = $livestockAnimalsQueryBuilder->expr()->eq('animal.isAlive', $isAlive);
+      }
 
       $livestockAnimalsQueryBuilder
           ->select('animal')
           ->from (Animal::class, 'animal')
           ->where($livestockAnimalsQueryBuilder->expr()->andX(
               $livestockAnimalsQueryBuilder->expr()->andX(
-                  $livestockAnimalsQueryBuilder->expr()->eq('animal.isAlive', $isAlive),
+                  $isAliveFilter,
                   $this->getLiveStockQueryGenderFilter($livestockAnimalsQueryBuilder, $queryOnlyOnAnimalGenderType, 'animal'), //apply gender filter
                   $livestockAnimalsQueryBuilder->expr()->orX(
                       $livestockAnimalsQueryBuilder->expr()->isNull('animal.transferState'),
@@ -622,7 +626,7 @@ class AnimalRepository extends BaseRepository
   public function getCandidateMothersForBirth(Location $location, CacheService $cacheService, BaseSerializer $serializer)
   {
       return $this->getManager()->getRepository(Animal::class)
-          ->getLiveStock($location , $cacheService, $serializer, true,
+          ->getLiveStock($location , $cacheService, $serializer, null,
               Ewe::class, $this->getExtraJmsGroupsForCandidateMothers());
   }
 
