@@ -15,8 +15,11 @@ use AppBundle\Entity\Tag;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\BirthService;
+use AppBundle\Service\CacheService;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\UnitTestData;
@@ -54,10 +57,14 @@ class BirthTest extends WebTestCase
     static private $ewe;
     /** @var Ram */
     static private $ram;
+    /** @var Mate */
+    static private $newTestMate;
     /** @var Tag */
     static private $tag;
     /** @var IRSerializer */
     static private $serializer;
+    /** @var CacheService */
+    static private $cacheService;
     /** @var EntityManagerInterface|ObjectManager */
     static private $em;
     /** @var RequestClient */
@@ -83,20 +90,37 @@ class BirthTest extends WebTestCase
 
         //Get service classes
         self::$serializer = $container->get('app.serializer.ir');
+        self::$cacheService = $container->get('app.cache');
         self::$em = $container->get('doctrine')->getManager();
 
         //Database safety check
         Validator::isTestDatabase(self::$em);
+
+        UnitTestData::deleteTestAnimals(self::$em->getConnection(), [Mate::getTableName()]);
 
         self::$location = UnitTestData::getActiveTestLocation(self::$em);
         self::$ram = UnitTestData::createTestRam(self::$em, self::$location);
         self::$ewe = UnitTestData::createTestEwe(self::$em, self::$location);
         self::$tag = UnitTestData::createTag(self::$em, self::$location);
         self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
+        self::$newTestMate = UnitTestData::createNewTestMate(
+            self::$em,
+            self::$ewe,
+            self::$ram,
+            self::$location,
+            new \DateTime('2002-06-03'),
+            new \DateTime('2002-08-14')
+        );
+
+        self::$em->getRepository(Animal::class)
+            ->purgeCandidateMothersCache(self::$location, self::$cacheService);
     }
 
     public static function tearDownAfterClass()
     {
+        self::$em->getRepository(Animal::class)
+            ->purgeCandidateMothersCache(self::$location, self::$cacheService);
+
         self::$em->refresh(self::$ewe);
         foreach (self::$ewe->getMatings() as $mating) {
             self::$em->remove($mating);
@@ -219,6 +243,55 @@ class BirthTest extends WebTestCase
         $response = $this->client->getResponse();
         $data = json_decode($response->getContent(), true);
         $this->assertStatusCode(200, $this->client);
+    }
+
+
+    /**
+     * @group get
+     * @group birth-get
+     */
+    public function testCandidateMothersCount()
+    {
+        $belowMinEventDate = new \DateTime('2002-10-14');
+        $minEventDate = new \DateTime('2002-10-15');
+        $maxEventDate = new \DateTime('2002-12-19');
+        $aboveMaxEventDate = new \DateTime('2002-12-20');
+
+        $this->baseTestCandidateMothersCount($minEventDate, 1, 'SuggestedCandidateMothers count minEventDate');
+        $this->baseTestCandidateMothersCount($maxEventDate, 1, 'SuggestedCandidateMothers count maxEventDate');
+        $this->baseTestCandidateMothersCount($belowMinEventDate, 0, 'SuggestedCandidateMothers count belowMinEventDate');
+        $this->baseTestCandidateMothersCount($aboveMaxEventDate, 0, 'SuggestedCandidateMothers count aboveMaxEventDate');
+    }
+
+
+    /**
+     * @param \DateTime $dateOfBirth
+     * @param $expectedCount
+     * @param $label
+     */
+    private function baseTestCandidateMothersCount(\DateTime $dateOfBirth, $expectedCount, $label)
+    {
+        $json =
+            json_encode(
+                [
+                    "date_of_birth" => TimeUtil::getTimeStampForJsonBody($dateOfBirth),
+                ]);
+
+        $this->client->request(Request::METHOD_POST,
+            Endpoint::DECLARE_BIRTH_ENDPOINT . $this->endpointSuffixes[self::GET_CandidateMothers],
+            array(),
+            array(),
+            $this->defaultHeaders,
+            $json
+        );
+
+        $response = $this->client->getResponse();
+        $data = json_decode($response->getContent(), true);
+        $this->assertStatusCode(200, $this->client);
+
+        $result = ArrayUtil::get('result', $data, []);
+        $suggestedCandidateMothers = ArrayUtil::get('suggested_candidate_mothers', $result, []);
+        $this->assertCount(1, $suggestedCandidateMothers, 'SuggestedCandidateMothers count minEventDate');
     }
 
 
