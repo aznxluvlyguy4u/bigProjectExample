@@ -17,6 +17,7 @@ use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
@@ -24,6 +25,7 @@ use AppBundle\Entity\Token;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\BreedType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;
@@ -123,10 +125,49 @@ class UnitTestData
         $animal->setLocation($location);
         $animal->setIsAlive(true);
 
+        $animal->setDateOfBirth(new \DateTime('2001-01-01'));
+
         $em->persist($animal);
         $em->flush();
 
         return $animal;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Ewe $ewe
+     * @param Ram $ram
+     * @param Location $location
+     * @param \DateTime $startDate
+     * @param \DateTime $endDate
+     * @param bool $pmsg
+     * @param bool $ki
+     * @return Mate
+     */
+    public static function createNewTestMate(EntityManagerInterface $em,
+                                              Ewe $ewe, Ram $ram, Location $location,
+                                              \DateTime $startDate, \DateTime $endDate,
+                                              $pmsg = false, $ki = false)
+    {
+        $mate = new Mate();
+        $mate->setStudEwe($ewe);
+        $mate->setStudRam($ram);
+        $mate->setLocation($location);
+        $mate->setStartDate($startDate);
+        $mate->setEndDate($endDate);
+        $mate->setRequestState(RequestStateType::COMPLETED);
+        $mate->setPmsg($pmsg);
+        $mate->setKi($ki);
+        $mate->setApprovalDate($mate->getLogDate());
+
+        $mate->setRamUlnCountryCode($ram->getUlnCountryCode());
+        $mate->setRamUlnNumber($ram->getUlnNumber());
+
+        $em->persist($mate);
+        $em->flush();
+
+        return $mate;
     }
 
 
@@ -142,9 +183,20 @@ class UnitTestData
         if (is_string($tableNames)) { $tableNames = [$tableNames]; }
         foreach ($tableNames as $tableName) {
             if (is_string($tableName)) {
-                $sql = "DELETE FROM $tableName WHERE animal_id IN 
-                (SELECT id FROM animal WHERE nickname = '$testLabel' AND name = '$testLabel')";
-                SqlUtil::updateWithCount($conn, $sql);
+
+                $testAnimalIdsArray = "SELECT id FROM animal WHERE nickname = '$testLabel' AND name = '$testLabel'";
+
+                switch ($tableName) {
+                    case Mate::getTableName():
+                        $sql = "DELETE FROM mate WHERE stud_ewe_id IN ($testAnimalIdsArray) OR stud_ram_id IN ($testAnimalIdsArray)";
+                        SqlUtil::updateWithCount($conn, $sql);
+                        break;
+
+                    default:
+                        $sql = "DELETE FROM $tableName WHERE animal_id IN ($testAnimalIdsArray)";
+                        SqlUtil::updateWithCount($conn, $sql);
+                        break;
+                }
             }
         }
 
@@ -344,7 +396,25 @@ class UnitTestData
         //Check if Default Location exists
         $location = $em->getRepository(Location::class)->findOneByActiveUbn(self::UBN);
         if ($location) {
-            return $location;
+
+            $skipLocation = false;
+            if ((is_int($locationToSkip) && $locationToSkip !== $location->getId())
+                || ($locationToSkip instanceof Location && $locationToSkip->getId() !== $location->getId())) {
+                $skipLocation = true;
+            }
+
+            if (!$skipLocation) {
+                $aliveCount = 0;
+                /** @var Animal $animal */
+                foreach($location->getAnimals() as $animal) {
+                    if ($animal->getIsAlive()) {
+                        if (++$aliveCount >= $minAliveAnimalsCount) {
+                            return $location;
+                        }
+                    }
+                }
+            }
+
         }
 
         return self::getRandomActiveLocation($em, $locationToSkip, $minAliveAnimalsCount);

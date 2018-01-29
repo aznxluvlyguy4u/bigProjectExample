@@ -737,7 +737,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             foreach ($children as $child) {
                 if($child->getDateOfBirth()) {
                     //Add as a true candidate surrogate to list
-                    if(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {
+                    if(abs(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow)) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {
                         $suggestedCandidatesResult[] = $this->getAnimalResult($animal, $location);
                         $addToOtherCandidates = false;
                         break;

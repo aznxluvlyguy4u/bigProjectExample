@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Constant\Constant;
+use AppBundle\Criteria\MateCriteria;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\MateOutput;
 use AppBundle\Util\Validator;
@@ -187,5 +188,21 @@ class MateRepository extends BaseRepository {
     {
         $matings = $this->getMatingsStudRam($locationStudRamOwner);
         return MateOutput::createMatesStudRamsOverview($matings);
+    }
+
+
+    /**
+     * @param Location $location
+     * @return \Doctrine\ORM\QueryBuilder
+     * @throws \Doctrine\ORM\Query\QueryException
+     * @throws \Exception
+     */
+    public function getQueryBuilderByLocation(Location $location)
+    {
+        return $this->getManager()->createQueryBuilder()
+            ->select('mate')
+            ->from(Mate::class, 'mate')
+            ->addCriteria(MateCriteria::byLocation($location))
+        ;
     }
 }
