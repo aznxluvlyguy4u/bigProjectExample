@@ -43,7 +43,11 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
 
             if($data[JsonInputConstant::HETEROSIS] == null
                 || $data[JsonInputConstant::RECOMBINATION] == null) {
-                //TODO
+                /*
+                The empty heterosis and recombination values should be filled
+                before generating the mixblup input files.
+                */
+                continue;
             }
 
             $formattedUln = MixBlupSetting::INCLUDE_ULNS ? self::getFormattedUln($data) : '';
@@ -359,8 +363,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
             $filterString = $filterString.$prefix."r.abbreviation = '".$abbreviation."'";
             $prefix = ' OR ';
         }
-        $filterString = $filterString.") AND m.inspector_id NOTNULL";
-        //TODO include a way to filter for only NSFO inspectors
+        $filterString = $filterString.") AND m.inspector_id NOTNULL AND i.is_authorized_nsfo_inspector = TRUE";
 
         return $filterString;
     }

@@ -63,10 +63,10 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
         $middle = [
             ' CovHetLam  R #Heterosis lam of worp', //Heterosis of offspring/litter
             ' CovRecLam  R #Recombinatie lam of worp', //Recombination of offspring/litter
-            ' CovTE_M    R #Rasdeel TE van moeder', //BreedCode part TE of mother //TODO definition still unclear
+            ' CovTE_M    R #Rasdeel TE van moeder', //BreedCode part TE of mother
             ' Inductie   R #Bronstinduction 1=Ja, 0=Nee', //pmsg value in mate 0=FALSE, 1=TRUE
             ' PermMil    I #Permanent milieu is identiek aan de ID van de ooi of moeder',
-            ' IDM        I #Het unieke diernummer van de moeder', //TODO definition still unclear
+            ' IDM        I #Het unieke diernummer van de moeder van dier in hoofdkolom',
             ' WorpID     A ',
             ' TotGeb     T #Totaal geboren lammeren in de worp', //bornAliveCount in litter
             ' DoodGeb    T #Doodgeboren lammeren in de worp', //stillbornCount in litter
