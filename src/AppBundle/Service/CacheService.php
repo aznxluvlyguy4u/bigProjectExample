@@ -129,6 +129,8 @@ class CacheService
         if($location) {
             $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
             $historicCacheId = AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID .$location->getId();
+            $candidateMotherId = AnimalRepository::CANDIDATE_MOTHERS_CACHE_ID . $location->getId();
+
             $this->getRedisAdapter()->deleteItems([
                 $cacheId,
                 $cacheId . '_' . Ewe::getShortClassName(),
@@ -138,6 +140,7 @@ class CacheService
                 $historicCacheId . '_' . Ewe::getShortClassName(),
                 $historicCacheId . '_' . Ram::getShortClassName(),
                 $historicCacheId . '_' . Neuter::getShortClassName(),
+                $candidateMotherId,
             ]);
         }
     }
