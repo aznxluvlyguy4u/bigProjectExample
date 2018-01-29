@@ -49,6 +49,7 @@ class AnimalRepository extends BaseRepository
   const LIVESTOCK_CACHE_ID = 'GET_LIVESTOCK_';
   const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
   const CANDIDATE_FATHERS_CACHE_ID = 'GET_CANDIDATE_FATHERS_';
+  const CANDIDATE_MOTHERS_CACHE_ID = 'GET_CANDIDATE_MOTHERS_';
   const CANDIDATE_SURROGATES_CACHE_ID = 'GET_CANDIDATE_SURROGATES_';
   const ANIMAL_ALIAS = 'animal';
 
@@ -623,20 +624,74 @@ class AnimalRepository extends BaseRepository
 
 
 
-  public function getCandidateMothersForBirth(Location $location, CacheService $cacheService, BaseSerializer $serializer)
+  public function getCandidateMothersForBirth(Location $location,
+                                              CacheService $cacheService,
+                                              BaseSerializer $serializer,
+                                              $onlyIncludeAliveEwes = false
+  )
   {
-      return $this->getManager()->getRepository(Animal::class)
-          ->getLiveStock($location , $cacheService, $serializer, null,
-              Ewe::class, $this->getExtraJmsGroupsForCandidateMothers());
+      $clazz = Ewe::class;
+
+      $mateQb = $this->getManager()->getRepository(Mate::class)->getQueryBuilderByLocation($location);
+
+      //Create currentLiveStock Query to use as subselect
+      $isAlive = $onlyIncludeAliveEwes ? null : true;
+      $livestockAnimalDQLQuery = $this->getLivestockQuery($location, $isAlive, $clazz, true);
+      $mateQb->expr()->in('mate.studEwe', $livestockAnimalDQLQuery)
+      ;
+
+      $query = $mateQb->getQuery();
+      $query->setFetchMode(Mate::class, 'studEwe', ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Animal::class, 'location', ClassMetadata::FETCH_EAGER);
+
+
+      //Returns a list of AnimalResidences
+      if (self::USE_REDIS_CACHE) {
+          $cacheId = $this->getCandidateMothersCacheId($location);
+
+          if ($cacheService->isHit($cacheId)) {
+              $studEwes = $serializer->deserializeArrayOfObjects($cacheService->getItem($cacheId), $clazz);
+          } else {
+              $mates = $query->getResult();
+              $studEwes = $this->getEwesFromMates($mates);
+
+              $jmsGroups = [JmsGroup::BASIC, JmsGroup::LIVESTOCK, JmsGroup::MATINGS];
+
+              $serializedStudEwes = $serializer->getArrayOfSerializedObjects($studEwes, $jmsGroups,true);
+              $cacheService->set($cacheId, $serializedStudEwes);
+          }
+
+      } else {
+          $mates = $query->getResult();
+          $studEwes = $this->getEwesFromMates($mates);
+      }
+
+      return $studEwes;
   }
 
 
     /**
-     * @return array
+     * @param Mate[] $mates
+     * @return Ewe[]
      */
-  private function getExtraJmsGroupsForCandidateMothers()
+  private function getEwesFromMates($mates)
   {
-      return [JmsGroup::MATINGS];
+      $studEwes = [];
+
+      //Grab the animals on returned residences
+      foreach ($mates as $mate)
+      {
+          $studEwe = $mate->getStudEwe();
+          if ($studEwe === null) {
+              continue;
+          }
+
+          $animalId = $studEwe->getId();
+          if (!key_exists($animalId, $studEwes)) {
+              $studEwes[$animalId] = $studEwe;
+          }
+      }
+      return $studEwes;
   }
 
 
@@ -660,7 +715,10 @@ class AnimalRepository extends BaseRepository
      */
   private function getCandidateMothersCacheId(Location $location)
   {
-      return $this->getLivestockCacheId($location, Ewe::class, $this->getExtraJmsGroupsForCandidateMothers());
+      return
+          AnimalRepository::CANDIDATE_MOTHERS_CACHE_ID .
+          $location->getId()
+      ;
   }
 
 
