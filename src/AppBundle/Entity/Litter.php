@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -88,6 +89,7 @@ class Litter extends DeclareNsfoBase
      * @JMS\Type("integer")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "ERROR_DETAILS"
      * })
@@ -101,6 +103,7 @@ class Litter extends DeclareNsfoBase
      * @JMS\Type("integer")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "ERROR_DETAILS"
      * })
@@ -131,7 +134,7 @@ class Litter extends DeclareNsfoBase
 
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="litter", cascade={"persist"})
-     * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      */
     private $children;
 
@@ -139,13 +142,16 @@ class Litter extends DeclareNsfoBase
      * @var ArrayCollection
      * 
      * @ORM\OneToMany(targetEntity="Stillborn", mappedBy="litter", cascade={"persist"})
-     * @JMS\Type("AppBundle\Entity\Stillborn")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Stillborn>")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     private $stillborns;
 
     /**
      * @var ArrayCollection
-     * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareBirth>")
      * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="litter", cascade={"persist"})
      * @JMS\Groups({
      *     "ERROR_DETAILS"
@@ -171,6 +177,7 @@ class Litter extends DeclareNsfoBase
      * @JMS\SerializedName("n_ling")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC"
      * })
      *
@@ -725,4 +732,22 @@ class Litter extends DeclareNsfoBase
     }
 
 
+    /**
+     * @param int $bornAliveCount
+     * @param int $stillbornCount
+     * @return Litter
+     */
+    public static function getNewImportedLitter($bornAliveCount, $stillbornCount)
+    {
+        $litter = new Litter();
+        $litter->setRequestState(RequestStateType::IMPORTED);
+        $litter->setStatus(RequestStateType::IMPORTED);
+        $litter->setIsAbortion(false);
+        $litter->setIsPseudoPregnancy(false);
+
+        $litter->setBornAliveCount($bornAliveCount);
+        $litter->setStillbornCount($stillbornCount);
+
+        return $litter;
+    }
 }

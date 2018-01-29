@@ -40,18 +40,23 @@ class DashboardOutput extends Output
         $repository = $em->getRepository(Content::class);
         $dashBoardIntroductionText = $repository->getDashBoardIntroductionText();
 
+        $healthStatus = [];
+        if ($location && $location->getAnimalHealthSubscription()) {
+            $healthStatus = [
+                "location_health_status" => self::$locationHealthStatus,
+                //maedi_visna is zwoegerziekte
+                "maedi_visna_status" => self::$maediVisnaStatus,
+                "maedi_visna_check_date" => self::$maediVisnaCheckDate,
+                "scrapie_status" => self::$scrapieStatus,
+                "scrapie_check_date" => self::$scrapieCheckDate,
+            ];
+        }
+
         $result = array(
                   "introduction" =>  $dashBoardIntroductionText,
                   "ubn" => self::$ubn,
                   "health_status" =>
-                  array(
-                    "location_health_status" => self::$locationHealthStatus,
-                    //maedi_visna is zwoegerziekte
-                      "maedi_visna_status" => self::$maediVisnaStatus,
-                      "maedi_visna_check_date" => self::$maediVisnaCheckDate,
-                      "scrapie_status" => self::$scrapieStatus,
-                      "scrapie_check_date" => self::$scrapieCheckDate,
-                  ),
+                  $healthStatus,
                   "livestock" =>
                   array(
                     "pedigree_animals" =>

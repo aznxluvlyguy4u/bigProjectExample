@@ -817,4 +817,35 @@ class DatabaseDataFixer
             $cmdUtilOrOutput->writeln($count . ' '. $message);
         }
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param $cmdUtilOrOutput
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function replaceEmptyStringsByNull(Connection $conn, $cmdUtilOrOutput)
+    {
+        $queries = [
+            'Animal.birthProgress' => "UPDATE animal SET birth_progress = NULL WHERE birth_progress = ''",
+        ];
+
+        $totalUpdateCount = 0;
+        $classVariablesWithUpdateCount = [];
+        foreach ($queries as $classVariable => $sql) {
+            $updateCount = SqlUtil::updateWithCount($conn, $sql);
+            $totalUpdateCount += $updateCount;
+            if ($updateCount > 0) {
+                $classVariablesWithUpdateCount[] = $classVariable . '(' . $updateCount . ')';
+            }
+        }
+
+        $classVariablesString = count($classVariablesWithUpdateCount) > 0 ? ' in: ' . implode(', ', $classVariablesWithUpdateCount) : '';
+        $message = 'empty strings have been replaced by null' . $classVariablesString . '.';
+
+        self::writeCount($cmdUtilOrOutput, $totalUpdateCount, $message);
+
+        return $totalUpdateCount;
+    }
 }

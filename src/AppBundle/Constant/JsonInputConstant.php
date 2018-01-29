@@ -7,6 +7,10 @@ class JsonInputConstant
 {
     const ID = 'id';
     const DASHBOARD_TYPE = 'dashboard_type';
+    const PLAIN_TEXT_INPUT = 'plain_text_input';
+    const UPDATED = 'updated';
+    const NOT_UPDATED = 'not_updated';
+    const SUCCESSFUL_UPDATE_SECONDARY_VALUES = 'successful_update_secondary_values';
 
     //Admins
     const ADMINS = 'admins';
@@ -65,6 +69,12 @@ class JsonInputConstant
     const EXCLUDE_MOTHER = 'exclude_mother';
     const EXCLUDE_FATHER = 'exclude_father';
     const GENERATIONS = 'generations';
+    const SEPARATOR = 'separator';
+    const ULNS_WITHOUT_FOUND_ANIMALS = 'ulns_without_found_animals';
+    const STNS_WITHOUT_FOUND_ANIMALS = 'stns_without_found_animals';
+    const FOUND_ULNS = 'found_ulns';
+    const FOUND_STNS = 'found_stns';
+    const BREED_CODE_UPDATED = 'breed_code_updated';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -76,6 +86,11 @@ class JsonInputConstant
     const ACTION_BY = 'action_by';
     const IS_REMOVED_BY_USER = 'is_removed_by_user';
     const IS_DUTCH = 'is_dutch';
+    const IS_MULTI_EDIT = 'is_multi_edit';
+    const EDITS = 'edits';
+    const SUCCESSFUL_EDITS = 'successful_edits';
+    const SUCCESS_COUNT = 'success_count';
+    const ERROR_COUNT = 'error_count';
 
     //Sync
     const IS_RVO_LEADING = 'is_rvo_leading';
@@ -142,6 +157,7 @@ class JsonInputConstant
     const SCRAPIE_END_DATE = 'scrapie_end_date';
     const MAEDI_VISNA_REASON_OF_EDIT = 'maedi_visna_reason_of_edit';
     const SCRAPIE_REASON_OF_EDIT = 'scrapie_reason_of_edit';
+    const ANIMAL_HEALTH_SUBSCRIPTION = 'animal_health_subscription';
 
     //Locations
     const LOCATION = 'location';
@@ -157,6 +173,7 @@ class JsonInputConstant
 
     //Location / UBN
     const UBN = 'ubn';
+    const UBNS = 'ubns';
 
     //Messages
     const MESSAGE_ID = 'message_id';

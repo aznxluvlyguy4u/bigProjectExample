@@ -21,6 +21,11 @@ use Symfony\Component\HttpFoundation\Request;
 
 class UbnService extends DeclareControllerServiceBase
 {
+    const ALL_UBNS_CACHE_ID_ = 'ALL_UBNS_CACHE_ID_';
+
+    /** @var array */
+    private static $allUbnCacheIds = [];
+
     /**
      * @param Request $request
      * @return JsonResponse
@@ -69,10 +74,76 @@ class UbnService extends DeclareControllerServiceBase
         { return ResultUtil::unauthorized(); }
 
         $activeOnly = RequestUtil::getBooleanQuery($request,QueryParameter::ACTIVE_ONLY,true);
-        $filter = $activeOnly ? ['isActive' => true] : [];
+        $includeGhostLoginData = RequestUtil::getBooleanQuery($request,QueryParameter::INCLUDE_GHOST_LOGIN_DATA,false);
 
-        $ubns = $this->getManager()->getRepository(Location::class)->findBy($filter, ['ubn' => 'ASC']);
-        $output = $this->getBaseSerializer()->getDecodedJson($ubns, [JmsGroup::MINIMAL]);
+        $filter = self::getUbnRepositoryFilter($activeOnly);
+        $jmsGroups = self::getUbnJmsGroups($includeGhostLoginData);
+
+        $cacheId = self::getUbnCacheId($activeOnly, $includeGhostLoginData);
+
+        if ($this->getCacheService()->isHit($cacheId)) {
+            $output = $this->getCacheService()->getItem($cacheId);
+        } else {
+            $ubns = $this->getManager()->getRepository(Location::class)->findBy($filter, ['ubn' => 'ASC']);
+            $output = $this->getBaseSerializer()->getDecodedJson($ubns, $jmsGroups);
+            $this->getCacheService()->set($cacheId, $output);
+        }
+
         return ResultUtil::successResult($output);
     }
+
+
+    /**
+     * @param boolean $activeOnly
+     * @return array
+     */
+    private static function getUbnRepositoryFilter($activeOnly)
+    {
+        return $activeOnly ? ['isActive' => true] : [];
+    }
+
+
+    /**
+     * @param $includeGhostLoginData
+     * @return array
+     */
+    private static function getUbnJmsGroups($includeGhostLoginData)
+    {
+        return $includeGhostLoginData ? [JmsGroup::MINIMAL, JmsGroup::GHOST_LOGIN] : [JmsGroup::MINIMAL];
+    }
+
+
+    /**
+     * @param boolean $activeOnly
+     * @param boolean $includeGhostLoginData
+     * @return string
+     */
+    private static function getUbnCacheId($activeOnly, $includeGhostLoginData)
+    {
+        $filter = self::getUbnRepositoryFilter($activeOnly);
+        $jmsGroups = self::getUbnJmsGroups($includeGhostLoginData);
+        return self::ALL_UBNS_CACHE_ID_ . CacheService::getJmsGroupsSuffix($jmsGroups) . CacheService::getFilterSuffix($filter);
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function getAllUbnCacheIds()
+    {
+        if (count(self::$allUbnCacheIds) > 0) {
+            return self::$allUbnCacheIds;
+        }
+
+        $boolValOptions = [true, false];
+
+        foreach ($boolValOptions as $activeOnly) {
+            foreach ($boolValOptions as $includeGhostLoginData) {
+                self::$allUbnCacheIds[] = self::getUbnCacheId($activeOnly, $includeGhostLoginData);
+            }
+        }
+
+        return self::$allUbnCacheIds;
+    }
+
 }

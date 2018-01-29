@@ -7,6 +7,7 @@ namespace AppBundle\Util;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class StoredProcedure
 {
@@ -77,13 +78,14 @@ class StoredProcedure
 
     /**
      * @param Connection $conn
+     * @param TranslatorInterface $translator
      * @param $functionName
      */
-    public static function createOrUpdateProcedure(Connection $conn, $functionName)
+    public static function createOrUpdateProcedure(Connection $conn, TranslatorInterface $translator, $functionName)
     {
         switch ($functionName) {
             case self::GET_LIVESTOCK_REPORT: self::createLiveStockReport($conn); break;
-            case self::GET_ERROR_MESSAGES: self::createErrorMessages($conn); break;
+            case self::GET_ERROR_MESSAGES: self::createErrorMessages($conn, $translator); break;
             default: break;
         }
     }
@@ -117,7 +119,11 @@ class StoredProcedure
                   a.breed_code as a_breed_code, m.breed_code as m_breed_code, f.breed_code as f_breed_code,
                   a.scrapie_genotype as a_scrapie_genotype, m.scrapie_genotype as m_scrapie_genotype, f.scrapie_genotype as f_scrapie_genotype,
                   a.breed_code as a_breed_code, m.breed_code as m_breed_code, f.breed_code as f_breed_code,
-                  ac.dutch_breed_status as a_dutch_breed_status, mc.dutch_breed_status as m_dutch_breed_status, fc.dutch_breed_status as f_dutch_breed_status,
+                  
+                  a_breed_types.dutch_first_letter as a_dutch_breed_status,
+                  mom_breed_types.dutch_first_letter as m_dutch_breed_status,
+                  dad_breed_types.dutch_first_letter as f_dutch_breed_status, 
+                  
                   ac.n_ling as a_n_ling, mc.n_ling as m_n_ling, fc.n_ling as f_n_ling,
                   a.predicate as a_predicate_value, m.predicate as m_predicate_value, f.predicate as f_predicate_value,
                   a.predicate_score as a_predicate_score, m.predicate_score as m_predicate_score, f.predicate_score as f_predicate_score,
@@ -159,6 +165,9 @@ class StoredProcedure
     LEFT JOIN result_table_breed_grades ab ON a.id = ab.animal_id
     LEFT JOIN result_table_breed_grades mb ON m.id = mb.animal_id
     LEFT JOIN result_table_breed_grades fb ON f.id = fb.animal_id
+    LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS a_breed_types(english, dutch_first_letter) ON a.breed_type = a_breed_types.english
+    LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS mom_breed_types(english, dutch_first_letter) ON m.breed_type = mom_breed_types.english
+    LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS dad_breed_types(english, dutch_first_letter) ON f.breed_type = dad_breed_types.english
   ".$filterString;
 
         return $sql;
@@ -192,9 +201,45 @@ class StoredProcedure
 
 
     /**
+     * @param TranslatorInterface $translator
      * @param Connection $conn
      */
-    public static function createErrorMessages(Connection $conn)
+    public static function createErrorMessages(Connection $conn, TranslatorInterface $translator)
+    {
+        $parameters = [
+            'showHidden' => 'BOOLEAN',
+        ];
+
+        $declareStatement =
+            "  option1 BOOLEAN;
+               option2 BOOLEAN;";
+
+        $beginStatement =
+            "IF showHidden = TRUE THEN
+                option1 = true;
+                option2 = false;
+             ELSE
+                option1 = false;
+                option2 = false;
+             END IF;";
+
+        $sql = self::getErrorMessagesSqlQuery($translator, true);
+
+        self::createOrUpdateProcedureBase($conn, self::GET_ERROR_MESSAGES, $sql, $parameters,
+            $declareStatement, $beginStatement);
+    }
+
+
+    /**
+     * @param TranslatorInterface $translator
+     * @param boolean $isStoredProcedureSql
+     * @param boolean $onlyReturnNonHiddenForAdminIfRegularSql
+     * @return string
+     */
+    public static function getErrorMessagesSqlQuery(TranslatorInterface $translator,
+                                                    $isStoredProcedureSql,
+                                                    $onlyReturnNonHiddenForAdminIfRegularSql = true
+    )
     {
         $selectBase =
             "b.request_id,
@@ -202,6 +247,7 @@ class StoredProcedure
              b.log_date,
              b.ubn,
              b.type,
+             b.hide_failed_message,
              declareType.dutch as dutch_type,
              NULLIF(TRIM(CONCAT(a.first_name,' ',a.last_name)), '') as action_by,
              COALESCE(e.access_level, 'CLIENT') as action_by_type,";
@@ -211,19 +257,40 @@ class StoredProcedure
              LEFT JOIN employee e ON e.id = a.id
              LEFT JOIN (VALUES ".SqlUtil::declareIRTranslationValues().") AS declareType(english, dutch) ON b.type = declareType.english";
 
+
+        if ($isStoredProcedureSql) {
+
+            $hiddenForAdminFilter = " AND (
+                   b.hide_for_admin = option1
+                   OR b.hide_for_admin = option2
+                 ) ";
+
+            $hiddenForAdminFilterInNsfoBase = " AND (
+                   nsfo_b.hide_for_admin = option1
+                   OR nsfo_b.hide_for_admin = option2
+                 ) ";
+
+        } else {
+            $hiddenForAdminFilter = $onlyReturnNonHiddenForAdminIfRegularSql ? ' AND b.hide_for_admin = false ' : ' ';
+            $hiddenForAdminFilterInNsfoBase = $onlyReturnNonHiddenForAdminIfRegularSql ? ' AND nsfo_b.hide_for_admin = false ' : ' ';
+        }
+
         $whereBase =
             "b.request_state = '".RequestStateType::FAILED."' AND
              b.newest_version_id ISNULL --only return latest version
-             AND (
-                   b.hide_for_admin = option1
-                   OR b.hide_for_admin = option2
-                 )";
+             ".$hiddenForAdminFilter;
+
+        $motherLabel = StringUtil::replaceSpacesWithUnderscores(strtolower($translator->trans('MOTHER')));
+        $fatherLabel = StringUtil::replaceSpacesWithUnderscores(strtolower($translator->trans('FATHER')));
+        $amountLabel = StringUtil::replaceSpacesWithUnderscores(strtolower($translator->trans('AMOUNT')));
 
         $sql = "SELECT
                  $selectBase
                  d.date_of_birth as event_date,
                  null as related_ubn,
-                 CONCAT(uln_country_code, uln_number) as declare_info,
+                 CONCAT(uln_country_code, uln_number,
+                 ', $motherLabel: ', uln_country_code_mother, uln_mother,
+                  ', $fatherLabel: ',uln_country_code_father, uln_father) as declare_info,
                  nsfo_b.message_id as non_ir_request_id,
                  nsfo_b.hide_for_admin
                FROM declare_base b
@@ -234,19 +301,13 @@ class StoredProcedure
                WHERE
                   b.request_state = '".RequestStateType::FAILED."' AND
                   nsfo_b.newest_version_id ISNULL --only return latest version of litter
-                  AND (
-                        b.hide_for_admin = option1
-                        OR b.hide_for_admin = option2
-                      )
+                  $hiddenForAdminFilter
                   AND (
                         nsfo_b.request_state = '" . RequestStateType::FAILED . "' OR
                         nsfo_b.request_state = '" . RequestStateType::OPEN . "' OR
                         l.status = '" . RequestStateType::INCOMPLETE . "'
                       )
-                  AND (
-                        nsfo_b.hide_for_admin = option1
-                        OR nsfo_b.hide_for_admin = option2
-                      )
+                  $hiddenForAdminFilterInNsfoBase
 
                UNION
 
@@ -317,36 +378,26 @@ class StoredProcedure
                  $selectBase
                  b.log_date as event_date,
                  d.ubn_new_owner as related_ubn,
-                 null as declare_info,
+                 CONCAT('$amountLabel: ', COALESCE(counts.tag_count, 0)) as declare_info,
                  null as non_ir_request_id,
                  b.hide_for_admin
                FROM declare_base b
                  INNER JOIN declare_tags_transfer d ON b.id = d.id
                  $joinBase
+                 LEFT JOIN (
+                  SELECT d.id, COUNT(d.id) as tag_count
+                  FROM declare_base b
+                         INNER JOIN declare_tags_transfer d ON b.id = d.id
+                         INNER JOIN transfer_requests rs ON rs.declare_tags_transfer_id = d.id
+                  WHERE
+                    $whereBase
+                  GROUP BY d.id
+                  )counts ON counts.id = d.id
                WHERE
                  $whereBase
 
                ORDER BY log_date DESC";
 
-        $parameters = [
-            'showHidden' => 'BOOLEAN',
-        ];
-
-        $declareStatement =
-            "  option1 BOOLEAN;
-               option2 BOOLEAN;";
-
-        $beginStatement =
-            "IF showHidden = TRUE THEN
-                option1 = true;
-                option2 = false;
-             ELSE
-                option1 = false;
-                option2 = false;
-             END IF;";
-
-        self::createOrUpdateProcedureBase($conn, self::GET_ERROR_MESSAGES, $sql, $parameters,
-            $declareStatement, $beginStatement);
+        return $sql;
     }
-
 }

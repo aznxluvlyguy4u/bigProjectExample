@@ -136,6 +136,13 @@ services:
     app.animal.details.updater:
         parent: app.abstract_base.controller
         class: AppBundle\Service\AnimalDetailsUpdaterService
+        calls:
+          - method: setAnimalDetailsBatchUpdater
+            arguments:
+              - '@AppBundle\Service\AnimalDetailsBatchUpdaterService'
+
+    AppBundle\Service\AnimalDetailsBatchUpdaterService:
+        parent: app.abstract_base.controller
 
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
@@ -267,6 +274,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
+          - '@translator'
 
     app.migrator.client:
         class: AppBundle\Service\Migration\ClientMigrator
@@ -451,16 +459,22 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ErrorMessageService
 
-    app.treatment:
+    app.treatment.base:
         parent: app.abstract_base.controller
+        abstract: true
+        calls:
+          - method: onInit
+
+    app.treatment:
+        parent: app.treatment.base
         class: AppBundle\Service\TreatmentService
 
     app.treatment.template:
-        parent: app.abstract_base.controller
+        parent: app.treatment.base
         class: AppBundle\Service\TreatmentTemplateService
 
     app.treatment.type:
-        parent: app.abstract_base.controller
+        parent: app.treatment.base
         class: AppBundle\Service\TreatmentTypeService
 
     app.email:
@@ -480,17 +494,22 @@ services:
           - '@app.cache'
           - '@doctrine.orm.entity_manager'
           - '@app.user'
+          - '@translator'
+          - '@logger'
 
     app.abstract_base.auth:
+        parent: app.abstract_base.controller
         abstract: true
-        arguments:
-          - '@app.serializer.base'
-          - '@app.cache'
-          - '@app.email'
-          - '@doctrine.orm.entity_manager'
-          - '@app.user'
-          - '@security.password_encoder'
-          - '@templating'
+        calls:
+          - method: setEmailService
+            arguments:
+              - '@app.email'
+          - method: setEncoder
+            arguments:
+              - '@security.password_encoder'
+          - method: setTemplatingService
+            arguments:
+              - '@templating'
 
     app.security.auth:
         parent: app.abstract_base.auth
@@ -509,44 +528,50 @@ services:
         class: AppBundle\Service\AdminProfileService
 
     app.abstract_base.declare:
+        parent: app.abstract_base.controller
         abstract: true
-        arguments:
-          - '@app.aws.queueservice.external'
-          - '@app.cache'
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.request.message_builder'
-          - '@app.user'
+        calls:
+          - method: setRequestMessageBuilder
+            arguments:
+              - '@app.request.message_builder'
+          - method: setIrSerializer
+            arguments:
+              - '@app.serializer.ir'
+          - method: setExternalQueueService
+            arguments:
+              - '@app.aws.queueservice.external'
 
     app.animal:
         parent: app.abstract_base.declare
         class: AppBundle\Service\AnimalService
 
     app.arrival:
+        parent: app.abstract_base.declare
         class: AppBundle\Service\ArrivalService
-        arguments:
-          - '@app.aws.queueservice.external'
-          - '@app.cache'
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.request.message_builder'
-          - '@app.user'
-          - '@app.health.updater'
-          - '@app.animallocation.history'
-          - '%kernel.environment%'
+        calls:
+          - method: setHealthUpdaterService
+            arguments:
+              - '@app.health.updater'
+          - method: setAnimalLocationHistoryService
+            arguments:
+              - '@app.animallocation.history'
+          - method: setEnvironment
+            arguments:
+              - '%kernel.environment%'
 
     app.birth:
+        parent: app.abstract_base.declare
         class: AppBundle\Service\BirthService
-        arguments:
-          - '@app.aws.queueservice.external'
-          - '@app.cache'
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.request.message_builder'
-          - '@app.user'
-          - '@logger'
-          - '@app.aws.queueservice.internal'
-          - '@app.doctrine.entitygetter'
+        calls:
+          - method: setEntityGetter
+            arguments:
+              - '@app.doctrine.entitygetter'
+          - method: setLogger
+            arguments:
+              - '@logger'
+          - method: setInternalQueueService
+            arguments:
+              - '@app.aws.queueservice.internal'
 
     app.breed_type:
         parent: app.abstract_base.controller
@@ -586,16 +611,12 @@ services:
 
 
     app.depart:
+        parent: app.abstract_base.declare
         class: AppBundle\Service\DepartService
-        arguments:
-          - '@app.aws.queueservice.external'
-          - '@app.cache'
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.request.message_builder'
-          - '@app.user'
-          - '%kernel.environment%'
-
+        calls:
+          - method: setEnvironment
+            arguments:
+              - '%kernel.environment%'
     app.export:
         parent: app.abstract_base.declare
         class: AppBundle\Service\ExportService
@@ -633,25 +654,23 @@ services:
         class: AppBundle\Service\ProfileService
 
     app.declare.revoke:
+        parent: app.abstract_base.declare
         class: AppBundle\Service\RevokeService
-        arguments:
-          - '@app.aws.queueservice.external'
-          - '@app.cache'
-          - '@doctrine.orm.entity_manager'
-          - '@app.serializer.ir'
-          - '@app.request.message_builder'
-          - '@app.user'
-          - '@app.doctrine.entitygetter'
+        calls:
+          - method: setEntityGetter
+            arguments:
+              - '@app.doctrine.entitygetter'
 
     app.queue_dashboard:
+        parent: app.abstract_base.controller
         class: AppBundle\Service\QueueDashboardService
-        arguments:
-          - '@app.serializer.base'
-          - '@app.cache'
-          - '@doctrine.orm.entity_manager'
-          - '@app.user'
-          - '@app.aws.queueservice.external'
-          - '@app.aws.queueservice.internal'
+        calls:
+          - method: setExternalQueueService
+            arguments:
+              - '@app.aws.queueservice.external'
+          - method: setInternalQueueService
+            arguments:
+              - '@app.aws.queueservice.internal'
 
     app.tag.replace:
         parent: app.abstract_base.declare

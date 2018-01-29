@@ -7,6 +7,7 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\MateBuilder;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Mate;
 use AppBundle\Output\MateOutput;
 use AppBundle\Util\ActionLogWriter;
@@ -40,6 +41,7 @@ class MateService extends ControllerServiceBase
         MateBuilder::approveMateDeclaration($mate, $loggedInUser);
 
         $this->persistAndFlush($mate);
+        $this->getManager()->getRepository(Animal::class)->purgeCandidateMothersCache($location, $this->getCacheService());
 
         $output = MateOutput::createMateOverview($mate);
 
@@ -76,6 +78,7 @@ class MateService extends ControllerServiceBase
         MateBuilder::approveMateDeclaration($mate, $loggedInUser);
 
         $this->persistAndFlush($mate);
+        $this->getManager()->getRepository(Animal::class)->purgeCandidateMothersCache($location, $this->getCacheService());
 
         $output = MateOutput::createMateOverview($mate);
 

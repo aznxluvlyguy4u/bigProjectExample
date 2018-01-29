@@ -41,7 +41,9 @@ class Location
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "BASIC"
+     *     "ANIMALS_BATCH_EDIT",
+     *     "BASIC",
+     *     "MINIMAL"
      * })
      * @Expose
      */
@@ -56,6 +58,7 @@ class Location
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ANIMAL_DETAILS",
+   *     "ANIMALS_BATCH_EDIT",
    *     "BASIC",
    *     "LIVESTOCK",
    *     "MINIMAL",
@@ -177,7 +180,8 @@ class Location
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
    * @JMS\Type("AppBundle\Entity\Company")
    * @JMS\Groups({
-   *     "ANIMAL_DETAILS"
+   *     "ANIMAL_DETAILS",
+   *     "ANIMALS_BATCH_EDIT",
    * })
    * @JMS\MaxDepth(depth=2)
    * @Expose
@@ -236,7 +240,7 @@ class Location
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Tag", mappedBy="location", cascade={"persist"})
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Tag>")
      */
     private $tags;
 
@@ -263,6 +267,7 @@ class Location
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "MINIMAL",
      *     "TREATMENT_TEMPLATE"
@@ -270,6 +275,54 @@ class Location
      * @Expose
      */
     private $isActive;
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("owner")
+     * @JMS\Groups({
+     *     "GHOST_LOGIN"
+     * })
+     * @JMS\Type("AppBundle\Entity\Client")
+     */
+    public function getOwner()
+    {
+        if($this->company != null) {
+            return $this->getCompany()->getOwner();
+        }
+        return null;
+    }
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("users")
+     * @JMS\Groups({
+     *     "GHOST_LOGIN"
+     * })
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Person>")
+     */
+    public function getCompanyUsers() {
+        if($this->company != null) {
+            return $this->getCompany()->getCompanyUsers();
+        }
+        return new ArrayCollection();
+    }
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("has_ghost_login")
+     * @JMS\Groups({
+     *     "GHOST_LOGIN"
+     * })
+     * @JMS\Type("boolean")
+     * @return boolean
+     */
+    public function hasGhostLoginOption() {
+        if (!$this->isActive || !$this->getCompany() || !$this->getCompany()->isActive()) {
+            return false;
+        }
+
+        return $this->getOwner() !== null || count($this->getCompanyUsers()) > 0;
+    }
 
     /**
     * Constructor
@@ -1077,11 +1130,11 @@ class Location
     }
 
 
-    public function getOwner()
+    /**
+     * @return bool
+     */
+    public function getAnimalHealthSubscription()
     {
-        if($this->company != null) {
-            return $this->getCompany()->getOwner();
-        }
-        return null;
+        return $this->company ? $this->company->getAnimalHealthSubscription() : false;
     }
 }

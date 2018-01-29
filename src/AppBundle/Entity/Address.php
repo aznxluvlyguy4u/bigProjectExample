@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\StringUtil;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -188,7 +189,7 @@ abstract class Address
      */
     public function setAddressNumberSuffix($addressNumberSuffix)
     {
-        $this->addressNumberSuffix = trim($addressNumberSuffix);
+        $this->addressNumberSuffix = StringUtil::trimIfNotNull($addressNumberSuffix);
 
         return $this;
     }
@@ -284,7 +285,7 @@ abstract class Address
      */
     public function setState($state)
     {
-        $this->state = trim($state);
+        $this->state = StringUtil::trimIfNotNull($state);
 
         return $this;
     }

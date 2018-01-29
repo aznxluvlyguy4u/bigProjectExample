@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\StringUtil;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -47,7 +48,7 @@ class Client extends Person
     * @var ArrayCollection
     *
     * @ORM\OneToMany(targetEntity="Company", mappedBy="owner", cascade={"persist"})
-    * @JMS\Type("array")
+    * @JMS\Type("ArrayCollection<AppBundle\Entity\Company>")
     * @JMS\Groups({
     *    "ADDRESS",
     *    "UBN"
@@ -69,7 +70,7 @@ class Client extends Person
     * @var ArrayCollection
     *
     * @ORM\OneToMany(targetEntity="Tag", mappedBy="owner", cascade={"persist"})
-    * @JMS\Type("array")
+    * @JMS\Type("ArrayCollection<AppBundle\Entity\Tag>")
     */
     private $tags;
 
@@ -115,7 +116,7 @@ class Client extends Person
     */
     public function setRelationNumberKeeper($relationNumberKeeper)
     {
-    $this->relationNumberKeeper = trim($relationNumberKeeper);
+    $this->relationNumberKeeper = StringUtil::trimIfNotNull($relationNumberKeeper);
 
     return $this;
     }
@@ -200,7 +201,7 @@ class Client extends Person
     */
     public function setUsername($username)
     {
-    $this->username = trim($username);
+    $this->username = StringUtil::trimIfNotNull($username);
 
     return $this;
     }

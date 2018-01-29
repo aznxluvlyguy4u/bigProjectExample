@@ -48,18 +48,36 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     /** @var RequestMessageBuilder */
     protected $requestMessageBuilder;
 
-    public function __construct(AwsExternalQueueService $externalQueueService,
-                                CacheService $cacheService,
-                                EntityManagerInterface $manager,
-                                IRSerializer $irSerializer,
-                                RequestMessageBuilder $requestMessageBuilder,
-                                UserService $userService)
+    /**
+     * @required
+     *
+     * @param AwsExternalQueueService $externalQueueService
+     */
+    public function setExternalQueueService(AwsExternalQueueService $externalQueueService)
     {
-        parent::__construct($irSerializer, $cacheService, $manager, $userService);
         $this->externalQueueService = $externalQueueService;
+    }
+
+    /**
+     * @required
+     *
+     * @param IRSerializer $irSerializer
+     */
+    public function setIrSerializer(IRSerializer $irSerializer)
+    {
         $this->irSerializer = $irSerializer;
+    }
+
+    /**
+     * @required
+     *
+     * @param RequestMessageBuilder $requestMessageBuilder
+     */
+    public function setRequestMessageBuilder(RequestMessageBuilder $requestMessageBuilder)
+    {
         $this->requestMessageBuilder = $requestMessageBuilder;
     }
+
 
     /**
      * @param DeclareBase $messageObject

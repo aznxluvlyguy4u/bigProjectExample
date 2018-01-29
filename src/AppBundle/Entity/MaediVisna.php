@@ -2,7 +2,9 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\StringUtil;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -189,6 +191,14 @@ class MaediVisna
     }
 
     /**
+     * @return bool
+     */
+    public function isStatusBlank()
+    {
+        return $this->status === null || $this->status === MaediVisnaStatus::BLANK;
+    }
+
+    /**
      * Set endDate
      *
      * @param \DateTime $endDate
@@ -361,7 +371,7 @@ class MaediVisna
      */
     public function setReasonOfEdit($reasonOfEdit)
     {
-        $this->reasonOfEdit = trim($reasonOfEdit);
+        $this->reasonOfEdit = StringUtil::trimIfNotNull($reasonOfEdit);
     }
     
     

@@ -66,8 +66,13 @@ class Utils
 
         return $repositoryNameSpace;
     }
-    
 
+
+    /**
+     * @param string $ulnString
+     * @param bool $hasSpaceBetweenCountryCodeAndNumber
+     * @return array|null
+     */
     public static function getUlnFromString($ulnString, $hasSpaceBetweenCountryCodeAndNumber = false)
     {
         //Verify format first
@@ -75,17 +80,57 @@ class Utils
             return null;
         }
 
-        if($hasSpaceBetweenCountryCodeAndNumber) {
-            $parts = explode(' ', $ulnString);
-            $countryCode = $parts[0];
-            $ulnNumber = $parts[1];
-        } else {
-            $countryCode = mb_substr($ulnString, 0, 2, 'utf-8');
-            $ulnNumber = mb_substr($ulnString, 2, strlen($ulnString));
+        return self::separateFirstToCharsAndEndOfString(
+            $ulnString,
+            $hasSpaceBetweenCountryCodeAndNumber,
+            Constant::ULN_COUNTRY_CODE_NAMESPACE,
+            Constant::ULN_NUMBER_NAMESPACE
+        );
+    }
+
+
+    /**
+     * @param string $stnString
+     * @param bool $hasSpaceBetweenCountryCodeAndNumber
+     * @return array|null
+     */
+    public static function getStnFromString($stnString, $hasSpaceBetweenCountryCodeAndNumber = false)
+    {
+        //Verify format first
+        if(!Validator::verifyPedigreeCountryCodeAndNumberFormat($stnString, $hasSpaceBetweenCountryCodeAndNumber)) {
+            return null;
         }
 
-        return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $countryCode, Constant::ULN_NUMBER_NAMESPACE => $ulnNumber);
+        return self::separateFirstToCharsAndEndOfString(
+            $stnString,
+            $hasSpaceBetweenCountryCodeAndNumber,
+            Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE,
+            Constant::PEDIGREE_NUMBER_NAMESPACE
+        );
     }
+
+
+    /**
+     * @param $string
+     * @param $isSeparatedBySpace
+     * @param int|string $key1
+     * @param int|string $key2
+     * @return array
+     */
+    protected static function separateFirstToCharsAndEndOfString($string, $isSeparatedBySpace, $key1 = 0, $key2 = 1)
+    {
+        if($isSeparatedBySpace) {
+            $parts = explode(' ', $string);
+            $firstTwoChars = $parts[0];
+            $endOfString = $parts[1];
+        } else {
+            $firstTwoChars = mb_substr($string, 0, 2, 'utf-8');
+            $endOfString = mb_substr($string, 2, strlen($string));
+        }
+
+        return [$key1 => $firstTwoChars, $key2 => $endOfString];
+    }
+
 
     /**
      * Returns the minimum DateTime for when the age is at least the inserted value.

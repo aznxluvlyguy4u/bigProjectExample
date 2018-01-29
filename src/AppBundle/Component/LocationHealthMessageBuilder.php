@@ -10,7 +10,9 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Enumerator\LocationHealthStatus;
+use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\HealthChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -93,13 +95,13 @@ class LocationHealthMessageBuilder
         $isScrapieStatusOriginHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieStatusOrigin);
 
         //Set illness  booleans
-        if($isMaediVisnaStatusOriginHealthy) {
+        if($isMaediVisnaStatusOriginHealthy || $maediVisnaStatusDestination === MaediVisnaStatus::BLANK) {
             $healthMessage->setCheckForMaediVisna(false);
         } else {
             $healthMessage->setCheckForMaediVisna(true);
         }
 
-        if($isScrapieStatusOriginHealthy) {
+        if($isScrapieStatusOriginHealthy || $scrapieStatusDestination === ScrapieStatus::BLANK) {
             $healthMessage->setCheckForScrapie(false);
         } else {
             $healthMessage->setCheckForScrapie(true);

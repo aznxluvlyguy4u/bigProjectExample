@@ -38,7 +38,9 @@ use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class ControllerServiceBase
@@ -52,6 +54,10 @@ abstract class ControllerServiceBase
     private $cacheService;
     /** @var UserService */
     private $userService;
+    /** @var TranslatorInterface */
+    protected $translator;
+    /** @var Logger */
+    private $logger;
 
     /** @var string */
     private $actionLogEditMessage;
@@ -59,12 +65,17 @@ abstract class ControllerServiceBase
     public function __construct(BaseSerializer $baseSerializer,
                                 CacheService $cacheService,
                                 EntityManagerInterface $manager,
-                                UserService $userService)
+                                UserService $userService,
+                                TranslatorInterface $translator,
+                                Logger $logger
+    )
     {
         $this->baseSerializer = $baseSerializer;
         $this->cacheService = $cacheService;
         $this->manager = $manager;
         $this->userService = $userService;
+        $this->translator = $translator;
+        $this->logger = $logger;
     }
 
 
@@ -95,6 +106,24 @@ abstract class ControllerServiceBase
     }
 
 
+    /**
+     * @return Logger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
+    }
+
+
+    /**
+     * @param \Exception $exception
+     */
+    public function logExceptionAsError($exception)
+    {
+        $this->getLogger()->error($exception->getMessage());
+        $this->getLogger()->error($exception->getTraceAsString());
+    }
+
 
     /**
      * Clears the redis cache for the Livestock of a given location , to reflect changes of animals on Livestock.
@@ -114,6 +143,9 @@ abstract class ControllerServiceBase
     {
         return $this->cacheService;
     }
+
+
+
 
 
     /**
@@ -364,4 +396,54 @@ abstract class ControllerServiceBase
     {
         return $this->userService->getSelectedUbn($request);
     }
+
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    protected function translateUcFirstLower($string)
+    {
+        return strtr(ucfirst(strtolower($this->translator->trans($string))), [
+            'ubn' => 'UBN',
+            'uln' => 'ULN',
+            'ulns' => 'ULNs'
+        ]);
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param array $jmsGroups
+     * @param boolean $enableMaxDepthChecks
+     * @param boolean $includeParentsInLitter
+     * @return array
+     */
+    public function getDecodedJsonOfAnimalWithParents(Animal $animal, array $jmsGroups = [], $enableMaxDepthChecks, $includeParentsInLitter = false)
+    {
+        $serializedAnimal = $this->getBaseSerializer()->getDecodedJson($animal, $jmsGroups, $enableMaxDepthChecks);
+
+        if ($animal->getParentFather() !== null) {
+            $serializedAnimal['parent_father'] = $this->getBaseSerializer()->getDecodedJson($animal->getParentFather(), [JmsGroup::PARENT_DATA]);
+        }
+        if ($animal->getParentMother() !== null) {
+            $serializedAnimal['parent_mother'] = $this->getBaseSerializer()->getDecodedJson($animal->getParentMother(), [JmsGroup::PARENT_DATA]);
+        }
+        if ($animal->getSurrogate() !== null) {
+            $serializedAnimal['surrogate'] = $this->getBaseSerializer()->getDecodedJson($animal->getSurrogate(), [JmsGroup::PARENT_DATA]);
+        }
+
+        $litter = $animal->getLitter();
+        if ($includeParentsInLitter && $litter !== null) {
+            if ($litter->getAnimalFather() !== null) {
+                $serializedAnimal['litter']['animal_father'] = $this->getBaseSerializer()->getDecodedJson($litter->getAnimalFather(), [JmsGroup::PARENT_DATA]);
+            }
+            if ($litter->getAnimalMother() !== null) {
+                $serializedAnimal['litter']['animal_mother'] = $this->getBaseSerializer()->getDecodedJson($litter->getAnimalMother(), [JmsGroup::PARENT_DATA]);
+            }
+        }
+
+        return $serializedAnimal;
+    }
+
 }

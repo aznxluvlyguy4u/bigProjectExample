@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\Location;
@@ -69,6 +70,25 @@ class AdminActionLogWriter
 
         $log = new ActionLog($client, $loggedInAdmin, UserActionType::HEALTH_STATUS_UPDATE, true, $description, self::IS_USER_ENVIRONMENT);
         DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Employee $loggedInAdmin
+     * @param Company $company
+     * @return ActionLog
+     */
+    public static function updateAnimalHealthSubscription(EntityManagerInterface $em, Employee $loggedInAdmin,
+                                                          Company $company)
+    {
+        $description = $company->getAnimalHealthSubscription() ? 'ACTIVATED' : 'DEACTIVATED';
+
+        $log = new ActionLog($company->getOwner(), $loggedInAdmin, UserActionType::ANIMAL_HEALTH_SUBSCRIPTION_UPDATE,
+            true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($em, $log);
 
         return $log;
     }

@@ -41,13 +41,12 @@ class TreatmentServiceBase extends ControllerServiceBase
     /** @var string */
     protected $actionLogDescription;
 
-    public function __construct(BaseSerializer $serializer,
-                                CacheService $cacheService,
-                                EntityManagerInterface $em,
-                                UserService $userService)
-    {
-        parent::__construct($serializer, $cacheService, $em, $userService);
 
+    /**
+     * @required
+     */
+    public function onInit()
+    {
         $this->treatmentAnimalRepository = $this->getManager()->getRepository(TreatmentAnimal::class);
         $this->treatmentLocationRepository = $this->getManager()->getRepository(TreatmentLocation::class);
         $this->treatmentTemplateRepository = $this->getManager()->getRepository(TreatmentTemplate::class);

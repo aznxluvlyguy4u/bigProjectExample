@@ -33,6 +33,7 @@ use JMS\Serializer\Annotation\Expose;
  *               "DeclareWeight" : "AppBundle\Entity\DeclareWeight",
  *                      "Litter" : "AppBundle\Entity\Litter"},
  *     groups = {
+ *     "ANIMALS_BATCH_EDIT",
  *     "BASIC",
  *     "ERROR_DETAILS"
  * })
@@ -49,6 +50,7 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
+     *     "ANIMALS_BATCH_EDIT",
      *     "ERROR_DETAILS"
      * })
      */
@@ -86,7 +88,8 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @JMS\Groups({
      *     "ADMIN_HIDDEN_STATUS",
      *     "ERROR_DETAILS",
-     *     "HIDDEN_STATUS"
+     *     "HIDDEN_STATUS",
+     *     "MATINGS"
      * })
      */
     protected $requestState;

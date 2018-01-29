@@ -40,18 +40,33 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     /** @var string */
     private $environment;
 
-    public function __construct(AwsExternalQueueService $externalQueueService,
-                                CacheService $cacheService,
-                                EntityManagerInterface $manager,
-                                IRSerializer $irSerializer,
-                                RequestMessageBuilder $requestMessageBuilder,
-                                UserService $userService, HealthUpdaterService $healthService,
-                                AnimalLocationHistoryService $animalLocationHistoryService,
-                                $environment)
+    /**
+     * @required
+     *
+     * @param HealthUpdaterService $healthService
+     */
+    public function setHealthUpdaterService(HealthUpdaterService $healthService)
     {
-        parent::__construct($externalQueueService, $cacheService, $manager, $irSerializer, $requestMessageBuilder, $userService);
         $this->healthService = $healthService;
+    }
+
+    /**
+     * @required
+     *
+     * @param AnimalLocationHistoryService $animalLocationHistoryService
+     */
+    public function setAnimalLocationHistoryService(AnimalLocationHistoryService $animalLocationHistoryService)
+    {
         $this->animalLocationHistoryService = $animalLocationHistoryService;
+    }
+
+    /**
+     * @required
+     *
+     * @param string $environment
+     */
+    public function setEnvironment($environment)
+    {
         $this->environment = $environment;
     }
 
@@ -127,9 +142,11 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             return $pedigreeValidation->get(Constant::RESPONSE);
         }
 
-        //LocationHealth null value fixes
-        $this->healthService->fixLocationHealthMessagesWithNullValues($location);
-        $this->healthService->fixIncongruentLocationHealthIllnessValues($location);
+        if ($location->getAnimalHealthSubscription()) {
+            //LocationHealth null value fixes
+            $this->healthService->fixLocationHealthMessagesWithNullValues($location);
+            $this->healthService->fixIncongruentLocationHealthIllnessValues($location);
+        }
 
         $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
 
@@ -203,8 +220,10 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->saveNewestDeclareVersion($content, $messageObject);
 
-        //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
-        $this->healthService->updateLocationHealth($messageObject);
+        if ($location->getAnimalHealthSubscription()) {
+            //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
+            $this->healthService->updateLocationHealth($messageObject);
+        }
 
         if ($departLog) { $this->persist($departLog); }
         ActionLogWriter::completeActionLog($this->getManager(), $arrivalOrImportLog);

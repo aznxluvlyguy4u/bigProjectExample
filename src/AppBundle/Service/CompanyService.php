@@ -18,9 +18,11 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -143,7 +145,7 @@ class CompanyService extends AuthServiceBase
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
         if($content->get('subscription_date')) {
-            $company->setSubscriptionDate(new \DateTime($content->get('subscription_date')));
+            $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
         }
         $company->setIsActive(true);
         $company->setOwner($owner);
@@ -234,7 +236,9 @@ class CompanyService extends AuthServiceBase
         //This information is necessary to show the most up to date information on the PedigreeCertificates
         $this->getManager()->getRepository(Animal::class)->updateLocationOfBirthByCompany($company);
 
-        return ResultUtil::successResult('ok');
+        $this->getCacheService()->delete(UbnService::getAllUbnCacheIds());
+
+        return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
     }
 
 
@@ -368,10 +372,14 @@ class CompanyService extends AuthServiceBase
         $company->setDebtorNumber($content->get('debtor_number'));
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
-        $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
+
+        if ($company->getAnimalHealthSubscription() != $content->get('animal_health_subscription')) {
+            $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
+            AdminActionLogWriter::updateAnimalHealthSubscription($this->getManager(), $admin, $company);
+        }
 
         if($content->get('subscription_date')) {
-            $company->setSubscriptionDate(new \DateTime($content->get('subscription_date')));
+            $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
         }
 
         $company->getOwner()->setRelationNumberKeeper($content->get('company_relation_number'));
@@ -544,7 +552,9 @@ class CompanyService extends AuthServiceBase
 
         $this->getManager()->getRepository(Animal::class)->updateLocationOfBirthByCompany($company);
 
-        return ResultUtil::successResult('ok');
+        $this->getCacheService()->delete(UbnService::getAllUbnCacheIds());
+
+        return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
     }
 
 
@@ -578,6 +588,8 @@ class CompanyService extends AuthServiceBase
         $this->getManager()->flush();
 
         $log = ActionLogWriter::activeStatusCompany($this->getManager(), $isActive, $company, $admin);
+
+        $this->getCacheService()->delete(UbnService::getAllUbnCacheIds());
 
         return ResultUtil::successResult('ok');
     }
