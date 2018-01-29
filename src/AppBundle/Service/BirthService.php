@@ -753,7 +753,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             foreach ($childeren as $child) {
                 if($child->getDateOfBirth()) {
                     //Add as a true candidate surrogate to list
-                    if(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {
+                    if(abs(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow)) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {
                         $suggestedCandidatesResult[] = [
                             JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
                             JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
