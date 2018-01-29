@@ -44,6 +44,15 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                 continue;
             }
 
+            if($data[JsonInputConstant::HETEROSIS] == null
+                || $data[JsonInputConstant::RECOMBINATION] == null) {
+                /*
+                The empty heterosis and recombination values should be filled
+                before generating the mixblup input files.
+                */
+                continue;
+            }
+
             $formattedIsTreated = self::getFormattedIsTreated($data);
             $formattedSamplePeriod = self::getFormattedSamplePeriod($data);
 
