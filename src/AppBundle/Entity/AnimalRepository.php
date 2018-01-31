@@ -47,6 +47,7 @@ class AnimalRepository extends BaseRepository
   const BATCH = 1000;
   const USE_REDIS_CACHE = true; //TODO activate this when the livestock and historicLivestock redis cache is fixed
   const LIVESTOCK_CACHE_ID = 'GET_LIVESTOCK_';
+  const EWES_LIVESTOCK_WITH_LAST_MATE_CACHE_ID = 'GET_EWES_LIVESTOCK_WITH_LAST_MATE_';
   const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
   const CANDIDATE_FATHERS_CACHE_ID = 'GET_CANDIDATE_FATHERS_';
   const CANDIDATE_MOTHERS_CACHE_ID = 'GET_CANDIDATE_MOTHERS_';
@@ -346,6 +347,105 @@ class AnimalRepository extends BaseRepository
     
     return $results;
   }
+
+
+    /**
+     * @param Location $location
+     * @param CacheService $cacheService
+     * @param BaseSerializer $serializer
+     * @param bool $onlyIncludeAliveEwes
+     * @return array
+     */
+  public function getEwesLivestockWithLastMate(Location $location,
+                                               CacheService $cacheService,
+                                               BaseSerializer $serializer,
+                                               $onlyIncludeAliveEwes = true)
+  {
+      $clazz = Ewe::class;
+
+      //Returns a list of AnimalResidences
+      if (self::USE_REDIS_CACHE) {
+          $cacheId = self::getEwesLivestockWithLastMateCacheId($location);
+
+          if ($cacheService->isHit($cacheId)) {
+              $ewes = $serializer->deserializeArrayOfObjects($cacheService->getItem($cacheId), $clazz);
+          } else {
+              /** @var Ewe[] $ewes */
+              $ewes = $this->getEwesLivestockWithLastMateQuery($location, $onlyIncludeAliveEwes)->getResult();
+
+              foreach ($ewes as $ewe) {
+                  $ewe->onlyKeepLastActiveMateInMatings();
+              }
+
+              $jmsGroups = self::getEwesLivestockWithLastMateJmsGroups();
+              $jmsGroups[] = JmsGroup::MATINGS;
+
+              $serializedEwes = $serializer->getArrayOfSerializedObjects($ewes, $jmsGroups,true);
+              $ewes = $serializer->deserializeArrayOfObjects($serializedEwes, $clazz);
+
+              $cacheService->set($cacheId, $serializedEwes);
+          }
+
+      } else {
+          $ewes = $this->getEwesLivestockWithLastMateQuery($location, $onlyIncludeAliveEwes)->getResult();
+      }
+
+      return $ewes;
+  }
+
+
+    /**
+     * @param Location $location
+     * @param bool $onlyIncludeAliveEwes
+     * @return \Doctrine\ORM\Query|string
+     */
+  private function getEwesLivestockWithLastMateQuery(Location $location,
+                                                     $onlyIncludeAliveEwes = true)
+  {
+      $clazz = Ewe::class;
+      $isAlive = $onlyIncludeAliveEwes ? null : true;
+
+      $query = $this->getLivestockQuery($location, $isAlive, $clazz, false);
+      $query->setFetchMode(Mate::class, 'studEwe', ClassMetadata::FETCH_EAGER);
+
+      return $query;
+  }
+
+
+    /**
+     * @return array
+     */
+    public static function getEwesLivestockWithLastMateJmsGroups()
+    {
+        return [JmsGroup::LIVESTOCK, JmsGroup::LAST_MATE];
+    }
+
+
+    /**
+     * @param Location $location
+     * @param CacheService $cacheService
+     * @return boolean
+     */
+    public static function purgeEwesLivestockWithLastMateCache(Location $location, CacheService $cacheService)
+    {
+        if ($location) {
+            return $cacheService->delete(self::getEwesLivestockWithLastMateCacheId($location));
+        }
+        return false;
+    }
+
+
+    /**
+     * @param Location $location
+     * @return string
+     */
+    public static function getEwesLivestockWithLastMateCacheId(Location $location)
+    {
+        return
+            AnimalRepository::EWES_LIVESTOCK_WITH_LAST_MATE_CACHE_ID .
+            $location->getId()
+            ;
+    }
 
 
   /**

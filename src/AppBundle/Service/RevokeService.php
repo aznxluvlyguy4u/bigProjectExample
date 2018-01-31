@@ -11,6 +11,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Controller\RevokeAPIControllerInterface;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Mate;
@@ -140,6 +141,7 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
         if($nsfoDeclaration instanceof Mate) {
             $this->getManager()->getRepository(Animal::class)->purgeCandidateMothersCache($nsfoDeclaration->getLocation(), $this->getCacheService());
+            AnimalRepository::purgeEwesLivestockWithLastMateCache($nsfoDeclaration->getLocation(), $this->getCacheService());
         }
 
         $log = ActionLogWriter::completeActionLog($this->getManager(), $log);

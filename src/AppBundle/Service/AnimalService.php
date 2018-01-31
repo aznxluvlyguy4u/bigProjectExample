@@ -11,6 +11,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\AnimalAPIControllerInterface;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
@@ -26,6 +27,7 @@ use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\AdminActionLogWriter;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -254,29 +256,24 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = $this->getSelectedLocation($request);
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
-        $livestock = $this->getManager()->getRepository(Animal::class)
-            ->getLiveStock($location, $this->getCacheService(), $this->getBaseSerializer(), true);
-        $livestockAnimals = [];
+        $includeLastMate = RequestUtil::getBooleanQuery($request, QueryParameter::IS_EWES_WITH_LAST_MATE, false);;
 
-        /** @var Animal $animal */
-        foreach ($livestock as $animal) {
-            $livestockAnimals[] = [
-                JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                JsonInputConstant::GENDER =>  $animal->getGender(),
-                JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                JsonInputConstant::UBN => $location->getUbn(),
-                JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-            ];
+        if ($includeLastMate) {
+            $livestock = $this->getManager()->getRepository(Animal::class)
+                ->getEwesLivestockWithLastMate($location, $this->getCacheService(), $this->getBaseSerializer(), true);
+            $jmsGroups = AnimalRepository::getEwesLivestockWithLastMateJmsGroups();
+            $jmsGroups[] = JmsGroup::IS_NOT_HISTORIC_ANIMAL;
+
+        } else {
+            $livestock = $this->getManager()->getRepository(Animal::class)
+                ->getLiveStock($location, $this->getCacheService(), $this->getBaseSerializer(), true);
+            $jmsGroups = [JmsGroup::LIVESTOCK, JmsGroup::IS_NOT_HISTORIC_ANIMAL];
         }
 
-        return ResultUtil::successResult($livestockAnimals);
+        $serializedLivestockAnimals = $this->getBaseSerializer()
+            ->getDecodedJson($livestock, $jmsGroups);
+
+        return ResultUtil::successResult($serializedLivestockAnimals);
     }
 
 
@@ -291,27 +288,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         $historicLivestock = $this->getManager()->getRepository(Animal::class)
             ->getHistoricLiveStock($location, $this->getCacheService(), $this->getBaseSerializer());
-        $historicLivestockAnimals = [];
 
-        /** @var Animal $animal */
-        foreach ($historicLivestock as $animal) {
-            $historicLivestockAnimals[] = [
-                JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                JsonInputConstant::GENDER =>  $animal->getGender(),
-                JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                JsonInputConstant::UBN => $animal->getUbn(),
-                JsonInputConstant::IS_HISTORIC_ANIMAL => true,
-                JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-            ];
-        }
+        $serializedHistoricLivestock = $this->getBaseSerializer()
+            ->getDecodedJson($historicLivestock,[JmsGroup::LIVESTOCK, JmsGroup::IS_HISTORIC_ANIMAL]);
 
-        return ResultUtil::successResult($historicLivestockAnimals);
+        return ResultUtil::successResult($serializedHistoricLivestock);
     }
 
 

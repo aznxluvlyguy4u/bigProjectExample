@@ -28,6 +28,7 @@ class Mate extends DeclareNsfoBase
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
+     *     "LAST_MATE",
      *     "MATINGS"
      * })
      */
@@ -43,6 +44,7 @@ class Mate extends DeclareNsfoBase
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
+     *     "LAST_MATE",
      *     "MATINGS"
      * })
      */
@@ -60,6 +62,9 @@ class Mate extends DeclareNsfoBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({
+     *     "LAST_MATE"
+     * })
      */
     private $ramUlnCountryCode;
 
@@ -67,6 +72,9 @@ class Mate extends DeclareNsfoBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({
+     *     "LAST_MATE"
+     * })
      */
     private $ramUlnNumber;
     
@@ -84,6 +92,7 @@ class Mate extends DeclareNsfoBase
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
      * @JMS\Groups({
+     *     "LAST_MATE",
      *     "MATINGS"
      * })
      */
@@ -94,6 +103,7 @@ class Mate extends DeclareNsfoBase
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
      * @JMS\Groups({
+     *     "LAST_MATE",
      *     "MATINGS"
      * })
      */

@@ -130,6 +130,7 @@ class CacheService
             $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
             $historicCacheId = AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID .$location->getId();
             $candidateMotherId = AnimalRepository::CANDIDATE_MOTHERS_CACHE_ID . $location->getId();
+            $eweLivestockWithLastMateCacheId = AnimalRepository::getEwesLivestockWithLastMateCacheId($location);
 
             $this->getRedisAdapter()->deleteItems([
                 $cacheId,
@@ -141,6 +142,7 @@ class CacheService
                 $historicCacheId . '_' . Ram::getShortClassName(),
                 $historicCacheId . '_' . Neuter::getShortClassName(),
                 $candidateMotherId,
+                $eweLivestockWithLastMateCacheId,
             ]);
         }
     }

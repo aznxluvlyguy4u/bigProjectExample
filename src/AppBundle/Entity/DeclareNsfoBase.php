@@ -89,6 +89,7 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      *     "ADMIN_HIDDEN_STATUS",
      *     "ERROR_DETAILS",
      *     "HIDDEN_STATUS",
+     *     "LAST_MATE",
      *     "MATINGS"
      * })
      */

@@ -7,6 +7,7 @@ namespace AppBundle\Enumerator;
 class QueryParameter
 {
     const ACTIVE_ONLY = 'active_only';
+    const ALIVE_ONLY = 'alive_only';
     const CONCAT_VALUE_AND_ACCURACY = 'concat_value_and_accuracy';
     const END_DATE = 'end_date';
     const FILE_TYPE_QUERY = 'file_type';
@@ -23,4 +24,5 @@ class QueryParameter
     const LANGUAGE = 'language';
     const PLAIN_TEXT_INPUT = 'plain_text_input';
     const ASSOCIATIVE_ARRAY_OUTPUT = 'associative_array_output';
+    const IS_EWES_WITH_LAST_MATE = 'is_ewes_with_last_mate';
 }

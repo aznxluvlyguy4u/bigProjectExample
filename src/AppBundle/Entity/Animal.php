@@ -99,6 +99,7 @@ abstract class Animal
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MIXBLUP",
      *     "PARENT_DATA",
      *     "USER_MEASUREMENT"
@@ -120,6 +121,7 @@ abstract class Animal
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MIXBLUP",
      *     "PARENT_DATA",
      *     "USER_MEASUREMENT"
@@ -181,6 +183,7 @@ abstract class Animal
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
+     *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "ERROR_DETAILS",
@@ -199,7 +202,8 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
-     *     "DECLARE"
+     *     "DECLARE",
+     *     "LIVESTOCK"
      * })
      */
     protected $dateOfDeath;
@@ -215,6 +219,7 @@ abstract class Animal
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "USER_MEASUREMENT"
@@ -409,6 +414,7 @@ abstract class Animal
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MIXBLUP",
      *     "TREATMENT_TEMPLATE",
      *     "USER_MEASUREMENT"
@@ -427,6 +433,7 @@ abstract class Animal
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "PARENT_DATA",
@@ -450,6 +457,7 @@ abstract class Animal
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "PARENT_DATA",
@@ -467,7 +475,8 @@ abstract class Animal
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "BASIC",
-     *     "DECLARE"
+     *     "DECLARE",
+     *     "LIVESTOCK"
      * })
      */
     protected $animalOrderNumber;
@@ -833,6 +842,88 @@ abstract class Animal
      * })
      */
     protected $collarNumber;
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("is_public")
+     * @JMS\Groups({
+     *     "LIVESTOCK"
+     * })
+     * @return bool
+     */
+    public function isAnimalPublic()
+    {
+        $location = $this->getLocation();
+        if($location != null) {
+            $company = $location->getCompany();
+            if($company != null) {
+                return $company->getIsRevealHistoricAnimals();
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("worker_number")
+     * @JMS\Groups({
+     *     "LIVESTOCK"
+     * })
+     * @return string
+     */
+    public function getWorkerNumber()
+    {
+        return $this->animalOrderNumber;
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("ubn")
+     * @JMS\Groups({
+     *     "LIVESTOCK"
+     * })
+     * @return string
+     */
+    public function getUbn()
+    {
+        if($this->location instanceof Location) {
+            return $this->location->getUbn();
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("is_historic_animal")
+     * @JMS\Groups({
+     *     "IS_HISTORIC_ANIMAL"
+     * })
+     * @return bool
+     */
+    public function isHistoricAnimal()
+    {
+        return true;
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("is_historic_animal")
+     * @JMS\Groups({
+     *     "IS_NOT_HISTORIC_ANIMAL"
+     * })
+     * @return bool
+     */
+    public function isNotHistoricAnimal()
+    {
+        return false;
+    }
+
 
     /**
      * Animal constructor.
@@ -2535,19 +2626,6 @@ abstract class Animal
 
 
     /**
-     * @return string
-     */
-    public function getUbn()
-    {
-        if($this->location instanceof Location) {
-          return $this->location->getUbn();
-        } else {
-            return null;
-        }
-    }
-
-
-    /**
      * @param string $ubnOfBirth
      */
     public function setUbnOfBirth($ubnOfBirth)
@@ -2683,21 +2761,6 @@ abstract class Animal
     public function setNickname($nickname)
     {
         $this->nickname = $nickname;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isAnimalPublic()
-    {
-        $location = $this->getLocation();
-        if($location != null) {
-            $company = $location->getCompany();
-            if($company != null) {
-                return $company->getIsRevealHistoricAnimals();
-            }
-        }
-        return true;
     }
 
 

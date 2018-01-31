@@ -25,6 +25,10 @@ class JmsGroup
 
     const HIDDEN_STATUS = 'HIDDEN_STATUS';
 
+    const IS_HISTORIC_ANIMAL = 'IS_HISTORIC_ANIMAL';
+    const IS_NOT_HISTORIC_ANIMAL = 'IS_NOT_HISTORIC_ANIMAL';
+
+    const LAST_MATE = 'LAST_MATE';
     const LIVESTOCK = 'LIVESTOCK';
 
     const MATINGS = 'MATINGS';

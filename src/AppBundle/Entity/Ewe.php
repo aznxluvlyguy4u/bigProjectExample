@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Criteria\MateCriteria;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
@@ -64,6 +65,25 @@ class Ewe extends Animal
      * })
      */
     private $matings;
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("last_mate")
+     * @JMS\Groups({
+     *     "LAST_MATE"
+     * })
+     * @return Mate|null
+     */
+    public function getLastActiveMate()
+    {
+        if ($this->getMatings()->count() > 0) {
+            return $this->getMatings()
+                ->matching(MateCriteria::orderByEndDateDesc())
+                ->matching(MateCriteria::requestStateIsFinished())
+                ->first();
+        }
+        return null;
+    }
 
     /**
      * Ewe constructor.
@@ -160,6 +180,17 @@ class Ewe extends Animal
     public function setMatings($matings)
     {
         $this->matings = $matings;
+    }
+
+
+    /**
+     * @param Mate $mate
+     */
+    public function addMate(Mate $mate)
+    {
+        if ($mate) {
+            $this->getMatings()->add($mate);
+        }
     }
     
 
@@ -585,5 +616,15 @@ class Ewe extends Animal
                 $declareBirths //TODO check if births are properly included
             )
         ))->matching($criteria);
+    }
+
+
+    public function onlyKeepLastActiveMateInMatings()
+    {
+        $lastActiveMate = $this->getLastActiveMate();
+        $this->setMatings(new ArrayCollection());
+        if ($lastActiveMate) {
+            $this->addMate($lastActiveMate);
+        }
     }
 }
