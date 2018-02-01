@@ -80,6 +80,7 @@ class Ewe extends Animal
             return $this->getMatings()
                 ->matching(MateCriteria::orderByEndDateDesc())
                 ->matching(MateCriteria::requestStateIsFinished())
+                ->matching(MateCriteria::hasNoLitter())
                 ->first();
         }
         return null;

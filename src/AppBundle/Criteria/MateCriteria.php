@@ -52,4 +52,16 @@ class MateCriteria
                     );
     }
 
+
+    /**
+     * @return Criteria
+     */
+    public static function hasNoLitter()
+    {
+        return Criteria::create()
+            ->where(
+                Criteria::expr()->eq('litter', null)
+            );
+    }
+
 }

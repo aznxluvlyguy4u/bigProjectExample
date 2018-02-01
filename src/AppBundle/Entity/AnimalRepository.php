@@ -407,6 +407,9 @@ class AnimalRepository extends BaseRepository
 
       $query = $this->getLivestockQuery($location, $isAlive, $clazz, false);
       $query->setFetchMode(Mate::class, 'studEwe', ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Ram::class, 'parentFather', ClassMetadata::FETCH_EXTRA_LAZY);
+      $query->setFetchMode(Ewe::class, 'parentMother', ClassMetadata::FETCH_EXTRA_LAZY);
+      $query->setFetchMode(Litter::class, 'litter', ClassMetadata::FETCH_EAGER);
 
       return $query;
   }
