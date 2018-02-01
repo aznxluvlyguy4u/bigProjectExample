@@ -738,7 +738,7 @@ class AnimalRepository extends BaseRepository
       $clazz = Ewe::class;
 
       //Create currentLiveStock Query to use as subselect
-      $isAlive = $onlyIncludeAliveEwes ? null : true;
+      $isAlive = $onlyIncludeAliveEwes ? true : null;
       $livestockAnimalDQLQuery = $this->getLivestockQuery($location, $isAlive, $clazz, true);
 
       $mateQb = $this->getManager()->createQueryBuilder();
