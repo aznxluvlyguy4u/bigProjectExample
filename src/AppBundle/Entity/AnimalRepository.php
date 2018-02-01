@@ -8,10 +8,12 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Criteria\AnimalCriteria;
+use AppBundle\Criteria\MateCriteria;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;
 use AppBundle\Util\AnimalArrayReader;
@@ -735,12 +737,22 @@ class AnimalRepository extends BaseRepository
   {
       $clazz = Ewe::class;
 
-      $mateQb = $this->getManager()->getRepository(Mate::class)->getQueryBuilderByLocation($location);
-
       //Create currentLiveStock Query to use as subselect
       $isAlive = $onlyIncludeAliveEwes ? null : true;
       $livestockAnimalDQLQuery = $this->getLivestockQuery($location, $isAlive, $clazz, true);
-      $mateQb->expr()->in('mate.studEwe', $livestockAnimalDQLQuery)
+
+      $mateQb = $this->getManager()->createQueryBuilder();
+
+      $mateQb
+          ->select('mate')
+          ->from(Mate::class, 'mate')
+          ->leftJoin('mate.litter', 'litter')
+          ->where($mateQb->expr()->eq('mate.requestState', "'".RequestStateType::FINISHED."'"))
+          ->andWhere($mateQb->expr()->in('mate.studEwe', $livestockAnimalDQLQuery))
+          ->andWhere($mateQb->expr()->eq('mate.location', $location->getId()))
+          ->andWhere(
+              $mateQb->expr()->isNull('litter.id')
+          )
       ;
 
       $query = $mateQb->getQuery();
