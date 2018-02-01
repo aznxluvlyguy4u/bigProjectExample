@@ -21,7 +21,7 @@ class Litter extends DeclareNsfoBase
     use EntityClassInfo;
 
     /**
-     * @ORM\OneToOne(targetEntity="Mate")
+     * @ORM\OneToOne(targetEntity="Mate", inversedBy="litter")
      * @ORM\JoinColumn(name="mate_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Mate")
      */

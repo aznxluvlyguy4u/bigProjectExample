@@ -178,6 +178,25 @@ class Mate extends DeclareNsfoBase
      */
     private $location;
 
+    /**
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\Litter", mappedBy="mate")
+     * @var Litter
+     */
+    private $litter;
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("has_litter")
+     * @JMS\Groups({
+     *     "LAST_MATE"
+     * })
+     * @return boolean
+     */
+    public function hasLitter()
+    {
+        return $this->litter !== null;
+    }
+
     
     public function __construct() {
       parent::__construct();
@@ -520,6 +539,25 @@ class Mate extends DeclareNsfoBase
     public function setApprovedBy($approvedBy)
     {
         $this->approvedBy = $approvedBy;
+    }
+
+
+    /**
+     * @return Litter
+     */
+    public function getLitter()
+    {
+        return $this->litter;
+    }
+
+    /**
+     * @param Litter $litter
+     * @return Mate
+     */
+    public function setLitter($litter)
+    {
+        $this->litter = $litter;
+        return $this;
     }
 
 
