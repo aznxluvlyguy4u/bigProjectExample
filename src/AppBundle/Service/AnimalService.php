@@ -256,9 +256,9 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = $this->getSelectedLocation($request);
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
-        $includeLastMate = RequestUtil::getBooleanQuery($request, QueryParameter::IS_EWES_WITH_LAST_MATE, false);;
+        $isEwesWithLastMate = RequestUtil::getBooleanQuery($request, QueryParameter::IS_EWES_WITH_LAST_MATE, false);;
 
-        if ($includeLastMate) {
+        if ($isEwesWithLastMate) {
             $livestock = $this->getManager()->getRepository(Animal::class)
                 ->getEwesLivestockWithLastMate($location, $this->getCacheService(), $this->getBaseSerializer(), true);
             $jmsGroups = AnimalRepository::getEwesLivestockWithLastMateJmsGroups();
