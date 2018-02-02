@@ -30,11 +30,14 @@ use JMS\Serializer\Annotation\Expose;
  *     "ACTION_LOG_ADMIN",
  *     "ACTION_LOG_USER",
  *     "ANIMAL_DETAILS",
+ *     "ADDRESS",
  *     "BASIC",
  *     "CONTACT_INFO",
  *     "ERROR_DETAILS",
+ *     "GHOST_LOGIN",
  *     "INVOICE",
  *     "TREATMENT_TEMPLATE",
+ *     "UBN",
  *     "USER_MEASUREMENT",
  *     "VWA"
  *  })
@@ -61,6 +64,8 @@ abstract class Person implements UserInterface
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ANIMAL_DETAILS",
+   *     "BASIC",
+   *     "GHOST_LOGIN",
    *     "INVOICE",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
@@ -80,8 +85,10 @@ abstract class Person implements UserInterface
    *     "ACTION_LOG_ADMIN",
    *     "ACTION_LOG_USER",
    *     "ANIMAL_DETAILS",
+   *     "BASIC",
    *     "CONTACT_INFO",
    *     "ERROR_DETAILS",
+   *     "GHOST_LOGIN",
    *     "INVOICE",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
@@ -101,8 +108,10 @@ abstract class Person implements UserInterface
    *     "ACTION_LOG_ADMIN",
    *     "ACTION_LOG_USER",
    *     "ANIMAL_DETAILS",
+   *     "BASIC",
    *     "CONTACT_INFO",
    *     "ERROR_DETAILS",
+   *     "GHOST_LOGIN",
    *     "INVOICE",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
@@ -119,6 +128,8 @@ abstract class Person implements UserInterface
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
+   *     "BASIC",
+   *     "GHOST_LOGIN",
    *     "VWA"
    * })
    * @Expose
@@ -140,6 +151,7 @@ abstract class Person implements UserInterface
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "BASIC",
      *     "INVOICE",
      *     "USER_MEASUREMENT",
      *     "VWA"
@@ -520,7 +532,7 @@ abstract class Person implements UserInterface
      */
     public function setUsername($username)
     {
-        $this->username = $username;
+        $this->username = StringUtil::trimIfNotNull($username);
 
         return $this;
     }
@@ -558,7 +570,7 @@ abstract class Person implements UserInterface
    */
   public function setCellphoneNumber($cellphoneNumber)
   {
-    $this->cellphoneNumber = trim($cellphoneNumber);
+    $this->cellphoneNumber = StringUtil::trimIfNotNull($cellphoneNumber);
   }
 
   /**
@@ -615,7 +627,7 @@ abstract class Person implements UserInterface
    */
   public function setPrefix($prefix)
   {
-    $this->prefix = trim($prefix);
+    $this->prefix = StringUtil::trimIfNotNull($prefix);
   }
 
   /**

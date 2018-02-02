@@ -8,6 +8,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\TestConstant;
+use AppBundle\Entity\BirthProgress;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Animal;
@@ -21,6 +22,8 @@ use AppBundle\Entity\Mate;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Token;
+use AppBundle\Enumerator\BlindnessFactorType;
+use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\NullChecker;
@@ -34,7 +37,16 @@ use Symfony\Component\HttpFoundation\Response;
 class Validator
 {
     const DEFAULT_MIN_PASSWORD_LENGTH = 6;
+    const MAX_ULN_NUMBER_LENGTH = 12;
+    const MIN_ULN_NUMBER_LENGTH = 8;
+    const ULN_COUNTRY_CODE_LENGTH = 2;
 
+    /** @var array */
+    private static $validBreedTypes = [];
+    /** @var array */
+    private static $validBlindFactors = [];
+    /** @var array */
+    private static $validBirthProgresses = [];
 
     /**
      * @param float $number
@@ -79,21 +91,24 @@ class Validator
     public static function verifyUlnFormat($ulnString, $includesSpaceBetweenCountryCodeAndNumber = false)
     {
         if($includesSpaceBetweenCountryCodeAndNumber) {
-            $pregMatch = "/([A-Z]{2})+[ ]+([0-9]{8,12})/";
+            $pregMatch = "/(".Regex::countryCode().")+[ ]+".Regex::ulnNumber()."/";
         } else {
-            $pregMatch = "/([A-Z]{2})+([0-9]{8,12})/";
+            $pregMatch = "/(".Regex::countryCode().")+".Regex::ulnNumber()."/";
         }
 
-        return preg_match($pregMatch,$ulnString);
+        return preg_match($pregMatch,$ulnString)
+            && (self::ULN_COUNTRY_CODE_LENGTH + self::MIN_ULN_NUMBER_LENGTH) <= strlen($ulnString)
+            && strlen($ulnString) <= (self::ULN_COUNTRY_CODE_LENGTH + self::MAX_ULN_NUMBER_LENGTH);
     }
 
 
     public static function verifyUlnNumberFormat($ulnNumber)
     {
-        $ulnLength = 12;
-        $pregMatch = "/([0-9]{12})/";
+        $pregMatch = "/".Regex::ulnNumber()."/";
 
-        return preg_match($pregMatch,$ulnNumber) && strlen($ulnNumber) == $ulnLength;
+        return preg_match($pregMatch,$ulnNumber)
+            && self::MIN_ULN_NUMBER_LENGTH <= strlen($ulnNumber)
+            && strlen($ulnNumber) <= self::MAX_ULN_NUMBER_LENGTH;
     }
 
 
@@ -120,7 +135,7 @@ class Validator
     public static function verifyPedigreeNumberFormat($pedigreeNumber)
     {
         $numberLengthIncludingDash = 11;
-        return preg_match("/([A-Z0-9]{5}[-][a-zA-Z0-9]{5})/",$pedigreeNumber)
+        return preg_match("/(".Regex::pedigreeNumber().")/",$pedigreeNumber)
         && strlen($pedigreeNumber) == $numberLengthIncludingDash;
     }
 
@@ -134,10 +149,10 @@ class Validator
     {
         if($includesSpaceBetweenCountryCodeAndNumber) {
             $numberLengthIncludingDash = 14;
-            $pregMatch = "/([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{5})/";
+            $pregMatch = "/(".Regex::countryCode()."[ ]".Regex::pedigreeNumber().")/";
         } else {
             $numberLengthIncludingDash = 13;
-            $pregMatch = "/([A-Z]{2}[A-Z0-9]{5}[-][a-zA-Z0-9]{5})/";
+            $pregMatch = "/(".Regex::countryCode().Regex::pedigreeNumber().")/";
         }
         return preg_match($pregMatch,$stn) && strlen($stn) == $numberLengthIncludingDash;
     }
@@ -541,6 +556,66 @@ class Validator
         }
 
         return $sum%10 == 0;
+    }
+
+
+    /**
+     * @param string $breedType
+     * @param bool $allowEmpty
+     * @return bool
+     */
+    public static function hasValidBreedType($breedType, $allowEmpty = true)
+    {
+        if (count(self::$validBreedTypes) === 0) {
+            self::$validBreedTypes = BreedType::getConstants();
+        }
+
+        if ($breedType === null) {
+            return $allowEmpty;
+        }
+
+        return key_exists($breedType, self::$validBreedTypes);
+    }
+
+
+    /**
+     * @param string $blindnessFactor
+     * @param bool $allowEmpty
+     * @return bool
+     */
+    public static function hasValidBlindnessFactorType($blindnessFactor, $allowEmpty = true)
+    {
+        if (count(self::$validBlindFactors) === 0) {
+            self::$validBlindFactors = BlindnessFactorType::getConstants();
+        }
+
+        if ($blindnessFactor === null) {
+            return $allowEmpty;
+        }
+
+        return key_exists($blindnessFactor, self::$validBlindFactors);
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param string $birthProgress
+     * @param bool $allowEmpty
+     * @return bool
+     */
+    public static function hasValidBirthProgressType(EntityManagerInterface $em, $birthProgress, $allowEmpty = true)
+    {
+        if ($birthProgress === null) {
+            return $allowEmpty;
+        }
+
+        // Only retrieve data if at least one birth progress to be checked is not null
+
+        if (count(self::$validBirthProgresses) === 0) {
+            self::$validBirthProgresses = $em->getRepository(BirthProgress::class)->getAllDescriptions();
+        }
+
+        return key_exists($birthProgress, self::$validBirthProgresses);
     }
 
 

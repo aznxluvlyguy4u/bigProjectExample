@@ -165,6 +165,24 @@ class MixBlupDataFileBase
 
     /**
      * @param array $data
+     * @param string $key
+     * @param bool $useColumnPadding
+     * @param string $nullReplacement
+     * @return string
+     */
+    protected static function getFormattedBooleanValueAsIntegerStringFromData($data, $key, $useColumnPadding = true, $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT)
+    {
+        $boolVal = ArrayUtil::get($key, $data, null);
+        if (is_bool($boolVal)) {
+            $data[$key] = $boolVal ? '1' : '0';
+        }
+
+        return DsvWriterUtil::getFormattedValueFromArray($data, 3, $key, $useColumnPadding, $nullReplacement);
+    }
+
+
+    /**
+     * @param array $data
      * @param int $columnWidth
      * @param string $key
      * @param bool $useColumnPadding

@@ -7,6 +7,8 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\MateBuilder;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Mate;
 use AppBundle\Output\MateOutput;
 use AppBundle\Util\ActionLogWriter;
@@ -31,7 +33,7 @@ class MateService extends ControllerServiceBase
         $log = ActionLogWriter::createMate($this->getManager(), $client, $loggedInUser, $location, $content);
 
         $validateEweGender = true;
-        $mateValidator = new MateValidator($this->getManager(), $content, $client, $validateEweGender);
+        $mateValidator = new MateValidator($this->getManager(), $this->translator, $content, $client, $validateEweGender);
         if(!$mateValidator->getIsInputValid()) { return $mateValidator->createJsonResponse(); }
 
         $mate = MateBuilder::post($this->getManager(), $content, $client, $loggedInUser, $location);
@@ -40,6 +42,8 @@ class MateService extends ControllerServiceBase
         MateBuilder::approveMateDeclaration($mate, $loggedInUser);
 
         $this->persistAndFlush($mate);
+        $this->getManager()->getRepository(Animal::class)->purgeCandidateMothersCache($location, $this->getCacheService());
+        AnimalRepository::purgeEwesLivestockWithLastMateCache($location, $this->getCacheService());
 
         $output = MateOutput::createMateOverview($mate);
 
@@ -66,7 +70,7 @@ class MateService extends ControllerServiceBase
 
         $validateEweGender = true;
         $isPost = false;
-        $mateValidator = new MateValidator($this->getManager(), $content, $client, $validateEweGender, $isPost);
+        $mateValidator = new MateValidator($this->getManager(), $this->translator, $content, $client, $validateEweGender, $isPost);
         if(!$mateValidator->getIsInputValid()) { return $mateValidator->createJsonResponse(); }
 
         $mate = $mateValidator->getMateFromMessageId();
@@ -76,6 +80,8 @@ class MateService extends ControllerServiceBase
         MateBuilder::approveMateDeclaration($mate, $loggedInUser);
 
         $this->persistAndFlush($mate);
+        $this->getManager()->getRepository(Animal::class)->purgeCandidateMothersCache($location, $this->getCacheService());
+        AnimalRepository::purgeEwesLivestockWithLastMateCache($location, $this->getCacheService());
 
         $output = MateOutput::createMateOverview($mate);
 

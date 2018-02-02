@@ -31,11 +31,12 @@ class MenuBarOutput extends Output
 
     public static function createAdmin(Employee $employee)
     {
-        $result = array(
+        $result = [
             "first_name" => $employee->getFirstName(),
             "last_name" => $employee->getLastName(),
-            "email_address" => $employee->getEmailAddress()
-        );
+            "email_address" => $employee->getEmailAddress(),
+            "access_level" => $employee->getAccessLevel(),
+        ];
 
         return $result;
     }

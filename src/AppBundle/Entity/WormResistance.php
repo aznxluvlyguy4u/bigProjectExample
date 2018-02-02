@@ -72,6 +72,14 @@ class WormResistance
 
 
     /**
+     * @var int
+     * @JMS\Type("integer")
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $treatmentUbn;
+
+
+    /**
      * Behandeld voor monsteren
      *
      * @var boolean
@@ -82,7 +90,9 @@ class WormResistance
 
 
     /**
-     * EPG
+     * EPG = LnFEC
+     *
+     * Natural logarithm from egg count.
      *
      * @var float
      * @JMS\Type("float")
@@ -94,6 +104,8 @@ class WormResistance
     /**
      * SIgA Glasgow (% from pos)
      *
+     * IgA determination in Scotland.
+     *
      * @var float
      * @JMS\Type("float")
      * @ORM\Column(type="float", nullable=true)
@@ -102,6 +114,8 @@ class WormResistance
 
     /**
      * CARLA IgA NZ
+     *
+     * IgA determination in New Zealand.
      *
      * @var float
      * @JMS\Type("float")
@@ -113,6 +127,10 @@ class WormResistance
     /**
      * Class CARLA IgA NZ
      *
+     * Class based on IgA determination in New Zealand (Klasse op basis van IgA bepaling in Nieuw Zeeland).
+     * Possible values: None detected, Medium, Trace, Low, High
+     * If empty use the missing value (-99) instead
+     *
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -121,6 +139,8 @@ class WormResistance
 
 
     /**
+     * Early or late sample within season. value: 1 or 2.
+     *
      * @var int
      * @JMS\Type("integer")
      * @ORM\Column(type="integer", nullable=true)
@@ -401,6 +421,26 @@ class WormResistance
         $this->isActive = $isActive;
         return $this;
     }
+
+
+    /**
+     * @return int
+     */
+    public function getTreatmentUbn()
+    {
+        return $this->treatmentUbn;
+    }
+
+    /**
+     * @param int $treatmentUbn
+     * @return WormResistance
+     */
+    public function setTreatmentUbn($treatmentUbn)
+    {
+        $this->treatmentUbn = $treatmentUbn;
+        return $this;
+    }
+
 
 
 }

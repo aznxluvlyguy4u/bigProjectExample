@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Component\MixBlup\WormResistanceInputProcess;
 use AppBundle\Constant\Environment;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Component\MixBlup\ExteriorInputProcess;
@@ -15,8 +16,8 @@ use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\TimeUtil;
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 
 /**
@@ -27,7 +28,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
 {
     /** @var Connection */
     private $conn;
-    /** @var ObjectManager */
+    /** @var EntityManagerInterface */
     private $em;
     /** @var AWSSimpleStorageService */
     private $s3Service;
@@ -51,14 +52,14 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
 
     /**
      * MixBlupInputFilesService constructor.
-     * @param ObjectManager $em
+     * @param EntityManagerInterface $em
      * @param AWSSimpleStorageService $s3Service
      * @param MixBlupInputQueueService $queueService
      * @param string $currentEnvironment
      * @param string $cacheDir
      * @param Logger $logger
      */
-    public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, MixBlupInputQueueService $queueService,
+    public function __construct(EntityManagerInterface $em, AWSSimpleStorageService $s3Service, MixBlupInputQueueService $queueService,
                                 $currentEnvironment, $cacheDir, $logger)
     {
         $this->em = $em;
@@ -74,6 +75,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorInputProcess($em, $this->workingFolder, $this->logger);
         $this->mixBlupProcesses[MixBlupType::LAMB_MEAT_INDEX] = new LambMeatIndexInputProcess($em, $this->workingFolder, $this->logger);
         $this->mixBlupProcesses[MixBlupType::FERTILITY] = new ReproductionInputProcess($em, $this->workingFolder, $this->logger);
+        $this->mixBlupProcesses[MixBlupType::WORM] = new WormResistanceInputProcess($em, $this->workingFolder, $this->logger);
 
         $this->setCachePurgeSettingByEnvironment();
     }

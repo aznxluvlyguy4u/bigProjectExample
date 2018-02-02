@@ -25,6 +25,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Stillborn;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
@@ -61,14 +62,35 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     /** @var Logger */
     private $logger;
 
-    public function __construct(AwsExternalQueueService $externalQueueService, CacheService $cacheService, EntityManagerInterface $manager, IRSerializer $irSerializer, RequestMessageBuilder $requestMessageBuilder, UserService $userService,
-                                Logger $logger,
-                                AwsInternalQueueService $internalQueueService,
-                                EntityGetter $entityGetter)
+    /**
+     * @required load at start up
+     *
+     * @param EntityGetter $entityGetter
+     */
+    public function setEntityGetter(EntityGetter $entityGetter)
     {
-        parent::__construct($externalQueueService, $cacheService, $manager, $irSerializer, $requestMessageBuilder, $userService);
         $this->entityGetter = $entityGetter;
+    }
+
+
+    /**
+     * @required load at start up
+     *
+     * @param Logger $logger
+     */
+    public function setLogger(Logger $logger)
+    {
         $this->logger = $logger;
+    }
+
+
+    /**
+     * @required load at start up
+     *
+     * @param AwsInternalQueueService $internalQueueService
+     */
+    public function setInternalQueueService(AwsInternalQueueService $internalQueueService)
+    {
         $this->internalQueueService = $internalQueueService;
     }
 
@@ -621,7 +643,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $result = [];
         $candidateFathers = $this->getManager()->getRepository(DeclareBirth::class)->getCandidateFathers($mother, $dateOfBirth);
-        $otherCandidateFathers = $this->getManager()->getRepository(Animal::class)->getLiveStock($location, $this->getCacheService(), true, Ram::class);
+        $otherCandidateFathers = $this->getManager()->getRepository(Animal::class)
+            ->getLiveStock($location, $this->getCacheService(), $this->getBaseSerializer(),true, Ram::class);
         $filteredOtherCandidateFathers = [];
         $suggestedCandidateFathers = [];
         $suggestedCandidateFatherIds = [];
@@ -629,39 +652,13 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         /** @var Animal $animal */
         foreach ($candidateFathers as $animal) {
             $suggestedCandidateFatherIds['id'] = $animal->getId();
-            $suggestedCandidateFathers[] = [
-                JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                JsonInputConstant::GENDER =>  $animal->getGender(),
-                JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                JsonInputConstant::UBN => $location->getUbn(),
-                JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-            ];
+            $suggestedCandidateFathers[] = $this->getAnimalResult($animal, $location);
         }
 
         /** @var Animal $animal */
         foreach ($otherCandidateFathers as $animal) {
             if(!array_key_exists($animal->getId(), $suggestedCandidateFatherIds)) {
-                $filteredOtherCandidateFathers[] = [
-                    JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                    JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                    JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                    JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                    JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                    JsonInputConstant::GENDER =>  $animal->getGender(),
-                    JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                    JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                    JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                    JsonInputConstant::UBN => $location->getUbn(),
-                    JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                    JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                ];
+                $filteredOtherCandidateFathers[] = $this->getAnimalResult($animal, $location);
             }
         }
 
@@ -718,56 +715,30 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $otherCandidatesResult = [];
         $result = [];
 
-        $surrogateMotherCandidates = $this->getManager()->getRepository(DeclareBirth::class)->getCandidateSurrogateMothers($location , $mother);
+        $surrogateMotherCandidates = $this->getManager()->getRepository(DeclareBirth::class)->getCandidateSurrogateMothers($location, $mother);
 
         $offsetDateFromNow = $dateOfBirth->modify('-' . self::SURROGATE_MOTHER_OFFSET_DAYS .'days');
 
         /** @var Ewe $animal */
         foreach ($surrogateMotherCandidates as $animal) {
 
-            //Check if surrogate mother candidate has given birth to childeren within the last 6 months
+            //Check if surrogate mother candidate has given birth to children within the last 6 months
             if($animal->getChildren()->count() == 0) {
                 if(self::SHOW_OTHER_SURROGATE_MOTHERS) {
-                    $otherCandidatesResult[] = [
-                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                        JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
-                        JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
-                        JsonInputConstant::GENDER => $animal->getGender(),
-                        JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
-                        JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
-                        JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
-                        JsonInputConstant::UBN => $location->getUbn(),
-                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                        JsonInputConstant::IS_PUBLIC => $animal->isAnimalPublic(),
-                    ];
+                    $otherCandidatesResult[] = $this->getAnimalResult($animal, $location);
                 }
                 continue;
             }
 
-            $childeren = $animal->getChildren();
+            $children = $animal->getChildren();
             $addToOtherCandidates = true;
 
             /** @var Animal $child */
-            foreach ($childeren as $child) {
+            foreach ($children as $child) {
                 if($child->getDateOfBirth()) {
                     //Add as a true candidate surrogate to list
-                    if(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {
-                        $suggestedCandidatesResult[] = [
-                            JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                            JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                            JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                            JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                            JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                            JsonInputConstant::GENDER =>  $animal->getGender(),
-                            JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                            JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                            JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                            JsonInputConstant::UBN => $location->getUbn(),
-                            JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                            JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                        ];
+                    if(abs(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow)) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {
+                        $suggestedCandidatesResult[] = $this->getAnimalResult($animal, $location);
                         $addToOtherCandidates = false;
                         break;
                     }
@@ -780,20 +751,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             }
 
             if(self::SHOW_OTHER_SURROGATE_MOTHERS) {
-                $otherCandidatesResult[] = [
-                    JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                    JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                    JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                    JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                    JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                    JsonInputConstant::GENDER =>  $animal->getGender(),
-                    JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                    JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                    JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                    JsonInputConstant::UBN => $location->getUbn(),
-                    JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                    JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                ];
+                $otherCandidatesResult[] = $this->getAnimalResult($animal, $location);
             }
         }
 
@@ -802,6 +760,31 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $result['other_candidate_surrogates'] = $otherCandidatesResult;
 
         return ResultUtil::successResult($result);
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param Location $location
+     * @return array
+     */
+    private function getAnimalResult(Animal $animal, Location $location)
+    {
+        return [
+            JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+            JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+            JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+            JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
+            JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
+            JsonInputConstant::GENDER => $animal->getGender(),
+            JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
+            JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
+            JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
+            JsonInputConstant::UBN => $location->getUbn(),
+            JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+            JsonInputConstant::IS_PUBLIC => $animal->isAnimalPublic(),
+            JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
+        ];
     }
 
 
@@ -820,7 +803,9 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $otherCandidatesResult = [];
         $result = [];
 
-        $motherCandidates = $this->getManager()->getRepository(Animal::class)->getLiveStock($location , $this->getCacheService(), true, Ewe::class);
+        $motherCandidates = $this->getManager()->getRepository(Animal::class)
+            ->getCandidateMothersForBirth($location, $this->getCacheService(), $this->getBaseSerializer())
+        ;
 
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;
@@ -828,23 +813,10 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         //Animal has no registered matings, thus it is not a true candidate
         /** @var Ewe $animal */
         foreach ($motherCandidates as $animal) {
-            if($animal->getMatings()->count() == 0 ) {
+
+            if($animal->getMatings()->count() === 0) {
                 if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
-                    $otherCandidatesResult[] = [
-                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                        JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
-                        JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
-                        JsonInputConstant::GENDER => $animal->getGender(),
-                        JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
-                        JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
-                        JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
-                        JsonInputConstant::UBN => $location->getUbn(),
-                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                        JsonInputConstant::IS_PUBLIC => $animal->isAnimalPublic(),
-                        JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
-                    ];
+                    $otherCandidatesResult[] = $this->getAnimalResult($animal, $location);
                 }
                 continue;
             }
@@ -870,21 +842,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             //animal has given birth within the last 167 days, thus it is not a true candidate
             if(!$checkAnimalForMatings) {
                 if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
-                    $otherCandidatesResult[] = [
-                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                        JsonInputConstant::GENDER =>  $animal->getGender(),
-                        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                        JsonInputConstant::UBN => $location->getUbn(),
-                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                        JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
-                    ];
+                    $otherCandidatesResult[] = $this->getAnimalResult($animal, $location);
                 }
                 continue;
             }
@@ -893,6 +851,13 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
             /** @var Mate $mating */
             foreach ($matings as $mating) {
+                if ($mating->getRequestState() === RequestStateType::REVOKED) {
+                    if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
+                        $otherCandidatesResult[] = $this->getAnimalResult($animal, $location);
+                    }
+                    continue;
+                }
+
                 $lowerboundPregnancyDays = self::MEDIAN_PREGNANCY_DAYS - self::MATING_DAYS_OFFSET;
                 $upperboundPregnancyDays = self::MEDIAN_PREGNANCY_DAYS + self::MATING_DAYS_OFFSET;
 
@@ -909,21 +874,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                     $candidateFathers[] = $mating->getStudRam();
 
                     //Add as a true candidate surrogate to list
-                    $suggestedCandidatesResult[] = [
-                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                        JsonInputConstant::GENDER =>  $animal->getGender(),
-                        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                        JsonInputConstant::UBN => $location->getUbn(),
-                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                        JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
-                    ];
+                    $suggestedCandidatesResult[] = $this->getAnimalResult($animal, $location);
                     $addToOtherCandidates = false;
                     break;
                 }
@@ -934,23 +885,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             }
 
             if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
-                $otherCandidatesResult[] = [
-                    JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                    JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                    JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                    JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
-                    JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
-                    JsonInputConstant::GENDER => $animal->getGender(),
-                    JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
-                    JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
-                    JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
-                    JsonInputConstant::UBN => $location->getUbn(),
-                    JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                    JsonInputConstant::IS_PUBLIC => $animal->isAnimalPublic(),
-                    JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
-                ];
+                $otherCandidatesResult[] = $this->getAnimalResult($animal, $location);
             }
-
         }
 
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;

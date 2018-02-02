@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\StringUtil;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -43,6 +44,9 @@ abstract class Address
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $streetName;
 
@@ -52,6 +56,9 @@ abstract class Address
    * @ORM\Column(type="integer")
    * @Assert\NotBlank
    * @JMS\Type("integer")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $addressNumber;
 
@@ -60,6 +67,9 @@ abstract class Address
    *
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $addressNumberSuffix;
 
@@ -71,6 +81,9 @@ abstract class Address
    * @Assert\Regex("/([0-9]{4}[A-Z]{2})\b/")
    * @Assert\Length(max = 6)
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $postalCode;
 
@@ -80,6 +93,9 @@ abstract class Address
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $city;
 
@@ -89,6 +105,9 @@ abstract class Address
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $country;
 
@@ -97,6 +116,9 @@ abstract class Address
    *
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
+   * @JMS\Groups({
+   *     "ADDRESS"
+   * })
    */
   private $state;
 
@@ -167,7 +189,7 @@ abstract class Address
      */
     public function setAddressNumberSuffix($addressNumberSuffix)
     {
-        $this->addressNumberSuffix = trim($addressNumberSuffix);
+        $this->addressNumberSuffix = StringUtil::trimIfNotNull($addressNumberSuffix);
 
         return $this;
     }
@@ -263,7 +285,7 @@ abstract class Address
      */
     public function setState($state)
     {
-        $this->state = trim($state);
+        $this->state = StringUtil::trimIfNotNull($state);
 
         return $this;
     }

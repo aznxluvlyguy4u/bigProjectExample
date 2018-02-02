@@ -27,21 +27,19 @@ class ActionLogService
     private $serializer;
     /** @var UserService */
     private $userService;
+    /** @var CacheService */
+    private $cacheService;
 
     /** @var ActionLogRepository */
     private $actionLogRepository;
 
-    /**
-     * ActionLogService constructor.
-     * @param EntityManagerInterface $em
-     * @param IRSerializer $serializer
-     * @param UserService $userService
-     */
-    public function __construct(EntityManagerInterface $em, IRSerializer $serializer, UserService $userService)
+    public function __construct(EntityManagerInterface $em, IRSerializer $serializer,
+                                UserService $userService, CacheService $cacheService)
     {
         $this->em = $em;
         $this->serializer = $serializer;
         $this->userService = $userService;
+        $this->cacheService = $cacheService;
 
         $this->actionLogRepository = $em->getRepository(ActionLog::class);
     }
@@ -113,7 +111,6 @@ class ActionLogService
         if(!AdminValidator::isAdmin($this->userService->getUser(), AccessLevelType::ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
-
-        return ResultUtil::successResult($this->actionLogRepository->getUserAccountPersonIds());
+        return ResultUtil::successResult($this->actionLogRepository->getUserAccountPersonIds($this->serializer, $this->cacheService));
     }
 }

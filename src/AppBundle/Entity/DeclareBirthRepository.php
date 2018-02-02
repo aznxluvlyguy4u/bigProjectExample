@@ -159,31 +159,25 @@ class DeclareBirthRepository extends BaseRepository {
    * @param Ewe $mother
    * @return array
    */
-  public function getCandidateSurrogateMothers(Location $location, Ewe $mother) {
-    $em = $this->getEntityManager();
-    $livestockEwesQueryBuilder = $em->createQueryBuilder();
+  public function getCandidateSurrogateMothers(Location $location, Ewe $mother)
+  {
+      $livestockEwesQueryBuilder = $this->getManager()->getRepository(Animal::class)
+          ->getLivestockQueryBuilder(
+              $location,
+              true,
+              Ewe::class,
+              true
+          );
 
-    $livestockEwesQueryBuilder
-      ->select('animal')
-      ->from('AppBundle:Animal', 'animal')
-      ->where($livestockEwesQueryBuilder->expr()->andX(
-        $livestockEwesQueryBuilder->expr()->andX(
-          $livestockEwesQueryBuilder->expr()->eq('animal.isAlive', 'true'),
-          $livestockEwesQueryBuilder->expr()->eq('animal.gender', "'FEMALE'"),
-          $livestockEwesQueryBuilder->expr()
-            ->neq('animal.id', $mother->getId()),
-          $livestockEwesQueryBuilder->expr()->orX(
-            $livestockEwesQueryBuilder->expr()->isNull('animal.transferState'),
-            $livestockEwesQueryBuilder->expr()
-              ->neq('animal.transferState', "'TRANSFERRING'")
-          )),
-        $livestockEwesQueryBuilder->expr()
-          ->eq('animal.location', $location->getId())
-      ));
+      $livestockEwesQueryBuilder
+          ->andWhere(
+              $livestockEwesQueryBuilder->expr()->neq('animal.id', $mother->getId())
+          )
+      ;
 
-    $query = $livestockEwesQueryBuilder->getQuery();
+      $query = $livestockEwesQueryBuilder->getQuery();
 
-    return $query->getResult();
+      return $query->getResult();
   }
 
 

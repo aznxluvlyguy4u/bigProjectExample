@@ -24,6 +24,39 @@ class ResultUtil
 
 
     /**
+     * @param $result
+     * @param string $message
+     * @param $code
+     * @return JsonResponse
+     */
+    public static function multiEditErrorResult($result, $message, $code)
+    {
+        return new JsonResponse([
+            Constant::RESULT_NAMESPACE => $result,
+            Constant::MESSAGE_NAMESPACE => $message,
+        ], $code);
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    public static function internalServerError()
+    {
+        return ResultUtil::errorResult('INTERNAL SERVER ERROR', Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    public static function badRequest()
+    {
+        return ResultUtil::errorResult('BAD REQUEST', Response::HTTP_BAD_REQUEST);
+    }
+
+
+    /**
      * @param string $message
      * @param int $code The HTTP code
      * @param array $errors

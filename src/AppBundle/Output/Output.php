@@ -5,6 +5,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Enumerator\MaediVisnaStatus;
+use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\Finder;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -43,14 +45,14 @@ abstract class Output
     /** @var \DateTime */
     static protected $scrapieCheckDate;
 
-    /** @var \DateTime */
-    static protected $checkDate;
-
     /** @var string */
     static protected $maediVisnaReasonOfEdit;
 
     /** @var string */
     static protected $scrapieReasonOfEdit;
+
+    /** @var boolean */
+    static protected $animalHealthSubscription;
 
     /**
      * @param Location $location
@@ -60,18 +62,20 @@ abstract class Output
         if($location != null) {
             self::$ubn = $location->getUbn();
             self::$locationHealth = $location->getLocationHealth();
+            self::$animalHealthSubscription = $location->getAnimalHealthSubscription();
 
         } else {
             self::$ubn = null;
             self::$locationHealth = null;
+            self::$animalHealthSubscription = false;
         }
         
 
-        if(self::$locationHealth != null) {
+        if(self::$locationHealth != null && self::$animalHealthSubscription) {
             self::$locationHealthStatus = self::$locationHealth->getLocationHealthStatus();
 
             $lastScrapie = Finder::findLatestActiveScrapie($location, $em);
-            if($lastScrapie != null) {
+            if($lastScrapie != null && $lastScrapie->getStatus() !== ScrapieStatus::BLANK) {
                 self::$scrapieStatus = $lastScrapie->getStatus();
                 self::$scrapieCheckDate = $lastScrapie->getCheckDate();
                 self::$scrapieEndDate = $lastScrapie->getEndDate();
@@ -79,7 +83,7 @@ abstract class Output
             }
 
             $lastMaediVisna = Finder::findLatestActiveMaediVisna($location, $em);
-            if($lastMaediVisna != null) {
+            if($lastMaediVisna != null && $lastMaediVisna->getStatus() !== MaediVisnaStatus::BLANK) {
                 self::$maediVisnaStatus = $lastMaediVisna->getStatus();
                 self::$maediVisnaCheckDate = $lastMaediVisna->getCheckDate();
                 self::$maediVisnaEndDate = $lastMaediVisna->getEndDate();
@@ -95,7 +99,6 @@ abstract class Output
             self::$maediVisnaCheckDate = "";
             self::$scrapieEndDate = "";
             self::$scrapieCheckDate = "";
-            self::$checkDate = "";
             self::$scrapieReasonOfEdit = "";
             self::$maediVisnaReasonOfEdit = "";
         }

@@ -61,7 +61,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                 self::getFormattedRecombination($data).
                 self::getFormattedHeterosisLamb($data).
                 self::getFormattedRecombinationLamb($data).
-                self::getTeBreedCodepartOfMother($data). //TODO
+                self::getTeBreedCodepartOfMother($data).
                 self::getFormattedPmsg($data).
                 self::getFormattedPermMil($data).
                 self::getFormattedNullableMotherId($data).

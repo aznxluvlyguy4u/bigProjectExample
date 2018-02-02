@@ -44,7 +44,7 @@ class Employee extends Person
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Token", mappedBy="admin", cascade={"persist"})
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Token>")
      */
     private $ghostTokens;
 
@@ -52,7 +52,7 @@ class Employee extends Person
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="CompanyNote", mappedBy="creator")
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\CompanyNote>")
      */
     private $notes;
 
@@ -74,6 +74,9 @@ class Employee extends Person
 
         $this->accessLevel = $accessLevel;
         $this->objectType = "Employee";
+
+        $this->ghostTokens = new ArrayCollection();
+        $this->notes = new ArrayCollection();
     }
 
     /**

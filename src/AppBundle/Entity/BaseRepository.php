@@ -14,6 +14,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\QueryBuilder;
 
 /**
  * Class BaseRepository
@@ -65,6 +66,22 @@ class BaseRepository extends EntityRepository
     public function flush()
     {
         $this->getManager()->flush();
+    }
+
+    /**
+     * @param QueryBuilder $qb
+     * @param bool $onlyReturnQuery
+     * @return mixed
+     */
+    protected function returnQueryOrResult(QueryBuilder $qb, $onlyReturnQuery = false)
+    {
+        $query = $qb->getQuery();
+
+        if ($onlyReturnQuery) {
+            return $query;
+        }
+
+        return $query->getResult();
     }
 
     protected function getRequests($requests, $state = null)

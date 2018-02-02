@@ -6,9 +6,14 @@ use AppBundle\Component\Count;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\ReportLabel;
+use AppBundle\Criteria\AnimalCriteria;
+use AppBundle\Criteria\MateCriteria;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;
 use AppBundle\Util\AnimalArrayReader;
@@ -18,6 +23,7 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -27,6 +33,7 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Adapter\TraceableAdapter;
 use Doctrine\ORM\Query\Parameter;
@@ -42,9 +49,12 @@ class AnimalRepository extends BaseRepository
   const BATCH = 1000;
   const USE_REDIS_CACHE = true; //TODO activate this when the livestock and historicLivestock redis cache is fixed
   const LIVESTOCK_CACHE_ID = 'GET_LIVESTOCK_';
+  const EWES_LIVESTOCK_WITH_LAST_MATE_CACHE_ID = 'GET_EWES_LIVESTOCK_WITH_LAST_MATE_';
   const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
   const CANDIDATE_FATHERS_CACHE_ID = 'GET_CANDIDATE_FATHERS_';
+  const CANDIDATE_MOTHERS_CACHE_ID = 'GET_CANDIDATE_MOTHERS_';
   const CANDIDATE_SURROGATES_CACHE_ID = 'GET_CANDIDATE_SURROGATES_';
+  const ANIMAL_ALIAS = 'animal';
 
   /**
    * @param $Id
@@ -341,75 +351,315 @@ class AnimalRepository extends BaseRepository
   }
 
 
+    /**
+     * @param Location $location
+     * @param CacheService $cacheService
+     * @param BaseSerializer $serializer
+     * @param bool $onlyIncludeAliveEwes
+     * @return array
+     */
+  public function getEwesLivestockWithLastMate(Location $location,
+                                               CacheService $cacheService,
+                                               BaseSerializer $serializer,
+                                               $onlyIncludeAliveEwes = true)
+  {
+      $clazz = Ewe::class;
+
+      //Returns a list of AnimalResidences
+      if (self::USE_REDIS_CACHE) {
+          $cacheId = self::getEwesLivestockWithLastMateCacheId($location);
+
+          if ($cacheService->isHit($cacheId)) {
+              $ewes = $serializer->deserializeArrayOfObjects($cacheService->getItem($cacheId), $clazz);
+          } else {
+              /** @var Ewe[] $ewes */
+              $ewes = $this->getEwesLivestockWithLastMateQuery($location, $onlyIncludeAliveEwes)->getResult();
+
+              foreach ($ewes as $ewe) {
+                  $ewe->onlyKeepLastActiveMateInMatings();
+              }
+
+              $jmsGroups = self::getEwesLivestockWithLastMateJmsGroups();
+              $jmsGroups[] = JmsGroup::MATINGS;
+
+              $serializedEwes = $serializer->getArrayOfSerializedObjects($ewes, $jmsGroups,true);
+              $ewes = $serializer->deserializeArrayOfObjects($serializedEwes, $clazz);
+
+              $cacheService->set($cacheId, $serializedEwes);
+          }
+
+      } else {
+          $ewes = $this->getEwesLivestockWithLastMateQuery($location, $onlyIncludeAliveEwes)->getResult();
+      }
+
+      return $ewes;
+  }
+
+
+    /**
+     * @param Location $location
+     * @param bool $onlyIncludeAliveEwes
+     * @return \Doctrine\ORM\Query|string
+     */
+  private function getEwesLivestockWithLastMateQuery(Location $location,
+                                                     $onlyIncludeAliveEwes = true)
+  {
+      $clazz = Ewe::class;
+      $isAlive = $onlyIncludeAliveEwes ? null : true;
+
+      $query = $this->getLivestockQuery($location, $isAlive, $clazz, false);
+      $query->setFetchMode(Mate::class, 'studEwe', ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Ram::class, 'parentFather', ClassMetadata::FETCH_EXTRA_LAZY);
+      $query->setFetchMode(Ewe::class, 'parentMother', ClassMetadata::FETCH_EXTRA_LAZY);
+      $query->setFetchMode(Litter::class, 'litter', ClassMetadata::FETCH_EAGER);
+
+      return $query;
+  }
+
+
+    /**
+     * @return array
+     */
+    public static function getEwesLivestockWithLastMateJmsGroups()
+    {
+        return [JmsGroup::LIVESTOCK, JmsGroup::LAST_MATE];
+    }
+
+
+    /**
+     * @param Location $location
+     * @param CacheService $cacheService
+     * @return boolean
+     */
+    public static function purgeEwesLivestockWithLastMateCache(Location $location, CacheService $cacheService)
+    {
+        if ($location) {
+            return $cacheService->delete(self::getEwesLivestockWithLastMateCacheId($location));
+        }
+        return false;
+    }
+
+
+    /**
+     * @param Location $location
+     * @return string
+     */
+    public static function getEwesLivestockWithLastMateCacheId(Location $location)
+    {
+        return
+            AnimalRepository::EWES_LIVESTOCK_WITH_LAST_MATE_CACHE_ID .
+            $location->getId()
+            ;
+    }
+
+
   /**
    * @param Location $location
    * @param CacheService $cacheService
+   * @param BaseSerializer $serializer
    * @param bool $isAlive
    * @param Animal $queryOnlyOnAnimalGenderType
-   * 
+   * @param array $extraJmsGroups
+   *
    * @return array
    */
   public function getLiveStock(Location $location,
                                CacheService $cacheService,
+                               BaseSerializer $serializer,
                                $isAlive = true,
-                               $queryOnlyOnAnimalGenderType = null
+                               $queryOnlyOnAnimalGenderType = null,
+                               array $extraJmsGroups = []
   )
   {
-    $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID . $location->getId(); //. sha1($location->getId());
-    $isAlive = $isAlive ? 'true' : 'false';
+    $cacheId = $this->getLivestockCacheId($location, $queryOnlyOnAnimalGenderType, $extraJmsGroups);
+    $query = $this->getLivestockQuery($location, $isAlive, $queryOnlyOnAnimalGenderType, false);
 
-    $em = $this->getEntityManager();
-    $livestockAnimalsQueryBuilder = $em->createQueryBuilder();
+    $clazz = $queryOnlyOnAnimalGenderType === null ? Animal::class : $queryOnlyOnAnimalGenderType;
 
-    //Base case, get animals of all gender types for livestock
-    $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->orX(
-      $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'MALE'"),
-      $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'FEMALE'"),
-      $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'NEUTER'")
-    );
-
-    //A filter was given to filter livestock on a given gender type
-    if($queryOnlyOnAnimalGenderType) {
-      switch ($queryOnlyOnAnimalGenderType) {
-        case Ewe::class:
-          $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'FEMALE'");
-          $cacheId .= '_'.Ewe::getShortClassName();
-          break;
-        case Ram::class:
-          $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'MALE'");
-          $cacheId .= '_'.Ram::getShortClassName();
-          break;
-        case Neuter::class:
-          $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'NEUTER'");
-          $cacheId .= '_'.Neuter::getShortClassName();
-          break;
-        default:
-          break;
-      }
-    }
-
-    $livestockAnimalsQueryBuilder
-      ->select('animal')
-      ->from ('AppBundle:Animal', 'animal')
-      ->where($livestockAnimalsQueryBuilder->expr()->andX(
-        $livestockAnimalsQueryBuilder->expr()->andX(
-          $livestockAnimalsQueryBuilder->expr()->eq('animal.isAlive', $isAlive),
-          $livestockAnimalsGenderExpression, //apply gender filter
-          $livestockAnimalsQueryBuilder->expr()->orX(
-            $livestockAnimalsQueryBuilder->expr()->isNull('animal.transferState'),
-            $livestockAnimalsQueryBuilder->expr()->neq('animal.transferState', "'TRANSFERRING'")
-          )),
-          $livestockAnimalsQueryBuilder->expr()->eq('animal.location', $location->getId())
-        ));
-
-    $query = $livestockAnimalsQueryBuilder->getQuery();
-
+    //Returns a list of AnimalResidences
     if (self::USE_REDIS_CACHE) {
-        return $cacheService->get($cacheId, $query);
+        if ($cacheService->isHit($cacheId)) {
+            $animals = $serializer->deserializeArrayOfObjects($cacheService->getItem($cacheId), $clazz);
+        } else {
+            $animals = $query->getResult();
+
+            $standardJmsGroups = [JmsGroup::BASIC, JmsGroup::LIVESTOCK];
+            $jmsGroups = count($extraJmsGroups) > 0 ? ArrayUtil::concatArrayValues([$extraJmsGroups, $standardJmsGroups], true): $standardJmsGroups;
+
+            $serializedAnimals = $serializer->getArrayOfSerializedObjects($animals, $jmsGroups,true);
+            $cacheService->set($cacheId, $serializedAnimals);
+        }
+
+    } else {
+        $animals = $query->getResult();
     }
 
-    return $query->getResult();
+    return $animals;
   }
+
+
+    /**
+     * @param Location $location
+     * @param bool $isAlive set to null to ignore isAlive status
+     * @param string $queryOnlyOnAnimalGenderType
+     * @param bool $ignoreTransferState
+     * @return QueryBuilder
+     */
+  public function getLivestockQueryBuilder(Location $location, $isAlive = true, $queryOnlyOnAnimalGenderType = null,
+                                           $ignoreTransferState = false)
+  {
+      $livestockAnimalsQueryBuilder = $this->getManager()->createQueryBuilder();
+
+      $isAliveFilter = null;
+      if ($isAlive !== null) {
+          $isAlive = $isAlive ? 'true' : 'false';
+          $isAliveFilter = $livestockAnimalsQueryBuilder->expr()->eq('animal.isAlive', $isAlive);
+      }
+
+      $livestockAnimalsQueryBuilder
+          ->select('animal')
+          ->from (Animal::class, 'animal')
+          ->where($livestockAnimalsQueryBuilder->expr()->andX(
+              $livestockAnimalsQueryBuilder->expr()->andX(
+                  $isAliveFilter,
+                  $this->getLiveStockQueryGenderFilter($livestockAnimalsQueryBuilder, $queryOnlyOnAnimalGenderType, 'animal'), //apply gender filter
+                  $this->getLivestockQueryTransferStateFilter($livestockAnimalsQueryBuilder, $ignoreTransferState)
+              ),
+              $livestockAnimalsQueryBuilder->expr()->eq('animal.location', $location->getId())
+          ));
+
+      return $livestockAnimalsQueryBuilder;
+  }
+
+
+    /**
+     * @param Location $location
+     * @param bool $isAlive
+     * @param string $queryOnlyOnAnimalGenderType
+     * @param boolean $returnDQL
+     * @param boolean $ignoreTransferState
+     * @return \Doctrine\ORM\Query | string
+     */
+  private function getLivestockQuery(Location $location, $isAlive = true, $queryOnlyOnAnimalGenderType = null,
+                                     $returnDQL = false, $ignoreTransferState = false)
+  {
+      $livestockAnimalsQueryBuilder = $this->getLivestockQueryBuilder($location, $isAlive, $queryOnlyOnAnimalGenderType, $ignoreTransferState);
+
+      $livestockAnimalQuery = $livestockAnimalsQueryBuilder->getQuery();
+
+      $livestockAnimalQuery->useQueryCache(true);
+      $livestockAnimalQuery->setCacheable(true);
+      $livestockAnimalQuery->useResultCache(true, Constant::CACHE_LIVESTOCK_TIME_SPAN, $this->getLivestockCacheId($location, $queryOnlyOnAnimalGenderType));
+
+      if ($returnDQL) {
+          return $livestockAnimalsQueryBuilder->getDQL();
+      }
+
+      return $livestockAnimalQuery;
+  }
+
+
+    /**
+     * @param QueryBuilder $livestockAnimalsQueryBuilder
+     * @param string $queryOnlyOnAnimalGenderType
+     * @param string $alias
+     * @return \Doctrine\DBAL\Query\Expression\CompositeExpression|string
+     */
+  private function getLiveStockQueryGenderFilter(QueryBuilder $livestockAnimalsQueryBuilder, $queryOnlyOnAnimalGenderType, $alias = 'animal')
+  {
+      $maleQueryFilter = $livestockAnimalsQueryBuilder->expr()->eq($alias.'.gender', "'".GenderType::MALE."'");
+      $femaleQueryFilter = $livestockAnimalsQueryBuilder->expr()->eq($alias.'.gender', "'".GenderType::FEMALE."'");
+      $neuterQueryFilter = $livestockAnimalsQueryBuilder->expr()->eq($alias.'.gender', "'".GenderType::NEUTER."'");
+
+      //A filter was given to filter livestock on a given gender type
+      if($queryOnlyOnAnimalGenderType) {
+          switch ($queryOnlyOnAnimalGenderType) {
+              case Ram::class: return $maleQueryFilter;
+              case Ewe::class: return $femaleQueryFilter;
+              case Neuter::class: return $neuterQueryFilter;
+              default: break;
+          }
+      }
+
+      //Base case, get animals of all gender types for livestock
+      return $livestockAnimalsQueryBuilder->expr()->orX(
+          $maleQueryFilter,
+          $femaleQueryFilter,
+          $neuterQueryFilter
+      );
+  }
+
+
+    /**
+     * @param QueryBuilder $livestockAnimalsQueryBuilder
+     * @param bool $ignoreTransferState
+     * @return Expr\Orx|null
+     */
+  private function getLivestockQueryTransferStateFilter(QueryBuilder $livestockAnimalsQueryBuilder, $ignoreTransferState = false)
+  {
+      if ($ignoreTransferState) {
+          return null;
+      }
+
+      return $livestockAnimalsQueryBuilder->expr()->orX(
+          $livestockAnimalsQueryBuilder->expr()->isNull('animal.transferState'),
+          $livestockAnimalsQueryBuilder->expr()->neq('animal.transferState', "'".AnimalTransferStatus::TRANSFERRING."'")
+      );
+  }
+
+
+    /**
+     * @param Location $location
+     * @param string $queryOnlyOnAnimalGenderType
+     * @param array $extraJmsGroups
+     * @return string
+     */
+    private function getLivestockCacheId(Location $location, $queryOnlyOnAnimalGenderType = null, $extraJmsGroups = [])
+    {
+        return
+            AnimalRepository::LIVESTOCK_CACHE_ID .
+            $location->getId() .
+            $this->getGenderSuffix($queryOnlyOnAnimalGenderType) .
+            CacheService::getJmsGroupsSuffix($extraJmsGroups)
+        ;
+    }
+
+
+    /**
+     * @param Location $location
+     * @param string $queryOnlyOnAnimalGenderType
+     * @param array $extraJmsGroups
+     * @return string
+     */
+    private function getHistoricLivestockCacheId(Location $location, $queryOnlyOnAnimalGenderType = null, $extraJmsGroups = [])
+    {
+        return
+            AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID .
+            $location->getId() .
+            $this->getGenderSuffix($queryOnlyOnAnimalGenderType) .
+            CacheService::getJmsGroupsSuffix($extraJmsGroups)
+        ;
+    }
+
+
+    /**
+     * @param string $queryOnlyOnAnimalGenderType
+     * @return string
+     */
+    private function getGenderSuffix($queryOnlyOnAnimalGenderType = null)
+    {
+        //A filter was given to filter livestock on a given gender type
+        if($queryOnlyOnAnimalGenderType) {
+          switch ($queryOnlyOnAnimalGenderType) {
+              case Ewe::class:      return '_'.Ewe::getShortClassName();
+              case Ram::class:      return '_'.Ram::getShortClassName();
+              case Neuter::class:   return '_'.Neuter::getShortClassName();
+              default: break;
+          }
+        }
+        return '';
+    }
+
 
   /**
    * /**
@@ -430,90 +680,26 @@ class AnimalRepository extends BaseRepository
       return [];
     }
 
-    $cacheId = AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID ;
-    $cacheId = $cacheId . $location->getId(); //. sha1($location->getId());
-    $idCurrentLocation = $location->getId();
+    $cacheId = $this->getHistoricLivestockCacheId($location, $queryOnlyOnAnimalGenderType);
 
-    $em = $this->getEntityManager();
-
-    $genderFilterExpression = null;
-
-    $livestockAnimalQueryBuilder = $em->createQueryBuilder();
-    $historicAnimalsQueryBuilder = $em->createQueryBuilder();
-
-    //Base case, get animals of all gender types for  livestock
-    $livestockAnimalsGenderExpression = $livestockAnimalQueryBuilder->expr()->orX(
-      $livestockAnimalQueryBuilder->expr()->eq('a.gender', "'MALE'"),
-      $livestockAnimalQueryBuilder->expr()->eq('a.gender', "'FEMALE'"),
-      $livestockAnimalQueryBuilder->expr()->eq('a.gender', "'NEUTER'")
-    );
-
-    //Base case, get animals of all gender types for historic livestock
-    $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->orX(
-      $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'MALE'"),
-      $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'FEMALE'"),
-      $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'NEUTER'")
-    );
-
-    //A filter was given to filter historic livestock on a given gender type
-    if($queryOnlyOnAnimalGenderType) {
-      switch ($queryOnlyOnAnimalGenderType) {
-        case Ewe::getClassName():
-          $livestockAnimalsGenderExpression = $livestockAnimalQueryBuilder->expr()->eq('animal.gender', "'FEMALE'");
-          $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'FEMALE'");
-          $cacheId .= '_'.Ewe::getShortClassName();
-          break;
-        case Ram::getClassName():
-          $livestockAnimalsGenderExpression = $livestockAnimalQueryBuilder->expr()->eq('animal.gender', "'MALE'");
-          $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'MALE'");
-          $cacheId .= '_'.Ram::getShortClassName();
-          break;
-        case Neuter::getClassName():
-          $livestockAnimalsGenderExpression = $livestockAnimalQueryBuilder->expr()->eq('animal.gender', "'NEUTER'");
-          $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'NEUTER'");
-          $cacheId .= '_'.Neuter::getShortClassName();
-          break;
-        default:
-          break;
-
-      }
-    }
+    $historicAnimalsQueryBuilder = $this->getManager()->createQueryBuilder();
 
     //Create currentLiveStock Query to use as subselect
-    $livestockAnimalQueryBuilder
-      ->select('animal')
-      ->from ('AppBundle:Animal', 'animal')
-      ->where($livestockAnimalQueryBuilder->expr()->andX(
-        $livestockAnimalQueryBuilder->expr()->andX(
-          $livestockAnimalQueryBuilder->expr()->eq('animal.isAlive','true'),
-          $livestockAnimalQueryBuilder->expr()->orX(
-            $livestockAnimalQueryBuilder->expr()->isNull('animal.transferState'),
-            $livestockAnimalQueryBuilder->expr()->neq('animal.transferState', "'TRANSFERRING'")
-          )
-        ),
-        $livestockAnimalQueryBuilder->expr()->eq('animal.location', $location->getId()),
-        $livestockAnimalsGenderExpression
-      ));
-    $livestockAnimalQuery = $livestockAnimalQueryBuilder->getQuery();
-
-
-    $livestockAnimalQuery->useQueryCache(true);
-    $livestockAnimalQuery->setCacheable(true);
-    $livestockAnimalQuery->useResultCache(true, Constant::CACHE_LIVESTOCK_TIME_SPAN, AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId());
+    $livestockAnimalDQLQuery = $this->getLivestockQuery($location, true, $queryOnlyOnAnimalGenderType, true);
 
     //Create historicLivestock Query and use currentLivestock Query
     //as Subselect to get only Historic Livestock Animals
     $historicAnimalsQuery =
       $historicAnimalsQueryBuilder
         ->select('a,r,l')
-        ->from('AppBundle:AnimalResidence', 'r')
+        ->from(AnimalResidence::class, 'r')
         ->innerJoin('r.animal', 'a', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('r.animal', 'a.id'))
         ->leftJoin('r.location', 'l', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('a.location', 'l.id'))
         ->leftJoin('l.company', 'c', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('l.company', 'c.id'))
         ->where($historicAnimalsQueryBuilder->expr()->andX(
-          $historicAnimalsQueryBuilder->expr()->eq('r.location', $idCurrentLocation),
-          $historicAnimalsQueryBuilder->expr()->notIn('r.animal', $livestockAnimalQueryBuilder->getDQL()),
-          $historicAnimalsGenderExpression //apply gender filter
+          $historicAnimalsQueryBuilder->expr()->eq('r.location', $location->getId()),
+          $historicAnimalsQueryBuilder->expr()->notIn('r.animal', $livestockAnimalDQLQuery),
+            $this->getLiveStockQueryGenderFilter($historicAnimalsQueryBuilder, $queryOnlyOnAnimalGenderType, 'a') //apply gender filter
         ));
 
     $query = $historicAnimalsQuery->getQuery();
@@ -559,6 +745,121 @@ class AnimalRepository extends BaseRepository
           }
       }
       return $historicLivestock;
+  }
+
+
+
+  public function getCandidateMothersForBirth(Location $location,
+                                              CacheService $cacheService,
+                                              BaseSerializer $serializer,
+                                              $onlyIncludeAliveEwes = false
+  )
+  {
+      $clazz = Ewe::class;
+
+      //Create currentLiveStock Query to use as subselect
+      $isAlive = $onlyIncludeAliveEwes ? true : null;
+      $livestockAnimalDQLQuery = $this->getLivestockQuery(
+          $location,
+          $isAlive,
+          $clazz,
+          true,
+          true
+      );
+
+      $mateQb = $this->getManager()->createQueryBuilder();
+
+      $mateQb
+          ->select('mate')
+          ->from(Mate::class, 'mate')
+          ->leftJoin('mate.litter', 'litter')
+          ->where($mateQb->expr()->eq('mate.requestState', "'".RequestStateType::FINISHED."'"))
+          ->andWhere($mateQb->expr()->in('mate.studEwe', $livestockAnimalDQLQuery))
+          ->andWhere($mateQb->expr()->eq('mate.location', $location->getId()))
+          ->andWhere(
+              $mateQb->expr()->isNull('litter.id')
+          )
+      ;
+
+      $query = $mateQb->getQuery();
+      $query->setFetchMode(Mate::class, 'studEwe', ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Animal::class, 'location', ClassMetadata::FETCH_EAGER);
+
+
+      //Returns a list of AnimalResidences
+      if (self::USE_REDIS_CACHE) {
+          $cacheId = $this->getCandidateMothersCacheId($location);
+
+          if ($cacheService->isHit($cacheId)) {
+              $studEwes = $serializer->deserializeArrayOfObjects($cacheService->getItem($cacheId), $clazz);
+          } else {
+              $mates = $query->getResult();
+              $studEwes = $this->getEwesFromMates($mates);
+
+              $jmsGroups = [JmsGroup::BASIC, JmsGroup::LIVESTOCK, JmsGroup::MATINGS];
+
+              $serializedStudEwes = $serializer->getArrayOfSerializedObjects($studEwes, $jmsGroups,true);
+              $cacheService->set($cacheId, $serializedStudEwes);
+          }
+
+      } else {
+          $mates = $query->getResult();
+          $studEwes = $this->getEwesFromMates($mates);
+      }
+
+      return $studEwes;
+  }
+
+
+    /**
+     * @param Mate[] $mates
+     * @return Ewe[]
+     */
+  private function getEwesFromMates($mates)
+  {
+      $studEwes = [];
+
+      //Grab the animals on returned residences
+      foreach ($mates as $mate)
+      {
+          $studEwe = $mate->getStudEwe();
+          if ($studEwe === null) {
+              continue;
+          }
+
+          $animalId = $studEwe->getId();
+          if (!key_exists($animalId, $studEwes)) {
+              $studEwes[$animalId] = $studEwe;
+          }
+      }
+      return $studEwes;
+  }
+
+
+    /**
+     * @param Location $location
+     * @param CacheService $cacheService
+     * @return boolean
+     */
+  public function purgeCandidateMothersCache(Location $location, CacheService $cacheService)
+  {
+      if ($location) {
+          return $cacheService->delete($this->getCandidateMothersCacheId($location));
+      }
+      return false;
+  }
+
+
+    /**
+     * @param Location $location
+     * @return string
+     */
+  private function getCandidateMothersCacheId(Location $location)
+  {
+      return
+          AnimalRepository::CANDIDATE_MOTHERS_CACHE_ID .
+          $location->getId()
+      ;
   }
 
 
@@ -627,6 +928,149 @@ class AnimalRepository extends BaseRepository
     $uln = Utils::getUlnFromString($ulnString);
     return $this->findByUlnCountryCodeAndNumber($uln[Constant::ULN_COUNTRY_CODE_NAMESPACE], $uln[Constant::ULN_NUMBER_NAMESPACE] );
   }
+
+
+    /**
+     * @param string $ulnString
+     * @return Animal[]|Ram[]|array
+     */
+    public function findAnimalsByUlnString($ulnString)
+    {
+        $ulnParts = Utils::getUlnFromString($ulnString);
+
+        if ($ulnParts === null) {
+            return [];
+        }
+
+        return $this->findBy(
+            [
+                'ulnCountryCode' => $ulnParts[Constant::ULN_COUNTRY_CODE_NAMESPACE],
+                'ulnNumber' => $ulnParts[Constant::ULN_NUMBER_NAMESPACE],
+            ]);
+    }
+
+
+    /**
+     * @param string $stnString
+     * @return Animal[]|Ram[]|array
+     */
+    public function findAnimalsByStnString($stnString)
+    {
+        $stnParts = Utils::getStnFromString($stnString);
+
+        if ($stnParts === null) {
+            return [];
+        }
+
+        return $this->findBy(
+            [
+                'pedigreeCountryCode' => $stnParts[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE],
+                'pedigreeNumber' => $stnParts[Constant::PEDIGREE_NUMBER_NAMESPACE],
+            ]);
+    }
+
+
+    /**
+     * @param string $ulnOrStnString
+     * @param bool $includeInputType
+     * @return Animal[]|Ram[]|array
+     */
+    public function findAnimalsByUlnOrStnString($ulnOrStnString, $includeInputType = false)
+    {
+        $ulnOrStnString = StringUtil::removeSpaces($ulnOrStnString);
+
+        $animals = [];
+        $inputType = ReportLabel::INVALID;
+
+        if (Validator::verifyUlnFormat($ulnOrStnString, false)) {
+            $animals = $this->findAnimalsByUlnString($ulnOrStnString);
+            $inputType = ReportLabel::ULN;
+
+        } elseif (Validator::verifyPedigreeCountryCodeAndNumberFormat($ulnOrStnString, false)) {
+            $animals = $this->findAnimalsByStnString($ulnOrStnString);
+            $inputType = ReportLabel::STN;
+        }
+
+        if ($includeInputType) {
+            return [
+                JsonInputConstant::ANIMALS => $animals,
+                JsonInputConstant::TYPE => $inputType,
+            ];
+        }
+
+        return $animals;
+    }
+
+
+    /**
+     * @param array $ids
+     * @param bool $useIdAsKey
+     * @param bool $onlyReturnQuery
+     * @return array|\Doctrine\ORM\Query
+     * @throws \Doctrine\ORM\Query\QueryException
+     */
+    public function findByIds(array $ids = [], $useIdAsKey = false, $onlyReturnQuery = false)
+    {
+        $qb = $this->createQueryBuilder(self::ANIMAL_ALIAS)->addCriteria(AnimalCriteria::byIds($ids));
+
+        if ($useIdAsKey && $onlyReturnQuery === false) {
+             $animals = $this->returnQueryOrResult($qb, false);
+             $resultWithIdAsKeys = [];
+             /**
+              * @var int $key
+              * @var Animal $animal
+              */
+            foreach ($animals as $key => $animal) {
+                 $resultWithIdAsKeys[$animal->getId()] = $animal;
+            }
+            $animals = null;
+            return $resultWithIdAsKeys;
+        }
+
+        return $this->returnQueryOrResult($qb, $onlyReturnQuery);
+    }
+
+
+    /**
+     * @param array $ulnPartsArray
+     * @param array $stnPartsArray
+     * @param array $ubns
+     * @param bool $onlyReturnQuery
+     * @return array|\Doctrine\ORM\Query
+     * @throws \Doctrine\ORM\Query\QueryException
+     * @throws \Exception
+     */
+    public function findAnimalsByUlnPartsOrStnPartsOrUbns(array $ulnPartsArray = [], array $stnPartsArray = [],
+                                                          array $ubns = [], $onlyReturnQuery = false)
+    {
+        if (count($ulnPartsArray) === 0 && count($stnPartsArray) === 0) {
+            if ($onlyReturnQuery = true) {
+                return [];
+            } else {
+                // TODO return a proper empty result is only query is requested
+                return null;
+            }
+        }
+
+        $qb = $this->createQueryBuilder(self::ANIMAL_ALIAS)
+            ->addCriteria(AnimalCriteria::byUlnOrStnParts($ulnPartsArray, $stnPartsArray, self::ANIMAL_ALIAS))
+        ;
+
+        if (count($ubns) > 0) {
+            $locationsQuery = $this->getManager()->getRepository(Location::class)->getLocationsQueryByUbns($ubns);
+
+            if ($locationsQuery !== null) {
+                $qb->orWhere($qb->expr()->in('animal.location', $locationsQuery->getDQL()));
+
+                /** @var Parameter $parameter */
+                foreach ($locationsQuery->getParameters() as $parameter) {
+                    $qb->setParameter($parameter->getName(), $parameter->getValue(), $parameter->getType());
+                }
+            }
+        }
+
+        return $this->returnQueryOrResult($qb, $onlyReturnQuery);
+    }
 
 
   public function getAnimalByUlnOrPedigree($content)
@@ -1517,4 +1961,43 @@ class AnimalRepository extends BaseRepository
     }
 
 
+    /**
+     * @param array $ulns
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getDuplicateCountsByUln(array $ulns = [])
+    {
+        if (count($ulns) === 0) {
+            return [];
+        }
+
+        $sql = "SELECT COUNT(*) as count, CONCAT(uln_country_code, uln_number) as uln
+                FROM animal
+                  WHERE CONCAT(uln_country_code, uln_number) IN (".SqlUtil::getFilterListString($ulns, true).") 
+                GROUP BY CONCAT(uln_country_code, uln_number) HAVING COUNT(*) > 1";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        return SqlUtil::groupSqlResultsOfKey1ByKey2('count', 'uln', $results,true, false);
+    }
+
+
+    /**
+     * @param array $stns
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getDuplicateCountsByStn(array $stns = [])
+    {
+        if (count($stns) === 0) {
+            return [];
+        }
+
+        $sql = "SELECT COUNT(*) as count, CONCAT(pedigree_country_code, pedigree_number) as stn
+                FROM animal
+                  WHERE CONCAT(pedigree_country_code, pedigree_number) IN (".SqlUtil::getFilterListString($stns, true).") 
+                GROUP BY CONCAT(pedigree_country_code, pedigree_number) HAVING COUNT(*) > 1";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        return SqlUtil::groupSqlResultsOfKey1ByKey2('count', 'stn', $results,true, false);
+    }
+    
 }

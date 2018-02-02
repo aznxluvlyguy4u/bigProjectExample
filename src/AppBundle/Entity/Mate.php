@@ -27,6 +27,10 @@ class Mate extends DeclareNsfoBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "LAST_MATE",
+     *     "MATINGS"
+     * })
      */
     private $startDate;
 
@@ -39,6 +43,10 @@ class Mate extends DeclareNsfoBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "LAST_MATE",
+     *     "MATINGS"
+     * })
      */
     private $endDate;
 
@@ -54,6 +62,9 @@ class Mate extends DeclareNsfoBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({
+     *     "LAST_MATE"
+     * })
      */
     private $ramUlnCountryCode;
 
@@ -61,6 +72,9 @@ class Mate extends DeclareNsfoBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({
+     *     "LAST_MATE"
+     * })
      */
     private $ramUlnNumber;
     
@@ -77,6 +91,10 @@ class Mate extends DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "LAST_MATE",
+     *     "MATINGS"
+     * })
      */
     private $pmsg;
 
@@ -84,6 +102,10 @@ class Mate extends DeclareNsfoBase
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "LAST_MATE",
+     *     "MATINGS"
+     * })
      */
     private $ki;
 
@@ -155,6 +177,25 @@ class Mate extends DeclareNsfoBase
      * @JMS\Type("AppBundle\Entity\Location")
      */
     private $location;
+
+    /**
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\Litter", mappedBy="mate")
+     * @var Litter
+     */
+    private $litter;
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("has_litter")
+     * @JMS\Groups({
+     *     "LAST_MATE"
+     * })
+     * @return boolean
+     */
+    public function hasLitter()
+    {
+        return $this->litter !== null;
+    }
 
     
     public function __construct() {
@@ -498,6 +539,25 @@ class Mate extends DeclareNsfoBase
     public function setApprovedBy($approvedBy)
     {
         $this->approvedBy = $approvedBy;
+    }
+
+
+    /**
+     * @return Litter
+     */
+    public function getLitter()
+    {
+        return $this->litter;
+    }
+
+    /**
+     * @param Litter $litter
+     * @return Mate
+     */
+    public function setLitter($litter)
+    {
+        $this->litter = $litter;
+        return $this;
     }
 
 

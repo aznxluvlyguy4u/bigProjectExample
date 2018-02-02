@@ -6,6 +6,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -34,10 +35,12 @@ use \DateTime;
  *                        "Neuter" : "AppBundle\Entity\Neuter"},
  *     groups = {
  *     "ANIMAL_DETAILS",
+ *     "ANIMALS_BATCH_EDIT",
  *     "BASIC",
  *     "DECLARE",
  *     "MINIMAL",
  *     "MIXBLUP",
+ *     "PARENT_DATA",
  *     "USER_MEASUREMENT"
  * })
  *
@@ -55,10 +58,12 @@ abstract class Animal
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "MIXBLUP",
+     *     "PARENT_DATA",
      *     "TREATMENT_TEMPLATE",
      *     "USER_MEASUREMENT"
      * })
@@ -70,6 +75,9 @@ abstract class Animal
      * @ORM\Column(type="datetime", options={"default":"CURRENT_TIMESTAMP"}, nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "ANIMALS_BATCH_EDIT"
+     * })
      */
     protected $creationDate;
 
@@ -87,10 +95,13 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MIXBLUP",
+     *     "PARENT_DATA",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -106,10 +117,13 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MIXBLUP",
+     *     "PARENT_DATA",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -122,7 +136,9 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "DECLARE"
+     *     "ANIMALS_BATCH_EDIT",
+     *     "DECLARE",
+     *     "PARENT_DATA"
      * })
      */
     protected $name;
@@ -135,6 +151,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK"
@@ -149,6 +166,7 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "LIVESTOCK"
      * })
      */
@@ -162,8 +180,10 @@ abstract class Animal
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
+     *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "ERROR_DETAILS",
@@ -180,8 +200,10 @@ abstract class Animal
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
-     *     "DECLARE"
+     *     "DECLARE",
+     *     "LIVESTOCK"
      * })
      */
     protected $dateOfDeath;
@@ -193,9 +215,11 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "USER_MEASUREMENT"
@@ -263,6 +287,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE"
      * })
      */
@@ -287,6 +312,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE"
      * })
      */
@@ -294,56 +320,56 @@ abstract class Animal
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareArrival")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareArrival>")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal")
      */
     protected $arrivals;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareDepart")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareDepart>")
      * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="animal", cascade={"persist"})
      */
     protected $departures;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareImport")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareImport>")
      * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="animal")
      */
     protected $imports;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareExport")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareExport>")
      * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="animal", cascade={"persist"})
      */
     protected $exports;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareBirth>")
      * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist","remove"})
      */
     protected $births;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareLoss")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareLoss>")
      * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="animal", cascade={"persist"})
      */
     protected $deaths;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareAnimalFlag")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareAnimalFlag>")
      * @ORM\OneToMany(targetEntity="DeclareAnimalFlag", mappedBy="animal", cascade={"persist"})
      */
     protected $flags;
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareTagReplace")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareTagReplace>")
      * @ORM\OneToMany(targetEntity="DeclareTagReplace", mappedBy="animal", cascade={"persist"})
      */
     protected $tagReplacements;
@@ -351,7 +377,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @JMS\Type("AppBundle\Entity\DeclareWeight")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareWeight>")
      * @ORM\OneToMany(targetEntity="DeclareWeight", mappedBy="animal")
      */
     protected $declareWeights;
@@ -370,6 +396,7 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "LIVESTOCK"
      * })
@@ -383,9 +410,11 @@ abstract class Animal
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MIXBLUP",
      *     "TREATMENT_TEMPLATE",
      *     "USER_MEASUREMENT"
@@ -400,11 +429,14 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
+     *     "PARENT_DATA",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "USER_MEASUREMENT"
@@ -421,11 +453,14 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
+     *     "PARENT_DATA",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "USER_MEASUREMENT"
@@ -440,7 +475,8 @@ abstract class Animal
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "BASIC",
-     *     "DECLARE"
+     *     "DECLARE",
+     *     "LIVESTOCK"
      * })
      */
     protected $animalOrderNumber;
@@ -480,6 +516,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE"
      * })
      */
@@ -502,7 +539,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="animal", cascade={"persist", "remove"})
      * @ORM\OrderBy({"startDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\AnimalResidence")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalResidence>")
      */
     protected $animalResidenceHistory;
 
@@ -511,7 +548,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="BodyFat", mappedBy="animal", cascade={"persist"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\BodyFat")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\BodyFat>")
      */
     protected $bodyFatMeasurements;
 
@@ -520,7 +557,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="MuscleThickness", mappedBy="animal", cascade={"persist"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\MuscleThickness")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\MuscleThickness>")
      */
     protected $muscleThicknessMeasurements;
 
@@ -529,7 +566,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="TailLength", mappedBy="animal", cascade={"persist","remove"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\TailLength")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TailLength>")
      */
     protected $tailLengthMeasurements;
 
@@ -538,7 +575,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="Weight", mappedBy="animal", cascade={"persist", "remove"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\Weight")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Weight>")
      */
     protected $weightMeasurements;
 
@@ -547,7 +584,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="Exterior", mappedBy="animal", cascade={"persist"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\Exterior")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Exterior>")
      */
     protected $exteriorMeasurements;
 
@@ -569,6 +606,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "USER_MEASUREMENT"
@@ -582,6 +620,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "USER_MEASUREMENT"
@@ -625,7 +664,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $predicate;
@@ -635,7 +675,8 @@ abstract class Animal
      * @JMS\Type("integer")
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $predicateScore;
@@ -646,6 +687,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "USER_MEASUREMENT"
      * })
@@ -659,7 +701,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $blindnessFactor;
@@ -670,7 +713,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true, options={"default":null})
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $myoMax;
@@ -681,7 +725,8 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $litter;
@@ -691,6 +736,7 @@ abstract class Animal
      *
      * @ORM\OneToMany(targetEntity="GenderHistoryItem", mappedBy="animal", cascade={"persist"})
      * @ORM\JoinColumn(name="gender_history_id", referencedColumnName="id")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\GenderHistoryItem>")
      */
     protected $genderHistory;
 
@@ -699,7 +745,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $note;
@@ -711,6 +758,7 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\PedigreeRegister")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "USER_MEASUREMENT"
      * })
@@ -720,6 +768,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      * @ORM\OneToMany(targetEntity="WormResistance", mappedBy="animal", cascade={"persist"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\WormResistance>")
      */
     protected $wormResistances;
 
@@ -728,7 +777,9 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
+     *     "ERROR_DETAILS"
      * })
      */
     protected $birthProgress;
@@ -738,7 +789,8 @@ abstract class Animal
      * @JMS\Type("boolean")
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $lambar;
@@ -746,7 +798,7 @@ abstract class Animal
     /**
      * @var ResultTableBreedGrades
      * @ORM\OneToOne(targetEntity="ResultTableBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
-     * @JMS\Type("AppBundle\Entity\ResultTableBreedGrades")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\ResultTableBreedGrades>")
      */
     protected $latestBreedGrades;
 
@@ -763,7 +815,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $nickname;
@@ -773,7 +826,8 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $collarColor;
@@ -783,10 +837,93 @@ abstract class Animal
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      */
     protected $collarNumber;
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("is_public")
+     * @JMS\Groups({
+     *     "LIVESTOCK"
+     * })
+     * @return bool
+     */
+    public function isAnimalPublic()
+    {
+        $location = $this->getLocation();
+        if($location != null) {
+            $company = $location->getCompany();
+            if($company != null) {
+                return $company->getIsRevealHistoricAnimals();
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("worker_number")
+     * @JMS\Groups({
+     *     "LIVESTOCK"
+     * })
+     * @return string
+     */
+    public function getWorkerNumber()
+    {
+        return $this->animalOrderNumber;
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("ubn")
+     * @JMS\Groups({
+     *     "LIVESTOCK"
+     * })
+     * @return string
+     */
+    public function getUbn()
+    {
+        if($this->location instanceof Location) {
+            return $this->location->getUbn();
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("is_historic_animal")
+     * @JMS\Groups({
+     *     "IS_HISTORIC_ANIMAL"
+     * })
+     * @return bool
+     */
+    public function isHistoricAnimal()
+    {
+        return true;
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("is_historic_animal")
+     * @JMS\Groups({
+     *     "IS_NOT_HISTORIC_ANIMAL"
+     * })
+     * @return bool
+     */
+    public function isNotHistoricAnimal()
+    {
+        return false;
+    }
+
 
     /**
      * Animal constructor.
@@ -860,7 +997,7 @@ abstract class Animal
      */
     public function setPedigreeCountryCode($pedigreeCountryCode)
     {
-        $this->pedigreeCountryCode = trim(strtoupper($pedigreeCountryCode));
+        $this->pedigreeCountryCode = StringUtil::trimAndStringToUpperIfNotNull($pedigreeCountryCode);
 
         return $this;
     }
@@ -884,7 +1021,7 @@ abstract class Animal
      */
     public function setPedigreeNumber($pedigreeNumber)
     {
-        $this->pedigreeNumber = trim($pedigreeNumber);
+        $this->pedigreeNumber = StringUtil::trimIfNotNull($pedigreeNumber);
 
         return $this;
     }
@@ -1025,7 +1162,7 @@ abstract class Animal
      */
     public function setName($name)
     {
-        $this->name = trim($name);
+        $this->name = StringUtil::trimIfNotNull($name);
 
         return $this;
     }
@@ -1049,7 +1186,7 @@ abstract class Animal
      */
     public function setGender($gender)
     {
-        $this->gender = trim($gender);
+        $this->gender = StringUtil::trimIfNotNull($gender);
 
         return $this;
     }
@@ -1432,7 +1569,7 @@ abstract class Animal
      */
     public function setUlnNumber($ulnNumber)
     {
-        $this->ulnNumber = trim($ulnNumber);
+        $this->ulnNumber = StringUtil::trimIfNotNull($ulnNumber);
 
         return $this;
     }
@@ -1446,7 +1583,7 @@ abstract class Animal
      */
     public function setUlnCountryCode($ulnCountryCode)
     {
-        $this->ulnCountryCode = trim(strtoupper($ulnCountryCode));
+        $this->ulnCountryCode = StringUtil::trimAndStringToUpperIfNotNull($ulnCountryCode);
 
         return $this;
     }
@@ -1460,7 +1597,7 @@ abstract class Animal
      */
     public function setAnimalOrderNumber($animalOrderNumber)
     {
-        $this->animalOrderNumber = trim($animalOrderNumber);
+        $this->animalOrderNumber = StringUtil::trimIfNotNull($animalOrderNumber);
 
         return $this;
     }
@@ -1814,7 +1951,7 @@ abstract class Animal
      */
     public function setAnimalCountryOrigin($animalCountryOrigin)
     {
-        $this->animalCountryOrigin = trim($animalCountryOrigin);
+        $this->animalCountryOrigin = StringUtil::trimIfNotNull($animalCountryOrigin);
 
         return $this;
     }
@@ -1842,7 +1979,7 @@ abstract class Animal
      */
     public function setTransferState($transferState)
     {
-        $this->transferState = trim($transferState);
+        $this->transferState = StringUtil::trimIfNotNull($transferState);
     }
 
     /**
@@ -2193,7 +2330,7 @@ abstract class Animal
      */
     public function setBreed($breed)
     {
-        $this->breed = trim($breed);
+        $this->breed = StringUtil::trimIfNotNull($breed);
     }
 
     /**
@@ -2205,7 +2342,7 @@ abstract class Animal
      */
     public function setBreedType($breedType)
     {
-        $this->breedType = trim($breedType);
+        $this->breedType = StringUtil::trimIfNotNull($breedType);
 
         return $this;
     }
@@ -2239,7 +2376,7 @@ abstract class Animal
      */
     public function setBreedCode($breedCode)
     {
-        $this->breedCode = trim($breedCode);
+        $this->breedCode = StringUtil::trimIfNotNull($breedCode);
 
         return $this;
     }
@@ -2349,7 +2486,7 @@ abstract class Animal
      */
     public function setScrapieGenotype($scrapieGenotype)
     {
-        $this->scrapieGenotype = trim($scrapieGenotype);
+        $this->scrapieGenotype = StringUtil::trimIfNotNull($scrapieGenotype);
 
         return $this;
     }
@@ -2489,24 +2626,11 @@ abstract class Animal
 
 
     /**
-     * @return string
-     */
-    public function getUbn()
-    {
-        if($this->location instanceof Location) {
-          return $this->location->getUbn();
-        } else {
-            return null;
-        }
-    }
-
-
-    /**
      * @param string $ubnOfBirth
      */
     public function setUbnOfBirth($ubnOfBirth)
     {
-        $this->ubnOfBirth = trim($ubnOfBirth);
+        $this->ubnOfBirth = StringUtil::trimIfNotNull($ubnOfBirth);
     }
 
 
@@ -2639,21 +2763,14 @@ abstract class Animal
         $this->nickname = $nickname;
     }
 
-    /**
-     * @return bool
-     */
-    public function isAnimalPublic()
-    {
-        $location = $this->getLocation();
-        if($location != null) {
-            $company = $location->getCompany();
-            if($company != null) {
-                return $company->getIsRevealHistoricAnimals();
-            }
-        }
-        return true;
-    }
 
+    /**
+     * @return string
+     */
+    public function getCollarColorAndNumber()
+    {
+        return $this->collarColor.$this->collarNumber;
+    }
 
 
     /**

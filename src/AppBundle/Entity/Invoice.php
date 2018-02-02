@@ -77,7 +77,7 @@ class Invoice
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="InvoiceRule", mappedBy="invoice", cascade={"persist"})
-     * @JMS\Type("ArrayCollection")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\InvoiceRule>")
      * @JMS\Groups({
      *     "INVOICE"
      * })

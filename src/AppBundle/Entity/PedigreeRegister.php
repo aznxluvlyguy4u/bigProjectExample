@@ -28,6 +28,7 @@ class PedigreeRegister
      * @JMS\Type("integer")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "USER_MEASUREMENT"
      * })
      * @Expose
@@ -41,7 +42,8 @@ class PedigreeRegister
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      * @Expose
      */
@@ -63,6 +65,7 @@ class PedigreeRegister
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "USER_MEASUREMENT"
      * })
      * @Expose

@@ -146,7 +146,7 @@ class DeclareExport extends DeclareBase
      * @JMS\Groups({
      *     "ERROR_DETAILS"
      * })
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareExportResponse>")
      */
     private $responses;
 

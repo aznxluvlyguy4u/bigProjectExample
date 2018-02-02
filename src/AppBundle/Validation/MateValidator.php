@@ -15,10 +15,12 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Service\ControllerServiceBase;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class MateValidator extends DeclareNsfoBaseValidator
 {
@@ -47,17 +49,22 @@ class MateValidator extends DeclareNsfoBaseValidator
 
     const KI_MISSING         = 'KI MISSING';
     const PMSG_MISSING       = 'PMSG MISSING';
+    const LAST_BIRTH_AND_CURRENT_MATE_LESS_THAN_6_WEEKS = 'THE LAST BIRTH AND THE CURRENT MATE PERIOD ARE LESS THAN 6 WEEKS';
 
     /** @var boolean */
     private $validateEweGender;
 
     /** @var Mate */
     private $mate;
+    /** @var TranslatorInterface */
+    private $translator;
 
-    public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client, $validateEweGender = true, $isPost = true)
+    public function __construct(ObjectManager $manager, TranslatorInterface $translator,
+                                ArrayCollection $content, Client $client, $validateEweGender = true, $isPost = true)
     {
         parent::__construct($manager, $content, $client);
         $this->validateEweGender = $validateEweGender;
+        $this->translator = $translator;
 
         if($isPost) {
             $this->validatePost($content);
@@ -95,6 +102,17 @@ class MateValidator extends DeclareNsfoBaseValidator
         return $this->mate;
     }
 
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    private function trans($string)
+    {
+        return ControllerServiceBase::translateWithUcFirstLower($this->translator, $string);
+    }
+
+
     /**
      * @param ArrayCollection $content
      */
@@ -109,7 +127,7 @@ class MateValidator extends DeclareNsfoBaseValidator
 
         $foundMate = $this->isNonRevokedNsfoDeclarationOfClient($messageId);
         if(!($foundMate instanceof Mate)) {
-            $this->errors[] = self::MESSAGE_ID_ERROR;
+            $this->errors[] =  $this->trans(self::MESSAGE_ID_ERROR);
             $isMessageIdValid = false;
         } else {
             $this->mate = $foundMate;
@@ -144,7 +162,7 @@ class MateValidator extends DeclareNsfoBaseValidator
         //First validate if uln or pedigree exists
         $containsUlnOrPedigree = NullChecker::arrayContainsUlnOrPedigree($ramArray);
         if(!$containsUlnOrPedigree) {
-            $this->errors[] = self::RAM_MISSING_INPUT;
+            $this->errors[] = $this->trans(self::RAM_MISSING_INPUT);
             return false;
         }
 
@@ -155,21 +173,21 @@ class MateValidator extends DeclareNsfoBaseValidator
 
             $isUlnFormatValid = Validator::verifyUlnFormat($ulnString);
             if(!$isUlnFormatValid) {
-                $this->errors[] = self::RAM_ULN_FORMAT_INCORRECT;
+                $this->errors[] = $this->trans(self::RAM_ULN_FORMAT_INCORRECT);
                 return false;
             }
 
             //If animal is in database, verify the gender
             $animal = $this->animalRepository->findAnimalByUlnString($ulnString);
             if(!$animal) {
-                $this->errors[] = self::RAM_ULN_NOT_FOUND;
+                $this->errors[] = $this->trans(self::RAM_ULN_NOT_FOUND);
                 return false;
             }
 
             $isMaleCheck = $this->validateIfRamUlnBelongsToMaleIfFoundInDatabase($animal);
 
             if(!$isMaleCheck) {
-                $this->errors[] = self::RAM_ULN_FOUND_BUT_NOT_MALE;
+                $this->errors[] = $this->trans(self::RAM_ULN_FOUND_BUT_NOT_MALE);
             }
 
             return $isMaleCheck;
@@ -181,11 +199,11 @@ class MateValidator extends DeclareNsfoBaseValidator
                 $animal = $this->animalRepository->findAnimalByAnimalArray($ramArray);
                 $isMaleCheck = $this->validateIfRamUlnBelongsToMaleIfFoundInDatabase($animal);
                 if(!$isMaleCheck) {
-                    $this->errors[] = self::RAM_PEDIGREE_FOUND_BUT_NOT_MALE;
+                    $this->errors[] = $this->trans(self::RAM_PEDIGREE_FOUND_BUT_NOT_MALE);
                 }
                 return $isMaleCheck;
             } else {
-                $this->errors[] = self::RAM_PEDIGREE_NOT_FOUND;
+                $this->errors[] = $this->trans(self::RAM_PEDIGREE_NOT_FOUND);
                 return false;
             }
         }
@@ -222,19 +240,19 @@ class MateValidator extends DeclareNsfoBaseValidator
 
         $ulnString = NullChecker::getUlnStringFromArray($eweArray, null);
         if($ulnString == null) {
-            $this->errors[] = self::EWE_MISSING_INPUT;
+            $this->errors[] = $this->trans(self::EWE_MISSING_INPUT);
             return false;
         }
 
         $foundAnimal = $this->animalRepository->findAnimalByAnimalArray($eweArray);
         if($foundAnimal == null) {
-            $this->errors[] = self::EWE_NO_ANIMAL_FOUND;
+            $this->errors[] = $this->trans(self::EWE_NO_ANIMAL_FOUND);
             return false;
         }
 
         if($this->validateEweGender) {
             if(!($foundAnimal instanceof Ewe)) {
-                $this->errors[] = self::EWE_FOUND_BUT_NOT_EWE;
+                $this->errors[] = $this->trans(self::EWE_FOUND_BUT_NOT_EWE);
                 return false;
             }
         }
@@ -251,7 +269,7 @@ class MateValidator extends DeclareNsfoBaseValidator
                 $interval = $startDate->diff($birthDate);
 
                 if($interval->days < 42) {
-                    $this->errors[] = "THE LAST BIRTH AND THE CURRENT MATE PERIOD ARE LESS THAN 6 WEEKS";
+                    $this->errors[] = $this->trans(self::LAST_BIRTH_AND_CURRENT_MATE_LESS_THAN_6_WEEKS);
                     return false;
                 }
 
@@ -273,12 +291,12 @@ class MateValidator extends DeclareNsfoBaseValidator
                     $mateEndDate = $mateEndDate->setTime(0,0,0);
 
                     if($startDate >= $mateStartDate && $startDate <= $mateEndDate) {
-                        $this->errors[] = self::START_DATE_IS_IN_A_MATING_PERIOD;
+                        $this->errors[] = $this->trans(self::START_DATE_IS_IN_A_MATING_PERIOD);
                         return false;
                     }
 
                     if($endDate >= $mateStartDate && $endDate <= $mateEndDate) {
-                        $this->errors[] = self::END_DATE_IS_IN_A_MATING_PERIOD;
+                        $this->errors[] = $this->trans(self::END_DATE_IS_IN_A_MATING_PERIOD);
                         return false;
                     }
                 }
@@ -286,7 +304,7 @@ class MateValidator extends DeclareNsfoBaseValidator
 
             return true;
         } else {
-            $this->errors[] = self::EWE_NOT_OF_CLIENT;
+            $this->errors[] = $this->trans(self::EWE_NOT_OF_CLIENT);
             return false;
         }
     }
@@ -308,39 +326,39 @@ class MateValidator extends DeclareNsfoBaseValidator
         $pmsg = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::PMSG, $content);
 
         if($startDate === null) {
-            $this->errors[] = self::START_DATE_MISSING;
+            $this->errors[] = $this->trans(self::START_DATE_MISSING);
             $allNonAnimalValuesAreValid =  false;
         }
 
         if($startDate > new \DateTime('now')) {
-            $this->errors[] = self::START_DATE_IN_FUTURE;
+            $this->errors[] = $this->trans(self::START_DATE_IN_FUTURE);
             $allNonAnimalValuesAreValid =  false;
         }
 
         if($endDate === null) {
-            $this->errors[] = self::END_DATE_MISSING;
+            $this->errors[] = $this->trans(self::END_DATE_MISSING);
             $allNonAnimalValuesAreValid =  false;
         }
 
         if ($endDate > new \DateTime('now')) {
-            $this->errors[] = self::END_DATE_IN_FUTURE;
+            $this->errors[] = $this->trans(self::END_DATE_IN_FUTURE);
             $allNonAnimalValuesAreValid = false;
         }
 
         if($startDate != null && $endDate != null) {
             if($startDate > $endDate) {
-                $this->errors[] = self::START_AFTER_END_DATE;
+                $this->errors[] = $this->trans(self::START_AFTER_END_DATE);
                 $allNonAnimalValuesAreValid =  false;
             }
         }
 
         if($ki === null) {
-            $this->errors[] = self::KI_MISSING;
+            $this->errors[] = $this->trans(self::KI_MISSING);
             $allNonAnimalValuesAreValid =  false;
         }
 
         if($pmsg === null) {
-            $this->errors[] = self::PMSG_MISSING;
+            $this->errors[] = $this->trans(self::PMSG_MISSING);
             $allNonAnimalValuesAreValid =  false;
         }
 

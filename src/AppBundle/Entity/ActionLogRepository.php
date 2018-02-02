@@ -2,6 +2,9 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Service\BaseSerializer;
+use AppBundle\Service\CacheService;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 
@@ -11,6 +14,7 @@ use AppBundle\Util\TimeUtil;
  */
 class ActionLogRepository extends BaseRepository
 {
+    const ACTION_LOG_PERSONS_CACHE_ID = 'GET_ACTION_LOG_PERSONS';
 
     /**
      * @param int $userAccountPersonId
@@ -74,18 +78,20 @@ class ActionLogRepository extends BaseRepository
 
 
     /**
+     * @param BaseSerializer $serializer
+     * @param CacheService $cacheService
      * @return array
      */
-    public function getUserAccountPersonIds()
+    public function getUserAccountPersonIds(BaseSerializer $serializer, CacheService $cacheService)
     {
-        $sql = "SELECT p.person_id, p.first_name, p.last_name, p.type, p.email_address, p.is_active
-                FROM person p
-                INNER JOIN (
-                    SELECT user_account_id FROM action_log
-                    WHERE user_account_id NOTNULL
-                    GROUP BY user_account_id
-                    )l ON p.id = l.user_account_id
-                ORDER BY p.last_name";
-        return $this->getConnection()->query($sql)->fetchAll();
+        if ($cacheService->isHit(self::ACTION_LOG_PERSONS_CACHE_ID)) {
+            return $cacheService->getItem(self::ACTION_LOG_PERSONS_CACHE_ID);
+        }
+
+        $persons = $this->getManager()->getRepository(Person::class)->findAll();
+        $output = $serializer->getDecodedJson($persons, [JmsGroup::ADDRESS, JmsGroup::BASIC, JmsGroup::UBN]);
+        $cacheService->set(self::ACTION_LOG_PERSONS_CACHE_ID, $output);
+
+        return $output;
     }
 }

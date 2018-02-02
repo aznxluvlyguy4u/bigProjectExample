@@ -47,6 +47,7 @@ use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -482,7 +483,9 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
 
             //                        key      array   null replacement
             $gender = ArrayUtil::get('gender', $child, null);
-            $birthProgress = ArrayUtil::get('birth_progress', $child, null);
+            $birthProgress = StringUtil::convertEmptyStringToNull(
+                ArrayUtil::get('birth_progress', $child, null)
+            );
             $hasLambar = ArrayUtil::get('has_lambar', $child, false);
             $tailLengthValue = ArrayUtil::get('tail_length', $child, $tailLengthEmptyValue);
             $birthWeightValue = ArrayUtil::get('birth_weight', $child, $birthWeightEmptyValue);

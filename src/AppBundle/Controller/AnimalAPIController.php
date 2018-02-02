@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\AnimalDetailsBatchUpdaterService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -57,6 +58,43 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   {
       return $this->get('app.animal')->getAllAnimalsByTypeOrState($request);
   }
+
+
+    /**
+     * Retrieve a list of animals, by a list of ulns as plain text
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="plain_text_input",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="input type (currently the false path is not implemented), true by default",
+     *        "format"="?plain_text_input=true"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve a list of animals by plain text input"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("")
+     * @Method("POST")
+     */
+    public function getAnimals(Request $request)
+    {
+        return $this->get('app.animal')->getAnimals($request);
+    }
+
 
   /**
    * Retrieve an animal, found by it's ULN. For example NL100029511721
@@ -297,6 +335,34 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   {
       return $this->get('app.animal.details.updater')->updateAnimalDetails($request, $ulnString);
   }
+
+
+    /**
+     * Batch update animal details
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Batch update animal details"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-details")
+     * @Method("PUT")
+     */
+    function batchUpdateAnimalDetails(Request $request)
+    {
+        return $this->get(AnimalDetailsBatchUpdaterService::class)->updateAnimalDetails($request);
+    }
+
 
   /**
    * Get Animal Details by ULN. For example NL100029511721

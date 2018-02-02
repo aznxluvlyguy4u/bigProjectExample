@@ -9,6 +9,17 @@ class DateUtil
     const DATE_STRING_FORMAT_FILENAME = 'Y-m-d_H\hi\ms\s';
     const DEFAULT_SQL_DATE_STRING_FORMAT = 'DD-MM-YYYY';
 
+
+    /**
+     * A practical "End of Time"
+     *
+     * @return \DateTime
+     */
+    public static function endOfTime()
+    {
+        return new \DateTime('3000-01-01');
+    }
+
     /**
      * Regex for YYYY-MM-DD, where MM and DD can also be one digit in length
      * 

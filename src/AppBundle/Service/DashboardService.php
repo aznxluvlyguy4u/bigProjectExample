@@ -50,7 +50,7 @@ class DashboardService extends ControllerServiceBase
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $outputArray = AdminDashboardOutput::createAdminDashboard($this->getManager());
+        $outputArray = AdminDashboardOutput::createAdminDashboard($this->getManager(), $this->translator);
 
         return ResultUtil::successResult($outputArray);
     }

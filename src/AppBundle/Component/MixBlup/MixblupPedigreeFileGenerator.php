@@ -63,6 +63,18 @@ class MixblupPedigreeFileGenerator
      * @param CommandUtil|null $cmdUtil
      * @return array
      */
+    public static function generateWormResistanceOptimizedSet(Connection $conn, Logger $logger, $cmdUtil = null)
+    {
+        return self::generateSet($conn, $logger, MixBlupType::WORM, $cmdUtil);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param Logger $logger
+     * @param CommandUtil|null $cmdUtil
+     * @return array
+     */
     public static function generateFullSet(Connection $conn, Logger $logger, $cmdUtil = null)
     {
         return self::generateSet($conn, $logger, null, $cmdUtil);
@@ -92,6 +104,10 @@ class MixblupPedigreeFileGenerator
             case MixBlupType::LAMB_MEAT_INDEX:
                 $pedigreeRecords = $mixBlupPedigreeUtil->getLambMeatIndexOptimizedSet();
                 $choice = MixBlupType::LAMB_MEAT_INDEX.' optimized';
+                break;
+            case MixBlupType::WORM:
+                $pedigreeRecords = $mixBlupPedigreeUtil->getWormResistanceOptimizedSet();
+                $choice = MixBlupType::WORM.' optimized';
                 break;
             default:
                 $pedigreeRecords = $mixBlupPedigreeUtil->getFullSet();

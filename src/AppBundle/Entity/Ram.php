@@ -29,7 +29,7 @@ class Ram extends Animal
 
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentFather")
-     * @JMS\Type("AppBundle\Entity\Ram")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      */
     private $children;
 
@@ -47,7 +47,7 @@ class Ram extends Animal
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalFather")
-     * @JMS\Type("AppBundle\Entity\Ram")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Litter>")
      * @ORM\OrderBy({"litterDate" = "ASC"})
      */
     private $litters;
@@ -55,7 +55,7 @@ class Ram extends Animal
     /**
      * @var ArrayCollection
      *
-     * @JMS\Type("AppBundle\Entity\Mate")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Mate>")
      * @ORM\OneToMany(targetEntity="Mate", mappedBy="studRam")
      */
     private $matings;

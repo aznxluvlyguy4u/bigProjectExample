@@ -151,12 +151,22 @@ class BaseSerializer
     /**
      * @param array $array
      * @param $clazz
+     * @param boolean $isArrayOfObjects
      * @param DeserializationContext $context
      * @return mixed
      */
-    public function denormalizeToObject(array $array, $clazz, DeserializationContext $context = null)
+    public function denormalizeToObject(array $array, $clazz, $isArrayOfObjects = false, DeserializationContext $context = null)
     {
-        return $this->jmsSerializer->fromArray($array, $clazz, $context);
+        if (!$isArrayOfObjects) {
+            return $this->jmsSerializer->fromArray($array, $clazz, $context);
+        }
+
+        $result = [];
+        foreach ($array as $object) {
+            $result[] = $this->jmsSerializer->fromArray($object, $clazz, $context);
+        }
+
+        return $result;
     }
 
 }

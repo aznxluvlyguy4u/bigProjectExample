@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Criteria\MateCriteria;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
@@ -25,13 +26,13 @@ class Ewe extends Animal
 
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentMother")
-     * @JMS\Type("AppBundle\Entity\Ewe")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      */
     private $children;
 
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="surrogate")
-     * @JMS\Type("AppBundle\Entity\Ewe")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      */
     protected $surrogateChildren;
 
@@ -49,7 +50,7 @@ class Ewe extends Animal
        * @var ArrayCollection
        * 
        * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalMother")
-       * @JMS\Type("AppBundle\Entity\Ewe")
+       * @JMS\Type("ArrayCollection<AppBundle\Entity\Litter>")
        * @ORM\OrderBy({"litterDate" = "ASC"})
        */
     private $litters;
@@ -57,10 +58,33 @@ class Ewe extends Animal
     /**
      * @var ArrayCollection
      *
-     * @JMS\Type("AppBundle\Entity\Mate")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Mate>")
      * @ORM\OneToMany(targetEntity="Mate", mappedBy="studEwe")
+     * @JMS\Groups({
+     *     "MATINGS"
+     * })
      */
     private $matings;
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("last_mate")
+     * @JMS\Groups({
+     *     "LAST_MATE"
+     * })
+     * @return Mate|null
+     */
+    public function getLastActiveMate()
+    {
+        if ($this->getMatings()->count() > 0) {
+            return $this->getMatings()
+                ->matching(MateCriteria::orderByEndDateDesc())
+                ->matching(MateCriteria::requestStateIsFinished())
+                ->matching(MateCriteria::hasNoLitter())
+                ->first();
+        }
+        return null;
+    }
 
     /**
      * Ewe constructor.
@@ -76,6 +100,7 @@ class Ewe extends Animal
        
          $this->litters = new ArrayCollection();
          $this->children = new ArrayCollection();
+         $this->matings = new ArrayCollection();
      }
 
     /**
@@ -142,6 +167,11 @@ class Ewe extends Animal
      */
     public function getMatings()
     {
+        // Necessary, because serializer will make empty arrays null
+        if ($this->matings === null) {
+            $this->matings = new ArrayCollection();
+        }
+
         return $this->matings;
     }
 
@@ -151,6 +181,17 @@ class Ewe extends Animal
     public function setMatings($matings)
     {
         $this->matings = $matings;
+    }
+
+
+    /**
+     * @param Mate $mate
+     */
+    public function addMate(Mate $mate)
+    {
+        if ($mate) {
+            $this->getMatings()->add($mate);
+        }
     }
     
 
@@ -576,5 +617,15 @@ class Ewe extends Animal
                 $declareBirths //TODO check if births are properly included
             )
         ))->matching($criteria);
+    }
+
+
+    public function onlyKeepLastActiveMateInMatings()
+    {
+        $lastActiveMate = $this->getLastActiveMate();
+        $this->setMatings(new ArrayCollection());
+        if ($lastActiveMate) {
+            $this->addMate($lastActiveMate);
+        }
     }
 }

@@ -5,6 +5,7 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Constant\JsonInputConstant;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -148,5 +149,15 @@ class RequestUtil
             . implode(', ', $keysSet);
 
         return ResultUtil::errorResult($errorMessage, 428);
+    }
+
+
+    /**
+     * @param ArrayCollection $content
+     * @return bool
+     */
+    public static function isMultiEdit(ArrayCollection $content)
+    {
+        return $content->get(JsonInputConstant::IS_MULTI_EDIT) === true;
     }
 }

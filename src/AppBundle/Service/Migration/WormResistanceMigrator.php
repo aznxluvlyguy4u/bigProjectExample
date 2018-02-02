@@ -48,7 +48,7 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         $this->animalIdsByUniqueStn = $this->animalRepository->getAnimalPrimaryKeysByUniqueStnArray();
 
         $this->writeLn('Get current WormResistance records search array ...');
-        $sql = "SELECT CONCAT(animal_id,'|',year) as key FROM worm_resistance";
+        $sql = "SELECT CONCAT(animal_id,'|',year,sample_period) as key FROM worm_resistance";
         $currentRecords = SqlUtil::getSingleValueGroupedSqlResults(
             'key', $this->conn->query($sql)->fetchAll(), false, true);
 
@@ -59,7 +59,7 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         ;
 
         $insertBatchSet->setSqlQueryBase("INSERT INTO worm_resistance (animal_id, log_date, sampling_date, year,
-                 treated_for_samples, epg, s_iga_glasgow, carla_iga_nz, class_carla_iga_nz, sample_period) VALUES ");
+                 treated_for_samples, epg, s_iga_glasgow, carla_iga_nz, class_carla_iga_nz, sample_period, treatment_ubn) VALUES ");
 
         $this->data = $this->parseCSV(self::WORM_RESISTANCE);
         $this->sqlBatchProcessor->start(count($this->data));
@@ -74,7 +74,7 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
             $sampleDateString = $this->parseDateString($record[6]); //Date YYYY-MM-DD
             $year = $this->parseYear($record[7]); //int
             //$companyName = $record[8]; //int
-            //$ubn = $record[9]; //int
+            $treatmentUbn = $this->parseUbn($record[9]); //int
             //$animalOrderNumber = $record[10]; //int
             $treatedForSamples = $this->getTreatedForSamples($record[11]); //nee/ja/null/''
             $epg = $this->getEpg($record[12]); //int MAX 30000
@@ -85,15 +85,14 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
 
             $animalId = $this->getAnimalId($record);
 
-            if ($animalId === null || key_exists($animalId.'|'.$year, $currentRecords)) {
+            if ($animalId === null || key_exists($animalId.'|'.$year.$record[16], $currentRecords)) {
                 $insertBatchSet->incrementSkippedCount();
                 continue;
             }
 
             $insertBatchSet->appendValuesString("(".$animalId . ",NOW()," . $sampleDateString . "," . $year . ","
                 . $treatedForSamples . "," . $epg . "," . $sIgaGlasgow . ","
-                . $carlaIgaNz . "," . $classCarlaIgaNz . "," . $samplePeriod . ")");
-            $insertBatchSet->incrementBatchCount();
+                . $carlaIgaNz . "," . $classCarlaIgaNz . "," . $samplePeriod . "," . $treatmentUbn . ")");
 
 
             $this->sqlBatchProcessor
@@ -104,6 +103,37 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         $this->sqlBatchProcessor
             ->end()
             ->purgeAllSets();
+
+        $this->fillEmptyTreatmentUbnsWithCurrentUbns();
+    }
+
+
+    private function fillEmptyTreatmentUbnsWithCurrentUbns()
+    {
+        try {
+            $sql = "UPDATE worm_resistance SET treatment_ubn = v.new_treatment_ubn
+                FROM (
+                  SELECT
+                    w.id,
+                --     w.animal_id,
+                --     w.treatment_ubn,
+                --     a.ubn_of_birth,
+                --     l.ubn as current_ubn,
+                    COALESCE(w.treatment_ubn, CAST(a.ubn_of_birth AS INTEGER), CAST(l.ubn AS INTEGER)) as new_treatment_ubn
+                  FROM worm_resistance w
+                    INNER JOIN animal a ON w.animal_id = a.id
+                    LEFT JOIN location l ON a.location_id = l.id
+                  WHERE w.treatment_ubn ISNULL AND (a.ubn_of_birth NOTNULL OR l.ubn NOTNULL)
+                ) AS v(w_id, new_treatment_ubn) WHERE worm_resistance.id = v.w_id";
+            $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+            $updateCountText = $updateCount === 0 ? 'No' : $updateCount;
+            $this->writeLn($updateCountText . ' empty treatment ubns where filled using ubnOfBirths or currentUbns');
+
+        } catch (\Exception $exception) {
+            $this->writeLn('An error occured trying to fill the empty TreatmentUbns.');
+            $this->writeLn($exception->getMessage());
+            $this->writeLn($exception->getTraceAsString());
+        }
     }
 
 
@@ -148,6 +178,19 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         }
         $float = str_replace(',','.', $float);
         return SqlUtil::getNullCheckedValueForSqlQuery($float, true);
+    }
+
+
+    /**
+     * @param $ubn
+     * @return string
+     */
+    private function parseUbn($ubn)
+    {
+        if (ctype_digit($ubn) || is_int($ubn)) {
+            return SqlUtil::getNullCheckedValueForSqlQuery($ubn, false);
+        }
+        return SqlUtil::NULL;
     }
 
 

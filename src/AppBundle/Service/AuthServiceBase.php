@@ -36,17 +36,33 @@ class AuthServiceBase extends ControllerServiceBase
     /** @var TwigEngine */
     private $templatingService;
 
-    public function __construct(BaseSerializer $baseSerializer,
-                                CacheService $cacheService,
-                                EmailService $emailService,
-                                EntityManagerInterface $manager,
-                                UserService $userService,
-                                UserPasswordEncoderInterface $encoder,
-                                TwigEngine $templatingService)
+    /**
+     * @required
+     *
+     * @param EmailService $emailService
+     */
+    public function setEmailService(EmailService $emailService)
     {
-        parent::__construct($baseSerializer, $cacheService, $manager, $userService);
         $this->emailService = $emailService;
+    }
+
+    /**
+     * @required
+     *
+     * @param UserPasswordEncoderInterface $encoder
+     */
+    public function setEncoder(UserPasswordEncoderInterface $encoder)
+    {
         $this->encoder = $encoder;
+    }
+
+    /**
+     * @required
+     *
+     * @param TwigEngine $templatingService
+     */
+    public function setTemplatingService(TwigEngine $templatingService)
+    {
         $this->templatingService = $templatingService;
     }
 

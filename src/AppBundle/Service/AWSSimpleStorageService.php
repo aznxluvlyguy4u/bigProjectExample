@@ -53,7 +53,7 @@ class AWSSimpleStorageService
         /**
          * Get current environment, set separate files based on environment
          */
-        if ($systemEnvironment = 'test') {
+        if ($systemEnvironment === 'test') {
             $this->pathApppendage = "test/";
 
         } else {

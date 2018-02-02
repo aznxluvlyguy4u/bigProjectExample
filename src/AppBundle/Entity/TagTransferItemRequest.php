@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Traits\EntityClassInfo;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints\DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -122,7 +123,7 @@ class TagTransferItemRequest
     /**
      * @ORM\OneToMany(targetEntity="TagTransferItemResponse", mappedBy="tagTransferItemRequest", cascade={"persist"})
      * @ORM\JoinColumn(name="tag_transfer_item_request_id", referencedColumnName="id")
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TagTransferItemResponse>")
      * @JMS\Groups({
      *     "ERROR_DETAILS"
      * })
@@ -143,6 +144,7 @@ class TagTransferItemRequest
     public function __construct() {
         $this->logDate = new \DateTime();
         $this->animalType = AnimalType::sheep;
+        $this->responses = new ArrayCollection();
     }
 
     /**

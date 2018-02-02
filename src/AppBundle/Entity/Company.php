@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -36,18 +37,21 @@ class Company
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
      *     "INVOICE"
      * })
      */
     private $companyId;
 
     /**
-    * @var string
-    *
-    * @ORM\Column(type="string", nullable=true)
-    * @JMS\Type("string")
-    * @JMS\Groups({
-     *     "INVOICE"
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     *  @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "INVOICE",
+     *     "UBN"
      * })
     */
     private $debtorNumber;
@@ -59,7 +63,9 @@ class Company
     * @JMS\Type("string")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "INVOICE"
+     *     "ANIMALS_BATCH_EDIT",
+     *     "INVOICE",
+     *     "UBN"
      * })
     */
     private $companyName;
@@ -103,8 +109,9 @@ class Company
     * @ORM\OneToMany(targetEntity="Location", mappedBy="company", cascade={"persist"}, fetch="EAGER")
     * @JMS\Type("AppBundle\Entity\Location")
     * @JMS\Groups({
-     *     "INVOICE"
-     * })
+    *     "INVOICE",
+    *     "UBN"
+    * })
     */
     private $locations;
 
@@ -116,6 +123,7 @@ class Company
     * @JMS\Type("AppBundle\Entity\Client")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "GHOST_LOGIN",
      *     "INVOICE"
      * })
     */
@@ -127,6 +135,9 @@ class Company
     * @Assert\NotBlank
     * @ORM\OneToOne(targetEntity="CompanyAddress", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\CompanyAddress")
+    * @JMS\Groups({
+    *     "UBN"
+    * })
     */
     private $address;
 
@@ -180,7 +191,7 @@ class Company
      * @JMS\Groups({
      *     "INVOICE"
      * })
-     * @JMS\Type("ArrayCollection")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Invoice>")
      */
     private $invoices;
 
@@ -188,7 +199,10 @@ class Company
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Client", mappedBy="employer", cascade={"persist"})
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Person>")
+     * @JMS\Groups({
+     *     "GHOST_LOGIN"
+     * })
      */
     private $companyUsers;
 
@@ -196,7 +210,7 @@ class Company
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Pedigree", mappedBy="company")
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Pedigree>")
      */
     private $pedigrees;
 
@@ -236,7 +250,7 @@ class Company
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="CompanyNote", mappedBy="company")
-     * @JMS\Type("array")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\CompanyNote>")
      */
     private $notes;
 
@@ -262,6 +276,9 @@ class Company
     $this->invoices = new ArrayCollection();
     $this->companyUsers = new ArrayCollection();
     $this->setCompanyId(Utils::generateTokenCode());
+    $this->notes = new ArrayCollection();
+    $this->pedigrees = new ArrayCollection();
+    $this->invoices = new ArrayCollection();
   }
 
     /**
@@ -299,7 +316,7 @@ class Company
      */
     public function setCompanyName($companyName)
     {
-        $this->companyName = trim($companyName);
+        $this->companyName = StringUtil::trimIfNotNull($companyName);
 
         return $this;
     }
@@ -442,7 +459,7 @@ class Company
      */
     public function setVatNumber($vatNumber)
     {
-        $this->vatNumber = trim($vatNumber);
+        $this->vatNumber = StringUtil::trimIfNotNull($vatNumber);
     }
 
     /**
@@ -458,7 +475,7 @@ class Company
      */
     public function setChamberOfCommerceNumber($chamberOfCommerceNumber)
     {
-        $this->chamberOfCommerceNumber = trim($chamberOfCommerceNumber);
+        $this->chamberOfCommerceNumber = StringUtil::trimIfNotNull($chamberOfCommerceNumber);
     }
 
     /**
@@ -474,7 +491,7 @@ class Company
      */
     public function setCompanyRelationNumber($companyRelationNumber)
     {
-        $this->companyRelationNumber = trim($companyRelationNumber);
+        $this->companyRelationNumber = StringUtil::trimIfNotNull($companyRelationNumber);
     }
 
     /**
@@ -490,7 +507,7 @@ class Company
      */
     public function setTelephoneNumber($telephoneNumber)
     {
-        $this->telephoneNumber = trim($telephoneNumber);
+        $this->telephoneNumber = StringUtil::trimIfNotNull($telephoneNumber);
     }
 
     /**
@@ -506,7 +523,7 @@ class Company
      */
     public function setVeterinarianDapNumber($veterinarianDapNumber)
     {
-        $this->veterinarianDapNumber = trim($veterinarianDapNumber);
+        $this->veterinarianDapNumber = StringUtil::trimIfNotNull($veterinarianDapNumber);
     }
 
     /**
@@ -522,7 +539,7 @@ class Company
      */
     public function setVeterinarianCompanyName($veterinarianCompanyName)
     {
-        $this->veterinarianCompanyName = trim($veterinarianCompanyName);
+        $this->veterinarianCompanyName = StringUtil::trimIfNotNull($veterinarianCompanyName);
     }
 
     /**
@@ -538,7 +555,7 @@ class Company
      */
     public function setVeterinarianTelephoneNumber($veterinarianTelephoneNumber)
     {
-        $this->veterinarianTelephoneNumber = trim($veterinarianTelephoneNumber);
+        $this->veterinarianTelephoneNumber = StringUtil::trimIfNotNull($veterinarianTelephoneNumber);
     }
 
     /**
@@ -554,7 +571,7 @@ class Company
      */
     public function setVeterinarianEmailAddress($veterinarianEmailAddress)
     {
-        $this->veterinarianEmailAddress = trim(strtolower($veterinarianEmailAddress));
+        $this->veterinarianEmailAddress = StringUtil::trimIfNotNull(strtolower($veterinarianEmailAddress));
     }
 
 
@@ -572,7 +589,7 @@ class Company
      */
     public function setDebtorNumber($debtorNumber)
     {
-        $this->debtorNumber = trim($debtorNumber);
+        $this->debtorNumber = StringUtil::trimIfNotNull($debtorNumber);
     }
 
     /**
