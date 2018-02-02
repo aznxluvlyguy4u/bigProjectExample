@@ -161,7 +161,13 @@ class DeclareBirthRepository extends BaseRepository {
    */
   public function getCandidateSurrogateMothers(Location $location, Ewe $mother)
   {
-      $livestockEwesQueryBuilder = $this->getManager()->getRepository(Animal::class)->getLivestockQueryBuilder($location, true, Ewe::class);
+      $livestockEwesQueryBuilder = $this->getManager()->getRepository(Animal::class)
+          ->getLivestockQueryBuilder(
+              $location,
+              true,
+              Ewe::class,
+              true
+          );
 
       $livestockEwesQueryBuilder
           ->andWhere(

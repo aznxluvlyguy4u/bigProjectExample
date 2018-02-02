@@ -502,9 +502,11 @@ class AnimalRepository extends BaseRepository
      * @param Location $location
      * @param bool $isAlive set to null to ignore isAlive status
      * @param string $queryOnlyOnAnimalGenderType
+     * @param bool $ignoreTransferState
      * @return QueryBuilder
      */
-  public function getLivestockQueryBuilder(Location $location, $isAlive = true, $queryOnlyOnAnimalGenderType = null)
+  public function getLivestockQueryBuilder(Location $location, $isAlive = true, $queryOnlyOnAnimalGenderType = null,
+                                           $ignoreTransferState = false)
   {
       $livestockAnimalsQueryBuilder = $this->getManager()->createQueryBuilder();
 
@@ -521,10 +523,8 @@ class AnimalRepository extends BaseRepository
               $livestockAnimalsQueryBuilder->expr()->andX(
                   $isAliveFilter,
                   $this->getLiveStockQueryGenderFilter($livestockAnimalsQueryBuilder, $queryOnlyOnAnimalGenderType, 'animal'), //apply gender filter
-                  $livestockAnimalsQueryBuilder->expr()->orX(
-                      $livestockAnimalsQueryBuilder->expr()->isNull('animal.transferState'),
-                      $livestockAnimalsQueryBuilder->expr()->neq('animal.transferState', "'".AnimalTransferStatus::TRANSFERRING."'")
-                  )),
+                  $this->getLivestockQueryTransferStateFilter($livestockAnimalsQueryBuilder, $ignoreTransferState)
+              ),
               $livestockAnimalsQueryBuilder->expr()->eq('animal.location', $location->getId())
           ));
 
@@ -537,11 +537,13 @@ class AnimalRepository extends BaseRepository
      * @param bool $isAlive
      * @param string $queryOnlyOnAnimalGenderType
      * @param boolean $returnDQL
+     * @param boolean $ignoreTransferState
      * @return \Doctrine\ORM\Query | string
      */
-  private function getLivestockQuery(Location $location, $isAlive = true, $queryOnlyOnAnimalGenderType = null, $returnDQL = false)
+  private function getLivestockQuery(Location $location, $isAlive = true, $queryOnlyOnAnimalGenderType = null,
+                                     $returnDQL = false, $ignoreTransferState = false)
   {
-      $livestockAnimalsQueryBuilder = $this->getLivestockQueryBuilder($location, $isAlive, $queryOnlyOnAnimalGenderType);
+      $livestockAnimalsQueryBuilder = $this->getLivestockQueryBuilder($location, $isAlive, $queryOnlyOnAnimalGenderType, $ignoreTransferState);
 
       $livestockAnimalQuery = $livestockAnimalsQueryBuilder->getQuery();
 
@@ -584,6 +586,24 @@ class AnimalRepository extends BaseRepository
           $maleQueryFilter,
           $femaleQueryFilter,
           $neuterQueryFilter
+      );
+  }
+
+
+    /**
+     * @param QueryBuilder $livestockAnimalsQueryBuilder
+     * @param bool $ignoreTransferState
+     * @return Expr\Orx|null
+     */
+  private function getLivestockQueryTransferStateFilter(QueryBuilder $livestockAnimalsQueryBuilder, $ignoreTransferState = false)
+  {
+      if ($ignoreTransferState) {
+          return null;
+      }
+
+      return $livestockAnimalsQueryBuilder->expr()->orX(
+          $livestockAnimalsQueryBuilder->expr()->isNull('animal.transferState'),
+          $livestockAnimalsQueryBuilder->expr()->neq('animal.transferState', "'".AnimalTransferStatus::TRANSFERRING."'")
       );
   }
 
@@ -739,7 +759,13 @@ class AnimalRepository extends BaseRepository
 
       //Create currentLiveStock Query to use as subselect
       $isAlive = $onlyIncludeAliveEwes ? true : null;
-      $livestockAnimalDQLQuery = $this->getLivestockQuery($location, $isAlive, $clazz, true);
+      $livestockAnimalDQLQuery = $this->getLivestockQuery(
+          $location,
+          $isAlive,
+          $clazz,
+          true,
+          true
+      );
 
       $mateQb = $this->getManager()->createQueryBuilder();
 
