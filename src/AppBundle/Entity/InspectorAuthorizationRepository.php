@@ -14,6 +14,7 @@ use AppBundle\Util\ArrayUtil;
  */
 class InspectorAuthorizationRepository extends PersonRepository {
 
+    const NON_NSFO_INSPECTOR_NAME = 'Niet NSFO';
 
     /**
      * @param string $ulnString
@@ -88,7 +89,21 @@ class InspectorAuthorizationRepository extends PersonRepository {
                 FROM inspector_authorization a
                   INNER JOIN person p ON p.id = a.inspector_id
                 WHERE measurement_type = '".$measurementType."' ".$filter."
-                GROUP BY first_name, last_name, person_id";
+                GROUP BY first_name, last_name, person_id
+                UNION
+                SELECT p.person_id, p.first_name, p.last_name
+                FROM inspector i
+                  INNER JOIN person p ON p.id = i.id
+                WHERE p.last_name = '".self::NON_NSFO_INSPECTOR_NAME."'
+                ORDER BY first_name, last_name";
+            $inspectors = $this->getConnection()->query($sql)->fetchAll();
+
+        } else {
+            $sql = "SELECT p.person_id, p.first_name, p.last_name
+                FROM inspector i
+                  INNER JOIN person p ON p.id = i.id
+                WHERE p.last_name = '".self::NON_NSFO_INSPECTOR_NAME."'
+                ORDER BY first_name, last_name";
             $inspectors = $this->getConnection()->query($sql)->fetchAll();
         }
 
