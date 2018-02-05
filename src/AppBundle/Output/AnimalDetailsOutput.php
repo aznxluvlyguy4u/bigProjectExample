@@ -192,6 +192,14 @@ class AnimalDetailsOutput
             "ascendants" => ArrayUtil::get($animal->getUln(), $ascendants, []),
         );
 
+        if ($animal->getPedigreeRegister()) {
+            $result["pedigree_register"] = [
+                "id" => $animal->getPedigreeRegister()->getId(),
+                "abbreviation" => $animal->getPedigreeRegister()->getAbbreviation(),
+                "full_name" => $animal->getPedigreeRegister()->getFullName(),
+            ];
+        }
+
         return $result;
     }
 
