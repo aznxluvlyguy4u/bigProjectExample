@@ -700,9 +700,9 @@ class CompanyService extends AuthServiceBase
         /** @var QueryBuilder $qb */
         $qb = $this->getManager()->getRepository(Company::class)
             ->createQueryBuilder('qb')
-            ->where('qb.companyName LIKE :company_name')
+            ->where('LOWER(qb.companyName) LIKE :company_name')
             ->andWhere('qb.isActive = true')
-            ->setParameter('company_name', $name.'%');
+            ->setParameter('company_name', '%'.strtolower($name).'%');
 
         $companies = $qb->getQuery()->getResult();
         $companies = CompanyOutput::createCompanyList($companies);
