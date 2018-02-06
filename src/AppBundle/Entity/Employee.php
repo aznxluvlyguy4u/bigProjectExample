@@ -70,7 +70,7 @@ class Employee extends Person
                               $password = '', $username = null, $cellphoneNumber = null)
     {
         //Call super constructor first
-        parent::__construct($firstName, $lastName, $emailAddress, $password = '', $username, $cellphoneNumber);
+        parent::__construct($firstName, $lastName, $emailAddress, $password, $username, $cellphoneNumber);
 
         $this->accessLevel = $accessLevel;
         $this->objectType = "Employee";
