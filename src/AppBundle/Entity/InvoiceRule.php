@@ -145,14 +145,6 @@ class InvoiceRule
     }
 
     /**
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
      * @return string
      */
     public function getDescription()
@@ -171,11 +163,7 @@ class InvoiceRule
     }
 
     /**
-<<<<<<< HEAD
-     * @return int
-=======
      * @return float
->>>>>>> development
      */
     public function getVatPercentageRate()
     {
@@ -183,12 +171,8 @@ class InvoiceRule
     }
 
     /**
-<<<<<<< HEAD
-     * @param int $vatPercentageRate
-=======
      * @param float $vatPercentageRate
      * @return InvoiceRule
->>>>>>> development
      */
     public function setVatPercentageRate($vatPercentageRate)
     {
@@ -197,11 +181,7 @@ class InvoiceRule
     }
 
     /**
-<<<<<<< HEAD
-     * @return int
-=======
      * @return float
->>>>>>> development
      */
     public function getPriceExclVat()
     {
@@ -209,12 +189,8 @@ class InvoiceRule
     }
 
     /**
-<<<<<<< HEAD
-     * @param int $priceExclVat
-=======
      * @param float $priceExclVat
      * @return InvoiceRule
->>>>>>> development
      */
     public function setPriceExclVat($priceExclVat)
     {
@@ -277,54 +253,6 @@ class InvoiceRule
     }
 
     /**
-     * @return int
-     */
-    public function getSortOrder()
-    {
-        return $this->sortOrder;
-    }
-
-    /**
-     * @param int $sortOrder
-     */
-    public function setSortOrder($sortOrder)
-    {
-        $this->sortOrder = $sortOrder;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCategory()
-    {
-        return $this->category;
-    }
-
-    /**
-     * @param string $category
-     */
-    public function setCategory($category)
-    {
-        $this->category = $category;
-    }
-
-    /**
-     * @return string
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
-
-    /**
-     * @param string $type
-     */
-    public function setType($type)
-    {
-        $this->type = $type;
-    }
-
-    /**
      * @return bool
      */
     public function isDeleted()
@@ -359,7 +287,6 @@ class InvoiceRule
     }
 
     /**
-<<<<<<< HEAD
      * TODO Find a better way to clone values (excluding the id) than using custom getters and setters
      * @param InvoiceRule $invoiceRuleTemplate
      */
@@ -369,24 +296,6 @@ class InvoiceRule
         $this->setPriceExclVat($invoiceRuleTemplate->getPriceExclVat());
         $this->setVatPercentageRate($invoiceRuleTemplate->getVatPercentageRate());
     }
-=======
-     * @return bool
-     */
-    public function isDeleted()
-    {
-        return $this->isDeleted;
-    }
-
-    /**
-     * @param bool $isDeleted
-     * @return InvoiceRule
-     */
-    public function setIsDeleted($isDeleted)
-    {
-        $this->isDeleted = $isDeleted;
-        return $this;
-    }
 
 
->>>>>>> development
 }

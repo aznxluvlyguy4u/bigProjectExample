@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\InvoiceRuleTemplateAPIControllerInterface;
+use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceRuleTemplate;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
@@ -67,10 +68,10 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleTem
 
         $content = RequestUtil::getContentAsArray($request);
 
-        /** @var InvoiceRuleTemplate $updatedRule */
-        $updatedRule = $this->getBaseSerializer()->deserializeToObject($content, InvoiceRuleTemplate::class);  //TODO replace with InvoiceRule::class?
-        $repository = $this->getManager()->getRepository(InvoiceRuleTemplate::class);
-        /** @var InvoiceRuleTemplate $currentRule */
+        /** @var InvoiceRule $updatedRule */
+        $updatedRule = $this->getBaseSerializer()->deserializeToObject($content, InvoiceRule::class);
+        $repository = $this->getManager()->getRepository(InvoiceRule::class);
+        /** @var InvoiceRule $currentRule */
         $currentRule = $repository->find($content['id']);
         if(!$currentRule) { return ResultUtil::errorResult('THE INVOICE RULE  IS NOT FOUND.', 428); }
 
