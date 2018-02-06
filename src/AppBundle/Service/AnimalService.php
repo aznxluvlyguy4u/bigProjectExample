@@ -373,18 +373,21 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $message = $this->syncAnimalsForAllLocations($admin)[Constant::MESSAGE_NAMESPACE];
+        $hasNotBeenSyncedForAtLeastThisAmountOfDays = RequestUtil::getIntegerQuery($request, QueryParameter::MAX_DAYS,7);
+        $message = $this->syncAnimalsForAllLocations($admin, $hasNotBeenSyncedForAtLeastThisAmountOfDays)[Constant::MESSAGE_NAMESPACE];
         return ResultUtil::successResult($message);
     }
 
 
     /**
      * @param $loggedInUser
+     * @param int $hasNotBeenSyncedForAtLeastThisAmountOfDays
      * @return array
      */
-    public function syncAnimalsForAllLocations($loggedInUser)
+    public function syncAnimalsForAllLocations($loggedInUser, $hasNotBeenSyncedForAtLeastThisAmountOfDays = 0)
     {
-        $allLocations = $this->getManager()->getRepository(Location::class)->findAll();
+        $allLocations = $this->getManager()->getRepository(Location::class)
+            ->getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays);
         $content = new ArrayCollection();
         $count = 0;
 
@@ -407,8 +410,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $total = sizeof($allLocations);
         $message = "THE ANIMALS HAVE BEEN SYNCED FOR " . $count . " OUT OF " . $total . " TOTAL LOCATIONS (UBNS)";
 
-        return array('message' => $message,
-            'count' => $count);
+        return array(Constant::MESSAGE_NAMESPACE => $message,
+            Constant::COUNT => $count);
     }
 
 
