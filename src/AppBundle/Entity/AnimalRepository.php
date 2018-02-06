@@ -549,7 +549,7 @@ class AnimalRepository extends BaseRepository
 
       $livestockAnimalQuery->useQueryCache(true);
       $livestockAnimalQuery->setCacheable(true);
-      $livestockAnimalQuery->useResultCache(true, Constant::CACHE_LIVESTOCK_TIME_SPAN, $this->getLivestockCacheId($location, $queryOnlyOnAnimalGenderType));
+      // DO NOT use $livestockAnimalQuery->useResultCache(), use the serialized results in the redis cache instead!
 
       if ($returnDQL) {
           return $livestockAnimalsQueryBuilder->getDQL();
