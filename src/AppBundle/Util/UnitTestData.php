@@ -156,10 +156,11 @@ class UnitTestData
         $mate->setLocation($location);
         $mate->setStartDate($startDate);
         $mate->setEndDate($endDate);
-        $mate->setRequestState(RequestStateType::COMPLETED);
+        $mate->setRequestState(RequestStateType::FINISHED);
         $mate->setPmsg($pmsg);
         $mate->setKi($ki);
         $mate->setApprovalDate($mate->getLogDate());
+        $mate->setIsApprovedByThirdParty(true);
 
         $mate->setRamUlnCountryCode($ram->getUlnCountryCode());
         $mate->setRamUlnNumber($ram->getUlnNumber());
