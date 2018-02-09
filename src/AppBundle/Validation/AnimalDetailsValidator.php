@@ -17,7 +17,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 class AnimalDetailsValidator extends BaseValidator
 {
     const ERROR_UNAUTHORIZED_FOR_ANIMAL = "Animal does not belong to this ubn, or is not a Historic Animal that was made public";
-    const ERROR_NON_EXISTENT_ANIMAL = "Animal does not exist in our world :(";
+    const ERROR_NON_EXISTENT_ANIMAL = "ANIMAL WAS NOT FOUND";
     const ERROR_NON_PUBLIC_ANIMAL = "The current owner has not made this animal public";
 
     /** @var ObjectManager */
