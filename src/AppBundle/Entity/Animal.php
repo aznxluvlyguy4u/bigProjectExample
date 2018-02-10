@@ -1507,8 +1507,9 @@ abstract class Animal
             $this->setParentFather(null);
         } elseif ($clazz === Ewe::class) {
             $this->setParentMother(null);
+        } else {
+            throw new \Exception('parent class is not a Ram or Ewe', 428);
         }
-        throw new \Exception('parent class is not a Ram or Ewe', 428);
     }
 
 
