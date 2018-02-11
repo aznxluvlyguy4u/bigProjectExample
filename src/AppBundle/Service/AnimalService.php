@@ -454,6 +454,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             if(!AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::ADMIN))
             { return AdminValidator::getStandardErrorResponse(); }
 
+            if (RequestUtil::getBooleanQuery($request, QueryParameter::MINIMAL_OUTPUT, false)) {
+                return $this->getBasicAnimalDetailsByUln($ulnString);
+            }
+
             $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
 
             if($animal === null) {
@@ -497,7 +501,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     {
         $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
         if ($animal === null) {
-            return ResultUtil::errorResult(AnimalDetailsValidator::ERROR_NON_EXISTENT_ANIMAL, Response::HTTP_BAD_REQUEST);
+            return ResultUtil::errorResult($this->translateUcFirstLower(AnimalDetailsValidator::ERROR_NON_EXISTENT_ANIMAL), Response::HTTP_BAD_REQUEST);
         }
         $output = $this->getBaseSerializer()->getDecodedJson($animal, [JmsGroup::BASIC]);
         return ResultUtil::successResult($output);
