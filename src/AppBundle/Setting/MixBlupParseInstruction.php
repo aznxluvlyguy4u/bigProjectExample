@@ -4,6 +4,7 @@
 namespace AppBundle\Setting;
 
 
+use AppBundle\Component\MixBlup\WormResistanceInstructionFiles;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MixBlupAnalysis;
 use AppBundle\Component\MixBlup\ExteriorInstructionFiles;
@@ -81,6 +82,10 @@ class MixBlupParseInstruction
 
             case MixBlupAnalysis::TAIL_LENGTH:
                 $model = LambMeatIndexInstructionFiles::getTailLengthModel(false);
+                break;
+
+            case MixBlupAnalysis::WORM_RESISTANCE:
+                $model = WormResistanceInstructionFiles::getWormResistanceModel(false);
                 break;
 
             default:
