@@ -45,6 +45,10 @@ class BreedValueTypeConstant
     const EXTERIOR_TYPE_VG_M = 'TypeVGm';
     const EXTERIOR_TYPE_DF = 'TypeDF';
 
+    //WormResistanceIndex
+    const NATURAL_LOGARITHM_EGG_COUNT = 'LnFEC';
+    const IGA_SCOTLAND = 'SIgA';
+    const IGA_NEW_ZEALAND = 'NZIgA';
 
     /**
      * @return array
