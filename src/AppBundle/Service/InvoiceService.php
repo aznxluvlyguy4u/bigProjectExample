@@ -232,6 +232,21 @@ class InvoiceService extends ControllerServiceBase
         /** @var InvoiceRule $ruleTemplate */
         $ruleTemplate = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRule::class);
 
+        $errorMessage = '';
+        if ($ruleTemplate->getDescription() === '' || $ruleTemplate->getDescription() === null) {
+            $errorMessage .= $this->translateUcFirstLower('DESCRIPTION CANNOT BE EMPTY').'. ';
+        }
+        if ($ruleTemplate->getPriceExclVat() === null) {
+            $errorMessage .= $this->translateUcFirstLower('PRICE EXCL VAT CANNOT BE EMPTY, BUT CAN BE ZERO').'. ';
+        }
+        if ($ruleTemplate->getVatPercentageRate() === null) {
+            $errorMessage .= $this->translateUcFirstLower('VAT PERCENTAGE RATE CANNOT BE EMPTY, BUT CAN BE ZERO').'. ';
+        }
+
+        if ($errorMessage !== '') {
+            return ResultUtil::errorResult($errorMessage,Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
         $ruleTemplate->setInvoice($invoice);
         $this->persistAndFlush($ruleTemplate);
 
