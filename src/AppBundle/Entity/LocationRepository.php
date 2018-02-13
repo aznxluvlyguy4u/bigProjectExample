@@ -3,10 +3,15 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\Query\Expr\Join;
 
 /**
  * Class LocationRepository
@@ -186,5 +191,44 @@ class LocationRepository extends BaseRepository
       }
 
       return $qb->getQuery();
+  }
+
+
+    /**
+     * @param int $hasNotBeenSyncedForAtLeastThisAmountOfDays
+     * @return array
+     * @throws \Exception
+     */
+  public function getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays = 7)
+  {
+      if (!ctype_digit($hasNotBeenSyncedForAtLeastThisAmountOfDays) && !is_int($hasNotBeenSyncedForAtLeastThisAmountOfDays)) {
+          throw new \Exception('hasNotBeenSyncedForAtLeastThisAmountOfDays should be an integer');
+      }
+
+      $minLogDate = new \DateTime('- '.$hasNotBeenSyncedForAtLeastThisAmountOfDays.'days');
+
+      $retrieveAnimalsLocationQb = $this->getManager()->createQueryBuilder();
+      $retrieveAnimalsLocationQb
+          ->select('(l)')
+          ->from(RetrieveAnimals::class, 'r')
+          ->innerJoin('r.location', 'l', Join::WITH, $retrieveAnimalsLocationQb->expr()->eq('r.location', 'l.id'))
+          ->where(':minLogDate <= r.logDate')
+          ->andWhere($retrieveAnimalsLocationQb->expr()->eq('r.requestState', "'".RequestStateType::FINISHED."'"))
+          ->groupBy('l')
+          ->setParameter('minLogDate', $minLogDate->format(SqlUtil::DATE_FORMAT))
+      ;
+
+      $qb = $this->getManager()->createQueryBuilder();
+      $qb
+          ->select('location')
+          ->from(Location::class, 'location')
+          ->innerJoin('location.company', 'company', Join::WITH, $qb->expr()->eq('location.company', 'company.id'))
+          ->where($qb->expr()->eq('company.isActive', 'true'))
+          ->andWhere($qb->expr()->eq('location.isActive', 'true'))
+          ->andWhere($qb->expr()->notIn('location.id', $retrieveAnimalsLocationQb->getDQL()))
+          ->setParameter('minLogDate', $minLogDate->format(SqlUtil::DATE_FORMAT))
+      ;
+
+      return $qb->getQuery()->getResult();
   }
 }

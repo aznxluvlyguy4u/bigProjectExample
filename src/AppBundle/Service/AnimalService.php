@@ -373,18 +373,21 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $message = $this->syncAnimalsForAllLocations($admin)[Constant::MESSAGE_NAMESPACE];
+        $hasNotBeenSyncedForAtLeastThisAmountOfDays = RequestUtil::getIntegerQuery($request, QueryParameter::MAX_DAYS,7);
+        $message = $this->syncAnimalsForAllLocations($admin, $hasNotBeenSyncedForAtLeastThisAmountOfDays)[Constant::MESSAGE_NAMESPACE];
         return ResultUtil::successResult($message);
     }
 
 
     /**
      * @param $loggedInUser
+     * @param int $hasNotBeenSyncedForAtLeastThisAmountOfDays
      * @return array
      */
-    public function syncAnimalsForAllLocations($loggedInUser)
+    public function syncAnimalsForAllLocations($loggedInUser, $hasNotBeenSyncedForAtLeastThisAmountOfDays = 0)
     {
-        $allLocations = $this->getManager()->getRepository(Location::class)->findAll();
+        $allLocations = $this->getManager()->getRepository(Location::class)
+            ->getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays);
         $content = new ArrayCollection();
         $count = 0;
 
@@ -407,8 +410,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $total = sizeof($allLocations);
         $message = "THE ANIMALS HAVE BEEN SYNCED FOR " . $count . " OUT OF " . $total . " TOTAL LOCATIONS (UBNS)";
 
-        return array('message' => $message,
-            'count' => $count);
+        return array(Constant::MESSAGE_NAMESPACE => $message,
+            Constant::COUNT => $count);
     }
 
 
@@ -450,6 +453,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
             if(!AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::ADMIN))
             { return AdminValidator::getStandardErrorResponse(); }
+
+            if (RequestUtil::getBooleanQuery($request, QueryParameter::MINIMAL_OUTPUT, false)) {
+                return $this->getBasicAnimalDetailsByUln($ulnString);
+            }
 
             $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
 
@@ -494,7 +501,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     {
         $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
         if ($animal === null) {
-            return ResultUtil::errorResult(AnimalDetailsValidator::ERROR_NON_EXISTENT_ANIMAL, Response::HTTP_BAD_REQUEST);
+            return ResultUtil::errorResult($this->translateUcFirstLower(AnimalDetailsValidator::ERROR_NON_EXISTENT_ANIMAL), Response::HTTP_BAD_REQUEST);
         }
         $output = $this->getBaseSerializer()->getDecodedJson($animal, [JmsGroup::BASIC]);
         return ResultUtil::successResult($output);
