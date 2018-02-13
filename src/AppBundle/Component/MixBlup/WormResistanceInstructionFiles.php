@@ -89,7 +89,7 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
      * @param boolean $isRelani
      * @return array
      */
-    private static function getWormResistanceModel($isRelani)
+    public static function getWormResistanceModel($isRelani)
     {
         $jaarBedr = self::jaarBedrijf($isRelani);
 

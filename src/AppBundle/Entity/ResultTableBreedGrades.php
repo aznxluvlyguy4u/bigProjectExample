@@ -499,7 +499,47 @@ class ResultTableBreedGrades
      */
     private $weightAt20WeeksAccuracy;
 
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $naturalLogarithmEggCount;
 
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $naturalLogarithmEggCountAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $igaScotland;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $igaScotlandAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $igaNewZealand;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $igaNewZealandAccuracy;
 
     /**
      * ResultTableBreedIndex constructor.
@@ -1711,6 +1751,114 @@ class ResultTableBreedGrades
     public function setWeightAt20WeeksAccuracy($weightAt20WeeksAccuracy)
     {
         $this->weightAt20WeeksAccuracy = $weightAt20WeeksAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getNaturalLogarithmEggCount()
+    {
+        return $this->naturalLogarithmEggCount;
+    }
+
+    /**
+     * @param float $naturalLogarithmEggCount
+     * @return ResultTableBreedGrades
+     */
+    public function setNaturalLogarithmEggCount($naturalLogarithmEggCount)
+    {
+        $this->naturalLogarithmEggCount = $naturalLogarithmEggCount;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getNaturalLogarithmEggCountAccuracy()
+    {
+        return $this->naturalLogarithmEggCountAccuracy;
+    }
+
+    /**
+     * @param float $naturalLogarithmEggCountAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setNaturalLogarithmEggCountAccuracy($naturalLogarithmEggCountAccuracy)
+    {
+        $this->naturalLogarithmEggCountAccuracy = $naturalLogarithmEggCountAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getIgaScotland()
+    {
+        return $this->igaScotland;
+    }
+
+    /**
+     * @param float $igaScotland
+     * @return ResultTableBreedGrades
+     */
+    public function setIgaScotland($igaScotland)
+    {
+        $this->igaScotland = $igaScotland;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getIgaScotlandAccuracy()
+    {
+        return $this->igaScotlandAccuracy;
+    }
+
+    /**
+     * @param float $igaScotlandAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setIgaScotlandAccuracy($igaScotlandAccuracy)
+    {
+        $this->igaScotlandAccuracy = $igaScotlandAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getIgaNewZealand()
+    {
+        return $this->igaNewZealand;
+    }
+
+    /**
+     * @param float $igaNewZealand
+     * @return ResultTableBreedGrades
+     */
+    public function setIgaNewZealand($igaNewZealand)
+    {
+        $this->igaNewZealand = $igaNewZealand;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getIgaNewZealandAccuracy()
+    {
+        return $this->igaNewZealandAccuracy;
+    }
+
+    /**
+     * @param float $igaNewZealandAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setIgaNewZealandAccuracy($igaNewZealandAccuracy)
+    {
+        $this->igaNewZealandAccuracy = $igaNewZealandAccuracy;
         return $this;
     }
 
