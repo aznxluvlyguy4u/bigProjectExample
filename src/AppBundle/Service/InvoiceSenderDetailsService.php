@@ -55,7 +55,8 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
         }
 
         $address->setPostalCode($contentAddress['postal_code']);
-        $address->setCity("");
+        $address->setCity($contentAddress['city']);
+
 
         $country = ArrayUtil::get('country', $contentAddress);
         if ($country !== null && $country !== '') {
