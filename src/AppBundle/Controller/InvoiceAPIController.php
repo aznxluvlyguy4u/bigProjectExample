@@ -110,6 +110,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      * )
      *
      * @param Request $request
+     * @param Invoice $id
      * @Method("PUT")
      * @Route("/{id}")
      * @return JsonResponse
@@ -135,6 +136,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      * )
      *
      * @param Request $request
+     * @param Invoice $id
      * @Method("DELETE")
      * @Route("/{id}")
      * @return JsonResponse
@@ -186,12 +188,13 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      *
      * @Route("/{invoice}/invoice-rules")
      * @param Request $request
+     * @param Invoice $invoice
      * @Method("POST")
      * @return jsonResponse
      */
-    public function createInvoiceRuleTemplate(Request $request, Invoice $invoice)
+    public function createInvoiceRule(Request $request, Invoice $invoice)
     {
-        return $this->get('app.invoice')->createInvoiceRuleTemplate($request, $invoice);
+        return $this->get('app.invoice')->createInvoiceRule($request, $invoice);
     }
 
     /**
@@ -214,7 +217,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      * @Method("PUT")
      * @return jsonResponse
      */
-    public function updateInvoiceRuleTemplate(Request $request)
+    public function updateInvoiceRule(Request $request)
     {
         return $this->get('app.invoice')->updateInvoiceRuleTemplate($request);
     }
@@ -236,12 +239,14 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      *
      * @Route("/{invoice}/invoice-rules/{id}")
      * @param Request $request
+     * @param InvoiceRule $invoiceRule
+     * @param Invoice $invoice
      * @Method("DELETE")
      * @return jsonResponse
      */
-    public function deleteInvoiceRuleTemplate(Request $request, InvoiceRule $invoiceRuleTemplate, Invoice $invoice)
+    public function deleteInvoiceRule(Request $request, InvoiceRule $invoiceRule, Invoice $invoice)
     {
-        return $this->get('app.invoice')->deleteInvoiceRuleTemplate($request, $invoiceRuleTemplate, $invoice);
+        return $this->get('app.invoice')->deleteInvoiceRuleTemplate($request, $invoiceRule, $invoice);
     }
 
 }
