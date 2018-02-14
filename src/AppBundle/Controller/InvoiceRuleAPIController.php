@@ -3,20 +3,19 @@
 namespace AppBundle\Controller;
 
 
-use AppBundle\Entity\InvoiceRuleTemplate;
+use AppBundle\Entity\InvoiceRule;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 
 /**
- * Class InvoiceRuleTemplateAPIController
+ * Class InvoiceRuleAPIController
  * @package AppBundle\Controller
- * @Route("api/v1/invoice-rule-templates")
+ * @Route("api/v1/invoice-rules")
  */
-class InvoiceRuleTemplateAPIController extends APIController implements InvoiceRuleTemplateAPIControllerInterface
+class InvoiceRuleAPIController extends APIController implements InvoiceRuleAPIControllerInterface
 {
     /**
      * @Route("")
@@ -54,10 +53,11 @@ class InvoiceRuleTemplateAPIController extends APIController implements InvoiceR
     /**
      * @Route("/{id}")
      * @param Request $request
+     * @param InvoiceRule $invoiceRule
      * @Method("DELETE")
      * @return jsonResponse
      */
-    public function deleteInvoiceRule(Request $request, InvoiceRuleTemplate $invoiceRule)
+    public function deleteInvoiceRule(Request $request, InvoiceRule $invoiceRule)
     {
         return $this->get('app.invoice.rule')->deleteInvoiceRule($request, $invoiceRule);
     }
