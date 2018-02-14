@@ -214,5 +214,21 @@ class InvoiceSenderDetails
         $this->setAddress($invoiceSenderDetails->getAddress());
     }
 
-
+    /**
+     * @return bool
+     */
+    public function containsAllNecessaryData() {
+        return
+            $this->getName() !== null &&
+            $this->getIban() !== null &&
+            $this->getChamberOfCommerceNumber() !== null &&
+            $this->getvatNumber() !== null &&
+            $this->getPaymentDeadlineInDays() !== null &&
+            $this->getAddress() !== null &&
+            $this->getAddress()->getAddressNumber() !== null &&
+            $this->getAddress()->getStreetName() !== null &&
+            $this->getAddress()->getPostalCode() !== null &&
+            $this->getAddress()->getCity() !== null
+        ;
+    }
 }

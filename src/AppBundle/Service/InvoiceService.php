@@ -88,9 +88,12 @@ class InvoiceService extends ControllerServiceBase
                 ->findOneBy(array('id' => $contentRule['id']));
             $deserializedRules->add($invoiceRule);
         }
-        /** @var InvoiceSenderDetails $details */
-        $details = $this->getManager()->getRepository(InvoiceSenderDetails::class)
-            ->findOneBy(array('id' => $content['sender_details']['id']));
+
+        $details = $this->retrieveValidatedSenderDetails($content);
+        if ($details instanceof JsonResponse) {
+            return $details;
+        }
+
         $invoice->setInvoiceRules($deserializedRules);
         $invoice->setTotal($content['total']);
         $invoice->setUbn($content["ubn"]);
@@ -127,11 +130,33 @@ class InvoiceService extends ControllerServiceBase
 
 
     /**
+     * @param ArrayCollection $content
+     * @return JsonResponse|InvoiceSenderDetails
+     */
+    private function retrieveValidatedSenderDetails(ArrayCollection $content)
+    {
+        $senderDetailsErrorMessage = ResultUtil::errorResult('SENDER DETAILS ARE MISSING', Response::HTTP_PRECONDITION_REQUIRED);
+        if (!$content->containsKey('sender_details') || !key_exists('id', $content->get('sender_details'))) {
+            return $senderDetailsErrorMessage;
+        }
+
+        $details = $this->getManager()->getRepository(InvoiceSenderDetails::class)
+            ->findOneBy(array('id' => $content['sender_details']['id']));
+
+        if ($details == null || !$details->containsAllNecessaryData()) {
+            return $senderDetailsErrorMessage;
+        }
+
+        return $details;
+    }
+
+
+    /**
      * @param Request $request
-     * @param Invoice $id
+     * @param Invoice $invoice
      * @return JsonResponse
      */
-    function updateInvoice(Request $request, Invoice $id)
+    function updateInvoice(Request $request, Invoice $invoice)
     {
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
@@ -142,19 +167,19 @@ class InvoiceService extends ControllerServiceBase
         $deserializedRules = new ArrayCollection();
         /** @var Company $invoiceCompany */
         $invoiceCompany = $this->getManager()->getRepository(Company::class)->findOneBy(array('companyId' => $content['company']['company_id']));
-        $id->setInvoiceRules($deserializedRules);
+        $invoice->setInvoiceRules($deserializedRules);
         foreach ($contentRules as $contentRule){
             /** @var InvoiceRule $rule */
             $invoiceRule = $this->getManager()->getRepository(InvoiceRule::class)
                 ->findOneBy(array('id' => $contentRule['id']));
             $deserializedRules->add($invoiceRule);
         }
-        $id->setInvoiceRules($deserializedRules);
-        if ($id->getCompany() !== null && $id->getCompany()->getId() !== $invoiceCompany->getId()){
+        $invoice->setInvoiceRules($deserializedRules);
+        if ($invoice->getCompany() !== null && $invoice->getCompany()->getId() !== $invoiceCompany->getId()){
             /** @var Company $oldCompany */
-            $oldCompany = $this->getManager()->getRepository(Company::class)->findOneBy(array('id' => $id->getCompany()->getId()));
-            $oldCompany->removeInvoice($id);
-            $invoiceCompany->addInvoice($id);
+            $oldCompany = $this->getManager()->getRepository(Company::class)->findOneBy(array('id' => $invoice->getCompany()->getId()));
+            $oldCompany->removeInvoice($invoice);
+            $invoiceCompany->addInvoice($invoice);
             $this->persistAndFlush($oldCompany);
             $this->persistAndFlush($invoiceCompany);
         }
@@ -167,17 +192,20 @@ class InvoiceService extends ControllerServiceBase
         $temporaryInvoice->setCompanyName($content['company_name']);
         $temporaryInvoice->setCompanyVatNumber($content['company_vat_number']);
         $temporaryInvoice->setStatus($content["status"]);
-        $id->copyValues($temporaryInvoice);
-        if ($id->getStatus() === "UNPAID") {
-            $id->setInvoiceDate(new \DateTime());
+        $invoice->copyValues($temporaryInvoice);
+        if ($invoice->getStatus() === "UNPAID") {
+            $invoice->setInvoiceDate(new \DateTime());
         }
         else {
-            $details = $this->getManager()->getRepository(InvoiceSenderDetails::class)
-                ->findOneBy(array('id' => $content['sender_details']['id']));
-            $id->setSenderDetails($details);
+            $details = $this->retrieveValidatedSenderDetails($content);
+            if ($details instanceof JsonResponse) {
+                return $details;
+            }
+
+            $invoice->setSenderDetails($details);
         }
-        $this->persistAndFlush($id);
-        return ResultUtil::successResult($id);
+        $this->persistAndFlush($invoice);
+        return ResultUtil::successResult($invoice);
     }
 
 
