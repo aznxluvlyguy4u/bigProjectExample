@@ -224,7 +224,7 @@ class InvoiceService extends ControllerServiceBase
      * @param Invoice $invoice
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function createInvoiceRuleTemplate(Request $request, Invoice $invoice)
+    public function createInvoiceRule(Request $request, Invoice $invoice)
     {
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
@@ -253,7 +253,7 @@ class InvoiceService extends ControllerServiceBase
         $invoice->addInvoiceRule($ruleTemplate);
         $this->persistAndFlush($invoice);
 
-        $output = $this->getBaseSerializer()->getDecodedJson($ruleTemplate, JmsGroup::INVOICE_RULE_TEMPLATE);
+        $output = $this->getBaseSerializer()->getDecodedJson($ruleTemplate, JmsGroup::INVOICE_RULE);
         return ResultUtil::successResult($output);
     }
 
@@ -262,7 +262,7 @@ class InvoiceService extends ControllerServiceBase
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function updateInvoiceRuleTemplate(Request $request)
+    public function updateInvoiceRule(Request $request)
     {
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
@@ -283,25 +283,25 @@ class InvoiceService extends ControllerServiceBase
         $currentRuleTemplate->copyValues($updatedRuleTemplate);
         $this->persistAndFlush($currentRuleTemplate);
 
-        $output = $this->getBaseSerializer()->getDecodedJson($updatedRuleTemplate, JmsGroup::INVOICE_RULE_TEMPLATE);
+        $output = $this->getBaseSerializer()->getDecodedJson($updatedRuleTemplate, JmsGroup::INVOICE_RULE);
         return ResultUtil::successResult($output);
     }
 
 
     /**
      * @param Request $request
-     * @param InvoiceRule $invoiceRuleTemplate
+     * @param InvoiceRule $invoiceRule
      * @param Invoice $invoice
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteInvoiceRuleTemplate(Request $request, InvoiceRule $invoiceRuleTemplate, Invoice $invoice)
+    public function deleteInvoiceRule(Request $request, InvoiceRule $invoiceRule, Invoice $invoice)
     {
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
         $repository = $this->getManager()->getRepository(InvoiceRule::class);
         /** @var InvoiceRule $ruleTemplate */
-        $ruleTemplate = $repository->find($invoiceRuleTemplate);
+        $ruleTemplate = $repository->find($invoiceRule);
 
         if(!$ruleTemplate) { return ResultUtil::errorResult('THE INVOICE RULE TEMPLATE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED); }
         $invoice->removeInvoiceRule($ruleTemplate);
@@ -310,7 +310,7 @@ class InvoiceService extends ControllerServiceBase
         $this->persistAndFlush($invoice);
         $this->persistAndFlush($ruleTemplate);
 
-        $output = $this->getBaseSerializer()->getDecodedJson($ruleTemplate, JmsGroup::INVOICE_RULE_TEMPLATE);
+        $output = $this->getBaseSerializer()->getDecodedJson($ruleTemplate, JmsGroup::INVOICE_RULE);
         return ResultUtil::successResult($output);
     }
 }
