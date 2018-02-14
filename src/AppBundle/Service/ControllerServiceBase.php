@@ -413,7 +413,11 @@ abstract class ControllerServiceBase
         return strtr(ucfirst(strtolower($translator->trans($string))), [
             'ubn' => 'UBN',
             'uln' => 'ULN',
-            'ulns' => 'ULNs'
+            'ulns' => 'ULNs',
+            'btw' => 'BTW',
+            'btw nummer' => 'BTW nummer',
+            'kvk' => 'KVK',
+            'kvk nummer' => 'KVK nummer',
         ]);
     }
 

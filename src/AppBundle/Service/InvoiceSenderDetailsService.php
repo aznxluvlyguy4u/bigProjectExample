@@ -14,6 +14,7 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class InvoiceSenderDetailsService extends ControllerServiceBase implements InvoiceSenderDetailsAPIControllerInterface
 {
@@ -69,8 +70,34 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
         $details->setPaymentDeadlineInDays($content->get('payment_deadline_in_days'));
         $details->setIban($content->get('iban'));
         $details->setAddress($address);
+
+        $verificationResult = $this->verifyInvoiceSenderDetailInput($details);
+        if ($verificationResult instanceof JsonResponse) {
+            return $verificationResult;
+        }
+
         $this->persistAndFlush($details);
+
         return ResultUtil::successResult($details);
+    }
+
+
+    /**
+     * @param InvoiceSenderDetails $details
+     * @return JsonResponse|bool
+     */
+    private function verifyInvoiceSenderDetailInput(InvoiceSenderDetails $details)
+    {
+        if (!$details->containsAllNecessaryData()) {
+            $errorMessage = $this->translateUcFirstLower('THE FOLLOWING DATA IS MISSING').': ';
+            $prefix = '';
+            foreach ($details->getMissingNecessaryVariables() as $variableName) {
+                $errorMessage .= $prefix . $this->translateUcFirstLower($variableName);
+                $prefix = ', ';
+            }
+            return ResultUtil::errorResult($errorMessage, Response::HTTP_PRECONDITION_REQUIRED);
+        }
+        return true;
     }
 
 
@@ -109,7 +136,14 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
         $temporaryInvoiceSenderDetails->setPaymentDeadlineInDays($content->get('payment_deadline_in_days'));
         $temporaryInvoiceSenderDetails->setIban($content->get('iban'));
         $temporaryInvoiceSenderDetails->setAddress($temporaryAddress);
+
+        $verificationResult = $this->verifyInvoiceSenderDetailInput($temporaryInvoiceSenderDetails);
+        if ($verificationResult instanceof JsonResponse) {
+            return $verificationResult;
+        }
+
         $invoiceSenderDetails->copyValues($temporaryInvoiceSenderDetails);
+
         $this->persistAndFlush($invoiceSenderDetails);
         return ResultUtil::successResult($invoiceSenderDetails);
     }

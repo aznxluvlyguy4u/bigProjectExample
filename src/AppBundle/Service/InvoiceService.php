@@ -90,8 +90,8 @@ class InvoiceService extends ControllerServiceBase
         }
 
         $details = $this->retrieveValidatedSenderDetails($content);
-        if ($details instanceof JsonResponse) {
-            return $details;
+        if ($details instanceof InvoiceSenderDetails) {
+            $invoice->setSenderDetails($details);
         }
 
         $invoice->setInvoiceRules($deserializedRules);
@@ -102,7 +102,6 @@ class InvoiceService extends ControllerServiceBase
         $invoice->setCompanyVatNumber($content['company_vat_number']);
         $invoice->setCompanyDebtorNumber($content['company_debtor_number']);
         $invoice->setStatus($content["status"]);
-        $invoice->setSenderDetails($details);
         if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
         }

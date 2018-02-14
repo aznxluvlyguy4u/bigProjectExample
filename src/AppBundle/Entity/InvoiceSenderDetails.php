@@ -228,7 +228,83 @@ class InvoiceSenderDetails
             $this->getAddress()->getAddressNumber() !== null &&
             $this->getAddress()->getStreetName() !== null &&
             $this->getAddress()->getPostalCode() !== null &&
-            $this->getAddress()->getCity() !== null
+            $this->getAddress()->getCity() !== null &&
+            $this->getAddress()->getCountry() !== null &&
+            $this->getName() !== '' &&
+            $this->getIban() !== '' &&
+            $this->getChamberOfCommerceNumber() !== '' &&
+            $this->getvatNumber() !== '' &&
+            $this->getPaymentDeadlineInDays() !== '' &&
+            $this->getAddress()->getAddressNumber() !== '' &&
+            $this->getAddress()->getStreetName() !== '' &&
+            $this->getAddress()->getPostalCode() !== '' &&
+            $this->getAddress()->getCity() !== '' &&
+            $this->getAddress()->getCountry() !== ''
         ;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getMissingNecessaryVariables()
+    {
+        $vars = [];
+
+        if ($this->getName() === null ||
+            $this->getName() === '') {
+            $vars[] = 'NAME';
+        }
+
+        if ($this->getIban() === null ||
+            $this->getIban() === '') {
+            $vars[] = 'IBAN';
+        }
+
+        if ($this->getChamberOfCommerceNumber() === null ||
+            $this->getChamberOfCommerceNumber() === '') {
+            $vars[] = 'CHAMBER OF COMMERCE NUMBER';
+        }
+
+        if ($this->getvatNumber() === null ||
+            $this->getvatNumber() === '') {
+            $vars[] = 'VAT NUMBER';
+        }
+
+        if ($this->getPaymentDeadlineInDays() === null ||
+            $this->getPaymentDeadlineInDays() === '') {
+            $vars[] = 'PAYMENT DEADLINE IN DAYS';
+        }
+
+        if ($this->getAddress() === null) {
+            $vars[] = 'ADDRESS NUMBER';
+            $vars[] = 'STREET NAME';
+            $vars[] = 'POSTAL CODE';
+            $vars[] = 'CITY';
+            $vars[] = 'COUNTRY';
+        } else {
+            if ($this->getAddress()->getAddressNumber() === null ||
+                $this->getAddress()->getAddressNumber() === '') {
+                $vars[] = 'ADDRESS NUMBER';
+            }
+            if ($this->getAddress()->getStreetName() === null ||
+                $this->getAddress()->getStreetName() === '') {
+                $vars[] = 'STREET NAME';
+            }
+            if ($this->getAddress()->getPostalCode() === null ||
+                $this->getAddress()->getPostalCode() === '') {
+                $vars[] = 'POSTAL CODE';
+            }
+            if ($this->getAddress()->getCity() === null ||
+                $this->getAddress()->getCity() === '') {
+                $vars[] = 'CITY';
+            }
+            if ($this->getAddress()->getCountry() === null ||
+                $this->getAddress()->getCountry() === '') {
+                $vars[] = 'COUNTRY';
+            }
+        }
+
+        return $vars;
     }
 }
