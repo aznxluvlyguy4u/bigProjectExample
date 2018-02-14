@@ -5,9 +5,9 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Controller\InvoiceRuleTemplateAPIControllerInterface;
+use AppBundle\Controller\InvoiceRuleAPIControllerInterface;
 use AppBundle\Entity\InvoiceRule;
-use AppBundle\Entity\InvoiceRuleTemplate;
+use AppBundle\Entity\InvoiceRuleRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Util\RequestUtil;
@@ -15,7 +15,7 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 
-class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleTemplateAPIControllerInterface
+class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPIControllerInterface
 {
     /**
      * @param Request $request
@@ -23,17 +23,13 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleTem
      */
     public function getInvoiceRules(Request $request)
     {
+        $category = $request->get('category');
+        $type = $request->query->get("type");
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
-
-        $repository = $this->getManager()->getRepository(InvoiceRuleTemplate::class); //TODO replace with InvoiceRule::class?
-        $category = $request->get('category');
-        if ($category != null) {
-            $rules = $repository->findBy(array('category' => $category));
-        }
-        else{
-            $rules = $repository->findAll();
-        }
+        /** @var InvoiceRuleRepository $repository */
+        $repository = $this->getManager()->getRepository(InvoiceRule::class); //TODO replace with InvoiceRule::class?
+        $rules = $repository->findByTypeCategory($type, $category);
         $output = $this->getBaseSerializer()->getDecodedJson($rules, JmsGroup::INVOICE_RULE);
 
         return ResultUtil::successResult($output);
@@ -49,7 +45,7 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleTem
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $rule = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRuleTemplate::class);  //TODO replace with InvoiceRule::class?
+        $rule = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRule::class);  //TODO replace with InvoiceRule::class?
         $this->persistAndFlush($rule);
 
         $output = $this->getBaseSerializer()->getDecodedJson($rule, JmsGroup::INVOICE_RULE);
@@ -85,18 +81,18 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleTem
 
     /**
      * @param Request $request
-     * @param InvoiceRuleTemplate $invoiceRule
+     * @param InvoiceRule $invoiceRule
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteInvoiceRule(Request $request, InvoiceRuleTemplate $invoiceRule)
+    public function deleteInvoiceRule(Request $request, InvoiceRule $invoiceRule)
     {
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $repository = $this->getManager()->getRepository(InvoiceRuleTemplate::class);  //TODO replace with InvoiceRule::class?
+        $repository = $this->getManager()->getRepository(InvoiceRule::class);  //TODO replace with InvoiceRule::class?
         $rule = $repository->find($invoiceRule);
 
-        if(!$rule) { return ResultUtil::errorResult('THE INVOICE RULE  IS NOT FOUND.', 428); }
+        if(!$rule) { return ResultUtil::errorResult('THE INVOICE RULE IS NOT FOUND.', 428); }
 
         $this->getManager()->remove($rule);
         $this->getManager()->flush();
