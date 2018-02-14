@@ -67,7 +67,7 @@ class CompanyOutput
             $billingAddress = key_exists('billingAddress', $company) ? [
                 'street_name' => Utils::fillNull($company['billingAddress']['streetName']),
                 'address_number' => Utils::fillNull($company['billingAddress']['addressNumber']),
-                'suffix' => Utils::fillNull($company['billingAddress']['addressNumber']),
+                'address_number_suffix' => Utils::fillNull($company['billingAddress']['addressNumberSuffix']),
                 'postal_code' => Utils::fillNull($company['billingAddress']['postalCode']),
                 'city' => Utils::fillNull($company['billingAddress']['city']),
                 'state' => Utils::fillNull($company['billingAddress']['state'])
@@ -83,7 +83,8 @@ class CompanyOutput
                 'address' => array(
                     'street_name' => Utils::fillNull($company['address']['streetName']),
                     'address_number' => Utils::fillNull($company['address']['addressNumber']),
-                    'suffix' => Utils::fillNull($company['address']['addressNumber']),
+                    'suffix' => Utils::fillNull($company['address']['addressNumberSuffix']),
+                    'address_number_suffix' => Utils::fillNull($company['address']['addressNumberSuffix']),
                     'postal_code' => Utils::fillNull($company['address']['postalCode']),
                     'city' => Utils::fillNull($company['address']['city']),
                     'state' => Utils::fillNull($company['address']['state'])
