@@ -24,7 +24,7 @@ class InvoiceRule
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Type("integer")
      * @JMS\Groups({
-     *     "INVOICE_RULE_TEMPLATE"
+     *     "INVOICE_RULE"
      * })
      */
     protected $id;
@@ -36,7 +36,7 @@ class InvoiceRule
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE_RULE_TEMPLATE"
+     *     "INVOICE_RULE"
      * })
      */
     private $description;
@@ -48,7 +48,7 @@ class InvoiceRule
      * @Assert\NotBlank
      * @JMS\Type("float")
      * @JMS\Groups({
-     *     "INVOICE_RULE_TEMPLATE"
+     *     "INVOICE_RULE"
      * })
      */
     private $vatPercentageRate;
@@ -60,7 +60,7 @@ class InvoiceRule
      * @Assert\NotBlank
      * @JMS\Type("float")
      * @JMS\Groups({
-     *     "INVOICE_RULE_TEMPLATE"
+     *     "INVOICE_RULE"
      * })
      */
     private $priceExclVat;
@@ -72,7 +72,7 @@ class InvoiceRule
      * @Assert\NotBlank
      * @JMS\Type("integer")
      * @JMS\Groups({
-     *     "INVOICE_RULE_TEMPLATE"
+     *     "INVOICE_RULE"
      * })
      */
     private $sortOrder;
@@ -84,7 +84,7 @@ class InvoiceRule
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE_RULE_TEMPLATE"
+     *     "INVOICE_RULE"
      * })
      */
     private $category;
@@ -94,7 +94,7 @@ class InvoiceRule
      * @ORM\Column(type="string", name="type", options={"default":"custom"})
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE_RULE_TEMPLATE"
+     *     "INVOICE_RULE"
      * })
      */
     private $type;
@@ -105,7 +105,7 @@ class InvoiceRule
      * @ORM\ManyToOne(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Invoice")
      * @JMS\Groups({
-     *     "INVOICE_RULE_TEMPLATE"
+     *     "INVOICE_RULE"
      * })
      */
     private $invoice;
@@ -115,7 +115,7 @@ class InvoiceRule
      * @ORM\Column(type="boolean", name="is_deleted", options={"default":false})
      * @JMS\Type("boolean")
      * @JMS\Groups({
-     *     "INVOICE_RULE_TEMPLATE"
+     *     "INVOICE_RULE"
      * })
      */
     private $isDeleted = false;
