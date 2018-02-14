@@ -64,6 +64,15 @@ class CompanyOutput
                 }
             }
 
+            $billingAddress = key_exists('billingAddress', $company) ? [
+                'street_name' => Utils::fillNull($company['billingAddress']['streetName']),
+                'address_number' => Utils::fillNull($company['billingAddress']['addressNumber']),
+                'suffix' => Utils::fillNull($company['billingAddress']['addressNumber']),
+                'postal_code' => Utils::fillNull($company['billingAddress']['postalCode']),
+                'city' => Utils::fillNull($company['billingAddress']['city']),
+                'state' => Utils::fillNull($company['billingAddress']['state'])
+            ] : [];
+
             $res[] = array(
                 'company_id' => Utils::fillNull($company['companyId']),
                 'debtor_number' => Utils::fillNull($company['debtorNumber']),
@@ -88,7 +97,8 @@ class CompanyOutput
                 'users' => $users,
                 'locations' => $locations,
                 'pedigrees' => $pedigrees,
-                'unpaid_invoices' => sizeof($invoices)
+                'unpaid_invoices' => sizeof($invoices),
+                'billing_address' => $billingAddress,
             );
         }
         return $res;

@@ -145,6 +145,9 @@ class Company
     * @var BillingAddress
     * @ORM\OneToOne(targetEntity="BillingAddress", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\BillingAddress")
+    * @JMS\Groups({
+    *     "INVOICE"
+    * })
     */
     private $billingAddress;
 
