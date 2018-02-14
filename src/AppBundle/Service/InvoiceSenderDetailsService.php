@@ -9,6 +9,7 @@ use AppBundle\Controller\InvoiceSenderDetailsAPIControllerInterface;
 use AppBundle\Entity\BillingAddress;
 use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
@@ -55,7 +56,12 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
 
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity("");
-        $address->setCountry("Nederland");
+
+        $country = ArrayUtil::get('country', $contentAddress);
+        if ($country !== null && $country !== '') {
+            $address->setCountry($country);
+        }
+
         $details->setName($content->get('name'));
         $details->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $details->setVatNumber($content->get('vat_number'));
@@ -84,13 +90,18 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
         $temporaryAddress->setStreetName($contentAddress['street_name']);
         $temporaryAddress->setAddressNumber($contentAddress['address_number']);
 
-        if(isset($contentAddress['suffix'])) {
+        if(isset($contentAddress['address_number_suffix'])) {
             $temporaryAddress->setAddressNumberSuffix($contentAddress['address_number_suffix']);
         }
 
         $temporaryAddress->setPostalCode($contentAddress['postal_code']);
         $temporaryAddress->setCity($contentAddress['city']);
-        $temporaryAddress->setCountry($contentAddress['country']);
+
+        $country = ArrayUtil::get('country', $contentAddress);
+        if ($country !== null && $country !== '') {
+            $temporaryAddress->setCountry($country);
+        }
+
         $temporaryInvoiceSenderDetails->setName($content->get('name'));
         $temporaryInvoiceSenderDetails->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $temporaryInvoiceSenderDetails->setVatNumber($content->get('vat_number'));
