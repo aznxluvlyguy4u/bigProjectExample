@@ -63,7 +63,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     private function getAnimalsByPlainTextInput(Request $request)
     {
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            AdminValidator::getStandardErrorResponse();
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $validationResult = $this->validateAnimalsByPlainTextInputRequest($request);
