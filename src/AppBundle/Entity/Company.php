@@ -136,7 +136,8 @@ class Company
     * @ORM\OneToOne(targetEntity="CompanyAddress", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\CompanyAddress")
     * @JMS\Groups({
-    *     "UBN"
+    *     "UBN",
+     *    "INVOICE"
     * })
     */
     private $address;
@@ -191,9 +192,6 @@ class Company
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Invoice", mappedBy="company")
-     * @JMS\Groups({
-     *     "INVOICE"
-     * })
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Invoice>")
      */
     private $invoices;

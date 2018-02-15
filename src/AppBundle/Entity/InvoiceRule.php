@@ -24,7 +24,9 @@ class InvoiceRule
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Type("integer")
      * @JMS\Groups({
-     *     "INVOICE_RULE"
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     protected $id;
@@ -36,7 +38,9 @@ class InvoiceRule
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE_RULE"
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $description;
@@ -48,7 +52,9 @@ class InvoiceRule
      * @Assert\NotBlank
      * @JMS\Type("float")
      * @JMS\Groups({
-     *     "INVOICE_RULE"
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $vatPercentageRate;
@@ -60,7 +66,9 @@ class InvoiceRule
      * @Assert\NotBlank
      * @JMS\Type("float")
      * @JMS\Groups({
-     *     "INVOICE_RULE"
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $priceExclVat;
@@ -72,7 +80,9 @@ class InvoiceRule
      * @Assert\NotBlank
      * @JMS\Type("integer")
      * @JMS\Groups({
-     *     "INVOICE_RULE"
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $sortOrder;
@@ -84,7 +94,9 @@ class InvoiceRule
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE_RULE"
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $category;
@@ -94,7 +106,9 @@ class InvoiceRule
      * @ORM\Column(type="string", name="type", options={"default":"custom"})
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE_RULE"
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $type;
@@ -102,20 +116,19 @@ class InvoiceRule
     /**
      * @var Invoice
      *
-     * @ORM\ManyToOne(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
-     * @JMS\Type("AppBundle\Entity\Invoice")
-     * @JMS\Groups({
-     *     "INVOICE_RULE"
-     * })
+     * @ORM\ManyToMany(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Invoice>")
      */
-    private $invoice;
+    private $invoices;
 
     /**
      * @var boolean
      * @ORM\Column(type="boolean", name="is_deleted", options={"default":false})
      * @JMS\Type("boolean")
      * @JMS\Groups({
-     *     "INVOICE_RULE"
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $isDeleted = false;
@@ -271,19 +284,33 @@ class InvoiceRule
     /**
      * @return Invoice
      */
-    public function getInvoice()
+    public function getInvoices()
     {
-        return $this->invoice;
+        return $this->invoices;
+    }
+
+    /**
+     * @param ArrayCollection $invoices
+     * @return InvoiceRule
+     */
+    public function setInvoices($invoices)
+    {
+        $this->invoices = $invoices;
+        return $this;
     }
 
     /**
      * @param Invoice $invoice
-     * @return InvoiceRule
      */
-    public function setInvoice($invoice)
-    {
-        $this->invoice = $invoice;
-        return $this;
+    public function addInvoice(Invoice $invoice) {
+        $this->invoices->add($invoice);
+    }
+
+    /**
+     * @param Invoice $invoice
+     */
+    public function removeInvoice(Invoice $invoice) {
+        $this->invoices->removeElement($invoice);
     }
 
     /**

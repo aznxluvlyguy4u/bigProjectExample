@@ -23,7 +23,8 @@ class Invoice
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     protected $id;
@@ -33,7 +34,8 @@ class Invoice
      * @Assert\NotBlank()
      * @ORM\Column(type="string",  unique=true, nullable=true)
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $invoiceNumber;
@@ -45,7 +47,8 @@ class Invoice
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $invoiceDate;
@@ -57,7 +60,8 @@ class Invoice
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $status;
@@ -68,7 +72,8 @@ class Invoice
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $documentUrl;
@@ -76,10 +81,11 @@ class Invoice
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="InvoiceRule", mappedBy="invoice", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity="InvoiceRule", mappedBy="invoices", cascade={"persist"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\InvoiceRule>")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $invoiceRules;
@@ -89,7 +95,8 @@ class Invoice
      * @ORM\Column(type="float", name="total", nullable=true)
      * @JMS\Type("float")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $total;
@@ -111,7 +118,8 @@ class Invoice
      * @ORM\Column(type="string", name="company_local_id", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $companyLocalId;
@@ -121,7 +129,8 @@ class Invoice
      * @ORM\Column(type="string", name="company_name", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $companyName;
@@ -131,7 +140,8 @@ class Invoice
      * @ORM\Column(type="string", name="company_vat_number", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $companyVatNumber;
@@ -141,7 +151,8 @@ class Invoice
      * @ORM\Column(type="string", name="company_debtor_number", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $companyDebtorNumber;
@@ -151,7 +162,8 @@ class Invoice
      * @ORM\Column(type="string", name="mollie_id", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $mollieId;
@@ -162,7 +174,8 @@ class Invoice
      * @ORM\JoinColumn(name="invoice_sender_details_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $senderDetails;
@@ -172,7 +185,8 @@ class Invoice
      * @ORM\Column(type="string", name="ubn", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $ubn;
@@ -183,7 +197,8 @@ class Invoice
      * @ORM\Column(name="is_deleted", type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
      * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
      */
     private $isDeleted = false;

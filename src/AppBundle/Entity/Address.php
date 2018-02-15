@@ -23,6 +23,7 @@ use JMS\Serializer\Annotation as JMS;
  *     groups = {
  *     "BASIC",
  *     "CONTACT_INFO"
+ *
  * })
  *
  * @package AppBundle\Entity
@@ -45,7 +46,8 @@ abstract class Address
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE"
    * })
    */
   private $streetName;
@@ -57,7 +59,8 @@ abstract class Address
    * @Assert\NotBlank
    * @JMS\Type("integer")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE"
    * })
    */
   private $addressNumber;
@@ -68,7 +71,8 @@ abstract class Address
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE"
    * })
    */
   private $addressNumberSuffix;
@@ -82,7 +86,8 @@ abstract class Address
    * @Assert\Length(max = 6)
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE"
    * })
    */
   private $postalCode;
@@ -94,7 +99,8 @@ abstract class Address
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE"
    * })
    */
   private $city;
@@ -106,7 +112,8 @@ abstract class Address
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE"
    * })
    */
   private $country;
@@ -117,7 +124,8 @@ abstract class Address
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE"
    * })
    */
   private $state;

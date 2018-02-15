@@ -195,6 +195,9 @@ class Location
    *
    * @ORM\OneToOne(targetEntity="LocationAddress", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\LocationAddress")
+   * @JMS\Groups({
+   *     "INVOICE"
+   * })
    */
   private $address;
 
