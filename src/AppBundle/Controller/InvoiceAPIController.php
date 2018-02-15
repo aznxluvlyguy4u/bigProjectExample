@@ -34,6 +34,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      *   resource = true,
      *   description = "Retrieve all invoices"
      * )
+     * @param Request $request
      * @Method("GET")
      * @Route("")
      * @return JsonResponse
@@ -58,14 +59,14 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      *   resource = true,
      *   description = "Retrieve a specific invoice"
      * )
-     *
+     * @param Invoice $invoice
      * @Method("GET")
-     * @Route("/{id}")
+     * @Route("/{invoice}")
      *
      */
-    function getInvoice($id)
+    function getInvoice(Invoice $invoice)
     {
-        return $this->get('app.invoice')->getInvoice($id);
+        return $this->get('app.invoice')->getInvoice($invoice);
     }
 
     /**
