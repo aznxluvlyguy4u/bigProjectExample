@@ -386,6 +386,11 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@security.token_storage'
 
+    app.pdf.invoice_pdf_generator_service:
+        class: AppBundle\Service\Invoice\InvoicePdfGeneratorService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+
     app.report.generator.query.breed_values:
         class: AppBundle\Service\Report\BreedValuesReportQueryGenerator
         arguments:

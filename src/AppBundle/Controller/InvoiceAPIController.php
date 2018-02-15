@@ -237,7 +237,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      *   description = "Delete an invoice rule belonging to an invoice"
      * )
      *
-     * @Route("/{invoice}/invoice-rules/{id}")
+     * @Route("/{invoice}/invoice-rules/{invoiceRule}")
      * @param Request $request
      * @param InvoiceRule $invoiceRule
      * @param Invoice $invoice
@@ -247,6 +247,31 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     public function deleteInvoiceRule(Request $request, InvoiceRule $invoiceRule, Invoice $invoice)
     {
         return $this->get('app.invoice')->deleteInvoiceRuleTemplate($request, $invoiceRule, $invoice);
+    }
+
+    /**
+     *
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve a specific invoice"
+     * )
+     *
+     * @Method("GET")
+     * @Route("/{invoice}/pdf")
+     * @param Request $request
+     * @param Invoice $invoice
+     */
+    public function getInvoicePdf(Request $request, Invoice $invoice) {
+
     }
 
 }
