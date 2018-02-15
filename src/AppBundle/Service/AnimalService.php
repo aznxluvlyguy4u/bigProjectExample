@@ -113,7 +113,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
+dump($animals, $ubns);die;
         $serializedAnimalsOutput = self::getSerializedAnimalsInBatchEditFormat($this, $animals);
 
         $ulnsWithMissingAnimals = [];
