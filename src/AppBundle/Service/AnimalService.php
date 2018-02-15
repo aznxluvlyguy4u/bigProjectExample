@@ -92,6 +92,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         foreach ($parts as $part) {
             $ulnOrStnString = StringUtil::removeSpaces($part);
 
+            if ($ulnOrStnString === '') {
+                continue;
+            }
+
             if (Validator::verifyUlnFormat($ulnOrStnString, false)) {
                 $ulnParts = Utils::getUlnFromString($ulnOrStnString);
                 $ulnPartsArray[] = $ulnParts;
