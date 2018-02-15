@@ -57,12 +57,12 @@ class InvoiceService extends ControllerServiceBase
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
             $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(array('id' => $id));
             /** @var Invoice $invoice */
-            $invoice = InvoiceOutput::createInvoiceOutputNoCompany($invoice);
+            $invoice = $this->getBaseSerializer()->getDecodedJson($invoice, JmsGroup::INVOICE_NO_COMPANY);
             return ResultUtil::successResult($invoice);
         }
         $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(array('id' => $id));
         /** @var Invoice $invoice */
-        $invoice = InvoiceOutput::createInvoiceOutput($invoice);
+        $invoice = $this->getBaseSerializer()->getDecodedJson($invoice, JmsGroup::INVOICE);
         return ResultUtil::successResult($invoice);
     }
 
@@ -273,8 +273,11 @@ class InvoiceService extends ControllerServiceBase
         if ($errorMessage !== '') {
             return ResultUtil::errorResult($errorMessage,Response::HTTP_PRECONDITION_REQUIRED);
         }
+        if ($ruleTemplate->getInvoices() == null) {
+            $ruleTemplate->setInvoices(new ArrayCollection());
+        }
 
-        $ruleTemplate->setInvoice($invoice);
+        $ruleTemplate->addInvoice($invoice);
         $this->persistAndFlush($ruleTemplate);
 
         $invoice->addInvoiceRule($ruleTemplate);
