@@ -398,6 +398,9 @@ class BreedValuesReportQueryGenerator
                          COALESCE(CAST(c_mom.born_alive_offspring_count AS TEXT), '-'),
                          production_asterisk_mom.mark
                      ),'-/-/-/-') as m_production,
+                a.ubn_of_birth,
+                -- location_of_birth.ubn as ubn_of_birth,
+                location.ubn as current_ubn,
                   
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
@@ -408,6 +411,8 @@ class BreedValuesReportQueryGenerator
                 LEFT JOIN animal_cache c ON a.id = c.animal_id
                 LEFT JOIN animal_cache c_mom ON mom.id = c_mom.animal_id
                 LEFT JOIN animal_cache c_dad ON dad.id = c_dad.animal_id
+                LEFT JOIN location ON a.location_id = location.id
+                -- LEFT JOIN location location_of_birth ON a.location_of_birth_id = location_of_birth.id
                 LEFT JOIN result_table_breed_grades bg ON a.id = bg.animal_id
                 -- LEFT JOIN (VALUES ".SqlUtil::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
                 LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS a_breed_types(english, dutch_first_letter) ON a.breed_type = a_breed_types.english
