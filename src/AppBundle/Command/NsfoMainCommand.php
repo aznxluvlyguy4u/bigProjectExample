@@ -613,8 +613,9 @@ class NsfoMainCommand extends ContainerAwareCommand
             '1: BirthProgress', "\n",
             '2: is_rvo_message boolean in action_log', "\n",
             '3: TreatmentType', "\n",
-            '4: StoredProcedures', "\n",
-            '5: StoredProcedures: overwrite all', "\n\n",
+            '4: LedgerCategory', "\n",
+            '5: StoredProcedures', "\n",
+            '6: StoredProcedures: overwrite all', "\n\n",
 
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
@@ -625,8 +626,9 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 1: $this->getContainer()->get('app.initializer.birth_progress')->run($this->cmdUtil); break;
             case 2: ActionLogWriter::initializeIsRvoMessageValues($this->conn, $this->cmdUtil); break;
             case 3: $this->getContainer()->get('app.initializer.treatment_type')->run($this->cmdUtil); break;
-            case 4: $storedProcedureIntializer->initialize(); break;
-            case 5: $storedProcedureIntializer->update(); break;
+            case 4: $this->getContainer()->get('AppBundle\Service\Migration\LedgerCategoryMigrator')->run($this->cmdUtil); break;
+            case 5: $storedProcedureIntializer->initialize(); break;
+            case 6: $storedProcedureIntializer->update(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }

@@ -303,6 +303,9 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\InspectorMigrator
 
+    AppBundle\Service\Migration\LedgerCategoryMigrator:
+        parent: app.migrator.base
+
     app.migrator.lamb_meat_index:
         class: AppBundle\Service\Migration\LambMeatIndexMigrator
         arguments:
