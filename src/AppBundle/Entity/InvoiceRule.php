@@ -122,6 +122,18 @@ class InvoiceRule
     private $invoices;
 
     /**
+     * @var LedgerCategory
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\LedgerCategory", inversedBy="invoiceRules")
+     * @JMS\Type("AppBundle\Entity\LedgerCategory")
+     * @JMS\Groups({
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $ledgerCategory;
+
+    /**
      * @var boolean
      * @ORM\Column(type="boolean", name="is_deleted", options={"default":false})
      * @JMS\Type("boolean")
@@ -311,6 +323,24 @@ class InvoiceRule
      */
     public function removeInvoice(Invoice $invoice) {
         $this->invoices->removeElement($invoice);
+    }
+
+    /**
+     * @return LedgerCategory
+     */
+    public function getLedgerCategory()
+    {
+        return $this->ledgerCategory;
+    }
+
+    /**
+     * @param LedgerCategory $ledgerCategory
+     * @return InvoiceRule
+     */
+    public function setLedgerCategory($ledgerCategory)
+    {
+        $this->ledgerCategory = $ledgerCategory;
+        return $this;
     }
 
     /**
