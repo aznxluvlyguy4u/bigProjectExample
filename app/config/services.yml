@@ -475,6 +475,9 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ErrorMessageService
 
+    AppBundle\Service\LedgerCategoryService:
+        parent: app.abstract_base.controller
+
     app.treatment.base:
         parent: app.abstract_base.controller
         abstract: true
