@@ -638,4 +638,16 @@ class StringUtil
     {
         return $string === null ? null : trim(strtoupper($string));
     }
+
+
+    public static function capitalizationSet()
+    {
+        return [
+            'ubn' => 'UBN',
+            'uln' => 'ULN',
+            'ulns' => 'ULNs',
+            'btw' => 'BTW',
+            'kvk' => 'KVK',
+        ];
+    }
 }

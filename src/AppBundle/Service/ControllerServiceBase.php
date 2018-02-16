@@ -35,6 +35,7 @@ use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -410,15 +411,12 @@ abstract class ControllerServiceBase
 
     public static function translateWithUcFirstLower(TranslatorInterface $translator, $string)
     {
-        return strtr(ucfirst(strtolower($translator->trans($string))), [
-            'ubn' => 'UBN',
-            'uln' => 'ULN',
-            'ulns' => 'ULNs',
-            'btw' => 'BTW',
-            'btw nummer' => 'BTW nummer',
-            'kvk' => 'KVK',
-            'kvk nummer' => 'KVK nummer',
-        ]);
+        return ucfirst(
+            strtr(
+                strtolower($translator->trans($string)),
+                StringUtil::capitalizationSet()
+            )
+        );
     }
 
 

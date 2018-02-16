@@ -1043,7 +1043,7 @@ class AnimalRepository extends BaseRepository
     public function findAnimalsByUlnPartsOrStnPartsOrUbns(array $ulnPartsArray = [], array $stnPartsArray = [],
                                                           array $ubns = [], $onlyReturnQuery = false)
     {
-        if (count($ulnPartsArray) === 0 && count($stnPartsArray) === 0) {
+        if (count($ulnPartsArray) === 0 && count($stnPartsArray) === 0 && count($ubns) === 0) {
             if ($onlyReturnQuery = true) {
                 return [];
             } else {

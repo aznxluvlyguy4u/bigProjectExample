@@ -63,7 +63,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     private function getAnimalsByPlainTextInput(Request $request)
     {
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            AdminValidator::getStandardErrorResponse();
+            return AdminValidator::getStandardErrorResponse();
         }
 
         $validationResult = $this->validateAnimalsByPlainTextInputRequest($request);
@@ -91,6 +91,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $parts = explode($separator, $plainTextInput);
         foreach ($parts as $part) {
             $ulnOrStnString = StringUtil::removeSpaces($part);
+
+            if ($ulnOrStnString === '') {
+                continue;
+            }
 
             if (Validator::verifyUlnFormat($ulnOrStnString, false)) {
                 $ulnParts = Utils::getUlnFromString($ulnOrStnString);
