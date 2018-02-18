@@ -196,8 +196,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $breedIndexTypes = $this->breedIndexTypeRepository->findAll();
         /** @var BreedIndexType $breedIndexType */
         foreach ($breedIndexTypes as $breedIndexType) {
-            $this->breedIndexTypesByDutchDescription[$breedValueType->getNl()] = $breedValueType;
-            $this->breedIndexTypeIdsByDutchDescription[$breedValueType->getNl()] = $breedValueType->getId();
+            $this->breedIndexTypesByDutchDescription[$breedIndexType->getNl()] = $breedIndexType;
+            $this->breedIndexTypeIdsByDutchDescription[$breedIndexType->getNl()] = $breedIndexType->getId();
         }
 
         $this->missingAnimalIds = [];
