@@ -7,6 +7,7 @@ namespace AppBundle\Service\Report;
 use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Count;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
@@ -166,6 +167,12 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             'm_total_offspring_count',
             'm_born_alive_offspring_count',
             'm_gave_birth_as_one_year_old',
+            BreedValueTypeConstant::NATURAL_LOGARITHM_EGG_COUNT,
+            BreedValueTypeConstant::NATURAL_LOGARITHM_EGG_COUNT.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
+            BreedValueTypeConstant::IGA_SCOTLAND,
+            BreedValueTypeConstant::IGA_SCOTLAND.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
+            BreedValueTypeConstant::IGA_NEW_ZEALAND,
+            BreedValueTypeConstant::IGA_NEW_ZEALAND.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
         ];
 
         $csvData = $this->unsetNestedKeys($this->data, $keysToIgnore);
