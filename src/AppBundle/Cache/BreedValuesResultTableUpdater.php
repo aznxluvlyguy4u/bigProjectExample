@@ -103,14 +103,14 @@ class BreedValuesResultTableUpdater
         $totalBreedValueUpdateCount = 0;
         foreach ($results as $result)
         {
-            $totalBreedValueUpdateCount += $this->updateByBreedValueType($result);
+            $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($result);
         }
 
         $messagePrefix = $totalBreedValueUpdateCount > 0 ? 'In total '.$totalBreedValueUpdateCount : 'In total NO';
         $this->write($messagePrefix. ' breed Value&Accuracy sets were updated');
 
 
-        $breedIndexUpdateCount = $this->updateByBreedValueIndexType();
+        $breedIndexUpdateCount = $this->updateResultTableByBreedValueIndexType();
         $messagePrefix = $breedIndexUpdateCount > 0 ? 'In total '.$breedIndexUpdateCount : 'In total NO';
         $this->write($messagePrefix. ' breed Index&Accuracy sets were updated');
     }
@@ -146,7 +146,7 @@ class BreedValuesResultTableUpdater
      * @param array $result
      * @return int
      */
-    private function updateByBreedValueType($result)
+    private function updateResultTableByBreedValueType($result)
     {
         $valueVar = $result['result_table_value_variable'];
         $accuracyVar = $result['result_table_accuracy_variable'];
@@ -203,7 +203,7 @@ class BreedValuesResultTableUpdater
     /**
      * @return int
      */
-    private function updateByBreedValueIndexType()
+    private function updateResultTableByBreedValueIndexType()
     {
         $totalUpdateCount = 0;
 
