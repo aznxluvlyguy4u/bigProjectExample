@@ -199,7 +199,7 @@ class BreedValueUtil
 
         foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
             
-            $lambMeatIndexValues = $lambMeatBreedIndexRepository->getLambMeatIndexValues($generationDate, $isIncludingOnlyAliveAnimals); //TODO function still needs to be implemented
+            $lambMeatIndexValues = $lambMeatBreedIndexRepository->getValues($generationDate, $isIncludingOnlyAliveAnimals);
 
             $mean = array_sum($lambMeatIndexValues) / count($lambMeatIndexValues);
             $standardDeviation = MathUtil::standardDeviation($lambMeatIndexValues, $mean);

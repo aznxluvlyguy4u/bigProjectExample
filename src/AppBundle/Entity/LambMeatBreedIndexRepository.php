@@ -6,20 +6,16 @@ namespace AppBundle\Entity;
  * Class LambMeatBreedIndexRepository
  * @package AppBundle\Entity
  */
-class LambMeatBreedIndexRepository extends BaseRepository {
+class LambMeatBreedIndexRepository extends BreedIndexRepository implements BreedIndexRepositoryInterface {
 
     /**
-     * @param $generationDate
-     * @param $isIncludingOnlyAliveAnimals
-     * @return array
-     * @throws \Exception
+     * @param \DateTime $generationDate
+     * @param bool $isIncludingOnlyAliveAnimals
+     * @return array|LambMeatBreedIndex[]
      */
-    public function getLambMeatIndexValues($generationDate, $isIncludingOnlyAliveAnimals)
+    public function getValues($generationDate, $isIncludingOnlyAliveAnimals)
     {
-        //TODO function still needs to be implemented
-        throw new \Exception('This function still needs to be implemented');
-
-        return [];
+        return $this->getBreedIndexValues($generationDate, $isIncludingOnlyAliveAnimals, LambMeatBreedIndex::class);
     }
 
 }
