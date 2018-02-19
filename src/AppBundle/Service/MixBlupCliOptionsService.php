@@ -15,6 +15,7 @@ use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,6 +29,7 @@ class MixBlupCliOptionsService
     const DEFAULT_OPTION = 0;
     const DEFAULT_UBN = 1674459;
     const DEFAULT_MIN_UBN = 0;
+    const DEFAULT_GENERATION_DATE_STRING = "2017-01-01 00:00:00";
 
     /** @var ObjectManager|EntityManagerInterface */
     private $em;
@@ -111,6 +113,7 @@ class MixBlupCliOptionsService
             '3: Generate MixBlup instruction files only', "\n",
             '4: Initialize blank genetic bases', "\n",
             '5: Set minimum reliability for all breedValueTypes by accuracy option', "\n",
+            '6: Update/Insert LambMeatIndex values by generationDate (excl. resultTable update)', "\n",
             '========================================================================', "\n",
             '10: Initialize BreedIndexType and BreedValueType', "\n",
             '11: Delete all duplicate breedValues', "\n",
@@ -139,6 +142,7 @@ class MixBlupCliOptionsService
             case 3: $this->mixBlupInputFilesService->writeInstructionFiles(); break;
             case 4: $this->breedValueService->initializeBlankGeneticBases(); break;
             case 5: $this->breedValueService->setMinReliabilityForAllBreedValueTypesByAccuracyOption($this->cmdUtil); break;
+            case 6: $this->updateLambMeatIndexesByGenerationDate(); break;
 
 
             case 10:
@@ -206,5 +210,17 @@ class MixBlupCliOptionsService
         $this->cmdUtil->writeln('Generating breedValues csv file for UBN: '.$ubn.' ...');
         $this->breedValuePrinter->printBreedValuesByUbn($ubn);
         $this->cmdUtil->writeln('BreedValues csv file generated for UBN: '.$ubn);
+    }
+
+
+    private function updateLambMeatIndexesByGenerationDate()
+    {
+        do {
+            $generationDateString = $this->cmdUtil->generateQuestion('insert generationDate string in following format: 2017-01-01 00:00:00 (default: '.self::DEFAULT_GENERATION_DATE_STRING.')', self::DEFAULT_GENERATION_DATE_STRING, false);
+        } while(!TimeUtil::isValidDateTime($generationDateString));
+
+        // Validate if geneticBase is not null for given generationDate
+
+        $this->breedIndexService->updateLambMeatIndexes($generationDateString);
     }
 }

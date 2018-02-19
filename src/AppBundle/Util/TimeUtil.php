@@ -326,6 +326,18 @@ class TimeUtil
 
 
     /**
+     * @param string $dateTime
+     * @param string $format
+     * @return bool
+     */
+    public static function isValidDateTime($dateTime, $format = SqlUtil::DATE_FORMAT)
+    {
+        $d = \DateTime::createFromFormat($format, $dateTime);
+        return $d && $d->format($format) == $dateTime;
+    }
+
+
+    /**
      * Regex for DD-MM-YYYY, where MM and DD can also be one digit in length
      *
      * @param bool $mustHaveLeadingZeroes
