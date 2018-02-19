@@ -4,48 +4,17 @@
 namespace AppBundle\Service\Migration;
 
 
-use AppBundle\Constant\BreedIndexTypeConstant;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\BreedIndexCoefficient;
-use AppBundle\Entity\BreedIndexCoefficientRepository;
-use AppBundle\Entity\BreedIndexType;
-use AppBundle\Entity\BreedValueType;
-use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\DBAL\Connection;
-use Symfony\Bridge\Monolog\Logger;
 
-class LambMeatIndexMigrator
+class LambMeatIndexMigrator extends IndexMigratorBase implements IndexMigratorInterface
 {
-    /** @var ObjectManager */
-    private $em;
-    /** @var Connection */
-    private $conn;
-    /** @var Logger */
-    private $logger;
-    /** @var BreedIndexCoefficientRepository */
-    private $breedIndexCoefficientRepository;
-
-    /**
-     * LambMeatIndexMigrator constructor.
-     * @param ObjectManager $em
-     * @param Logger $logger
-     */
-    public function __construct(ObjectManager $em, Logger $logger)
-    {
-        $this->em = $em;
-        $this->conn = $em->getConnection();
-        $this->logger = $logger;
-        /** @var BreedIndexCoefficientRepository breedIndexCoefficientRepository */
-        $this->breedIndexCoefficientRepository = $em->getRepository(BreedIndexCoefficient::class);
-    }
-
-
     public function migrate()
     {
         $startDate = new \DateTime('2016-01-01');
 
         $lambMeatIndexType = $this->getLambMeatIndexType();
-        $breedIndexCoefficients = $this->breedIndexCoefficientRepository->findBy(['breedIndexType' => $lambMeatIndexType]);
+        $breedIndexCoefficients = $this->getBreedIndexCoefficients($lambMeatIndexType);
 
         $growthBreedValueType = $this->getBreedValueType(BreedValueTypeConstant::GROWTH);
         $fatThicknessBreedValueType = $this->getBreedValueType(BreedValueTypeConstant::FAT_THICKNESS_3);
@@ -104,72 +73,33 @@ class LambMeatIndexMigrator
 
                 case BreedValueTypeConstant::MUSCLE_THICKNESS:
                     $createNewMuscleThicknessBreedIndexCoefficient = false;
-                    $updatedValues = $this->updateValues($breedIndexCoefficient, $fatThicknessBreedIndexCoefficient);
+                    $updatedValues = $this->updateValues($breedIndexCoefficient, $muscleThicknessBreedIndexCoefficient);
                     if($updatedValues) { $updateCount++; }
                     break;
             }
         }
 
         if($createNewGrowthBreedIndexCoefficient) {
-            $this->em->persist($growthBreedIndexCoefficient);
+            $this->getManager()->persist($growthBreedIndexCoefficient);
             $insertCount++;
         }
 
         if($createNewFatBreedIndexCoefficient) {
-            $this->em->persist($fatThicknessBreedIndexCoefficient);
+            $this->getManager()->persist($fatThicknessBreedIndexCoefficient);
             $insertCount++;
         }
 
         if($createNewMuscleThicknessBreedIndexCoefficient) {
-            $this->em->persist($muscleThicknessBreedIndexCoefficient);
+            $this->getManager()->persist($muscleThicknessBreedIndexCoefficient);
             $insertCount++;
         }
 
         if($insertCount > 0 || $updateCount > 0) {
-            $this->em->flush();
+            $this->getManager()->flush();
         }
 
-        $this->logger->notice('LambMeatIndex insert|update: '.$insertCount.'|'.$updateCount);
+        $this->getLogger()->notice('LambMeatIndex insert|update: '.$insertCount.'|'.$updateCount);
     }
 
 
-    /**
-     * @param BreedIndexCoefficient $retrievedBreedIndexCoefficient
-     * @param BreedIndexCoefficient $referenceBreedIndexCoefficient
-     * @return bool
-     */
-    public function updateValues(BreedIndexCoefficient $retrievedBreedIndexCoefficient, BreedIndexCoefficient$referenceBreedIndexCoefficient)
-    {
-        if(
-            $retrievedBreedIndexCoefficient->getC() !== $referenceBreedIndexCoefficient->getC()
-            || $retrievedBreedIndexCoefficient->getVar() !== $referenceBreedIndexCoefficient->getVar()
-            || $retrievedBreedIndexCoefficient->getT() !== $referenceBreedIndexCoefficient->getT()
-        ) {
-            $retrievedBreedIndexCoefficient->setC($referenceBreedIndexCoefficient->getC());
-            $retrievedBreedIndexCoefficient->setVar($referenceBreedIndexCoefficient->getVar());
-            $retrievedBreedIndexCoefficient->setT($referenceBreedIndexCoefficient->getT());
-            $this->em->persist($retrievedBreedIndexCoefficient);
-            return true;
-        }
-        return false;
-    }
-
-
-    /**
-     * @return BreedIndexType
-     */
-    private function getLambMeatIndexType()
-    {
-        return $this->em->getRepository(BreedIndexType::class)->findOneBy(['nl'=>BreedIndexTypeConstant::LAMB_MEAT_INDEX]);
-    }
-
-
-    /**
-     * @param $breedValueTypeConstant
-     * @return BreedValueType
-     */
-    private function getBreedValueType($breedValueTypeConstant)
-    {
-        return $this->em->getRepository(BreedValueType::class)->findOneBy(['nl'=>$breedValueTypeConstant]);
-    }
 }

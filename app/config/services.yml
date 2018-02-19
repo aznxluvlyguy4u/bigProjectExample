@@ -36,7 +36,8 @@ services:
           - '@app.breed.value'
           - '@app.breed.index'
           - '@app.excel.service'
-          - '@app.migrator.lamb_meat_index'
+          - '@AppBundle\Service\Migration\LambMeatIndexMigrator'
+          - '@AppBundle\Service\Migration\WormResistanceIndexMigrator'
           - '@app.mixblup.input'
           - '@app.mixblup.input.validate'
           - '@app.mixblup.output'
@@ -295,11 +296,18 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\InspectorMigrator
 
-    app.migrator.lamb_meat_index:
-        class: AppBundle\Service\Migration\LambMeatIndexMigrator
+    app.migrator.breed_index_base:
+        abstract: true
         arguments:
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
           - '@logger'
+
+    AppBundle\Service\Migration\LambMeatIndexMigrator:
+        parent: app.migrator.breed_index_base
+
+    AppBundle\Service\Migration\WormResistanceIndexMigrator:
+        parent: app.migrator.breed_index_base
 
     app.migrator.litters:
         parent: app.migrator.base

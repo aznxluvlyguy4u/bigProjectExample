@@ -10,6 +10,7 @@ use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Service\Migration\LambMeatIndexMigrator;
+use AppBundle\Service\Migration\WormResistanceIndexMigrator;
 use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Util\CommandUtil;
@@ -49,6 +50,8 @@ class MixBlupCliOptionsService
     private $excelService;
     /** @var LambMeatIndexMigrator */
     private $lambMeatIndexMigrator;
+    /** @var WormResistanceIndexMigrator */
+    private $wormResistanceIndexMigrator;
     /** @var MixBlupInputFilesService */
     private $mixBlupInputFilesService;
     /** @var MixBlupInputFileValidator */
@@ -66,6 +69,7 @@ class MixBlupCliOptionsService
                                 BreedIndexService $breedIndexService,
                                 ExcelService $excelService,
                                 LambMeatIndexMigrator $lambMeatIndexMigrator,
+                                WormResistanceIndexMigrator $wormResistanceIndexMigrator,
                                 MixBlupInputFilesService $mixBlupInputFilesService,
                                 MixBlupInputFileValidator $mixBlupInputFileValidator,
                                 MixBlupOutputFilesService $mixBlupOutputFilesService,
@@ -81,6 +85,7 @@ class MixBlupCliOptionsService
         $this->breedIndexService = $breedIndexService;
         $this->excelService = $excelService;
         $this->lambMeatIndexMigrator = $lambMeatIndexMigrator;
+        $this->wormResistanceIndexMigrator = $wormResistanceIndexMigrator;
         $this->mixBlupInputFilesService = $mixBlupInputFilesService;
         $this->mixBlupInputFileValidator = $mixBlupInputFileValidator;
         $this->mixBlupOutputFilesService = $mixBlupOutputFilesService;
@@ -111,6 +116,7 @@ class MixBlupCliOptionsService
             '11: Delete all duplicate breedValues', "\n",
             '12: Update result_table_breed_grades values and accuracies for all breedValue and breedIndex types', "\n",
             '13: Initialize lambMeatIndexCoefficients', "\n",
+            '14: Initialize wormResistanceIndexCoefficients', "\n",
             '========================================================================', "\n",
             '20: Validate ubnOfBirth format as !BLOCK in DataVruchtb.txt in mixblup cache folder', "\n",
             '21: Validate ubnOfBirth format as !BLOCK in PedVruchtb.txt in mixblup cache folder', "\n",
@@ -151,6 +157,7 @@ class MixBlupCliOptionsService
                 break;
 
             case 13: $this->lambMeatIndexMigrator->migrate(); break;
+            case 14: $this->wormResistanceIndexMigrator->migrate(); break;
 
             case 20: $this->mixBlupInputFileValidator->validateUbnOfBirthInDataFile($this->cmdUtil); break;
             case 21: $this->mixBlupInputFileValidator->validateUbnOfBirthInPedigreeFile($this->cmdUtil); break;
