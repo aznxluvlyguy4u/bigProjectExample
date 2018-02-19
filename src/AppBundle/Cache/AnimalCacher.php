@@ -2,15 +2,10 @@
 
 namespace AppBundle\Cache;
 
-use AppBundle\Component\Utils;
-use AppBundle\Component\BreedGrading\BreedFormat;
-use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalCacheRepository;
-use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
@@ -19,19 +14,14 @@ use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\DoctrineUtil;
-use AppBundle\Util\PedigreeUtil;
 use AppBundle\Util\ProductionUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
-use Doctrine\Common\Collections\Criteria;
 use \Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
