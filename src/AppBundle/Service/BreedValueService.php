@@ -15,8 +15,8 @@ use AppBundle\Setting\BreedGradingSetting;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\SqlUtil;
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 
 /**
@@ -28,7 +28,7 @@ class BreedValueService
 
     /** @var Connection */
     private $conn;
-    /** @var ObjectManager */
+    /** @var EntityManagerInterface */
     private $em;
     /** @var Logger */
     private $logger;
@@ -44,10 +44,10 @@ class BreedValueService
 
     /**
      * BreedValueService constructor.
-     * @param ObjectManager $em
+     * @param EntityManagerInterface $em
      * @param Logger $logger
      */
-    public function __construct(ObjectManager $em, $logger = null)
+    public function __construct(EntityManagerInterface $em, $logger = null)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();

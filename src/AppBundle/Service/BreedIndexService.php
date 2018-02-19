@@ -5,13 +5,12 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Constant\BreedIndexTypeConstant;
-use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\BreedIndexType;
 use AppBundle\Entity\BreedIndexTypeRepository;
 use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\BreedValueTypeRepository;
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 
 /**
@@ -23,7 +22,7 @@ class BreedIndexService
 
     /** @var Connection */
     private $conn;
-    /** @var ObjectManager */
+    /** @var EntityManagerInterface */
     private $em;
     /** @var Logger */
     private $logger;
@@ -35,10 +34,10 @@ class BreedIndexService
 
     /**
      * BreedIndexService constructor.
-     * @param ObjectManager $em
+     * @param EntityManagerInterface $em
      * @param Logger $logger
      */
-    public function __construct(ObjectManager $em, $logger = null)
+    public function __construct(EntityManagerInterface $em, $logger = null)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
