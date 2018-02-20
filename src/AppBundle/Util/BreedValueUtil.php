@@ -12,6 +12,7 @@ use AppBundle\Entity\NormalDistribution;
 use AppBundle\Entity\NormalDistributionRepository;
 use AppBundle\Enumerator\BreedValueCoefficientType;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 
 class BreedValueUtil
 {
@@ -183,45 +184,54 @@ class BreedValueUtil
 
 
     /**
-     * @param ObjectManager $em
+     * @param EntityManagerInterface $em
      * @param $generationDate
      */
-    public static function persistLambMeatIndexMeanAndStandardDeviation(ObjectManager $em, $generationDate)
+    public static function persistLambMeatIndexMeanAndStandardDeviation(EntityManagerInterface $em, $generationDate)
     {
-        /** @var NormalDistributionRepository $normalDistributionRepository */
-        $normalDistributionRepository = $em->getRepository(NormalDistribution::class);
-
-        /** @var LambMeatBreedIndexRepository $lambMeatBreedIndexRepository */
-        $lambMeatBreedIndexRepository = $em->getRepository(LambMeatBreedIndex::class);
-
-        $year = TimeUtil::getYearFromDateTimeString($generationDate);
         $type = BreedValueCoefficientType::LAMB_MEAT_INDEX;
 
         foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
-            
-            $lambMeatIndexValues = $lambMeatBreedIndexRepository->getValues($generationDate, $isIncludingOnlyAliveAnimals);
+            $lambMeatIndexValues = $em->getRepository(LambMeatBreedIndex::class)
+                ->getValues($generationDate, $isIncludingOnlyAliveAnimals);
 
-            $mean = array_sum($lambMeatIndexValues) / count($lambMeatIndexValues);
-            $standardDeviation = MathUtil::standardDeviation($lambMeatIndexValues, $mean);
+            self::upsertMeanAndStandardDeviation($em, $generationDate, $type, $isIncludingOnlyAliveAnimals, $lambMeatIndexValues);
+        }
+    }
 
-            $normalDistribution = $normalDistributionRepository->findOneBy(['year' => $year, 'type' => $type, 'isIncludingOnlyAliveAnimals' => $isIncludingOnlyAliveAnimals]);
 
-            if($normalDistribution instanceof NormalDistribution) {
-                /** @var NormalDistribution $normalDistribution */
+    private static function upsertMeanAndStandardDeviation(EntityManagerInterface $em, $generationDate, $type,
+                                                           $isIncludingOnlyAliveAnimals, array $valuesArray = [])
+    {
+        if (count($valuesArray) === 0) {
+            return;
+        }
 
-                //Update values if necessary
-                if(!NumberUtil::areFloatsEqual($normalDistribution->getMean(), $mean) || !NumberUtil::areFloatsEqual($normalDistribution->getStandardDeviation(), $standardDeviation)) {
-                    $normalDistribution->setMean($mean);
-                    $normalDistribution->setStandardDeviation($standardDeviation);
-                    $normalDistribution->setLogDate(new \DateTime());
+        /** @var NormalDistributionRepository $normalDistributionRepository */
+        $normalDistributionRepository = $em->getRepository(NormalDistribution::class);
 
-                    $em->persist($normalDistribution);
-                    $em->flush();
-                }
-            } else {
-                //Create a new entry
-                $normalDistributionRepository->persistFromValues($type, $year, $mean, $standardDeviation, $isIncludingOnlyAliveAnimals);
+        $year = TimeUtil::getYearFromDateTimeString($generationDate);
+
+        $mean = array_sum($valuesArray) / count($valuesArray);
+        $standardDeviation = MathUtil::standardDeviation($valuesArray, $mean);
+
+        $normalDistribution = $normalDistributionRepository->findOneBy(['year' => $year, 'type' => $type, 'isIncludingOnlyAliveAnimals' => $isIncludingOnlyAliveAnimals]);
+
+        if($normalDistribution instanceof NormalDistribution) {
+            /** @var NormalDistribution $normalDistribution */
+
+            //Update values if necessary
+            if(!NumberUtil::areFloatsEqual($normalDistribution->getMean(), $mean) || !NumberUtil::areFloatsEqual($normalDistribution->getStandardDeviation(), $standardDeviation)) {
+                $normalDistribution->setMean($mean);
+                $normalDistribution->setStandardDeviation($standardDeviation);
+                $normalDistribution->setLogDate(new \DateTime());
+
+                $em->persist($normalDistribution);
+                $em->flush();
             }
+        } else {
+            //Create a new entry
+            $normalDistributionRepository->persistFromValues($type, $year, $mean, $standardDeviation, $isIncludingOnlyAliveAnimals);
         }
     }
 }

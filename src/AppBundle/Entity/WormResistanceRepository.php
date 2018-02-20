@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\BreedIndexDiscriminatorTypeConstant;
 
 /**
  * Class WormResistanceRepository
@@ -13,9 +14,18 @@ class WormResistanceRepository extends BreedIndexRepository implements BreedInde
      * @param bool $isIncludingOnlyAliveAnimals
      * @return array|WormResistanceBreedIndex[]
      */
-    public function getValues($generationDate, $isIncludingOnlyAliveAnimals)
+    public function getIndexes($generationDate, $isIncludingOnlyAliveAnimals)
     {
-        return $this->getBreedIndexValues($generationDate, $isIncludingOnlyAliveAnimals, WormResistanceBreedIndex::class);
+        return $this->getBreedIndexes($generationDate, $isIncludingOnlyAliveAnimals, WormResistanceBreedIndex::class);
     }
 
+    /**
+     * @param \DateTime $generationDate
+     * @param bool $isIncludingOnlyAliveAnimals
+     * @return array|float[]
+     */
+    public function getValues($generationDate, $isIncludingOnlyAliveAnimals)
+    {
+        return $this->getBreedIndexValues($generationDate, $isIncludingOnlyAliveAnimals, BreedIndexDiscriminatorTypeConstant::WORM_RESISTANCE);
+    }
 }

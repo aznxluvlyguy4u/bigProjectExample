@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\BreedIndexDiscriminatorTypeConstant;
 
 /**
  * Class LambMeatBreedIndexRepository
@@ -13,9 +14,19 @@ class LambMeatBreedIndexRepository extends BreedIndexRepository implements Breed
      * @param bool $isIncludingOnlyAliveAnimals
      * @return array|LambMeatBreedIndex[]
      */
-    public function getValues($generationDate, $isIncludingOnlyAliveAnimals)
+    public function getIndexes($generationDate, $isIncludingOnlyAliveAnimals)
     {
-        return $this->getBreedIndexValues($generationDate, $isIncludingOnlyAliveAnimals, LambMeatBreedIndex::class);
+        return $this->getBreedIndexes($generationDate, $isIncludingOnlyAliveAnimals, LambMeatBreedIndex::class);
     }
 
+
+    /**
+     * @param \DateTime $generationDate
+     * @param bool $isIncludingOnlyAliveAnimals
+     * @return array|float[]
+     */
+    public function getValues($generationDate, $isIncludingOnlyAliveAnimals)
+    {
+        return $this->getBreedIndexValues($generationDate, $isIncludingOnlyAliveAnimals, BreedIndexDiscriminatorTypeConstant::LAMB_MEAT);
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Util\SqlUtil;
 use Doctrine\ORM\Query\Expr\Join;
 
 /**
@@ -16,7 +17,7 @@ class BreedIndexRepository extends BaseRepository {
      * @param string $breedIndexClass
      * @return array
      */
-    protected function getBreedIndexValues($generationDate, $isIncludingOnlyAliveAnimals, $breedIndexClass)
+    protected function getBreedIndexes($generationDate, $isIncludingOnlyAliveAnimals, $breedIndexClass)
     {
         $qb = $this->getManager()->createQueryBuilder();
 
@@ -35,10 +36,30 @@ class BreedIndexRepository extends BaseRepository {
 
         $qbBase
             ->andWhere(
-                $qb->expr()->eq('b.generationDate', "'".($generationDate->format('Y-m-d'))."'")
+                $qb->expr()->eq('b.generationDate', "'".($generationDate->format(SqlUtil::DATE_FORMAT))."'")
             );
 
         return $qb->getQuery()->getResult();
     }
 
+
+    /**
+     * @param string $generationDate
+     * @param boolean $isIncludingOnlyAliveAnimals
+     * @param string $breedIndexType
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    protected function getBreedIndexValues($generationDate, $isIncludingOnlyAliveAnimals, $breedIndexType)
+    {
+        $animalJoin = $isIncludingOnlyAliveAnimals ? 'INNER JOIN animal a ON b.animal_id = a.id': '';
+        $animalIsAliveFilter = $isIncludingOnlyAliveAnimals ? 'AND a.is_alive = TRUE' : '';
+
+        $sql = "SELECT
+                  b.index
+                FROM breed_index b
+                ".$animalJoin."
+                WHERE b.generation_date = '".$generationDate."' AND b.type = '".$breedIndexType."' ".$animalIsAliveFilter;
+        return $this->getConnection()->query($sql)->fetchAll();
+    }
 }
