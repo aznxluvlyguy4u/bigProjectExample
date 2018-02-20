@@ -182,6 +182,12 @@ services:
         arguments: ['%kernel.cache_dir%']
 
 
+    AppBundle\Service\NormalDistributionService:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+        calls:
+          - method: onInit
 
     app.datafix.base.duplicate:
         abstract: true

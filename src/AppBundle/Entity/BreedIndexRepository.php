@@ -44,7 +44,7 @@ class BreedIndexRepository extends BaseRepository {
 
 
     /**
-     * @param string $generationDate
+     * @param string|\DateTime $generationDate
      * @param boolean $isIncludingOnlyAliveAnimals
      * @param string $breedIndexType
      * @return array
@@ -52,6 +52,8 @@ class BreedIndexRepository extends BaseRepository {
      */
     protected function getBreedIndexValues($generationDate, $isIncludingOnlyAliveAnimals, $breedIndexType)
     {
+        $generationDateString = $generationDate instanceof \DateTime ? $generationDate->format(SqlUtil::DATE_FORMAT) : $generationDate;
+
         $animalJoin = $isIncludingOnlyAliveAnimals ? 'INNER JOIN animal a ON b.animal_id = a.id': '';
         $animalIsAliveFilter = $isIncludingOnlyAliveAnimals ? 'AND a.is_alive = TRUE' : '';
 
@@ -59,7 +61,7 @@ class BreedIndexRepository extends BaseRepository {
                   b.index
                 FROM breed_index b
                 ".$animalJoin."
-                WHERE b.generation_date = '".$generationDate."' AND b.type = '".$breedIndexType."' ".$animalIsAliveFilter;
+                WHERE b.generation_date = '".$generationDateString."' AND b.type = '".$breedIndexType."' ".$animalIsAliveFilter;
         return $this->getConnection()->query($sql)->fetchAll();
     }
 }

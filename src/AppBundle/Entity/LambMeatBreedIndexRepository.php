@@ -24,6 +24,7 @@ class LambMeatBreedIndexRepository extends BreedIndexRepository implements Breed
      * @param \DateTime $generationDate
      * @param bool $isIncludingOnlyAliveAnimals
      * @return array|float[]
+     * @throws \Exception
      */
     public function getValues($generationDate, $isIncludingOnlyAliveAnimals)
     {

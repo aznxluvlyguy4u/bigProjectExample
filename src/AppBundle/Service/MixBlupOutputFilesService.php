@@ -68,6 +68,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $breedIndexService;
     /** @var BreedValueService */
     private $breedValueService;
+    /** @var NormalDistributionService */
+    private $normalDistributionService;
     /** @var Logger */
     private $logger;
     /** @var BreedValuesResultTableUpdater */
@@ -150,20 +152,12 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $processScanCount;
     /** @var array */
     private $missingAnimalIds;
+    /** @var array */
+    private $hasFilenameArray;
 
-    /**
-     * MixBlupOutputFilesService constructor.
-     * @param ObjectManager $em
-     * @param AWSSimpleStorageService $s3Service
-     * @param MixBlupOutputQueueService $queueService
-     * @param BreedIndexService $breedIndexService
-     * @param BreedValueService $breedValueService
-     * @param string $currentEnvironment
-     * @param string $cacheDir
-     * @param Logger $logger
-     */
     public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, MixBlupOutputQueueService $queueService,
                                 BreedIndexService $breedIndexService, BreedValueService $breedValueService,
+                                NormalDistributionService $normalDistributionService,
                                 $currentEnvironment, $cacheDir, $logger = null)
     {
         $this->em = $em;
@@ -172,6 +166,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->queueService = $queueService;
         $this->breedIndexService = $breedIndexService;
         $this->breedValueService = $breedValueService;
+        $this->normalDistributionService = $normalDistributionService;
         $this->currentEnvironment = $currentEnvironment;
         $this->cacheDir = $cacheDir;
         $this->logger = $logger;
@@ -225,6 +220,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->relani = [];
         $this->relaniDirect = [];
         $this->relaniIndirect = [];
+        $this->hasFilenameArray = [];
 
         $this->currentBreedValueExistsByAnimalIdForGenerationDate = [];
 
@@ -360,6 +356,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                 $this->breedValueService->initializeBlankGeneticBases();
                 $this->updateBreedIndexesByOutputFileType();
+                $this->updateNormalDistributions();
                 $this->breedValuesResultTableUpdater->update();
 
             } else {
@@ -933,17 +930,25 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             $filenameParts = [$filenameParts];
         }
 
+        $searchKey = implode(',', $filenameParts);
+        if (key_exists($searchKey, $this->hasFilenameArray)) {
+            return $this->hasFilenameArray[$searchKey];
+        }
+
         foreach ([$this->bulkFiles, $this->relsol] as $set) {
             foreach ($set as $filenameWithExtension) {
                 foreach ($filenameParts as $filenamePart) {
                     if (strpos($filenameWithExtension, $filenamePart) !== false) {
-                        return true;
+
+                        $this->hasFilenameArray[$searchKey] = true;
+                        return $this->hasFilenameArray[$searchKey];
                     }
                 }
             }
         }
 
-        return false;
+        $this->hasFilenameArray[$searchKey] = false;
+        return $this->hasFilenameArray[$searchKey];
     }
 
 
@@ -951,26 +956,42 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     {
         $generationDateString = $this->getGenerationDateStringFromKey();
         if ($generationDateString) {
-
-            $hasLambMeatOutputFiles = $this->hasLambMeatOutputFiles();
-            $hasWormResistanceOutputFiles = $this->hasWormResistanceOutputFiles();
-
-            if ($hasLambMeatOutputFiles || $hasWormResistanceOutputFiles) {
+            if ($this->hasLambMeatOutputFiles() || $this->hasWormResistanceOutputFiles()) {
                 $this->breedValueService->initializeBlankGeneticBases();
             }
 
-            if ($hasLambMeatOutputFiles) {
+            if ($this->hasLambMeatOutputFiles()) {
                 $this->logger->notice('LambMeatOutputFilename found in message. 
                 Processing new LambMeatIndexes...');
                 $this->breedIndexService->updateLambMeatIndexes($generationDateString);
             }
 
             // TODO activate if WormResistanceIndex needs to be updated
-//            if ($hasWormResistanceOutputFiles) {
+//            if ($this->hasWormResistanceOutputFiles()) {
 //                $this->logger->notice('WormResistanceOutputFilename found in message.
 //                Processing new WormResistanceIndexes...');
 //                $this->breedIndexService->updateWormResistanceIndexes($generationDateString);
 //            }
+        }
+    }
+
+
+    private function updateNormalDistributions()
+    {
+        $generationDateString = $this->getGenerationDateStringFromKey();
+        if ($generationDateString) {
+
+            if ($this->hasLambMeatOutputFiles()) {
+                $this->logger->notice('LambMeatOutputFilename found in message. 
+                Processing new LambMeatIndex NormalDistribution...');
+                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString);
+            }
+
+            if ($this->hasWormResistanceOutputFiles()) {
+                $this->logger->notice('LambMeatOutputFilename found in message. 
+                Processing new WormResistance sIga NormalDistribution...');
+                $this->normalDistributionService->persistWormResistanceMeanAndStandardDeviationSIgA($generationDateString);
+            }
         }
     }
 
