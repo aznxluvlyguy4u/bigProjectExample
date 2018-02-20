@@ -8,6 +8,7 @@ use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Component\MixBlup\MixBlupInstructionFileBase;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Constant\Filename;
+use AppBundle\Constant\MixBlupAnalysis;
 use AppBundle\Entity\BreedIndexType;
 use AppBundle\Entity\BreedIndexTypeRepository;
 use AppBundle\Entity\BreedValue;
@@ -25,6 +26,7 @@ use AppBundle\Util\LoggerUtil;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
@@ -62,6 +64,10 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $s3Service;
     /** @var MixBlupOutputQueueService */
     private $queueService;
+    /** @var BreedIndexService */
+    private $breedIndexService;
+    /** @var BreedValueService */
+    private $breedValueService;
     /** @var Logger */
     private $logger;
     /** @var BreedValuesResultTableUpdater */
@@ -150,17 +156,22 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
      * @param ObjectManager $em
      * @param AWSSimpleStorageService $s3Service
      * @param MixBlupOutputQueueService $queueService
+     * @param BreedIndexService $breedIndexService
+     * @param BreedValueService $breedValueService
      * @param string $currentEnvironment
      * @param string $cacheDir
      * @param Logger $logger
      */
     public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, MixBlupOutputQueueService $queueService,
+                                BreedIndexService $breedIndexService, BreedValueService $breedValueService,
                                 $currentEnvironment, $cacheDir, $logger = null)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
         $this->s3Service = $s3Service;
         $this->queueService = $queueService;
+        $this->breedIndexService = $breedIndexService;
+        $this->breedValueService = $breedValueService;
         $this->currentEnvironment = $currentEnvironment;
         $this->cacheDir = $cacheDir;
         $this->logger = $logger;
@@ -260,7 +271,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $response = $this->queueService->getNextMessage();
         $messageBody = AwsQueueServiceBase::getMessageBodyFromResponse($response);
         if ($messageBody) {
-            $this->key = $messageBody->key;
+            $this->key = $messageBody->key; // NOTE this should be the generationDateString with underscore between date and time
             $this->bulkFiles = $messageBody->files;
             $this->relsol = $messageBody->relsol;
             $this->errors = $messageBody->errors;
@@ -347,6 +358,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->logger->notice('No animalIds were missing in the database');
                 }
 
+                $this->breedValueService->initializeBlankGeneticBases();
+                $this->updateBreedIndexesByOutputFileType();
                 $this->breedValuesResultTableUpdater->update();
 
             } else {
@@ -875,6 +888,89 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         if($this->processScanCount%self::PRINT_BATCH_SIZE === 0) {
             $this->printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray);
+        }
+    }
+
+
+    /**
+     * @return null|string
+     */
+    private function getGenerationDateStringFromKey()
+    {
+        $generationDateString = strtr($this->key, ['_' => ' ']);
+        if (TimeUtil::isValidDateTime($generationDateString, SqlUtil::DATE_FORMAT)) {
+            return $generationDateString;
+        }
+        return null;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function hasLambMeatOutputFiles()
+    {
+        return $this->hasOutputFilesByFilenamePart(MixBlupAnalysis::LAMB_MEAT);
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function hasWormResistanceOutputFiles()
+    {
+        return $this->hasOutputFilesByFilenamePart(MixBlupAnalysis::WORM_RESISTANCE);
+    }
+
+
+    /**
+     * @param string[]|string $filenameParts
+     * @return bool
+     */
+    private function hasOutputFilesByFilenamePart($filenameParts)
+    {
+        if (is_string($filenameParts)) {
+            $filenameParts = [$filenameParts];
+        }
+
+        foreach ([$this->bulkFiles, $this->relsol] as $set) {
+            foreach ($set as $filenameWithExtension) {
+                foreach ($filenameParts as $filenamePart) {
+                    if (strpos($filenameWithExtension, $filenamePart) !== false) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+    private function updateBreedIndexesByOutputFileType()
+    {
+        $generationDateString = $this->getGenerationDateStringFromKey();
+        if ($generationDateString) {
+
+            $hasLambMeatOutputFiles = $this->hasLambMeatOutputFiles();
+            $hasWormResistanceOutputFiles = $this->hasWormResistanceOutputFiles();
+
+            if ($hasLambMeatOutputFiles || $hasWormResistanceOutputFiles) {
+                $this->breedValueService->initializeBlankGeneticBases();
+            }
+
+            if ($hasLambMeatOutputFiles) {
+                $this->logger->notice('LambMeatOutputFilename found in message. 
+                Processing new LambMeatIndexes...');
+                $this->breedIndexService->updateLambMeatIndexes($generationDateString);
+            }
+
+            // TODO activate if WormResistanceIndex needs to be updated
+//            if ($hasWormResistanceOutputFiles) {
+//                $this->logger->notice('WormResistanceOutputFilename found in message.
+//                Processing new WormResistanceIndexes...');
+//                $this->breedIndexService->updateWormResistanceIndexes($generationDateString);
+//            }
         }
     }
 

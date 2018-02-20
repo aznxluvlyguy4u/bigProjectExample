@@ -135,6 +135,12 @@ class BreedIndexService
     }
 
 
+    public function updateWormResistanceIndexes($generationDateSqlString)
+    {
+        // TODO
+    }
+
+
     /**
      * @param string $generationDateSqlString
      * @throws \Doctrine\DBAL\DBALException
@@ -143,7 +149,7 @@ class BreedIndexService
     public function updateLambMeatIndexes($generationDateSqlString)
     {
         // Validate if geneticBase is not null for given generationDate
-        if (!$this->areGeneticBasesNotNull($generationDateSqlString)) {
+        if (!$this->areLambMeatIndexGeneticBasesNotNull($generationDateSqlString)) {
             $errorMessage = 'GeneticBases are missing for lambMeatIndex year '.mb_substr($generationDateSqlString, 0, 4);
             $this->getLogger()->error($errorMessage);
             throw new \Exception($errorMessage);
@@ -161,7 +167,7 @@ class BreedIndexService
      * @param int|string|\DateTime $generationDateSqlString
      * @return bool
      */
-    private function areGeneticBasesNotNull($generationDateSqlString)
+    private function areLambMeatIndexGeneticBasesNotNull($generationDateSqlString)
     {
         $year = null;
         if ($generationDateSqlString instanceof \DateTime) {

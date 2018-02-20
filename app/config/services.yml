@@ -171,6 +171,8 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@app.aws.storageservice'
           - '@app.aws.queueservice.mixblup_output'
+          - '@app.breed.index'
+          - '@app.breed.value'
           - '%environment%'
           - '%kernel.cache_dir%'
           - '@logger'
