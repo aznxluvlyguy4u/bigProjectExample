@@ -148,6 +148,8 @@ class BreedValuesResultTableUpdater
      */
     private function updateResultTableByBreedValueType($result)
     {
+        // TODO create separate logic for WormResistance values?
+
         $valueVar = $result['result_table_value_variable'];
         $accuracyVar = $result['result_table_accuracy_variable'];
 

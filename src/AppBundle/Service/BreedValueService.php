@@ -158,6 +158,8 @@ class BreedValueService
      */
     public function initializeBlankGeneticBases()
     {
+        // TODO create separate logic for WormResistance values?
+
         $sql = "SELECT t.id as breed_value_type_id, t.nl as dutch_breed_value_name, measurement_year
                   FROM breed_value_type t
                   INNER JOIN (
@@ -230,6 +232,8 @@ class BreedValueService
      */
     public function calculateGeneticBase($measurementsYear, $dutchBreedValueTypeName)
     {
+        // TODO create separate logic for WormResistance values?
+
         $geneticBaseYear = $measurementsYear - BreedGradingSetting::GENETIC_BASE_YEAR_OFFSET;
 
         $sql = "SELECT EXTRACT(YEAR FROM date_of_birth), AVG(b.value) as average
