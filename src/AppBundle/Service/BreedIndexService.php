@@ -9,6 +9,7 @@ use AppBundle\Constant\BreedIndexTypeConstant;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\BreedIndexType;
 use AppBundle\Entity\BreedIndexTypeRepository;
+use AppBundle\Entity\BreedValueGeneticBase;
 use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\BreedValueTypeRepository;
 use AppBundle\Util\SqlUtil;
@@ -135,14 +136,61 @@ class BreedIndexService
 
 
     /**
-     * @param $generationDateSqlString
+     * @param string $generationDateSqlString
      * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
      */
     public function updateLambMeatIndexes($generationDateSqlString)
     {
-        $this->insertEmptyLambMeatIndexes($generationDateSqlString);
-        $this->fixIncongruentBreedIndexTables();
-        $this->updateIncongruentLambMeatIndexes($generationDateSqlString);
+        // Validate if geneticBase is not null for given generationDate
+        if (!$this->areGeneticBasesNotNull($generationDateSqlString)) {
+            $errorMessage = 'GeneticBases are missing for lambMeatIndex year '.mb_substr($generationDateSqlString, 0, 4);
+            $this->getLogger()->error($errorMessage);
+            throw new \Exception($errorMessage);
+
+        } else {
+            if ($this->insertEmptyLambMeatIndexes($generationDateSqlString) > 0) {
+                $this->fixIncongruentBreedIndexTables();
+            }
+            $this->updateIncongruentLambMeatIndexes($generationDateSqlString);
+        }
+    }
+
+
+    /**
+     * @param int|string|\DateTime $generationDateSqlString
+     * @return bool
+     */
+    private function areGeneticBasesNotNull($generationDateSqlString)
+    {
+        $year = null;
+        if ($generationDateSqlString instanceof \DateTime) {
+            $year = $generationDateSqlString->format('Y');
+        } elseif(is_string($generationDateSqlString)) {
+            $year = mb_substr($generationDateSqlString, 0, 4);
+        } else {
+            return false;
+        }
+
+        $breedValueTypes = $this->getManager()->getRepository(BreedValueGeneticBase::class)
+            ->getLambMeatIndexBasesByYear($year);
+
+        $containsBreedValueTypes = [
+            BreedValueTypeConstant::GROWTH => false,
+            BreedValueTypeConstant::MUSCLE_THICKNESS => false,
+            BreedValueTypeConstant::FAT_THICKNESS_3 => false,
+        ];
+
+        /** @var BreedValueGeneticBase $breedValueGeneticBase */
+        foreach ($breedValueTypes as $breedValueGeneticBase) {
+            foreach ($containsBreedValueTypes as $breedValueTypeNl => $containsBreedValueType) {
+                if ($breedValueGeneticBase->getBreedValueType() && $breedValueGeneticBase->getBreedValueType()->getNl() === $breedValueTypeNl) {
+                    $containsBreedValueTypes[$breedValueTypeNl] = true;
+                }
+            }
+        }
+
+        return !in_array(false, $containsBreedValueTypes);
     }
 
 

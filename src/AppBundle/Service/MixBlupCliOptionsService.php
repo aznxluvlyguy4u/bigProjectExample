@@ -219,8 +219,6 @@ class MixBlupCliOptionsService
             $generationDateString = $this->cmdUtil->generateQuestion('insert generationDate string in following format: 2017-01-01 00:00:00 (default: '.self::DEFAULT_GENERATION_DATE_STRING.')', self::DEFAULT_GENERATION_DATE_STRING, false);
         } while(!TimeUtil::isValidDateTime($generationDateString));
 
-        // Validate if geneticBase is not null for given generationDate
-
         $this->breedIndexService->updateLambMeatIndexes($generationDateString);
     }
 }
