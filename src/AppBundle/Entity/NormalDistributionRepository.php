@@ -1,7 +1,10 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\BreedValueTypeConstant;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\MathUtil;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class NormalDistributionRepository
@@ -43,4 +46,34 @@ class NormalDistributionRepository extends BaseRepository {
         $this->getManager()->persist($normalDistribution);
         $this->getManager()->flush();
     }
+
+
+    /**
+     * @param array $years
+     * @return ArrayCollection
+     */
+    public function getSiGAbyYears(array $years)
+    {
+        $results = new ArrayCollection();
+        if (count($years) === 0) {
+            return $results;
+        }
+
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $qb->select('n')
+            ->from(NormalDistribution::class, 'n')
+            ->where($qb->expr()->in('n.year', ':years'))
+            ->andWhere($qb->expr()->eq('n.type', "'".BreedValueTypeConstant::IGA_SCOTLAND."'"))
+            ->setParameter('years', $years)
+        ;
+
+        /** @var NormalDistribution $normalDistribution */
+        foreach ($qb->getQuery()->getResult() as $normalDistribution) {
+            $results->add($normalDistribution);
+        }
+
+        return $results;
+    }
+
 }
