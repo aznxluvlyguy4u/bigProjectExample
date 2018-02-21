@@ -61,7 +61,7 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
             return ResultUtil::errorResult('LEDGER CATEGORY IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
-        $rule->setCategory($ledgerCategory);
+        $rule->setLedgerCategory($ledgerCategory);
         $this->persistAndFlush($rule);
 
         $output = $this->getBaseSerializer()->getDecodedJson($rule, JmsGroup::INVOICE_RULE);
