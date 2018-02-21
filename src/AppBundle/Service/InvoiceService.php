@@ -336,7 +336,7 @@ class InvoiceService extends ControllerServiceBase
         if(!$ruleTemplate) { return ResultUtil::errorResult('THE INVOICE RULE TEMPLATE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED); }
         $invoice->removeInvoiceRule($ruleTemplate);
         $ruleTemplate->setIsDeleted(true);
-        $ruleTemplate->setInvoice(null);
+        $ruleTemplate->removeInvoice($invoice);
         $this->persistAndFlush($invoice);
         $this->persistAndFlush($ruleTemplate);
 

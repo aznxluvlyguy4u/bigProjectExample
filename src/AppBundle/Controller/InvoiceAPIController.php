@@ -247,7 +247,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      */
     public function deleteInvoiceRule(Request $request, InvoiceRule $invoiceRule, Invoice $invoice)
     {
-        return $this->get('app.invoice')->deleteInvoiceRuleTemplate($request, $invoiceRule, $invoice);
+        return $this->get('app.invoice')->deleteInvoiceRule($request, $invoiceRule, $invoice);
     }
 
     /**
