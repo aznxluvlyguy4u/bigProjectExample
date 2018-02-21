@@ -8,12 +8,14 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\InvoiceRuleAPIControllerInterface;
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceRuleRepository;
+use AppBundle\Entity\LedgerCategory;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPIControllerInterface
 {
@@ -45,7 +47,21 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $rule = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRule::class);  //TODO replace with InvoiceRule::class?
+        /** @var InvoiceRule $rule */
+        $rule = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRule::class);
+
+        $validationResult = $this->validateInsertValues($rule);
+        if ($validationResult instanceof JsonResponse) {
+            return $validationResult;
+        }
+
+        $ledgerCategory = $this->getManager()->getRepository(LedgerCategory::class)
+            ->find($rule->getLedgerCategory()->getId());
+        if(!$ledgerCategory) {
+            return ResultUtil::errorResult('LEDGER CATEGORY IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $rule->setCategory($ledgerCategory);
         $this->persistAndFlush($rule);
 
         $output = $this->getBaseSerializer()->getDecodedJson($rule, JmsGroup::INVOICE_RULE);
@@ -62,20 +78,76 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $content = RequestUtil::getContentAsArray($request);
-
         /** @var InvoiceRule $updatedRule */
-        $updatedRule = $this->getBaseSerializer()->deserializeToObject($content, InvoiceRule::class);
-        $repository = $this->getManager()->getRepository(InvoiceRule::class);
-        /** @var InvoiceRule $currentRule */
-        $currentRule = $repository->find($content['id']);
-        if(!$currentRule) { return ResultUtil::errorResult('THE INVOICE RULE  IS NOT FOUND.', 428); }
+        $updatedRule = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRule::class);
+
+        $validationResult = $this->validateUpdateValues($updatedRule);
+        if ($validationResult instanceof JsonResponse) {
+            return $validationResult;
+        }
+
+        $currentRule = $this->getManager()->getRepository(InvoiceRule::class)->find($updatedRule->getId());
+        if(!$currentRule) {
+            return ResultUtil::errorResult('THE INVOICE RULE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $ledgerCategory = $this->getManager()->getRepository(LedgerCategory::class)
+            ->find($updatedRule->getLedgerCategory()->getId());
+        if(!$ledgerCategory) {
+            return ResultUtil::errorResult('LEDGER CATEGORY IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED);
+        }
 
         $currentRule->copyValues($updatedRule);
+        $currentRule->setLedgerCategory($ledgerCategory);
+
         $this->persistAndFlush($currentRule);
 
         $output = $this->getBaseSerializer()->getDecodedJson($updatedRule, JmsGroup::INVOICE_RULE);
         return ResultUtil::successResult($output);
+    }
+
+
+    /**
+     * @param InvoiceRule $newRule
+     * @return JsonResponse|bool
+     */
+    private function validateInsertValues(InvoiceRule $newRule)
+    {
+        if ($newRule === null) {
+            return ResultUtil::errorResult('REQUEST BODY IS EMPTY', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        if ($newRule->getLedgerCategory() === null || $newRule->getLedgerCategory()->getId() === null) {
+            return ResultUtil::errorResult('LEDGER CATEGORY IS MISSING', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        if ($newRule->getDescription() === null || $newRule->getDescription() === '') {
+            return ResultUtil::errorResult('DESCRIPTION IS MISSING', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        if ($newRule->getPriceExclVat() === null) {
+            return ResultUtil::errorResult('PRICE EXCL. VAT IS MISSING', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        if ($newRule->getVatPercentageRate() === null) {
+            return ResultUtil::errorResult('VAT PERCENTAGE RATE IS MISSING', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        return true;
+    }
+
+
+    /**
+     * @param InvoiceRule $updatedRule
+     * @return JsonResponse|boolean
+     */
+    private function validateUpdateValues(InvoiceRule $updatedRule)
+    {
+        if ($updatedRule && $updatedRule->getId() === null) {
+            return ResultUtil::errorResult('INVOICE RULE ID IS EMPTY', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        return $this->validateInsertValues($updatedRule);
     }
 
 
@@ -89,10 +161,10 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $repository = $this->getManager()->getRepository(InvoiceRule::class);  //TODO replace with InvoiceRule::class?
+        $repository = $this->getManager()->getRepository(InvoiceRule::class);
         $rule = $repository->find($invoiceRule);
 
-        if(!$rule) { return ResultUtil::errorResult('THE INVOICE RULE IS NOT FOUND.', 428); }
+        if(!$rule) { return ResultUtil::errorResult('THE INVOICE RULE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED); }
 
         $this->getManager()->remove($rule);
         $this->getManager()->flush();
