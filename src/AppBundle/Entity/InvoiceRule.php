@@ -123,7 +123,7 @@ class InvoiceRule
 
     /**
      * @var LedgerCategory
-     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\LedgerCategory", inversedBy="invoiceRules")
+     * @ORM\ManyToOne(targetEntity="LedgerCategory", inversedBy="invoiceRules")
      * @JMS\Type("AppBundle\Entity\LedgerCategory")
      * @JMS\Groups({
      *     "INVOICE_RULE",
