@@ -13,6 +13,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -127,6 +128,9 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
 
         if ($newRule->getPriceExclVat() === null) {
             return ResultUtil::errorResult('PRICE EXCL. VAT IS MISSING', Response::HTTP_PRECONDITION_REQUIRED);
+
+        } elseif (!Validator::hasValidNumberOfCurrencyDecimals($newRule->getPriceExclVat())) {
+            return ResultUtil::errorResult('CURRENCY CANNOT EXCEED '.Validator::MAX_NUMBER_OF_CURRENCY_INPUT_DECIMALS.' DECIMAL SPACES', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
         if ($newRule->getVatPercentageRate() === null) {
