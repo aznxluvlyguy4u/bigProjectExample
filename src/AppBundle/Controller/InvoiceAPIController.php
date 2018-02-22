@@ -60,13 +60,14 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      *   description = "Retrieve a specific invoice"
      * )
      * @param Invoice $invoice
+     * @param Request $request
      * @Method("GET")
      * @Route("/{invoice}")
      *
      */
-    function getInvoice(Invoice $invoice)
+    function getInvoice(Request $request, Invoice $invoice)
     {
-        return $this->get('app.invoice')->getInvoice($invoice);
+        return $this->get('app.invoice')->getInvoice($request, $invoice);
     }
 
     /**

@@ -7,11 +7,10 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\InvoiceRuleAPIControllerInterface;
 use AppBundle\Entity\InvoiceRule;
-use AppBundle\Entity\InvoiceRuleRepository;
 use AppBundle\Entity\LedgerCategory;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
-use AppBundle\Util\RequestUtil;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
@@ -26,13 +25,11 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
      */
     public function getInvoiceRules(Request $request)
     {
-        $category = $request->get('category');
-        $type = $request->query->get("type");
+        $type = $request->query->get(QueryParameter::TYPE_QUERY);
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
-        /** @var InvoiceRuleRepository $repository */
-        $repository = $this->getManager()->getRepository(InvoiceRule::class); //TODO replace with InvoiceRule::class?
-        $rules = $repository->findByTypeCategory($type, $category);
+
+        $rules = $this->getManager()->getRepository(InvoiceRule::class)->findByType($type);
         $output = $this->getBaseSerializer()->getDecodedJson($rules, JmsGroup::INVOICE_RULE);
 
         return ResultUtil::successResult($output);

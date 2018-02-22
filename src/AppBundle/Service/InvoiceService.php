@@ -30,7 +30,8 @@ class InvoiceService extends ControllerServiceBase
      */
     function getInvoices(Request $request)
     {
-        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)
+            || UserService::isGhostLogin($request)) {
             /** @var Location $location */
             $location = $this->getSelectedLocation($request);
             /** @var InvoiceRepository $repo */
@@ -50,20 +51,41 @@ class InvoiceService extends ControllerServiceBase
 
     /**
      * @param $id
+     * @param Request $request
      * @return JsonResponse
      */
-    function getInvoice($id)
+    function getInvoice(Request $request, $id)
     {
-        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(array('id' => $id));
-            /** @var Invoice $invoice */
-            $invoice = $this->getBaseSerializer()->getDecodedJson($invoice, JmsGroup::INVOICE_NO_COMPANY);
-            return ResultUtil::successResult($invoice);
-        }
-        $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(array('id' => $id));
         /** @var Invoice $invoice */
-        $invoice = $this->getBaseSerializer()->getDecodedJson($invoice, JmsGroup::INVOICE);
-        return ResultUtil::successResult($invoice);
+        $invoice = $this->getManager()->getRepository(Invoice::class)->find($id);
+
+        $type = JmsGroup::INVOICE;
+        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)
+            || UserService::isGhostLogin($request)
+        ) {
+            $type = JmsGroup::INVOICE_NO_COMPANY;
+
+            if (!$this->isClientAllowedToSeeInvoice($this->getSelectedLocation($request), $invoice)) {
+                return ResultUtil::errorResult('THE INVOICE DOES NOT BELONG TO THE LOGGED IN CLIENT', Response::HTTP_PRECONDITION_REQUIRED);
+            }
+        }
+
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoice, $type));
+    }
+
+
+    /**
+     * @param Location $selectedLocation
+     * @param Invoice $invoice
+     * @return bool
+     */
+    private function isClientAllowedToSeeInvoice(Location $selectedLocation, Invoice $invoice)
+    {
+        return
+            $selectedLocation && $selectedLocation->getCompany() && $selectedLocation->getCompany()->getId()
+            && $invoice && $invoice->getCompany() && $invoice->getCompany()->getId()
+            && $selectedLocation->getCompany()->getId() === $invoice->getCompany()->getId()
+        ;
     }
 
 
@@ -124,7 +146,7 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setInvoiceNumber($number);
         }
         $this->persistAndFlush($invoice);
-        return ResultUtil::successResult($invoice);
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoice, [JmsGroup::INVOICE]));
     }
 
 
@@ -204,7 +226,7 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
         }
         $this->persistAndFlush($invoice);
-        return ResultUtil::successResult($invoice);
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoice, [JmsGroup::INVOICE]));
     }
 
 
