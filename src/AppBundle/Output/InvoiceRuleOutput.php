@@ -26,7 +26,6 @@ class InvoiceRuleOutput
             'vat_percentage_rate' => $invoiceRule->getVatPercentageRate(),
             'price_excl_vat' => $invoiceRule->getPriceExclVat(),
             'sort_order' => $invoiceRule->getSortOrder(),
-            'category' => $invoiceRule->getCategory(),
             'type' => $invoiceRule->getType()
         );
     }

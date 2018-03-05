@@ -89,20 +89,6 @@ class InvoiceRule
 
     /**
      * @var string
-     *
-     * @ORM\Column(type="string", options={"default":"GENERAL"})
-     * @Assert\NotBlank
-     * @JMS\Type("string")
-     * @JMS\Groups({
-     *     "INVOICE_RULE",
-     *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
-     * })
-     */
-    private $category;
-
-    /**
-     * @var string
      * @ORM\Column(type="string", name="type", options={"default":"custom"})
      * @JMS\Type("string")
      * @JMS\Groups({
@@ -238,24 +224,6 @@ class InvoiceRule
     public function setSortOrder($sortOrder)
     {
         $this->sortOrder = $sortOrder;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCategory()
-    {
-        return $this->category;
-    }
-
-    /**
-     * @param string $category
-     * @return InvoiceRule
-     */
-    public function setCategory($category)
-    {
-        $this->category = $category;
         return $this;
     }
 
