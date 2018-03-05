@@ -40,7 +40,7 @@ class Validator
 
     const DEFAULT_MIN_PASSWORD_LENGTH = 6;
     const MAX_ULN_NUMBER_LENGTH = 12;
-    const MIN_ULN_NUMBER_LENGTH = 8;
+    const MIN_ULN_NUMBER_LENGTH = 6;
     const ULN_COUNTRY_CODE_LENGTH = 2;
 
     /** @var array */

@@ -44,7 +44,9 @@ class JsonInputConstant
     const ULN_FATHER = 'uln_mother';
     const ULN_MOTHER = 'uln_father';
     const MOTHER_ID = 'mother_id';
+    const MOTHER = 'mother';
     const FATHER_ID = 'father_id';
+    const FATHER = 'father';
     const STN = 'stn';
     const SCRAPIE_GENOTYPE = 'scrapie_genotype';
     const BREED = 'breed';
