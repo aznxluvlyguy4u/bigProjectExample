@@ -11,11 +11,13 @@ use AppBundle\Controller\BirthAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareBirthResponse;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
@@ -376,13 +378,21 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
 
                 //Remove REVOKED declare losses, exports and departs
-                foreach ([$child->getDeaths(), $child->getDepartures(), $child->getExports(), $child->getArrivals()] as $declaresToRemove) {
+                foreach ([
+                             $child->getDeaths(),
+                             $child->getDepartures(),
+                             $child->getExports(),
+                             $child->getArrivals(),
+                             $child->getDeclareWeights()
+                         ] as $declaresToRemove) {
                     /** @var DeclareLoss|DeclareDepart|DeclareExport $declareToRemove */
                     foreach($declaresToRemove as $declareToRemove) {
                         if($declareToRemove->getRequestState() === RequestStateType::REVOKED || $declareToRemove->getRequestState() === RequestStateType::FAILED) {
 
-                            foreach ($declareToRemove->getResponses() as $response) {
-                                $this->getManager()->remove($response);
+                            if ($declareToRemove instanceof DeclareBase) {
+                                foreach ($declareToRemove->getResponses() as $response) {
+                                    $this->getManager()->remove($response);
+                                }
                             }
 
                             if($declareToRemove instanceof DeclareDepart || $declaresToRemove instanceof DeclareArrival) {
@@ -403,6 +413,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                                 $declareType = 'afvoermelding';
                             } elseif($declareToRemove instanceof DeclareExport) {
                                 $declareType = 'exportmelding';
+                            } elseif($declareToRemove instanceof DeclareWeight) {
+                                $declareType = 'gewichtmelding';
                             }
 
                             return Validator::createJsonResponse('Er bestaat nog een '.$declareType.' die niet is ingetrokken voor dit dier op ubn: '.$declareToRemove->getUbn(), $statusCode);
