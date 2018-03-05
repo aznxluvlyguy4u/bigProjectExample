@@ -203,6 +203,9 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             return $csvData;
         }
 
+        $translationSet = StringUtil::capitalizationSet();
+        $translationSet[' '] = '_';
+
         foreach ($csvData as $item => $records) {
             foreach ($records as $columnHeader => $value) {
 
@@ -216,10 +219,10 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
                     default: $translatedColumnHeader = $this->trans(strtoupper($columnHeader)); break;
                 }
 
-                $translatedColumnHeader = strtr(strtolower($translatedColumnHeader), [' ' => '_']);
+                $translatedColumnHeader = strtr(strtolower($translatedColumnHeader), $translationSet);
 
                 if ($columnHeader !== $translatedColumnHeader) {
-                    $csvData[$item][strtolower($translatedColumnHeader)] = $value;
+                    $csvData[$item][$translatedColumnHeader] = $value;
                     unset($csvData[$item][$columnHeader]);
                 }
             }
