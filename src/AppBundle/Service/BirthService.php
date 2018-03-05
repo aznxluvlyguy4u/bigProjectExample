@@ -209,13 +209,15 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             }
         }
 
-        $this->saveNewestDeclareVersion($content, $litter);
+        if ($litter) {
+            $this->saveNewestDeclareVersion($content, $litter);
 
-        //Send workerTask to update resultTable records of parents and children
-        $this->sendTaskToQueue($this->internalQueueService, WorkerTaskUtil::createResultTableMessageBodyByBirthRequests($requestMessages));
+            //Send workerTask to update resultTable records of parents and children
+            $this->sendTaskToQueue($this->internalQueueService, WorkerTaskUtil::createResultTableMessageBodyByBirthRequests($requestMessages));
 
-        //Clear cache for this location, to reflect changes on the livestock
-        $this->clearLivestockCacheForLocation($location);
+            //Clear cache for this location, to reflect changes on the livestock
+            $this->clearLivestockCacheForLocation($location);
+        }
 
         ActionLogWriter::completeActionLog($this->getManager(), $logs);
 
