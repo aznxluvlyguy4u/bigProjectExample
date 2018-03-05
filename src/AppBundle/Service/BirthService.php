@@ -387,7 +387,10 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                          ] as $declaresToRemove) {
                     /** @var DeclareLoss|DeclareDepart|DeclareExport $declareToRemove */
                     foreach($declaresToRemove as $declareToRemove) {
-                        if($declareToRemove->getRequestState() === RequestStateType::REVOKED || $declareToRemove->getRequestState() === RequestStateType::FAILED) {
+                        if( $declareToRemove instanceof DeclareWeight
+                            || $declareToRemove->getRequestState() === RequestStateType::REVOKED
+                            || $declareToRemove->getRequestState() === RequestStateType::FAILED
+                        ) {
 
                             if ($declareToRemove instanceof DeclareBase) {
                                 foreach ($declareToRemove->getResponses() as $response) {
@@ -417,7 +420,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                                 $declareType = 'gewichtmelding';
                             }
 
-                            return Validator::createJsonResponse('Er bestaat nog een '.$declareType.' die niet is ingetrokken voor dit dier op ubn: '.$declareToRemove->getUbn(), $statusCode);
+                            return Validator::createJsonResponse('Er bestaat nog een '.$declareType.' die niet is ingetrokken voor dit dier '.$child->getUln().' op ubn: '.$declareToRemove->getUbn(), $statusCode);
                         }
                     }
                 }
