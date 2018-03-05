@@ -211,15 +211,17 @@ class ActionLogWriter
     /**
      * @param ObjectManager $em
      * @param array $requestMessages
+     * @param ArrayCollection $content
      * @param Client $client
+     * @param Person $actionBy
      * @return array
      * @throws \Exception
      */
-    public static function createBirth(ObjectManager $em, $requestMessages, Client $client = null)
+    public static function createBirth(ObjectManager $em, $requestMessages, ArrayCollection $content,
+                                       Client $client = null, Person $actionBy)
     {
         $logs = [];
-
-        if (count($requestMessages) === 0) { return $logs; }
+        $clientOfDeclare = null;
 
         /** @var DeclareBirth $requestMessage */
         foreach ($requestMessages as $requestMessage) {
@@ -242,6 +244,7 @@ class ActionLogWriter
             if ($client === null) {
                 if ($requestMessage->getLocation()) {
                     $clientOfDeclare = $requestMessage->getLocation()->getOwner();
+                    $client = $clientOfDeclare;
                 }
             }
 
@@ -250,7 +253,57 @@ class ActionLogWriter
             $em->persist($log);
             $logs[] = $log;
         }
-        $em->flush();
+
+        // Assuming stillborns are processed
+        $stillBornCount = 0;
+        if ($content->containsKey(JsonInputConstant::CHILDREN)) {
+
+            $motherContent = $content->get(JsonInputConstant::MOTHER);
+            $ulnMother = null;
+            if ($motherContent) {
+                $ulnMother =
+                    ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $motherContent).
+                    ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $motherContent)
+                ;
+            }
+
+            $fatherContent = $content->get(JsonInputConstant::FATHER);
+            $ulnFather = null;
+            if ($fatherContent) {
+                $ulnFather =
+                    ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $fatherContent).
+                    ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $fatherContent)
+                ;
+            }
+
+            $dateTimeOfBirthString = $content->get(JsonInputConstant::DATE_OF_BIRTH);
+            $dateOfBirthString = '';
+            if ($dateTimeOfBirthString) {
+                $dateParts = explode('T', $dateTimeOfBirthString);
+                if (count($dateParts) === 2) {
+                    $dateOfBirthString = ArrayUtil::get(0, $dateParts, $dateOfBirthString);
+                }
+            }
+
+            foreach ($content->get(JsonInputConstant::CHILDREN) as $child) {
+                if (ArrayUtil::get(JsonInputConstant::IS_ALIVE, $child) === false) {
+                    $stillBornCount++;
+                }
+            }
+
+            if ($stillBornCount > 0) {
+                $description = $stillBornCount . ' doodgeborenen, GebDatum '.$dateOfBirthString.', moeder: '.$ulnMother. ', vader: '.$ulnFather;
+
+                $log = new ActionLog($client, $actionBy, UserActionType::DECLARE_BIRTH, false, $description);
+                $log->setIsRvoMessage(false);
+                $em->persist($log);
+                $logs[] = $log;
+            }
+        }
+
+        if (count($requestMessages) > 0 || $stillBornCount > 0) {
+            $em->flush();
+        }
 
         return $logs;
     }

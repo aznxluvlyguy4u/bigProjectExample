@@ -186,7 +186,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             return $requestMessages;
         }
 
-        $logs = ActionLogWriter::createBirth($this->getManager(), $requestMessages, $client);
+        $logs = ActionLogWriter::createBirth($this->getManager(), $requestMessages, $content, $client, $loggedInUser);
 
         //Creating request succeeded, send to Queue
 
@@ -241,7 +241,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $resentCount = 0;
 
         if ($openCount > 0) {
-            $logs = ActionLogWriter::createBirth($this->getManager(), $requestMessages);
+            $logs = ActionLogWriter::createBirth($this->getManager(), $requestMessages, new ArrayCollection(), null, $loggedInUser);
 
             //Creating request succeeded, send to Queue
             /** @var DeclareBirth $requestMessage */
