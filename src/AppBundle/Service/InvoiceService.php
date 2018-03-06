@@ -10,13 +10,16 @@ use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRepository;
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceSenderDetails;
+use AppBundle\Entity\LedgerCategory;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Output\InvoiceOutput;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,6 +27,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class InvoiceService extends ControllerServiceBase
 {
+    /** @var array */
+    private $ledgerCategoriesById;
+    /** @var array */
+    private $invalidLedgerCategoryIds;
+
     /**
      * @param Request $request
      * @return JsonResponse
@@ -268,6 +276,55 @@ class InvoiceService extends ControllerServiceBase
     }
 
 
+    private function initializeLedgerCategorySearchArray()
+    {
+        if ($this->ledgerCategoriesById === null) {
+            $this->ledgerCategoriesById = [];
+        }
+        if ($this->invalidLedgerCategoryIds === null) {
+            $this->invalidLedgerCategoryIds = [];
+        }
+    }
+
+
+    private function purgeLedgerCategorySearchArrays()
+    {
+        $this->ledgerCategoriesById = [];
+        $this->invalidLedgerCategoryIds = [];
+    }
+
+
+    /**
+     * @param int|string $ledgerCategoryId
+     * @return LedgerCategory|null
+     */
+    private function getLedgerCategoryById($ledgerCategoryId)
+    {
+        $this->initializeLedgerCategorySearchArray();
+
+        $ledgerCategory = ArrayUtil::get($ledgerCategoryId, $this->ledgerCategoriesById, null);
+
+        if ($ledgerCategory) {
+            return $ledgerCategory;
+        }
+
+        if (key_exists($ledgerCategoryId, $this->invalidLedgerCategoryIds)) {
+            return null;
+        }
+
+        $ledgerCategory = $this->getManager()->getRepository(LedgerCategory::class)
+            ->find($ledgerCategoryId);
+
+        if ($ledgerCategory) {
+            $this->ledgerCategoriesById[$ledgerCategoryId] = $ledgerCategory;
+        } else {
+            $this->invalidLedgerCategoryIds[$ledgerCategoryId] = $ledgerCategoryId;
+        }
+
+        return $ledgerCategory;
+    }
+
+
     /**
      * @param Request $request
      * @param Invoice $invoice
@@ -281,32 +338,76 @@ class InvoiceService extends ControllerServiceBase
         /** @var InvoiceRule $ruleTemplate */
         $ruleTemplate = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRule::class);
 
-        $errorMessage = '';
-        if ($ruleTemplate->getDescription() === '' || $ruleTemplate->getDescription() === null) {
-            $errorMessage .= $this->translateUcFirstLower('DESCRIPTION CANNOT BE EMPTY').'. ';
-        }
-        if ($ruleTemplate->getPriceExclVat() === null) {
-            $errorMessage .= $this->translateUcFirstLower('PRICE EXCL VAT CANNOT BE EMPTY, BUT CAN BE ZERO').'. ';
-        }
-        if ($ruleTemplate->getVatPercentageRate() === null) {
-            $errorMessage .= $this->translateUcFirstLower('VAT PERCENTAGE RATE CANNOT BE EMPTY, BUT CAN BE ZERO').'. ';
+        $validationResult = $this->validateRuleTemplate($ruleTemplate);
+        if ($validationResult instanceof JsonResponse) {
+            return $validationResult;
         }
 
-        if ($errorMessage !== '') {
-            return ResultUtil::errorResult($errorMessage,Response::HTTP_PRECONDITION_REQUIRED);
-        }
         if ($ruleTemplate->getInvoices() == null) {
             $ruleTemplate->setInvoices(new ArrayCollection());
         }
 
         $ruleTemplate->addInvoice($invoice);
+        $ruleTemplate->setLedgerCategory(
+            $this->getLedgerCategoryById($ruleTemplate->getLedgerCategory()->getId())
+        );
         $this->persistAndFlush($ruleTemplate);
 
         $invoice->addInvoiceRule($ruleTemplate);
         $this->persistAndFlush($invoice);
 
+        $this->purgeLedgerCategorySearchArrays();
+
         $output = $this->getBaseSerializer()->getDecodedJson($ruleTemplate, JmsGroup::INVOICE_RULE);
         return ResultUtil::successResult($output);
+    }
+
+
+    /**
+     * @param InvoiceRule $ruleTemplate
+     * @return JsonResponse|boolean
+     */
+    private function validateRuleTemplate(InvoiceRule $ruleTemplate)
+    {
+        $errorMessage = '';
+        $ledgerCategory = null;
+
+        // Null checks
+
+        if ($ruleTemplate->getDescription() === '' || $ruleTemplate->getDescription() === null) {
+            $errorMessage .= $this->translateUcFirstLower('DESCRIPTION CANNOT BE EMPTY').'. ';
+        }
+        if ($ruleTemplate->getPriceExclVat() === null
+            || (!is_float($ruleTemplate->getPriceExclVat()) && !is_int($ruleTemplate->getPriceExclVat()))
+        ){
+            $errorMessage .= $this->translateUcFirstLower('PRICE EXCL VAT CANNOT BE EMPTY, BUT CAN BE ZERO').'. ';
+        }
+        if ($ruleTemplate->getVatPercentageRate() === null) {
+            $errorMessage .= $this->translateUcFirstLower('VAT PERCENTAGE RATE CANNOT BE EMPTY, BUT CAN BE ZERO').'. ';
+        }
+        if ($ruleTemplate->getLedgerCategory() === null || $ruleTemplate->getLedgerCategory()->getId() === null) {
+            $errorMessage .= $this->translateUcFirstLower('LEDGER CATEGORY CANNOT BE EMPTY').'. ';
+        } else {
+            $ledgerCategory = $this->getLedgerCategoryById($ruleTemplate->getLedgerCategory()->getId());
+
+            if ($ledgerCategory === null) {
+                $errorMessage .= $this->translateUcFirstLower('NO LEDGER CATEGORY FOUND FOR GIVEN LEDGER CATEGORY ID').'. ';
+            } elseif (!$ledgerCategory->isActive()) {
+                $errorMessage .= $this->translateUcFirstLower('LEDGER CATEGORY IS INACTIVE').'. ';
+            }
+        }
+
+        // Value checks
+
+        if (!Validator::hasValidNumberOfCurrencyDecimals($ruleTemplate->getPriceExclVat())) {
+            $errorMessage .= $this->translateUcFirstLower('CURRENCY CANNOT EXCEED '.Validator::MAX_NUMBER_OF_CURRENCY_INPUT_DECIMALS.' DECIMAL SPACES').'. ';
+        }
+
+        if ($errorMessage !== '') {
+            return ResultUtil::errorResult($errorMessage,Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        return true;
     }
 
 
