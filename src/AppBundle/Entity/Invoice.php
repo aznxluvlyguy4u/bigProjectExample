@@ -80,15 +80,14 @@ class Invoice
 
     /**
      * @var ArrayCollection
-     *
-     * @ORM\ManyToMany(targetEntity="InvoiceRule", mappedBy="invoices", cascade={"persist"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\InvoiceRule>")
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\InvoiceRuleSelection", mappedBy="invoice", cascade={"persist", "remove"}, orphanRemoval=true)
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\InvoiceRuleSelection>")
      * @JMS\Groups({
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY"
      * })
      */
-    private $invoiceRules;
+    private $invoiceRuleSelections;
 
     /**
      * @var float
@@ -208,7 +207,7 @@ class Invoice
      */
     public function __construct()
     {
-        $this->invoiceRules = new ArrayCollection();
+        $this->initializeInvoiceRuleSelection();
     }
 
     public function getId() {
@@ -279,24 +278,51 @@ class Invoice
         $this->documentUrl = $documentUrl;
     }
 
+
+    private function initializeInvoiceRuleSelection()
+    {
+        if ($this->invoiceRuleSelections === null) {
+            $this->invoiceRuleSelections = new ArrayCollection();
+        }
+    }
+
     /**
      * @return ArrayCollection
      */
-    public function getInvoiceRules()
+    public function getInvoiceRuleSelections()
     {
-        return $this->invoiceRules;
+        $this->initializeInvoiceRuleSelection();
+        return $this->invoiceRuleSelections;
     }
 
     /**
-     * @param ArrayCollection $invoiceRules
+     * @param ArrayCollection $invoiceRuleSelections
+     * @return Invoice
      */
-    public function setInvoiceRules($invoiceRules)
+    public function setInvoiceRuleSelections($invoiceRuleSelections)
     {
-        $this->invoiceRules = $invoiceRules;
+        $this->invoiceRuleSelections = $invoiceRuleSelections;
+        return $this;
     }
 
-    public function addInvoiceRule(InvoiceRule $invoiceRule){
-        $this->invoiceRules[] = $invoiceRule;
+    /**
+     * @param InvoiceRuleSelection $invoiceRuleSelection
+     * @return Invoice
+     */
+    public function addInvoiceRuleSelection(InvoiceRuleSelection $invoiceRuleSelection)
+    {
+        $this->invoiceRuleSelections->add($invoiceRuleSelection);
+        return $this;
+    }
+
+    /**
+     * @param InvoiceRuleSelection $invoiceRuleSelection
+     * @return Invoice
+     */
+    public function removeInvoiceRuleSelection(InvoiceRuleSelection $invoiceRuleSelection)
+    {
+        $this->invoiceRuleSelections->removeElement($invoiceRuleSelection);
+        return $this;
     }
 
     public function removeInvoiceRule(InvoiceRule $invoiceRule){

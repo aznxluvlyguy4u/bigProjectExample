@@ -111,6 +111,8 @@ class InvoiceService extends ControllerServiceBase
         ($invoice);
         $content = RequestUtil::getContentAsArray($request);
         $contentRules = $content['invoice_rules'];
+
+        // TODO get deserialized InvoiceRuleSelections
         $deserializedRules = new ArrayCollection();
         foreach ($contentRules as $contentRule){
             /** @var InvoiceRule $rule */
@@ -124,7 +126,8 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
         }
 
-        $invoice->setInvoiceRules($deserializedRules);
+        // TODO set InvoiceRuleSelections
+
         $invoice->setTotal($content['total']);
         $invoice->setUbn($content["ubn"]);
         $invoice->setCompanyLocalId($content['company_id']);
@@ -196,14 +199,18 @@ class InvoiceService extends ControllerServiceBase
         $deserializedRules = new ArrayCollection();
         /** @var Company $invoiceCompany */
         $invoiceCompany = $this->getManager()->getRepository(Company::class)->findOneBy(array('companyId' => $content['company']['company_id']));
-        $invoice->setInvoiceRules($deserializedRules);
+
+        // TODO set InvoiceRuleSelections
+        // TODO get deserialized InvoiceRuleSelections
         foreach ($contentRules as $contentRule){
             /** @var InvoiceRule $rule */
             $invoiceRule = $this->getManager()->getRepository(InvoiceRule::class)
                 ->findOneBy(array('id' => $contentRule['id']));
             $deserializedRules->add($invoiceRule);
         }
-        $invoice->setInvoiceRules($deserializedRules);
+        // TODO set InvoiceRuleSelections
+
+
         if ($invoice->getCompany() !== null && $invoice->getCompany()->getId() !== $invoiceCompany->getId()){
             /** @var Company $oldCompany */
             $oldCompany = $this->getManager()->getRepository(Company::class)->findOneBy(array('id' => $invoice->getCompany()->getId()));
@@ -343,17 +350,13 @@ class InvoiceService extends ControllerServiceBase
             return $validationResult;
         }
 
-        if ($ruleTemplate->getInvoices() == null) {
-            $ruleTemplate->setInvoices(new ArrayCollection());
-        }
-
-        $ruleTemplate->addInvoice($invoice);
         $ruleTemplate->setLedgerCategory(
             $this->getLedgerCategoryById($ruleTemplate->getLedgerCategory()->getId())
         );
         $this->persistAndFlush($ruleTemplate);
 
-        $invoice->addInvoiceRule($ruleTemplate);
+        $invoiceRuleSelection = null; //$ruleTemplate TODO
+        $invoice->addInvoiceRuleSelection($invoiceRuleSelection);
         $this->persistAndFlush($invoice);
 
         $this->purgeLedgerCategorySearchArrays();
@@ -457,9 +460,8 @@ class InvoiceService extends ControllerServiceBase
         $ruleTemplate = $repository->find($invoiceRule);
 
         if(!$ruleTemplate) { return ResultUtil::errorResult('THE INVOICE RULE TEMPLATE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED); }
-        $invoice->removeInvoiceRule($ruleTemplate);
+        $invoice->removeInvoiceRuleSelection($ruleTemplate); // TODO
         $ruleTemplate->setIsDeleted(true);
-        $ruleTemplate->removeInvoice($invoice);
         $this->persistAndFlush($invoice);
         $this->persistAndFlush($ruleTemplate);
 

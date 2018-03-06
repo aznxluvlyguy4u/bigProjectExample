@@ -100,14 +100,6 @@ class InvoiceRule
     private $type;
 
     /**
-     * @var Invoice
-     *
-     * @ORM\ManyToMany(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\Invoice>")
-     */
-    private $invoices;
-
-    /**
      * @var LedgerCategory
      * @ORM\ManyToOne(targetEntity="LedgerCategory", inversedBy="invoiceRules")
      * @JMS\Type("AppBundle\Entity\LedgerCategory")
@@ -132,11 +124,23 @@ class InvoiceRule
     private $isDeleted = false;
 
     /**
+     * @var ArrayCollection
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\InvoiceRuleSelection", mappedBy="invoiceRule", cascade={"persist", "remove"}, orphanRemoval=true)
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\InvoiceRuleSelection>")
+     * @JMS\Groups({
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $invoiceRuleSelections;
+
+    /**
      * InvoiceRule constructor.
      */
     public function __construct()
     {
-        $this->invoices = new ArrayCollection();
+        $this->invoiceRuleSelections = new ArrayCollection();
     }
 
     /**
@@ -262,38 +266,6 @@ class InvoiceRule
     }
 
     /**
-     * @return Invoice
-     */
-    public function getInvoices()
-    {
-        return $this->invoices;
-    }
-
-    /**
-     * @param ArrayCollection $invoices
-     * @return InvoiceRule
-     */
-    public function setInvoices($invoices)
-    {
-        $this->invoices = $invoices;
-        return $this;
-    }
-
-    /**
-     * @param Invoice $invoice
-     */
-    public function addInvoice(Invoice $invoice) {
-        $this->invoices->add($invoice);
-    }
-
-    /**
-     * @param Invoice $invoice
-     */
-    public function removeInvoice(Invoice $invoice) {
-        $this->invoices->removeElement($invoice);
-    }
-
-    /**
      * @return LedgerCategory
      */
     public function getLedgerCategory()
@@ -308,6 +280,24 @@ class InvoiceRule
     public function setLedgerCategory($ledgerCategory)
     {
         $this->ledgerCategory = $ledgerCategory;
+        return $this;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getInvoiceRuleSelections()
+    {
+        return $this->invoiceRuleSelections;
+    }
+
+    /**
+     * @param ArrayCollection $invoiceRuleSelections
+     * @return InvoiceRule
+     */
+    public function setInvoiceRuleSelections($invoiceRuleSelections)
+    {
+        $this->invoiceRuleSelections = $invoiceRuleSelections;
         return $this;
     }
 
