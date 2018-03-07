@@ -67,6 +67,7 @@ abstract class Person implements UserInterface
    *     "BASIC",
    *     "GHOST_LOGIN",
    *     "INVOICE",
+   *     "INVOICE_NO_COMPANY",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -90,6 +91,7 @@ abstract class Person implements UserInterface
    *     "ERROR_DETAILS",
    *     "GHOST_LOGIN",
    *     "INVOICE",
+   *     "INVOICE_NO_COMPANY",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -113,6 +115,7 @@ abstract class Person implements UserInterface
    *     "ERROR_DETAILS",
    *     "GHOST_LOGIN",
    *     "INVOICE",
+   *     "INVOICE_NO_COMPANY",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -153,6 +156,7 @@ abstract class Person implements UserInterface
      *     "ANIMAL_DETAILS",
      *     "BASIC",
      *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
      *     "USER_MEASUREMENT",
      *     "VWA"
      * })

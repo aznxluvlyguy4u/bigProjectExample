@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\InvoiceRule;
+use AppBundle\Entity\InvoiceRuleSelection;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Entity\Invoice;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -188,15 +189,15 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      *   description = "Create an invoice rule for an invoice"
      * )
      *
-     * @Route("/{invoice}/invoice-rules")
+     * @Route("/{invoice}/invoice-rule-selection")
      * @param Request $request
      * @param Invoice $invoice
      * @Method("POST")
      * @return jsonResponse
      */
-    public function createInvoiceRule(Request $request, Invoice $invoice)
+    public function createInvoiceRuleSelection(Request $request, Invoice $invoice)
     {
-        return $this->get('app.invoice')->createInvoiceRule($request, $invoice);
+        return $this->get('app.invoice')->createInvoiceRuleSelection($request, $invoice);
     }
 
     /**
@@ -239,16 +240,16 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      *   description = "Delete an invoice rule belonging to an invoice"
      * )
      *
-     * @Route("/{invoice}/invoice-rules/{invoiceRule}")
+     * @Route("/{invoice}/invoice-rule-selection/{invoiceRuleSelectionId}")
      * @param Request $request
-     * @param InvoiceRule $invoiceRule
+     * @param int $invoiceRuleSelectionId
      * @param Invoice $invoice
      * @Method("DELETE")
      * @return jsonResponse
      */
-    public function deleteInvoiceRule(Request $request, InvoiceRule $invoiceRule, Invoice $invoice)
+    public function deleteInvoiceRule(Request $request, Invoice $invoice, $invoiceRuleSelectionId)
     {
-        return $this->get('app.invoice')->deleteInvoiceRule($request, $invoiceRule, $invoice);
+        return $this->get('app.invoice')->deleteInvoiceRuleSelection($request, $invoice, $invoiceRuleSelectionId);
     }
 
     /**

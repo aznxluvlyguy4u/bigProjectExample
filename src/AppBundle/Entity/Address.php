@@ -36,6 +36,11 @@ abstract class Address
    * @ORM\Column(type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
+   * @JMS\Type("integer")
+   * @JMS\Groups({
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
+   * })
    */
   protected $id;
 
@@ -47,7 +52,8 @@ abstract class Address
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ADDRESS",
-   *     "INVOICE"
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $streetName;
@@ -60,7 +66,8 @@ abstract class Address
    * @JMS\Type("integer")
    * @JMS\Groups({
    *     "ADDRESS",
-   *     "INVOICE"
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $addressNumber;
@@ -72,7 +79,8 @@ abstract class Address
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ADDRESS",
-   *     "INVOICE"
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $addressNumberSuffix;
@@ -87,7 +95,8 @@ abstract class Address
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ADDRESS",
-   *     "INVOICE"
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $postalCode;
@@ -100,7 +109,8 @@ abstract class Address
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ADDRESS",
-   *     "INVOICE"
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $city;
@@ -113,7 +123,8 @@ abstract class Address
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ADDRESS",
-   *     "INVOICE"
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $country;
@@ -125,7 +136,8 @@ abstract class Address
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ADDRESS",
-   *     "INVOICE"
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $state;

@@ -29,7 +29,8 @@ class Client extends Person
      *     "ACTION_LOG_ADMIN",
      *     "ACTION_LOG_USER",
      *     "BASIC",
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
     * @Expose
     */

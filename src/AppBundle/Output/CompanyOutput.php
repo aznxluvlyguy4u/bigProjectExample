@@ -8,6 +8,8 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Pedigree;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Service\BaseSerializer;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Component\Count;
 
@@ -106,11 +108,14 @@ class CompanyOutput
     }
 
     /**
+     * // TODO replace this completely with the serializer
+     *
      * @param Company $company
+     * @param BaseSerializer $baseSerializer
      *
      * @return array
      */
-    public static function createCompany($company)
+    public static function createCompany($company, BaseSerializer $baseSerializer)
     {
         $res = array();
 
@@ -152,15 +157,7 @@ class CompanyOutput
             'country' => Utils::fillNull($company->getBillingAddress()->getCountry()),
         );
 
-        $invoices = $company->getInvoices();
-
-        $res['invoices'] = [];
-
-        foreach ($invoices as $invoice){
-            if ($invoice->isDeleted() == false){
-                $res['invoices'][] = InvoiceOutput::createInvoiceOutputNoCompany($invoice);
-            }
-        }
+        $res['invoices'] = $baseSerializer->getDecodedJson($company->getInvoices(), JmsGroup::INVOICE_NO_COMPANY);
 
         $locations = $company->getLocations();
         $res['locations'] = [];
@@ -293,22 +290,12 @@ class CompanyOutput
         return $res;
     }
 
-    public static function createCompanyInvoiceOutputList($companies){
-        $results = array();
-        /** @var Company $company */
-        foreach ($companies as $company) {
-            if ($company->isActive()) {
-                $results[] = self::createCompanyInvoiceOutput($company);
-            }
-        }
-        return $results;
-    }
-
     /**
      * @param Company $company
+     * @param BaseSerializer $baseSerializer
      * @return array;
      */
-    public static function createCompanyInvoiceOutput($company){
+    public static function createCompanyInvoiceOutput($company, BaseSerializer $baseSerializer){
         return array(
             'id' => $company->getId(),
             'locations' => LocationOutput::generateInvoiceLocationArrayList($company->getLocations()),
@@ -319,7 +306,8 @@ class CompanyOutput
             'debtor_number' => $company->getDebtorNumber(),
             'owner' => $company->getOwner(),
             'company_address' => AddressOutput::createAddressOutput($company->getAddress()),
-            'invoices' => InvoiceOutput::createInvoiceOutputListNoCompany($company->getInvoices()),
+            'invoices' => $baseSerializer->getDecodedJson($company->getInvoices(), JmsGroup::INVOICE_NO_COMPANY),
+//            'invoices' => InvoiceOutput::createInvoiceOutputListNoCompany($company->getInvoices()),
         );
     }
 
@@ -342,34 +330,4 @@ class CompanyOutput
         );
     }
 
-    public static function createCompanyList($companies){
-        $results = array();
-        /** @var Company $company */
-        foreach ($companies as $company) {
-            if ($company->isActive()) {
-                $results[] = self::createCompanyArrayOutput($company);
-            }
-        }
-        return $results;
-    }
-
-    /**
-     * @param Company $company
-     * @return array;
-     */
-    public static function createCompanyArrayOutput($company){
-        return array(
-            'id' => $company->getId(),
-            'company_id' => $company->getCompanyId(),
-            'locations' => [],
-            'company_relation_number' => $company->getCompanyRelationNumber(),
-            'chamber_of_commerce_number' => $company->getChamberOfCommerceNumber(),
-            'vat_number' => $company->getVatNumber(),
-            'company_name' => $company->getCompanyName(),
-            'debtor_number' => $company->getDebtorNumber(),
-            'owner' => ClientOutput::createOwnerOutput($company->getOwner()),
-            'company_address' => AddressOutput::createAddressOutput($company->getAddress()),
-            'invoices' => InvoiceOutput::createInvoiceOutputList($company->getInvoices()),
-        );
-    }
 }

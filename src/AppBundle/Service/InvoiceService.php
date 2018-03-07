@@ -9,10 +9,12 @@ use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRepository;
 use AppBundle\Entity\InvoiceRule;
+use AppBundle\Entity\InvoiceRuleSelection;
 use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Entity\LedgerCategory;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Output\InvoiceOutput;
@@ -45,15 +47,12 @@ class InvoiceService extends ControllerServiceBase
             /** @var InvoiceRepository $repo */
             $repo = $this->getManager()->getRepository(Invoice::class);
             $invoices = $repo->findClientAvailableInvoices($location->getUbn());
-            $invoices = InvoiceOutput::createInvoiceOutputListNoCompany($invoices);
-            return ResultUtil::successResult($invoices);
+            return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoices, [JmsGroup::INVOICE_NO_COMPANY]));
         }
         $repo = $this->getManager()->getRepository(Invoice::class);
         $status = $request->get('status');
         $invoices = $repo->findBy(array('isDeleted' => false), array('invoiceDate' => 'ASC'));
-        $invoices = InvoiceOutput::createInvoiceOutputList($invoices);
-
-        return ResultUtil::successResult($invoices);
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoices, [JmsGroup::INVOICE]));
     }
 
 
@@ -276,7 +275,7 @@ class InvoiceService extends ControllerServiceBase
         { return AdminValidator::getStandardErrorResponse(); }
 
         $repository = $this->getManager()->getRepository(InvoiceRule::class);
-        $ruleTemplates = $repository->findBy(array('isDeleted' => false, 'type' => 'standard'));
+        $ruleTemplates = $repository->findBy(array('isDeleted' => false, 'type' => InvoiceRuleType::STANDARD));
         $output = $this->getBaseSerializer()->getDecodedJson($ruleTemplates, JmsGroup::INVOICE_RULE_TEMPLATE);
 
         return ResultUtil::successResult($output);
@@ -337,31 +336,49 @@ class InvoiceService extends ControllerServiceBase
      * @param Invoice $invoice
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function createInvoiceRule(Request $request, Invoice $invoice)
+    public function createInvoiceRuleSelection(Request $request, Invoice $invoice)
     {
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        /** @var InvoiceRule $ruleTemplate */
-        $ruleTemplate = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRule::class);
+        /** @var InvoiceRuleSelection $invoiceRuleSelection */
+        $invoiceRuleSelection = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRuleSelection::class);
 
-        $validationResult = $this->validateRuleTemplate($ruleTemplate);
+        /** @var InvoiceRule $invoiceRule */
+        $invoiceRule = $invoiceRuleSelection->getInvoiceRule();
+
+        $validationResult = $this->validateRuleTemplate($invoiceRule);
         if ($validationResult instanceof JsonResponse) {
             return $validationResult;
         }
 
-        $ruleTemplate->setLedgerCategory(
-            $this->getLedgerCategoryById($ruleTemplate->getLedgerCategory()->getId())
-        );
-        $this->persistAndFlush($ruleTemplate);
+        if ($invoiceRule->getType() === InvoiceRuleType::STANDARD && $invoiceRule->getId()) {
+            $invoiceRule = $this->getManager()->getRepository(InvoiceRule::class)
+                ->find($invoiceRule->getId());
+            if ($invoiceRule->getType() !== InvoiceRuleType::STANDARD) {
+                return ResultUtil::errorResult('INVOICE RULE WITH GIVEN ID IS NOT OF TYPE STANDARD', Response::HTTP_BAD_REQUEST);
+            }
+        }
 
-        $invoiceRuleSelection = null; //$ruleTemplate TODO
+        $invoiceRule->setLedgerCategory(
+            $this->getLedgerCategoryById($invoiceRule->getLedgerCategory()->getId())
+        );
+
+        $invoiceRuleSelection->setInvoiceRule($invoiceRule);
+        $invoiceRuleSelection->setInvoice($invoice);
         $invoice->addInvoiceRuleSelection($invoiceRuleSelection);
-        $this->persistAndFlush($invoice);
+
+        if ($invoiceRule->getType() !== InvoiceRuleType::STANDARD) {
+            $this->getManager()->persist($invoiceRule);
+        }
+
+        $this->getManager()->persist($invoiceRuleSelection);
+        $this->getManager()->persist($invoice);
+        $this->getManager()->flush();
 
         $this->purgeLedgerCategorySearchArrays();
 
-        $output = $this->getBaseSerializer()->getDecodedJson($ruleTemplate, JmsGroup::INVOICE_RULE);
+        $output = $this->getBaseSerializer()->getDecodedJson($invoiceRuleSelection, JmsGroup::INVOICE_RULE);
         return ResultUtil::successResult($output);
     }
 
@@ -446,26 +463,32 @@ class InvoiceService extends ControllerServiceBase
 
     /**
      * @param Request $request
-     * @param InvoiceRule $invoiceRule
+     * @param int $invoiceRuleSelectionId
      * @param Invoice $invoice
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteInvoiceRule(Request $request, InvoiceRule $invoiceRule, Invoice $invoice)
+    public function deleteInvoiceRuleSelection(Request $request, Invoice $invoice, $invoiceRuleSelectionId)
     {
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $repository = $this->getManager()->getRepository(InvoiceRule::class);
-        /** @var InvoiceRule $ruleTemplate */
-        $ruleTemplate = $repository->find($invoiceRule);
+        $repository = $this->getManager()->getRepository(InvoiceRuleSelection::class);
+        /** @var InvoiceRuleSelection $invoiceRuleSelection */
+        $invoiceRuleSelection = $repository->find($invoiceRuleSelectionId);
 
-        if(!$ruleTemplate) { return ResultUtil::errorResult('THE INVOICE RULE TEMPLATE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED); }
-        $invoice->removeInvoiceRuleSelection($ruleTemplate); // TODO
-        $ruleTemplate->setIsDeleted(true);
-        $this->persistAndFlush($invoice);
-        $this->persistAndFlush($ruleTemplate);
+        if(!$invoiceRuleSelection) { return ResultUtil::errorResult('THE INVOICE RULE SELECTION IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED); }
+        $invoice->removeInvoiceRuleSelection($invoiceRuleSelection);
 
-        $output = $this->getBaseSerializer()->getDecodedJson($ruleTemplate, JmsGroup::INVOICE_RULE);
+        $invoiceRule = $invoiceRuleSelection->getInvoiceRule();
+        if ($invoiceRule->getType() === InvoiceRuleType::CUSTOM) {
+            $this->getManager()->remove($invoiceRule);
+        }
+
+        $this->getManager()->persist($invoice);
+        $this->getManager()->remove($invoiceRuleSelection);
+        $this->getManager()->flush();
+
+        $output = $this->getBaseSerializer()->getDecodedJson($invoiceRuleSelection, JmsGroup::INVOICE_RULE);
         return ResultUtil::successResult($output);
     }
 }

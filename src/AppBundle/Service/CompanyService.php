@@ -15,6 +15,10 @@ use AppBundle\Entity\CompanyNote;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Filter\ActiveCompanyFilter;
+use AppBundle\Filter\ActiveInvoiceFilter;
+use AppBundle\Filter\ActiveLocationFilter;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
 use AppBundle\Util\ActionLogWriter;
@@ -257,10 +261,12 @@ class CompanyService extends AuthServiceBase
         }
 
         // Get Company
+        $this->activateFilter(ActiveInvoiceFilter::NAME);
         $company = $this->getManager()->getRepository(Company::class)->findOneByCompanyId($companyId);
+        $this->deactivateFilter(ActiveInvoiceFilter::NAME);
 
         // Generate Company Details
-        $result = CompanyOutput::createCompany($company);
+        $result = CompanyOutput::createCompany($company, $this->getBaseSerializer());
 
         return ResultUtil::successResult($result);
     }
@@ -685,9 +691,14 @@ class CompanyService extends AuthServiceBase
      * @return JsonResponse
      */
     public function getCompanyInvoiceDetails(){
-        $companies = $this->getManager()->getRepository(Company::class)->findAll();
-        $companies = CompanyOutput::createCompanyInvoiceOutputList($companies);
-        return ResultUtil::successResult($companies);
+
+        $this->activateFilter(ActiveCompanyFilter::NAME);
+        $this->activateFilter(ActiveLocationFilter::NAME);
+        $companies = $this->getManager()->getRepository(Company::class)->findBy(['isActive' => true]);
+        $this->deactivateFilter(ActiveCompanyFilter::NAME);
+        $this->deactivateFilter(ActiveLocationFilter::NAME);
+
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
     }
 
 
@@ -706,8 +717,7 @@ class CompanyService extends AuthServiceBase
             ->setParameter('company_name', '%'.strtolower($name).'%');
 
         $companies = $qb->getQuery()->getResult();
-        $companies = CompanyOutput::createCompanyList($companies);
-        return ResultUtil::successResult($companies);
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
     }
     
 }

@@ -24,10 +24,14 @@ class Company
     use EntityClassInfo;
 
     /**
-    * @ORM\Column(type="integer")
-    * @ORM\Id
-    * @ORM\GeneratedValue(strategy="IDENTITY")
-    */
+     * @ORM\Column(type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
     protected $id;
 
     /**
@@ -51,6 +55,7 @@ class Company
      *  @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
      *     "UBN"
      * })
     */
@@ -65,6 +70,7 @@ class Company
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
      *     "UBN"
      * })
     */
@@ -76,7 +82,8 @@ class Company
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
     * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
     */
     private $vatNumber;
@@ -87,7 +94,8 @@ class Company
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
     * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
     */
     private $chamberOfCommerceNumber;
@@ -98,7 +106,8 @@ class Company
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
     * @JMS\Groups({
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
     */
     private $companyRelationNumber;
@@ -110,6 +119,7 @@ class Company
     * @JMS\Type("AppBundle\Entity\Location")
     * @JMS\Groups({
     *     "INVOICE",
+    *     "INVOICE_NO_COMPANY",
     *     "UBN"
     * })
     */
@@ -124,7 +134,8 @@ class Company
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "GHOST_LOGIN",
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
     */
     protected $owner;
@@ -137,7 +148,8 @@ class Company
     * @JMS\Type("AppBundle\Entity\CompanyAddress")
     * @JMS\Groups({
     *     "UBN",
-     *    "INVOICE"
+    *     "INVOICE",
+    *     "INVOICE_NO_COMPANY"
     * })
     */
     private $address;

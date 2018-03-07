@@ -31,6 +31,12 @@ class Location
    * @ORM\Column(type="integer")
    * @ORM\GeneratedValue(strategy="IDENTITY")
    * @Expose
+   * @JMS\Type("integer")
+   * @JMS\Groups({
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
+   * })
+   *
    */
   protected $id;
 
@@ -44,6 +50,7 @@ class Location
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
      *     "MINIMAL"
      * })
      * @Expose
@@ -62,6 +69,7 @@ class Location
    *     "ANIMALS_BATCH_EDIT",
    *     "BASIC",
    *     "INVOICE",
+   *     "INVOICE_NO_COMPANY",
    *     "LIVESTOCK",
    *     "MINIMAL",
    *     "TREATMENT_TEMPLATE",
@@ -196,7 +204,8 @@ class Location
    * @ORM\OneToOne(targetEntity="LocationAddress", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\LocationAddress")
    * @JMS\Groups({
-   *     "INVOICE"
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $address;

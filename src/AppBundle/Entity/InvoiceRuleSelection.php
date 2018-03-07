@@ -39,11 +39,6 @@ class InvoiceRuleSelection
      * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Invoice", inversedBy="invoiceRuleSelections", cascade={"persist"})
      * @ORM\JoinColumn(name="invoice_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Invoice")
-     * @JMS\Groups({
-     *     "INVOICE_RULE",
-     *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
-     * })
      */
     private $invoice;
 
