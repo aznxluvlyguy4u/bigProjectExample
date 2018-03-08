@@ -747,5 +747,8 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\WeightService
 
-
-
+    # This custom handler is not properly registered by the jms serializer yet!
+    jms_serializer.custom_datetime_handler:
+        class: AppBundle\Serializer\CustomDateTimeHandler
+        tags:
+          - { name: jms_serializer.subscribing_handler, method: deserializeDateTimeToJson, type: DateTime, format: json, direction: deserialization }
