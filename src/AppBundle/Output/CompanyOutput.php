@@ -81,6 +81,8 @@ class CompanyOutput
                 'company_name' => Utils::fillNull($company['companyName']),
                 'subscription_date' => Utils::fillNull($company['subscriptionDate']),
                 'animal_health_subscription' => Utils::fillNull($company['animalHealthSubscription']),
+                'vat_number' => Utils::fillNull($company['vatNumber']),
+                'chamber_of_commerce_number' => Utils::fillNull($company['chamberOfCommerceNumber']),
                 'status' => Utils::fillNull($company['isActive']),
                 'address' => array(
                     'street_name' => Utils::fillNull($company['address']['streetName']),
