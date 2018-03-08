@@ -169,7 +169,7 @@ class Invoice
 
     /**
      * @var InvoiceSenderDetails
-     * @ORM\ManyToOne(targetEntity="InvoiceSenderDetails")
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\InvoiceSenderDetails")
      * @ORM\JoinColumn(name="invoice_sender_details_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
      * @JMS\Groups({
@@ -311,6 +311,7 @@ class Invoice
      */
     public function addInvoiceRuleSelection(InvoiceRuleSelection $invoiceRuleSelection)
     {
+        $this->initializeInvoiceRuleSelection();
         $this->invoiceRuleSelections->add($invoiceRuleSelection);
         return $this;
     }
@@ -321,12 +322,9 @@ class Invoice
      */
     public function removeInvoiceRuleSelection(InvoiceRuleSelection $invoiceRuleSelection)
     {
+        $this->initializeInvoiceRuleSelection();
         $this->invoiceRuleSelections->removeElement($invoiceRuleSelection);
         return $this;
-    }
-
-    public function removeInvoiceRule(InvoiceRule $invoiceRule){
-        $this->invoiceRules->removeElement($invoiceRule);
     }
 
     /**

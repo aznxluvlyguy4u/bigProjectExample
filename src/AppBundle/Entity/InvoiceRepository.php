@@ -36,15 +36,24 @@ class InvoiceRepository extends BaseRepository
         return $result;
     }
 
-    public function getInvoicesOfCurrentYear($year){
+    /**
+     * @param int $year
+     * @return Invoice
+     */
+    public function getInvoiceOfCurrentYearWithLastInvoiceNumber($year){
         $qb = $this->getManager()->getRepository(Invoice::class)->createQueryBuilder('qb')
             ->where('qb.invoiceNumber LIKE :year')
             ->orderBy('qb.invoiceNumber', 'DESC')
             ->setMaxResults(1)
             ->setParameter('year', $year."%")
             ->getQuery();
-        /** @var Invoice $invoices */
+        /** @var Invoice[] $invoices */
         $result = $qb->getResult();
-        return $result;
+
+        if ($result === null || count($result) === 0) {
+            return null;
+        }
+
+        return $result[0];
     }
 }

@@ -17,13 +17,12 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Enumerator\JmsGroup;
-use AppBundle\Output\InvoiceOutput;
+use AppBundle\Serializer\PreSerializer\InvoicePreSerializer;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
-use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -105,80 +104,75 @@ class InvoiceService extends ControllerServiceBase
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $invoice = new Invoice();
-        $rules = array();
-        ($invoice);
-        $content = RequestUtil::getContentAsArray($request);
-        $contentRules = $content['invoice_rules'];
+        /** @var Invoice $invoice */
+        $invoice = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Invoice::class);
 
-        // TODO get deserialized InvoiceRuleSelections
-        $deserializedRules = new ArrayCollection();
-        foreach ($contentRules as $contentRule){
-            /** @var InvoiceRule $rule */
-            $invoiceRule = $this->getManager()->getRepository(InvoiceRule::class)
-                ->findOneBy(array('id' => $contentRule['id']));
-            $deserializedRules->add($invoiceRule);
+        $details = $this->retrieveValidatedSenderDetails($invoice);
+        if ($details instanceof JsonResponse) {
+            return $details;
         }
 
-        $details = $this->retrieveValidatedSenderDetails($content);
-        if ($details instanceof InvoiceSenderDetails) {
-            $invoice->setSenderDetails($details);
-        }
+        $invoice->setSenderDetails($details);
 
-        // TODO set InvoiceRuleSelections
+        /**
+         * NOTE!
+         *
+         * Currently invoiceRuleSelections are added in a separate endpoint.
+         */
 
-        $invoice->setTotal($content['total']);
-        $invoice->setUbn($content["ubn"]);
-        $invoice->setCompanyLocalId($content['company_id']);
-        $invoice->setCompanyName($content['company_name']);
-        $invoice->setCompanyVatNumber($content['company_vat_number']);
-        $invoice->setCompanyDebtorNumber($content['company_debtor_number']);
-        $invoice->setStatus($content["status"]);
         if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
         }
+
         /** @var Company $company */
-        $company = $this->getManager()->getRepository(Company::class)->findOneBy(array('companyId' => $content['company']['company_id']));
+        $company = $invoice->getCompany() && $invoice->getCompany()->getId()
+            ? $this->getManager()->getRepository(Company::class)->find($invoice->getCompany()->getId()) : null;
         if ($company !== null) {
             $invoice->setCompany($company);
             $company->addInvoice($invoice);
+            $this->getManager()->persist($company);
         }
+
         $year = new \DateTime();
         $year = $year->format('Y');
-        $number = $this->getManager()->getRepository(Invoice::class)->getInvoicesOfCurrentYear($year);
-        if($number === null || count($number) == 0) {
-            $number = (int)$year * 10000;
-            $invoice->setInvoiceNumber($number);
-        }
-        else {
-            $number = $number[0]->getInvoiceNumber();
-            $number++;
-            $invoice->setInvoiceNumber($number);
-        }
+        $previousInvoice = $this->getManager()->getRepository(Invoice::class)->getInvoiceOfCurrentYearWithLastInvoiceNumber($year);
+        $number = $previousInvoice === null ?
+            (int)$year * 10000 :
+            $previousInvoice->getInvoiceNumber() + 1
+        ;
+        $invoice->setInvoiceNumber($number);
+
         $this->persistAndFlush($invoice);
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoice, [JmsGroup::INVOICE]));
     }
 
 
     /**
-     * @param ArrayCollection $content
+     * @param Invoice $invoice
      * @return JsonResponse|InvoiceSenderDetails
      */
-    private function retrieveValidatedSenderDetails(ArrayCollection $content)
+    private function retrieveValidatedSenderDetails(Invoice $invoice)
     {
-        $senderDetailsErrorMessage = ResultUtil::errorResult('SENDER DETAILS ARE MISSING', Response::HTTP_PRECONDITION_REQUIRED);
-        if (!$content->containsKey('sender_details') || !key_exists('id', $content->get('sender_details'))) {
-            return $senderDetailsErrorMessage;
+        if ($invoice->getSenderDetails() === null || $invoice->getSenderDetails()->getId() === null) {
+            return $this->getSenderDetailsAreMissingErrorMessage();
         }
 
         $details = $this->getManager()->getRepository(InvoiceSenderDetails::class)
-            ->findOneBy(array('id' => $content['sender_details']['id']));
+            ->find($invoice->getSenderDetails()->getId());
 
-        if ($details == null || !$details->containsAllNecessaryData()) {
-            return $senderDetailsErrorMessage;
+        if ($details === null || !$details->containsAllNecessaryData()) {
+            return $this->getSenderDetailsAreMissingErrorMessage();
         }
 
         return $details;
+    }
+
+    /**
+     * @return JsonResponse
+     */
+    private function getSenderDetailsAreMissingErrorMessage()
+    {
+        return ResultUtil::errorResult('SENDER DETAILS ARE MISSING', Response::HTTP_PRECONDITION_REQUIRED);
     }
 
 
@@ -192,53 +186,48 @@ class InvoiceService extends ControllerServiceBase
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $content = RequestUtil::getContentAsArray($request);
-        $temporaryInvoice = new Invoice();
-        $contentRules = $content['invoice_rules'];
-        $deserializedRules = new ArrayCollection();
-        /** @var Company $invoiceCompany */
-        $invoiceCompany = $this->getManager()->getRepository(Company::class)->findOneBy(array('companyId' => $content['company']['company_id']));
+        /** @var Invoice $temporaryInvoice */
+        $temporaryInvoice = $this->getBaseSerializer()->deserializeToObject(
+            RequestUtil::revertToJson(
+                InvoicePreSerializer::clean($request->getContent())
+            ),
+            Invoice::class
+        );
 
-        // TODO set InvoiceRuleSelections
-        // TODO get deserialized InvoiceRuleSelections
-        foreach ($contentRules as $contentRule){
-            /** @var InvoiceRule $rule */
-            $invoiceRule = $this->getManager()->getRepository(InvoiceRule::class)
-                ->findOneBy(array('id' => $contentRule['id']));
-            $deserializedRules->add($invoiceRule);
-        }
-        // TODO set InvoiceRuleSelections
-
-
-        if ($invoice->getCompany() !== null && $invoice->getCompany()->getId() !== $invoiceCompany->getId()){
-            /** @var Company $oldCompany */
-            $oldCompany = $this->getManager()->getRepository(Company::class)->findOneBy(array('id' => $invoice->getCompany()->getId()));
-            $oldCompany->removeInvoice($invoice);
-            $invoiceCompany->addInvoice($invoice);
-            $this->persistAndFlush($oldCompany);
-            $this->persistAndFlush($invoiceCompany);
-        }
-        $temporaryInvoice->setCompany($invoiceCompany);
-        $temporaryInvoice->setInvoiceNumber($content['invoice_number']);
-        $temporaryInvoice->setTotal($content['total']);
-        $temporaryInvoice->setStatus($content['status']);
-        $temporaryInvoice->setUbn($content["ubn"]);
-        $temporaryInvoice->setCompanyLocalId($content['company_id']);
-        $temporaryInvoice->setCompanyName($content['company_name']);
-        $temporaryInvoice->setCompanyVatNumber($content['company_vat_number']);
-        $temporaryInvoice->setStatus($content["status"]);
-        $invoice->copyValues($temporaryInvoice);
-        if ($invoice->getStatus() === "UNPAID") {
+        if ($invoice->getStatus() === InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
         }
         else {
-            $details = $this->retrieveValidatedSenderDetails($content);
+            $details = $this->retrieveValidatedSenderDetails($temporaryInvoice);
             if ($details instanceof JsonResponse) {
                 return $details;
             }
 
             $invoice->setSenderDetails($details);
         }
+
+        /** @var Company $company */
+        $newCompany = $invoice->getCompany() && $invoice->getCompany()->getId()
+            ? $this->getManager()->getRepository(Company::class)->find($temporaryInvoice->getCompany()->getId()) : null;
+
+        /**
+         * NOTE!
+         *
+         * Currently invoiceRuleSelections are added in a separate endpoint.
+         */
+
+        if ($invoice->getCompany() !== null && $invoice->getCompany()->getId() !== $newCompany->getId()){
+            /** @var Company $oldCompany */
+            $oldCompany = $this->getManager()->getRepository(Company::class)->find($invoice->getCompany()->getId());
+            $oldCompany->removeInvoice($invoice);
+            $newCompany->addInvoice($invoice);
+            $this->getManager()->persist($oldCompany);
+            $this->getManager()->persist($newCompany);
+        }
+
+        $temporaryInvoice->setCompany($newCompany);
+        $invoice->copyValues($temporaryInvoice);
+
         $this->persistAndFlush($invoice);
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoice, [JmsGroup::INVOICE]));
     }
@@ -262,23 +251,6 @@ class InvoiceService extends ControllerServiceBase
             return new JsonResponse(array(Constant::ERRORS_NAMESPACE => "Error, you tried to remove an invoice that was already send"), Response::HTTP_OK);
         }
         return ResultUtil::successResult($id);
-    }
-
-
-    /**
-     * @param Request $request
-     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function getInvoiceRules(Request $request)
-    {
-        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
-        { return AdminValidator::getStandardErrorResponse(); }
-
-        $repository = $this->getManager()->getRepository(InvoiceRule::class);
-        $ruleTemplates = $repository->findBy(array('isDeleted' => false, 'type' => InvoiceRuleType::STANDARD));
-        $output = $this->getBaseSerializer()->getDecodedJson($ruleTemplates, JmsGroup::INVOICE_RULE_TEMPLATE);
-
-        return ResultUtil::successResult($output);
     }
 
 
@@ -428,36 +400,6 @@ class InvoiceService extends ControllerServiceBase
         }
 
         return true;
-    }
-
-
-    /**
-     * @param Request $request
-     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function updateInvoiceRule(Request $request)
-    {
-        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
-        { return AdminValidator::getStandardErrorResponse(); }
-
-        $content = RequestUtil::getContentAsArray($request);
-
-        /** @var InvoiceRule $updatedRuleTemplate */
-        $updatedRuleTemplate = new InvoiceRule();
-        $updatedRuleTemplate->setDescription($content['description']);
-        $updatedRuleTemplate->setVatPercentageRate($content['vat_percentage_rate']);
-        $updatedRuleTemplate->setPriceExclVat($content['price_excl_vat']);
-
-        $repository = $this->getManager()->getRepository(InvoiceRule::class);
-        /** @var InvoiceRule $currentRuleTemplate */
-        $currentRuleTemplate = $repository->findOneBy(array('id' => $content['id']));
-        if(!$currentRuleTemplate) { return ResultUtil::errorResult('THE INVOICE RULE TEMPLATE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED); }
-
-        $currentRuleTemplate->copyValues($updatedRuleTemplate);
-        $this->persistAndFlush($currentRuleTemplate);
-
-        $output = $this->getBaseSerializer()->getDecodedJson($updatedRuleTemplate, JmsGroup::INVOICE_RULE);
-        return ResultUtil::successResult($output);
     }
 
 

@@ -2,8 +2,6 @@
 
 namespace AppBundle\Entity;
 
-use \DateTime;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -20,6 +18,7 @@ class InvoiceSenderDetails
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
@@ -31,6 +30,7 @@ class InvoiceSenderDetails
     /**
      * @var string
      * @ORM\Column(type="string",name="name", nullable=true)
+     * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
@@ -42,6 +42,7 @@ class InvoiceSenderDetails
     /**
      * @var string
      * @ORM\Column(type="string", name="iban")
+     * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
@@ -53,6 +54,7 @@ class InvoiceSenderDetails
     /**
      * @var string
      * @ORM\Column(type="string", name="chamber_of_commerce_number")
+     * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
@@ -64,6 +66,7 @@ class InvoiceSenderDetails
     /**
      * @var string
      * @ORM\Column(type="string", name="vat_number")
+     * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
@@ -73,8 +76,9 @@ class InvoiceSenderDetails
     private $vatNumber;
 
     /**
-     * @var Address
-     * @ORM\OneToOne(targetEntity="Address", cascade={"persist"})
+     * @var BillingAddress
+     * @ORM\OneToOne(targetEntity="BillingAddress", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\BillingAddress")
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
@@ -86,6 +90,7 @@ class InvoiceSenderDetails
     /**
      * @var int
      * @ORM\Column(type="integer", name="payment_deadline_in_days")
+     * @JMS\Type("integer")
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
@@ -97,6 +102,7 @@ class InvoiceSenderDetails
     /**
      * @var bool
      * @ORM\Column(type="boolean", name="is_deleted")
+     * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
