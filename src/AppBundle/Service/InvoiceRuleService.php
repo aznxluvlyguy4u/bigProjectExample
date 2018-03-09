@@ -11,6 +11,7 @@ use AppBundle\Entity\LedgerCategory;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
@@ -26,10 +27,11 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
     public function getInvoiceRules(Request $request)
     {
         $type = $request->query->get(QueryParameter::TYPE_QUERY);
+        $activeOnly = RequestUtil::getBooleanQuery($request,QueryParameter::ACTIVE_ONLY,false);
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $rules = $this->getManager()->getRepository(InvoiceRule::class)->findByType($type);
+        $rules = $this->getManager()->getRepository(InvoiceRule::class)->findByType($type, $activeOnly);
         $output = $this->getBaseSerializer()->getDecodedJson($rules, JmsGroup::INVOICE_RULE);
 
         return ResultUtil::successResult($output);

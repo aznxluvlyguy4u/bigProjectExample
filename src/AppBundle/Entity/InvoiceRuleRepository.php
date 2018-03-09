@@ -20,9 +20,10 @@ class InvoiceRuleRepository extends BaseRepository
 
     /**
      * @param string $type
+     * @param boolean $activeOnly
      * @return array
      */
-    public function findByType($type)
+    public function findByType($type, $activeOnly)
     {
         $qb = $this->_em->createQueryBuilder();
         $qb->select("q")
@@ -33,6 +34,12 @@ class InvoiceRuleRepository extends BaseRepository
                 $qb->expr()->eq("q.type", ":type")
             );
             $qb->setParameter("type", $type);
+        }
+
+        if ($activeOnly) {
+            $qb->andWhere(
+                $qb->expr()->eq('q.isDeleted', 'false')
+            );
         }
 
         return $qb->getQuery()->getResult();
