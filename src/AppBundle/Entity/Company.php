@@ -220,14 +220,6 @@ class Company
     private $companyUsers;
 
     /**
-     * @var ArrayCollection
-     *
-     * @ORM\OneToMany(targetEntity="Pedigree", mappedBy="company")
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\Pedigree>")
-     */
-    private $pedigrees;
-
-    /**
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
@@ -290,7 +282,6 @@ class Company
     $this->companyUsers = new ArrayCollection();
     $this->setCompanyId(Utils::generateTokenCode());
     $this->notes = new ArrayCollection();
-    $this->pedigrees = new ArrayCollection();
     $this->invoices = new ArrayCollection();
   }
 
@@ -708,23 +699,6 @@ class Company
     public function removeCompanyUser(Client $user)
     {
         $this->companyUsers->removeElement($user);
-    }
-
-
-    /**
-     * @return ArrayCollection
-     */
-    public function getPedigrees()
-    {
-        return $this->pedigrees;
-    }
-
-    /**
-     * @param ArrayCollection $pedigrees
-     */
-    public function setPedigrees($pedigrees)
-    {
-        $this->pedigrees = $pedigrees;
     }
 
     /**

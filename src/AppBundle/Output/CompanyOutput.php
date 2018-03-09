@@ -4,13 +4,9 @@ namespace AppBundle\Output;
 
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Company;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\Invoice;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Pedigree;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Service\BaseSerializer;
-use Doctrine\Common\Collections\Collection;
 use AppBundle\Component\Count;
 
 class CompanyOutput
