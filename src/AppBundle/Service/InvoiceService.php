@@ -206,9 +206,6 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
         }
 
-        /** @var Company $company */
-        $newCompany = $invoice->getCompany() && $invoice->getCompany()->getId()
-            ? $this->getManager()->getRepository(Company::class)->find($temporaryInvoice->getCompany()->getId()) : null;
 
         /**
          * NOTE!
@@ -216,13 +213,35 @@ class InvoiceService extends ControllerServiceBase
          * Currently invoiceRuleSelections are added in a separate endpoint.
          */
 
-        if ($invoice->getCompany() !== null && $invoice->getCompany()->getId() !== $newCompany->getId()){
-            /** @var Company $oldCompany */
-            $oldCompany = $this->getManager()->getRepository(Company::class)->find($invoice->getCompany()->getId());
-            $oldCompany->removeInvoice($invoice);
-            $newCompany->addInvoice($invoice);
-            $this->getManager()->persist($oldCompany);
-            $this->getManager()->persist($newCompany);
+
+        /** @var Company $newCompany */
+        $newCompany = $temporaryInvoice->getCompany() && $temporaryInvoice->getCompany()->getCompanyId()
+            ? $this->getManager()->getRepository(Company::class)->findOneByCompanyId($temporaryInvoice->getCompany()->getCompanyId()) : null;
+        $oldCompany = $invoice->getCompany();
+
+        if ($newCompany) {
+
+            if ($oldCompany !== null){
+                if ($oldCompany->getCompanyId() !== $newCompany->getCompanyId()) {
+                    $oldCompany->removeInvoice($invoice);
+                    $newCompany->addInvoice($invoice);
+                    $invoice->setCompany($newCompany);
+                    $this->getManager()->persist($oldCompany);
+                    $this->getManager()->persist($newCompany);
+                }
+
+            } else {
+                $invoice->setCompany($newCompany);
+                $newCompany->addInvoice($invoice);
+                $this->getManager()->persist($newCompany);
+            }
+
+        } else {
+            if ($oldCompany !== null) {
+                $invoice->setCompany(null);
+                $oldCompany->removeInvoice($invoice);
+                $this->getManager()->persist($oldCompany);
+            }
         }
 
         $temporaryInvoice->setCompany($newCompany);
