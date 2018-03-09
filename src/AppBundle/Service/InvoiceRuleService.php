@@ -9,6 +9,7 @@ use AppBundle\Controller\InvoiceRuleAPIControllerInterface;
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\LedgerCategory;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\RequestUtil;
@@ -169,7 +170,12 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
 
         if(!$rule) { return ResultUtil::errorResult('THE INVOICE RULE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED); }
 
-        $this->getManager()->remove($rule);
+        if ($rule->getType() === InvoiceRuleType::CUSTOM) {
+            $this->getManager()->remove($rule);
+        } else {
+            $rule->setIsDeleted(true);
+            $this->getManager()->persist($rule);
+        }
         $this->getManager()->flush();
 
         $output = $this->getBaseSerializer()->getDecodedJson($rule, JmsGroup::INVOICE_RULE);
