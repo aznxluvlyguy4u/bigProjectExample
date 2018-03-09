@@ -10,9 +10,10 @@ class CompanyPreSerializer extends PreSerializerBase implements PreSerializerInt
 {
     /**
      * @param ArrayCollection|array|string $input
+     * @param boolean $returnAsArray
      * @return ArrayCollection
      */
-    static function clean($input)
+    static function clean($input, $returnAsArray = false)
     {
         $collection = self::preClean($input);
 
@@ -23,7 +24,7 @@ class CompanyPreSerializer extends PreSerializerBase implements PreSerializerInt
             $collection->set($subscriptionDateKey, $subscriptionDateString);
         }
 
-        return $collection;
+        return $returnAsArray ? $collection->toArray() : $collection;
     }
 
 }

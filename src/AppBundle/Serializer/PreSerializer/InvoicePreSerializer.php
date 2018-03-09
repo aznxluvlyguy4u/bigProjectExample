@@ -10,19 +10,20 @@ class InvoicePreSerializer extends PreSerializerBase implements PreSerializerInt
 {
     /**
      * @param ArrayCollection|array|string $input
-     * @return ArrayCollection
+     * @param boolean $returnAsArray
+     * @return ArrayCollection|array
      */
-    static function clean($input)
+    static function clean($input, $returnAsArray = false)
     {
         $collection = self::preClean($input);
 
         $companyKey = 'company';
 
         if ($collection->containsKey($companyKey)) {
-            $company = CompanyPreSerializer::clean($collection->get($companyKey));
+            $company = CompanyPreSerializer::clean($collection->get($companyKey), true);
             $collection->set($companyKey, $company);
         }
 
-        return $collection;
+        return $returnAsArray ? $collection->toArray() : $collection;
     }
 }
