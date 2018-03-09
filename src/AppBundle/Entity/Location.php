@@ -8,9 +8,6 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
-use AppBundle\Entity\Person;
-use AppBundle\Entity\LocationHealthInspection;
-use AppBundle\Entity\DeclareArrival;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
 
@@ -275,6 +272,14 @@ class Location
     private $treatments;
 
     /**
+     * @var ArrayCollection
+     * @ORM\OrderBy({"description" = "ASC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\PedigreeRegisterRegistration", mappedBy="location", cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\PedigreeRegisterRegistration>")
+     */
+    private $pedigreeRegisterRegistrations;
+
+    /**
      * @var boolean
      *
      * @ORM\Column(type="boolean", options={"default":true})
@@ -361,6 +366,7 @@ class Location
     $this->tags = new ArrayCollection();
     $this->treatmentTemplates = new ArrayCollection();
     $this->treatments = new ArrayCollection();
+    $this->pedigreeRegisterRegistrations = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 
@@ -1126,7 +1132,43 @@ class Location
         return $this;
     }
 
+    /**
+     * @return ArrayCollection
+     */
+    public function getPedigreeRegisterRegistrations()
+    {
+        return $this->pedigreeRegisterRegistrations;
+    }
 
+    /**
+     * @param ArrayCollection $pedigreeRegisterRegistrations
+     * @return Location
+     */
+    public function setPedigreeRegisterRegistrations($pedigreeRegisterRegistrations)
+    {
+        $this->pedigreeRegisterRegistrations = $pedigreeRegisterRegistrations;
+        return $this;
+    }
+
+    /**
+     * @param PedigreeRegisterRegistration $pedigreeRegisterRegistration
+     * @return Location
+     */
+    public function addPedigreeRegisterRegistration(PedigreeRegisterRegistration $pedigreeRegisterRegistration)
+    {
+        $this->pedigreeRegisterRegistrations->add($pedigreeRegisterRegistration);
+        return $this;
+    }
+
+    /**
+     * @param PedigreeRegisterRegistration $pedigreeRegisterRegistration
+     * @return Location
+     */
+    public function removePedigreeRegisterRegistration(PedigreeRegisterRegistration $pedigreeRegisterRegistration)
+    {
+        $this->pedigreeRegisterRegistrations->removeElement($pedigreeRegisterRegistration);
+        return $this;
+    }
 
     /**
      * @return mixed
