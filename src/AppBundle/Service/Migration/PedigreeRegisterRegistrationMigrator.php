@@ -74,9 +74,8 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
             $companyName = $record[1];
             $ubn = $record[2];
             $pedigreeRegisterAbbreviation = $record[3];
-            $skip = ArrayUtil::get(4, $record, null) !== null;
 
-            if ($skip) {
+            if ($this->skipRecord($record)) {
                 $skippedCount++;
                 continue;
             }
@@ -119,6 +118,16 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
         $this->printMissingData();
 
         return true;
+    }
+
+
+    /**
+     * @param array $record
+     * @return bool
+     */
+    private function skipRecord($record)
+    {
+        return ArrayUtil::get(4, $record, null) !== null;
     }
 
 
@@ -170,6 +179,7 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
         $duplicateBreederNumbers = [];
         $duplicateUbnAbbreviationCombinations = [];
         $missingPedigreeRegisters = [];
+        $incorrectBreederNumbers = [];
 
         foreach ($this->data as $record) {
 
@@ -178,11 +188,17 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
             $ubn = $record[2];
             $pedigreeRegisterAbbreviation = $record[3];
 
+            if ($this->skipRecord($record)) {
+                continue;
+            }
+
             $key = $breederNumber.' '.$companyName.' '.$ubn.' '.$pedigreeRegisterAbbreviation;
 
             if ($breederNumber === '' || $breederNumber == null) {
                 $this->writeLn('MISSING BREEDER NUMBER: '.$key);
                 return false;
+            } elseif (strlen($breederNumber) !== 5) {
+                $incorrectBreederNumbers[$key] = $breederNumber;
             }
 
             if ($companyName === '' || $companyName == null) {
@@ -224,6 +240,12 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
         if (count($duplicateBreederNumbers) > 0) {
             $this->writeLn('There are duplicate breederNumbers in the csv import file: '
                 . implode(', ', $duplicateBreederNumbers));
+            $isValid = false;
+        }
+
+        if (count($incorrectBreederNumbers) > 0) {
+            $this->writeLn('There are incorrect breederNumbers in the csv import file: '
+                . implode(', ', $incorrectBreederNumbers));
             $isValid = false;
         }
 
