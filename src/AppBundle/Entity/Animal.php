@@ -623,6 +623,7 @@ abstract class Animal
      *     "ANIMALS_BATCH_EDIT",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "USER_MEASUREMENT"
      * })
      */
