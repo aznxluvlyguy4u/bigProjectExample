@@ -57,21 +57,11 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
 
         $this->initializeSearchArrays();
 
-        /* TODO REACTIVATE LATER */
-//        if(!$this->validateInputFile()) { return false; }
+        if(!$this->validateInputFile()) { return false; }
 
         $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
 
         $this->writeLn('Only missing registrations will be added');
-
-
-        /* TODO REMOVE LATER */
-        $ubnIgnoreList = [
-            '2572828',
-            '6332617',
-            '6373999',
-        ];
-
 
         $newCount = 0;
         $skippedCount = 0;
@@ -84,27 +74,26 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
             $companyName = $record[1];
             $ubn = $record[2];
             $pedigreeRegisterAbbreviation = $record[3];
+            $skip = ArrayUtil::get(4, $record, null) !== null;
 
-            /* TODO REMOVE LATER */
-            if (in_array($ubn, $ubnIgnoreList)) {
+            if ($skip) {
                 $skippedCount++;
                 continue;
             }
 
 
-            if (
-                $this->isBreederNumberAlreadyUsedForRegistration($breederNumber)
-//                $this->registrationExists($breederNumber, $ubn, $pedigreeRegisterAbbreviation, $companyName)
-            ) {
+            if ($this->isBreederNumberAlreadyUsedForRegistration($breederNumber)) {
                 $alreadyExistsCount++;
                 continue;
             }
+
 
             $location = $this->getLocation($ubn, $companyName);
             if (!$location) {
                 $errors++;
                 continue;
             }
+
 
             $register = $this->getPedigreeRegister($pedigreeRegisterAbbreviation);
             if (!$register) {
@@ -444,59 +433,34 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
     }
 
 
-
-    /**
-     * @param string $breederNumber
-     * @param string $ubn
-     * @param string $abbreviation
-     * @param string $companyName
-     * @return bool
-     */
-    private function registrationExists($breederNumber, $ubn, $abbreviation, $companyName)
-    {
-        /** @var ArrayCollection|PedigreeRegisterRegistration[] $registrations */
-        $registrations = $this->registrations->matching(PedigreeRegisterRegistrationCriteria::byBreederNumber($breederNumber));
-
-        foreach ($registrations as $registration) {
-            if ($registration->getLocation() && $registration->getLocation()->getUbn() === $ubn
-            && $registration->getPedigreeRegister() && $registration->getPedigreeRegister()->getAbbreviation() === $abbreviation
-            && $this->locationMatchesCompanyName($registration->getLocation(), $companyName)
-            ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private function printMissingData()
     {
         $isDataMissing = false;
         $orderOnNewLine = true;
 
         if (count($this->missingLocations) > 0) {
-
+            $errorMessage = count($this->missingLocations). ' Missing locations: ';
             if  ($orderOnNewLine) {
-                $this->writeLn('Missing locations: ');
+                $this->writeLn($errorMessage);
                 foreach ($this->missingLocations as $key => $value) {
                     $this->writeLn($key);
                 }
             } else {
-                $this->writeLn('Missing locations: '.implode(',', $this->missingLocations));
+                $this->writeLn($errorMessage.implode(',', $this->missingLocations));
             }
 
             $isDataMissing = true;
         }
 
         if (count($this->locationsFoundWithoutMatchingOwner) > 0) {
-
+            $errorMessage = count($this->locationsFoundWithoutMatchingOwner).' Locations without a matching owner: ';
             if  ($orderOnNewLine) {
-                $this->writeLn('Locations without a matching owner: ');
+                $this->writeLn($errorMessage);
                 foreach ($this->locationsFoundWithoutMatchingOwner as $key => $value) {
                     $this->writeLn($value);
                 }
             } else {
-                $this->writeLn('Locations without a matching owner: '.ArrayUtil::implode($this->locationsFoundWithoutMatchingOwner));
+                $this->writeLn($errorMessage.ArrayUtil::implode($this->locationsFoundWithoutMatchingOwner));
             }
 
             $isDataMissing = true;
