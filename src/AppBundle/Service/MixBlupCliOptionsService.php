@@ -132,6 +132,11 @@ class MixBlupCliOptionsService
             '42: Print CSV file for NTS, TSNH, LAX pedigree registers', "\n",
             '43: Print CSV file Breedvalues overview all animals on a ubn, with atleast one breedValue', "\n",
             '44: Print CSV file Breedvalues overview all animals on a ubn, even those without a breedValue', "\n",
+            '========================================================================', "\n",
+            '50: Generate & Upload EXTERIOR MixBlupInputFiles and send message to MixBlup queue', "\n",
+            '51: Generate & Upload LAMB MEAT INDEX MixBlupInputFiles and send message to MixBlup queue', "\n",
+            '52: Generate & Upload FERTILITY MixBlupInputFiles and send message to MixBlup queue', "\n",
+            '53: Generate & Upload WORM MixBlupInputFiles and send message to MixBlup queue', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -184,6 +189,11 @@ class MixBlupCliOptionsService
             case 44: $filepath = $this->breedValuesOverviewReportService->generate(FileType::CSV, false, true, false);
                 $this->logger->notice($filepath);
                 break;
+
+            case 50: $this->mixBlupInputFilesService->runExterior(); break;
+            case 51: $this->mixBlupInputFilesService->runLambMeatIndex(); break;
+            case 52: $this->mixBlupInputFilesService->runFertility(); break;
+            case 53: $this->mixBlupInputFilesService->runWorm(); break;
 
             default: return;
         }

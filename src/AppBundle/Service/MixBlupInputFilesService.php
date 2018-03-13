@@ -47,6 +47,9 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     /** @var Logger */
     private $logger;
 
+    /** @var string */
+    private $onlyUseThisProcessType;
+
     /** @var boolean */
     private $purgeCacheAfterSuccessfulRun;
 
@@ -70,6 +73,8 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $this->cacheDir = $cacheDir;
         $this->logger = $logger;
         $this->workingFolder = $cacheDir.'/'.MixBlupFolder::ROOT;
+
+        $this->onlyUseThisProcessType = null;
 
         $this->mixBlupProcesses = [];
         $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorInputProcess($em, $this->workingFolder, $this->logger);
@@ -120,6 +125,38 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     }
 
 
+    public function runExterior()
+    {
+        $this->onlyUseThisProcessType = MixBlupType::EXTERIOR;
+        $this->run();
+        $this->onlyUseThisProcessType = null;
+    }
+
+
+    public function runLambMeatIndex()
+    {
+        $this->onlyUseThisProcessType = MixBlupType::LAMB_MEAT_INDEX;
+        $this->run();
+        $this->onlyUseThisProcessType = null;
+    }
+
+
+    public function runFertility()
+    {
+        $this->onlyUseThisProcessType = MixBlupType::FERTILITY;
+        $this->run();
+        $this->onlyUseThisProcessType = null;
+    }
+
+
+    public function runWorm()
+    {
+        $this->onlyUseThisProcessType = MixBlupType::WORM;
+        $this->run();
+        $this->onlyUseThisProcessType = null;
+    }
+
+
     /**
      * Generates the data for all the files,
      * writes the data to the text input files,
@@ -158,18 +195,41 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
      */
     private function write()
     {
-        /**
-         * @var string $mixBlupType
-         * @var MixBlupInputProcessInterface $mixBlupProcess
-         */
-        foreach($this->mixBlupProcesses as $mixBlupType => $mixBlupProcess)
-        {
-            $this->logger->notice('Writing MixBlup input files for: '.$mixBlupType);
-            $writeResult = $mixBlupProcess->write();
-            if(!$writeResult) {
-                $this->logger->critical('FAILED writing MixBlup input file for: '.$mixBlupType);
-                return false;
+        if ($this->onlyUseThisProcessType) {
+            return $this->writeProcess($this->onlyUseThisProcessType);
+
+        } else {
+            /**
+             * @var string $mixBlupType
+             * @var MixBlupInputProcessInterface $mixBlupProcess
+             */
+            foreach($this->mixBlupProcesses as $mixBlupType => $mixBlupProcess)
+            {
+                $processResult = $this->writeProcess($mixBlupType);
+                if (!$processResult) {
+                    return false;
+                }
             }
+        }
+
+        return true;
+    }
+
+
+    /**
+     * @param string $mixBlupType
+     * @return bool
+     */
+    private function writeProcess($mixBlupType)
+    {
+        /** @var MixBlupInputProcessInterface $mixBlupProcess */
+        $mixBlupProcess = $this->mixBlupProcesses[$this->onlyUseThisProcessType];
+
+        $this->logger->notice('Writing MixBlup input files for: '.$mixBlupType);
+        $writeResult = $mixBlupProcess->write();
+        if(!$writeResult) {
+            $this->logger->critical('FAILED writing MixBlup input file for: '.$mixBlupType);
+            return false;
         }
         return true;
     }
