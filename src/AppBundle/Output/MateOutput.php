@@ -4,18 +4,11 @@ namespace AppBundle\Output;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Company;
 use AppBundle\Entity\Ewe;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\Invoice;
-use AppBundle\Entity\Client;
 use AppBundle\Entity\Mate;
-use AppBundle\Entity\Pedigree;
-use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Collection;
-use AppBundle\Component\Count;
 
 class MateOutput
 {

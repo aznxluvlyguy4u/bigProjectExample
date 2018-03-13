@@ -844,6 +844,36 @@ abstract class Animal
      */
     protected $collarNumber;
 
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
+     * })
+     */
+    protected $nLing;
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("merged_n_ling")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     * @return integer
+     */
+    public function mergedNLing()
+    {
+        if ($this->getLitter()) {
+            return intval($this->getLitter()->getSize());
+        }
+
+        return $this->nLing;
+    }
+
 
     /**
      * @JMS\VirtualProperty
@@ -2884,6 +2914,25 @@ abstract class Animal
     {
         $this->wormResistances->remove($wormResistance);
 
+        return $this;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getNLing()
+    {
+        return $this->nLing;
+    }
+
+    /**
+     * @param int $nLing
+     * @return Animal
+     */
+    public function setNLing($nLing)
+    {
+        $this->nLing = $nLing;
         return $this;
     }
 

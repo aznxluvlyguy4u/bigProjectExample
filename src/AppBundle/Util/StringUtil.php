@@ -611,6 +611,17 @@ class StringUtil
 
 
     /**
+     * @param string $needle
+     * @param string $haystack
+     * @return bool
+     */
+    public static function containsSubstring($needle, $haystack)
+    {
+        return !!strpos(strtolower($haystack), strtolower($needle));
+    }
+
+
+    /**
      * @param string $string
      * @return string
      */
@@ -646,6 +657,8 @@ class StringUtil
             'ubn' => 'UBN',
             'uln' => 'ULN',
             'ulns' => 'ULNs',
+            'btw' => 'BTW',
+            'kvk' => 'KVK',
         ];
     }
 }

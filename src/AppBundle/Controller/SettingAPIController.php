@@ -19,6 +19,59 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class SettingAPIController extends APIController implements SettingAPIControllerInterface
 {
+    const INVOICE_JMS_GROUP = 'INVOICE';
+
+    /**
+     * @Route("/invoice-rules")
+     * @param Request $request
+     * @Method("GET")
+     * @return jsonResponse
+     */
+    public function getInvoiceRuleTemplate(Request $request)
+    {
+        return $this->get('app.invoice.rule.template')->getInvoiceRuleTemplate($request);
+    }
+
+    /**
+     * @Route("/invoice-rules")
+     * @param Request $request
+     * @Method("POST")
+     * @return jsonResponse
+     */
+    public function createInvoiceRuleTemplate(Request $request)
+    {
+        return $this->get('app.invoice.rule.template')->createInvoiceRuleTemplate($request);
+    }
+
+
+    /**
+     * @Route("/invoice-rules")
+     * @param Request $request
+     * @Method("PUT")
+     * @return jsonResponse
+     */
+    public function changeInvoiceRuleTemplate(Request $request)
+    {
+        return $this->get('app.invoice.rule.template')->changeInvoiceRuleTemplate($request);
+    }
+
+    /**
+     * @Route("/invoice-rules/{id}")
+     * @param Request $request
+     * @Method("DELETE")
+     * @return jsonResponse
+     */
+    public function deleteInvoiceRuleTemplate(Request $request, $id)
+    {
+        return $this->get('app.invoice.rule.template')->deleteInvoiceRuleTemplate($request, $id);
+    }
+
+
+
+
+
+
+
     /**
      * Edit reasons of loss drop down options.
      *

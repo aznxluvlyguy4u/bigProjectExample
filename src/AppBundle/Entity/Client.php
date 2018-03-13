@@ -24,11 +24,13 @@ class Client extends Person
     /**
     * @ORM\Column(type="string", nullable=true)
     * @Assert\Length(max = 20)
-    * @JMS\Type("string")
+    * @JMS\Type("string")=
     * @JMS\Groups({
      *     "ACTION_LOG_ADMIN",
      *     "ACTION_LOG_USER",
-     *     "BASIC"
+     *     "BASIC",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
     * @Expose
     */

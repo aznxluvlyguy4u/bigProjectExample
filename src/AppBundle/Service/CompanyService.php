@@ -15,6 +15,10 @@ use AppBundle\Entity\CompanyNote;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Filter\ActiveCompanyFilter;
+use AppBundle\Filter\ActiveInvoiceFilter;
+use AppBundle\Filter\ActiveLocationFilter;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
 use AppBundle\Util\ActionLogWriter;
@@ -28,8 +32,8 @@ use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
+use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 
 class CompanyService extends AuthServiceBase
@@ -51,13 +55,14 @@ class CompanyService extends AuthServiceBase
         // Get all companies
         $em = $this->getManager();
         $query = $em->createQuery(
-            'SELECT c,a,u,l,o,p,i         
+            'SELECT c,a,u,l,o,p,i,b         
             FROM AppBundle:Company c 
             LEFT JOIN c.locations l 
             LEFT JOIN c.owner o 
             LEFT JOIN c.companyUsers u 
             LEFT JOIN c.address a
             LEFT JOIN c.pedigrees p
+            LEFT JOIN c.billingAddress b
             LEFT JOIN c.invoices i'
         );
         $companies = $query->getResult(Query::HYDRATE_ARRAY);
@@ -256,10 +261,12 @@ class CompanyService extends AuthServiceBase
         }
 
         // Get Company
+        $this->activateFilter(ActiveInvoiceFilter::NAME);
         $company = $this->getManager()->getRepository(Company::class)->findOneByCompanyId($companyId);
+        $this->deactivateFilter(ActiveInvoiceFilter::NAME);
 
         // Generate Company Details
-        $result = CompanyOutput::createCompany($company);
+        $result = CompanyOutput::createCompany($company, $this->getBaseSerializer());
 
         return ResultUtil::successResult($result);
     }
@@ -678,6 +685,39 @@ class CompanyService extends AuthServiceBase
 
         return ResultUtil::successResult($result);
     }
-    
+
+
+    /**
+     * @return JsonResponse
+     */
+    public function getCompanyInvoiceDetails(){
+
+        $this->activateFilter(ActiveCompanyFilter::NAME);
+        $this->activateFilter(ActiveLocationFilter::NAME);
+        $companies = $this->getManager()->getRepository(Company::class)->findBy(['isActive' => true]);
+        $this->deactivateFilter(ActiveCompanyFilter::NAME);
+        $this->deactivateFilter(ActiveLocationFilter::NAME);
+
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getCompaniesByName(Request $request){
+        $name = $request->query->get('company_name');
+
+        /** @var QueryBuilder $qb */
+        $qb = $this->getManager()->getRepository(Company::class)
+            ->createQueryBuilder('qb')
+            ->where('LOWER(qb.companyName) LIKE :company_name')
+            ->andWhere('qb.isActive = true')
+            ->setParameter('company_name', '%'.strtolower($name).'%');
+
+        $companies = $qb->getQuery()->getResult();
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
+    }
     
 }

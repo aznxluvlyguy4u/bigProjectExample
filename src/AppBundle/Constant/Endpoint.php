@@ -25,6 +25,10 @@ class Endpoint
 
     const ERROR_ENDPOINT = '/api/v1/errors';
 
+    const FRONTEND_INVOICE_DETAILS_ENDPOINT = '/main/invoices/details';
+
+    const MOLLIE_ENDPOINT = "/api/v1/mollie";
+
     const PEDIGREE_REGISTER = '/api/v1/pedigreeregisters';
 
     const REPORT = '/api/v1/reports';
