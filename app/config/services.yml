@@ -173,6 +173,7 @@ services:
           - '@app.aws.queueservice.mixblup_output'
           - '@app.breed.index'
           - '@app.breed.value'
+          - '@AppBundle\Service\NormalDistributionService'
           - '%environment%'
           - '%kernel.cache_dir%'
           - '@logger'
