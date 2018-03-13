@@ -665,14 +665,16 @@ class NsfoMainCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '=====================================', "\n",
             '1: '.strtolower(CommandTitle::INSPECTOR), "\n",
-            '2: '.strtolower(CommandTitle::DATA_MIGRATE_2017_AND_WORM), "\n\n",
-
+            '2: '.strtolower(CommandTitle::DATA_MIGRATE_2017_AND_WORM), "\n",
+            '3: '.strtolower(CommandTitle::PEDIGREE_REGISTER_REGISTRATION), "\n",
+            "\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1: $this->getContainer()->get('app.migrator.inspector')->run($this->cmdUtil); break;
             case 2: $this->getContainer()->get('app.migrator.vsm')->run($this->cmdUtil); break;
+            case 3: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeRegisterRegistrationMigrator')->run($this->cmdUtil); break;
             default: $this->writeLn('Exit menu'); return;
         }
         $this->dataMigrationOptions();

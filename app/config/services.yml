@@ -273,6 +273,9 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\BirthProgressInitializer
 
+    AppBundle\Service\Migration\PedigreeRegisterRegistrationMigrator:
+        parent: app.migrator.base
+
     app.initializer.treatment_type:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\TreatmentTypeInitializer
