@@ -381,6 +381,26 @@ class SqlUtil
     }
 
 
+    public static function getSingleValueGroupedFloatsFromSqlResults($key, $results, $sortResults = false)
+    {
+        $listOfValues = [];
+        if(!is_array($results)) { return $listOfValues; }
+        if(count($results) == 0) { return $listOfValues; }
+        if(!array_key_exists($key, $results[0])) { return $listOfValues; }
+
+        foreach ($results as $result) {
+            $value = floatval($result[$key]);
+            $listOfValues[] = $value;
+        }
+
+        if($sortResults) {
+            sort($listOfValues);
+        }
+
+        return $listOfValues;
+    }
+
+
     /**
      * @param string|int $key1
      * @param string|int $key2

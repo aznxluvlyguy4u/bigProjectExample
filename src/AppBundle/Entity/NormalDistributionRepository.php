@@ -76,4 +76,29 @@ class NormalDistributionRepository extends BaseRepository {
         return $results;
     }
 
+
+    /**
+     * @param int $year
+     * @return NormalDistribution|null
+     */
+    public function getSiGAbyYear($year)
+    {
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $qb->select('n')
+            ->from(NormalDistribution::class, 'n')
+            ->where($qb->expr()->eq('n.year', ':year'))
+            ->andWhere($qb->expr()->eq('n.type', "'".BreedValueTypeConstant::IGA_SCOTLAND."'"))
+            ->setParameter('year', $year)
+        ;
+
+        $results = $qb->getQuery()->getResult();
+
+        if (count($results) === 0) {
+            return null;
+        }
+
+        return array_shift($results);
+    }
+
 }

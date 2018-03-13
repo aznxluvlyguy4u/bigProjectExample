@@ -10,6 +10,7 @@ use AppBundle\Entity\LambMeatBreedIndex;
 use AppBundle\Entity\NormalDistribution;
 use AppBundle\Entity\NormalDistributionRepository;
 use AppBundle\Enumerator\BreedValueCoefficientType;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\MathUtil;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\TimeUtil;
@@ -67,13 +68,14 @@ class NormalDistributionService
 
 
     /**
+     * Note the standard deviation will be based on the generation date of the breed values!
+     *
      * @param $generationDate
      * @throws \Exception
      */
     public function persistLambMeatIndexMeanAndStandardDeviation($generationDate)
     {
         $type = BreedValueCoefficientType::LAMB_MEAT_INDEX;
-        // NOTE! It is assumed that generationDate->year = measurementDate->year
         $year = TimeUtil::getYearFromDateTimeString($generationDate);
 
         foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
@@ -86,23 +88,29 @@ class NormalDistributionService
 
 
     /**
+     * Note the standard deviation will be based on the generation date of the breed values!
+     *
      * @param string|\DateTime $generationDate
+     * @param boolean $overwriteExisting
      * @throws \Exception
      */
-    public function persistWormResistanceMeanAndStandardDeviationSIgA($generationDate)
+    public function persistWormResistanceMeanAndStandardDeviationSIgA($generationDate, $overwriteExisting = false)
     {
         $breedValueTypeConstant = BreedValueTypeConstant::IGA_SCOTLAND;
 
-        $yearsInMeasurementSet = $this->getManager()->getRepository(BreedValue::class)
-            ->getMeasurementYearsOfGenerationSet($generationDate, $breedValueTypeConstant);
+        $generationYear = DateUtil::getYearFromDateStringOrDateTime($generationDate);
 
-        foreach ($yearsInMeasurementSet as $year) {
-            foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
-                $valuesArray = $this->getManager()->getRepository(BreedValue::class)
-                    ->getReliableSIgAValues($year, $isIncludingOnlyAliveAnimals);
+        $normalDistribution = $this->normalDistributionRepository->getSiGAbyYear($generationYear);
+        if ($normalDistribution && !$overwriteExisting) {
+            return;
+        }
 
-                self::upsertMeanAndStandardDeviation($breedValueTypeConstant, $year, $isIncludingOnlyAliveAnimals, $valuesArray);
-            }
+        foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
+            $valuesArray = $this->getManager()->getRepository(BreedValue::class)
+                ->getReliableSIgAValues($generationDate, $isIncludingOnlyAliveAnimals);
+
+            self::upsertMeanAndStandardDeviation($breedValueTypeConstant,
+                $generationYear, $isIncludingOnlyAliveAnimals, $valuesArray);
         }
     }
 

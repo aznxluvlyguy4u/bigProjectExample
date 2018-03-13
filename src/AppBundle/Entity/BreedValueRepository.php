@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Constant\BreedValueTypeConstant;
+use AppBundle\Setting\BreedGradingSetting;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
 
 /**
@@ -12,13 +14,21 @@ class BreedValueRepository extends BaseRepository
 {
 
     /**
-     * @param string|int $yearOfBirth used as year of measurement
+     * @param string|\DateTime $generationDate
      * @param boolean $isIncludingOnlyAliveAnimals
      * @return array
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\DBAL\DBALException|\Exception
      */
-    public function getReliableSIgAValues($yearOfBirth, $isIncludingOnlyAliveAnimals)
+    public function getReliableSIgAValues($generationDate, $isIncludingOnlyAliveAnimals)
     {
+        $generationDateString = $generationDate instanceof \DateTime ? $generationDate->format(SqlUtil::DATE_FORMAT) : $generationDate;
+        $generationYear = DateUtil::getYearFromDateStringOrDateTime($generationDateString);
+
+        if ($generationDate === null || $generationYear === null) {
+            throw new \Exception('Invalid generationDate entered for getReliableSIgAValues');
+        }
+
+        $yearOfBirth = $generationDate - BreedGradingSetting::GENETIC_BASE_YEAR_OFFSET;
         $animalIsAliveFilter = $isIncludingOnlyAliveAnimals ? 'AND a.is_alive = TRUE' : '';
 
         $sql = "SELECT
@@ -26,33 +36,17 @@ class BreedValueRepository extends BaseRepository
                 FROM breed_value b
                   INNER JOIN breed_value_type t ON b.type_id = t.id
                   INNER JOIN animal a ON b.animal_id = a.id
-                WHERE DATE_PART('year', a.date_of_birth) = ".$yearOfBirth." 
-                    AND t.nl = '".BreedValueTypeConstant::IGA_SCOTLAND."'
-                    AND b.reliability >= t.min_reliability ".$animalIsAliveFilter;
-        return $this->getConnection()->query($sql)->fetchAll();
-    }
+                WHERE 
+                    DATE_PART('year', a.date_of_birth) = ".$yearOfBirth." AND
+                    t.nl = '".BreedValueTypeConstant::IGA_SCOTLAND."' AND
+                    b.generation_date = '".$generationDateString."' AND
+                    b.reliability >= t.min_reliability ".$animalIsAliveFilter;
 
-
-    /**
-     * @param string|\DateTime $generationDate
-     * @param string $breedValueTypeNl
-     * @return array
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public function getMeasurementYearsOfGenerationSet($generationDate, $breedValueTypeNl)
-    {
-        $generationDateString = $generationDate instanceof \DateTime ? $generationDate->format(SqlUtil::DATE_FORMAT) : $generationDate;
-
-        $sql = "SELECT
-                  DATE_PART('year', a.date_of_birth) as year
-                FROM breed_value b
-                  INNER JOIN breed_value_type t ON b.type_id = t.id
-                  INNER JOIN animal a ON b.animal_id = a.id
-                WHERE b.generation_date = '".$generationDateString."' AND t.nl = '".$breedValueTypeNl."'
-                      AND b.reliability >= t.min_reliability
-                      AND a.date_of_birth NOTNULL
-                GROUP BY DATE_PART('year', a.date_of_birth)";
-        return $this->getConnection()->query($sql)->fetchAll();
+        return SqlUtil::getSingleValueGroupedFloatsFromSqlResults(
+            'value',
+            $this->getConnection()->query($sql)->fetchAll(),
+            false
+        );
     }
 
 }
