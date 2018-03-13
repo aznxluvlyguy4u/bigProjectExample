@@ -67,6 +67,7 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
             ' SIgA       T #IgA bepaling in Schotland',
             ' NZIgA      T #IgA bepaling in Nieuw Zeeland',
             ' Periode    I #vroege of late monstername binnen seizoen. 1/2, default = '.WormResistanceDataFile::SAMPLE_PERIOD_DEFAULT_VALUE,
+            // TODO add litter column headers here
         ];
 
         $lastDataRecords = [

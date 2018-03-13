@@ -6,6 +6,7 @@ namespace AppBundle\Component\MixBlup;
 
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DsvWriterUtil;
@@ -71,6 +72,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
             $recordEnd =
                 $formattedSamplePeriod.
+                // TODO add litter values here
                 self::getFormattedUbnOfBirthWithoutPadding($data)
             ;
 
@@ -133,14 +135,15 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
     static function getSqlQueryRelatedAnimals()
     {
         $returnValuesString = 'a.id as '.JsonInputConstant::ANIMAL_ID.', a.'.JsonInputConstant::TYPE;
-        return self::getSqlQueryForBaseValues($returnValuesString). ' GROUP BY a.id, a.type';
+        return self::getSqlQueryForBaseValues($returnValuesString, false). ' GROUP BY a.id, a.type';
     }
 
     /**
      * @param string $returnValuesString
+     * @param boolean $includeLitterData
      * @return string
      */
-    private static function getSqlQueryForBaseValues($returnValuesString = null)
+    private static function getSqlQueryForBaseValues($returnValuesString = null, $includeLitterData = true)
     {
         if($returnValuesString == null) {
             $returnValuesString =
@@ -159,13 +162,84 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                  w.".JsonInputConstant::YEAR."";
         }
 
+        $litterDataJoin = '';
+        if ($includeLitterData) {
+            $litterDataJoin =
+  "LEFT JOIN (
+    ".self::getJoinLatestLitterOnParentId(true)."
+    UNION
+    ".self::getJoinLatestLitterOnParentId(false)."
+    )litter ON litter.animal_id = w.animal_id";
+
+            $returnValuesString .= ',
+              litter.'.JsonInputConstant::LITTER_DATE.',
+              litter.'.JsonInputConstant::BORN_ALIVE_COUNT;
+        }
+
         return "SELECT
                   ".$returnValuesString."
                 FROM animal a
                   INNER JOIN worm_resistance w ON a.id = w.animal_id
+                 ".$litterDataJoin."
                 WHERE 
                   ".self::getSqlBaseFilter()."
                   ".self::getErrorLogAnimalPedigreeFilter('a.id');
+    }
+
+
+    /**
+     * @param boolean $isMother
+     * @return string
+     */
+    private static function getJoinLatestLitterOnParentId($isMother)
+    {
+        $parentIdLabel = $isMother ? 'animal_mother_id' : 'animal_father_id';
+        
+        return
+   "SELECT
+      l.$parentIdLabel as ".JsonInputConstant::ANIMAL_ID.",
+      DATE(l.litter_date) as ".JsonInputConstant::LITTER_DATE.",
+      l.".JsonInputConstant::BORN_ALIVE_COUNT."
+    FROM litter l
+      INNER JOIN declare_nsfo_base b ON b.id = l.id
+      INNER JOIN (
+                   -- Find the latest litter before sampling date
+                   -- or in same year if sampling date is missing
+                   SELECT
+                     l.$parentIdLabel, MAX(l.litter_date) as litter_date
+                   FROM litter l
+                     INNER JOIN declare_nsfo_base b ON b.id = l.id
+                     INNER JOIN worm_resistance r ON r.animal_id = l.$parentIdLabel
+                     INNER JOIN animal mom ON l.$parentIdLabel = mom.id
+                   WHERE
+                     (
+                       (r.sampling_date NOTNULL AND l.litter_date <= r.sampling_date)
+                       OR
+                       (r.sampling_date ISNULL AND DATE_PART('year', l.litter_date) <= r.year)
+                     )
+                     AND ".self::getLitterStateFilter('b', 'l')."
+                   GROUP BY l.$parentIdLabel
+                 )g ON g.$parentIdLabel = l.$parentIdLabel AND g.litter_date = l.litter_date
+    WHERE ".self::getLitterStateFilter('b', 'l');
+    }
+
+
+    /**
+     * @param string $baseAlias
+     * @param string $litterAlias
+     * @return string
+     */
+    private static function getLitterStateFilter($baseAlias = 'b', $litterAlias = 'l')
+    {
+        return "  (
+                            $baseAlias.request_state = '".RequestStateType::FINISHED."' OR 
+                            $baseAlias.request_state = '".RequestStateType::FINISHED_WITH_WARNING."' OR 
+                            $baseAlias.request_state = '".RequestStateType::IMPORTED."'
+                          )
+                     AND (
+                            $litterAlias.status = '".RequestStateType::COMPLETED."' OR
+                            $litterAlias.status = '".RequestStateType::IMPORTED."'
+                          )";
     }
 
 
