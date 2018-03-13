@@ -118,13 +118,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         /*
          * Insert your custom test here
          */
-
-        $needle ='Pasm';
-
-        $haystack = 'Tropasman';
-
-        dump(!!strpos(strtolower($haystack), strtolower($needle)));
-        dump(!!strpos(($haystack), ($needle)));die;
+        
     }
 
 
