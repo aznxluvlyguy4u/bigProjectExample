@@ -35,6 +35,16 @@ class RequestUtil
 
 
     /**
+     * @param ArrayCollection $collection
+     * @return string
+     */
+    public static function revertToJson(ArrayCollection $collection)
+    {
+        return json_encode($collection->toArray());
+    }
+
+
+    /**
      * @param Request $request
      * @param string $queryParameter
      * @param boolean $nullResult

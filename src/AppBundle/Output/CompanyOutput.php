@@ -4,11 +4,9 @@ namespace AppBundle\Output;
 
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Company;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\Invoice;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Pedigree;
-use Doctrine\Common\Collections\Collection;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Service\BaseSerializer;
 use AppBundle\Component\Count;
 
 class CompanyOutput
@@ -64,17 +62,29 @@ class CompanyOutput
                 }
             }
 
+            $billingAddress = key_exists('billingAddress', $company) ? [
+                'street_name' => Utils::fillNull($company['billingAddress']['streetName']),
+                'address_number' => Utils::fillNull($company['billingAddress']['addressNumber']),
+                'address_number_suffix' => Utils::fillNull($company['billingAddress']['addressNumberSuffix']),
+                'postal_code' => Utils::fillNull($company['billingAddress']['postalCode']),
+                'city' => Utils::fillNull($company['billingAddress']['city']),
+                'state' => Utils::fillNull($company['billingAddress']['state'])
+            ] : [];
+
             $res[] = array(
                 'company_id' => Utils::fillNull($company['companyId']),
                 'debtor_number' => Utils::fillNull($company['debtorNumber']),
                 'company_name' => Utils::fillNull($company['companyName']),
                 'subscription_date' => Utils::fillNull($company['subscriptionDate']),
                 'animal_health_subscription' => Utils::fillNull($company['animalHealthSubscription']),
+                'vat_number' => Utils::fillNull($company['vatNumber']),
+                'chamber_of_commerce_number' => Utils::fillNull($company['chamberOfCommerceNumber']),
                 'status' => Utils::fillNull($company['isActive']),
                 'address' => array(
                     'street_name' => Utils::fillNull($company['address']['streetName']),
                     'address_number' => Utils::fillNull($company['address']['addressNumber']),
-                    'suffix' => Utils::fillNull($company['address']['addressNumber']),
+                    'suffix' => Utils::fillNull($company['address']['addressNumberSuffix']),
+                    'address_number_suffix' => Utils::fillNull($company['address']['addressNumberSuffix']),
                     'postal_code' => Utils::fillNull($company['address']['postalCode']),
                     'city' => Utils::fillNull($company['address']['city']),
                     'state' => Utils::fillNull($company['address']['state'])
@@ -88,18 +98,22 @@ class CompanyOutput
                 'users' => $users,
                 'locations' => $locations,
                 'pedigrees' => $pedigrees,
-                'unpaid_invoices' => sizeof($invoices)
+                'unpaid_invoices' => sizeof($invoices),
+                'billing_address' => $billingAddress,
             );
         }
         return $res;
     }
 
     /**
+     * // TODO replace this completely with the serializer
+     *
      * @param Company $company
+     * @param BaseSerializer $baseSerializer
      *
      * @return array
      */
-    public static function createCompany($company)
+    public static function createCompany($company, BaseSerializer $baseSerializer)
     {
         $res = array();
 
@@ -140,6 +154,8 @@ class CompanyOutput
             'state' => Utils::fillNull($company->getBillingAddress()->getState()),
             'country' => Utils::fillNull($company->getBillingAddress()->getCountry()),
         );
+
+        $res['invoices'] = $baseSerializer->getDecodedJson($company->getInvoices(), JmsGroup::INVOICE_NO_COMPANY);
 
         $locations = $company->getLocations();
         $res['locations'] = [];
@@ -271,4 +287,45 @@ class CompanyOutput
 
         return $res;
     }
+
+    /**
+     * @param Company $company
+     * @param BaseSerializer $baseSerializer
+     * @return array;
+     */
+    public static function createCompanyInvoiceOutput($company, BaseSerializer $baseSerializer){
+        return array(
+            'id' => $company->getId(),
+            'locations' => LocationOutput::generateInvoiceLocationArrayList($company->getLocations()),
+            'company_relation_number' => $company->getCompanyRelationNumber(),
+            'chamber_of_commerce_number' => $company->getChamberOfCommerceNumber(),
+            'vat_number' => $company->getVatNumber(),
+            'company_name' => $company->getCompanyName(),
+            'debtor_number' => $company->getDebtorNumber(),
+            'owner' => $company->getOwner(),
+            'company_address' => AddressOutput::createAddressOutput($company->getAddress()),
+            'invoices' => $baseSerializer->getDecodedJson($company->getInvoices(), JmsGroup::INVOICE_NO_COMPANY),
+//            'invoices' => InvoiceOutput::createInvoiceOutputListNoCompany($company->getInvoices()),
+        );
+    }
+
+    /**
+     * @param Company $company
+     * @return array;
+     */
+    public static function createCompanyOutputNoInvoices($company){
+        return array(
+            'id' => $company->getId(),
+            'company_id' => $company->getCompanyId(),
+            'locations' => LocationOutput::generateInvoiceLocationArrayList($company->getLocations()),
+            'company_relation_number' => $company->getCompanyRelationNumber(),
+            'chamber_of_commerce_number' => $company->getChamberOfCommerceNumber(),
+            'vat_number' => $company->getVatNumber(),
+            'company_name' => $company->getCompanyName(),
+            'debtor_number' => $company->getDebtorNumber(),
+            'owner' => $company->getOwner(),
+            'company_address' => AddressOutput::createAddressOutput($company->getAddress()),
+        );
+    }
+
 }

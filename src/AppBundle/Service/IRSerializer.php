@@ -83,6 +83,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     private $entityManager;
     /** @var \AppBundle\Service\EntityGetter */
     private $entityGetter;
+
     /** @var Connection */
     private $conn;
 

@@ -24,10 +24,14 @@ class Company
     use EntityClassInfo;
 
     /**
-    * @ORM\Column(type="integer")
-    * @ORM\Id
-    * @ORM\GeneratedValue(strategy="IDENTITY")
-    */
+     * @ORM\Column(type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
     protected $id;
 
     /**
@@ -38,17 +42,20 @@ class Company
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
+     *     "INVOICE"
      * })
      */
     private $companyId;
 
     /**
-    * @var string
-    *
-    * @ORM\Column(type="string", nullable=true)
-    * @JMS\Type("string")
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
      *  @JMS\Groups({
      *     "ANIMAL_DETAILS",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
      *     "UBN"
      * })
     */
@@ -62,6 +69,8 @@ class Company
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
      *     "UBN"
      * })
     */
@@ -72,6 +81,10 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
+    * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
     */
     private $vatNumber;
 
@@ -80,6 +93,10 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
+    * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
     */
     private $chamberOfCommerceNumber;
 
@@ -88,6 +105,10 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
+    * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
     */
     private $companyRelationNumber;
 
@@ -97,6 +118,8 @@ class Company
     * @ORM\OneToMany(targetEntity="Location", mappedBy="company", cascade={"persist"}, fetch="EAGER")
     * @JMS\Type("AppBundle\Entity\Location")
     * @JMS\Groups({
+    *     "INVOICE",
+    *     "INVOICE_NO_COMPANY",
     *     "UBN"
     * })
     */
@@ -110,7 +133,9 @@ class Company
     * @JMS\Type("AppBundle\Entity\Client")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "GHOST_LOGIN"
+     *     "GHOST_LOGIN",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
      * })
     */
     protected $owner;
@@ -122,7 +147,9 @@ class Company
     * @ORM\OneToOne(targetEntity="CompanyAddress", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\CompanyAddress")
     * @JMS\Groups({
-    *     "UBN"
+    *     "UBN",
+    *     "INVOICE",
+    *     "INVOICE_NO_COMPANY"
     * })
     */
     private $address;
@@ -131,6 +158,9 @@ class Company
     * @var BillingAddress
     * @ORM\OneToOne(targetEntity="BillingAddress", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\BillingAddress")
+    * @JMS\Groups({
+    *     "INVOICE"
+    * })
     */
     private $billingAddress;
 
@@ -188,14 +218,6 @@ class Company
      * })
      */
     private $companyUsers;
-
-    /**
-     * @var ArrayCollection
-     *
-     * @ORM\OneToMany(targetEntity="Pedigree", mappedBy="company")
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\Pedigree>")
-     */
-    private $pedigrees;
 
     /**
      * @var string
@@ -256,10 +278,10 @@ class Company
   public function __construct()
   {
     $this->locations = new ArrayCollection();
+    $this->invoices = new ArrayCollection();
     $this->companyUsers = new ArrayCollection();
     $this->setCompanyId(Utils::generateTokenCode());
     $this->notes = new ArrayCollection();
-    $this->pedigrees = new ArrayCollection();
     $this->invoices = new ArrayCollection();
   }
 
@@ -679,23 +701,6 @@ class Company
         $this->companyUsers->removeElement($user);
     }
 
-
-    /**
-     * @return ArrayCollection
-     */
-    public function getPedigrees()
-    {
-        return $this->pedigrees;
-    }
-
-    /**
-     * @param ArrayCollection $pedigrees
-     */
-    public function setPedigrees($pedigrees)
-    {
-        $this->pedigrees = $pedigrees;
-    }
-
     /**
      * @return string
      */
@@ -752,6 +757,13 @@ class Company
         $this->isRevealHistoricAnimals = $isRevealHistoricAnimals;
     }
 
+    public function addInvoice(Invoice $invoice){
+        $this->invoices[] = $invoice;
+    }
+
+    public function removeInvoice(Invoice $invoice){
+        $this->invoices->removeElement($invoice);
+    }
 
     /**
      * @param null $nullReplacement

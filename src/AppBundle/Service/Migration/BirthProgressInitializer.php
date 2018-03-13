@@ -18,7 +18,7 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class BirthProgressInitializer extends MigratorServiceBase implements IMigratorService
 {
-    const SEPERATOR = '||||';
+    const SEPARATOR = '||||';
     const DELETE_NEW_RECORDS = false;
 
     /** @var BirthProgressRepository */
@@ -56,7 +56,7 @@ class BirthProgressInitializer extends MigratorServiceBase implements IMigratorS
         foreach ($birthProgresses as $birthProgress) {
             $descriptionSearchArray[$birthProgress->getDescription()] = $birthProgress;
             $dutchDescriptionSearchArray[$birthProgress->getDutchDescription()] = $birthProgress;
-            $deleteSearchArray[$birthProgress->getDescription().self::SEPERATOR.$birthProgress->getDutchDescription()] = $birthProgress;
+            $deleteSearchArray[$birthProgress->getDescription().self::SEPARATOR.$birthProgress->getDutchDescription()] = $birthProgress;
         }
 
         $newCount = 0;
@@ -67,7 +67,7 @@ class BirthProgressInitializer extends MigratorServiceBase implements IMigratorS
             $description = $record[0];
             $dutchDescription = $record[1];
             $mixBlupScore = intval($record[2]);
-            $deleteKey = $description.self::SEPERATOR.$dutchDescription;
+            $deleteKey = $description.self::SEPARATOR.$dutchDescription;
 
             if (!key_exists($description, $descriptionSearchArray)
                 && !key_exists($dutchDescription, $dutchDescriptionSearchArray)) {

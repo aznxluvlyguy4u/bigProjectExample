@@ -122,6 +122,14 @@ services:
           - '%environment%'
           - '%kernel.environment%'
 
+    app.mollie.service:
+        class: AppBundle\Service\MollieService
+        arguments:
+          $credentials: ['%mollie_test_api_key%', '%mollie_prod_api_key%']
+          $apiUrls: ['%api_local_host_url%','%api_stage_host_url%','%api_prod_host_url%']
+          $webUrls: ['%web_local_host_url%','%web_stage_host_url%','%web_prod_host_url%']
+          $currentEnvironment: '%environment%'
+
     app.doctrine.entitygetter:
         class: AppBundle\Service\EntityGetter
         arguments: ['@doctrine.orm.entity_manager']
@@ -275,6 +283,9 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\BirthProgressInitializer
 
+    AppBundle\Service\Migration\PedigreeRegisterRegistrationMigrator:
+        parent: app.migrator.base
+
     app.initializer.treatment_type:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\TreatmentTypeInitializer
@@ -307,6 +318,12 @@ services:
 
     app.migrator.breed_index_base:
         abstract: true
+
+    AppBundle\Service\Migration\LedgerCategoryMigrator:
+        parent: app.migrator.base
+
+    app.migrator.lamb_meat_index:
+        class: AppBundle\Service\Migration\LambMeatIndexMigrator
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
@@ -395,6 +412,11 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@security.token_storage'
 
+    app.pdf.invoice_pdf_generator_service:
+        class: AppBundle\Service\Invoice\InvoicePdfGeneratorService
+        arguments:
+          - '@doctrine.orm.entity_manager'
+
     app.report.generator.query.breed_values:
         class: AppBundle\Service\Report\BreedValuesReportQueryGenerator
         arguments:
@@ -475,6 +497,9 @@ services:
     app.declare.error_message:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ErrorMessageService
+
+    AppBundle\Service\LedgerCategoryService:
+        parent: app.abstract_base.controller
 
     app.treatment.base:
         parent: app.abstract_base.controller
@@ -642,6 +667,22 @@ services:
         parent: app.abstract_base.declare
         class: AppBundle\Service\ImportService
 
+    app.invoice:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\InvoiceService
+
+    app.invoice.rule:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\InvoiceRuleService
+
+    app.invoice.rule.template:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\InvoiceRuleTemplateService
+
+    app.invoice.sender.details:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\InvoiceSenderDetailsService
+
     app.loss:
         parent: app.abstract_base.declare
         class: AppBundle\Service\LossService
@@ -661,6 +702,18 @@ services:
     app.messages:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MessageService
+
+    app.mollie.payment:
+        class: AppBundle\Service\MolliePaymentService
+        arguments:
+          - '@app.serializer.base'
+          - '@app.cache'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@app.mollie.service'
+          - '%mollie_test_api_key%'
+          - '%mollie_prod_api_key%'
+          - '%environment%'
 
     app.pedigree_register:
         parent: app.abstract_base.controller
@@ -717,5 +770,8 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\WeightService
 
-
-
+    # This custom handler is not properly registered by the jms serializer yet!
+    jms_serializer.custom_datetime_handler:
+        class: AppBundle\Serializer\CustomDateTimeHandler
+        tags:
+          - { name: jms_serializer.subscribing_handler, method: deserializeDateTimeToJson, type: DateTime, format: json, direction: deserialization }

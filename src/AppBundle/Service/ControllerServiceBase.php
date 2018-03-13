@@ -454,4 +454,19 @@ abstract class ControllerServiceBase
         return $serializedAnimal;
     }
 
+
+    protected function activateFilter($filterName)
+    {
+        if (!$this->getManager()->getFilters()->isEnabled($filterName)) {
+            $this->getManager()->getFilters()->enable($filterName);
+        }
+    }
+
+
+    protected function deactivateFilter($filterName)
+    {
+        if ($this->getManager()->getFilters()->isEnabled($filterName)) {
+            $this->getManager()->getFilters()->disable($filterName);
+        }
+    }
 }
