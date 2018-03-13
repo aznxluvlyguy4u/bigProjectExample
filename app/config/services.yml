@@ -318,16 +318,13 @@ services:
 
     app.migrator.breed_index_base:
         abstract: true
-
-    AppBundle\Service\Migration\LedgerCategoryMigrator:
-        parent: app.migrator.base
-
-    app.migrator.lamb_meat_index:
-        class: AppBundle\Service\Migration\LambMeatIndexMigrator
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
           - '@logger'
+
+    AppBundle\Service\Migration\LedgerCategoryMigrator:
+        parent: app.migrator.base
 
     AppBundle\Service\Migration\LambMeatIndexMigrator:
         parent: app.migrator.breed_index_base
