@@ -24,8 +24,18 @@ class BreedValueType
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
      */
     private $id;
+
+    /**
+     * @var MixBlupAnalysisType
+     *
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\MixBlupAnalysisType", inversedBy="breedValueTypes")
+     * @ORM\JoinColumn(name="analysis_type_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\MixBlupAnalysisType")
+     */
+    private $mixBlupAnalysisType;
 
     /**
      * @var string
@@ -127,6 +137,24 @@ class BreedValueType
     public function setId($id)
     {
         $this->id = $id;
+        return $this;
+    }
+
+    /**
+     * @return MixBlupAnalysisType
+     */
+    public function getMixBlupAnalysisType()
+    {
+        return $this->mixBlupAnalysisType;
+    }
+
+    /**
+     * @param MixBlupAnalysisType $mixBlupAnalysisType
+     * @return BreedValueType
+     */
+    public function setMixBlupAnalysisType($mixBlupAnalysisType)
+    {
+        $this->mixBlupAnalysisType = $mixBlupAnalysisType;
         return $this;
     }
 
