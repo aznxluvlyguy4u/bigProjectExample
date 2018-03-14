@@ -81,6 +81,13 @@ class BreedValueType
      */
     private $showResult;
 
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", options={"default":false})
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     */
+    private $useNormalDistribution;
 
     /**
      * BreedValueType constructor.
@@ -95,6 +102,7 @@ class BreedValueType
         $this->resultTableValueVariable = ResultTableBreedGrades::getValueVariableByBreedValueType($en);
         $this->resultTableAccuracyVariable = ResultTableBreedGrades::getAccuracyVariableByBreedValueType($en);
         $this->showResult = true;
+        $this->useNormalDistribution = false;
     }
 
     /**
@@ -220,6 +228,24 @@ class BreedValueType
     public function setShowResult($showResult)
     {
         $this->showResult = $showResult;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUseNormalDistribution()
+    {
+        return $this->useNormalDistribution;
+    }
+
+    /**
+     * @param bool $useNormalDistribution
+     * @return BreedValueType
+     */
+    public function setUseNormalDistribution($useNormalDistribution)
+    {
+        $this->useNormalDistribution = $useNormalDistribution;
         return $this;
     }
 
