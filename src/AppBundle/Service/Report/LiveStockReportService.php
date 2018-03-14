@@ -176,8 +176,7 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             BreedValueTypeConstant::IGA_NEW_ZEALAND.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
         ];
 
-        $csvData = $this->reformatColumns($this->getData());
-        $csvData = $this->unsetNestedKeys($csvData, $keysToIgnore);
+        $csvData = $this->unsetNestedKeys($this->getData(), $keysToIgnore);
         $csvData = $this->translateColumnHeaders($csvData);
         $csvData = $this->moveBreedValueColumnsToEndArray($csvData);
 
@@ -367,71 +366,6 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
         }
 
         return $this->orderSqlResultsByOrderOfAnimalsInJsonBody($results);
-    }
-
-
-    private function reformatColumns(array $csvData)
-    {
-        $siGALabel = BreedValueTypeConstant::IGA_SCOTLAND;
-        $siGAaccLabel = BreedValueTypeConstant::IGA_SCOTLAND.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX;
-
-        $siGAyears = [];
-        foreach ($csvData as $item => $records) {
-             $siGA = ArrayUtil::get($siGALabel, $records);
-             $siGAacc = ArrayUtil::get($siGAaccLabel, $records);
-             $dateOfBirthString = ArrayUtil::get('a_date_of_birth', $records);
-             if ($dateOfBirthString && $siGA && $siGAacc) {
-                 $dateOfBirth = new \DateTime($dateOfBirthString);
-                 $year = $dateOfBirth->format('Y');
-
-                 $siGAyears[] = $year;
-             }
-        }
-
-        if (count($siGAyears) === 0) {
-            return $csvData;
-        }
-
-
-        $normalDistributions = $this->em->getRepository(NormalDistribution::class)->getSiGAbyYears($siGAyears);
-
-        foreach ($csvData as $item => $records) {
-            $siGA = ArrayUtil::get($siGALabel, $records);
-            $siGAacc = ArrayUtil::get($siGAaccLabel, $records);
-            $dateOfBirthString = ArrayUtil::get('a_date_of_birth', $records);
-            if ($dateOfBirthString && $siGA && $siGAacc) {
-                $dateOfBirth = new \DateTime($dateOfBirthString);
-                $year = $dateOfBirth->format('Y');
-
-                $normalDistribution = $this->getNormalDistributionByYearAndIncludeOnlyAliveAnimals($normalDistributions, $year, false);
-
-                $csvData[$item][$siGALabel] = BreedFormat::formatSiGAValueForDisplay($siGA, $normalDistribution);
-                $csvData[$item][$siGAaccLabel] = BreedFormat::formatAccuracyForDisplay($siGAacc);
-
-            } else {
-                $csvData[$item][$siGALabel] = null;
-                $csvData[$item][$siGAaccLabel] = null;
-            }
-        }
-
-        return $csvData;
-    }
-
-
-    /**
-     * @param ArrayCollection $normalDistributions
-     * @param $year
-     * @param $isIncludeOnlyAliveAnimals
-     * @return NormalDistribution|null
-     */
-    private function getNormalDistributionByYearAndIncludeOnlyAliveAnimals(ArrayCollection $normalDistributions, $year, $isIncludeOnlyAliveAnimals)
-    {
-        $normalDistribution = $normalDistributions->matching(NormalDistributionCriteria::byYearAndIncludeOnlyAliveAnimals($year, $isIncludeOnlyAliveAnimals));
-        if ($normalDistribution instanceof NormalDistribution) {
-            return $normalDistribution;
-        }
-        $this->logger->error('SiGA normal distribution missing for year '.$year);
-        return null;
     }
 
 
