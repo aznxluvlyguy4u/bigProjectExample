@@ -46,9 +46,10 @@ class BreedValuesReportQueryGenerator
     /**
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
+     * @param bool $ignoreHiddenBreedValueTypes
      * @throws DBALException
      */
-    private function createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false)
+    private function createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false, $ignoreHiddenBreedValueTypes = false)
     {
         // Reset values
         $this->animalShouldHaveAtleastOneExistingBreedValueFilter = '';
@@ -89,6 +90,11 @@ class BreedValuesReportQueryGenerator
                   SELECT breed_value_type_id FROM breed_value_genetic_base
                   GROUP BY breed_value_type_id ORDER BY breed_value_type_id
                 )";
+
+        if ($ignoreHiddenBreedValueTypes) {
+            $sql .= ' AND show_result';
+        }
+
         $existingBreedValueColumnValues = $this->fetchAll($sql);
 
         $this->breedValuesSelectQueryPart = '';
@@ -165,12 +171,14 @@ class BreedValuesReportQueryGenerator
     /**
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
+     * @param bool $ignoreHiddenBreedValueTypes
      * @return string
      * @throws DBALException
      */
-    public function getFullBreedValuesReportOverviewQuery($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false)
+    public function getFullBreedValuesReportOverviewQuery($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false, $ignoreHiddenBreedValueTypes = false)
     {
-        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues);
+        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
+            $ignoreHiddenBreedValueTypes);
 
         $sql = "
             SELECT
@@ -308,6 +316,7 @@ class BreedValuesReportQueryGenerator
      * @param bool $matchLocationIdOfSelectedAnimals
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
+     * @param bool $ignoreHiddenBreedValueTypes
      * @return string
      * @throws DBALException
      */
@@ -315,10 +324,12 @@ class BreedValuesReportQueryGenerator
                                                  array $ulnFilter = [],
                                                  $matchLocationIdOfSelectedAnimals = false,
                                                  $concatBreedValuesAndAccuracies = true,
-                                                 $includeAnimalsWithoutAnyBreedValues = true
+                                                 $includeAnimalsWithoutAnyBreedValues = true,
+                                                 $ignoreHiddenBreedValueTypes = false
     )
     {
-        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues);
+        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
+            $ignoreHiddenBreedValueTypes);
 
         $filterString = "WHERE a.is_alive = true AND a.location_id = ".$locationId." ORDER BY a.animal_order_number ASC";
 

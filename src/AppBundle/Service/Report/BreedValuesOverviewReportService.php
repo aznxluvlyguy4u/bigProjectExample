@@ -67,28 +67,32 @@ class BreedValuesOverviewReportService extends ReportServiceWithBreedValuesBase
      * @param boolean $concatBreedValuesAndAccuracies
      * @param boolean $includeAllLiveStockAnimals
      * @param boolean $uploadToS3
+     * @param boolean $ignoreHiddenBreedValueTypes
      * @return JsonResponse
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Exception
      */
-    public function generate($fileType, $concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals, $uploadToS3)
+    public function generate($fileType, $concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals, $uploadToS3,
+                             $ignoreHiddenBreedValueTypes = false)
     {
-        return $this->generateFile($this->getFilenameWithoutExtension(), $this->getData($concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals), self::TITLE, $fileType, $uploadToS3);
+        return $this->generateFile($this->getFilenameWithoutExtension(), $this->getData($concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals, $ignoreHiddenBreedValueTypes), self::TITLE, $fileType, $uploadToS3);
     }
 
 
     /**
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
+     * @param bool $ignoreHiddenBreedValueTypes
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function getData($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false)
+    private function getData($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false, $ignoreHiddenBreedValueTypes = false)
     {
         return $this->conn->query(
             $this->breedValuesReportQueryGenerator->getFullBreedValuesReportOverviewQuery(
                 $concatBreedValuesAndAccuracies,
-                $includeAnimalsWithoutAnyBreedValues
+                $includeAnimalsWithoutAnyBreedValues,
+                $ignoreHiddenBreedValueTypes
             )
         )->fetchAll();
     }

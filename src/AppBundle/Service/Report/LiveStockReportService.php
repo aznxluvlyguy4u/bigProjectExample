@@ -338,6 +338,7 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             $animals,
             $matchLocationOfSelectedAnimals,
             $this->concatValueAndAccuracy,
+            true,
             true
         );
 
