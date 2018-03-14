@@ -73,6 +73,14 @@ class BreedValueType
      */
     private $resultTableAccuracyVariable;
 
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     */
+    private $showResult;
+
 
     /**
      * BreedValueType constructor.
@@ -86,6 +94,7 @@ class BreedValueType
         $this->minReliability = BreedGradingSetting::MIN_RELIABILITY_FOR_GENETIC_BASE;
         $this->resultTableValueVariable = ResultTableBreedGrades::getValueVariableByBreedValueType($en);
         $this->resultTableAccuracyVariable = ResultTableBreedGrades::getAccuracyVariableByBreedValueType($en);
+        $this->showResult = true;
     }
 
     /**
@@ -195,6 +204,25 @@ class BreedValueType
         $this->resultTableAccuracyVariable = $resultTableAccuracyVariable;
         return $this;
     }
+
+    /**
+     * @return bool
+     */
+    public function isShowResult()
+    {
+        return $this->showResult;
+    }
+
+    /**
+     * @param bool $showResult
+     * @return BreedValueType
+     */
+    public function setShowResult($showResult)
+    {
+        $this->showResult = $showResult;
+        return $this;
+    }
+
 
 
 }
