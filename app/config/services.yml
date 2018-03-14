@@ -41,6 +41,7 @@ services:
           - '@app.mixblup.input'
           - '@app.mixblup.input.validate'
           - '@app.mixblup.output'
+          - '@AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator'
           - '@app.report.pedigree_register'
 
     app.info.parameters:
@@ -324,6 +325,9 @@ services:
           - '@logger'
 
     AppBundle\Service\Migration\LedgerCategoryMigrator:
+        parent: app.migrator.base
+
+    AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator:
         parent: app.migrator.base
 
     AppBundle\Service\Migration\LambMeatIndexMigrator:

@@ -158,8 +158,6 @@ class BreedValueService
      */
     public function initializeBlankGeneticBases()
     {
-        // TODO create separate logic for WormResistance values?
-
         $sql = "SELECT t.id as breed_value_type_id, t.nl as dutch_breed_value_name, measurement_year
                   FROM breed_value_type t
                   INNER JOIN (
@@ -232,8 +230,6 @@ class BreedValueService
      */
     public function calculateGeneticBase($measurementsYear, $dutchBreedValueTypeName)
     {
-        // TODO create separate logic for WormResistance values?
-
         $geneticBaseYear = $measurementsYear - BreedGradingSetting::GENETIC_BASE_YEAR_OFFSET;
 
         $sql = "SELECT EXTRACT(YEAR FROM date_of_birth), AVG(b.value) as average
@@ -251,4 +247,56 @@ class BreedValueService
         return $results['average'];
     }
 
+
+    /**
+     * @return int
+     */
+    public function initializeCustomBreedValueTypeSettings()
+    {
+        /** @var BreedValueType $siGa */
+        $siGa = $this->em->getRepository(BreedValueType::class)
+            ->findOneByNl('SIgA');
+
+        $updateCount = 0;
+        if (!$siGa->isUseNormalDistribution()) {
+            $siGa->setUseNormalDistribution(true);
+            $this->em->persist($siGa);
+            $updateCount++;
+        }
+
+        if ($siGa->getStandardDeviationStepSize() === null) {
+            $siGa->setStandardDeviationStepSize(10);
+            $this->em->persist($siGa);
+            $updateCount++;
+        }
+
+
+        /** @var BreedValueType $nziGa */
+        $nziGa = $this->em->getRepository(BreedValueType::class)
+            ->findOneByNl('NZIgA');
+        if ($nziGa->isShowResult()) {
+            $nziGa->setShowResult(false);
+            $this->em->persist($nziGa);
+            $updateCount++;
+        }
+
+        /** @var BreedValueType $nziGa */
+        $lnFec = $this->em->getRepository(BreedValueType::class)
+            ->findOneByNl('LnFEC');
+        if ($lnFec->isShowResult()) {
+            $lnFec->setShowResult(false);
+            $this->em->persist($lnFec);
+            $updateCount++;
+        }
+
+        if ($updateCount > 0) {
+            $this->em->flush();
+        }
+
+        $message = ($updateCount > 0 ? $updateCount : 'No') . ' custom breedValueType settings were initialized';
+
+        $this->logger->notice($message);
+
+        return $updateCount;
+    }
 }

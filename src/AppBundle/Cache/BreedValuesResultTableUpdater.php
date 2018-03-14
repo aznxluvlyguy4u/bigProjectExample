@@ -90,7 +90,7 @@ class BreedValuesResultTableUpdater
     }
 
 
-    public function update()
+    public function update(array $analysisTypes = [])
     {
         $this->insertMissingBlankRecords();
 
@@ -107,6 +107,8 @@ class BreedValuesResultTableUpdater
         $totalBreedValueUpdateCount = 0;
         foreach ($results as $result)
         {
+            // TODO use analysis types to filter out the non-updated breedValueTypes
+
             $valueVar = $result['result_table_value_variable'];
             $accuracyVar = $result['result_table_accuracy_variable'];
             $useNormalDistribution = $result['use_normal_distribution'];

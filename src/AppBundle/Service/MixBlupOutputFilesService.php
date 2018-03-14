@@ -15,6 +15,7 @@ use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\BreedValueRepository;
 use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\BreedValueTypeRepository;
+use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupParseInstruction;
 use AppBundle\Setting\MixBlupSetting;
@@ -357,7 +358,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                 $this->breedValueService->initializeBlankGeneticBases();
                 $this->updateBreedIndexesByOutputFileType();
                 $this->updateNormalDistributions();
-                $this->breedValuesResultTableUpdater->update();
+                $this->updateResultTableBreedValues();
 
             } else {
                 // Handle unsuccessful download
@@ -907,7 +908,12 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
      */
     private function hasLambMeatOutputFiles()
     {
-        return $this->hasOutputFilesByFilenamePart(MixBlupAnalysis::LAMB_MEAT);
+        return $this->hasOutputFilesByFilenamePart(
+            [
+                MixBlupAnalysis::LAMB_MEAT,
+                MixBlupAnalysis::TAIL_LENGTH,
+            ]
+        );
     }
 
 
@@ -917,6 +923,41 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private function hasWormResistanceOutputFiles()
     {
         return $this->hasOutputFilesByFilenamePart(MixBlupAnalysis::WORM_RESISTANCE);
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function hasFertilityOutputFiles()
+    {
+        return $this->hasOutputFilesByFilenamePart(
+            [
+                MixBlupAnalysis::BIRTH_PROGRESS,
+                MixBlupAnalysis::FERTILITY,
+                MixBlupAnalysis::FERTILITY_1,
+                MixBlupAnalysis::FERTILITY_2,
+                MixBlupAnalysis::FERTILITY_3,
+            ]
+        );
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function hasExteriorOutputFiles()
+    {
+        return $this->hasOutputFilesByFilenamePart(
+            [
+                MixBlupAnalysis::EXTERIOR_LEG_WORK,
+                MixBlupAnalysis::EXTERIOR_MUSCULARITY,
+                MixBlupAnalysis::EXTERIOR_PROGRESS,
+                MixBlupAnalysis::EXTERIOR_PROPORTION,
+                MixBlupAnalysis::EXTERIOR_SKULL,
+                MixBlupAnalysis::EXTERIOR_TYPE,
+            ]
+        );
     }
 
 
@@ -993,6 +1034,18 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                 $this->normalDistributionService->persistWormResistanceMeanAndStandardDeviationSIgA($generationDateString);
             }
         }
+    }
+
+
+    private function updateResultTableBreedValues()
+    {
+        $detectedAnalysisTypes = [];
+        if ($this->hasLambMeatOutputFiles()) { $detectedAnalysisTypes[MixBlupType::LAMB_MEAT_INDEX] = MixBlupType::LAMB_MEAT_INDEX; }
+        if ($this->hasExteriorOutputFiles()) { $detectedAnalysisTypes[MixBlupType::EXTERIOR] = MixBlupType::EXTERIOR; }
+        if ($this->hasFertilityOutputFiles()) { $detectedAnalysisTypes[MixBlupType::FERTILITY] = MixBlupType::FERTILITY; }
+        if ($this->hasWormResistanceOutputFiles()) { $detectedAnalysisTypes[MixBlupType::WORM] = MixBlupType::WORM; }
+
+        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes);
     }
 
 
