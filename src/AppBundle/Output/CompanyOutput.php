@@ -45,13 +45,6 @@ class CompanyOutput
                 }
             }
 
-            $pedigrees = array();
-            if(sizeof($company['pedigrees']) > 0) {
-                foreach($company['pedigrees'] as $pedigree) {
-                    $pedigrees[] = Utils::fillNull($pedigree['$pedigreeCode']);
-                }
-            }
-
             $invoices = array();
             if(sizeof($company['invoices']) > 0) {
                 foreach($company['invoices'] as $invoice) {
@@ -97,7 +90,6 @@ class CompanyOutput
                 ),
                 'users' => $users,
                 'locations' => $locations,
-                'pedigrees' => $pedigrees,
                 'unpaid_invoices' => sizeof($invoices),
                 'billing_address' => $billingAddress,
             );
