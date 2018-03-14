@@ -368,6 +368,7 @@ class AnimalCacher
      * @param ObjectManager $em
      * @param CommandUtil $cmdUtil
      * @param int $locationId
+     * @return int
      */
     public static function cacheAnimalsBySqlInsert(ObjectManager $em, CommandUtil $cmdUtil = null, $locationId = null)
     {
@@ -378,7 +379,7 @@ class AnimalCacher
         $animalCacheRepository = $em->getRepository(AnimalCache::class);
         $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataPerLocation(true, null, $locationId);
         $totalCount = count($animalCacherInputData);
-        if($totalCount == 0) { return; }
+        if($totalCount == 0) { return 0; }
 
         $cachedAnimalIds = self::getAnimalIdsOfAlreadyCachedAnimals($conn);
         
@@ -421,6 +422,8 @@ class AnimalCacher
         self::deleteDuplicateAnimalCacheRecords($em);
 
         DoctrineUtil::updateTableSequence($conn, ['animal_cache']);
+
+        return $processedCount;
     }
 
 
