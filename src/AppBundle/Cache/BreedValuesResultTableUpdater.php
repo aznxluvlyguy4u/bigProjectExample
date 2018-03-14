@@ -103,7 +103,10 @@ class BreedValuesResultTableUpdater
         $totalBreedValueUpdateCount = 0;
         foreach ($results as $result)
         {
-            $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($result);
+            $valueVar = $result['result_table_value_variable'];
+            $accuracyVar = $result['result_table_accuracy_variable'];
+
+            $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar);
         }
 
         $messagePrefix = $totalBreedValueUpdateCount > 0 ? 'In total '.$totalBreedValueUpdateCount : 'In total NO';
@@ -146,12 +149,9 @@ class BreedValuesResultTableUpdater
      * @param array $result
      * @return int
      */
-    private function updateResultTableByBreedValueType($result)
+    private function updateResultTableByBreedValueType($valueVar, $accuracyVar)
     {
         // TODO create separate logic for WormResistance values?
-
-        $valueVar = $result['result_table_value_variable'];
-        $accuracyVar = $result['result_table_accuracy_variable'];
 
         $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
 
