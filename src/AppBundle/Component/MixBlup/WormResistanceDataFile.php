@@ -72,7 +72,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
             $recordEnd =
                 $formattedSamplePeriod.
-                // TODO add litter values here
+                self::getFormattedFirstLitterAgeAndLastLitterOrdinal($data).
                 self::getFormattedUbnOfBirthWithoutPadding($data)
             ;
 
@@ -163,17 +163,20 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
         }
 
         $litterDataJoin = '';
+        $litterAlias = 'litter';
+
         if ($includeLitterData) {
             $litterDataJoin =
-  "LEFT JOIN (
+  " INNER JOIN animal_cache c ON c.animal_id = a.id
+    LEFT JOIN (
     ".self::getJoinLatestLitterOnParentId(true)."
     UNION
     ".self::getJoinLatestLitterOnParentId(false)."
-    )litter ON litter.animal_id = w.animal_id";
+    )".$litterAlias." ON ".$litterAlias.".animal_id = w.animal_id";
 
             $returnValuesString .= ',
-              litter.'.JsonInputConstant::LITTER_DATE.',
-              litter.'.JsonInputConstant::BORN_ALIVE_COUNT;
+              c.'.JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD.',
+              '.self::getLitterReturnValues($litterAlias);
         }
 
         return "SELECT
@@ -188,6 +191,16 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
 
     /**
+     * @param string $litterAlias
+     * @return string
+     */
+    private static function getLitterReturnValues($litterAlias)
+    {
+        return $litterAlias.'.'.JsonInputConstant::LITTER_ORDINAL;
+    }
+
+
+    /**
      * @param boolean $isMother
      * @return string
      */
@@ -198,8 +211,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
         return
    "SELECT
       l.$parentIdLabel as ".JsonInputConstant::ANIMAL_ID.",
-      DATE(l.litter_date) as ".JsonInputConstant::LITTER_DATE.",
-      l.".JsonInputConstant::BORN_ALIVE_COUNT."
+      ".self::getLitterReturnValues('l')."
     FROM litter l
       INNER JOIN declare_nsfo_base b ON b.id = l.id
       INNER JOIN (
@@ -423,4 +435,23 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
     }
 
 
+    /**
+     * @param array $data
+     * @return string
+     */
+    private static function getFormattedFirstLitterAgeAndLastLitterOrdinal(array $data)
+    {
+        $ageValue = null;
+        $gaveBirthAsOneYearOld = ArrayUtil::get(JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD, $data, null);
+        if ($gaveBirthAsOneYearOld !== null) {
+            $ageValue = $gaveBirthAsOneYearOld ? 1 : 2; // for all ages above 1 the value is 2
+        }
+
+        $litterOrdinal = ArrayUtil::get(JsonInputConstant::LITTER_ORDINAL, $data, null);
+
+        $value = $ageValue && $litterOrdinal ? strval($ageValue).strval($litterOrdinal)
+            : MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+
+        return DsvWriterUtil::pad($value, 3, true);
+    }
 }
