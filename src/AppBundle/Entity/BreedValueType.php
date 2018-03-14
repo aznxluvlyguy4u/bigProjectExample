@@ -90,6 +90,13 @@ class BreedValueType
     private $useNormalDistribution;
 
     /**
+     * @var float
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Type("float")
+     */
+    private $standardDeviationStepSize;
+
+    /**
      * BreedValueType constructor.
      * @param string $en
      * @param string $nl
@@ -246,6 +253,24 @@ class BreedValueType
     public function setUseNormalDistribution($useNormalDistribution)
     {
         $this->useNormalDistribution = $useNormalDistribution;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getStandardDeviationStepSize()
+    {
+        return $this->standardDeviationStepSize;
+    }
+
+    /**
+     * @param float $standardDeviationStepSize
+     * @return BreedValueType
+     */
+    public function setStandardDeviationStepSize($standardDeviationStepSize)
+    {
+        $this->standardDeviationStepSize = $standardDeviationStepSize;
         return $this;
     }
 
