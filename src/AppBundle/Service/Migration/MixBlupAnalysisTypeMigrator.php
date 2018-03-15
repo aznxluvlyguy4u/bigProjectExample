@@ -4,10 +4,13 @@
 namespace AppBundle\Service\Migration;
 
 
+use AppBundle\Constant\MixBlupAnalysis;
+use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\MixBlupAnalysisType;
 use AppBundle\Entity\MixBlupAnalysisTypeRepository;
 use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Enumerator\MixBlupType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -19,6 +22,11 @@ class MixBlupAnalysisTypeMigrator extends MigratorServiceBase implements IMigrat
     /** @var MixBlupAnalysisTypeRepository */
     private $mixBlupAnalysisTypeRepository;
 
+    /** @var MixBlupAnalysis[] */
+    private $analysisTypes;
+    /** @var BreedValueType[] */
+    private $breedValueTypes;
+
     public function __construct(ObjectManager $em, $rootDir)
     {
         parent::__construct($em, self::BATCH_SIZE, self::IMPORT_SUB_FOLDER, $rootDir);
@@ -29,6 +37,9 @@ class MixBlupAnalysisTypeMigrator extends MigratorServiceBase implements IMigrat
         );
 
         $this->getCsvOptions()->setPipeSeparator();
+
+        $this->analysisTypes = [];
+        $this->breedValueTypes = [];
     }
 
     public function run(CommandUtil $cmdUtil)
@@ -58,11 +69,9 @@ class MixBlupAnalysisTypeMigrator extends MigratorServiceBase implements IMigrat
      */
     private function initializeAnalysisTypes()
     {
-        $currentTypes = $this->mixBlupAnalysisTypeRepository->findAll();
-
         $newCount = 0;
         foreach (MixBlupType::getConstants() as $en => $nl) {
-            $currentType = $this->getTypeByEn($currentTypes, $en);
+            $currentType = $this->getAnalysisTypeByEn($en);
             if ($currentType) {
                 continue;
             }
@@ -88,15 +97,38 @@ class MixBlupAnalysisTypeMigrator extends MigratorServiceBase implements IMigrat
 
 
     /**
-     * @param MixBlupAnalysisType[] $currentTypes
      * @param string $en
      * @return MixBlupAnalysisType|null
      */
-    private function getTypeByEn($currentTypes, $en)
+    private function getAnalysisTypeByEn($en)
     {
+        if (count($this->analysisTypes) === 0) {
+            $this->analysisTypes = $this->mixBlupAnalysisTypeRepository->findAll();
+        }
+
         /** @var MixBlupAnalysisType $currentType */
-        foreach ($currentTypes as $currentType) {
+        foreach ($this->analysisTypes as $currentType) {
             if ($currentType->getEn() === $en) {
+                return $currentType;
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * @param string $nl
+     * @return MixBlupAnalysisType|null
+     */
+    private function getAnalysisTypeByNl($nl)
+    {
+        if (count($this->analysisTypes) === 0) {
+            $this->analysisTypes = $this->mixBlupAnalysisTypeRepository->findAll();
+        }
+
+        /** @var MixBlupAnalysisType $currentType */
+        foreach ($this->analysisTypes as $currentType) {
+            if ($currentType->getNl() === $nl) {
                 return $currentType;
             }
         }
@@ -106,6 +138,50 @@ class MixBlupAnalysisTypeMigrator extends MigratorServiceBase implements IMigrat
 
     private function setAnalysisTypesOnBreedValueTypes()
     {
-        //TODO
+        $csv = $this->parseCSV(self::BREED_VALUE_TYPE_ANALYSIS_TYPE);
+
+        $breedValueTypes = [];
+        /** @var BreedValueType $breedValueType */
+        foreach($this->em->getRepository(BreedValueType::class)->findAll() as $breedValueType) {
+            $breedValueTypes[$breedValueType->getNl()] = $breedValueType;
+        }
+
+        $updateCount = 0;
+        foreach ($csv as $record) {
+            $breedValueTypeNl = $record[0];
+            $analysisTypeNl = $record[1];
+
+            if ($breedValueTypeNl === null && $analysisTypeNl === null) {
+                continue;
+            }
+
+            $analysisType = $this->getAnalysisTypeByNl($analysisTypeNl);
+            $breedValueType = ArrayUtil::get($breedValueTypeNl, $breedValueTypes);
+
+            if ($analysisType === null) {
+                throw new \Exception('AnalysisType not found for ' . $analysisTypeNl);
+            }
+
+            if ($breedValueType === null) {
+                throw new \Exception('BreedValueType not found for ' . $breedValueTypeNl);
+            }
+
+            if ($breedValueType->getMixBlupAnalysisType() === null
+            || $breedValueType->getMixBlupAnalysisType()->getId() !== $analysisType->getId())
+            {
+                $breedValueType->setMixBlupAnalysisType($analysisType);
+                $this->em->persist($breedValueType);
+                $updateCount++;
+            }
+        }
+
+        if ($updateCount > 0) {
+            $this->em->flush();
+        }
+
+        $message = ($updateCount == 0 ? 'No' : $updateCount) . ' new mixBlupAnalysisType linked';
+        $this->writeln($message);
+
+        return $updateCount;
     }
 }
