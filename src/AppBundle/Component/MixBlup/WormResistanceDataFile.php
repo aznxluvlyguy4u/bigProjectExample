@@ -72,6 +72,9 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
             $recordEnd =
                 $formattedSamplePeriod.
+                self::getFormattedLitterGroup($data).
+                self::getFormattedNLing($data).
+                self::getFormattedStillbornCount($data).
                 self::getFormattedFirstLitterAgeAndLastLitterOrdinal($data).
                 self::getFormattedUbnOfBirthWithoutPadding($data)
             ;
@@ -194,7 +197,27 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      */
     private static function getLitterReturnValues($litterAlias)
     {
-        return $litterAlias.'.'.JsonInputConstant::LITTER_ORDINAL;
+        return
+            $litterAlias.'.'.JsonInputConstant::LITTER_ORDINAL." as ".JsonInputConstant::LITTER_ORDINAL.','.
+            $litterAlias.'.'.JsonInputConstant::LITTER_GROUP." as ".JsonInputConstant::LITTER_GROUP.",
+            $litterAlias.".JsonInputConstant::N_LING." as ".JsonInputConstant::N_LING.",
+            $litterAlias.".JsonInputConstant::TOTAL_STILLBORN_COUNT." as ".JsonInputConstant::TOTAL_STILLBORN_COUNT
+        ;
+    }
+
+
+    /**
+     * @param string $litterAlias
+     * @return string
+     */
+    private static function getNestedLitterReturnValues($litterAlias)
+    {
+        return
+            $litterAlias.'.'.JsonInputConstant::LITTER_ORDINAL.','.
+            "CONCAT(a.uln_country_code, a.uln_number,'_', LPAD(CAST($litterAlias.litter_ordinal AS TEXT), 2, '0')) as ".JsonInputConstant::LITTER_GROUP.",
+                 $litterAlias.born_alive_count + $litterAlias.stillborn_count as ".JsonInputConstant::N_LING.",
+                 $litterAlias.stillborn_count as ".JsonInputConstant::TOTAL_STILLBORN_COUNT
+        ;
     }
 
 
@@ -209,9 +232,10 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
         return
    "SELECT
       l.$parentIdLabel as ".JsonInputConstant::ANIMAL_ID.",
-      ".self::getLitterReturnValues('l')."
+      ".self::getNestedLitterReturnValues('l')."
     FROM litter l
       INNER JOIN declare_nsfo_base b ON b.id = l.id
+      INNER JOIN animal a ON l.$parentIdLabel = a.id
       INNER JOIN (
                    -- Find the latest litter before sampling date
                    -- or in same year if sampling date is missing
