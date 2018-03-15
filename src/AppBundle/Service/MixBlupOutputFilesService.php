@@ -997,22 +997,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     {
         $generationDateString = $this->getGenerationDateStringFromKey();
         if ($generationDateString) {
-            if ($this->hasLambMeatOutputFiles() || $this->hasWormResistanceOutputFiles()) {
-                $this->breedValueService->initializeBlankGeneticBases();
-            }
-
             if ($this->hasLambMeatOutputFiles()) {
+                $this->breedValueService->initializeBlankGeneticBases();
+
                 $this->logger->notice('LambMeatOutputFilename found in message. 
                 Processing new LambMeatIndexes...');
                 $this->breedIndexService->updateLambMeatIndexes($generationDateString);
             }
-
-            // TODO activate if WormResistanceIndex needs to be updated
-//            if ($this->hasWormResistanceOutputFiles()) {
-//                $this->logger->notice('WormResistanceOutputFilename found in message.
-//                Processing new WormResistanceIndexes...');
-//                $this->breedIndexService->updateWormResistanceIndexes($generationDateString);
-//            }
         }
     }
 

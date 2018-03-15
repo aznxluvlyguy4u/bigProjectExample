@@ -7,7 +7,6 @@ namespace AppBundle\Cache;
 use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Service\BreedValueService;
-use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -63,11 +62,13 @@ class BreedValuesResultTableUpdater
 
         $existingColumnNames = array_keys(SqlUtil::createSearchArrayByKey('column_name', $existingColumnNameResults));
 
-        $sql = "SELECT 
-                  result_table_value_variable,
-                  result_table_accuracy_variable,
-                  use_normal_distribution
-                FROM breed_value_type";
+        $sql = "SELECT
+                  b.result_table_value_variable,
+                  b.result_table_accuracy_variable,
+                  b.use_normal_distribution,
+                  a.nl as analysis_type_nl
+                FROM breed_value_type b
+                  LEFT JOIN mix_blup_analysis_type a ON b.analysis_type_id = a.id";
         $variableResults = $this->conn->query($sql)->fetchAll();
 
         $searchArray = [];
@@ -107,13 +108,14 @@ class BreedValuesResultTableUpdater
         $totalBreedValueUpdateCount = 0;
         foreach ($results as $result)
         {
-            // TODO use analysis types to filter out the non-updated breedValueTypes
-
             $valueVar = $result['result_table_value_variable'];
             $accuracyVar = $result['result_table_accuracy_variable'];
             $useNormalDistribution = $result['use_normal_distribution'];
+            $analysisTypeNl = $result['analysis_type_nl'];
 
-            $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar, $useNormalDistribution);
+            if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
+                $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar, $useNormalDistribution);
+            }
         }
 
         $messagePrefix = $totalBreedValueUpdateCount > 0 ? 'In total '.$totalBreedValueUpdateCount : 'In total NO';
