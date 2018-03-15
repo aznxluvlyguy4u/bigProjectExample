@@ -170,8 +170,6 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
   " INNER JOIN animal_cache c ON c.animal_id = a.id
     LEFT JOIN (
     ".self::getJoinLatestLitterOnParentId(true)."
-    UNION
-    ".self::getJoinLatestLitterOnParentId(false)."
     )".$litterAlias." ON ".$litterAlias.".animal_id = w.animal_id";
 
             $returnValuesString .= ',
