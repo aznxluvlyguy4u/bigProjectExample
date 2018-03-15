@@ -11,9 +11,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class NsfoRecurrentCommand extends ContainerAwareCommand
+class NsfoSyncCommand extends ContainerAwareCommand
 {
-    const TITLE = 'Recurrent commands';
+    const TITLE = 'Run sync processes intended for recurrent use with a cronjob';
 
     const ANIMAL_SYNC_MAX_DAYS = 7;
 
@@ -27,7 +27,7 @@ class NsfoRecurrentCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('nsfo:recurrent')
+            ->setName('nsfo:sync')
             ->setDescription(self::TITLE)
         ;
     }
