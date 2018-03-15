@@ -259,7 +259,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     private function writeProcess($mixBlupType)
     {
         /** @var MixBlupInputProcessInterface $mixBlupProcess */
-        $mixBlupProcess = $this->mixBlupProcesses[$this->onlyUseThisProcessType];
+        $mixBlupProcess = $this->mixBlupProcesses[$mixBlupType];
 
         $this->logger->notice('Writing MixBlup input files for: '.$mixBlupType);
         $writeResult = $mixBlupProcess->write();
