@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\VatCalculator;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -416,6 +417,18 @@ class Invoice
     public function setTotal($total)
     {
         $this->total = $total;
+    }
+
+
+    /**
+     * Update total based on the values in the InvoiceRuleSelections
+     */
+    public function updateTotal()
+    {
+        $this->setTotal(
+            VatCalculator::calculateVatBreakdown($this->getInvoiceRuleSelections())
+                ->getTotalInclVat()
+        );
     }
 
     /**

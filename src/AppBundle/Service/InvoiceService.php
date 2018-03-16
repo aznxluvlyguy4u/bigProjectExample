@@ -96,6 +96,16 @@ class InvoiceService extends ControllerServiceBase
 
 
     /**
+     * @param Invoice $invoice
+     * @return mixed
+     */
+    private function getInvoiceOutput(Invoice $invoice)
+    {
+        return $this->getBaseSerializer()->getDecodedJson($invoice, [JmsGroup::INVOICE]);
+    }
+
+
+    /**
      * @param Request $request
      * @return JsonResponse
      */
@@ -144,7 +154,7 @@ class InvoiceService extends ControllerServiceBase
         $invoice->setInvoiceNumber($number);
 
         $this->persistAndFlush($invoice);
-        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoice, [JmsGroup::INVOICE]));
+        return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }
 
 
@@ -249,9 +259,10 @@ class InvoiceService extends ControllerServiceBase
 
         $temporaryInvoice->setCompany($newCompany);
         $invoice->copyValues($temporaryInvoice);
+        $invoice->updateTotal();
 
         $this->persistAndFlush($invoice);
-        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoice, [JmsGroup::INVOICE]));
+        return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }
 
 
@@ -361,6 +372,7 @@ class InvoiceService extends ControllerServiceBase
         $invoiceRuleSelection->setInvoiceRule($invoiceRule);
         $invoiceRuleSelection->setInvoice($invoice);
         $invoice->addInvoiceRuleSelection($invoiceRuleSelection);
+        $invoice->updateTotal();
 
         if ($invoiceRule->getType() !== InvoiceRuleType::STANDARD) {
             $this->getManager()->persist($invoiceRule);
@@ -372,8 +384,7 @@ class InvoiceService extends ControllerServiceBase
 
         $this->purgeLedgerCategorySearchArrays();
 
-        $output = $this->getBaseSerializer()->getDecodedJson($invoiceRuleSelection, JmsGroup::INVOICE_RULE);
-        return ResultUtil::successResult($output);
+        return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }
 
 
@@ -448,11 +459,12 @@ class InvoiceService extends ControllerServiceBase
             $this->getManager()->remove($invoiceRule);
         }
 
+        $invoice->updateTotal();
+
         $this->getManager()->persist($invoice);
         $this->getManager()->remove($invoiceRuleSelection);
         $this->getManager()->flush();
 
-        $output = $this->getBaseSerializer()->getDecodedJson($invoiceRuleSelection, JmsGroup::INVOICE_RULE);
-        return ResultUtil::successResult($output);
+        return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }
 }
