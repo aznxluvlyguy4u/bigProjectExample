@@ -19,6 +19,26 @@ use Doctrine\DBAL\Connection;
  */
 class MixBlupDataFileBase
 {
+    const DECIMAL_SEPARATOR_SYMBOL = '.';
+    const THOUSAND_SEPARATOR_SYMBOL = '';
+
+
+    /**
+     * @param $value
+     * @param $decimals
+     * @return string
+     */
+    protected static function numberFormat($value, $decimals)
+    {
+        return number_format(
+            $value,
+            $decimals,
+            self::DECIMAL_SEPARATOR_SYMBOL,
+            self::THOUSAND_SEPARATOR_SYMBOL
+        );
+    }
+
+
     /**
      * @param string $animalIdKey
      * @return string
