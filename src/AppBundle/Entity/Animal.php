@@ -735,8 +735,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="GenderHistoryItem", mappedBy="animal", cascade={"persist"})
-     * @ORM\JoinColumn(name="gender_history_id", referencedColumnName="id")
+     * @ORM\OneToMany(targetEntity="GenderHistoryItem", mappedBy="animal", cascade={"persist", "remove"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\GenderHistoryItem>")
      */
     protected $genderHistory;
