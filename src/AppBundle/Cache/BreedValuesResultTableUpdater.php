@@ -167,7 +167,7 @@ class BreedValuesResultTableUpdater
         if ($useNormalDistribution) {
             $sqlResultTableValues = "SELECT
                           b.animal_id,
-                          100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) as corrected_value,
+                          ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation)) as corrected_value,
                           SQRT(b.reliability) as accuracy
                         FROM breed_value b
                           INNER JOIN breed_value_type t ON t.id = b.type_id

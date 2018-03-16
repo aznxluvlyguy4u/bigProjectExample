@@ -18,13 +18,14 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
     const SAMPLE_PERIOD_DEFAULT_VALUE = '1';
 
     const EPG_DECIMALS = 0;
+    const LN_FEC_DECIMALS = 5;
     const S_IGA_DECIMALS = 5;
     const CARLA_IGA_DECIMALS = 5;
 
     const NZ_CLASS_COLUMN_WIDTH = 3;
     const NZ_IGA_COLUMN_WIDTH = 9;
     const NZ_S_IGA_COLUMN_WIDTH = 9;
-    const LN_FEC_COLUMN_WIDTH = 5;
+    const LN_FEC_COLUMN_WIDTH = 9;
 
     private static $epgFormattedNullFiller;
     private static $sIgaFormattedNullFiller;
@@ -352,13 +353,18 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      */
     private static function getFormattedLnFEC(array $data)
     {
-        return self::getFormattedValueFromData(
-            $data,
-            self::LN_FEC_COLUMN_WIDTH,
-            JsonInputConstant::EPG,
-            true,
-            MixBlupInstructionFileBase::MISSING_REPLACEMENT
-        );
+        $value = ArrayUtil::get(JsonInputConstant::EPG, $data);
+
+        if ($value) {
+            $logValue = self::numberFormat(
+                log(floatval($value)),
+                self::LN_FEC_DECIMALS
+            );
+        } else {
+            $logValue = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+        }
+
+        return DsvWriterUtil::pad($logValue, self::LN_FEC_COLUMN_WIDTH, true);
     }
 
     /**

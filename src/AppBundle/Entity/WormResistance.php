@@ -90,9 +90,10 @@ class WormResistance
 
 
     /**
-     * EPG = LnFEC
+     * EPG = egg count.
      *
-     * Natural logarithm from egg count.
+     * This is related to the LnFEC, Natural logarithm from egg count.
+     * However EPG itself is the actual eggcount.
      *
      * @var float
      * @JMS\Type("float")
