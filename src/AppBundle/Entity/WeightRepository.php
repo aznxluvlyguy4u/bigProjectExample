@@ -157,26 +157,15 @@ class WeightRepository extends MeasurementRepository {
     /**
      * @param Animal $animal
      * @param \DateTime $dateTime
-     * @return Collection
+     * @return Collection|Weight[]
      */
     public function findByAnimalAndDate(Animal $animal, \DateTime $dateTime)
     {
-        $dayOfDateTime = TimeUtil::getDayOfDateTime($dateTime);
-        $dayAfterDateTime = TimeUtil::getDayAfterDateTime($dateTime);
-
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('animal', $animal))
-            ->andWhere(Criteria::expr()->gte('measurementDate', $dayOfDateTime))
-            ->andWhere(Criteria::expr()->lt('measurementDate', $dayAfterDateTime))
+        $criteria = $this->findByAnimalAndDateCriteria($animal, $dateTime)
             ->andWhere(Criteria::expr()->eq('isRevoked', false))
-            ->orderBy(['measurementDate' => Criteria::DESC])
-            ;
+        ;
 
-        /** @var Collection $weightMeasurements */
-        $weightMeasurements = $this->getManager()->getRepository(Weight::class)
-            ->matching($criteria);
-
-        return $weightMeasurements;
+        return $this->getManager()->getRepository(Weight::class)->matching($criteria);
     }
 
 
