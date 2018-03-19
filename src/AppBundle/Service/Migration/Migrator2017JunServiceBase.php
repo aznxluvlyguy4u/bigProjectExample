@@ -5,10 +5,13 @@ namespace AppBundle\Service\Migration;
 
 use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Inspector;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\VsmIdGroup;
 use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\CsvParser;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -123,6 +126,47 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
             JsonInputConstant::PEDIGREE_COUNTRY_CODE => $parts[0],
             JsonInputConstant::PEDIGREE_NUMBER => $parts[1],
         ];
+    }
+
+
+    protected function createInspectorSearchArrayAndInsertNewInspectors($inspectorColumnRank = 14)
+    {
+        $this->writeLn('Creating inspector search Array ...');
+
+        DoctrineUtil::updateTableSequence($this->conn, [Person::getTableName()]);
+
+        $this->inspectorIdsInDbByFullName = $this->getInspectorSearchArrayWithNameCorrections();
+
+        $newInspectors = [];
+
+        foreach ($this->data as $record) {
+            $inspectorFullName = $record[$inspectorColumnRank];
+
+            if ($inspectorFullName !== '' && !key_exists($inspectorFullName, $this->inspectorIdsInDbByFullName)
+                && !key_exists($inspectorFullName, $newInspectors)) {
+                $newInspectors[$inspectorFullName] = $inspectorFullName;
+            }
+        }
+
+        if (count($newInspectors) === 0) {
+            return;
+        }
+
+        $this->writeLn('Inserting '.count($newInspectors).' new inspectors ...');
+        foreach ($newInspectors as $newInspectorFullName) {
+            $nameParts = explode(' ', $newInspectorFullName, 2);
+            $inspector = new Inspector();
+            $inspector
+                ->setFirstName($nameParts[0])
+                ->setLastName($nameParts[1])
+                ->setPassword('BLANK')
+            ;
+            $this->em->persist($inspector);
+            $this->writeLn($inspector->getFullName());
+        }
+        $this->em->flush();
+
+        $this->writeln(count($newInspectors) . ' new inspectors inserted (without inspectorCode nor authorization');
     }
 
 
