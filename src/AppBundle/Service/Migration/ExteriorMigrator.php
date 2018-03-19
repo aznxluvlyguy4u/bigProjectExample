@@ -47,48 +47,6 @@ class ExteriorMigrator extends Migrator2017JunServiceBase implements IMigratorSe
     }
 
 
-
-    private function createInspectorSearchArrayAndInsertNewInspectors()
-    {
-        $this->writeLn('Creating inspector search Array ...');
-
-        DoctrineUtil::updateTableSequence($this->conn, [Person::getTableName()]);
-
-        $this->inspectorIdsInDbByFullName = $this->getInspectorSearchArrayWithNameCorrections();
-
-        $newInspectors = [];
-
-        foreach ($this->data as $record) {
-            $inspectorFullName = $record[14];
-
-            if ($inspectorFullName !== '' && !key_exists($inspectorFullName, $this->inspectorIdsInDbByFullName)
-            && !key_exists($inspectorFullName, $newInspectors)) {
-                $newInspectors[$inspectorFullName] = $inspectorFullName;
-            }
-        }
-
-        if (count($newInspectors) === 0) {
-            return;
-        }
-
-        $this->writeLn('Inserting '.count($newInspectors).' new inspectors ...');
-        foreach ($newInspectors as $newInspectorFullName) {
-            $nameParts = explode(' ', $newInspectorFullName);
-            $inspector = new Inspector();
-            $inspector
-                ->setFirstName($nameParts[0])
-                ->setLastName($nameParts[1])
-                ->setPassword('BLANK')
-            ;
-            $this->em->persist($inspector);
-            $this->writeLn($inspector->getFullName());
-        }
-        $this->em->flush();
-
-        $this->writeln(count($newInspectors) . ' new inspectors inserted (without inspectorCode nor authorization');
-    }
-
-
     private function migrateNewExteriors()
     {
         $this->writeLn('=== Migrating NEW exterior measurements ===');

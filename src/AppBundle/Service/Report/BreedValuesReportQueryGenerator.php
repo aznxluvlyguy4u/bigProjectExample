@@ -46,9 +46,10 @@ class BreedValuesReportQueryGenerator
     /**
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
+     * @param bool $ignoreHiddenBreedValueTypes
      * @throws DBALException
      */
-    private function createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false)
+    private function createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false, $ignoreHiddenBreedValueTypes = false)
     {
         // Reset values
         $this->animalShouldHaveAtleastOneExistingBreedValueFilter = '';
@@ -89,6 +90,11 @@ class BreedValuesReportQueryGenerator
                   SELECT breed_value_type_id FROM breed_value_genetic_base
                   GROUP BY breed_value_type_id ORDER BY breed_value_type_id
                 )";
+
+        if ($ignoreHiddenBreedValueTypes) {
+            $sql .= ' AND show_result';
+        }
+
         $existingBreedValueColumnValues = $this->fetchAll($sql);
 
         $this->breedValuesSelectQueryPart = '';
@@ -165,12 +171,14 @@ class BreedValuesReportQueryGenerator
     /**
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
+     * @param bool $ignoreHiddenBreedValueTypes
      * @return string
      * @throws DBALException
      */
-    public function getFullBreedValuesReportOverviewQuery($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false)
+    public function getFullBreedValuesReportOverviewQuery($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false, $ignoreHiddenBreedValueTypes = false)
     {
-        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues);
+        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
+            $ignoreHiddenBreedValueTypes);
 
         $sql = "
             SELECT
@@ -308,6 +316,7 @@ class BreedValuesReportQueryGenerator
      * @param bool $matchLocationIdOfSelectedAnimals
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
+     * @param bool $ignoreHiddenBreedValueTypes
      * @return string
      * @throws DBALException
      */
@@ -315,10 +324,12 @@ class BreedValuesReportQueryGenerator
                                                  array $ulnFilter = [],
                                                  $matchLocationIdOfSelectedAnimals = false,
                                                  $concatBreedValuesAndAccuracies = true,
-                                                 $includeAnimalsWithoutAnyBreedValues = true
+                                                 $includeAnimalsWithoutAnyBreedValues = true,
+                                                 $ignoreHiddenBreedValueTypes = false
     )
     {
-        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues);
+        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
+            $ignoreHiddenBreedValueTypes);
 
         $filterString = "WHERE a.is_alive = true AND a.location_id = ".$locationId." ORDER BY a.animal_order_number ASC";
 
@@ -398,6 +409,9 @@ class BreedValuesReportQueryGenerator
                          COALESCE(CAST(c_mom.born_alive_offspring_count AS TEXT), '-'),
                          production_asterisk_mom.mark
                      ),'-/-/-/-') as m_production,
+                a.ubn_of_birth,
+                -- location_of_birth.ubn as ubn_of_birth,
+                location.ubn as current_ubn,
                   
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
@@ -408,6 +422,8 @@ class BreedValuesReportQueryGenerator
                 LEFT JOIN animal_cache c ON a.id = c.animal_id
                 LEFT JOIN animal_cache c_mom ON mom.id = c_mom.animal_id
                 LEFT JOIN animal_cache c_dad ON dad.id = c_dad.animal_id
+                LEFT JOIN location ON a.location_id = location.id
+                -- LEFT JOIN location location_of_birth ON a.location_of_birth_id = location_of_birth.id
                 LEFT JOIN result_table_breed_grades bg ON a.id = bg.animal_id
                 -- LEFT JOIN (VALUES ".SqlUtil::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
                 LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS a_breed_types(english, dutch_first_letter) ON a.breed_type = a_breed_types.english

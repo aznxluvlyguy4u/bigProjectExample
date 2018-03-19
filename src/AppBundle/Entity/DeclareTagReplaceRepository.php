@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\RequestStateType;
 
 /**
  * Class DeclareTagReplaceRepository
@@ -55,7 +56,11 @@ class DeclareTagReplaceRepository extends BaseRepository {
         $sql = "SELECT uln_country_code_replacement, uln_number_replacement, replace_date
             FROM declare_tag_replace d
             INNER JOIN declare_base b ON d.id = b.id
-            WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') 
+            WHERE (
+                    b.request_state = '".RequestStateType::FINISHED."' OR 
+                    b.request_state = '".RequestStateType::FINISHED_WITH_WARNING."' OR 
+                    b.request_state = '".RequestStateType::IMPORTED."'
+                  ) 
               AND d.uln_country_code_to_replace = '".$oldReplacedUlnCountryCode."' AND uln_number_to_replace = '".$oldReplacedUlnNumber."'
             ORDER BY replace_date DESC";
         $result = $this->getManager()->getConnection()->query($sql)->fetch();
@@ -75,6 +80,21 @@ class DeclareTagReplaceRepository extends BaseRepository {
             }
         }
         while($foundNewerReplacementUln != null);
+    }
+
+
+    /**
+     * @param string $oldReplacedUln
+     * @param bool $hasSpaceBetweenCountryCodeAndNumber
+     * @return Animal|Ewe|Neuter|Ram|null
+     */
+    public function getAnimalByNewestReplacementUln($oldReplacedUln, $hasSpaceBetweenCountryCodeAndNumber = false)
+    {
+        $newestReplacementUln = $this->getNewReplacementUln($oldReplacedUln, $hasSpaceBetweenCountryCodeAndNumber);
+        if ($newestReplacementUln) {
+            return $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($newestReplacementUln);
+        }
+        return null;
     }
 
 

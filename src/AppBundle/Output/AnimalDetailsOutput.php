@@ -3,37 +3,27 @@
 namespace AppBundle\Output;
 
 
-use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Utils;
-use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
-use AppBundle\Entity\BreedValuesSet;
-use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\DeclareBase;
-use AppBundle\Entity\DeclareBaseRepository;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
-use AppBundle\Entity\GeneticBase;
-use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\MuscleThicknessRepository;
-use AppBundle\Entity\PedigreeRepository;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\PedigreeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 
 /**
  * Class DeclareAnimalDetailsOutput

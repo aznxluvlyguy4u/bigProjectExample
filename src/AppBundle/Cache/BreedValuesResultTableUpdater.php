@@ -7,7 +7,6 @@ namespace AppBundle\Cache;
 use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Service\BreedValueService;
-use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -63,7 +62,13 @@ class BreedValuesResultTableUpdater
 
         $existingColumnNames = array_keys(SqlUtil::createSearchArrayByKey('column_name', $existingColumnNameResults));
 
-        $sql = "SELECT result_table_value_variable, result_table_accuracy_variable FROM breed_value_type";
+        $sql = "SELECT
+                  b.result_table_value_variable,
+                  b.result_table_accuracy_variable,
+                  b.use_normal_distribution,
+                  a.nl as analysis_type_nl
+                FROM breed_value_type b
+                  LEFT JOIN mix_blup_analysis_type a ON b.analysis_type_id = a.id";
         $variableResults = $this->conn->query($sql)->fetchAll();
 
         $searchArray = [];
@@ -86,7 +91,7 @@ class BreedValuesResultTableUpdater
     }
 
 
-    public function update()
+    public function update(array $analysisTypes = [])
     {
         $this->insertMissingBlankRecords();
 
@@ -103,14 +108,21 @@ class BreedValuesResultTableUpdater
         $totalBreedValueUpdateCount = 0;
         foreach ($results as $result)
         {
-            $totalBreedValueUpdateCount += $this->updateByBreedValueType($result);
+            $valueVar = $result['result_table_value_variable'];
+            $accuracyVar = $result['result_table_accuracy_variable'];
+            $useNormalDistribution = $result['use_normal_distribution'];
+            $analysisTypeNl = $result['analysis_type_nl'];
+
+            if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
+                $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar, $useNormalDistribution);
+            }
         }
 
         $messagePrefix = $totalBreedValueUpdateCount > 0 ? 'In total '.$totalBreedValueUpdateCount : 'In total NO';
         $this->write($messagePrefix. ' breed Value&Accuracy sets were updated');
 
 
-        $breedIndexUpdateCount = $this->updateByBreedValueIndexType();
+        $breedIndexUpdateCount = $this->updateResultTableByBreedValueIndexType();
         $messagePrefix = $breedIndexUpdateCount > 0 ? 'In total '.$breedIndexUpdateCount : 'In total NO';
         $this->write($messagePrefix. ' breed Index&Accuracy sets were updated');
     }
@@ -143,20 +155,47 @@ class BreedValuesResultTableUpdater
 
 
     /**
-     * @param array $result
+     * @param string $valueVar
+     * @param string $accuracyVar
+     * @param boolean $useNormalDistribution
      * @return int
      */
-    private function updateByBreedValueType($result)
+    private function updateResultTableByBreedValueType($valueVar, $accuracyVar, $useNormalDistribution)
     {
-        $valueVar = $result['result_table_value_variable'];
-        $accuracyVar = $result['result_table_accuracy_variable'];
-
         $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
 
-        $sql = "UPDATE result_table_breed_grades
-                SET $valueVar = v.corrected_value, $accuracyVar = v.accuracy
-                FROM (
-                       SELECT b.animal_id, b.value - gb.value as corrected_value, b.reliability, SQRT(b.reliability) as accuracy
+        if ($useNormalDistribution) {
+            $sqlResultTableValues = "SELECT
+                          b.animal_id,
+                          ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation)) as corrected_value,
+                          SQRT(b.reliability) as accuracy
+                        FROM breed_value b
+                          INNER JOIN breed_value_type t ON t.id = b.type_id
+                          INNER JOIN (
+                                       SELECT b.animal_id, b.type_id, max(generation_date) as max_generation_date
+                                       FROM breed_value b
+                                         INNER JOIN breed_value_type t ON t.id = b.type_id
+                                       WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                                       GROUP BY b.animal_id, b.type_id
+                                     )g ON g.animal_id = b.animal_id AND g.type_id = b.type_id AND g.max_generation_date = b.generation_date
+                          INNER JOIN result_table_breed_grades r ON r.animal_id = b.animal_id
+                          INNER JOIN normal_distribution n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
+                        WHERE
+                          t.result_table_value_variable = '$valueVar' AND
+                          (
+                            100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) <> r.$valueVar OR
+                            SQRT(b.reliability) <> r.$accuracyVar OR
+                            r.$valueVar ISNULL OR r.$accuracyVar ISNULL
+                          ) AND
+                          t.use_normal_distribution AND
+                          n.is_including_only_alive_animals = FALSE";
+
+        } else {
+            // Default: Using genetic base
+            $sqlResultTableValues = "SELECT
+                          b.animal_id,
+                          b.value - gb.value as corrected_value,
+                          SQRT(b.reliability) as accuracy
                        FROM breed_value b
                          INNER JOIN breed_value_type t ON t.id = b.type_id
                          INNER JOIN (
@@ -171,8 +210,15 @@ class BreedValuesResultTableUpdater
                        WHERE
                          t.result_table_value_variable = '$valueVar' AND
                          (b.value - gb.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
-                         r.$valueVar ISNULL OR r.$accuracyVar ISNULL)
-                ) as v(animal_id, corrected_value, reliabilty, accuracy)
+                         r.$valueVar ISNULL OR r.$accuracyVar ISNULL) AND
+                         t.use_normal_distribution = FALSE";
+        }
+
+        $sql = "UPDATE result_table_breed_grades
+                SET $valueVar = v.corrected_value, $accuracyVar = v.accuracy
+                FROM (
+                      $sqlResultTableValues   
+                ) as v(animal_id, corrected_value, accuracy)
                 WHERE result_table_breed_grades.animal_id = v.animal_id";
         $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
 
@@ -203,7 +249,7 @@ class BreedValuesResultTableUpdater
     /**
      * @return int
      */
-    private function updateByBreedValueIndexType()
+    private function updateResultTableByBreedValueIndexType()
     {
         $totalUpdateCount = 0;
 

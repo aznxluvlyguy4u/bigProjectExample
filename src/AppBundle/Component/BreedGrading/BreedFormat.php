@@ -7,6 +7,7 @@ namespace AppBundle\Component\BreedGrading;
 use AppBundle\Constant\BreedIndexDiscriminatorTypeConstant;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Constant\ReportFormat;
+use AppBundle\Entity\NormalDistribution;
 use AppBundle\Util\NumberUtil;
 
 class BreedFormat
@@ -24,6 +25,9 @@ class BreedFormat
     //Scaling
     const LAMB_MEAT_INDEX_SCALE = 100; //This will be added to the lambMeatIndex value
     const INDEX_SCALE = 100; //This will be added to the default Index value
+
+    const SIGA_BREED_VALUE_SCALE = 100; //This will be added to the corrected SiGA breed value
+    const SIGA_STANDARD_DEVIATION_SCALE = 10; //1 Standard deviation is worth this much points
 
     //Minimum accuracies for the calculation
     const MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX = 0.40;
@@ -243,4 +247,47 @@ class BreedFormat
     }
 
 
+    /**
+     * @param float $correctedBreedValue
+     * @param float $accuracy
+     * @param NormalDistribution $normalDistribution
+     * @return string
+     */
+    public static function formatSiGAForDisplay($correctedBreedValue, $accuracy, NormalDistribution $normalDistribution)
+    {
+        if ($correctedBreedValue != null) {
+            return self::EMPTY_BREED_VALUE;
+        }
+
+        return self::formatSiGAValueForDisplay($correctedBreedValue, $normalDistribution)
+            .'/'.self::formatSiGAAccuracyForDisplay($accuracy);
+    }
+
+
+    /**
+     * @param float $correctedBreedValue
+     * @param NormalDistribution $normalDistribution
+     * @return string
+     */
+    public static function formatSiGAValueForDisplay($correctedBreedValue, NormalDistribution $normalDistribution)
+    {
+        $deviation = $normalDistribution->getMean() - $correctedBreedValue;
+        $standardDeviation = $normalDistribution->getStandardDeviation();
+
+        // TODO fix this
+        $diff = $deviation * (self::SIGA_STANDARD_DEVIATION_SCALE / $standardDeviation);
+
+        $scaledSiGAValue = self::SIGA_BREED_VALUE_SCALE + $diff; // TODO fix this
+        return number_format($scaledSiGAValue, BreedFormat::INDEX_DECIMAL_ACCURACY, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR);
+    }
+
+
+    /**
+     * @param float $accuracy
+     * @return float
+     */
+    public static function formatSiGAAccuracyForDisplay($accuracy)
+    {
+        return round($accuracy*100);
+    }
 }

@@ -24,8 +24,18 @@ class BreedValueType
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
      */
     private $id;
+
+    /**
+     * @var MixBlupAnalysisType
+     *
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\MixBlupAnalysisType", inversedBy="breedValueTypes")
+     * @ORM\JoinColumn(name="analysis_type_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\MixBlupAnalysisType")
+     */
+    private $mixBlupAnalysisType;
 
     /**
      * @var string
@@ -73,6 +83,28 @@ class BreedValueType
      */
     private $resultTableAccuracyVariable;
 
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     */
+    private $showResult;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", options={"default":false})
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     */
+    private $useNormalDistribution;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Type("float")
+     */
+    private $standardDeviationStepSize;
 
     /**
      * BreedValueType constructor.
@@ -86,6 +118,8 @@ class BreedValueType
         $this->minReliability = BreedGradingSetting::MIN_RELIABILITY_FOR_GENETIC_BASE;
         $this->resultTableValueVariable = ResultTableBreedGrades::getValueVariableByBreedValueType($en);
         $this->resultTableAccuracyVariable = ResultTableBreedGrades::getAccuracyVariableByBreedValueType($en);
+        $this->showResult = true;
+        $this->useNormalDistribution = false;
     }
 
     /**
@@ -103,6 +137,24 @@ class BreedValueType
     public function setId($id)
     {
         $this->id = $id;
+        return $this;
+    }
+
+    /**
+     * @return MixBlupAnalysisType
+     */
+    public function getMixBlupAnalysisType()
+    {
+        return $this->mixBlupAnalysisType;
+    }
+
+    /**
+     * @param MixBlupAnalysisType $mixBlupAnalysisType
+     * @return BreedValueType
+     */
+    public function setMixBlupAnalysisType($mixBlupAnalysisType)
+    {
+        $this->mixBlupAnalysisType = $mixBlupAnalysisType;
         return $this;
     }
 
@@ -195,6 +247,61 @@ class BreedValueType
         $this->resultTableAccuracyVariable = $resultTableAccuracyVariable;
         return $this;
     }
+
+    /**
+     * @return bool
+     */
+    public function isShowResult()
+    {
+        return $this->showResult;
+    }
+
+    /**
+     * @param bool $showResult
+     * @return BreedValueType
+     */
+    public function setShowResult($showResult)
+    {
+        $this->showResult = $showResult;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUseNormalDistribution()
+    {
+        return $this->useNormalDistribution;
+    }
+
+    /**
+     * @param bool $useNormalDistribution
+     * @return BreedValueType
+     */
+    public function setUseNormalDistribution($useNormalDistribution)
+    {
+        $this->useNormalDistribution = $useNormalDistribution;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getStandardDeviationStepSize()
+    {
+        return $this->standardDeviationStepSize;
+    }
+
+    /**
+     * @param float $standardDeviationStepSize
+     * @return BreedValueType
+     */
+    public function setStandardDeviationStepSize($standardDeviationStepSize)
+    {
+        $this->standardDeviationStepSize = $standardDeviationStepSize;
+        return $this;
+    }
+
 
 
 }

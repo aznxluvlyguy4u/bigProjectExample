@@ -19,6 +19,26 @@ use Doctrine\DBAL\Connection;
  */
 class MixBlupDataFileBase
 {
+    const DECIMAL_SEPARATOR_SYMBOL = '.';
+    const THOUSAND_SEPARATOR_SYMBOL = '';
+
+
+    /**
+     * @param $value
+     * @param $decimals
+     * @return string
+     */
+    protected static function numberFormat($value, $decimals)
+    {
+        return number_format(
+            $value,
+            $decimals,
+            self::DECIMAL_SEPARATOR_SYMBOL,
+            self::THOUSAND_SEPARATOR_SYMBOL
+        );
+    }
+
+
     /**
      * @param string $animalIdKey
      * @return string
@@ -473,6 +493,17 @@ class MixBlupDataFileBase
     protected static function getFormattedRecombination($data)
     {
         return self::getFormattedGeneVarianceFromData($data, MaxLength::HETEROSIS_AND_RECOMBINATION, JsonInputConstant::RECOMBINATION);
+    }
+
+
+    /**
+     * @param array $data
+     * @return string
+     */
+    protected static function getFormattedStillbornCount($data)
+    {
+        $stillBornCount = ArrayUtil::get(JsonInputConstant::TOTAL_STILLBORN_COUNT, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        return DsvWriterUtil::pad($stillBornCount, MaxLength::N_LING, true);
     }
 
 

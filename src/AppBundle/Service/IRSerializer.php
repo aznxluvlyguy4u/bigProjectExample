@@ -83,6 +83,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     private $entityManager;
     /** @var \AppBundle\Service\EntityGetter */
     private $entityGetter;
+
     /** @var Connection */
     private $conn;
 
@@ -325,7 +326,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
               /** @var Litter $litter */
             foreach ($litters as $litter) {
                 if($litter->getStatus() != 'REVOKED') {
-                  $dateInterval = TimeUtil::getDaysBetween($litter->getLitterDate(), $dateOfBirth);
+                  $dateInterval = abs(TimeUtil::getDaysBetween($litter->getLitterDate(), $dateOfBirth));
 
                   if($dateInterval <= $maxDaysLitterInterval) {
                     return Validator::createJsonResponse("Opgegeven moeder met ULN: "

@@ -44,7 +44,9 @@ class JsonInputConstant
     const ULN_FATHER = 'uln_mother';
     const ULN_MOTHER = 'uln_father';
     const MOTHER_ID = 'mother_id';
+    const MOTHER = 'mother';
     const FATHER_ID = 'father_id';
+    const FATHER = 'father';
     const STN = 'stn';
     const SCRAPIE_GENOTYPE = 'scrapie_genotype';
     const BREED = 'breed';
@@ -260,6 +262,7 @@ class JsonInputConstant
     const EARLIEST_LITTER_DATE = 'earliest_litter_date';
     const LATEST_LITTER_DATE = 'latest_litter_date';
     const LITTER_DATE = 'litter_date';
+    const LITTER_ORDINAL = 'litter_ordinal';
     const LITTER_ID = 'litter_id';
     const PRODUCTION = 'production';
     const GAVE_BIRTH_AS_ONE_YEAR_OLD = 'gave_birth_as_one_year_old';
