@@ -10,6 +10,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\VsmIdGroup;
 use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CsvParser;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
@@ -43,6 +44,8 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
     protected $animalIdsByVsmId;
     /** @var array */
     protected $inspectorIdsInDbByFullName;
+    /** @var Inspector[] */
+    protected $inspectorByIds;
     /** @var array */
     protected $primaryVsmIdsBySecondaryVsmId;
 
@@ -208,5 +211,36 @@ class Migrator2017JunServiceBase extends MigratorServiceBase
     protected function resetPrimaryVsmIdsBySecondaryVsmId()
     {
         $this->primaryVsmIdsBySecondaryVsmId = $this->vsmIdGroupRepository->getPrimaryVsmIdsBySecondaryVsmId();
+    }
+
+
+    /**
+     * This should only be run after generating the InspectorIdsInDbByFullname searchArray
+     *
+     * @param string $inspectorFullName
+     * @return Inspector
+     */
+    protected function getInspectorByFullname($inspectorFullName)
+    {
+        if ($inspectorFullName === '' || $inspectorFullName === null) {
+            return null;
+        }
+
+        if ($this->inspectorByIds === null) {
+            $this->inspectorByIds = [];
+        }
+
+        $inspectorId = $this->inspectorIdsInDbByFullName[$inspectorFullName];
+        $inspector =  ArrayUtil::get($inspectorId, $this->inspectorByIds);
+
+        if (!$inspector) {
+            $inspector = $this->em->getRepository(Inspector::class)->find($inspectorId);
+            if (!$inspector) {
+                throw new \Exception('NO INSPECTOR '.$inspectorFullName.' FOUND FOR ID '.$inspectorId);
+            }
+            $this->inspectorByIds[$inspectorId] = $inspector;
+        }
+
+        return $inspector;
     }
 }
