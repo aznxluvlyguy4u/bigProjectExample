@@ -11,6 +11,7 @@ use AppBundle\Cache\TailLengthCacher;
 use AppBundle\Cache\WeightCacher;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\ScrapieGenotypeSource;
 use AppBundle\Entity\TagSyncErrorLog;
 use AppBundle\Entity\TagSyncErrorLogRepository;
 use AppBundle\Enumerator\CommandTitle;
@@ -614,8 +615,10 @@ class NsfoMainCommand extends ContainerAwareCommand
             '2: is_rvo_message boolean in action_log', "\n",
             '3: TreatmentType', "\n",
             '4: LedgerCategory', "\n",
-            '5: StoredProcedures', "\n",
-            '6: StoredProcedures: overwrite all', "\n\n",
+            '5: ScrapieGenotypeSource', "\n",
+            '=====================================', "\n",
+            '10: StoredProcedures', "\n",
+            '11: StoredProcedures: overwrite all', "\n\n",
 
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
@@ -627,8 +630,13 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 2: ActionLogWriter::initializeIsRvoMessageValues($this->conn, $this->cmdUtil); break;
             case 3: $this->getContainer()->get('app.initializer.treatment_type')->run($this->cmdUtil); break;
             case 4: $this->getContainer()->get('AppBundle\Service\Migration\LedgerCategoryMigrator')->run($this->cmdUtil); break;
-            case 5: $storedProcedureIntializer->initialize(); break;
-            case 6: $storedProcedureIntializer->update(); break;
+            case 5:
+                $updateCount = $this->em->getRepository(ScrapieGenotypeSource::class)->initializeRecords();
+                $this->writeLn(($updateCount ? $updateCount : 'No').' ScrapieGenotypeSources have been inserted');
+                break;
+
+            case 10: $storedProcedureIntializer->initialize(); break;
+            case 11: $storedProcedureIntializer->update(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }

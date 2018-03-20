@@ -696,6 +696,18 @@ abstract class Animal
     protected $scrapieGenotype;
 
     /**
+     * @var ScrapieGenotypeSource
+     * @ORM\ManyToOne(targetEntity="ScrapieGenotypeSource")
+     * @ORM\JoinColumn(name="scrapie_genotype_source_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\ScrapieGenotypeSource")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
+     * })
+     */
+    protected $scrapieGenotypeSource;
+
+    /**
      * The current blindnessFactor
      *
      * @var string
@@ -2530,6 +2542,24 @@ abstract class Animal
     public function getScrapieGenotype()
     {
         return $this->scrapieGenotype;
+    }
+
+    /**
+     * @return ScrapieGenotypeSource
+     */
+    public function getScrapieGenotypeSource()
+    {
+        return $this->scrapieGenotypeSource;
+    }
+
+    /**
+     * @param ScrapieGenotypeSource $scrapieGenotypeSource
+     * @return Animal
+     */
+    public function setScrapieGenotypeSource($scrapieGenotypeSource)
+    {
+        $this->scrapieGenotypeSource = $scrapieGenotypeSource;
+        return $this;
     }
 
     /**
