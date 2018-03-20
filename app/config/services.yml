@@ -380,7 +380,7 @@ services:
 
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
-        arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter']
+        arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter', '@AppBundle\Service\PedigreeDataGenerator']
 
     app.health.updater:
         class: AppBundle\Service\HealthUpdaterService
@@ -770,6 +770,10 @@ services:
     app.weight:
         parent: app.abstract_base.controller
         class: AppBundle\Service\WeightService
+
+    AppBundle\Service\PedigreeDataGenerator:
+        arguments:
+          - '@doctrine.orm.entity_manager'
 
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:
