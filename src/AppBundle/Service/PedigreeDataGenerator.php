@@ -6,6 +6,9 @@ namespace AppBundle\Service;
 
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\ScrapieGenotypeSource;
+use AppBundle\Enumerator\ScrapieGenotypeType;
+use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\BreedCodeUtil;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
@@ -62,6 +65,8 @@ class PedigreeDataGenerator
             $this->em->flush();
         }
 
+        $this->em->getRepository(ScrapieGenotypeSource::class)->clearSearchArrays();
+
         return $animals;
     }
 
@@ -93,6 +98,16 @@ class PedigreeDataGenerator
     {
         $this->isAnimalValueUpdated = true;
         $this->isAnyValueUpdated = true;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return Location
+     */
+    private function getLocation(Animal $animal)
+    {
+        return $this->location ? $this->location : $animal->getLocation();
     }
 
 
@@ -152,15 +167,35 @@ class PedigreeDataGenerator
      */
     private function generateScrapieGenotype(Animal $animal)
     {
+        if ($animal->getScrapieGenotype() && !$animal->getScrapieGenotypeSource()) {
+            $animal->setScrapieGenotype($this->getScrapieGenotypeAdministrativeSource());
+            $this->valueWasUpdated();
+            return $animal;
+        }
+
         if ($animal->getScrapieGenotype() !== null && !$this->overwriteExistingData) {
             return $animal;
         }
 
-        // TODO
-
-        $this->valueWasUpdated();
+        if ($this->getLocation($animal) &&
+            $this->getLocation($animal)->getLocationHealth() &&
+            $this->getLocation($animal)->getLocationHealth()->getCurrentScrapieStatus() === ScrapieStatus::RESISTANT)
+        {
+            $animal->setScrapieGenotype(ScrapieGenotypeType::ARR_ARR);
+            $animal->setScrapieGenotype($this->getScrapieGenotypeAdministrativeSource());
+            $this->valueWasUpdated();
+        }
 
         return $animal;
+    }
+
+
+    /**
+     * @return ScrapieGenotypeSource
+     */
+    private function getScrapieGenotypeAdministrativeSource()
+    {
+        return $this->em->getRepository(ScrapieGenotypeSource::class)->getAdministrativeSource();
     }
 
 
