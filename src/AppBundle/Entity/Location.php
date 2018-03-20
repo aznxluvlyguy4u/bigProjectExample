@@ -1133,7 +1133,7 @@ class Location
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|PedigreeRegisterRegistration[]
      */
     public function getPedigreeRegisterRegistrations()
     {
