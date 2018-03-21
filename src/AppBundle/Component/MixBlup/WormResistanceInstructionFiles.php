@@ -68,9 +68,9 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
             ' NZIgA      T #IgA bepaling in Nieuw Zeeland',
             ' Periode    I #vroege of late monstername binnen seizoen. 1/2, default = '.WormResistanceDataFile::SAMPLE_PERIOD_DEFAULT_VALUE,
             ' WorpID     A ',
-            ' TotGeb     T #Totaal geboren lammeren in de worp', //bornAliveCount in litter
+            ' TotGeb     R #Totaal geboren lammeren in de worp', //bornAliveCount in litter
             ' DoodGeb    T #Doodgeboren lammeren in de worp', //stillbornCount in litter
-            ' ewllwnr    T #eerste worp leeftijd: 1 of 2 (voor alles boven 1), en laatste worp worpnummer',
+            ' Ewllwnr    I #eerste worp leeftijd: 1 of 2 (voor alles boven 1), en laatste worp worpnummer',
         ];
 
         $lastDataRecords = [
@@ -97,9 +97,9 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
     {
         $jaarBedr = self::jaarBedrijf($isRelani);
 
-        $lnFecTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld Periode';
-        $siGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse';
-        $nSiGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld Periode';
+        $lnFecTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld Periode TotGeb Ewllwnr';
+        $siGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse TotGeb Ewllwnr';
+        $nSiGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld Periode TotGeb Ewllwnr';
 
         return [
             'LnFEC' => ' LnFEC    ~ '.$jaarBedr.$lnFecTraits.' !RANDOM G(ID)',
