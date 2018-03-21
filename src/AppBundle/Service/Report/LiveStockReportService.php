@@ -174,6 +174,8 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             BreedValueTypeConstant::NATURAL_LOGARITHM_EGG_COUNT.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
             BreedValueTypeConstant::IGA_NEW_ZEALAND,
             BreedValueTypeConstant::IGA_NEW_ZEALAND.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
+            BreedValueTypeConstant::IGA_SCOTLAND,
+            BreedValueTypeConstant::IGA_SCOTLAND.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
         ];
 
         $csvData = $this->unsetNestedKeys($this->getData(), $keysToIgnore);

@@ -99,14 +99,14 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
             ;
 
 
-            // Records divided up by traits (kenmerken). LnFEC=EPG, SIgA, NZIgA
+            // Records divided up by traits (kenmerken). LnFEC=EPG, OdinBC, NZIgA. SIgA is replaced by OdinBC
 
             if(self::isSIgANotNull($data)) {
 
                  $record =
                     $recordBase.
                     self::getFormattedLnFECNullFiller().
-                    self::getFormattedSIgA($data).
+                    //self::getFormattedSIgA($data).
                     self::getFormattedOdinBc($data).
                     self::getFormattedNZIgANullFiller().
                     $recordEnd
@@ -123,7 +123,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                 $record =
                     $recordBase.
                     $formattedLnFEC.
-                    self::getFormattedSIgANullFiller().
+                    //self::getFormattedSIgANullFiller().
                     self::getFormattedOdinBcNullFiller().
                     self::getFormattedNZIgA($data).
                     $recordEnd
@@ -136,7 +136,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                 $record =
                     $recordBase.
                     $formattedLnFEC.
-                    self::getFormattedSIgANullFiller().
+                    //self::getFormattedSIgANullFiller().
                     self::getFormattedOdinBcNullFiller().
                     self::getFormattedNZIgANullFiller().
                     $recordEnd

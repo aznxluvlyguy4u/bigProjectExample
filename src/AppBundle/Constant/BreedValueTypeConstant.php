@@ -49,6 +49,7 @@ class BreedValueTypeConstant
     const NATURAL_LOGARITHM_EGG_COUNT = 'LnFEC';
     const IGA_SCOTLAND = 'SIgA';
     const IGA_NEW_ZEALAND = 'NZIgA';
+    const ODIN_BC = 'OdinBC';
 
     /**
      * @return array

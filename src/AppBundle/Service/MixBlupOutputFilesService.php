@@ -1020,9 +1020,10 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             }
 
             if ($this->hasWormResistanceOutputFiles()) {
-                $this->logger->notice('LambMeatOutputFilename found in message. 
-                Processing new WormResistance sIga NormalDistribution...');
-                $this->normalDistributionService->persistWormResistanceMeanAndStandardDeviationSIgA($generationDateString);
+                $this->logger->notice('WormResistanceOutputFilename found in message. 
+                Processing new WormResistance OdinBC NormalDistribution...');
+                $this->normalDistributionService
+                    ->persistBreedValueTypeMeanAndStandardDeviation(BreedValueTypeConstant::ODIN_BC, $generationDateString);
             }
         }
     }

@@ -4,7 +4,6 @@
 namespace AppBundle\Service;
 
 
-use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\LambMeatBreedIndex;
 use AppBundle\Entity\NormalDistribution;
@@ -90,24 +89,24 @@ class NormalDistributionService
     /**
      * Note the standard deviation will be based on the generation date of the breed values!
      *
+     * @param string $breedValueTypeConstant from BreedValueTypeConstant
      * @param string|\DateTime $generationDate
      * @param boolean $overwriteExisting
      * @throws \Exception
      */
-    public function persistWormResistanceMeanAndStandardDeviationSIgA($generationDate, $overwriteExisting = false)
+    public function persistBreedValueTypeMeanAndStandardDeviation($breedValueTypeConstant, $generationDate, $overwriteExisting = false)
     {
-        $breedValueTypeConstant = BreedValueTypeConstant::IGA_SCOTLAND;
-
         $generationYear = DateUtil::getYearFromDateStringOrDateTime($generationDate);
 
-        $normalDistribution = $this->normalDistributionRepository->getSiGAbyYear($generationYear);
+        $normalDistribution = $this->normalDistributionRepository
+            ->getByBreedValueTypeAndYear($breedValueTypeConstant, $generationYear);
         if ($normalDistribution && !$overwriteExisting) {
             return;
         }
 
         foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
             $valuesArray = $this->getManager()->getRepository(BreedValue::class)
-                ->getReliableSIgAValues($generationDate, $isIncludingOnlyAliveAnimals);
+                ->getReliableBreedValues($breedValueTypeConstant, $generationDate, $isIncludingOnlyAliveAnimals);
 
             self::upsertMeanAndStandardDeviation($breedValueTypeConstant,
                 $generationYear, $isIncludingOnlyAliveAnimals, $valuesArray);

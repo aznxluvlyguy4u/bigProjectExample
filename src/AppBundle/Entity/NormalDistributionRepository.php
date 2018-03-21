@@ -50,9 +50,10 @@ class NormalDistributionRepository extends BaseRepository {
 
     /**
      * @param array $years
+     * @param string $breedValueType from BreedValueTypeConstant
      * @return ArrayCollection
      */
-    public function getSiGAbyYears(array $years)
+    public function getByBreedValueTypeAndYears($breedValueType, array $years)
     {
         $results = new ArrayCollection();
         if (count($years) === 0) {
@@ -64,7 +65,7 @@ class NormalDistributionRepository extends BaseRepository {
         $qb->select('n')
             ->from(NormalDistribution::class, 'n')
             ->where($qb->expr()->in('n.year', ':years'))
-            ->andWhere($qb->expr()->eq('n.type', "'".BreedValueTypeConstant::IGA_SCOTLAND."'"))
+            ->andWhere($qb->expr()->eq('n.type', "'".$breedValueType."'"))
             ->setParameter('years', $years)
         ;
 
@@ -79,16 +80,17 @@ class NormalDistributionRepository extends BaseRepository {
 
     /**
      * @param int $year
+     * @param string $breedValueType from BreedValueTypeConstant
      * @return NormalDistribution|null
      */
-    public function getSiGAbyYear($year)
+    public function getByBreedValueTypeAndYear($breedValueType, $year)
     {
         $qb = $this->getManager()->createQueryBuilder();
 
         $qb->select('n')
             ->from(NormalDistribution::class, 'n')
             ->where($qb->expr()->eq('n.year', ':year'))
-            ->andWhere($qb->expr()->eq('n.type', "'".BreedValueTypeConstant::IGA_SCOTLAND."'"))
+            ->andWhere($qb->expr()->eq('n.type', "'".$breedValueType."'"))
             ->setParameter('year', $year)
         ;
 
@@ -100,5 +102,4 @@ class NormalDistributionRepository extends BaseRepository {
 
         return array_shift($results);
     }
-
 }

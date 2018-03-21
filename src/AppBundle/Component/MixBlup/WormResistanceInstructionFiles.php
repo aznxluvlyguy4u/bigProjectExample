@@ -4,6 +4,7 @@
 namespace AppBundle\Component\MixBlup;
 
 
+use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Setting\MixBlupInstructionFile;
 use AppBundle\Setting\MixBlupSetting;
@@ -63,10 +64,10 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
 
         $measurementValues = [
             ' Behandeld  R #0(nee)/1(ja), default = '.WormResistanceDataFile::IS_TREATED_DEFAULT_VALUE,
-            ' LnFEC      T #Natuurlijke logaritme uit de eitelling = epg',
-            ' SIgA       T #IgA bepaling in Schotland',
-            ' OdinBC     T #optical density index after Box-Cox transformation',
-            ' NZIgA      T #IgA bepaling in Nieuw Zeeland',
+            ' '.BreedValueTypeConstant::NATURAL_LOGARITHM_EGG_COUNT.'      T #Natuurlijke logaritme uit de eitelling = epg',
+            //' '.BreedValueTypeConstant::IGA_SCOTLAND.'       T #IgA bepaling in Schotland',
+            ' '.BreedValueTypeConstant::ODIN_BC.'     T #optical density index after Box-Cox transformation',
+            ' '.BreedValueTypeConstant::IGA_NEW_ZEALAND.'      T #IgA bepaling in Nieuw Zeeland',
             ' Periode    I #vroege of late monstername binnen seizoen. 1/2, default = '.WormResistanceDataFile::SAMPLE_PERIOD_DEFAULT_VALUE,
             ' WorpID     A ',
             ' TotGeb     R #Totaal geboren lammeren in de worp', //bornAliveCount in litter
@@ -99,13 +100,15 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
         $jaarBedr = self::jaarBedrijf($isRelani);
 
         $lnFecTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld Periode TotGeb Ewllwnr';
-        $siGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse TotGeb Ewllwnr OdinBC';
+        //$siGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse TotGeb Ewllwnr';
+        $odinBcTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse TotGeb Ewllwnr';
         $nSiGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld Periode TotGeb Ewllwnr';
 
         return [
-            'LnFEC' => ' LnFEC    ~ '.$jaarBedr.$lnFecTraits.' !RANDOM G(ID)',
-            'SIgA' =>  ' SIgA     ~ '.$jaarBedr.$siGaTraits.' !RANDOM G(ID)',
-            'NZIgA' => ' NZIgA    ~ '.$jaarBedr.$nSiGaTraits.' !RANDOM G(ID)',
+            BreedValueTypeConstant::NATURAL_LOGARITHM_EGG_COUNT => ' '.BreedValueTypeConstant::NATURAL_LOGARITHM_EGG_COUNT.'    ~ '.$jaarBedr.$lnFecTraits.' !RANDOM G(ID)',
+            //BreedValueTypeConstant::IGA_SCOTLAND =>  ' '.BreedValueTypeConstant::IGA_SCOTLAND.'     ~ '.$jaarBedr.$siGaTraits.' !RANDOM G(ID)',
+            BreedValueTypeConstant::ODIN_BC =>  ' '.BreedValueTypeConstant::ODIN_BC.'     ~ '.$jaarBedr.$odinBcTraits.' !RANDOM G(ID)',
+            BreedValueTypeConstant::IGA_NEW_ZEALAND => ' '.BreedValueTypeConstant::IGA_NEW_ZEALAND.'    ~ '.$jaarBedr.$nSiGaTraits.' !RANDOM G(ID)',
         ];
     }
 }
