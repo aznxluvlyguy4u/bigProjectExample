@@ -65,6 +65,7 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
             ' Behandeld  R #0(nee)/1(ja), default = '.WormResistanceDataFile::IS_TREATED_DEFAULT_VALUE,
             ' LnFEC      T #Natuurlijke logaritme uit de eitelling = epg',
             ' SIgA       T #IgA bepaling in Schotland',
+            ' OdinBC     T #optical density index after Box-Cox transformation',
             ' NZIgA      T #IgA bepaling in Nieuw Zeeland',
             ' Periode    I #vroege of late monstername binnen seizoen. 1/2, default = '.WormResistanceDataFile::SAMPLE_PERIOD_DEFAULT_VALUE,
             ' WorpID     A ',
@@ -98,7 +99,7 @@ class WormResistanceInstructionFiles extends MixBlupInstructionFileBase implemen
         $jaarBedr = self::jaarBedrijf($isRelani);
 
         $lnFecTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld Periode TotGeb Ewllwnr';
-        $siGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse TotGeb Ewllwnr';
+        $siGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse TotGeb Ewllwnr OdinBC';
         $nSiGaTraits = $isRelani ? '' : ' CovTE '.self::getBreedCodesModel().' Sekse Behandeld Periode TotGeb Ewllwnr';
 
         return [

@@ -96,7 +96,7 @@ class MixBlupInputProcessBase
      */
     private function writeToFile(array $records, $filename, $subfolder = null)
     {
-        if(!is_string($filename) || $filename == '') { return false; }
+        if(!is_string($filename) || $filename == '' || count($records) === 0) { return false; }
 
         if($subfolder != null) {
             $filePath = $this->outputFolderPath.'/'.$subfolder.'/'.$filename;
