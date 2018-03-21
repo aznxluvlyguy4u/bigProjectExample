@@ -152,4 +152,27 @@ class NormalDistributionService
                 ->persistFromValues($type, $year, $mean, $standardDeviation, $isIncludingOnlyAliveAnimals);
         }
     }
+
+
+    /**
+     * @param array $valuesArray
+     * @return NormalDistribution|null
+     */
+    public static function getMeanAndStandardDeviation(array $valuesArray = [])
+    {
+        if (count($valuesArray) === 0) {
+            return null;
+        }
+
+        $mean = array_sum($valuesArray) / count($valuesArray);
+        $standardDeviation = MathUtil::standardDeviation($valuesArray, $mean);
+
+        return (new NormalDistribution(
+            null,
+            null,
+            $mean,
+            $standardDeviation,
+            false)
+        );
+    }
 }
