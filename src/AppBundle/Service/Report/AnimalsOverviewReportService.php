@@ -7,6 +7,7 @@ namespace AppBundle\Service\Report;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
+use AppBundle\Util\ProcessUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,6 +21,8 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
     const CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT = false;
     const MAX_CURRENT_ANIMAL_AGE_IN_YEARS = 18;
 
+    const PROCESS_TIME_LIMIT_IN_MINUTES = 10;
+
     /**
      * @inheritDoc
      */
@@ -32,6 +35,8 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
         $this->concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT);
 
         $this->setLocaleFromQueryParameter($request);
+
+        ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 
         $this->data = $this->retrieveLiveStockDataForCsv();
 
