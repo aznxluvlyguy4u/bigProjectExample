@@ -496,13 +496,31 @@ class BreedValuesReportQueryGenerator
                     a.predicate_score as a_predicate_score,
                     mom.predicate_score as m_predicate_score,
                     dad.predicate_score as f_predicate_score,
-                    c.muscularity as a_muscularity,
+                    
                     c_mom.muscularity as m_muscularity,
                     c_dad.muscularity as f_muscularity,
-                    c.general_appearance as a_general_appearance,
+                    
                     c_mom.general_appearance as m_general_appearance,
                     c_dad.general_appearance as f_general_appearance,
-
+                    
+                    c.exterior_measurement_date as a_measurement_date,
+                    c.kind as a_kind,
+                    c.skull as a_skull,
+                    c.progress as a_progress,
+                    c.muscularity as a_muscularity,
+                    c.proportion as a_proportion,
+                    c.exterior_type as a_exterior_type,                 
+                    c.leg_work as a_leg_work,
+                    c.fur as a_fur,
+                    c.general_appearance as a_general_appearance,
+                    c.height as a_height,
+                    c.breast_depth as a_breast_depth,
+                    c.torso_length as a_torso_length,                    
+                    NULLIF(TRIM(CONCAT(exterior_inspector.first_name,' ',exterior_inspector.last_name)),'') as a_inspector,
+                    
+                    pr.abbreviation as pedigree_register,
+                    -- ADD pedigree_register subscription is_active here
+                   
                 NULLIF(CONCAT(
                      COALESCE(CAST(c.production_age AS TEXT), '-'),'/',
                      COALESCE(CAST(c.litter_count AS TEXT), '-'),'/',
@@ -527,9 +545,17 @@ class BreedValuesReportQueryGenerator
                          COALESCE(CAST(c_mom.born_alive_offspring_count AS TEXT), '-'),
                          production_asterisk_mom.mark
                      ),'-/-/-/-') as m_production,
-                a.ubn_of_birth,
-                -- location_of_birth.ubn as ubn_of_birth,
+                
+                a.ubn_of_birth as ubn_of_birth_text_value,
+                location_of_birth.ubn as ubn_of_birth,
+                NULLIF(TRIM(CONCAT(breeder.first_name,' ',breeder.last_name)),'') as breedername,
+                breeder_address.city as breeder_city,
+                breeder_address.state as breeder_state,
+                
                 location.ubn as current_ubn,
+                NULLIF(TRIM(CONCAT(holder.first_name,' ',holder.last_name)),'') as holdername,
+                company_address.city as holder_city,
+                company_address.state as holder_state,
                   
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
@@ -540,8 +566,19 @@ class BreedValuesReportQueryGenerator
                 LEFT JOIN animal_cache c ON a.id = c.animal_id
                 LEFT JOIN animal_cache c_mom ON mom.id = c_mom.animal_id
                 LEFT JOIN animal_cache c_dad ON dad.id = c_dad.animal_id
+                LEFT JOIN person exterior_inspector ON exterior_inspector.id = c.exterior_inspector_id
+                LEFT JOIN pedigree_register pr ON pr.id = a.pedigree_register_id
+                
                 LEFT JOIN location ON a.location_id = location.id
-                -- LEFT JOIN location location_of_birth ON a.location_of_birth_id = location_of_birth.id
+                LEFT JOIN company ON company.id = location.company_id
+                LEFT JOIN person holder ON holder.id = company.owner_id
+                LEFT JOIN address company_address ON company_address.id = company.address_id
+                
+                LEFT JOIN location location_of_birth ON a.location_of_birth_id = location_of_birth.id
+                LEFT JOIN company breeder_company ON breeder_company.id = location_of_birth.company_id
+                LEFT JOIN person breeder ON breeder.id = breeder_company.owner_id
+                LEFT JOIN address breeder_address ON breeder_address.id = breeder_company.address_id
+                
                 LEFT JOIN result_table_breed_grades bg ON a.id = bg.animal_id
                 -- LEFT JOIN (VALUES ".SqlUtil::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
                 LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS a_breed_types(english, dutch_first_letter) ON a.breed_type = a_breed_types.english

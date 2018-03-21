@@ -9,6 +9,7 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\ProcessUtil;
 use AppBundle\Util\RequestUtil;
+use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -21,7 +22,7 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
     const CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT = false;
     const MAX_CURRENT_ANIMAL_AGE_IN_YEARS = 18;
 
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 10;
+    const PROCESS_TIME_LIMIT_IN_MINUTES = 180; // 3 hours
 
     /**
      * @inheritDoc
@@ -32,15 +33,21 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $this->concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT);
+        try {
 
-        $this->setLocaleFromQueryParameter($request);
+            $this->concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT);
 
-        ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
+            $this->setLocaleFromQueryParameter($request);
 
-        $this->data = $this->retrieveLiveStockDataForCsv();
+            ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 
-        return $this->getCsvReport();
+            $this->data = $this->retrieveLiveStockDataForCsv();
+
+            return $this->getCsvReport();
+
+        } catch (\Exception $exception) {
+            return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
+        }
     }
 
     /**
