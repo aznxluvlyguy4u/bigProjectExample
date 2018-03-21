@@ -35,7 +35,7 @@ use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class InbreedingCoefficientReportService extends ReportServiceBase
+class InbreedingCoefficientReportService extends ReportServiceBase implements ReportServiceInterface
 {
     const GENERATION_OF_ASCENDANTS = 7;
     const MAX_GENERATION_OF_ASCENDANTS = 8;

@@ -25,7 +25,7 @@ use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-class PedigreeCertificateReportService extends ReportServiceBase
+class PedigreeCertificateReportService extends ReportServiceBase implements ReportServiceInterface
 {
     const TITLE = 'pedigree certificates report';
     const TWIG_FILE = 'Report/pedigree_certificates.html.twig';

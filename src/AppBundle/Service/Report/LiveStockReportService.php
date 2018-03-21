@@ -29,7 +29,7 @@ use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 
-class LiveStockReportService extends ReportServiceWithBreedValuesBase
+class LiveStockReportService extends ReportServiceWithBreedValuesBase implements ReportServiceInterface
 {
     const TITLE = 'livestock_report';
     const TWIG_FILE = 'Report/livestock_report.html.twig';
