@@ -128,6 +128,16 @@ class ReportServiceBase
 
     /**
      * @param string $value
+     * @return string
+     */
+    protected function trans($value)
+    {
+        return $this->translator->trans($value);
+    }
+
+
+    /**
+     * @param string $value
      * @param bool $replaceSpacesWithUnderScores
      * @param bool $capitalizeFirstLetter
      * @return string
