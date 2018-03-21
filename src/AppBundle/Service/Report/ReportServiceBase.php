@@ -4,10 +4,8 @@
 namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
-use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Client;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;

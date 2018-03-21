@@ -9,19 +9,10 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Enumerator\QueryParameter;
-use AppBundle\Service\AWSSimpleStorageService;
-use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
-use AppBundle\Service\ExcelService;
-use AppBundle\Service\UserService;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
-use Doctrine\ORM\EntityManagerInterface;
-use Knp\Snappy\GeneratorInterface;
-use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bridge\Twig\TwigEngine;
-use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
