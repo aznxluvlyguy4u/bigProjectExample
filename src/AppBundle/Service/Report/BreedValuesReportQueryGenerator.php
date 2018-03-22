@@ -4,10 +4,13 @@
 namespace AppBundle\Service\Report;
 
 
+use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\Locale;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class BreedValuesReportQueryGenerator
 {
@@ -15,6 +18,8 @@ class BreedValuesReportQueryGenerator
 
     /** @var EntityManagerInterface */
     private $em;
+    /** @var TranslatorInterface */
+    protected $translator;
 
     /** @var string */
     private $animalShouldHaveAtleastOneExistingBreedValueFilter;
@@ -26,9 +31,10 @@ class BreedValuesReportQueryGenerator
     private $breedValuesNullFilter;
     
 
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, TranslatorInterface $translator)
     {
         $this->em = $em;
+        $this->translator = $translator;
     }
 
 
@@ -462,136 +468,119 @@ class BreedValuesReportQueryGenerator
         $filterString .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
 
         $sql = "SELECT DISTINCT 
-                    CONCAT(a.uln_country_code, a.uln_number) as a_uln,
-                    CONCAT(a.pedigree_country_code, a.pedigree_number) as a_stn,
-                    CONCAT(mom.uln_country_code, mom.uln_number) as m_uln,
-                    CONCAT(mom.pedigree_country_code, mom.pedigree_number) as m_stn,
-                    CONCAT(dad.uln_country_code, dad.uln_number) as f_uln,
-                    CONCAT(dad.pedigree_country_code, dad.pedigree_number) as f_stn,
-                    -- gender.dutch as gender,
-                    a.gender as gender,
-                    a.is_alive,
-                    a.animal_order_number as a_animal_order_number,
-                    to_char(a.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as a_date_of_birth,
-                    to_char(mom.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as m_date_of_birth,
-                    to_char(dad.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as f_date_of_birth,
+                    a.uln as ".$this->translateColumnHeader('a_uln').",
+                    a.stn as ".$this->translateColumnHeader('a_stn').",
+                    mom.uln as ".$this->translateColumnHeader('m_uln').",
+                    mom.stn as ".$this->translateColumnHeader('m_stn').",
+                    dad.uln as ".$this->translateColumnHeader('f_uln').",
+                    dad.stn as ".$this->translateColumnHeader('f_stn').",
+                    gender.translated_char as ".$this->translateColumnHeader('gender').",
+                    a.is_alive as ".$this->translateColumnHeader('is_alive').",
+                    a.animal_order_number as ".$this->translateColumnHeader('a_animal_order_number').",
+                    a.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('a_date_of_birth').",
+                    mom.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('m_date_of_birth').",
+                    dad.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('f_date_of_birth').",
                     
-                    a_breed_types.dutch_first_letter as a_dutch_breed_status,
-                    a.breed_code as a_breed_code,
-                    mom_breed_types.dutch_first_letter as m_dutch_breed_status,
-                    mom.breed_code as m_breed_code,
-                    dad_breed_types.dutch_first_letter as f_dutch_breed_status, 
-                    dad.breed_code as f_breed_code,
+                    a.breed_type_as_dutch_first_letter as ".$this->translateColumnHeader('a_dutch_breed_status').",
+                    a.breed_code as ".$this->translateColumnHeader('a_breed_code').",
+                    mom.breed_type_as_dutch_first_letter as ".$this->translateColumnHeader('m_dutch_breed_status').",
+                    mom.breed_code as ".$this->translateColumnHeader('m_breed_code').",
+                    dad.breed_type_as_dutch_first_letter as ".$this->translateColumnHeader('f_dutch_breed_status').", 
+                    dad.breed_code as ".$this->translateColumnHeader('f_breed_code').",
 
-                    a.scrapie_genotype as a_scrapie_genotype,
-                    mom.scrapie_genotype as m_scrapie_genotype,
-                    dad.scrapie_genotype as f_scrapie_genotype,
+                    a.scrapie_genotype as ".$this->translateColumnHeader('a_scrapie_genotype').",
+                    mom.scrapie_genotype as ".$this->translateColumnHeader('m_scrapie_genotype').",
+                    dad.scrapie_genotype as ".$this->translateColumnHeader('f_scrapie_genotype').",
 
-                    c.n_ling as a_n_ling,
-                    c_mom.n_ling as m_n_ling,
-                    c_dad.n_ling as f_n_ling,
-                    a.predicate as a_predicate_value,
-                    mom.predicate as m_predicate_value,
-                    dad.predicate as f_predicate_value,
-                    a.predicate_score as a_predicate_score,
-                    mom.predicate_score as m_predicate_score,
-                    dad.predicate_score as f_predicate_score,
+                    a.n_ling as ".$this->translateColumnHeader('a_')."n_ling , -- sql header cannot have a dash
+                    mom.n_ling as ".$this->translateColumnHeader('m_')."n_ling , -- sql header cannot have a dash
+                    dad.n_ling as ".$this->translateColumnHeader('f_')."n_ling , -- sql header cannot have a dash
                     
-                    c_mom.muscularity as m_muscularity,
-                    c_dad.muscularity as f_muscularity,
+                    a.formatted_predicate as ".$this->translateColumnHeader('a_predicate').",
+                    mom.formatted_predicate as ".$this->translateColumnHeader('m_predicate').",
+                    dad.formatted_predicate as ".$this->translateColumnHeader('f_predicate').",
                     
-                    c_mom.general_appearance as m_general_appearance,
-                    c_dad.general_appearance as f_general_appearance,
+                    mom.muscularity as ".$this->translateColumnHeader('m_muscularity').",
+                    dad.muscularity as ".$this->translateColumnHeader('f_muscularity').",
                     
-                    c.exterior_measurement_date as a_measurement_date,
-                    c.kind as a_kind,
-                    c.skull as a_skull,
-                    c.progress as a_progress,
-                    c.muscularity as a_muscularity,
-                    c.proportion as a_proportion,
-                    c.exterior_type as a_exterior_type,                 
-                    c.leg_work as a_leg_work,
-                    c.fur as a_fur,
-                    c.general_appearance as a_general_appearance,
-                    c.height as a_height,
-                    c.breast_depth as a_breast_depth,
-                    c.torso_length as a_torso_length,                    
-                    NULLIF(TRIM(CONCAT(exterior_inspector.first_name,' ',exterior_inspector.last_name)),'') as a_inspector,
+                    mom.general_appearance as ".$this->translateColumnHeader('m_general_appearance').",
+                    dad.general_appearance as ".$this->translateColumnHeader('f_general_appearance').",
                     
-                    pr.abbreviation as pedigree_register,
+                    a.exterior_measurement_date as ".$this->translateColumnHeader('a_measurement_date').",
+                    a.kind as ".$this->translateColumnHeader('a_kind').",
+                    a.skull as ".$this->translateColumnHeader('a_skull').",
+                    a.progress as ".$this->translateColumnHeader('a_progress').",
+                    a.muscularity as ".$this->translateColumnHeader('a_muscularity').",
+                    a.proportion as ".$this->translateColumnHeader('a_proportion').",
+                    a.exterior_type as ".$this->translateColumnHeader('a_exterior_type').",                 
+                    a.leg_work as ".$this->translateColumnHeader('a_leg_work').",
+                    a.fur as ".$this->translateColumnHeader('a_fur').",
+                    a.general_appearance as ".$this->translateColumnHeader('a_general_appearance').",
+                    a.height as ".$this->translateColumnHeader('a_height').",
+                    a.breast_depth as ".$this->translateColumnHeader('a_breast_depth').",
+                    a.torso_length as ".$this->translateColumnHeader('a_torso_length').",
+                    a.exterior_inspector_full_name as ".$this->translateColumnHeader('a_inspector').",
+                    
+                    a.pedigree_register_abbreviation as ".$this->translateColumnHeader('pedigree_register').",
                     -- ADD pedigree_register subscription is_active here
                    
-                NULLIF(CONCAT(
-                     COALESCE(CAST(c.production_age AS TEXT), '-'),'/',
-                     COALESCE(CAST(c.litter_count AS TEXT), '-'),'/',
-                     COALESCE(CAST(c.total_offspring_count AS TEXT), '-'),'/',
-                     COALESCE(CAST(c.born_alive_offspring_count AS TEXT), '-'),
-                     production_asterisk.mark
-                 ),'-/-/-/-') as production,
-
-                NULLIF(CONCAT(
-                         COALESCE(CAST(c_dad.production_age AS TEXT), '-'),'/',
-                         COALESCE(CAST(c_dad.litter_count AS TEXT), '-'),'/',
-                         COALESCE(CAST(c_dad.total_offspring_count AS TEXT), '-'),'/',
-                         COALESCE(CAST(c_dad.born_alive_offspring_count AS TEXT), '-'),
-                         production_asterisk_dad.mark
-                     ),'-/-/-/-') as f_production,
-
-
-                NULLIF(CONCAT(
-                         COALESCE(CAST(c_mom.production_age AS TEXT), '-'),'/',
-                         COALESCE(CAST(c_mom.litter_count AS TEXT), '-'),'/',
-                         COALESCE(CAST(c_mom.total_offspring_count AS TEXT), '-'),'/',
-                         COALESCE(CAST(c_mom.born_alive_offspring_count AS TEXT), '-'),
-                         production_asterisk_mom.mark
-                     ),'-/-/-/-') as m_production,
+                a.production as ".$this->translateColumnHeader('production').",
+                dad.production as ".$this->translateColumnHeader('f_production').",
+                mom.production as ".$this->translateColumnHeader('m_production').",
                 
-                a.ubn_of_birth as ubn_of_birth_text_value,
-                location_of_birth.ubn as ubn_of_birth,
-                NULLIF(TRIM(CONCAT(breeder.first_name,' ',breeder.last_name)),'') as breedername,
-                breeder_address.city as breeder_city,
-                breeder_address.state as breeder_state,
+                a.ubn_of_birth as ".$this->translateColumnHeader('ubn_of_birth_text_value').",
+
+                breeder.ubn as ".$this->translateColumnHeader('ubn_of_birth').",
+                breeder.owner_full_name as ".$this->translateColumnHeader('breedername').",
+                breeder.city as ".$this->translateColumnHeader('breeder_city').",
+                breeder.state as ".$this->translateColumnHeader('breeder_state').",
                 
-                location.ubn as current_ubn,
-                NULLIF(TRIM(CONCAT(holder.first_name,' ',holder.last_name)),'') as holdername,
-                company_address.city as holder_city,
-                company_address.state as holder_state,
+                holder.ubn as ".$this->translateColumnHeader('current_ubn').",
+                holder.owner_full_name as ".$this->translateColumnHeader('holdername').",
+                holder.city as ".$this->translateColumnHeader('holder_city').",
+                holder.state as ".$this->translateColumnHeader('holder_state').",
                   
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
                   
-              FROM animal a
-                LEFT JOIN animal mom ON a.parent_mother_id = mom.id
-                LEFT JOIN animal dad ON a.parent_father_id = dad.id
-                LEFT JOIN animal_cache c ON a.id = c.animal_id
-                LEFT JOIN animal_cache c_mom ON mom.id = c_mom.animal_id
-                LEFT JOIN animal_cache c_dad ON dad.id = c_dad.animal_id
-                LEFT JOIN person exterior_inspector ON exterior_inspector.id = c.exterior_inspector_id
-                LEFT JOIN pedigree_register pr ON pr.id = a.pedigree_register_id
+              FROM view_animal_livestock_overview_details a
+                LEFT JOIN view_minimal_parent_details mom ON a.parent_mother_id = mom.animal_id
+                LEFT JOIN view_minimal_parent_details dad ON a.parent_father_id = dad.animal_id
+                LEFT JOIN view_location_details holder ON holder.location_id = a.location_id
+                LEFT JOIN view_location_details breeder ON breeder.location_id = a.location_of_birth_id
                 
-                LEFT JOIN location ON a.location_id = location.id
-                LEFT JOIN company ON company.id = location.company_id
-                LEFT JOIN person holder ON holder.id = company.owner_id
-                LEFT JOIN address company_address ON company_address.id = company.address_id
-                
-                LEFT JOIN location location_of_birth ON a.location_of_birth_id = location_of_birth.id
-                LEFT JOIN company breeder_company ON breeder_company.id = location_of_birth.company_id
-                LEFT JOIN person breeder ON breeder.id = breeder_company.owner_id
-                LEFT JOIN address breeder_address ON breeder_address.id = breeder_company.address_id
-                
-                LEFT JOIN result_table_breed_grades bg ON a.id = bg.animal_id
-                -- LEFT JOIN (VALUES ".SqlUtil::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
-                LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS a_breed_types(english, dutch_first_letter) ON a.breed_type = a_breed_types.english
-                LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS mom_breed_types(english, dutch_first_letter) ON mom.breed_type = mom_breed_types.english
-                LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS dad_breed_types(english, dutch_first_letter) ON dad.breed_type = dad_breed_types.english
-                LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk(bool_val, mark) ON c.gave_birth_as_one_year_old = production_asterisk.bool_val
-                LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk_dad(bool_val, mark) ON c_dad.gave_birth_as_one_year_old = production_asterisk_dad.bool_val
-                LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk_mom(bool_val, mark) ON c_mom.gave_birth_as_one_year_old = production_asterisk_mom.bool_val
+                LEFT JOIN result_table_breed_grades bg ON a.animal_id = bg.animal_id
+                LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
                 ".$this->breedValuesPlusSignsQueryJoinPart."
             ".$filterString
             //.' LIMIT 100'
         ;
 
+        ReportServiceWithBreedValuesBase::closeColumnHeaderTranslation();
+
         return $sql;
     }
+
+
+    private function getGenderLetterTranslationValues()
+    {
+        $translations = [
+          GenderType::NEUTER => $this->translator->trans(ReportServiceWithBreedValuesBase::NEUTER_SINGLE_CHAR),
+          GenderType::FEMALE => $this->translator->trans(ReportServiceWithBreedValuesBase::FEMALE_SINGLE_CHAR),
+          GenderType::MALE => $this->translator->trans(ReportServiceWithBreedValuesBase::MALE_SINGLE_CHAR),
+        ];
+
+        return SqlUtil::createSqlValuesString($translations);
+    }
+
+
+    /**
+     * @param string $columnHeader
+     * @return string
+     */
+    private function translateColumnHeader($columnHeader)
+    {
+        return ReportServiceWithBreedValuesBase::translateColumnHeader($this->translator, $columnHeader);
+    }
+
 }

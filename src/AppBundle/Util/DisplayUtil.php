@@ -97,6 +97,6 @@ class DisplayUtil
         if(!array_key_exists($predicate, PredicateType::getAll())) { return null; }
         $score = $predicateScore != null && $predicateScore >= self::MIN_PREDICATE_SCORE_FOR_DISPLAY ? '('.$predicateScore.')' : null;
 
-        return Translation::getAbbreviation($predicate).$score;
+        return Translation::getPredicateAbbreviation($predicate).$score;
     }
 }

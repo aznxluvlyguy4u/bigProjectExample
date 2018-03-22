@@ -428,6 +428,7 @@ services:
         class: AppBundle\Service\Report\BreedValuesReportQueryGenerator
         arguments:
           - '@doctrine.orm.entity_manager'
+          - '@translator'
 
     app.report.base:
         abstract: true

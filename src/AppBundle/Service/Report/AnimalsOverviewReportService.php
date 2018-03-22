@@ -75,9 +75,7 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
     {
         $this->extension = FileType::CSV;
 
-        $csvData = $this->unsetNestedKeys($this->getData(), LiveStockReportService::getLivestockKeysToIgnore());
-        $csvData = $this->translateColumnHeaders($csvData);
-        $csvData = $this->moveBreedValueColumnsToEndArray($csvData);
+        $csvData = $this->getData();
 
         return $this->generateFile($this->filename, $csvData,
             self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
