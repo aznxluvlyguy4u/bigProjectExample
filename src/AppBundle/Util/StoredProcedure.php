@@ -4,23 +4,17 @@
 namespace AppBundle\Util;
 
 
-use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Traits\EnumInfo;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Translation\TranslatorInterface;
 
 class StoredProcedure
 {
+    use EnumInfo;
+
     const GET_LIVESTOCK_REPORT = 'get_livestock_report';
     const GET_ERROR_MESSAGES = 'get_error_messages';
-
-    /**
-     * @return array
-     */
-    public static function getConstants() {
-        $oClass = new \ReflectionClass(__CLASS__);
-        return $oClass->getConstants();
-    }
 
     /**
      * @param Connection $conn

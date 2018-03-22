@@ -291,12 +291,18 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\TreatmentTypeInitializer
 
-    app.initializer.stored_procedure:
-        class: AppBundle\Service\Migration\StoredProcedureInitializer
+    app.database.content.initializer:
+        abstract: true
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
           - '@translator'
+
+    AppBundle\Service\Migration\StoredProcedureInitializer:
+        parent: app.database.content.initializer
+
+    AppBundle\Service\Migration\SqlViewInitializer:
+        parent: app.database.content.initializer
 
     app.migrator.client:
         class: AppBundle\Service\Migration\ClientMigrator

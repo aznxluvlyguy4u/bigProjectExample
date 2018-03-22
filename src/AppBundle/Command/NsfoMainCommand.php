@@ -617,13 +617,16 @@ class NsfoMainCommand extends ContainerAwareCommand
             '4: LedgerCategory', "\n",
             '5: ScrapieGenotypeSource', "\n",
             '=====================================', "\n",
-            '10: StoredProcedures', "\n",
-            '11: StoredProcedures: overwrite all', "\n\n",
+            '10: StoredProcedures: initialize if not exist', "\n",
+            '11: StoredProcedures: overwrite all', "\n",
+            '12: SqlViews: initialize if not exist', "\n",
+            '13: SqlViews: overwrite all', "\n",
+            "\n",
 
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
-        $storedProcedureIntializer = $this->getContainer()->get('app.initializer.stored_procedure');
+        $storedProcedureIntializer = $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer');
 
         switch ($option) {
             case 1: $this->getContainer()->get('app.initializer.birth_progress')->run($this->cmdUtil); break;
@@ -635,8 +638,11 @@ class NsfoMainCommand extends ContainerAwareCommand
                 $this->writeLn(($updateCount ? $updateCount : 'No').' ScrapieGenotypeSources have been inserted');
                 break;
 
-            case 10: $storedProcedureIntializer->initialize(); break;
-            case 11: $storedProcedureIntializer->update(); break;
+            case 10: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->initialize(); break;
+            case 11: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->update(); break;
+
+            case 12: $this->getContainer()->get('AppBundle\Service\Migration\SqlViewInitializer')->initialize(); break;
+            case 13: $this->getContainer()->get('AppBundle\Service\Migration\SqlViewInitializer')->update(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }
