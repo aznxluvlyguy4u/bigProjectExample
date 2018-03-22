@@ -102,8 +102,21 @@ class CsvFromSqlResultsWriterService
      */
     public function write(array $results, $filename, CommandUtil $cmdUtil = null, $subDir = self::DEFAULT_SUBDIR)
     {
-        $dir = FilesystemUtil::concatDirAndFilename($this->cacheDir, $subDir);
+        $dir = self::csvCacheDir($this->cacheDir, $subDir);
         return self::writeCsv($results, $dir, $filename, $this->fs, $this->separator,$cmdUtil);
+    }
+
+
+    /**
+     * @param string $cacheDir
+     * @param string $csvSubDir
+     * @return string
+     */
+    public static function csvCacheDir($cacheDir, $csvSubDir = self::DEFAULT_SUBDIR)
+    {
+        $dir = FilesystemUtil::concatDirAndFilename($cacheDir, $csvSubDir);
+        FilesystemUtil::createFolderPathIfNull($dir);
+        return $dir;
     }
 
 

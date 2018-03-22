@@ -22,7 +22,7 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
     const CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT = false;
     const MAX_CURRENT_ANIMAL_AGE_IN_YEARS = 18;
 
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 180; // 3 hours
+    const PROCESS_TIME_LIMIT_IN_MINUTES = 15;
 
     /**
      * @inheritDoc
@@ -41,44 +41,23 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
 
             ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 
-            $this->data = $this->retrieveLiveStockDataForCsv();
+            $sql = $this->breedValuesReportQueryGenerator->createAnimalsOverviewReportQuery(
+                $this->concatValueAndAccuracy,
+                true,
+                true,
+                self::MAX_CURRENT_ANIMAL_AGE_IN_YEARS
+            );
 
-            return $this->getCsvReport();
+            $this->filename = $this->translate(self::FILENAME);
+            $this->extension = FileType::CSV;
+
+            return $this->generateCsvFileBySqlQuery($this->getFilename(), $sql, !$this->outputReportsToCacheFolderForLocalTesting);
 
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
         }
     }
 
-    /**
-     * @return array
-     */
-    private function retrieveLiveStockDataForCsv()
-    {
-        $sql = $this->breedValuesReportQueryGenerator->createAnimalsOverviewReportQuery(
-            $this->concatValueAndAccuracy,
-            true,
-            true,
-            self::MAX_CURRENT_ANIMAL_AGE_IN_YEARS
-        );
-
-        return $this->preFormatLivestockSqlResult($this->conn->query($sql)->fetchAll());
-    }
 
 
-    /**
-     * @return \AppBundle\Component\HttpFoundation\JsonResponse
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Exception
-     */
-    private function getCsvReport()
-    {
-        $this->extension = FileType::CSV;
-
-        $csvData = $this->getData();
-
-        return $this->generateFile($this->filename, $csvData,
-            self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
-        );
-    }
 }

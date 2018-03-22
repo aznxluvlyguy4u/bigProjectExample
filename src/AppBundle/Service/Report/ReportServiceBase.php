@@ -9,10 +9,12 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
+use AppBundle\Service\CsvFromSqlResultsWriterService;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\TwigOutputUtil;
@@ -248,7 +250,32 @@ class ReportServiceBase
             return $this->uploadReportFileToS3($localFilePath);
         }
 
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $localFilePath], 200);
+        return ResultUtil::successResult($localFilePath);
+    }
+
+
+    /**
+     * @param string $filenameWithExtension
+     * @param string $selectQuery
+     * @param boolean $uploadToS3
+     * @return JsonResponse
+     */
+    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery, $uploadToS3)
+    {
+        $dir = CsvFromSqlResultsWriterService::csvCacheDir($this->cacheDir);
+
+        $localFilePath = FilesystemUtil::concatDirAndFilename($dir, $filenameWithExtension);
+
+        $writeResult = SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
+        if (!$writeResult) {
+            return ResultUtil::errorResult($this->trans('FAILED WRITING THE CSV FILE'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        if ($uploadToS3) {
+            return $this->uploadReportFileToS3($localFilePath);
+        }
+
+        return ResultUtil::successResult($localFilePath);
     }
 
 
@@ -266,7 +293,7 @@ class ReportServiceBase
         );
 
         $this->fs->remove($filePath);
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+        return ResultUtil::successResult($url);
     }
 
 

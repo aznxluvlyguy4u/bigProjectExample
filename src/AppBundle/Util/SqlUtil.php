@@ -12,6 +12,7 @@ use AppBundle\Enumerator\RequestTypeIRDutchInformal;
 use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class SqlUtil
@@ -609,4 +610,30 @@ class SqlUtil
     }
 
 
+    /**
+     * @param Connection $conn
+     * @param string $selectQuery
+     * @param string $filepath
+     * @param Logger|null $logger
+     * @return bool
+     */
+    public static function writeToFile(Connection $conn, $selectQuery, $filepath, Logger $logger = null)
+    {
+        try {
+            $sql = "COPY (
+                $selectQuery
+                ) TO '$filepath'  With CSV HEADER DELIMITER ';'";
+            $conn->exec($sql);
+
+        } catch (\Exception $exception) {
+
+            if ($logger) {
+                $logger->error($exception->getMessage());
+                $logger->error($exception->getTraceAsString());
+            }
+            return false;
+        }
+
+        return true;
+    }
 }
