@@ -83,19 +83,23 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     private $entityManager;
     /** @var \AppBundle\Service\EntityGetter */
     private $entityGetter;
+    /** @var PedigreeDataGenerator */
+    private $pedigreeDataGenerator;
 
     /** @var Connection */
     private $conn;
 
     public function __construct(Serializer $jmsSerializer,
                                 EntityManagerInterface $entityManager,
-                                EntityGetter $entityGetter)
+                                EntityGetter $entityGetter,
+                                PedigreeDataGenerator $pedigreeDataGenerator)
     {
         parent::__construct($jmsSerializer);
 
         $this->entityManager = $entityManager;
         $this->entityGetter = $entityGetter;
         $this->conn = $entityManager->getConnection();
+        $this->pedigreeDataGenerator = $pedigreeDataGenerator;
     }
 
     /**
@@ -610,8 +614,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 $animalResidence->setStartDate($dateOfBirth);
                 $child->addAnimalResidenceHistory($animalResidence);
 
-                //TODO - set pedigree details based on father / mother / location pedigree membership
-
                 $litter->addChild($child);
 
                 $declareBirthRequest->setDateOfBirth($dateOfBirth);
@@ -730,6 +732,8 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
             if (count($newWeights) + count($newTailLengths) > 0) {
                 $this->getManager()->flush();
             }
+
+            $children = $this->pedigreeDataGenerator->generate($children, $location,false);
 
         } catch (UniqueConstraintViolationException $exception) {
             //Reset tags to UNASSIGNED

@@ -105,6 +105,19 @@ class RetrieveTags
      */
     private $actionBy;
 
+    /**
+     * Is the retrieveTag manually initiated by the user
+     *
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @Assert\NotBlank
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
+     */
+    private $isManual;
+
     public function __construct() {
         $this->setLogDate(new \DateTime());
     }
@@ -351,4 +364,24 @@ class RetrieveTags
     {
         $this->actionBy = $actionBy;
     }
+
+    /**
+     * @return bool
+     */
+    public function isManual()
+    {
+        return $this->isManual;
+    }
+
+    /**
+     * @param bool $isManual
+     * @return RetrieveTags
+     */
+    public function setIsManual($isManual)
+    {
+        $this->isManual = $isManual;
+        return $this;
+    }
+
+
 }

@@ -121,6 +121,29 @@ class StringUtil
 
 
     /**
+     * @param string $pedigreeNumber
+     * @return null|string
+     */
+    public static function bumpPedigreeNumber($pedigreeNumber)
+    {
+        if (!Validator::verifyPedigreeNumberFormat($pedigreeNumber)) { return null; }
+
+        $positionOfFirstAnimalOrderChar = 6;
+
+        $firstAnimalOrderChar = substr($pedigreeNumber, $positionOfFirstAnimalOrderChar, 1);
+
+        if ($firstAnimalOrderChar === 'Z') {
+            return null;
+        }
+
+        $newFirstAnimalOrderNumber = $firstAnimalOrderChar === strval(intval($firstAnimalOrderChar)) ? 'A' : ++$firstAnimalOrderChar;
+        $pedigreeNumber[$positionOfFirstAnimalOrderChar] = $newFirstAnimalOrderNumber;
+
+        return $pedigreeNumber;
+    }
+
+
+    /**
      * @param string $firstName
      * @param string $lastName
      * @return string

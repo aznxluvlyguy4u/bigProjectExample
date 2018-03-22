@@ -8,24 +8,14 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Report\PedigreeCertificates;
-use AppBundle\Service\AWSSimpleStorageService;
-use AppBundle\Service\CsvFromSqlResultsWriterService;
-use AppBundle\Service\ExcelService;
-use AppBundle\Service\UserService;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\UlnValidator;
-use Doctrine\Common\Persistence\ObjectManager;
-use Knp\Snappy\GeneratorInterface;
-use Symfony\Bridge\Monolog\Logger;
-use Symfony\Bridge\Twig\TwigEngine;
-use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-class PedigreeCertificateReportService extends ReportServiceBase
+class PedigreeCertificateReportService extends ReportServiceBase implements ReportServiceInterface
 {
     const TITLE = 'pedigree certificates report';
     const TWIG_FILE = 'Report/pedigree_certificates.html.twig';

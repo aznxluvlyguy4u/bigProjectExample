@@ -185,15 +185,15 @@ class Translation
      * @param string $englishString
      * @return string
      */
-    public static function getAbbreviation($englishString)
+    public static function getPredicateAbbreviation($englishString)
     {
-        return strtr($englishString, self::getEnglishToAbbreviationArray());
+        return strtr($englishString, self::getEnglishPredicateToAbbreviationArray());
     }
 
     /**
      * @return array
      */
-    private static function getEnglishToAbbreviationArray()
+    public static function getEnglishPredicateToAbbreviationArray()
     {
         return array(
             //PredicateType
