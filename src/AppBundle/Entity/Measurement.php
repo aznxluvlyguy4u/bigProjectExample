@@ -270,6 +270,17 @@ abstract class Measurement
      */
     public function setAnimalIdAndDateByAnimalAndDateTime(Animal $animal, \DateTime $measurementDate)
     {
+        $this->animalIdAndDate = self::generateAnimalIdAndDate($animal, $measurementDate);
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param \DateTime $measurementDate
+     * @return null|string
+     */
+    public static function generateAnimalIdAndDate(Animal $animal, \DateTime $measurementDate)
+    {
         $animalIdAndDate = null;
         if($animal instanceof Animal) {
             $animalId = $animal->getId();
@@ -278,9 +289,9 @@ abstract class Measurement
                 $animalIdAndDate = $animalId.'_'.$dateTimeString;
             }
         }
-
-        $this->animalIdAndDate = $animalIdAndDate;
+        return $animalIdAndDate;
     }
+
 
     /**
      * @return Client|Employee
