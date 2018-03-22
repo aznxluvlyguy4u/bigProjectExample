@@ -10,7 +10,7 @@ use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\TimeUtil;
-use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 
 /**
@@ -55,6 +55,19 @@ class BodyFatRepository extends MeasurementRepository {
             ];
         }
         return $results;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param \DateTime $dateTime
+     * @return Collection|BodyFat[]
+     */
+    public function findByAnimalAndDate(Animal $animal, \DateTime $dateTime)
+    {
+        return $this->getManager()->getRepository(BodyFat::class)->matching(
+            $this->findByAnimalAndDateCriteria($animal, $dateTime)
+        );
     }
 
 
