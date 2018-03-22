@@ -319,6 +319,9 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\ExteriorMigrator
 
+    AppBundle\Service\Migration\ScanMeasurementsMigrator:
+        parent: app.migrator.base
+
     app.migrator.inspector:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\InspectorMigrator

@@ -448,4 +448,27 @@ class CommandUtil
 
         return $employee;
     }
+
+
+    /**
+     * @param int $defaultIntValue
+     * @param string $intLabel
+     * @return int
+     */
+    public function questionForIntChoice($defaultIntValue = 0, $intLabel)
+    {
+        do{
+            do {
+                $choice = $this->generateQuestion('Insert integer for '.$intLabel. ' value (default = '
+                    .$defaultIntValue.')', $defaultIntValue);
+            } while (!ctype_digit($choice) && !is_int($choice));
+
+            $intChoice = intval($choice);
+            $this->writeln('You chose: '.$intChoice);
+
+            $continue = !$this->generateConfirmationQuestion('Is this correct? (y/n, default = no)');
+        } while ($continue);
+
+        return $intChoice;
+    }
 }
