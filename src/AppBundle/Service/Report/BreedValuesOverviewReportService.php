@@ -77,7 +77,7 @@ class BreedValuesOverviewReportService extends ReportServiceWithBreedValuesBase
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function getData($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false, $ignoreHiddenBreedValueTypes = false)
+    public function getData($concatBreedValuesAndAccuracies = true, $includeAnimalsWithoutAnyBreedValues = false, $ignoreHiddenBreedValueTypes = false)
     {
         return $this->conn->query(
             $this->breedValuesReportQueryGenerator->getFullBreedValuesReportOverviewQuery(
