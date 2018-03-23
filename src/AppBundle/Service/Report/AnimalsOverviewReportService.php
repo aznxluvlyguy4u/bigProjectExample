@@ -47,7 +47,7 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
                 true,
                 self::MAX_CURRENT_ANIMAL_AGE_IN_YEARS
             );
-
+dump($sql);die;
             $this->filename = $this->translate(self::FILENAME);
             $this->extension = FileType::CSV;
 

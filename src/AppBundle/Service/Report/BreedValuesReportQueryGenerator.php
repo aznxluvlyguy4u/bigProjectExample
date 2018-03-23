@@ -4,6 +4,7 @@
 namespace AppBundle\Service\Report;
 
 
+use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Locale;
 use AppBundle\Util\DateUtil;
@@ -92,14 +93,23 @@ class BreedValuesReportQueryGenerator
         //Create breed value batch query parts
 
         $sql = "SELECT nl, result_table_value_variable, result_table_accuracy_variable
-                FROM breed_value_type WHERE id IN (
-                  SELECT breed_value_type_id FROM breed_value_genetic_base
-                  GROUP BY breed_value_type_id ORDER BY breed_value_type_id
-                )";
-
-        if ($ignoreHiddenBreedValueTypes) {
-            $sql .= ' AND show_result';
-        }
+                FROM breed_value_type bvt
+                WHERE
+                  (
+                    id IN (
+                      SELECT breed_value_type_id
+                      FROM breed_value_genetic_base
+                      GROUP BY breed_value_type_id
+                    )
+                    OR
+                    nl IN (
+                      SELECT type
+                      FROM normal_distribution
+                      GROUP BY type
+                    )
+                  ) ".($ignoreHiddenBreedValueTypes ? ' AND show_result' : '')."
+                
+                ORDER BY bvt.id ASC";
 
         $existingBreedValueColumnValues = $this->fetchAll($sql);
 
@@ -114,7 +124,7 @@ class BreedValuesReportQueryGenerator
             foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
 
                 foreach ($columnValuesSets as $columnValueSet) {
-                    $breedValueLabel = $columnValueSet['nl'];
+                    $breedValueLabel = $this->translatedBreedValueColumnHeader($columnValueSet['nl']);
                     $resultTableValueVar = $columnValueSet['result_table_value_variable'];
                     $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
 
@@ -143,7 +153,7 @@ class BreedValuesReportQueryGenerator
             foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
 
                 foreach ($columnValuesSets as $columnValueSet) {
-                    $breedValueLabel = $columnValueSet['nl'];
+                    $breedValueLabel = $this->translatedBreedValueColumnHeader($columnValueSet['nl']);
                     $resultTableValueVar = $columnValueSet['result_table_value_variable'];
                     $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
 
@@ -171,6 +181,18 @@ class BreedValuesReportQueryGenerator
                         $this->breedValuesNullFilter
                 )";
         }
+    }
+
+
+    /**
+     * @param string $breedValueTypeNl
+     * @return string
+     */
+    public function translatedBreedValueColumnHeader($breedValueTypeNl)
+    {
+        return strtr($breedValueTypeNl, [
+           BreedValueTypeConstant::ODIN_BC => 'WormRes'
+        ]);
     }
 
 
