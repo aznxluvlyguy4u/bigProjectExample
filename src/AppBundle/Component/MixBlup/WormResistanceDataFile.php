@@ -91,7 +91,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
             $recordEnd =
                 $formattedSamplePeriod.
-                self::getFormattedLitterGroup($data).
+                self::getFormattedLitterGroup($data, MixBlupInstructionFileBase::MISSING_REPLACEMENT).
                 self::getFormattedNLing($data).
                 self::getFormattedStillbornCount($data).
                 self::getFormattedFirstLitterAgeAndLastLitterOrdinal($data).
@@ -532,7 +532,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
         $litterOrdinal = ArrayUtil::get(JsonInputConstant::LITTER_ORDINAL, $data, null);
 
         $value = $ageValue && $litterOrdinal ? strval($ageValue).strval($litterOrdinal)
-            : MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+            : MixBlupInstructionFileBase::CLASS_MISSING_REPLACEMENT;
 
         return DsvWriterUtil::pad($value, 3, true);
     }
