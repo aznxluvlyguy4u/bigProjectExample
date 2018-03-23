@@ -36,6 +36,7 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
         try {
 
             $this->concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT);
+            $pedigreeActiveEndDateLimit = RequestUtil::getDateQuery($request,QueryParameter::END_DATE, new \DateTime());
 
             $this->setLocaleFromQueryParameter($request);
 
@@ -45,7 +46,8 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
                 $this->concatValueAndAccuracy,
                 true,
                 true,
-                self::MAX_CURRENT_ANIMAL_AGE_IN_YEARS
+                self::MAX_CURRENT_ANIMAL_AGE_IN_YEARS,
+                $pedigreeActiveEndDateLimit
             );
 
             $this->filename = $this->translate(self::FILENAME);

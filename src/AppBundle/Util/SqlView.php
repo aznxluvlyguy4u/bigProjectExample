@@ -29,7 +29,7 @@ class SqlView
         try {
             $sql = "CREATE OR REPLACE VIEW $viewName AS
                 ".self::getSelectQuery($viewName);
-            $conn->query($sql)->execute();
+            $conn->exec($sql);
 
         } catch (\Exception $exception) {
             return false;
@@ -49,10 +49,29 @@ class SqlView
         try {
             $sql = "CREATE VIEW $viewName AS
                 ".self::getSelectQuery($viewName);
-            $conn->query($sql)->execute();
+            $conn->exec($sql);
 
         } catch (TableExistsException $exception) {
             return false;
+
+        } catch (\Exception $exception) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param $viewName
+     * @return bool
+     */
+    public static function dropView(Connection $conn, $viewName)
+    {
+        try {
+            $sql = "DROP VIEW $viewName";
+            $conn->exec($sql);
 
         } catch (\Exception $exception) {
             return false;
@@ -175,10 +194,11 @@ class SqlView
                 CONCAT(a.uln_country_code, a.uln_number) as uln,
                 CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
                 a.date_of_birth,
+                a.is_alive,
                 to_char(a.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_date_of_birth,
+                to_char(a.date_of_death, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_date_of_death,
                 NULLIF(trim(trailing '-ling' from c.n_ling),'') as n_ling,
                 a.gender,
-                a.is_alive,
                 a.animal_order_number,
                 a.ubn_of_birth,
                 a.location_of_birth_id,
@@ -195,7 +215,7 @@ class SqlView
                 a.scrapie_genotype,
                 a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter,
                 
-                c.exterior_measurement_date as exterior_measurement_date,
+                to_char(c.exterior_measurement_date, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_exterior_measurement_date,
                 NULLIF(c.kind,'') as kind,
                 c.skull as skull,
                 c.progress as progress,

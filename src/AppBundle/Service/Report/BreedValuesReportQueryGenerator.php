@@ -9,6 +9,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Locale;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -473,13 +474,15 @@ class BreedValuesReportQueryGenerator
      * @param bool $includeAnimalsWithoutAnyBreedValues
      * @param bool $ignoreHiddenBreedValueTypes
      * @param int $maxCurrentAnimalAgeInYears
+     * @param \DateTime $pedigreeActiveEndDateLimit
      * @return string
      * @throws DBALException
      */
     public function createAnimalsOverviewReportQuery($concatBreedValuesAndAccuracies = true,
                                                      $includeAnimalsWithoutAnyBreedValues = true,
                                                      $ignoreHiddenBreedValueTypes = false,
-                                                     $maxCurrentAnimalAgeInYears
+                                                     $maxCurrentAnimalAgeInYears,
+                                                     $pedigreeActiveEndDateLimit
     )
     {
         $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
@@ -513,6 +516,7 @@ class BreedValuesReportQueryGenerator
                     a.is_alive as ".$this->translateColumnHeader('is_alive').",
                     a.animal_order_number as ".$this->translateColumnHeader('a_animal_order_number').",
                     a.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('a_date_of_birth').",
+                    a.dd_mm_yyyy_date_of_death as ".$this->translateColumnHeader('a_date_of_death').",
                     mom.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('m_date_of_birth').",
                     dad.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('f_date_of_birth').",
                     
@@ -541,7 +545,7 @@ class BreedValuesReportQueryGenerator
                     mom.general_appearance as ".$this->translateColumnHeader('m_general_appearance').",
                     dad.general_appearance as ".$this->translateColumnHeader('f_general_appearance').",
                     
-                    a.exterior_measurement_date as ".$this->translateColumnHeader('a_measurement_date').",
+                    a.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('a_measurement_date').",
                     a.kind as ".$this->translateColumnHeader('a_kind').",
                     a.skull as ".$this->translateColumnHeader('a_skull').",
                     a.progress as ".$this->translateColumnHeader('a_progress').",
@@ -574,6 +578,7 @@ class BreedValuesReportQueryGenerator
                 holder.owner_full_name as ".$this->translateColumnHeader('holdername').",
                 holder.city as ".$this->translateColumnHeader('holder_city').",
                 holder.state as ".$this->translateColumnHeader('holder_state').",
+                COALESCE(register_activity.has_active_pedigree_register, FALSE) as ".$this->translateColumnHeader('has_active_pedigree_register').",
                   
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
@@ -586,6 +591,13 @@ class BreedValuesReportQueryGenerator
                 
                 LEFT JOIN result_table_breed_grades bg ON a.animal_id = bg.animal_id
                 LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
+                LEFT JOIN (
+                            SELECT
+                              location_id, true as has_active_pedigree_register
+                            FROM pedigree_register_registration
+                            WHERE end_date ISNULL OR end_date > '".TimeUtil::getDayOfDateTime($pedigreeActiveEndDateLimit)->format('Y-m-d')."'
+                            GROUP BY location_id
+                          )register_activity ON register_activity.location_id = a.location_id
                 ".$this->breedValuesPlusSignsQueryJoinPart."
             ".$filterString
             //.' LIMIT 100'

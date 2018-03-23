@@ -25,6 +25,8 @@ class SqlViewInitializer extends DatabaseContentInitializerBase implements Datab
 
     function update()
     {
+        $this->dropViews();
+
         $upsertCount = 0;
 
         // Some views are dependent on others, so run at least twice
@@ -44,4 +46,20 @@ class SqlViewInitializer extends DatabaseContentInitializerBase implements Datab
     }
 
 
+    private function dropViews()
+    {
+        $dropCount = 0;
+
+        foreach (SqlView::getConstants() as $sqlViewName) {
+            $dropResult = SqlView::dropView($this->getConnection(), $sqlViewName);
+            if ($dropResult) {
+                $dropCount++;
+                $this->getLogger()->notice($sqlViewName . ' dropped');
+            } else {
+                $this->getLogger()->notice($sqlViewName . ' error when dropping');
+            }
+        }
+
+        $this->getLogger()->notice('Drop count: '.$dropCount);
+    }
 }
