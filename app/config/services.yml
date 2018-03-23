@@ -43,6 +43,12 @@ services:
           - '@app.mixblup.output'
           - '@AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator'
           - '@app.report.pedigree_register'
+          - '@AppBundle\Cache\BreedValuesResultTableUpdater'
+
+    AppBundle\Cache\BreedValuesResultTableUpdater:
+        arguments:
+          - '@doctrine.orm.default_entity_manager'
+          - '@logger'
 
     app.info.parameters:
         class: AppBundle\Service\InfoService
@@ -182,6 +188,7 @@ services:
           - '@app.aws.queueservice.mixblup_output'
           - '@app.breed.index'
           - '@app.breed.value'
+          - '@AppBundle\Cache\BreedValuesResultTableUpdater'
           - '@AppBundle\Service\NormalDistributionService'
           - '%environment%'
           - '%kernel.cache_dir%'

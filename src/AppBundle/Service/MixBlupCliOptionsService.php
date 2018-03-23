@@ -8,6 +8,7 @@ use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Component\MixBlup\MixBlupInputFileValidator;
 use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Service\Migration\LambMeatIndexMigrator;
 use AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator;
@@ -65,6 +66,8 @@ class MixBlupCliOptionsService
     private $pedigreeRegisterOverviewReportService;
     /** @var MixBlupAnalysisTypeMigrator */
     private $mixBlupAnalysisTypeMigrator;
+    /** @var BreedValuesResultTableUpdater */
+    private $breedValuesResultTableUpdater;
 
     public function __construct(EntityManagerInterface $em, Logger $logger,
                                 BreedValuesOverviewReportService $breedValuesOverviewReportService,
@@ -78,7 +81,9 @@ class MixBlupCliOptionsService
                                 MixBlupInputFileValidator $mixBlupInputFileValidator,
                                 MixBlupOutputFilesService $mixBlupOutputFilesService,
                                 MixBlupAnalysisTypeMigrator $mixBlupAnalysisTypeMigrator,
-                                PedigreeRegisterOverviewReportService $pedigreeRegisterOverviewReportService)
+                                PedigreeRegisterOverviewReportService $pedigreeRegisterOverviewReportService,
+                                BreedValuesResultTableUpdater $breedValuesResultTableUpdater
+    )
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -96,6 +101,7 @@ class MixBlupCliOptionsService
         $this->mixBlupOutputFilesService = $mixBlupOutputFilesService;
         $this->mixBlupAnalysisTypeMigrator = $mixBlupAnalysisTypeMigrator;
         $this->pedigreeRegisterOverviewReportService = $pedigreeRegisterOverviewReportService;
+        $this->breedValuesResultTableUpdater = $breedValuesResultTableUpdater;
     }
 
 
@@ -122,9 +128,15 @@ class MixBlupCliOptionsService
             '10: Initialize BreedIndexType and BreedValueType', "\n",
             '11: Initialize MixBlupAnalysisTypes', "\n",
             '12: Delete all duplicate breedValues', "\n",
+            '========================================================================', "\n",
             '13: Update result_table_breed_grades values and accuracies for all breedValue and breedIndex types', "\n",
-            '14: Initialize lambMeatIndexCoefficients', "\n",
-            '15: Initialize wormResistanceIndexCoefficients', "\n",
+            '14: Update result_table_breed_grades values and accuracies for '.MixBlupType::LAMB_MEAT_INDEX.' types', "\n",
+            '15: Update result_table_breed_grades values and accuracies for '.MixBlupType::FERTILITY.' types', "\n",
+            '16: Update result_table_breed_grades values and accuracies for '.MixBlupType::WORM.' types', "\n",
+            '17: Update result_table_breed_grades values and accuracies for '.MixBlupType::EXTERIOR.' types', "\n",
+            '========================================================================', "\n",
+            '18: Initialize lambMeatIndexCoefficients', "\n",
+            '19: Initialize wormResistanceIndexCoefficients', "\n",
             '========================================================================', "\n",
             '20: Validate ubnOfBirth format as !BLOCK in DataVruchtb.txt in mixblup cache folder', "\n",
             '21: Validate ubnOfBirth format as !BLOCK in PedVruchtb.txt in mixblup cache folder', "\n",
@@ -169,13 +181,14 @@ class MixBlupCliOptionsService
                 $this->cmdUtil->writeln($message);
                 break;
 
-            case 13:
-                $breedValuesResultTableUpdater = new BreedValuesResultTableUpdater($this->em, $this->logger);
-                $breedValuesResultTableUpdater->update();
-                break;
+            case 13: $this->breedValuesResultTableUpdater->update(); break;
+            case 14: $this->breedValuesResultTableUpdater->update([MixBlupType::LAMB_MEAT_INDEX]); break;
+            case 15: $this->breedValuesResultTableUpdater->update([MixBlupType::FERTILITY]); break;
+            case 16: $this->breedValuesResultTableUpdater->update([MixBlupType::WORM]); break;
+            case 17: $this->breedValuesResultTableUpdater->update([MixBlupType::EXTERIOR]); break;
 
-            case 14: $this->lambMeatIndexMigrator->migrate(); break;
-            case 15: $this->wormResistanceIndexMigrator->migrate(); break;
+            case 18: $this->lambMeatIndexMigrator->migrate(); break;
+            case 19: $this->wormResistanceIndexMigrator->migrate(); break;
 
             case 20: $this->mixBlupInputFileValidator->validateUbnOfBirthInDataFile($this->cmdUtil); break;
             case 21: $this->mixBlupInputFileValidator->validateUbnOfBirthInPedigreeFile($this->cmdUtil); break;

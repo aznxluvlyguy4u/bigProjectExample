@@ -158,6 +158,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
     public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, MixBlupOutputQueueService $queueService,
                                 BreedIndexService $breedIndexService, BreedValueService $breedValueService,
+                                BreedValuesResultTableUpdater $breedValuesResultTableUpdater,
                                 NormalDistributionService $normalDistributionService,
                                 $currentEnvironment, $cacheDir, $logger = null)
     {
@@ -172,7 +173,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->cacheDir = $cacheDir;
         $this->logger = $logger;
 
-        $this->breedValuesResultTableUpdater = new BreedValuesResultTableUpdater($this->em, $logger);
+        $this->breedValuesResultTableUpdater = $breedValuesResultTableUpdater;
 
         $this->breedIndexTypeRepository = $this->em->getRepository(BreedIndexType::class);
         $this->breedValueTypeRepository = $this->em->getRepository(BreedValueType::class);
