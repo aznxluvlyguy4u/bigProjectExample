@@ -485,7 +485,20 @@ class BreedValuesReportQueryGenerator
         $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
             $ignoreHiddenBreedValueTypes);
 
-        $filterString = "WHERE a.date_of_birth NOTNULL AND EXTRACT(YEAR FROM AGE(NOW(), a.date_of_birth)) < ".$maxCurrentAnimalAgeInYears;
+        $filterString = "WHERE
+                          a.date_of_birth NOTNULL
+                          AND EXTRACT(YEAR FROM AGE(NOW(), a.date_of_birth)) < $maxCurrentAnimalAgeInYears
+                          AND a.animal_id IN (
+                            SELECT
+                              animal_id
+                            FROM animal_residence r
+                            GROUP BY animal_id
+                            UNION
+                            SELECT
+                              id as animal_id
+                            FROM animal
+                            WHERE location_id NOTNULL
+                          ) ";
 
         $filterString .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
 

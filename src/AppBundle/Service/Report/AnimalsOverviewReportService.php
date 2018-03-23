@@ -20,9 +20,9 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
     const FILENAME = self::TITLE;
 
     const CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT = false;
-    const MAX_CURRENT_ANIMAL_AGE_IN_YEARS = 18;
+    const MAX_CURRENT_ANIMAL_AGE_IN_YEARS = 15;
 
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 15;
+    const PROCESS_TIME_LIMIT_IN_MINUTES = 3;
 
     /**
      * @inheritDoc
@@ -47,7 +47,7 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
                 true,
                 self::MAX_CURRENT_ANIMAL_AGE_IN_YEARS
             );
-dump($sql);die;
+
             $this->filename = $this->translate(self::FILENAME);
             $this->extension = FileType::CSV;
 
