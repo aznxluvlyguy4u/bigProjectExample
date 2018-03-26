@@ -104,4 +104,24 @@ class DateUtil
     {
         return $dateTime->format('d-m-Y');
     }
+
+
+    /**
+     * @param string|\DateTime $dateTime
+     * @return null|int
+     */
+    public static function getYearFromDateStringOrDateTime($dateTime)
+    {
+        if ($dateTime === null) {
+            return null;
+        }
+
+        if ($dateTime instanceof \DateTime) {
+            $date = $dateTime;
+        } else {
+            $date = new \DateTime($dateTime);
+        }
+
+        return intval($date->format('Y'));
+    }
 }

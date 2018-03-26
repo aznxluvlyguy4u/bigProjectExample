@@ -613,8 +613,9 @@ class NsfoMainCommand extends ContainerAwareCommand
             '1: BirthProgress', "\n",
             '2: is_rvo_message boolean in action_log', "\n",
             '3: TreatmentType', "\n",
-            '4: StoredProcedures', "\n",
-            '5: StoredProcedures: overwrite all', "\n\n",
+            '4: LedgerCategory', "\n",
+            '5: StoredProcedures', "\n",
+            '6: StoredProcedures: overwrite all', "\n\n",
 
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
@@ -625,8 +626,9 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 1: $this->getContainer()->get('app.initializer.birth_progress')->run($this->cmdUtil); break;
             case 2: ActionLogWriter::initializeIsRvoMessageValues($this->conn, $this->cmdUtil); break;
             case 3: $this->getContainer()->get('app.initializer.treatment_type')->run($this->cmdUtil); break;
-            case 4: $storedProcedureIntializer->initialize(); break;
-            case 5: $storedProcedureIntializer->update(); break;
+            case 4: $this->getContainer()->get('AppBundle\Service\Migration\LedgerCategoryMigrator')->run($this->cmdUtil); break;
+            case 5: $storedProcedureIntializer->initialize(); break;
+            case 6: $storedProcedureIntializer->update(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }
@@ -663,14 +665,18 @@ class NsfoMainCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '=====================================', "\n",
             '1: '.strtolower(CommandTitle::INSPECTOR), "\n",
-            '2: '.strtolower(CommandTitle::DATA_MIGRATE_2017_AND_WORM), "\n\n",
-
+            '2: '.strtolower(CommandTitle::DATA_MIGRATE_2017_AND_WORM), "\n",
+            '3: '.strtolower(CommandTitle::PEDIGREE_REGISTER_REGISTRATION), "\n",
+            '4: '.strtolower(CommandTitle::SCAN_MEASUREMENTS_DATA), "\n",
+            "\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1: $this->getContainer()->get('app.migrator.inspector')->run($this->cmdUtil); break;
             case 2: $this->getContainer()->get('app.migrator.vsm')->run($this->cmdUtil); break;
+            case 3: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeRegisterRegistrationMigrator')->run($this->cmdUtil); break;
+            case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScanMeasurementsMigrator')->run($this->cmdUtil); break;
             default: $this->writeLn('Exit menu'); return;
         }
         $this->dataMigrationOptions();

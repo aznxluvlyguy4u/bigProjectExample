@@ -23,6 +23,7 @@ use JMS\Serializer\Annotation as JMS;
  *     groups = {
  *     "BASIC",
  *     "CONTACT_INFO"
+ *
  * })
  *
  * @package AppBundle\Entity
@@ -35,6 +36,11 @@ abstract class Address
    * @ORM\Column(type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
+   * @JMS\Type("integer")
+   * @JMS\Groups({
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
+   * })
    */
   protected $id;
 
@@ -45,7 +51,9 @@ abstract class Address
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $streetName;
@@ -57,7 +65,9 @@ abstract class Address
    * @Assert\NotBlank
    * @JMS\Type("integer")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $addressNumber;
@@ -68,7 +78,9 @@ abstract class Address
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $addressNumberSuffix;
@@ -82,7 +94,9 @@ abstract class Address
    * @Assert\Length(max = 6)
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $postalCode;
@@ -94,7 +108,9 @@ abstract class Address
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $city;
@@ -106,7 +122,9 @@ abstract class Address
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $country;
@@ -117,7 +135,9 @@ abstract class Address
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "ADDRESS"
+   *     "ADDRESS",
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY"
    * })
    */
   private $state;

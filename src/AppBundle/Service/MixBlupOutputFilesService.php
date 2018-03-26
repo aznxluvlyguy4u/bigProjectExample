@@ -8,12 +8,14 @@ use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Component\MixBlup\MixBlupInstructionFileBase;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Constant\Filename;
+use AppBundle\Constant\MixBlupAnalysis;
 use AppBundle\Entity\BreedIndexType;
 use AppBundle\Entity\BreedIndexTypeRepository;
 use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\BreedValueRepository;
 use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\BreedValueTypeRepository;
+use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupParseInstruction;
 use AppBundle\Setting\MixBlupSetting;
@@ -25,6 +27,7 @@ use AppBundle\Util\LoggerUtil;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
@@ -62,6 +65,12 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $s3Service;
     /** @var MixBlupOutputQueueService */
     private $queueService;
+    /** @var BreedIndexService */
+    private $breedIndexService;
+    /** @var BreedValueService */
+    private $breedValueService;
+    /** @var NormalDistributionService */
+    private $normalDistributionService;
     /** @var Logger */
     private $logger;
     /** @var BreedValuesResultTableUpdater */
@@ -144,23 +153,21 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $processScanCount;
     /** @var array */
     private $missingAnimalIds;
+    /** @var array */
+    private $hasFilenameArray;
 
-    /**
-     * MixBlupOutputFilesService constructor.
-     * @param ObjectManager $em
-     * @param AWSSimpleStorageService $s3Service
-     * @param MixBlupOutputQueueService $queueService
-     * @param string $currentEnvironment
-     * @param string $cacheDir
-     * @param Logger $logger
-     */
     public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, MixBlupOutputQueueService $queueService,
+                                BreedIndexService $breedIndexService, BreedValueService $breedValueService,
+                                NormalDistributionService $normalDistributionService,
                                 $currentEnvironment, $cacheDir, $logger = null)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
         $this->s3Service = $s3Service;
         $this->queueService = $queueService;
+        $this->breedIndexService = $breedIndexService;
+        $this->breedValueService = $breedValueService;
+        $this->normalDistributionService = $normalDistributionService;
         $this->currentEnvironment = $currentEnvironment;
         $this->cacheDir = $cacheDir;
         $this->logger = $logger;
@@ -196,8 +203,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $breedIndexTypes = $this->breedIndexTypeRepository->findAll();
         /** @var BreedIndexType $breedIndexType */
         foreach ($breedIndexTypes as $breedIndexType) {
-            $this->breedIndexTypesByDutchDescription[$breedValueType->getNl()] = $breedValueType;
-            $this->breedIndexTypeIdsByDutchDescription[$breedValueType->getNl()] = $breedValueType->getId();
+            $this->breedIndexTypesByDutchDescription[$breedIndexType->getNl()] = $breedIndexType;
+            $this->breedIndexTypeIdsByDutchDescription[$breedIndexType->getNl()] = $breedIndexType->getId();
         }
 
         $this->missingAnimalIds = [];
@@ -214,6 +221,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->relani = [];
         $this->relaniDirect = [];
         $this->relaniIndirect = [];
+        $this->hasFilenameArray = [];
 
         $this->currentBreedValueExistsByAnimalIdForGenerationDate = [];
 
@@ -260,7 +268,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $response = $this->queueService->getNextMessage();
         $messageBody = AwsQueueServiceBase::getMessageBodyFromResponse($response);
         if ($messageBody) {
-            $this->key = $messageBody->key;
+            $this->key = $messageBody->key; // NOTE this should be the generationDateString with underscore between date and time
             $this->bulkFiles = $messageBody->files;
             $this->relsol = $messageBody->relsol;
             $this->errors = $messageBody->errors;
@@ -347,7 +355,10 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->logger->notice('No animalIds were missing in the database');
                 }
 
-                $this->breedValuesResultTableUpdater->update();
+                $this->breedValueService->initializeBlankGeneticBases();
+                $this->updateBreedIndexesByOutputFileType();
+                $this->updateNormalDistributions();
+                $this->updateResultTableBreedValues();
 
             } else {
                 // Handle unsuccessful download
@@ -876,6 +887,156 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         if($this->processScanCount%self::PRINT_BATCH_SIZE === 0) {
             $this->printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray);
         }
+    }
+
+
+    /**
+     * @return null|string
+     */
+    private function getGenerationDateStringFromKey()
+    {
+        $generationDateString = strtr($this->key, ['_' => ' ']);
+        if (TimeUtil::isValidDateTime($generationDateString, SqlUtil::DATE_FORMAT)) {
+            return $generationDateString;
+        }
+        return null;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function hasLambMeatOutputFiles()
+    {
+        return $this->hasOutputFilesByFilenamePart(
+            [
+                MixBlupAnalysis::LAMB_MEAT,
+                MixBlupAnalysis::TAIL_LENGTH,
+            ]
+        );
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function hasWormResistanceOutputFiles()
+    {
+        return $this->hasOutputFilesByFilenamePart(MixBlupAnalysis::WORM_RESISTANCE);
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function hasFertilityOutputFiles()
+    {
+        return $this->hasOutputFilesByFilenamePart(
+            [
+                MixBlupAnalysis::BIRTH_PROGRESS,
+                MixBlupAnalysis::FERTILITY,
+                MixBlupAnalysis::FERTILITY_1,
+                MixBlupAnalysis::FERTILITY_2,
+                MixBlupAnalysis::FERTILITY_3,
+            ]
+        );
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function hasExteriorOutputFiles()
+    {
+        return $this->hasOutputFilesByFilenamePart(
+            [
+                MixBlupAnalysis::EXTERIOR_LEG_WORK,
+                MixBlupAnalysis::EXTERIOR_MUSCULARITY,
+                MixBlupAnalysis::EXTERIOR_PROGRESS,
+                MixBlupAnalysis::EXTERIOR_PROPORTION,
+                MixBlupAnalysis::EXTERIOR_SKULL,
+                MixBlupAnalysis::EXTERIOR_TYPE,
+            ]
+        );
+    }
+
+
+    /**
+     * @param string[]|string $filenameParts
+     * @return bool
+     */
+    private function hasOutputFilesByFilenamePart($filenameParts)
+    {
+        if (is_string($filenameParts)) {
+            $filenameParts = [$filenameParts];
+        }
+
+        $searchKey = implode(',', $filenameParts);
+        if (key_exists($searchKey, $this->hasFilenameArray)) {
+            return $this->hasFilenameArray[$searchKey];
+        }
+
+        foreach ([$this->bulkFiles, $this->relsol] as $set) {
+            foreach ($set as $filenameWithExtension) {
+                foreach ($filenameParts as $filenamePart) {
+                    if (strpos($filenameWithExtension, $filenamePart) !== false) {
+
+                        $this->hasFilenameArray[$searchKey] = true;
+                        return $this->hasFilenameArray[$searchKey];
+                    }
+                }
+            }
+        }
+
+        $this->hasFilenameArray[$searchKey] = false;
+        return $this->hasFilenameArray[$searchKey];
+    }
+
+
+    private function updateBreedIndexesByOutputFileType()
+    {
+        $generationDateString = $this->getGenerationDateStringFromKey();
+        if ($generationDateString) {
+            if ($this->hasLambMeatOutputFiles()) {
+                $this->breedValueService->initializeBlankGeneticBases();
+
+                $this->logger->notice('LambMeatOutputFilename found in message. 
+                Processing new LambMeatIndexes...');
+                $this->breedIndexService->updateLambMeatIndexes($generationDateString);
+            }
+        }
+    }
+
+
+    private function updateNormalDistributions()
+    {
+        $generationDateString = $this->getGenerationDateStringFromKey();
+        if ($generationDateString) {
+
+            if ($this->hasLambMeatOutputFiles()) {
+                $this->logger->notice('LambMeatOutputFilename found in message. 
+                Processing new LambMeatIndex NormalDistribution...');
+                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString);
+            }
+
+            if ($this->hasWormResistanceOutputFiles()) {
+                $this->logger->notice('LambMeatOutputFilename found in message. 
+                Processing new WormResistance sIga NormalDistribution...');
+                $this->normalDistributionService->persistWormResistanceMeanAndStandardDeviationSIgA($generationDateString);
+            }
+        }
+    }
+
+
+    private function updateResultTableBreedValues()
+    {
+        $detectedAnalysisTypes = [];
+        if ($this->hasLambMeatOutputFiles()) { $detectedAnalysisTypes[MixBlupType::LAMB_MEAT_INDEX] = MixBlupType::LAMB_MEAT_INDEX; }
+        if ($this->hasExteriorOutputFiles()) { $detectedAnalysisTypes[MixBlupType::EXTERIOR] = MixBlupType::EXTERIOR; }
+        if ($this->hasFertilityOutputFiles()) { $detectedAnalysisTypes[MixBlupType::FERTILITY] = MixBlupType::FERTILITY; }
+        if ($this->hasWormResistanceOutputFiles()) { $detectedAnalysisTypes[MixBlupType::WORM] = MixBlupType::WORM; }
+
+        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes);
     }
 
 

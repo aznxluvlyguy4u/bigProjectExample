@@ -7,14 +7,18 @@ namespace AppBundle\Service\Report;
 use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Count;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Criteria\NormalDistributionCriteria;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\NormalDistribution;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\QueryParameter;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
@@ -166,9 +170,13 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             'm_total_offspring_count',
             'm_born_alive_offspring_count',
             'm_gave_birth_as_one_year_old',
+            BreedValueTypeConstant::NATURAL_LOGARITHM_EGG_COUNT,
+            BreedValueTypeConstant::NATURAL_LOGARITHM_EGG_COUNT.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
+            BreedValueTypeConstant::IGA_NEW_ZEALAND,
+            BreedValueTypeConstant::IGA_NEW_ZEALAND.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
         ];
 
-        $csvData = $this->unsetNestedKeys($this->data, $keysToIgnore);
+        $csvData = $this->unsetNestedKeys($this->getData(), $keysToIgnore);
         $csvData = $this->translateColumnHeaders($csvData);
         $csvData = $this->moveBreedValueColumnsToEndArray($csvData);
 
@@ -190,9 +198,8 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
 
     private function translateColumnHeaders($csvData)
     {
-        if ($this->translator->getLocale() === Locale::EN) {
-            return $csvData;
-        }
+        $translationSet = StringUtil::capitalizationSet();
+        $translationSet[' '] = '_';
 
         foreach ($csvData as $item => $records) {
             foreach ($records as $columnHeader => $value) {
@@ -207,10 +214,10 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
                     default: $translatedColumnHeader = $this->trans(strtoupper($columnHeader)); break;
                 }
 
-                $translatedColumnHeader = strtr(strtolower($translatedColumnHeader), [' ' => '_']);
+                $translatedColumnHeader = strtr(strtolower($translatedColumnHeader), $translationSet);
 
                 if ($columnHeader !== $translatedColumnHeader) {
-                    $csvData[$item][strtolower($translatedColumnHeader)] = $value;
+                    $csvData[$item][$translatedColumnHeader] = $value;
                     unset($csvData[$item][$columnHeader]);
                 }
             }
@@ -326,6 +333,7 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             $animals,
             $matchLocationOfSelectedAnimals,
             $this->concatValueAndAccuracy,
+            true,
             true
         );
 
@@ -429,18 +437,28 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
         $allCsvColumns = array_keys(reset($csvResults));
 
         $allBreedCodeNames = [];
+        $allTranslatedBreedCodeNames = [];
         $sql = "SELECT nl FROM breed_value_type;";
         foreach ($this->conn->query($sql)->fetchAll() as $value) {
             $columnName = strtolower($value['nl']);
             $allBreedCodeNames[$columnName] = $columnName;
+
+            $translatedColumnName = strtolower($this->trans(strtoupper($columnName)));
+            $allTranslatedBreedCodeNames[$translatedColumnName] = $translatedColumnName;
+
             if (!$this->concatValueAndAccuracy) {
                 $accuracyColumnName = $columnName . BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX;
                 $allBreedCodeNames[$accuracyColumnName] = $accuracyColumnName;
+                $translatedAccuracyColumnName = $translatedColumnName . BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX;
+                $allTranslatedBreedCodeNames[$translatedAccuracyColumnName] = $translatedAccuracyColumnName;
             }
         }
 
         foreach ($allCsvColumns as $columnName) {
             if (key_exists($columnName, $allBreedCodeNames)) {
+                $allPossibleBreedCodeNames[$columnName] = $columnName;
+            }
+            if (key_exists($columnName, $allTranslatedBreedCodeNames)) {
                 $allPossibleBreedCodeNames[$columnName] = $columnName;
             }
         }

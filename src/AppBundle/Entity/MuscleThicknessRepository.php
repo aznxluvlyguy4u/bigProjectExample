@@ -8,6 +8,7 @@ use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 
 /**
@@ -74,6 +75,19 @@ class MuscleThicknessRepository extends MeasurementRepository {
         }
 
         return $latestMuscleThickness;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param \DateTime $dateTime
+     * @return Collection|MuscleThickness[]
+     */
+    public function findByAnimalAndDate(Animal $animal, \DateTime $dateTime)
+    {
+        return $this->getManager()->getRepository(MuscleThickness::class)->matching(
+            $this->findByAnimalAndDateCriteria($animal, $dateTime)
+        );
     }
 
 

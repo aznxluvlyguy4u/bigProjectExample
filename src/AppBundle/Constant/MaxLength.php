@@ -20,7 +20,7 @@ class MaxLength
     const HETEROSIS_AND_RECOMBINATION = 5;
     const LITTER_GROUP = 17;
     const MUSCLE_THICKNESS = 5; //99.99
-    const N_LING = 2;
+    const N_LING = 3;
     const NSFO_INSPECTOR = 7;
     const PMSG = 3; //0/1 includes -99
     const SUCKLE_COUNT = 3; //includes -99

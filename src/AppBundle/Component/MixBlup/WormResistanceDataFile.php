@@ -6,6 +6,7 @@ namespace AppBundle\Component\MixBlup;
 
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DsvWriterUtil;
@@ -17,13 +18,14 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
     const SAMPLE_PERIOD_DEFAULT_VALUE = '1';
 
     const EPG_DECIMALS = 0;
+    const LN_FEC_DECIMALS = 5;
     const S_IGA_DECIMALS = 5;
     const CARLA_IGA_DECIMALS = 5;
 
     const NZ_CLASS_COLUMN_WIDTH = 3;
     const NZ_IGA_COLUMN_WIDTH = 9;
     const NZ_S_IGA_COLUMN_WIDTH = 9;
-    const LN_FEC_COLUMN_WIDTH = 5;
+    const LN_FEC_COLUMN_WIDTH = 9;
 
     private static $epgFormattedNullFiller;
     private static $sIgaFormattedNullFiller;
@@ -71,6 +73,10 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
             $recordEnd =
                 $formattedSamplePeriod.
+                self::getFormattedLitterGroup($data).
+                self::getFormattedNLing($data).
+                self::getFormattedStillbornCount($data).
+                self::getFormattedFirstLitterAgeAndLastLitterOrdinal($data).
                 self::getFormattedUbnOfBirthWithoutPadding($data)
             ;
 
@@ -133,14 +139,15 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
     static function getSqlQueryRelatedAnimals()
     {
         $returnValuesString = 'a.id as '.JsonInputConstant::ANIMAL_ID.', a.'.JsonInputConstant::TYPE;
-        return self::getSqlQueryForBaseValues($returnValuesString). ' GROUP BY a.id, a.type';
+        return self::getSqlQueryForBaseValues($returnValuesString, false). ' GROUP BY a.id, a.type';
     }
 
     /**
      * @param string $returnValuesString
+     * @param boolean $includeLitterData
      * @return string
      */
-    private static function getSqlQueryForBaseValues($returnValuesString = null)
+    private static function getSqlQueryForBaseValues($returnValuesString = null, $includeLitterData = true)
     {
         if($returnValuesString == null) {
             $returnValuesString =
@@ -159,13 +166,115 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                  w.".JsonInputConstant::YEAR."";
         }
 
+        $litterDataJoin = '';
+        $litterAlias = 'litter';
+
+        if ($includeLitterData) {
+            $litterDataJoin =
+  " INNER JOIN animal_cache c ON c.animal_id = a.id
+    LEFT JOIN (
+    ".self::getJoinLatestLitterOnParentId(true)."
+    )".$litterAlias." ON ".$litterAlias.".animal_id = w.animal_id";
+
+            $returnValuesString .= ',
+              c.'.JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD.',
+              '.self::getLitterReturnValues($litterAlias);
+        }
+
         return "SELECT
                   ".$returnValuesString."
                 FROM animal a
                   INNER JOIN worm_resistance w ON a.id = w.animal_id
+                 ".$litterDataJoin."
                 WHERE 
                   ".self::getSqlBaseFilter()."
                   ".self::getErrorLogAnimalPedigreeFilter('a.id');
+    }
+
+
+    /**
+     * @param string $litterAlias
+     * @return string
+     */
+    private static function getLitterReturnValues($litterAlias)
+    {
+        return
+            $litterAlias.'.'.JsonInputConstant::LITTER_ORDINAL." as ".JsonInputConstant::LITTER_ORDINAL.','.
+            $litterAlias.'.'.JsonInputConstant::LITTER_GROUP." as ".JsonInputConstant::LITTER_GROUP.",
+            $litterAlias.".JsonInputConstant::N_LING." as ".JsonInputConstant::N_LING.",
+            $litterAlias.".JsonInputConstant::TOTAL_STILLBORN_COUNT." as ".JsonInputConstant::TOTAL_STILLBORN_COUNT
+        ;
+    }
+
+
+    /**
+     * @param string $litterAlias
+     * @return string
+     */
+    private static function getNestedLitterReturnValues($litterAlias)
+    {
+        return
+            $litterAlias.'.'.JsonInputConstant::LITTER_ORDINAL.','.
+            "CONCAT(a.uln_country_code, a.uln_number,'_', LPAD(CAST($litterAlias.litter_ordinal AS TEXT), 2, '0')) as ".JsonInputConstant::LITTER_GROUP.",
+                 $litterAlias.born_alive_count + $litterAlias.stillborn_count as ".JsonInputConstant::N_LING.",
+                 $litterAlias.stillborn_count as ".JsonInputConstant::TOTAL_STILLBORN_COUNT
+        ;
+    }
+
+
+    /**
+     * @param boolean $isMother
+     * @return string
+     */
+    private static function getJoinLatestLitterOnParentId($isMother)
+    {
+        $parentIdLabel = $isMother ? 'animal_mother_id' : 'animal_father_id';
+        
+        return
+   "SELECT
+      l.$parentIdLabel as ".JsonInputConstant::ANIMAL_ID.",
+      ".self::getNestedLitterReturnValues('l')."
+    FROM litter l
+      INNER JOIN declare_nsfo_base b ON b.id = l.id
+      INNER JOIN animal a ON l.$parentIdLabel = a.id
+      INNER JOIN (
+                   -- Find the latest litter before sampling date
+                   -- or in same year if sampling date is missing
+                   SELECT
+                     l.$parentIdLabel, MAX(l.litter_date) as litter_date
+                   FROM litter l
+                     INNER JOIN declare_nsfo_base b ON b.id = l.id
+                     INNER JOIN worm_resistance r ON r.animal_id = l.$parentIdLabel
+                     INNER JOIN animal mom ON l.$parentIdLabel = mom.id
+                   WHERE
+                     (
+                       (r.sampling_date NOTNULL AND l.litter_date <= r.sampling_date)
+                       OR
+                       (r.sampling_date ISNULL AND DATE_PART('year', l.litter_date) <= r.year)
+                     )
+                     AND ".self::getLitterStateFilter('b', 'l')."
+                   GROUP BY l.$parentIdLabel
+                 )g ON g.$parentIdLabel = l.$parentIdLabel AND g.litter_date = l.litter_date
+    WHERE ".self::getLitterStateFilter('b', 'l');
+    }
+
+
+    /**
+     * @param string $baseAlias
+     * @param string $litterAlias
+     * @return string
+     */
+    private static function getLitterStateFilter($baseAlias = 'b', $litterAlias = 'l')
+    {
+        return "  (
+                            $baseAlias.request_state = '".RequestStateType::FINISHED."' OR 
+                            $baseAlias.request_state = '".RequestStateType::FINISHED_WITH_WARNING."' OR 
+                            $baseAlias.request_state = '".RequestStateType::IMPORTED."'
+                          )
+                     AND (
+                            $litterAlias.status = '".RequestStateType::COMPLETED."' OR
+                            $litterAlias.status = '".RequestStateType::IMPORTED."'
+                          )";
     }
 
 
@@ -244,13 +353,18 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      */
     private static function getFormattedLnFEC(array $data)
     {
-        return self::getFormattedValueFromData(
-            $data,
-            self::LN_FEC_COLUMN_WIDTH,
-            JsonInputConstant::EPG,
-            true,
-            MixBlupInstructionFileBase::MISSING_REPLACEMENT
-        );
+        $value = ArrayUtil::get(JsonInputConstant::EPG, $data);
+
+        if ($value) {
+            $logValue = self::numberFormat(
+                log(floatval($value)),
+                self::LN_FEC_DECIMALS
+            );
+        } else {
+            $logValue = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+        }
+
+        return DsvWriterUtil::pad($logValue, self::LN_FEC_COLUMN_WIDTH, true);
     }
 
     /**
@@ -349,4 +463,23 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
     }
 
 
+    /**
+     * @param array $data
+     * @return string
+     */
+    private static function getFormattedFirstLitterAgeAndLastLitterOrdinal(array $data)
+    {
+        $ageValue = null;
+        $gaveBirthAsOneYearOld = ArrayUtil::get(JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD, $data, null);
+        if ($gaveBirthAsOneYearOld !== null) {
+            $ageValue = $gaveBirthAsOneYearOld ? 1 : 2; // for all ages above 1 the value is 2
+        }
+
+        $litterOrdinal = ArrayUtil::get(JsonInputConstant::LITTER_ORDINAL, $data, null);
+
+        $value = $ageValue && $litterOrdinal ? strval($ageValue).strval($litterOrdinal)
+            : MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+
+        return DsvWriterUtil::pad($value, 3, true);
+    }
 }

@@ -178,4 +178,24 @@ class MeasurementRepository extends BaseRepository {
         }
         if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
+
+
+    /**
+     * @param Animal $animal
+     * @param \DateTime $dateTime
+     * @return Criteria
+     */
+    protected function findByAnimalAndDateCriteria(Animal $animal, \DateTime $dateTime)
+    {
+        $dayOfDateTime = TimeUtil::getDayOfDateTime($dateTime);
+        $dayAfterDateTime = TimeUtil::getDayAfterDateTime($dateTime);
+
+        return Criteria::create()
+            ->where(Criteria::expr()->eq('animal', $animal))
+            ->andWhere(Criteria::expr()->gte('measurementDate', $dayOfDateTime))
+            ->andWhere(Criteria::expr()->lt('measurementDate', $dayAfterDateTime))
+            ->andWhere(Criteria::expr()->eq('isActive', true))
+            ->orderBy(['measurementDate' => Criteria::DESC])
+        ;
+    }
 }

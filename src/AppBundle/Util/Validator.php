@@ -36,9 +36,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Validator
 {
+    const MAX_NUMBER_OF_CURRENCY_INPUT_DECIMALS = 3;
+
     const DEFAULT_MIN_PASSWORD_LENGTH = 6;
     const MAX_ULN_NUMBER_LENGTH = 12;
-    const MIN_ULN_NUMBER_LENGTH = 8;
+    const MIN_ULN_NUMBER_LENGTH = 6;
     const ULN_COUNTRY_CODE_LENGTH = 2;
 
     /** @var array */
@@ -47,6 +49,17 @@ class Validator
     private static $validBlindFactors = [];
     /** @var array */
     private static $validBirthProgresses = [];
+
+
+    /**
+     * @param float $number
+     * @return bool
+     */
+    public static function hasValidNumberOfCurrencyDecimals($number)
+    {
+        return self::isNumberOfDecimalsWithinLimit($number, self::MAX_NUMBER_OF_CURRENCY_INPUT_DECIMALS);
+    }
+
 
     /**
      * @param float $number

@@ -61,6 +61,17 @@ doctrine:
         query_cache_driver: redis
         # enable resultset caching
         result_cache_driver: redis
+        filters:
+          active_company_filter:
+            class:  AppBundle\Filter\ActiveCompanyFilter
+            enabled: false
+          active_invoice_filter:
+            class:  AppBundle\Filter\ActiveInvoiceFilter
+            enabled: false
+          active_location_filter:
+            class:  AppBundle\Filter\ActiveLocationFilter
+            enabled: false
+
 services:
     twig.extension.stringloader:
         class: Twig_Extension_StringLoader

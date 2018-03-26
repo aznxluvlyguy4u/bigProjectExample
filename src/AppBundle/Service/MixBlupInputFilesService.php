@@ -4,6 +4,8 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\AnimalCacher;
+use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Component\MixBlup\WormResistanceInputProcess;
 use AppBundle\Constant\Environment;
 use AppBundle\Enumerator\MixBlupType;
@@ -14,6 +16,7 @@ use AppBundle\Component\MixBlup\ReproductionInputProcess;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\LitterUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\DBAL\Connection;
@@ -47,6 +50,9 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     /** @var Logger */
     private $logger;
 
+    /** @var string */
+    private $onlyUseThisProcessType;
+
     /** @var boolean */
     private $purgeCacheAfterSuccessfulRun;
 
@@ -70,6 +76,8 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $this->cacheDir = $cacheDir;
         $this->logger = $logger;
         $this->workingFolder = $cacheDir.'/'.MixBlupFolder::ROOT;
+
+        $this->onlyUseThisProcessType = null;
 
         $this->mixBlupProcesses = [];
         $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorInputProcess($em, $this->workingFolder, $this->logger);
@@ -120,6 +128,38 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     }
 
 
+    public function runExterior()
+    {
+        $this->onlyUseThisProcessType = MixBlupType::EXTERIOR;
+        $this->run();
+        $this->onlyUseThisProcessType = null;
+    }
+
+
+    public function runLambMeatIndex()
+    {
+        $this->onlyUseThisProcessType = MixBlupType::LAMB_MEAT_INDEX;
+        $this->run();
+        $this->onlyUseThisProcessType = null;
+    }
+
+
+    public function runFertility()
+    {
+        $this->onlyUseThisProcessType = MixBlupType::FERTILITY;
+        $this->run();
+        $this->onlyUseThisProcessType = null;
+    }
+
+
+    public function runWorm()
+    {
+        $this->onlyUseThisProcessType = MixBlupType::WORM;
+        $this->run();
+        $this->onlyUseThisProcessType = null;
+    }
+
+
     /**
      * Generates the data for all the files,
      * writes the data to the text input files,
@@ -129,6 +169,8 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     public function run()
     {
         $this->updateAnimalIdAndDateValues();
+        $this->generateMissingAnimalCacheRecords();
+        $this->updateLitterDetails();
         $this->deleteMixBlupFilesInCache();
         $writeResult = $this->write();
         if($writeResult) {
@@ -151,6 +193,37 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         }
     }
 
+
+    private function generateMissingAnimalCacheRecords()
+    {
+        $updateCount = AnimalCacher::cacheAnimalsBySqlInsert($this->em, null);
+        $countVal = $updateCount > 0 ? 'No' : $updateCount;
+        $this->logger->notice($countVal.' missing animal_cache records inserted');
+    }
+
+
+    private function updateLitterDetails()
+    {
+        $this->logger->notice('Updating litter details...');
+        $updateCount = GeneDiversityUpdater::updateAll($this->conn, false, null);
+        $this->logger->notice($updateCount.' heterosis and recombination values updated');
+
+        if ($this->runIncludesFertility() || $this->runIncludesWorm()) {
+            $this->logger->notice(LitterUtil::matchMatchingMates($this->conn, false).' \'mate-litter\'s matched');
+            $this->logger->notice(LitterUtil::removeMatesFromRevokedLitters($this->conn).' \'mate-litter\'s unmatched');
+
+            $this->logger->notice(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
+            $this->logger->notice(LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn).' litterOrdinals removed from revoked litters');
+
+            if ($this->runIncludesFertility()) {
+                $this->logger->notice(LitterUtil::updateSuckleCount($this->conn).' suckleCounts updated');
+                $this->logger->notice(LitterUtil::removeSuckleCountFromRevokedLitters($this->conn).' suckleCounts removed from revoked litters');
+                $this->logger->notice(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated');
+                $this->logger->notice(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated');
+            }
+        }
+    }
+
     
     /**
      * Writes the instructionFile-, dataFile- and pedigreeFile data to their respective text input files.
@@ -158,18 +231,41 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
      */
     private function write()
     {
-        /**
-         * @var string $mixBlupType
-         * @var MixBlupInputProcessInterface $mixBlupProcess
-         */
-        foreach($this->mixBlupProcesses as $mixBlupType => $mixBlupProcess)
-        {
-            $this->logger->notice('Writing MixBlup input files for: '.$mixBlupType);
-            $writeResult = $mixBlupProcess->write();
-            if(!$writeResult) {
-                $this->logger->critical('FAILED writing MixBlup input file for: '.$mixBlupType);
-                return false;
+        if ($this->onlyUseThisProcessType) {
+            return $this->writeProcess($this->onlyUseThisProcessType);
+
+        } else {
+            /**
+             * @var string $mixBlupType
+             * @var MixBlupInputProcessInterface $mixBlupProcess
+             */
+            foreach($this->mixBlupProcesses as $mixBlupType => $mixBlupProcess)
+            {
+                $processResult = $this->writeProcess($mixBlupType);
+                if (!$processResult) {
+                    return false;
+                }
             }
+        }
+
+        return true;
+    }
+
+
+    /**
+     * @param string $mixBlupType
+     * @return bool
+     */
+    private function writeProcess($mixBlupType)
+    {
+        /** @var MixBlupInputProcessInterface $mixBlupProcess */
+        $mixBlupProcess = $this->mixBlupProcesses[$mixBlupType];
+
+        $this->logger->notice('Writing MixBlup input files for: '.$mixBlupType);
+        $writeResult = $mixBlupProcess->write();
+        if(!$writeResult) {
+            $this->logger->critical('FAILED writing MixBlup input file for: '.$mixBlupType);
+            return false;
         }
         return true;
     }
@@ -264,6 +360,27 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $this->logger->notice('Generated MixBlup input files deleted from the workingfolder '.$this->workingFolder);
     }
 
+
+    /** @return bool */
+    private function runIncludesFertility() { return $this->runIncludesType(MixBlupType::FERTILITY); }
+    /** @return bool */
+    private function runIncludesLambMeatIndex() { return $this->runIncludesType(MixBlupType::LAMB_MEAT_INDEX); }
+    /** @return bool */
+    private function runIncludesExterior() { return $this->runIncludesType(MixBlupType::EXTERIOR); }
+    /** @return bool */
+    private function runIncludesWorm() { return $this->runIncludesType(MixBlupType::WORM); }
+
+    /**
+     * @param string $mixblupType
+     * @return bool
+     */
+    private function runIncludesType($mixblupType)
+    {
+        return
+                ($this->onlyUseThisProcessType === null && key_exists(MixBlupType::FERTILITY, $this->mixBlupProcesses))
+                || $this->onlyUseThisProcessType === $mixblupType
+            ;
+    }
 
     /** @return string */
     public function getDataFolder() { return $this->workingFolder."/".MixBlupFolder::DATA; }

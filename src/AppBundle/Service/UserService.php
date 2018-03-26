@@ -204,4 +204,13 @@ class UserService
         }
     }
 
+
+    /**
+     * @param Request $request
+     * @return bool
+     */
+    public static function isGhostLogin(Request $request)
+    {
+        return $request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
+    }
 }

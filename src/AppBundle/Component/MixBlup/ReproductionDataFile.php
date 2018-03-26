@@ -364,17 +364,6 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      * @param array $data
      * @return string
      */
-    protected static function getFormattedStillbornCount($data)
-    {
-        $stillBornCount = ArrayUtil::get(JsonInputConstant::TOTAL_STILLBORN_COUNT, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
-        return DsvWriterUtil::pad($stillBornCount, MaxLength::N_LING, true);
-    }
-
-
-    /**
-     * @param array $data
-     * @return string
-     */
     protected static function getFormattedEarlyFertility($data)
     {
         $recordTypeOrdination = intval($data[self::RECORD_TYPE_ORDINATION]);

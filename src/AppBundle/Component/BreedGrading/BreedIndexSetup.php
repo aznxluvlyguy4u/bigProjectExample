@@ -7,6 +7,7 @@ namespace AppBundle\Component\BreedGrading;
 use AppBundle\Component\MixBlup\ExteriorInstructionFiles;
 use AppBundle\Component\MixBlup\LambMeatIndexInstructionFiles;
 use AppBundle\Component\MixBlup\ReproductionInstructionFiles;
+use AppBundle\Component\MixBlup\WormResistanceInstructionFiles;
 use AppBundle\Constant\BreedIndexTypeConstant;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Util\ArrayUtil;
@@ -111,6 +112,21 @@ class BreedIndexSetup
 
         self::validateIncludedBreedValues($includedBreedValues, $breedValuesInMixBlupFiles,
             BreedIndexTypeConstant::EXTERIOR_INDEX);
+
+        return $includedBreedValues;
+    }
+
+
+    public static function wormResistanceIndex()
+    {
+        $includedBreedValues = [
+            BreedValueTypeConstant::IGA_SCOTLAND,
+        ];
+
+        $breedValuesInMixBlupFiles = WormResistanceInstructionFiles::getWormResistanceModel(false);
+
+        self::validateIncludedBreedValues($includedBreedValues, $breedValuesInMixBlupFiles,
+            BreedIndexTypeConstant::WORM_RESISTANCE_INDEX);
 
         return $includedBreedValues;
     }

@@ -117,4 +117,22 @@ class CompanyAPIController extends APIController
         return $this->get('app.company')->createCompanyNotes($request, $companyId);
     }
 
+    /**
+     * @return JsonResponse
+     * @Route("/invoice/info")
+     * @Method("GET")
+     */
+    public function getCompanyInvoiceDetails(){
+        return $this->get('app.company')->getCompanyInvoiceDetails();
+    }
+
+    /**
+     * @param Request $request   the request object
+     * @return JsonResponse
+     * @Route("/company/name")
+     * @Method("GET")
+     */
+    public function getCompaniesByName(Request $request){
+        return $this->get('app.company')->getCompaniesByName($request);
+    }
 }

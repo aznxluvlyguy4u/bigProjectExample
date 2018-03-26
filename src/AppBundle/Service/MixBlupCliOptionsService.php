@@ -10,10 +10,13 @@ use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Service\Migration\LambMeatIndexMigrator;
+use AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator;
+use AppBundle\Service\Migration\WormResistanceIndexMigrator;
 use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,6 +30,7 @@ class MixBlupCliOptionsService
     const DEFAULT_OPTION = 0;
     const DEFAULT_UBN = 1674459;
     const DEFAULT_MIN_UBN = 0;
+    const DEFAULT_GENERATION_DATE_STRING = "2017-01-01 00:00:00";
 
     /** @var ObjectManager|EntityManagerInterface */
     private $em;
@@ -49,6 +53,8 @@ class MixBlupCliOptionsService
     private $excelService;
     /** @var LambMeatIndexMigrator */
     private $lambMeatIndexMigrator;
+    /** @var WormResistanceIndexMigrator */
+    private $wormResistanceIndexMigrator;
     /** @var MixBlupInputFilesService */
     private $mixBlupInputFilesService;
     /** @var MixBlupInputFileValidator */
@@ -57,7 +63,8 @@ class MixBlupCliOptionsService
     private $mixBlupOutputFilesService;
     /** @var PedigreeRegisterOverviewReportService */
     private $pedigreeRegisterOverviewReportService;
-
+    /** @var MixBlupAnalysisTypeMigrator */
+    private $mixBlupAnalysisTypeMigrator;
 
     public function __construct(EntityManagerInterface $em, Logger $logger,
                                 BreedValuesOverviewReportService $breedValuesOverviewReportService,
@@ -66,9 +73,11 @@ class MixBlupCliOptionsService
                                 BreedIndexService $breedIndexService,
                                 ExcelService $excelService,
                                 LambMeatIndexMigrator $lambMeatIndexMigrator,
+                                WormResistanceIndexMigrator $wormResistanceIndexMigrator,
                                 MixBlupInputFilesService $mixBlupInputFilesService,
                                 MixBlupInputFileValidator $mixBlupInputFileValidator,
                                 MixBlupOutputFilesService $mixBlupOutputFilesService,
+                                MixBlupAnalysisTypeMigrator $mixBlupAnalysisTypeMigrator,
                                 PedigreeRegisterOverviewReportService $pedigreeRegisterOverviewReportService)
     {
         $this->em = $em;
@@ -81,9 +90,11 @@ class MixBlupCliOptionsService
         $this->breedIndexService = $breedIndexService;
         $this->excelService = $excelService;
         $this->lambMeatIndexMigrator = $lambMeatIndexMigrator;
+        $this->wormResistanceIndexMigrator = $wormResistanceIndexMigrator;
         $this->mixBlupInputFilesService = $mixBlupInputFilesService;
         $this->mixBlupInputFileValidator = $mixBlupInputFileValidator;
         $this->mixBlupOutputFilesService = $mixBlupOutputFilesService;
+        $this->mixBlupAnalysisTypeMigrator = $mixBlupAnalysisTypeMigrator;
         $this->pedigreeRegisterOverviewReportService = $pedigreeRegisterOverviewReportService;
     }
 
@@ -106,11 +117,14 @@ class MixBlupCliOptionsService
             '3: Generate MixBlup instruction files only', "\n",
             '4: Initialize blank genetic bases', "\n",
             '5: Set minimum reliability for all breedValueTypes by accuracy option', "\n",
+            '6: Update/Insert LambMeatIndex values by generationDate (excl. resultTable update)', "\n",
             '========================================================================', "\n",
             '10: Initialize BreedIndexType and BreedValueType', "\n",
-            '11: Delete all duplicate breedValues', "\n",
-            '12: Update result_table_breed_grades values and accuracies for all breedValue and breedIndex types', "\n",
-            '13: Initialize lambMeatIndexCoefficients', "\n",
+            '11: Initialize MixBlupAnalysisTypes', "\n",
+            '12: Delete all duplicate breedValues', "\n",
+            '13: Update result_table_breed_grades values and accuracies for all breedValue and breedIndex types', "\n",
+            '14: Initialize lambMeatIndexCoefficients', "\n",
+            '15: Initialize wormResistanceIndexCoefficients', "\n",
             '========================================================================', "\n",
             '20: Validate ubnOfBirth format as !BLOCK in DataVruchtb.txt in mixblup cache folder', "\n",
             '21: Validate ubnOfBirth format as !BLOCK in PedVruchtb.txt in mixblup cache folder', "\n",
@@ -123,6 +137,11 @@ class MixBlupCliOptionsService
             '42: Print CSV file for NTS, TSNH, LAX pedigree registers', "\n",
             '43: Print CSV file Breedvalues overview all animals on a ubn, with atleast one breedValue', "\n",
             '44: Print CSV file Breedvalues overview all animals on a ubn, even those without a breedValue', "\n",
+            '========================================================================', "\n",
+            '50: Generate & Upload EXTERIOR MixBlupInputFiles and send message to MixBlup queue', "\n",
+            '51: Generate & Upload LAMB MEAT INDEX MixBlupInputFiles and send message to MixBlup queue', "\n",
+            '52: Generate & Upload FERTILITY MixBlupInputFiles and send message to MixBlup queue', "\n",
+            '53: Generate & Upload WORM MixBlupInputFiles and send message to MixBlup queue', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -133,24 +152,30 @@ class MixBlupCliOptionsService
             case 3: $this->mixBlupInputFilesService->writeInstructionFiles(); break;
             case 4: $this->breedValueService->initializeBlankGeneticBases(); break;
             case 5: $this->breedValueService->setMinReliabilityForAllBreedValueTypesByAccuracyOption($this->cmdUtil); break;
+            case 6: $this->updateLambMeatIndexesByGenerationDate(); break;
 
 
             case 10:
                 $this->breedIndexService->initializeBreedIndexType();
                 $this->breedValueService->initializeBreedValueType();
+                $this->breedValueService->initializeCustomBreedValueTypeSettings();
                 break;
             case 11:
+                $this->mixBlupAnalysisTypeMigrator->run($this->cmdUtil);
+                break;
+            case 12:
                 $deleteCount = MixBlupOutputFilesService::deleteDuplicateBreedValues($this->conn);
                 $message = $deleteCount > 0 ? $deleteCount . ' duplicate breedValues were deleted' : 'No duplicate breedValues found';
                 $this->cmdUtil->writeln($message);
                 break;
 
-            case 12:
+            case 13:
                 $breedValuesResultTableUpdater = new BreedValuesResultTableUpdater($this->em, $this->logger);
                 $breedValuesResultTableUpdater->update();
                 break;
 
-            case 13: $this->lambMeatIndexMigrator->migrate(); break;
+            case 14: $this->lambMeatIndexMigrator->migrate(); break;
+            case 15: $this->wormResistanceIndexMigrator->migrate(); break;
 
             case 20: $this->mixBlupInputFileValidator->validateUbnOfBirthInDataFile($this->cmdUtil); break;
             case 21: $this->mixBlupInputFileValidator->validateUbnOfBirthInPedigreeFile($this->cmdUtil); break;
@@ -173,6 +198,11 @@ class MixBlupCliOptionsService
             case 44: $filepath = $this->breedValuesOverviewReportService->generate(FileType::CSV, false, true, false);
                 $this->logger->notice($filepath);
                 break;
+
+            case 50: $this->mixBlupInputFilesService->runExterior(); break;
+            case 51: $this->mixBlupInputFilesService->runLambMeatIndex(); break;
+            case 52: $this->mixBlupInputFilesService->runFertility(); break;
+            case 53: $this->mixBlupInputFilesService->runWorm(); break;
 
             default: return;
         }
@@ -199,5 +229,15 @@ class MixBlupCliOptionsService
         $this->cmdUtil->writeln('Generating breedValues csv file for UBN: '.$ubn.' ...');
         $this->breedValuePrinter->printBreedValuesByUbn($ubn);
         $this->cmdUtil->writeln('BreedValues csv file generated for UBN: '.$ubn);
+    }
+
+
+    private function updateLambMeatIndexesByGenerationDate()
+    {
+        do {
+            $generationDateString = $this->cmdUtil->generateQuestion('insert generationDate string in following format: 2017-01-01 00:00:00 (default: '.self::DEFAULT_GENERATION_DATE_STRING.')', self::DEFAULT_GENERATION_DATE_STRING, false);
+        } while(!TimeUtil::isValidDateTime($generationDateString));
+
+        $this->breedIndexService->updateLambMeatIndexes($generationDateString);
     }
 }

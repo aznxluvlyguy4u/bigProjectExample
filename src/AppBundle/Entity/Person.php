@@ -35,11 +35,12 @@ use JMS\Serializer\Annotation\Expose;
  *     "CONTACT_INFO",
  *     "ERROR_DETAILS",
  *     "GHOST_LOGIN",
+ *     "INVOICE",
  *     "TREATMENT_TEMPLATE",
  *     "UBN",
  *     "USER_MEASUREMENT",
  *     "VWA"
- * })
+ *  })
  *
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
@@ -65,6 +66,8 @@ abstract class Person implements UserInterface
    *     "ANIMAL_DETAILS",
    *     "BASIC",
    *     "GHOST_LOGIN",
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -84,8 +87,11 @@ abstract class Person implements UserInterface
    *     "ACTION_LOG_USER",
    *     "ANIMAL_DETAILS",
    *     "BASIC",
+   *     "CONTACT_INFO",
    *     "ERROR_DETAILS",
    *     "GHOST_LOGIN",
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -105,8 +111,11 @@ abstract class Person implements UserInterface
    *     "ACTION_LOG_USER",
    *     "ANIMAL_DETAILS",
    *     "BASIC",
+   *     "CONTACT_INFO",
    *     "ERROR_DETAILS",
    *     "GHOST_LOGIN",
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -146,6 +155,8 @@ abstract class Person implements UserInterface
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "BASIC",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
      *     "USER_MEASUREMENT",
      *     "VWA"
      * })
