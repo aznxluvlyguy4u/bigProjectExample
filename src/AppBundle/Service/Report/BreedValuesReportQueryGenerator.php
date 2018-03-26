@@ -360,7 +360,7 @@ class BreedValuesReportQueryGenerator
         $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
             $ignoreHiddenBreedValueTypes);
 
-        $filterString = "WHERE a.is_alive = true AND a.location_id = ".$locationId." ORDER BY a.animal_order_number ASC";
+        $filterString = "WHERE a.is_alive = true AND a.location_id = ".$locationId." ";
 
         $ulnCount = count($ulnFilter);
         if ($ulnCount > 0) {
