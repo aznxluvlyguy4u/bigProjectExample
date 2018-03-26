@@ -6,14 +6,11 @@ use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use JMS\Serializer\Annotation\ExclusionPolicy;
-use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class PedigreeRegister
  * @ORM\Entity(repositoryClass="AppBundle\Entity\PedigreeRegisterRepository")
  * @package AppBundle\Entity
- * @ExclusionPolicy("all")
  */
 class PedigreeRegister
 {
@@ -31,7 +28,6 @@ class PedigreeRegister
      *     "ANIMALS_BATCH_EDIT",
      *     "USER_MEASUREMENT"
      * })
-     * @Expose
      */
     private $id;
 
@@ -45,7 +41,6 @@ class PedigreeRegister
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT"
      * })
-     * @Expose
      */
     private $abbreviation;
 
@@ -53,7 +48,6 @@ class PedigreeRegister
      * @var PedigreeCode
      * @ORM\ManyToOne(targetEntity="PedigreeCode", cascade={"persist"})
      * @ORM\JoinColumn(name="pedigree_code_id", referencedColumnName="id")
-     * @Expose
      */
     private $pedigreeCode;
 
@@ -68,7 +62,6 @@ class PedigreeRegister
      *     "ANIMALS_BATCH_EDIT",
      *     "USER_MEASUREMENT"
      * })
-     * @Expose
      */
     private $fullName;
 
@@ -129,7 +122,6 @@ class PedigreeRegister
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @Expose
      */
     private $specie;
 
@@ -141,7 +133,6 @@ class PedigreeRegister
      *     "ANIMAL_DETAILS",
      *     "USER_MEASUREMENT"
      * })
-     * @Expose
      */
     private $isRegisteredWithNsfo;
 
