@@ -120,6 +120,7 @@ class RetrieveTags
 
     public function __construct() {
         $this->setLogDate(new \DateTime());
+        $this->isManual = false;
     }
 
     /**
