@@ -10,15 +10,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
-use AppBundle\Criteria\NormalDistributionCriteria;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\NormalDistribution;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\GenderType;
-use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\QueryParameter;
-use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
@@ -26,10 +19,9 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 
-class LiveStockReportService extends ReportServiceWithBreedValuesBase
+class LiveStockReportService extends ReportServiceWithBreedValuesBase implements ReportServiceInterface
 {
     const TITLE = 'livestock_report';
     const TWIG_FILE = 'Report/livestock_report.html.twig';
@@ -41,23 +33,6 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
     const FILE_NAME_REPORT_TYPE = 'LIVESTOCK';
     const PEDIGREE_NULL_FILLER = '-';
     const ULN_NULL_FILLER = '-';
-    const NEUTER_STRING = '-';
-    const EWE_LETTER = 'O';
-    const RAM_LETTER = 'R';
-
-    /** @var Client */
-    private $client;
-    /** @var Location */
-    private $location;
-
-    /** @var ArrayCollection */
-    private $content;
-    /** @var array */
-    private $data;
-    /** @var bool */
-    private $concatValueAndAccuracy;
-    /** @var string */
-    private $fileType;
 
 
     /**
@@ -146,7 +121,22 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
     {
         $this->extension = FileType::CSV;
 
-        $keysToIgnore = [
+        $csvData = $this->unsetNestedKeys($this->getData(), self::getLivestockKeysToIgnore());
+        $csvData = $this->translateColumnHeaders($csvData);
+        $csvData = $this->moveBreedValueColumnsToEndArray($csvData);
+
+        return $this->generateFile($this->filename, $csvData,
+            self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
+        );
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function getLivestockKeysToIgnore()
+    {
+        return [
             'a_uln_without_order_number',
             'f_uln_without_order_number',
             'f_animal_order_number',
@@ -174,56 +164,9 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             BreedValueTypeConstant::NATURAL_LOGARITHM_EGG_COUNT.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
             BreedValueTypeConstant::IGA_NEW_ZEALAND,
             BreedValueTypeConstant::IGA_NEW_ZEALAND.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
+            BreedValueTypeConstant::IGA_SCOTLAND,
+            BreedValueTypeConstant::IGA_SCOTLAND.BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX,
         ];
-
-        $csvData = $this->unsetNestedKeys($this->getData(), $keysToIgnore);
-        $csvData = $this->translateColumnHeaders($csvData);
-        $csvData = $this->moveBreedValueColumnsToEndArray($csvData);
-
-        return $this->generateFile($this->filename, $csvData,
-            self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
-        );
-    }
-
-
-    /**
-     * @param string $value
-     * @return string
-     */
-    private function trans($value)
-    {
-        return $this->translator->trans($value);
-    }
-
-
-    private function translateColumnHeaders($csvData)
-    {
-        $translationSet = StringUtil::capitalizationSet();
-        $translationSet[' '] = '_';
-
-        foreach ($csvData as $item => $records) {
-            foreach ($records as $columnHeader => $value) {
-
-                $prefix = mb_substr($columnHeader, 0, 2);
-                $upperSuffix = strtoupper(mb_substr($columnHeader, 2, strlen($columnHeader)-2));
-
-                switch ($prefix) {
-                    case 'a_': $translatedColumnHeader = $this->trans('A') . '_' . $this->trans($upperSuffix); break;
-                    case 'f_': $translatedColumnHeader = $this->trans('F') . '_' . $this->trans($upperSuffix); break;
-                    case 'm_': $translatedColumnHeader = $this->trans('M') . '_' . $this->trans($upperSuffix); break;
-                    default: $translatedColumnHeader = $this->trans(strtoupper($columnHeader)); break;
-                }
-
-                $translatedColumnHeader = strtr(strtolower($translatedColumnHeader), $translationSet);
-
-                if ($columnHeader !== $translatedColumnHeader) {
-                    $csvData[$item][$translatedColumnHeader] = $value;
-                    unset($csvData[$item][$columnHeader]);
-                }
-            }
-        }
-
-        return $csvData;
     }
 
 
@@ -337,58 +280,9 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             true
         );
 
-        $results = $this->conn->query($sql)->fetchAll();
-
-        $keys = array_keys($results);
-        foreach ($keys as $key) {
-
-            $results[$key]['gender'] = $this->getGenderLetter($results[$key]['gender']);
-
-            $results[$key]['a_n_ling'] = str_replace('-ling', '', $results[$key]['a_n_ling']);
-            $results[$key]['f_n_ling'] = str_replace('-ling', '', $results[$key]['f_n_ling']);
-            $results[$key]['m_n_ling'] = str_replace('-ling', '', $results[$key]['m_n_ling']);
-
-            // Format Predicate values
-            $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
-            $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
-            $results[$key]['m_predicate'] = DisplayUtil::parsePredicateString($results[$key]['m_predicate_value'], $results[$key]['m_predicate_score']);
-            unset($results[$key]['a_predicate_value']);
-            unset($results[$key]['f_predicate_value']);
-            unset($results[$key]['m_predicate_value']);
-            unset($results[$key]['a_predicate_score']);
-            unset($results[$key]['f_predicate_score']);
-            unset($results[$key]['m_predicate_score']);
-
-        }
+        $results = $this->preFormatLivestockSqlResult($this->conn->query($sql)->fetchAll());
 
         return $this->orderSqlResultsByOrderOfAnimalsInJsonBody($results);
-    }
-
-
-    /**
-     * @param array $results
-     * @return array
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    private function moveBreedValueColumnsToEndArray(array $results)
-    {
-        $availableBreedColumnValues = $this->getAvailableBreedValueColumns($results);
-
-        $keys = array_keys($results);
-        foreach ($keys as $key) {
-
-            // Place the breedValues at the end of the csv file
-            foreach ($availableBreedColumnValues as $availableBreedColumnValue) {
-                if (key_exists($availableBreedColumnValue, $results[$key])) {
-                    $value = $results[$key][$availableBreedColumnValue];
-                    unset($results[$key][$availableBreedColumnValue]);
-                    $results[$key][$availableBreedColumnValue] = $value;
-                }
-            }
-
-        }
-
-        return $results;
     }
 
 
@@ -422,61 +316,6 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
 
 
     /**
-     * @param array $csvResults
-     * @return array
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    private function getAvailableBreedValueColumns(array $csvResults)
-    {
-        if (count($csvResults) === 0) {
-            return [];
-        }
-
-        $allPossibleBreedCodeNames = [];
-
-        $allCsvColumns = array_keys(reset($csvResults));
-
-        $allBreedCodeNames = [];
-        $allTranslatedBreedCodeNames = [];
-        $sql = "SELECT nl FROM breed_value_type;";
-        foreach ($this->conn->query($sql)->fetchAll() as $value) {
-            $columnName = strtolower($value['nl']);
-            $allBreedCodeNames[$columnName] = $columnName;
-
-            $translatedColumnName = strtolower($this->trans(strtoupper($columnName)));
-            $allTranslatedBreedCodeNames[$translatedColumnName] = $translatedColumnName;
-
-            if (!$this->concatValueAndAccuracy) {
-                $accuracyColumnName = $columnName . BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX;
-                $allBreedCodeNames[$accuracyColumnName] = $accuracyColumnName;
-                $translatedAccuracyColumnName = $translatedColumnName . BreedValuesReportQueryGenerator::ACCURACY_TABLE_LABEL_SUFFIX;
-                $allTranslatedBreedCodeNames[$translatedAccuracyColumnName] = $translatedAccuracyColumnName;
-            }
-        }
-
-        foreach ($allCsvColumns as $columnName) {
-            if (key_exists($columnName, $allBreedCodeNames)) {
-                $allPossibleBreedCodeNames[$columnName] = $columnName;
-            }
-            if (key_exists($columnName, $allTranslatedBreedCodeNames)) {
-                $allPossibleBreedCodeNames[$columnName] = $columnName;
-            }
-        }
-
-        return $allPossibleBreedCodeNames;
-    }
-
-
-    /**
-     * @return array
-     */
-    public function getData()
-    {
-        return $this->data;
-    }
-
-
-    /**
      * @return string
      */
     private function parseNameAddressString()
@@ -504,21 +343,5 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
         return DisplayUtil::parseProductionStringFromGivenParts($productionAge, $litterCount, $totalOffSpringCount, $bornAliveOffspringCount, $addProductionAsterisk);
     }
 
-
-    /**
-     * @param string $genderEnglish
-     * @return string
-     */
-    private function getGenderLetter($genderEnglish)
-    {
-        /* variables translated to Dutch */
-        if($genderEnglish == 'Ram' || $genderEnglish == GenderType::MALE || $genderEnglish == GenderType::M) {
-            return self::RAM_LETTER;
-        } elseif ($genderEnglish == 'Ewe' || $genderEnglish == GenderType::FEMALE || $genderEnglish == GenderType::V) {
-            return self::EWE_LETTER;
-        } else {
-            return self::NEUTER_STRING;
-        }
-    }
 
 }

@@ -410,12 +410,12 @@ class MixBlupDataFileBase
 
     /**
      * @param array $data
-     * @param string $key
+     * @param string $nullReplacement
      * @return string
      */
-    protected static function getFormattedLitterGroup($data, $key = JsonInputConstant::LITTER_GROUP)
+    protected static function getFormattedLitterGroup($data, $nullReplacement = MixBlupInstructionFileBase::LITTER_NULL_REPLACEMENT)
     {
-        return self::getFormattedValueFromData($data, MaxLength::LITTER_GROUP, $key, true, MixBlupInstructionFileBase::LITTER_NULL_REPLACEMENT);
+        return self::getFormattedValueFromData($data, MaxLength::LITTER_GROUP, JsonInputConstant::LITTER_GROUP, true, $nullReplacement);
     }
 
 

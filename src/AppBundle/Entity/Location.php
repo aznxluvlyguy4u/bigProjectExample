@@ -273,7 +273,7 @@ class Location
 
     /**
      * @var ArrayCollection
-     * @ORM\OrderBy({"description" = "ASC"})
+     * @ORM\OrderBy({"breederNumber" = "ASC"})
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\PedigreeRegisterRegistration", mappedBy="location", cascade={"persist", "remove"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\PedigreeRegisterRegistration>")
      */
@@ -1133,7 +1133,7 @@ class Location
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|PedigreeRegisterRegistration[]
      */
     public function getPedigreeRegisterRegistrations()
     {

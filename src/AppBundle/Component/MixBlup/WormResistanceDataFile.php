@@ -7,9 +7,11 @@ namespace AppBundle\Component\MixBlup;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Service\NormalDistributionService;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DsvWriterUtil;
+use AppBundle\Util\NumberUtil;
 use Doctrine\DBAL\Connection;
 
 class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataFileInterface
@@ -20,16 +22,24 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
     const EPG_DECIMALS = 0;
     const LN_FEC_DECIMALS = 5;
     const S_IGA_DECIMALS = 5;
+    const ODIN_BC_DECIMALS = 5;
     const CARLA_IGA_DECIMALS = 5;
 
     const NZ_CLASS_COLUMN_WIDTH = 3;
     const NZ_IGA_COLUMN_WIDTH = 9;
     const NZ_S_IGA_COLUMN_WIDTH = 9;
+    const ODIN_BC_COLUMN_WIDTH = 9;
     const LN_FEC_COLUMN_WIDTH = 9;
 
-    private static $epgFormattedNullFiller;
+    private static $lnFecFormattedNullFiller;
     private static $sIgaFormattedNullFiller;
+    private static $odinBcFormattedNullFiller;
     private static $nzIgaFormattedNullFiller;
+
+    /** @var float */
+    private static $minOdinBC;
+    /** @var float */
+    private static $maxOdinBC;
 
     /**
      * @inheritDoc
@@ -39,8 +49,16 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
         $dynamicColumnWidths = self::dynamicColumnWidths($conn);
         $yearAndUbnDynamicColumnWidth = $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH];
 
+        $sqlValues = $conn->query(WormResistanceDataFile::getSqlQueryForBaseValues())->fetchAll();
+
+        if (count($sqlValues) === 0) {
+            return [];
+        }
+
+        self::initializeOdinBcBoundaryValues($sqlValues);
+
         $results = [];
-        foreach ($conn->query(self::getSqlQueryForBaseValues())->fetchAll() as $data) {
+        foreach ($sqlValues as $data) {
             $parsedBreedCode = self::parseBreedCode($data);
             if (!$parsedBreedCode) {
                 continue;
@@ -73,7 +91,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
             $recordEnd =
                 $formattedSamplePeriod.
-                self::getFormattedLitterGroup($data).
+                self::getFormattedLitterGroup($data, MixBlupInstructionFileBase::MISSING_REPLACEMENT).
                 self::getFormattedNLing($data).
                 self::getFormattedStillbornCount($data).
                 self::getFormattedFirstLitterAgeAndLastLitterOrdinal($data).
@@ -81,14 +99,15 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
             ;
 
 
-            // Records divided up by traits (kenmerken). LnFEC=EPG, SIgA, NZIgA
+            // Records divided up by traits (kenmerken). LnFEC=EPG, OdinBC, NZIgA. SIgA is replaced by OdinBC
 
             if(self::isSIgANotNull($data)) {
 
                  $record =
                     $recordBase.
                     self::getFormattedLnFECNullFiller().
-                    self::getFormattedSIgA($data).
+                    //self::getFormattedSIgA($data).
+                    self::getFormattedOdinBc($data).
                     self::getFormattedNZIgANullFiller().
                     $recordEnd
                 ;
@@ -104,7 +123,8 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                 $record =
                     $recordBase.
                     $formattedLnFEC.
-                    self::getFormattedSIgANullFiller().
+                    //self::getFormattedSIgANullFiller().
+                    self::getFormattedOdinBcNullFiller().
                     self::getFormattedNZIgA($data).
                     $recordEnd
                 ;
@@ -116,7 +136,8 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
                 $record =
                     $recordBase.
                     $formattedLnFEC.
-                    self::getFormattedSIgANullFiller().
+                    //self::getFormattedSIgANullFiller().
+                    self::getFormattedOdinBcNullFiller().
                     self::getFormattedNZIgANullFiller().
                     $recordEnd
                 ;
@@ -126,8 +147,9 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
             }
         }
 
-        self::$epgFormattedNullFiller = null;
+        self::$lnFecFormattedNullFiller = null;
         self::$sIgaFormattedNullFiller = null;
+        self::$odinBcFormattedNullFiller = null;
         self::$nzIgaFormattedNullFiller = null;
 
         return $results;
@@ -147,7 +169,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      * @param boolean $includeLitterData
      * @return string
      */
-    private static function getSqlQueryForBaseValues($returnValuesString = null, $includeLitterData = true)
+    public static function getSqlQueryForBaseValues($returnValuesString = null, $includeLitterData = true)
     {
         if($returnValuesString == null) {
             $returnValuesString =
@@ -372,14 +394,7 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      */
     private static function getFormattedLnFECNullFiller()
     {
-        if (self::$epgFormattedNullFiller === null) {
-            self::$epgFormattedNullFiller = DsvWriterUtil::pad(
-                MixBlupInstructionFileBase::MISSING_REPLACEMENT,
-                self::LN_FEC_COLUMN_WIDTH,
-                true
-            );
-        }
-        return self::$epgFormattedNullFiller;
+        return self::getFormattedStaticVarNullFiller(self::$lnFecFormattedNullFiller, self::LN_FEC_COLUMN_WIDTH);
     }
 
 
@@ -400,18 +415,46 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
 
 
     /**
+     * @param array $data
+     * @return string
+     */
+    private static function getFormattedOdinBc(array $data)
+    {
+        $siga = ArrayUtil::get(JsonInputConstant::S_IGA_GLASGOW, $data);
+
+        $value = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+
+        if ($siga) {
+            $odinBc = self::calcOdinBc($siga);
+
+            if (self::$minOdinBC <= $odinBc && $odinBc <= self::$maxOdinBC) {
+                $value = self::numberFormat($odinBc,self::ODIN_BC_DECIMALS);
+            }
+        }
+
+        return DsvWriterUtil::pad(
+            $value,
+            self::ODIN_BC_COLUMN_WIDTH,
+            true)
+            ;
+    }
+
+
+    /**
+     * @return string
+     */
+    private static function getFormattedOdinBcNullFiller()
+    {
+        return self::getFormattedStaticVarNullFiller(self::$odinBcFormattedNullFiller, self::ODIN_BC_COLUMN_WIDTH);
+    }
+
+
+    /**
      * @return string
      */
     private static function getFormattedSIgANullFiller()
     {
-        if (self::$sIgaFormattedNullFiller === null) {
-            self::$sIgaFormattedNullFiller = DsvWriterUtil::pad(
-                MixBlupInstructionFileBase::MISSING_REPLACEMENT,
-                self::NZ_S_IGA_COLUMN_WIDTH,
-                true
-            );
-        }
-        return self::$sIgaFormattedNullFiller;
+        return self::getFormattedStaticVarNullFiller(self::$sIgaFormattedNullFiller, self::NZ_S_IGA_COLUMN_WIDTH);
     }
 
 
@@ -435,6 +478,17 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
      * @return string
      */
     private static function getFormattedNZIgANullFiller()
+    {
+        return self::getFormattedStaticVarNullFiller(self::$nzIgaFormattedNullFiller, self::NZ_IGA_COLUMN_WIDTH);
+    }
+
+
+    /**
+     * @param string $staticVar
+     * @param string $padLength
+     * @return string
+     */
+    private static function getFormattedStaticVarNullFiller($staticVar, $padLength)
     {
         if (self::$nzIgaFormattedNullFiller === null) {
             self::$nzIgaFormattedNullFiller = DsvWriterUtil::pad(
@@ -478,8 +532,52 @@ class WormResistanceDataFile extends MixBlupDataFileBase implements MixBlupDataF
         $litterOrdinal = ArrayUtil::get(JsonInputConstant::LITTER_ORDINAL, $data, null);
 
         $value = $ageValue && $litterOrdinal ? strval($ageValue).strval($litterOrdinal)
-            : MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+            : MixBlupInstructionFileBase::CLASS_MISSING_REPLACEMENT;
 
         return DsvWriterUtil::pad($value, 3, true);
+    }
+
+
+    /**
+     * @param $sqlValues
+     */
+    public static function initializeOdinBcBoundaryValues($sqlValues)
+    {
+        $nd = self::generateOdinBcNormalDistribution($sqlValues);
+
+        self::$maxOdinBC = $nd->getMean() + 4 * $nd->getStandardDeviation();
+        self::$minOdinBC = $nd->getMean() - 4 * $nd->getStandardDeviation();
+    }
+
+
+    /**
+     * @param $sqlValues
+     * @return \AppBundle\Entity\NormalDistribution|null
+     */
+    private static function generateOdinBcNormalDistribution($sqlValues)
+    {
+        $sIgaValues = ArrayUtil::mapNestedValues('s_iga_glasgow', $sqlValues, true);
+        $odinValues = array_map('AppBundle\Component\MixBlup\WormResistanceDataFile::calcOdinBc', $sIgaValues);
+        return NormalDistributionService::getMeanAndStandardDeviation($odinValues);
+    }
+
+
+    /**
+     * @param float $siga
+     * @return float
+     */
+    private static function calcOdinBc($siga)
+    {
+        if ($siga === null) {
+            return null;
+        }
+
+        $divisor = pow((floatval($siga)/100.0) + 1, 0.25);
+
+        if (NumberUtil::isFloatZero($divisor)) {
+            return null;
+        }
+
+        return -4.0 / $divisor;
     }
 }

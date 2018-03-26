@@ -542,6 +542,20 @@ class ResultTableBreedGrades
     private $igaNewZealandAccuracy;
 
     /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $odinBc;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $odinBcAccuracy;
+
+    /**
      * ResultTableBreedIndex constructor.
      */
     public function __construct()
@@ -1862,6 +1876,41 @@ class ResultTableBreedGrades
         return $this;
     }
 
+    /**
+     * @return float
+     */
+    public function getOdinBc()
+    {
+        return $this->odinBc;
+    }
+
+    /**
+     * @param float $odinBc
+     * @return ResultTableBreedGrades
+     */
+    public function setOdinBc($odinBc)
+    {
+        $this->odinBc = $odinBc;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getOdinBcAccuracy()
+    {
+        return $this->odinBcAccuracy;
+    }
+
+    /**
+     * @param float $odinBcAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setOdinBcAccuracy($odinBcAccuracy)
+    {
+        $this->odinBcAccuracy = $odinBcAccuracy;
+        return $this;
+    }
 
     /**
      * @param $breedIndexTypeEnglish

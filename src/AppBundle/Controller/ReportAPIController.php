@@ -106,7 +106,7 @@ class ReportAPIController extends APIController {
 
 
   /**
-   * Generate livestock pdf report.
+   * Generate livestock csv or pdf report.
    *
    * @ApiDoc(
    *   section = "Reports",
@@ -142,7 +142,7 @@ class ReportAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Generate livestock pdf report"
+   *   description = "Generate livestock csv or pdf report"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -153,6 +153,49 @@ class ReportAPIController extends APIController {
   {
       return $this->get('app.report.livestock')->getReport($request);
   }
+
+
+    /**
+     * Generate animals overview csv report.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="language",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+     *        "format"="?language=en"
+     *     },
+     *     {
+     *        "name"="concat_value_and_accuracy",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="Choose if the value and accuracy breedValue numbers should be combined into one column. false is default",
+     *        "format"="?concat_value_and_accuracy=true"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate animals overview csv report"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/animals-overview")
+     * @Method("POST")
+     */
+    public function getAnimalsOverviewReport(Request $request)
+    {
+        return $this->get('AppBundle\Service\Report\AnimalsOverviewReportService')->getReport($request);
+    }
 
 
     /**

@@ -275,6 +275,15 @@ class AnimalCache
     private $exteriorMeasurementDate;
 
     /**
+     * @var Inspector
+     *
+     * @ORM\ManyToOne(targetEntity="Inspector")
+     * @ORM\JoinColumn(name="exterior_inspector_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\Inspector")
+     */
+    private $exteriorInspector;
+
+    /**
      * Bronstsynchronisatie/Bronstinductie
      * 
      * @var boolean
@@ -713,6 +722,24 @@ class AnimalCache
     public function setExteriorMeasurementDateByDateString($exteriorMeasurementDateString)
     {
         $this->exteriorMeasurementDate = new \DateTime($exteriorMeasurementDateString);
+    }
+
+    /**
+     * @return Inspector
+     */
+    public function getExteriorInspector()
+    {
+        return $this->exteriorInspector;
+    }
+
+    /**
+     * @param Inspector $exteriorInspector
+     * @return AnimalCache
+     */
+    public function setExteriorInspector($exteriorInspector)
+    {
+        $this->exteriorInspector = $exteriorInspector;
+        return $this;
     }
 
     /**

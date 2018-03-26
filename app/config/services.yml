@@ -43,6 +43,12 @@ services:
           - '@app.mixblup.output'
           - '@AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator'
           - '@app.report.pedigree_register'
+          - '@AppBundle\Cache\BreedValuesResultTableUpdater'
+
+    AppBundle\Cache\BreedValuesResultTableUpdater:
+        arguments:
+          - '@doctrine.orm.default_entity_manager'
+          - '@logger'
 
     app.info.parameters:
         class: AppBundle\Service\InfoService
@@ -182,6 +188,7 @@ services:
           - '@app.aws.queueservice.mixblup_output'
           - '@app.breed.index'
           - '@app.breed.value'
+          - '@AppBundle\Cache\BreedValuesResultTableUpdater'
           - '@AppBundle\Service\NormalDistributionService'
           - '%environment%'
           - '%kernel.cache_dir%'
@@ -291,12 +298,18 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\TreatmentTypeInitializer
 
-    app.initializer.stored_procedure:
-        class: AppBundle\Service\Migration\StoredProcedureInitializer
+    app.database.content.initializer:
+        abstract: true
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
           - '@translator'
+
+    AppBundle\Service\Migration\StoredProcedureInitializer:
+        parent: app.database.content.initializer
+
+    AppBundle\Service\Migration\SqlViewInitializer:
+        parent: app.database.content.initializer
 
     app.migrator.client:
         class: AppBundle\Service\Migration\ClientMigrator
@@ -383,7 +396,7 @@ services:
 
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
-        arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter']
+        arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter', '@AppBundle\Service\PedigreeDataGenerator']
 
     app.health.updater:
         class: AppBundle\Service\HealthUpdaterService
@@ -425,6 +438,7 @@ services:
         class: AppBundle\Service\Report\BreedValuesReportQueryGenerator
         arguments:
           - '@doctrine.orm.entity_manager'
+          - '@translator'
 
     app.report.base:
         abstract: true
@@ -466,6 +480,9 @@ services:
     app.report.livestock:
         parent: app.report.breedvalues.base
         class: AppBundle\Service\Report\LiveStockReportService
+
+    AppBundle\Service\Report\AnimalsOverviewReportService:
+        parent: app.report.breedvalues.base
 
     app.report.pedigree_certificates:
         parent: app.report.base
@@ -773,6 +790,10 @@ services:
     app.weight:
         parent: app.abstract_base.controller
         class: AppBundle\Service\WeightService
+
+    AppBundle\Service\PedigreeDataGenerator:
+        arguments:
+          - '@doctrine.orm.entity_manager'
 
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:

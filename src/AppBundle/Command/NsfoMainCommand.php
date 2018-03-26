@@ -11,6 +11,7 @@ use AppBundle\Cache\TailLengthCacher;
 use AppBundle\Cache\WeightCacher;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\ScrapieGenotypeSource;
 use AppBundle\Entity\TagSyncErrorLog;
 use AppBundle\Entity\TagSyncErrorLogRepository;
 use AppBundle\Enumerator\CommandTitle;
@@ -614,21 +615,34 @@ class NsfoMainCommand extends ContainerAwareCommand
             '2: is_rvo_message boolean in action_log', "\n",
             '3: TreatmentType', "\n",
             '4: LedgerCategory', "\n",
-            '5: StoredProcedures', "\n",
-            '6: StoredProcedures: overwrite all', "\n\n",
+            '5: ScrapieGenotypeSource', "\n",
+            '=====================================', "\n",
+            '10: StoredProcedures: initialize if not exist', "\n",
+            '11: StoredProcedures: overwrite all', "\n",
+            '12: SqlViews: initialize if not exist', "\n",
+            '13: SqlViews: overwrite all', "\n",
+            "\n",
 
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
-        $storedProcedureIntializer = $this->getContainer()->get('app.initializer.stored_procedure');
+        $storedProcedureIntializer = $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer');
 
         switch ($option) {
             case 1: $this->getContainer()->get('app.initializer.birth_progress')->run($this->cmdUtil); break;
             case 2: ActionLogWriter::initializeIsRvoMessageValues($this->conn, $this->cmdUtil); break;
             case 3: $this->getContainer()->get('app.initializer.treatment_type')->run($this->cmdUtil); break;
             case 4: $this->getContainer()->get('AppBundle\Service\Migration\LedgerCategoryMigrator')->run($this->cmdUtil); break;
-            case 5: $storedProcedureIntializer->initialize(); break;
-            case 6: $storedProcedureIntializer->update(); break;
+            case 5:
+                $updateCount = $this->em->getRepository(ScrapieGenotypeSource::class)->initializeRecords();
+                $this->writeLn(($updateCount ? $updateCount : 'No').' ScrapieGenotypeSources have been inserted');
+                break;
+
+            case 10: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->initialize(); break;
+            case 11: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->update(); break;
+
+            case 12: $this->getContainer()->get('AppBundle\Service\Migration\SqlViewInitializer')->initialize(); break;
+            case 13: $this->getContainer()->get('AppBundle\Service\Migration\SqlViewInitializer')->update(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }

@@ -61,10 +61,11 @@ class ExteriorCacher
                   kind = v.kind,
                   progress = v.progress,
                   exterior_measurement_date = v.measurement_date,
+                  exterior_inspector_id = v.inspector_id,
                   log_date = '".TimeUtil::getTimeStampNow()."'
                 FROM (
                   SELECT x.animal_id, x.skull, x.muscularity, x.proportion, x.exterior_type, x.leg_work, x.fur, x.general_appearance,
-                    x.height, x.breast_depth, x.torso_length, x.markings, x.kind, x.progress, m.measurement_date
+                    x.height, x.breast_depth, x.torso_length, x.markings, x.kind, x.progress, m.measurement_date, m.inspector_id
                   FROM exterior x
                   INNER JOIN measurement m ON x.id = m.id
                   INNER JOIN (
@@ -90,11 +91,14 @@ class ExteriorCacher
                     c.markings ISNULL OR c.markings <> x.markings OR
                     c.kind <> x.kind OR (c.kind ISNULL AND x.kind NOTNULL) OR
                     c.progress ISNULL OR c.progress <> x.progress OR
-                    c.exterior_measurement_date ISNULL OR c.exterior_measurement_date <> m.measurement_date
+                    c.exterior_measurement_date ISNULL OR c.exterior_measurement_date <> m.measurement_date OR
+                    (c.exterior_inspector_id ISNULL AND m.inspector_id NOTNULL) OR
+                    (c.exterior_inspector_id NOTNULL AND m.inspector_id ISNULL) OR
+                    c.exterior_inspector_id <> m.inspector_id
                   )
                        -- AND a.location_id = 00000 < filter location_id here when necessary
                 ) AS v(animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearance,
-                height, breast_depth, torso_length, markings, kind, progress, measurement_date) WHERE animal_cache.animal_id = v.animal_id
+                height, breast_depth, torso_length, markings, kind, progress, measurement_date, inspector_id) WHERE animal_cache.animal_id = v.animal_id
                   RETURNING 1
                 )
                 SELECT COUNT(*) AS count FROM rows;";

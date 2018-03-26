@@ -16,6 +16,9 @@ class ArrayUtil
 {
     const KEY_VALUE_SEPARATOR = ' => ';
 
+    /** @var int|string */
+    private static $nestedKey;
+
     /**
      * Get null checked value value from an array
      * 
@@ -150,5 +153,38 @@ class ArrayUtil
         $string = $string . ']';
 
         return $string;
+    }
+
+
+    /**
+     * @param array $array
+     * @return array
+     */
+    public static function removeEmptyValues($array)
+    {
+        return array_filter($array, function($a) { return $a !== null; });
+    }
+
+
+    /**
+     * @param string|int $nestedKey
+     * @param array $array
+     * @param bool $removeNullValues
+     * @return array
+     */
+    public static function mapNestedValues($nestedKey, $array, $removeNullValues = false)
+    {
+        self::$nestedKey = $nestedKey;
+
+        $values = array_map(
+            function ($record) {
+                return ArrayUtil::get(self::$nestedKey, $record);
+            },
+            $array
+        );
+
+        self::$nestedKey = null;
+
+        return $removeNullValues ? self::removeEmptyValues($values) : $values;
     }
 }
