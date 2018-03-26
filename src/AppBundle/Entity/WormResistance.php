@@ -57,7 +57,7 @@ class WormResistance
     /**
      * @var Animal
      *
-     * @ORM\ManyToOne(targetEntity="Animal")
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="wormResistances")
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
      */
     private $animal;

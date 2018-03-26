@@ -42,7 +42,7 @@ class PedigreeRegisterRegistration
 
     /**
      * @var Location
-     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Location", inversedBy="pedigreeRegisterRegistrations")
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="pedigreeRegisterRegistrations")
      * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Location>")
      * @JMS\Groups({
