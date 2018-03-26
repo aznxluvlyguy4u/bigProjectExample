@@ -794,6 +794,7 @@ services:
     AppBundle\Service\PedigreeDataGenerator:
         arguments:
           - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:
