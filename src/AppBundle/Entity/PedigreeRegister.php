@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -49,7 +50,17 @@ class PedigreeRegister
      * @ORM\ManyToOne(targetEntity="PedigreeCode", cascade={"persist"})
      * @ORM\JoinColumn(name="pedigree_code_id", referencedColumnName="id")
      */
-    private $pedigreeCode;
+
+    /**
+     * @var ArrayCollection
+     * @ORM\ManyToMany(targetEntity="PedigreeCode")
+     * @ORM\JoinTable(name="pedigree_register_pedigree_codes",
+     *      joinColumns={@ORM\JoinColumn(name="pedigree_register_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="pedigree_code_id", referencedColumnName="id")}
+     * )
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\PedigreeCode>")
+     */
+    private $pedigreeCodes;
 
     /**
      * @var string
@@ -149,6 +160,7 @@ class PedigreeRegister
         $this->abbreviation = $abbreviation;
         $this->fullName = $fullName;
         $this->isRegisteredWithNsfo = $isRegisteredWithNsfo;
+        $this->initializePedigreeCodes();
     }
 
 
@@ -305,19 +317,49 @@ class PedigreeRegister
     }
 
     /**
-     * @return PedigreeCode
+     * @return ArrayCollection
      */
-    public function getPedigreeCode()
+    public function getPedigreeCodes()
     {
-        return $this->pedigreeCode;
+        $this->initializePedigreeCodes();
+        return $this->pedigreeCodes;
+    }
+
+    private function initializePedigreeCodes()
+    {
+        if ($this->pedigreeCodes === null) {
+            $this->pedigreeCodes = new ArrayCollection();
+        }
+    }
+
+    /**
+     * @param ArrayCollection $pedigreeCodes
+     * @return PedigreeRegister
+     */
+    public function setPedigreeCodes($pedigreeCodes)
+    {
+        $this->pedigreeCodes = $pedigreeCodes;
+        return $this;
     }
 
     /**
      * @param PedigreeCode $pedigreeCode
+     * @return ArrayCollection
      */
-    public function setPedigreeCode($pedigreeCode)
+    public function addPedigreeCode($pedigreeCode)
     {
-        $this->pedigreeCode = $pedigreeCode;
+        $this->getPedigreeCodes()->add($pedigreeCode);
+        return $this->pedigreeCodes;
+    }
+
+    /**
+     * @param PedigreeCode $pedigreeCode
+     * @return ArrayCollection
+     */
+    public function removePedigreeCode($pedigreeCode)
+    {
+        $this->getPedigreeCodes()->removeElement($pedigreeCode);
+        return $this->pedigreeCodes;
     }
 
     /**
