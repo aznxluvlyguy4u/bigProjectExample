@@ -616,6 +616,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             '3: TreatmentType', "\n",
             '4: LedgerCategory', "\n",
             '5: ScrapieGenotypeSource', "\n",
+            '6: PedigreeCodes & PedigreeRegister-PedigreeCode relationships', "\n",
             '=====================================', "\n",
             '10: StoredProcedures: initialize if not exist', "\n",
             '11: StoredProcedures: overwrite all', "\n",
@@ -637,6 +638,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 $updateCount = $this->em->getRepository(ScrapieGenotypeSource::class)->initializeRecords();
                 $this->writeLn(($updateCount ? $updateCount : 'No').' ScrapieGenotypeSources have been inserted');
                 break;
+            case 6: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeCodeInitializer')->run($this->cmdUtil); break;
 
             case 10: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->initialize(); break;
             case 11: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->update(); break;

@@ -3,8 +3,6 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
-use JMS\Serializer\Annotation\ExclusionPolicy;
-use JMS\Serializer\Annotation\Expose;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -59,7 +57,7 @@ class PedigreeCode
      * @param string $fullName
      * @param boolean $isValidated
      */
-    public function __construct($code, $fullName, $isValidated = false)
+    public function __construct($code, $fullName = null, $isValidated = false)
     {
         $this->code = $code;
         $this->fullName = $fullName;

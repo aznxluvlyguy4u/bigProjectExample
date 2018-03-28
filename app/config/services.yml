@@ -343,6 +343,9 @@ services:
     AppBundle\Service\Migration\LedgerCategoryMigrator:
         parent: app.migrator.base
 
+    AppBundle\Service\Migration\PedigreeCodeInitializer:
+        parent: app.migrator.base
+
     AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator:
         parent: app.migrator.base
 
