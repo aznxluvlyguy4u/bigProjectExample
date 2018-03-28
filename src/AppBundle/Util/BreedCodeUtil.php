@@ -19,6 +19,10 @@ class BreedCodeUtil
      */
     public static function isValidBreedCodeString($breedCodeString, $isBy8Parts = false)
     {
+        if ($breedCodeString === null || $breedCodeString === '') {
+            return false;
+        }
+
         $breedCodeParts = self::getBreedCodePartsFromBreedCodeString($breedCodeString, $isBy8Parts);
         return $isBy8Parts ? self::verifySumOf8PartBreedCodeParts($breedCodeParts) : self::verifySumOf100PartBreedCodeParts($breedCodeParts);
     }
@@ -31,6 +35,23 @@ class BreedCodeUtil
     public static function getBreedCodeAs8PartsFromBreedCodeString($breedCodeString)
     {
         return self::getBreedCodePartsFromBreedCodeString($breedCodeString, true);
+    }
+
+
+    /**
+     * @param $breedCodeString
+     * @return string|null
+     */
+    public static function getBiggestBreedCodePartFromValidatedBreedCodeString($breedCodeString)
+    {
+        if (!self::isValidBreedCodeString($breedCodeString)) {
+            return null;
+        }
+
+        $parts = self::getBreedCodePartsFromBreedCodeString($breedCodeString);
+        arsort($parts);
+
+        return current(array_keys($parts));
     }
 
 

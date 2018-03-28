@@ -81,9 +81,9 @@ class PedigreeDataGenerator
     {
         $this->isAnimalValueUpdated = false;
 
-        $animal = $this->generatePedigreeCountryCodeAndNumber($animal);
+        // NOTE! Run these functions in this order!
         $animal = $this->generateMissingBreedCodes($animal);
-        $animal = $this->generatePedigreeRegister($animal);
+        $animal = $this->generatePedigreeCountryCodeAndNumber($animal);
         $animal = $this->generateScrapieGenotype($animal);
         $animal = $this->generateBreedType($animal);
 
@@ -165,28 +165,48 @@ class PedigreeDataGenerator
     }
 
 
-    private function getBreederNumber($animal)
+    /**
+     * @param Animal $animal
+     * @return null|string
+     */
+    private function getBreederNumber(Animal $animal)
     {
-        $registrations = $this->getLocation($animal)->getPedigreeRegisterRegistrations();
+        $location = $this->getLocation($animal);
+        if (!$location) {
+            return null;
+        }
+
+        $registrations = $location->getPedigreeRegisterRegistrations();
         if (count($registrations) === 0) {
             return null;
         }
 
-        $registration = null;
-        if (count($registrations) === 1) {
-            $registration = $registrations->first();
-            // TODO CHECK IF PEDIGREE MATCHES
-        }
 
-        // count > 1
-        // TODO FIND MATCHING PEDIGREE
-
-        if (!($registration instanceof PedigreeRegisterRegistration)) {
+        if (!$animal->getParentMother()) {
             return null;
         }
 
-        if (!(is_string($registration->getBreederNumber()) && strlen($registration->getBreederNumber()) === 5)) {
-            $this->logError('INVALID BREEDER NUMBER: '.$registration->getBreederNumber(), $animal);
+        $biggestBreedCodeOfMother = $animal->getParentMother()->getBiggestBreedCodePartFromValidatedBreedCodeString();
+        if (!$biggestBreedCodeOfMother) {
+            return null;
+        }
+
+
+        /** @var PedigreeRegisterRegistration $registration */
+        $foundRegistration = null;
+        foreach ($registrations as $registration) {
+            if ($registration->getPedigreeRegister()->hasPedigreeCode($biggestBreedCodeOfMother)) {
+                $foundRegistration = $registration;
+                break;
+            }
+        }
+
+        if (!($foundRegistration instanceof PedigreeRegisterRegistration)) {
+            return null;
+        }
+
+        if (!(is_string($foundRegistration->getBreederNumber()) && strlen($foundRegistration->getBreederNumber()) === 5)) {
+            $this->logError('INVALID BREEDER NUMBER: '.$foundRegistration->getBreederNumber(), $animal);
             return null;
         }
 
@@ -233,20 +253,6 @@ class PedigreeDataGenerator
 
         $sql = "SELECT COUNT(*) as count FROM animal WHERE pedigree_number = '".$pedigreeNumber."'";
         return $em->getConnection()->query($sql)->fetch()['count'] > 0;
-    }
-
-
-    private function generatePedigreeRegister(Animal $animal)
-    {
-        if ($animal->getPedigreeRegister() !== null && !$this->overwriteExistingData) {
-            return $animal;
-        }
-
-        // TODO ?
-
-        $this->valueWasUpdated();
-
-        return $animal;
     }
 
 

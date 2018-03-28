@@ -365,11 +365,15 @@ class PedigreeRegister
 
 
     /**
-     * @param string $code
+     * @param string|PedigreeCode $code
      * @return boolean
      */
     public function hasPedigreeCode($code)
     {
+        if ($code instanceof PedigreeCode) {
+            $code = $code->getCode();
+        }
+
         $pedigreeCodes = $this->pedigreeCodes->matching(PedigreeCodeCriteria::byCode($code));
         return $pedigreeCodes->count() > 0;
     }

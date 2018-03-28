@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
@@ -2963,6 +2964,15 @@ abstract class Animal
     {
         $this->nLing = $nLing;
         return $this;
+    }
+
+
+    /**
+     * @return string|null
+     */
+    public function getBiggestBreedCodePartFromValidatedBreedCodeString()
+    {
+        return BreedCodeUtil::getBiggestBreedCodePartFromValidatedBreedCodeString($this->breedCode);
     }
 
 
