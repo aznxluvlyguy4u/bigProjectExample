@@ -986,6 +986,7 @@ abstract class Animal
         $this->tailLengthMeasurements = new ArrayCollection();
         $this->weightMeasurements = new ArrayCollection();
         $this->declareWeights = new ArrayCollection();
+        $this->exteriorMeasurements = new ArrayCollection();
         $this->flags = new ArrayCollection();
         $this->ulnHistory = new ArrayCollection();
         $this->genderHistory = new ArrayCollection();
@@ -2602,10 +2603,9 @@ abstract class Animal
      *
      * @return Animal
      */
-    public function addExteriorMeasurement(\AppBundle\Entity\Exterior $exteriorMeasurement)
+    public function addExteriorMeasurement($exteriorMeasurement)
     {
-        $this->exteriorMeasurements[] = $exteriorMeasurement;
-
+        $this->getExteriorMeasurements()->add($exteriorMeasurement);
         return $this;
     }
 
@@ -2626,6 +2626,10 @@ abstract class Animal
      */
     public function getExteriorMeasurements()
     {
+        if ($this->exteriorMeasurements === null) {
+            $this->exteriorMeasurements = new ArrayCollection();
+        }
+
         return $this->exteriorMeasurements;
     }
 

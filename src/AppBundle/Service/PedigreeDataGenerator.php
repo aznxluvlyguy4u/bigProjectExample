@@ -4,14 +4,19 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Criteria\ExteriorCriteria;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegisterRegistration;
 use AppBundle\Entity\ScrapieGenotypeSource;
+use AppBundle\Enumerator\BreedCodeType;
+use AppBundle\Enumerator\BreedType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 
@@ -319,16 +324,118 @@ class PedigreeDataGenerator
     }
 
 
-
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
     private function generateBreedType(Animal $animal)
     {
         if ($animal->getBreedType() !== null && !$this->overwriteExistingData) {
             return $animal;
         }
 
+        $biggestBreedCodePart = $animal->getBiggestBreedCodePartFromValidatedBreedCodeString();
+        switch ($biggestBreedCodePart) {
+            case BreedCodeType::NH: $animal = $this->generateNHBreedType($animal); break;
+            case BreedCodeType::CF: $animal = $this->generateCFBreedType($animal); break;
+            case BreedCodeType::BM: $animal = $this->generateBMBreedType($animal); break;
+            case BreedCodeType::TE: $animal = $this->generateTEBreedType($animal); break;
+            default: break;
+        }
+
+        return $animal;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
+    private function generateNHBreedType(Animal $animal)
+    {
+        // Default for Ram and Ewe
+        $calculatedBreedType = BreedType::REGISTER;
+
+        if ($animal->getGender() === GenderType::FEMALE) {
+            if ($animal->getParentFather() && $animal->getParentFather()->getBreedType() === BreedType::PURE_BRED) {
+                if ($animal->getParentFather()->getBreedCode() === 'NH100'
+                || $animal->getParentFather()->getBreedCode() === 'NH88TE12'
+                || $animal->getParentFather()->getBreedCode() === 'NH75TE25'
+                || $animal->getParentFather()->getBreedCode() === 'NH50TE50'
+                ) {
+                    $calculatedBreedType = BreedType::PURE_BRED;
+                }
+            }
+        }
+
+        if ($animal->getBreedType() !== $calculatedBreedType) {
+            $animal->setBreedType($calculatedBreedType);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
+    }
+
+
+    private function generateCFBreedType(Animal $animal)
+    {
+        if ($animal->getBreedType() !== BreedType::REGISTER) {
+            $animal->setBreedType(BreedType::REGISTER);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
+    }
+
+
+    private function generateBMBreedType(Animal $animal)
+    {
+        $calculatedBreedType = BreedType::REGISTER;
+
+        if ($animal->getDateOfBirth()
+            && $this->isPureBredValidatedBMParent($animal, true)
+            && $this->isPureBredValidatedBMParent($animal, false)
+        ) {
+            $calculatedBreedType = BreedType::PURE_BRED;
+        }
+
+        if ($animal->getBreedType() !== $calculatedBreedType) {
+            $animal->setBreedType($calculatedBreedType);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param $isFather
+     * @return bool
+     */
+    private function isPureBredValidatedBMParent(Animal $animal, $isFather)
+    {
+        $parent = $isFather ? $animal->getParentFather() : $animal->getParentMother();
+
+        if (!$parent || !$parent->getDateOfBirth() || $parent->getBreedCode() !== 'BM100') {
+            return false;
+        }
+
+        $age = abs(TimeUtil::getAgeInDays($parent->getDateOfBirth(), $animal->getDateOfBirth()));
+        return $parent->getExteriorMeasurements()
+                ->matching(ExteriorCriteria::pureBredParentExterior($age))
+                ->count() > 0;
+    }
+
+
+    private function generateTEBreedType(Animal $animal)
+    {
         // TODO
 
-        $this->valueWasUpdated();
+//        if ($animal->getBreedType() !== BreedType::REGISTER) {
+//            $animal->setBreedType(BreedType::REGISTER);
+//            $this->valueWasUpdated();
+//        }
 
         return $animal;
     }

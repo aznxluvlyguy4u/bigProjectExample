@@ -564,7 +564,7 @@ class Ewe extends Animal
     /**
      * Get exteriorMeasurements
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return ArrayCollection
      */
     public function getExteriorMeasurements()
     {
