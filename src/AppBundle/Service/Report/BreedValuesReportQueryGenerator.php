@@ -18,6 +18,9 @@ class BreedValuesReportQueryGenerator
 {
     const ACCURACY_TABLE_LABEL_SUFFIX = '_acc';
 
+    const BREED_VALUE_DECIMAL_SPACES = 2;
+    const NORMALIZED_BREED_VALUE_DECIMAL_SPACES = 0;
+
     /** @var EntityManagerInterface */
     private $em;
     /** @var TranslatorInterface */
@@ -93,7 +96,7 @@ class BreedValuesReportQueryGenerator
 
         //Create breed value batch query parts
 
-        $sql = "SELECT nl, result_table_value_variable, result_table_accuracy_variable
+        $sql = "SELECT nl, result_table_value_variable, result_table_accuracy_variable, use_normal_distribution
                 FROM breed_value_type bvt
                 WHERE
                   (
@@ -125,24 +128,36 @@ class BreedValuesReportQueryGenerator
             foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
 
                 foreach ($columnValuesSets as $columnValueSet) {
-                    $breedValueLabel = $this->translatedBreedValueColumnHeader($columnValueSet['nl']);
+                    $breedValueLabel = BreedValuesReportQueryGenerator::translatedBreedValueColumnHeader($columnValueSet['nl']);
                     $resultTableValueVar = $columnValueSet['result_table_value_variable'];
                     $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
+                    $useNormalDistribution = $columnValueSet['use_normal_distribution'];
 
-                    $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix . "NULLIF(CONCAT(
-                         ".$resultTableValueVar."_plus_sign.mark,
-                         COALESCE(CAST(ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), 2) AS TEXT),''),'/',
+                    if ($useNormalDistribution) {
+
+                        $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix . "NULLIF(CONCAT(
+                         COALESCE(CAST(ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC),".self::NORMALIZED_BREED_VALUE_DECIMAL_SPACES.") AS TEXT),''),'/',
                          COALESCE(CAST(ROUND(bg.".$resultTableAccuracyVar."*100) AS TEXT),'')
                      ),'/') as ".$breedValueLabel;
 
-                    $valuesPrefix = ",
-                        ";
+                    } else {
 
-                    $this->breedValuesPlusSignsQueryJoinPart = $this->breedValuesPlusSignsQueryJoinPart . "LEFT JOIN (VALUES (true, '+'),(false, '')) AS ".$resultTableValueVar."_plus_sign(is_positive, mark) ON (bg.".$resultTableValueVar." > 0) = ".$resultTableValueVar."_plus_sign.is_positive
+                        $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix . "NULLIF(CONCAT(
+                         ".$resultTableValueVar."_plus_sign.mark,
+                         COALESCE(CAST(ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC),".self::BREED_VALUE_DECIMAL_SPACES.") AS TEXT),''),'/',
+                         COALESCE(CAST(ROUND(bg.".$resultTableAccuracyVar."*100) AS TEXT),'')
+                     ),'/') as ".$breedValueLabel;
+
+                        $this->breedValuesPlusSignsQueryJoinPart = $this->breedValuesPlusSignsQueryJoinPart . "LEFT JOIN (VALUES (true, '+'),(false, '')) AS ".$resultTableValueVar."_plus_sign(is_positive, mark) ON (bg.".$resultTableValueVar." > 0) = ".$resultTableValueVar."_plus_sign.is_positive
                     ";
+
+                    }
 
                     $this->breedValuesNullFilter = $this->breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
                     ";
+
+                    $valuesPrefix = ",
+                        ";
 
                     $filterPrefix = ' OR ';
                 }
@@ -154,21 +169,23 @@ class BreedValuesReportQueryGenerator
             foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
 
                 foreach ($columnValuesSets as $columnValueSet) {
-                    $breedValueLabel = $this->translatedBreedValueColumnHeader($columnValueSet['nl']);
+                    $breedValueLabel = BreedValuesReportQueryGenerator::translatedBreedValueColumnHeader($columnValueSet['nl']);
                     $resultTableValueVar = $columnValueSet['result_table_value_variable'];
                     $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
+                    $useNormalDistribution = $columnValueSet['use_normal_distribution'];
+
+                    $breedValueDecimalSpaces = $useNormalDistribution ?
+                        self::NORMALIZED_BREED_VALUE_DECIMAL_SPACES : self::BREED_VALUE_DECIMAL_SPACES;
 
                     $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix
-                        . " ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), 2) as ".$breedValueLabel .",
+                        . " ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), ".$breedValueDecimalSpaces.") as ".$breedValueLabel .",
                         ROUND(bg.".$resultTableAccuracyVar."*100) as ". $breedValueLabel. self::ACCURACY_TABLE_LABEL_SUFFIX;
-
-                    $valuesPrefix = ",
-                        ";
-
-                    //keep  $this->breedValuesNullFilter blank
 
                     $this->breedValuesNullFilter = $this->breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
                     ";
+
+                    $valuesPrefix = ",
+                        ";
 
                     $filterPrefix = ' OR ';
                 }
@@ -189,11 +206,21 @@ class BreedValuesReportQueryGenerator
      * @param string $breedValueTypeNl
      * @return string
      */
-    public function translatedBreedValueColumnHeader($breedValueTypeNl)
+    public static function translatedBreedValueColumnHeader($breedValueTypeNl)
     {
-        return strtr($breedValueTypeNl, [
-           BreedValueTypeConstant::ODIN_BC => 'WormRes'
-        ]);
+        $translateArrayInput = [
+            BreedValueTypeConstant::ODIN_BC => 'WormRes'
+        ];
+
+        $translateArray = [];
+        foreach ($translateArrayInput as $breedValueType => $translatedBreedValueType) {
+            $translateArray[$breedValueType] = $translatedBreedValueType;
+            $translateArray[strtolower($breedValueType)] = strtolower($translatedBreedValueType);
+        }
+
+        $translateArrayInput = null;
+
+        return strtr($breedValueTypeNl, $translateArray);
     }
 
 

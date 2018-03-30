@@ -169,7 +169,7 @@ class ReportServiceWithBreedValuesBase extends ReportServiceBase
             $columnName = strtolower($value['nl']);
             $allBreedCodeNames[$columnName] = $columnName;
 
-            $translatedColumnName = strtolower($this->trans(strtoupper($columnName)));
+            $translatedColumnName = $this->translateBreedValueColumnHeader($columnName);
             $allTranslatedBreedCodeNames[$translatedColumnName] = $translatedColumnName;
 
             if (!$this->concatValueAndAccuracy) {
@@ -184,12 +184,21 @@ class ReportServiceWithBreedValuesBase extends ReportServiceBase
             if (key_exists($columnName, $allBreedCodeNames)) {
                 $allPossibleBreedCodeNames[$columnName] = $columnName;
             }
+            $translatedColumnName = $this->translateBreedValueColumnHeader($columnName);
             if (key_exists($columnName, $allTranslatedBreedCodeNames)) {
-                $allPossibleBreedCodeNames[$columnName] = $columnName;
+                $allPossibleBreedCodeNames[$translatedColumnName] = $translatedColumnName;
             }
         }
 
         return $allPossibleBreedCodeNames;
+    }
+
+
+    private function translateBreedValueColumnHeader($columnName)
+    {
+        return strtolower($this->trans(strtoupper(
+            BreedValuesReportQueryGenerator::translatedBreedValueColumnHeader($columnName)
+        )));
     }
 
 
