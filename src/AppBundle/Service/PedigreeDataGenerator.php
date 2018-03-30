@@ -55,16 +55,22 @@ class PedigreeDataGenerator
         $this->overwriteExistingData = $overwriteExistingData;
         $this->inBatchSize = 0;
 
-        foreach ($animals as $key => $animal) {
-            $animals[$key] = $this->generatePedigreeData($animal);
+        try {
 
-            if ($this->inBatchSize%$batchSize === 0) {
+            foreach ($animals as $key => $animal) {
+                $animals[$key] = $this->generatePedigreeData($animal);
+
+                if ($this->inBatchSize%$batchSize === 0) {
+                    $this->em->flush();
+                }
+            }
+
+            if ($this->isAnyValueUpdated) {
                 $this->em->flush();
             }
-        }
 
-        if ($this->isAnyValueUpdated) {
-            $this->em->flush();
+        } catch (\Exception $exception) {
+            // TODO log errors
         }
 
         $this->em->getRepository(ScrapieGenotypeSource::class)->clearSearchArrays();
