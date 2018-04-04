@@ -733,7 +733,8 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 $this->getManager()->flush();
             }
 
-            $children = $this->pedigreeDataGenerator->generate($children, $location,false);
+            // TODO activate this when pedigreeDataGenerator has been completed
+            // $children = $this->pedigreeDataGenerator->generate($children, $location,false);
 
         } catch (UniqueConstraintViolationException $exception) {
             //Reset tags to UNASSIGNED

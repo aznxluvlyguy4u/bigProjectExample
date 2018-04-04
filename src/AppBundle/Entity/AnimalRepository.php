@@ -1409,7 +1409,7 @@ class AnimalRepository extends BaseRepository
     /**
      * @return array
      */
-    public function getAnimalPrimaryKeysByUlnStringArray($isCountryCodeSeparatedByString = false)
+    public function getAnimalPrimaryKeysByUlnStringArrayIncludingTagReplaces($isCountryCodeSeparatedByString = false)
     {
         $array = [];
         foreach ($this->getAnimalPrimaryKeysByUlnStringResults($isCountryCodeSeparatedByString) as $result) {
@@ -1422,7 +1422,14 @@ class AnimalRepository extends BaseRepository
             }
         }
 
-        return $array;
+        return $this->includeAnimalIdsByUlnsFromDeclareTagReplacesToSearchArray($array);
+    }
+
+
+    private function includeAnimalIdsByUlnsFromDeclareTagReplacesToSearchArray(array $animalIdsByUlnArray)
+    {
+        $animalIdsByUlnArrayFromTagReplaces = $this->getManager()->getRepository(DeclareTagReplace::class)->getAnimalIdsByUlns();
+        return ArrayUtil::concatArrayValues([$animalIdsByUlnArray, $animalIdsByUlnArrayFromTagReplaces],false);
     }
 
 

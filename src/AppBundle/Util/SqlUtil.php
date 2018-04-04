@@ -499,6 +499,19 @@ class SqlUtil
 
 
     /**
+     * @param array $values
+     * @param boolean $valueIsBetweenSingleQuotationMarks
+     * @return null|string
+     */
+    public static function valueString($values = [], $valueIsBetweenSingleQuotationMarks)
+    {
+        if(count($values) === 0) { return null; }
+
+        $quotationMark = $valueIsBetweenSingleQuotationMarks ? "'" : '';
+        return "($quotationMark".implode("$quotationMark),($quotationMark", $values) . "$quotationMark)";
+    }
+
+    /**
      * @param array $dutchByEnglishValues
      * @param bool $isOnlyCapitalizeFirstLetterKey
      * @param bool $isOnlyCapitalizeFirstLetterValue
@@ -607,6 +620,31 @@ class SqlUtil
         $prefixAndSuffix = $quoteIndividualValues ? "'" : '';
 
         return $prefixAndSuffix . implode($glue, $values) . $prefixAndSuffix;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param $animalIds
+     * @param bool $sortResults
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getMissingAnimalIds(Connection $conn, $animalIds, $sortResults = false)
+    {
+        if (count($animalIds) === 0) { return []; }
+
+        $wrappedAnimalIds = SqlUtil::valueString($animalIds, false);
+
+        $sql = "SELECT
+                  missing.animal_id
+                FROM
+                  (VALUES $wrappedAnimalIds) AS missing(animal_id)
+                  LEFT JOIN animal a ON a.id = missing.animal_id
+                WHERE a.id ISNULL";
+        $missingAnimalIds = $conn->query($sql)->fetchAll();
+
+        return SqlUtil::getSingleValueGroupedSqlResults('animal_id', $missingAnimalIds,true, $sortResults);
     }
 
 
