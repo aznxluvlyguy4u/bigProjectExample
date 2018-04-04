@@ -660,12 +660,14 @@ class NsfoMainCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '=====================================', "\n",
             '1: Birth Weight and TailLength', "\n",
+            '2: UbnOfBirth (string) in Animal', "\n",
             "\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1: $this->getContainer()->get('app.datafix.birth.measurements.missing')->run(); break;
+            case 2: $this->getContainer()->get('AppBundle\Service\DataFix\MissingUbnOfBirthFillerService')->run(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }
