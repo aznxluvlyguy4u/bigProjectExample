@@ -223,6 +223,10 @@ class BreedValuesResultTableUpdater
                 WHERE result_table_breed_grades.animal_id = v.animal_id";
         $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
 
+        //Calculate breed values and accuracies of children without one, based on the values of both parents
+        $childrenUpdateCount = $this->updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar);
+        $updateCount += $childrenUpdateCount;
+
         //Update obsolete value to null
         $sql = "UPDATE result_table_breed_grades
                     SET $valueVar = NULL, $accuracyVar = NULL
@@ -239,12 +243,8 @@ class BreedValuesResultTableUpdater
                     )";
         $updateCount += SqlUtil::updateWithCount($this->conn, $sql);
 
-        if ($valueVar === 'odin_bc') {
-            $updateCount += $this->updateOdinBcValuesOfChildrenBasedOnValuesOfParents();
-        }
-
         $records = $valueVar.' and '.$accuracyVar. ' records';
-        $message = $updateCount > 0 ? $updateCount . ' '. $records. ' updated.': 'No '.$records.' updated.';
+        $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.') '. $records. ' updated.': 'No '.$records.' updated.';
         $this->write($message);
 
         return $updateCount;
@@ -252,17 +252,19 @@ class BreedValuesResultTableUpdater
 
 
     /**
+     * @param string $valueVar
+     * @param string $accuracyVar
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function updateOdinBcValuesOfChildrenBasedOnValuesOfParents()
+    private function updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar)
     {
-        $sql = "UPDATE result_table_breed_grades SET odin_bc = calc.odin_bc, odin_bc_accuracy = calc.odin_bc_accuracy
+        $sql = "UPDATE result_table_breed_grades SET $valueVar = calc.breed_value, $accuracyVar = calc.accuracy
                 FROM (
                   SELECT
                     ra.animal_id,
-                    (rf.odin_bc + rm.odin_bc) / 2 as calculated_odin_bc,
-                    SQRT(0.25*rf.odin_bc_accuracy*rf.odin_bc_accuracy + 0.25*rm.odin_bc_accuracy*rm.odin_bc_accuracy) as calculated_odin_bc_accuracy
+                    (rf.$valueVar + rm.$valueVar) / 2 as calculated_breed_value,
+                    SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar) as calculated_accuracy
                   FROM result_table_breed_grades ra
                     INNER JOIN animal a ON ra.animal_id = a.id
                     INNER JOIN result_table_breed_grades rf ON a.parent_father_id = rf.animal_id
@@ -270,18 +272,18 @@ class BreedValuesResultTableUpdater
                   WHERE
                     a.parent_father_id NOTNULL AND
                     a.parent_mother_id NOTNULL AND
-                    (ra.odin_bc ISNULL OR ra.odin_bc_accuracy ISNULL) AND
-                    (rf.odin_bc NOTNULL OR rf.odin_bc_accuracy NOTNULL) AND
-                    (rm.odin_bc NOTNULL OR rm.odin_bc_accuracy NOTNULL) AND
-                    SQRT(0.25*rf.odin_bc_accuracy*rf.odin_bc_accuracy + 0.25*rm.odin_bc_accuracy*rm.odin_bc_accuracy)
-                    >= (SELECT SQRT(min_reliability) FROM breed_value_type WHERE nl = '".BreedValueTypeConstant::ODIN_BC."')
-                ) AS calc(animal_id, odin_bc, odin_bc_accuracy)
+                    (ra.$valueVar ISNULL OR ra.$accuracyVar ISNULL) AND
+                    (rf.$valueVar NOTNULL OR rf.$accuracyVar NOTNULL) AND
+                    (rm.$valueVar NOTNULL OR rm.$accuracyVar NOTNULL) AND
+                    SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar)
+                    >= (SELECT SQRT(min_reliability) as min_accuracy FROM breed_value_type WHERE result_table_value_variable = '$valueVar')
+                ) AS calc(animal_id, breed_value, accuracy)
                 WHERE result_table_breed_grades.animal_id = calc.animal_id
                   AND (
-                        result_table_breed_grades.odin_bc ISNULL OR
-                        result_table_breed_grades.odin_bc_accuracy ISNULL OR
-                        result_table_breed_grades.odin_bc <> calc.odin_bc OR
-                        result_table_breed_grades.odin_bc_accuracy <> calc.odin_bc_accuracy
+                        result_table_breed_grades.$valueVar ISNULL OR
+                        result_table_breed_grades.$accuracyVar ISNULL OR
+                        result_table_breed_grades.$valueVar <> calc.breed_value OR
+                        result_table_breed_grades.$accuracyVar <> calc.accuracy
                       )";
         return SqlUtil::updateWithCount($this->conn, $sql);
     }
