@@ -31,6 +31,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -762,4 +763,19 @@ class Validator
         return true;
     }
 
+
+    /**
+     * @param \Exception $exception
+     * @return bool
+     */
+    public static function isMissingAnimalIdForeignKeyException(\Exception $exception)
+    {
+        if ($exception instanceof ForeignKeyConstraintViolationException) {
+            return
+                StringUtil::containsSubstring("Key (animal_id)=(", $exception->getMessage()) &&
+                StringUtil::containsSubstring(") is not present in table \"animal\"", $exception->getMessage())
+            ;
+        }
+        return false;
+    }
 }
