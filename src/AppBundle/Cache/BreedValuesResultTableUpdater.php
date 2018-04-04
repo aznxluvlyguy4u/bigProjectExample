@@ -223,11 +223,34 @@ class BreedValuesResultTableUpdater
                 WHERE result_table_breed_grades.animal_id = v.animal_id";
         $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
 
+        /*
+         * Update obsolete value to null
+         * NOTE! This should be done BEFORE calculating the values for the children,
+         * to prevent cascading calculation for children breedValues based on other calculated values
+         */
+        $removeCount = $this->setResultTableValueToNullWhereBreedValueIsMissing($valueVar, $accuracyVar);
+        $updateCount += $removeCount;
+
         //Calculate breed values and accuracies of children without one, based on the values of both parents
         $childrenUpdateCount = $this->updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar);
         $updateCount += $childrenUpdateCount;
 
-        //Update obsolete value to null
+        $records = $valueVar.' and '.$accuracyVar. ' records';
+        $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.', removed: '.$removeCount.') '. $records. ' updated.': 'No '.$records.' updated.';
+        $this->write($message);
+
+        return $updateCount;
+    }
+
+
+    /**
+     * @param $valueVar
+     * @param $accuracyVar
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function setResultTableValueToNullWhereBreedValueIsMissing($valueVar, $accuracyVar)
+    {
         $sql = "UPDATE result_table_breed_grades
                     SET $valueVar = NULL, $accuracyVar = NULL
                     WHERE animal_id IN (
@@ -239,15 +262,11 @@ class BreedValuesResultTableUpdater
                             INNER JOIN breed_value_type t ON t.id = b.type_id
                           WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
                         )i ON r.animal_id = i.animal_id
-                      WHERE i.id ISNULL AND (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL)
-                    )";
-        $updateCount += SqlUtil::updateWithCount($this->conn, $sql);
-
-        $records = $valueVar.' and '.$accuracyVar. ' records';
-        $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.') '. $records. ' updated.': 'No '.$records.' updated.';
-        $this->write($message);
-
-        return $updateCount;
+                      WHERE
+                        i.id ISNULL AND 
+                        (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL)
+                      )";
+        return SqlUtil::updateWithCount($this->conn, $sql);
     }
 
 
