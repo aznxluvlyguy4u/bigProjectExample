@@ -365,10 +365,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->logger->notice('No animalIds were missing in the database');
                 }
 
-                $this->breedValueService->initializeBlankGeneticBases();
-                $this->updateBreedIndexesByOutputFileType();
-                $this->updateNormalDistributions();
-                $this->updateResultTableBreedValues();
+                $this->updateResultTableBreedValuesAndTheirPrerequisites();
 
             } else {
                 // Handle unsuccessful download
@@ -1001,51 +998,27 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     }
 
 
-    private function updateBreedIndexesByOutputFileType()
-    {
-        $generationDateString = $this->getGenerationDateStringFromKey();
-        if ($generationDateString) {
-            if ($this->hasLambMeatOutputFiles()) {
-                $this->breedValueService->initializeBlankGeneticBases();
-
-                $this->logger->notice('LambMeatOutputFilename found in message. 
-                Processing new LambMeatIndexes...');
-                $this->breedIndexService->updateLambMeatIndexes($generationDateString);
-            }
-        }
-    }
-
-
-    private function updateNormalDistributions()
-    {
-        $generationDateString = $this->getGenerationDateStringFromKey();
-        if ($generationDateString) {
-
-            if ($this->hasLambMeatOutputFiles()) {
-                $this->logger->notice('LambMeatOutputFilename found in message. 
-                Processing new LambMeatIndex NormalDistribution...');
-                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString);
-            }
-
-            if ($this->hasWormResistanceOutputFiles()) {
-                $this->logger->notice('WormResistanceOutputFilename found in message. 
-                Processing new WormResistance OdinBC NormalDistribution...');
-                $this->normalDistributionService
-                    ->persistBreedValueTypeMeanAndStandardDeviation(BreedValueTypeConstant::ODIN_BC, $generationDateString);
-            }
-        }
-    }
-
-
-    private function updateResultTableBreedValues()
+    private function updateResultTableBreedValuesAndTheirPrerequisites()
     {
         $detectedAnalysisTypes = [];
-        if ($this->hasLambMeatOutputFiles()) { $detectedAnalysisTypes[MixBlupType::LAMB_MEAT_INDEX] = MixBlupType::LAMB_MEAT_INDEX; }
-        if ($this->hasExteriorOutputFiles()) { $detectedAnalysisTypes[MixBlupType::EXTERIOR] = MixBlupType::EXTERIOR; }
-        if ($this->hasFertilityOutputFiles()) { $detectedAnalysisTypes[MixBlupType::FERTILITY] = MixBlupType::FERTILITY; }
-        if ($this->hasWormResistanceOutputFiles()) { $detectedAnalysisTypes[MixBlupType::WORM] = MixBlupType::WORM; }
+        if ($this->hasLambMeatOutputFiles()) {
+            $detectedAnalysisTypes[MixBlupType::LAMB_MEAT_INDEX] = MixBlupType::LAMB_MEAT_INDEX;
+            $this->logger->notice('LambMeatOutputFilename found in message...');
+        }
+        if ($this->hasExteriorOutputFiles()) {
+            $detectedAnalysisTypes[MixBlupType::EXTERIOR] = MixBlupType::EXTERIOR;
+            $this->logger->notice('ExteriorOutputFilename found in message...');
+        }
+        if ($this->hasFertilityOutputFiles()) {
+            $detectedAnalysisTypes[MixBlupType::FERTILITY] = MixBlupType::FERTILITY;
+            $this->logger->notice('FertilityOutputFilename found in message...');
+        }
+        if ($this->hasWormResistanceOutputFiles()) {
+            $detectedAnalysisTypes[MixBlupType::WORM] = MixBlupType::WORM;
+            $this->logger->notice('WormOutputFilename found in message...');
+        }
 
-        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes);
+        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes, true, true, $this->getGenerationDateStringFromKey());
     }
 
 

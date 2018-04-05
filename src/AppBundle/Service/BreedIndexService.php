@@ -36,6 +36,9 @@ class BreedIndexService
     /** @var BreedValueTypeRepository */
     private $breedValueTypeRepository;
 
+    /** @var array */
+    private $containsBreedValueTypes;
+
     /**
      * BreedIndexService constructor.
      * @param EntityManagerInterface $em
@@ -144,15 +147,25 @@ class BreedIndexService
     /**
      * @param string $generationDateSqlString
      * @throws \Doctrine\DBAL\DBALException
-     * @throws \Exception
      */
     public function updateLambMeatIndexes($generationDateSqlString)
     {
         // Validate if geneticBase is not null for given generationDate
         if (!$this->areLambMeatIndexGeneticBasesNotNull($generationDateSqlString)) {
             $errorMessage = 'GeneticBases are missing for lambMeatIndex year '.mb_substr($generationDateSqlString, 0, 4);
-            $this->getLogger()->error($errorMessage);
-            throw new \Exception($errorMessage);
+            $this->getLogger()->warning($errorMessage);
+
+            $missingBreedValueIndexesString = 'Missing breedValueType genetic bases (could be due to missing breedValues): ';
+            $prefix = '';
+
+            foreach ($this->containsBreedValueTypes as $breedValueTypeGeneticBase => $exists) {
+                if (!$exists) {
+                    $missingBreedValueIndexesString .= $prefix . $breedValueTypeGeneticBase;
+                    $prefix = ', ';
+                }
+            }
+
+            $this->getLogger()->warning($missingBreedValueIndexesString);
 
         } else {
             if ($this->insertEmptyLambMeatIndexes($generationDateSqlString) > 0) {
@@ -181,7 +194,7 @@ class BreedIndexService
         $breedValueTypes = $this->getManager()->getRepository(BreedValueGeneticBase::class)
             ->getLambMeatIndexBasesByYear($year);
 
-        $containsBreedValueTypes = [
+        $this->containsBreedValueTypes = [
             BreedValueTypeConstant::GROWTH => false,
             BreedValueTypeConstant::MUSCLE_THICKNESS => false,
             BreedValueTypeConstant::FAT_THICKNESS_3 => false,
@@ -189,14 +202,14 @@ class BreedIndexService
 
         /** @var BreedValueGeneticBase $breedValueGeneticBase */
         foreach ($breedValueTypes as $breedValueGeneticBase) {
-            foreach ($containsBreedValueTypes as $breedValueTypeNl => $containsBreedValueType) {
+            foreach ($this->containsBreedValueTypes as $breedValueTypeNl => $containsBreedValueType) {
                 if ($breedValueGeneticBase->getBreedValueType() && $breedValueGeneticBase->getBreedValueType()->getNl() === $breedValueTypeNl) {
-                    $containsBreedValueTypes[$breedValueTypeNl] = true;
+                    $this->containsBreedValueTypes[$breedValueTypeNl] = true;
                 }
             }
         }
 
-        return !in_array(false, $containsBreedValueTypes);
+        return !in_array(false, $this->containsBreedValueTypes);
     }
 
 

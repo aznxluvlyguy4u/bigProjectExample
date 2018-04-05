@@ -49,6 +49,9 @@ services:
         arguments:
           - '@doctrine.orm.default_entity_manager'
           - '@logger'
+          - '@app.breed.value'
+          - '@app.breed.index'
+          - '@AppBundle\Service\NormalDistributionService'
 
     app.info.parameters:
         class: AppBundle\Service\InfoService
