@@ -190,7 +190,7 @@ class ReportAPIController extends APIController {
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/animals-overview")
-     * @Method("POST")
+     * @Method("GET")
      */
     public function getAnimalsOverviewReport(Request $request)
     {
