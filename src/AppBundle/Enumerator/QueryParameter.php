@@ -26,4 +26,5 @@ class QueryParameter
     const ASSOCIATIVE_ARRAY_OUTPUT = 'associative_array_output';
     const IS_EWES_WITH_LAST_MATE = 'is_ewes_with_last_mate';
     const MAX_DAYS = 'max_days';
+    const YEAR = 'year';
 }

@@ -484,6 +484,9 @@ services:
     AppBundle\Service\Report\AnimalsOverviewReportService:
         parent: app.report.breedvalues.base
 
+    AppBundle\Service\Report\AnnualTe100UbnProductionReportService:
+        parent: app.report.breedvalues.base
+
     app.report.pedigree_certificates:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeCertificateReportService

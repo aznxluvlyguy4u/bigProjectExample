@@ -199,6 +199,49 @@ class ReportAPIController extends APIController {
 
 
     /**
+     * Generate annual TE100 production csv report.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="language",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+     *        "format"="?language=en"
+     *     },
+     *     {
+     *        "name"="year",
+     *        "dataType"="int",
+     *        "required"=true,
+     *        "description"="Year of the annual report",
+     *        "format"="?year=2018"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate annual TE100 production csv report"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/annual-te100-ubn-production")
+     * @Method("GET")
+     */
+    public function getAnnualTe100ProductionReport(Request $request)
+    {
+        return $this->get('AppBundle\Service\Report\AnnualTe100UbnProductionReportService')->getReport($request);
+    }
+
+
+    /**
      * Generate pedigree register xls report by abbreviation in query parameter 'type'
      *
      * @ApiDoc(
