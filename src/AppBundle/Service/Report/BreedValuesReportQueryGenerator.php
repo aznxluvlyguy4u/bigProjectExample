@@ -630,7 +630,7 @@ class BreedValuesReportQueryGenerator
             //.' LIMIT 100'
         ;
 
-        ReportServiceWithBreedValuesBase::closeColumnHeaderTranslation();
+        ReportServiceBase::closeColumnHeaderTranslation();
 
         return $sql;
     }
@@ -654,7 +654,7 @@ class BreedValuesReportQueryGenerator
      */
     private function translateColumnHeader($columnHeader)
     {
-        return ReportServiceWithBreedValuesBase::translateColumnHeader($this->translator, $columnHeader);
+        return ReportServiceBase::staticTranslateColumnHeader($this->translator, $columnHeader);
     }
 
 }

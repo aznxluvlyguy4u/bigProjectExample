@@ -46,8 +46,6 @@ class ReportServiceWithBreedValuesBase extends ReportServiceBase
 
     /** @var BreedValuesReportQueryGenerator */
     protected $breedValuesReportQueryGenerator;
-    /** @var array */
-    private static $translationSet;
 
     public function __construct(EntityManagerInterface $em, ExcelService $excelService, Logger $logger,
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter, UserService $userService,
@@ -80,70 +78,6 @@ class ReportServiceWithBreedValuesBase extends ReportServiceBase
         } else {
             return self::NEUTER_STRING;
         }
-    }
-
-
-    /**
-     * @param array $csvData
-     * @return array
-     */
-    protected function translateColumnHeaders($csvData)
-    {
-        foreach ($csvData as $item => $records) {
-            foreach ($records as $columnHeader => $value) {
-
-                $translatedColumnHeader = self::translateColumnHeader($this->translator, $columnHeader);
-
-                if ($columnHeader !== $translatedColumnHeader) {
-                    $csvData[$item][$translatedColumnHeader] = $value;
-                    unset($csvData[$item][$columnHeader]);
-                }
-            }
-        }
-
-        self::closeColumnHeaderTranslation();
-
-        return $csvData;
-    }
-
-
-    /**
-     * @return array
-     */
-    private static function getTranslationSet()
-    {
-        if (self::$translationSet === null || count(self::$translationSet) === 0) {
-            self::$translationSet = StringUtil::capitalizationSet();
-            self::$translationSet[' '] = '_';
-        }
-        return self::$translationSet;
-    }
-
-
-    public static function closeColumnHeaderTranslation()
-    {
-        self::$translationSet = null;
-    }
-
-
-    /**
-     * @param TranslatorInterface $translator
-     * @param string $columnHeader
-     * @return string
-     */
-    public static function translateColumnHeader(TranslatorInterface $translator, $columnHeader)
-    {
-        $prefix = mb_substr($columnHeader, 0, 2);
-        $upperSuffix = strtoupper(mb_substr($columnHeader, 2, strlen($columnHeader)-2));
-
-        switch ($prefix) {
-            case 'a_': $translatedColumnHeader = $translator->trans('A') . '_' . $translator->trans($upperSuffix); break;
-            case 'f_': $translatedColumnHeader = $translator->trans('F') . '_' . $translator->trans($upperSuffix); break;
-            case 'm_': $translatedColumnHeader = $translator->trans('M') . '_' . $translator->trans($upperSuffix); break;
-            default: $translatedColumnHeader = $translator->trans(strtoupper($columnHeader)); break;
-        }
-
-        return strtr(strtolower($translatedColumnHeader), self::getTranslationSet());
     }
 
 
