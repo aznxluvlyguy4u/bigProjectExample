@@ -78,7 +78,7 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
 
         return "SELECT
                   vld.ubn as ".$this->translateColumnHeader('ubn').",
-                  'TODO' as ".$this->translateColumnHeader('breedernumber').",
+                  vld.breeder_numbers as ".$this->translateColumnHeader('breedernumber').",
                   vld.owner_full_name as ".$this->translateColumnHeader('breedername').",
                   vld.city as ".$this->translateColumnHeader('city').",
                   vld.state as ".$this->translateColumnHeader('state').",
