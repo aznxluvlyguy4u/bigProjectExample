@@ -665,6 +665,8 @@ class SqlUtil
 
         } catch (\Exception $exception) {
 
+            FilesystemUtil::deleteFile($filepath);
+
             if ($logger) {
                 $logger->error($exception->getMessage());
                 $logger->error($exception->getTraceAsString());
