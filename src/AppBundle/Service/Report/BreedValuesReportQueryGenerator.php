@@ -633,7 +633,6 @@ class BreedValuesReportQueryGenerator
                           )register_activity ON register_activity.location_id = a.location_id
                 ".$this->breedValuesPlusSignsQueryJoinPart."
             ".$filterString
-            //.' LIMIT 100'
         ;
 
         ReportServiceBase::closeColumnHeaderTranslation();
