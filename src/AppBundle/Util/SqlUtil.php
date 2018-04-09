@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
@@ -14,6 +15,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SqlUtil
 {
@@ -658,10 +660,16 @@ class SqlUtil
     public static function writeToFile(Connection $conn, $selectQuery, $filepath, Logger $logger = null)
     {
         try {
-            $sql = "COPY (
-                $selectQuery
-                ) TO '$filepath'  With CSV HEADER DELIMITER ';'";
-            $conn->exec($sql);
+            $stmt = $conn->query($selectQuery);
+
+            if ($firstRow = $stmt->fetch()) {
+                self::writeRowToFile($filepath, array_keys($firstRow)); //write headers
+                self::writeRowToFile($filepath, $firstRow);
+            }
+
+            while ($row = $stmt->fetch()) {
+                self::writeRowToFile($filepath, $row);
+            }
 
         } catch (\Exception $exception) {
 
@@ -675,5 +683,16 @@ class SqlUtil
         }
 
         return true;
+    }
+
+
+    /**
+     * @param string $filepath
+     * @param array $values
+     * @param string $separator
+     */
+    private static function writeRowToFile($filepath, array $values, $separator = CsvOptions::DEFAULT_SEPARATOR)
+    {
+        file_put_contents($filepath, implode($separator, $values) ."\n",FILE_APPEND);
     }
 }

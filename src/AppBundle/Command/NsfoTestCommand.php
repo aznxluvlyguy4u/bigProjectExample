@@ -9,6 +9,7 @@ use AppBundle\Entity\LocationRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -118,6 +119,14 @@ class NsfoTestCommand extends ContainerAwareCommand
         /*
          * Insert your custom test here
          */
+
+        $selectQuery = "SELECT * FROM animal LIMIT 10";
+
+        SqlUtil::writeToFile(
+            $this->conn,
+            $selectQuery,
+            '/home/code/jvt/nsfo/api/var/cache/dev/csv/dieren_overzicht_rapportage__peildatum_2018-02-03__gemaakt_op_2018-04-09_14u29m05s.csv',
+            null);
 
     }
 
