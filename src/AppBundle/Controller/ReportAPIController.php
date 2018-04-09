@@ -184,11 +184,18 @@ class ReportAPIController extends APIController {
      *        "format"="?concat_value_and_accuracy=true"
      *     },
      *     {
-     *        "name"="end_date",
+     *        "name"="pedigree_active_end_date",
      *        "dataType"="date",
      *        "required"=false,
-     *        "description"="The maximum end date of a pedigree register to be included in the returned results, default is current dateTime",
-     *        "format"="?end_date=2018-01-02"
+     *        "description"="The maximum end date of a pedigree register to be included in the returned results, default is current date",
+     *        "format"="?pedigree_active_end_date=2018-01-02"
+     *     },
+     *     {
+     *        "name"="reference_date",
+     *        "dataType"="date",
+     *        "required"=false,
+     *        "description"="The date used to check the active ubn on reference date value, default is current date",
+     *        "format"="?reference_date=2018-01-02"
      *     }
      *   },
      *   resource = true,

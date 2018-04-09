@@ -502,6 +502,7 @@ class BreedValuesReportQueryGenerator
      * @param bool $includeAnimalsWithoutAnyBreedValues
      * @param bool $ignoreHiddenBreedValueTypes
      * @param int $maxCurrentAnimalAgeInYears
+     * @param string $activeUbnReferenceDateString
      * @param \DateTime $pedigreeActiveEndDateLimit
      * @return string
      * @throws DBALException
@@ -510,6 +511,7 @@ class BreedValuesReportQueryGenerator
                                                      $includeAnimalsWithoutAnyBreedValues = true,
                                                      $ignoreHiddenBreedValueTypes = false,
                                                      $maxCurrentAnimalAgeInYears,
+                                                     $activeUbnReferenceDateString,
                                                      $pedigreeActiveEndDateLimit
     )
     {
@@ -602,6 +604,7 @@ class BreedValuesReportQueryGenerator
                 breeder.city as ".$this->translateColumnHeader('breeder_city').",
                 breeder.state as ".$this->translateColumnHeader('breeder_state').",
                 
+                ".$this->activeUbnOnReferenceDateSelectPart($activeUbnReferenceDateString).",
                 holder.ubn as ".$this->translateColumnHeader('current_ubn').",
                 holder.owner_full_name as ".$this->translateColumnHeader('holdername').",
                 holder.city as ".$this->translateColumnHeader('holder_city').",
@@ -621,6 +624,7 @@ class BreedValuesReportQueryGenerator
                 LEFT JOIN view_location_details breeder ON breeder.location_id = a.location_of_birth_id
                 
                 LEFT JOIN (".$this->lastDepartExportOrLossQuery().")last_declare ON last_declare.animal_id = a.animal_id
+                ".$this->activeUbnOnReferenceDateJoin($activeUbnReferenceDateString)."
                 
                 LEFT JOIN result_table_breed_grades bg ON a.animal_id = bg.animal_id
                 LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
@@ -641,6 +645,9 @@ class BreedValuesReportQueryGenerator
     }
 
 
+    /**
+     * @return string
+     */
     private function lastDepartExportOrLossQuery()
     {
         $declaresSelectQuery = "SELECT
@@ -685,6 +692,81 @@ class BreedValuesReportQueryGenerator
                     )last_declare ON last_declare.animal_id = declare.animal_id
                                   AND last_declare.last_depart_date = declare.depart_date";
     }
+
+
+    /**
+     * @param string $dateString
+     * @return string
+     */
+    private function activeUbnOnReferenceDateJoin($dateString)
+    {
+        if(!TimeUtil::isFormatYYYYMMDD($dateString, false)) {
+            return ' ';
+        }
+
+        return "LEFT JOIN (
+    SELECT
+      r.animal_id,
+      l.ubn as active_ubn_at_reference_date,
+      1 as priority
+    FROM (
+           SELECT
+             r.animal_id,
+             max(id) as max_id
+           FROM animal_residence r
+           WHERE
+             start_date NOTNULL AND end_date NOTNULL AND
+             DATE(start_date) <= '$dateString' AND DATE(end_date) >= '$dateString'
+             AND is_pending = FALSE
+           GROUP BY r.animal_id
+         )closed_residence
+      INNER JOIN animal_residence r ON r.id = closed_residence.max_id
+      INNER JOIN location l ON r.location_id = l.id
+    )closed_residence ON closed_residence.animal_id = a.animal_id
+LEFT JOIN (
+    SELECT
+      open_residence.animal_id,
+      l.ubn as active_ubn_at_reference_date,
+      2 as priority
+    FROM (
+           SELECT
+             open_residence.animal_id,
+             open_residence.max_start_date,
+             max(id) as max_id
+           FROM (
+                  SELECT
+                    r.animal_id,
+                    max(start_date) as max_start_date
+                  FROM animal_residence r
+                  WHERE
+                    start_date NOTNULL AND end_date ISNULL AND
+                    DATE(start_date) <= '$dateString'
+                    AND is_pending = FALSE
+                  GROUP BY animal_id
+                )open_residence
+             INNER JOIN animal_residence r ON r.animal_id = open_residence.animal_id AND r.start_date = open_residence.max_start_date
+           GROUP BY open_residence.animal_id, open_residence.max_start_date
+         )open_residence
+      INNER JOIN animal_residence r ON r.id = open_residence.max_id
+      INNER JOIN location l ON r.location_id = l.id
+    )open_residence ON open_residence.animal_id = a.animal_id";
+    }
+
+
+    /**
+     * @param string $dateString
+     * @return string
+     */
+    private function activeUbnOnReferenceDateSelectPart($dateString)
+    {
+        if(!TimeUtil::isFormatYYYYMMDD($dateString, false)) {
+            return ' ';
+        }
+
+        return "COALESCE(closed_residence.active_ubn_at_reference_date, open_residence.active_ubn_at_reference_date) 
+        as ".$this->translateColumnHeader('active ubn at reference date').'_'.strtr($dateString, ['-' => '']);
+    }
+
 
 
     private function getGenderLetterTranslationValues()
