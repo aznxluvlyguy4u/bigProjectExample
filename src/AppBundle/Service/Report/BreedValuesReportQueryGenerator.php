@@ -7,6 +7,7 @@ namespace AppBundle\Service\Report;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Locale;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
@@ -606,6 +607,9 @@ class BreedValuesReportQueryGenerator
                 holder.city as ".$this->translateColumnHeader('holder_city').",
                 holder.state as ".$this->translateColumnHeader('holder_state').",
                 COALESCE(register_activity.has_active_pedigree_register, FALSE) as ".$this->translateColumnHeader('has_active_pedigree_register').",
+                
+                last_declare.depart_date as ".$this->translateColumnHeader('last departure date').",
+                last_declare.declare_type as ".$this->translateColumnHeader('last departure type').",
                   
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
@@ -615,6 +619,8 @@ class BreedValuesReportQueryGenerator
                 LEFT JOIN view_minimal_parent_details dad ON a.parent_father_id = dad.animal_id
                 LEFT JOIN view_location_details holder ON holder.location_id = a.location_id
                 LEFT JOIN view_location_details breeder ON breeder.location_id = a.location_of_birth_id
+                
+                LEFT JOIN (".$this->lastDepartExportOrLossQuery().")last_declare ON last_declare.animal_id = a.animal_id
                 
                 LEFT JOIN result_table_breed_grades bg ON a.animal_id = bg.animal_id
                 LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
@@ -633,6 +639,52 @@ class BreedValuesReportQueryGenerator
         ReportServiceBase::closeColumnHeaderTranslation();
 
         return $sql;
+    }
+
+
+    private function lastDepartExportOrLossQuery()
+    {
+        $declaresSelectQuery = "SELECT
+                    depart.animal_id,
+                    depart.depart_date as depart_date,
+                    '".$this->translateColumnHeader('declare depart')."' as declare_type
+                  FROM declare_base b
+                    INNER JOIN declare_depart depart ON depart.id = b.id
+                  WHERE (request_state = '".RequestStateType::FINISHED."' OR request_state = '".RequestStateType::FINISHED_WITH_WARNING."')
+                  UNION
+                  SELECT
+                    loss.animal_id,
+                    loss.date_of_death as depart_date,
+                    '".$this->translateColumnHeader('declare loss')."' as declare_type
+                  FROM declare_base b
+                    INNER JOIN declare_loss loss ON loss.id = b.id
+                  WHERE (request_state = '".RequestStateType::FINISHED."' OR request_state = '".RequestStateType::FINISHED_WITH_WARNING."')
+                  UNION
+                  SELECT
+                    export.animal_id,
+                    export.export_date as depart_date,
+                    '".$this->translateColumnHeader('declare export')."' as declare_type
+                  FROM declare_base b
+                    INNER JOIN declare_export export ON export.id = b.id
+                  WHERE (request_state = '".RequestStateType::FINISHED."' OR request_state = '".RequestStateType::FINISHED_WITH_WARNING."')";
+
+        return "SELECT
+                  declare.animal_id,
+                  declare.depart_date,
+                  declare.declare_type
+                FROM (
+                  $declaresSelectQuery
+                )declare
+                INNER JOIN (
+                    SELECT
+                      animal_id,
+                      MAX(depart_date) as last_depart_date
+                    FROM (
+                           $declaresSelectQuery
+                         )last_declare
+                    GROUP BY animal_id
+                    )last_declare ON last_declare.animal_id = declare.animal_id
+                                  AND last_declare.last_depart_date = declare.depart_date";
     }
 
 
