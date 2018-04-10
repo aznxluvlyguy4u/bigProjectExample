@@ -2622,7 +2622,7 @@ abstract class Animal
     /**
      * Get exteriorMeasurements
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection|ArrayCollection
      */
     public function getExteriorMeasurements()
     {
