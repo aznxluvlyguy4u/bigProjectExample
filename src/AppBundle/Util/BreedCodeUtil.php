@@ -317,4 +317,16 @@ class BreedCodeUtil
         }
         return $breedCodeString;
     }
+
+
+    /**
+     * @param string $breedCodeString
+     * @param string $breedCodePart
+     * @param int|string $partSize
+     * @return bool
+     */
+    public static function hasBreedCodePart($breedCodeString, $breedCodePart, $partSize)
+    {
+        return strpos($breedCodeString, $breedCodePart.$partSize) !== false;
+    }
 }
