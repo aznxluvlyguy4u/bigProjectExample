@@ -182,12 +182,12 @@ class PedigreeDataGenerator
      */
     private function getBreederNumber(Animal $animal)
     {
-        $location = $this->getLocation($animal);
-        if (!$location) {
+        $locationOfBirth = $animal->getLocationOfBirth();
+        if (!$locationOfBirth) {
             return null;
         }
 
-        $registrations = $location->getPedigreeRegisterRegistrations();
+        $registrations = $locationOfBirth->getPedigreeRegisterRegistrations();
         if (count($registrations) === 0) {
             return null;
         }
