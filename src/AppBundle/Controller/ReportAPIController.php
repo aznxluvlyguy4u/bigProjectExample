@@ -182,6 +182,20 @@ class ReportAPIController extends APIController {
      *        "required"=false,
      *        "description"="Choose if the value and accuracy breedValue numbers should be combined into one column. false is default",
      *        "format"="?concat_value_and_accuracy=true"
+     *     },
+     *     {
+     *        "name"="pedigree_active_end_date",
+     *        "dataType"="date",
+     *        "required"=false,
+     *        "description"="The maximum end date of a pedigree register to be included in the returned results, default is current date",
+     *        "format"="?pedigree_active_end_date=2018-01-02"
+     *     },
+     *     {
+     *        "name"="reference_date",
+     *        "dataType"="date",
+     *        "required"=false,
+     *        "description"="The date used to check the active ubn on reference date value, default is current date",
+     *        "format"="?reference_date=2018-01-02"
      *     }
      *   },
      *   resource = true,
@@ -190,11 +204,61 @@ class ReportAPIController extends APIController {
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/animals-overview")
-     * @Method("POST")
+     * @Method("GET")
      */
     public function getAnimalsOverviewReport(Request $request)
     {
         return $this->get('AppBundle\Service\Report\AnimalsOverviewReportService')->getReport($request);
+    }
+
+
+    /**
+     * Generate annual TE100 production csv report.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="language",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+     *        "format"="?language=en"
+     *     },
+     *     {
+     *        "name"="year",
+     *        "dataType"="int",
+     *        "required"=true,
+     *        "description"="Year of the annual report",
+     *        "format"="?year=2018"
+     *     },
+     *     {
+     *        "name"="end_date",
+     *        "dataType"="date",
+     *        "required"=false,
+     *        "description"="The maximum end date of a pedigree register to be included in the returned results, default is current dateTime",
+     *        "format"="?end_date=2018-01-02"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate annual TE100 production csv report"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/annual-te100-ubn-production")
+     * @Method("GET")
+     */
+    public function getAnnualTe100ProductionReport(Request $request)
+    {
+        return $this->get('AppBundle\Service\Report\AnnualTe100UbnProductionReportService')->getReport($request);
     }
 
 

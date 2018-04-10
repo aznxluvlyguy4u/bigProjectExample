@@ -105,15 +105,40 @@ class SqlView
     {
         return
             "SELECT
-                l.id as location_id,
-                l.ubn as ubn,
-                NULLIF(TRIM(CONCAT(p.first_name,' ',p.last_name)),'') as owner_full_name,
-                a.city as city,
-                a.state as state
-              FROM location l
-                INNER JOIN company c ON l.company_id = c.id
-                INNER JOIN person p ON p.id = c.owner_id
-                INNER JOIN address a ON a.id = c.address_id";
+              l.id as location_id,
+              l.ubn as ubn,
+              NULLIF(TRIM(CONCAT(p.first_name,' ',p.last_name)),'') as owner_full_name,
+              a.city as city,
+              a.state as state,
+              prs.pedigree_register_abbreviations,
+              te_prs.te_pedigree_register_abbreviations,
+              prs.breeder_numbers,
+              te_prs.te_breeder_numbers
+            FROM location l
+              INNER JOIN company c ON l.company_id = c.id
+              INNER JOIN person p ON p.id = c.owner_id
+              INNER JOIN address a ON a.id = c.address_id
+              LEFT JOIN (
+                          SELECT
+                            prr.location_id,
+                            TRIM(BOTH '{,}' FROM CAST(array_agg(pr.abbreviation ORDER BY abbreviation) AS TEXT)) as pedigree_register_abbreviations,
+                            TRIM(BOTH '{,}' FROM CAST(array_agg(prr.breeder_number ORDER BY breeder_number) AS TEXT)) as breeder_numbers
+                          FROM pedigree_register_registration prr
+                            INNER JOIN pedigree_register pr ON prr.pedigree_register_id = pr.id
+                          GROUP BY location_id
+                        )prs ON prs.location_id = l.id
+              LEFT JOIN (
+                          SELECT
+                            prr.location_id,
+                            TRIM(BOTH '{,}' FROM CAST(array_agg(pr.abbreviation ORDER BY abbreviation) AS TEXT)) as te_pedigree_register_abbreviations,
+                            TRIM(BOTH '{,}' FROM CAST(array_agg(prr.breeder_number ORDER BY breeder_number) AS TEXT)) as te_breeder_numbers
+                          FROM pedigree_register_registration prr
+                            INNER JOIN pedigree_register pr ON prr.pedigree_register_id = pr.id
+                            INNER JOIN pedigree_register_pedigree_codes codes ON pr.id = codes.pedigree_register_id
+                            INNER JOIN pedigree_code c ON codes.pedigree_code_id = c.id
+                          WHERE c.code = 'TE'
+                          GROUP BY location_id
+                        )te_prs ON te_prs.location_id = l.id";
     }
 
 
