@@ -127,6 +127,7 @@ class InvoiceRule
      * @var ArrayCollection
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\InvoiceRuleSelection", mappedBy="invoiceRule", cascade={"persist", "remove"}, orphanRemoval=true)
      * @JMS\Type("ArrayCollection<AppBundle\Entity\InvoiceRuleSelection>")
+     * @JMS\Exclude()
      * @JMS\Groups({
      *     "INVOICE_RULE",
      *     "INVOICE",
