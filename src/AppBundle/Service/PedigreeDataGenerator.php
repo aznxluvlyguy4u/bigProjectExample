@@ -299,7 +299,7 @@ class PedigreeDataGenerator
     private function generateScrapieGenotype(Animal $animal)
     {
         if ($animal->getScrapieGenotype() && !$animal->getScrapieGenotypeSource()) {
-            $animal->setScrapieGenotype($this->getScrapieGenotypeAdministrativeSource());
+            $animal->setScrapieGenotypeSource($this->getScrapieGenotypeAdministrativeSource());
             $this->valueWasUpdated();
             return $animal;
         }
