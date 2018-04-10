@@ -7,7 +7,9 @@ namespace AppBundle\Service;
 use AppBundle\Criteria\ExteriorCriteria;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Neuter;
 use AppBundle\Entity\PedigreeRegisterRegistration;
+use AppBundle\Entity\Ram;
 use AppBundle\Entity\ScrapieGenotypeSource;
 use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Enumerator\BreedType;
@@ -383,6 +385,10 @@ class PedigreeDataGenerator
     }
 
 
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
     private function generateCFBreedType(Animal $animal)
     {
         if ($animal->getBreedType() !== BreedType::REGISTER) {
@@ -394,6 +400,10 @@ class PedigreeDataGenerator
     }
 
 
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
     private function generateBMBreedType(Animal $animal)
     {
         $calculatedBreedType = BreedType::REGISTER;
@@ -429,21 +439,89 @@ class PedigreeDataGenerator
 
         $age = abs(TimeUtil::getAgeInDays($parent->getDateOfBirth(), $animal->getDateOfBirth()));
         return $parent->getExteriorMeasurements()
-                ->matching(ExteriorCriteria::pureBredParentExterior($age))
+                ->matching(ExteriorCriteria::pureBredBMParentExterior($age))
                 ->count() > 0;
     }
 
 
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
     private function generateTEBreedType(Animal $animal)
     {
-        // TODO
+        $calculatedBreedType = BreedType::REGISTER;
 
-//        if ($animal->getBreedType() !== BreedType::REGISTER) {
-//            $animal->setBreedType(BreedType::REGISTER);
-//            $this->valueWasUpdated();
-//        }
+        if ($this->isPureBredAndTE100($animal->getParentFather())
+            && $this->hasPureBredValidatedTEParent($animal, true)
+            && $this->hasPureBredValidatedTEParent($animal, false)
+        ) {
+            $calculatedBreedType = BreedType::PURE_BRED;
+        }
+
+        if ($animal->getBreedType() !== $calculatedBreedType) {
+            $animal->setBreedType($calculatedBreedType);
+            $this->valueWasUpdated();
+        }
 
         return $animal;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param $isFather
+     * @return bool
+     */
+    private function hasPureBredValidatedTEParent(Animal $animal, $isFather)
+    {
+        $parent = $isFather ? $animal->getParentFather() : $animal->getParentMother();
+
+        if (!$parent || !$parent->getDateOfBirth() || !$parent->getBreedCode() ||
+            !$animal->getDateOfBirth() || $animal instanceof Neuter) {
+            return false;
+        }
+
+        $age = abs(TimeUtil::getAgeInDays($parent->getDateOfBirth(), $animal->getDateOfBirth()));
+
+        if ($isFather) {
+            return $this->isPureBredAndTE100($parent)
+                && $parent->getExteriorMeasurements()
+                    ->matching(ExteriorCriteria::pureBredTEFatherExterior($age))
+                    ->count() > 0;
+        }
+
+        // for Mothers
+        if ($animal instanceof Ram) {
+
+            return $this->isPureBredAndTE100($parent)
+                && $parent->getExteriorMeasurements()
+                    ->matching(ExteriorCriteria::pureBredTEMotherOfRamExterior($age))
+                    ->count() > 0;
+
+        }
+        // animal is Ewe
+
+        return (
+                    $this->isPureBredAndTE100($parent) ||
+                    BreedCodeUtil::hasBreedCodePart($parent->getBreedCode(), 'TE', 88)
+               )
+                && $parent->getExteriorMeasurements()
+                ->matching(ExteriorCriteria::pureBredTEMotherOfEweExterior())
+                ->count() > 0;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return bool
+     */
+    private function isPureBredAndTE100($animal)
+    {
+        return $animal
+            && $animal->getBreedCode() === 'TE100'
+            && $animal->getBreedType() === BreedType::PURE_BRED
+            ;
     }
 
 
