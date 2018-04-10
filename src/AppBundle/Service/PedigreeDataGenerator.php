@@ -326,7 +326,7 @@ class PedigreeDataGenerator
      */
     private function getScrapieGenotypeAdministrativeSource()
     {
-        return $this->em->getRepository(ScrapieGenotypeSource::class)->getAdministrativeSource();
+        return $this->em->getRepository(ScrapieGenotypeSource::class)->getAdministrativeSource(false);
     }
 
 

@@ -37,39 +37,49 @@ class ScrapieGenotypeSourceRepository extends BaseRepository
 
     /**
      * @param string $sourceType
+     * @param boolean $withoutSearchArray
      * @return ScrapieGenotypeSource|null
      */
-    function getSourceByDescription($sourceType)
+    function getSourceByDescription($sourceType, $withoutSearchArray)
     {
+        if ($withoutSearchArray) {
+            /** @var ScrapieGenotypeSource $scrapieGenoTypeSource */
+            $scrapieGenoTypeSource = $this->findOneBy(['description' => $sourceType]);
+            return $scrapieGenoTypeSource;
+        }
+
         $this->initializeSourcesByDescription();
         return ArrayUtil::get($sourceType, $this->sources);
     }
 
 
     /**
+     * @param boolean $withoutSearchArray
      * @return ScrapieGenotypeSource|null
      */
-    function getAdministrativeSource()
+    function getAdministrativeSource($withoutSearchArray = true)
     {
-        return $this->getSourceByDescription(ScrapieGenotypeSourceType::ADMINISTRATIVE);
+        return $this->getSourceByDescription(ScrapieGenotypeSourceType::ADMINISTRATIVE, $withoutSearchArray);
     }
 
 
     /**
+     * @param boolean $withoutSearchArray
      * @return ScrapieGenotypeSource|null
      */
-    function getAdminEditSource()
+    function getAdminEditSource($withoutSearchArray = true)
     {
-        return $this->getSourceByDescription(ScrapieGenotypeSourceType::ADMIN_EDIT);
+        return $this->getSourceByDescription(ScrapieGenotypeSourceType::ADMIN_EDIT, $withoutSearchArray);
     }
 
 
     /**
+     * @param boolean $withoutSearchArray
      * @return ScrapieGenotypeSource|null
      */
-    function getLaboratoryResearchSource()
+    function getLaboratoryResearchSource($withoutSearchArray = true)
     {
-        return $this->getSourceByDescription(ScrapieGenotypeSourceType::LABORATORY_RESEARCH);
+        return $this->getSourceByDescription(ScrapieGenotypeSourceType::LABORATORY_RESEARCH, $withoutSearchArray);
     }
 
 
