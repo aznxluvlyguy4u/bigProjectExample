@@ -198,7 +198,17 @@ class Invoice
      */
     private $ubn;
 
-
+    /**
+     * @var DateTime
+     * @ORM\Column(type="datetime", name="paid_date", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $paidDate;
     /**
      * @var bool
      * @ORM\Column(name="is_deleted", type="boolean", nullable=false, options={"default":false})
@@ -220,6 +230,22 @@ class Invoice
 
     public function getId() {
         return $this->id;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getPaidDate()
+    {
+        return $this->paidDate;
+    }
+
+    /**
+     * @param DateTime $paidDate
+     */
+    public function setPaidDate($paidDate)
+    {
+        $this->paidDate = $paidDate;
     }
 
     /**
