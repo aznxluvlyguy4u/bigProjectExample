@@ -676,7 +676,7 @@ class BreedValuesReportQueryGenerator
 
         return "SELECT
                   declare.animal_id,
-                  declare.depart_date,
+                  DATE(declare.depart_date) as depart_date,
                   declare.declare_type
                 FROM (
                   $declaresSelectQuery
