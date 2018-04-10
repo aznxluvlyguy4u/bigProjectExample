@@ -399,8 +399,8 @@ class PedigreeDataGenerator
         $calculatedBreedType = BreedType::REGISTER;
 
         if ($animal->getDateOfBirth()
-            && $this->isPureBredValidatedBMParent($animal, true)
-            && $this->isPureBredValidatedBMParent($animal, false)
+            && $this->hasPureBredValidatedBMParent($animal, true)
+            && $this->hasPureBredValidatedBMParent($animal, false)
         ) {
             $calculatedBreedType = BreedType::PURE_BRED;
         }
@@ -419,7 +419,7 @@ class PedigreeDataGenerator
      * @param $isFather
      * @return bool
      */
-    private function isPureBredValidatedBMParent(Animal $animal, $isFather)
+    private function hasPureBredValidatedBMParent(Animal $animal, $isFather)
     {
         $parent = $isFather ? $animal->getParentFather() : $animal->getParentMother();
 
