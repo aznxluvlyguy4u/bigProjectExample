@@ -77,7 +77,8 @@ class PedigreeDataGenerator
             }
 
         } catch (\Exception $exception) {
-            // TODO log errors
+            $this->logger->error($exception->getTraceAsString());
+            $this->logger->error($exception->getMessage());
         }
 
         $this->em->getRepository(ScrapieGenotypeSource::class)->clearSearchArrays();
