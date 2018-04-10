@@ -2006,5 +2006,54 @@ class AnimalRepository extends BaseRepository
         $results = $this->getConnection()->query($sql)->fetchAll();
         return SqlUtil::groupSqlResultsOfKey1ByKey2('count', 'stn', $results,true, false);
     }
-    
+
+
+    /**
+     * @param boolean $onlyIncludeCurrentLivestockAnimals
+     * @return array|Animal[]
+     */
+    public function getAllAnimalsFromDeclareBirth($onlyIncludeCurrentLivestockAnimals)
+    {
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $notNullLocationQuery = null;
+        $animalIsAliveQuery = null;
+
+        if ($onlyIncludeCurrentLivestockAnimals) {
+            $notNullLocationQuery = $qb->expr()->isNotNull('animal.location');
+            $animalIsAliveQuery = $qb->expr()->eq('animal.isAlive', 'true');
+        }
+
+        $qb
+            ->select('b', 'animal')
+            ->from(DeclareBirth::class, 'b')
+            ->innerJoin('b.animal', 'animal', Join::WITH, $qb->expr()->eq('b.animal', 'animal.id'))
+            ->where(
+                $qb->expr()->andX(
+                    $qb->expr()->orX(
+                        $qb->expr()->eq('b.requestState', "'".RequestStateType::FINISHED."'"),
+                        $qb->expr()->eq('b.requestState', "'".RequestStateType::FINISHED_WITH_WARNING."'")
+                    ),
+                    $notNullLocationQuery,
+                    $animalIsAliveQuery
+                )
+            );
+
+        $animals = [];
+
+        /** @var DeclareBirth $declareBirth */
+        foreach ($qb->getQuery()->getResult() as $declareBirth)
+        {
+            $animal = $declareBirth->getAnimal();
+            if (!$animal) {
+                continue;
+            }
+
+            if (!key_exists($animal->getId(), $animals)) {
+                $animals[$animal->getId()] = $animal;
+            }
+        }
+        return $animals;
+    }
+
 }
