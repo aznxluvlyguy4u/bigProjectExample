@@ -804,6 +804,19 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@logger'
 
+    app.pedigree_data_reprocessor.base:
+        abstract: true
+        arguments:
+          - '@doctrine.orm.default_entity_manager'
+          - '@logger'
+          - '@AppBundle\Service\PedigreeDataGenerator'
+
+    AppBundle\Service\Migration\PedigreeDataReprocessor:
+        parent: app.pedigree_data_reprocessor.base
+
+    AppBundle\Service\Migration\ScrapieGenotypeReprocessor:
+        parent: app.pedigree_data_reprocessor.base
+
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:
         class: AppBundle\Serializer\CustomDateTimeHandler

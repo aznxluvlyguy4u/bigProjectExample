@@ -48,14 +48,71 @@ class PedigreeDataGenerator
         $this->logger = $logger;
     }
 
+
+    /**
+     * This function is intended to be used, right after the declareBirths of a litter.
+     *
+     * @param Animal[] $animals The animals array should contain the necessary pedigree and parent data.
+     * @param Location $location The current location of all given animals. If empty the current location of each animal is used
+     * @return Animal[]
+     */
+    public function generate($animals, $location)
+    {
+        return $this->generateBase($animals, $location);
+    }
+
+
+    /**
+     * Use this function when processing animals from old declare births.
+     *
+     * @param $animals
+     * @return Animal[]
+     */
+    public function generateBreedAndPedigreeData($animals)
+    {
+        return $this->generateBase(
+            $animals,
+            null,
+            true,
+            false
+        );
+    }
+
+
+    /**
+     * Use this function when processing animals from old declare births.
+     *
+     * @param $animals
+     * @param null $location
+     * @return Animal[]
+     */
+    public function generateScrapieGenotypeData($animals, $location = null)
+    {
+        return $this->generateBase(
+            $animals,
+            $location,
+            false,
+            true
+        );
+    }
+
+
     /**
      * @param Animal[] $animals The animals array should contain the necessary pedigree and parent data.
      * @param Location $location The current location of all given animals. If empty the current location of each animal is used.
+     * @param boolean $ignoreScrapieGenotypeGeneration
+     * @param boolean $ignoreNonScrapieGenotypeGeneration
      * @param boolean $overwriteExistingData
      * @param int $batchSize
      * @return Animal[]
      */
-    public function generate($animals, $location, $overwriteExistingData, $batchSize = self::BATCH_SIZE)
+    private function generateBase($animals,
+                                  $location = null,
+                                  $ignoreScrapieGenotypeGeneration = false,
+                                  $ignoreNonScrapieGenotypeGeneration = false,
+                                  $overwriteExistingData = false,
+                                  $batchSize = self::BATCH_SIZE
+    )
     {
         $this->isAnyValueUpdated = false;
         $this->location = $location;
@@ -65,7 +122,11 @@ class PedigreeDataGenerator
         try {
 
             foreach ($animals as $key => $animal) {
-                $animals[$key] = $this->generatePedigreeData($animal);
+                $animals[$key] = $this->generatePedigreeData(
+                    $animal,
+                    $ignoreScrapieGenotypeGeneration,
+                    $ignoreNonScrapieGenotypeGeneration
+                );
 
                 if ($this->inBatchSize%$batchSize === 0) {
                     $this->em->flush();
@@ -88,18 +149,25 @@ class PedigreeDataGenerator
 
 
     /**
+     * @param boolean $ignoreScrapieGenotypeGeneration
+     * @param boolean $ignoreNonScrapieGenotypeGeneration
      * @param Animal $animal
      * @return Animal
      */
-    private function generatePedigreeData(Animal $animal)
+    private function generatePedigreeData(Animal $animal, $ignoreScrapieGenotypeGeneration, $ignoreNonScrapieGenotypeGeneration)
     {
         $this->isAnimalValueUpdated = false;
 
         // NOTE! Run these functions in this order!
-        $animal = $this->generateMissingBreedCodes($animal);
-        $animal = $this->generatePedigreeCountryCodeAndNumber($animal);
-        $animal = $this->generateScrapieGenotype($animal);
-        $animal = $this->generateBreedType($animal);
+        if (!$ignoreNonScrapieGenotypeGeneration) {
+            $animal = $this->generateMissingBreedCodes($animal);
+            $animal = $this->generatePedigreeCountryCodeAndNumber($animal);
+            $animal = $this->generateBreedType($animal);
+        }
+
+        if (!$ignoreScrapieGenotypeGeneration) {
+            $animal = $this->generateScrapieGenotype($animal);
+        }
 
         if ($this->isAnimalValueUpdated) {
             $this->em->persist($animal);
