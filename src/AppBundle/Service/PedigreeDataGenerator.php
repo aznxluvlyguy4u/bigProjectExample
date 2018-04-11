@@ -350,16 +350,17 @@ class PedigreeDataGenerator
             return $animal;
         }
 
-        $breedCodeChild = BreedCodeUtil::calculateBreedCodeFromParents(
+        $calculatedBreedCodeChild = BreedCodeUtil::calculateBreedCodeFromParents(
             $animal->getParentFather(),
             $animal->getParentMother(),
             null,
             true
         );
 
-        $animal->setBreedCode($breedCodeChild);
-
-        $this->valueWasUpdated();
+        if ($calculatedBreedCodeChild !== $animal->getBreedCode()) {
+            $animal->setBreedCode($calculatedBreedCodeChild);
+            $this->valueWasUpdated();
+        }
 
         return $animal;
     }
