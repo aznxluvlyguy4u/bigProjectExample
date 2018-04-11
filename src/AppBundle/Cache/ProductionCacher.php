@@ -4,6 +4,8 @@
 namespace AppBundle\Cache;
 
 
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\Litter;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
@@ -18,6 +20,38 @@ class ProductionCacher
     public static function updateAllProductionValues(Connection $conn)
     {
         return self::updateProductionValues($conn, '');
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param Litter $litter
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateProductionValuesByLitter(Connection $conn, Litter $litter)
+    {
+        $animalIds = [];
+
+        if ($litter->getAnimalMother() && $litter->getAnimalMother()->getId() !== null) {
+            $animalIds[] = $litter->getAnimalMother()->getId();
+        }
+
+        if ($litter->getAnimalMother() && $litter->getAnimalMother()->getId() !== null) {
+            $animalIds[] = $litter->getAnimalMother()->getId();
+        }
+
+        /** @var Animal $child */
+        foreach($litter->getChildren() as $child) {
+            if ($child && $child->getId() !== null) {
+                $animalIds[] = $child->getId();
+            }
+        }
+
+        if (count($animalIds) === 0) {
+            return 0;
+        }
+        return self::updateProductionValues($conn, $animalIds);
     }
 
 

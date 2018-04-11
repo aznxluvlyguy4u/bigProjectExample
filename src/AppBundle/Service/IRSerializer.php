@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 use AppBundle\Cache\GeneDiversityUpdater;
+use AppBundle\Cache\ProductionCacher;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
@@ -731,6 +732,11 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
 
             if (count($newWeights) + count($newTailLengths) > 0) {
                 $this->getManager()->flush();
+            }
+
+            if (count($children) === 0) {
+                // Immediately update production values if all births are stillborn
+                ProductionCacher::updateProductionValuesByLitter($this->conn, $litter);
             }
 
             // TODO activate this when pedigreeDataGenerator has been completed
