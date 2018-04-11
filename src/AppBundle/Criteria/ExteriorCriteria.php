@@ -6,6 +6,8 @@ namespace AppBundle\Criteria;
 
 use AppBundle\Enumerator\ExteriorKind;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\Common\Collections\Expr\Comparison;
+use Doctrine\Common\Collections\Expr\CompositeExpression;
 
 class ExteriorCriteria
 {
@@ -13,33 +15,47 @@ class ExteriorCriteria
 
 
     /**
-     * @param bool $ignoreDOKind
-     * @return \Doctrine\Common\Collections\Expr\Comparison|null
+     * @param CompositeExpression|Comparison $criteria
+     * @param boolean $ignoreDOKind
+     * @return CompositeExpression
      */
-    private static function doKindCriteria($ignoreDOKind = false)
+    private static function addDoKindCriteria($criteria, $ignoreDOKind)
     {
-        return $ignoreDOKind ? null : Criteria::expr()->eq('kind', ExteriorKind::DO_);
+        if ($ignoreDOKind) {
+            return $criteria;
+        }
+
+        return Criteria::expr()->orX(
+            $criteria,
+            Criteria::expr()->eq('kind', ExteriorKind::DO_)
+        );
     }
 
 
+    /**
+     * @param bool $ignoreDOKind
+     * @return CompositeExpression
+     */
     private static function olderThanOneYearKindsCriteria($ignoreDOKind = false)
     {
-        return Criteria::expr()->orX(
-            self::doKindCriteria($ignoreDOKind),
+        $criteria = Criteria::expr()->orX(
             Criteria::expr()->eq('kind', ExteriorKind::DF_),
             Criteria::expr()->eq('kind', ExteriorKind::DD_),
             Criteria::expr()->eq('kind', ExteriorKind::HK_),
             Criteria::expr()->eq('kind', ExteriorKind::HH_)
         );
+        return self::addDoKindCriteria($criteria, $ignoreDOKind);
     }
 
 
+    /**
+     * @param bool $ignoreDOKind
+     * @return Comparison|CompositeExpression
+     */
     private static function oneYearOldOrYoungerKindsCriteria($ignoreDOKind = false)
     {
-        return Criteria::expr()->orX(
-            Criteria::expr()->eq('kind', ExteriorKind::VG_),
-            self::doKindCriteria($ignoreDOKind)
-        );
+        $criteria = Criteria::expr()->eq('kind', ExteriorKind::VG_);
+        return self::addDoKindCriteria($criteria, $ignoreDOKind);
     }
 
 
