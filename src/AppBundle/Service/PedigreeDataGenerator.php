@@ -17,6 +17,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\BreedCodeUtil;
+use AppBundle\Util\CommandUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,12 +25,14 @@ use Symfony\Bridge\Monolog\Logger;
 
 class PedigreeDataGenerator
 {
-    const BATCH_SIZE = 1000;
+    const BATCH_SIZE = 100;
 
     /** @var EntityManagerInterface */
     private $em;
     /** @var Logger */
     private $logger;
+    /** @var CommandUtil */
+    private $cmdUtil;
 
     /** @var boolean */
     private $overwriteExistingData;
@@ -43,6 +46,12 @@ class PedigreeDataGenerator
     private $inBatchSize;
     /** @var int */
     private $totalUpdateCount;
+    /** @var int */
+    private $lastFlushedAnimalId;
+    /** @var int */
+    private $lastCheckedAnimalId;
+    /** @var int */
+    private $startAnimalId;
 
     public function __construct(EntityManagerInterface $em, Logger $logger)
     {
@@ -67,11 +76,16 @@ class PedigreeDataGenerator
     /**
      * Use this function when processing animals from old declare births.
      *
-     * @param $animals
+     * @param Animal[] $animals
+     * @param CommandUtil $commandUtil
+     * @param int $startAnimalId
      * @return Animal[]
      */
-    public function generateBreedAndPedigreeData($animals)
+    public function generateBreedAndPedigreeData($animals, CommandUtil $commandUtil, $startAnimalId = 1)
     {
+        $this->cmdUtil = $commandUtil;
+        $this->startAnimalId = $startAnimalId;
+
         return $this->generateBase(
             $animals,
             null,
@@ -84,12 +98,17 @@ class PedigreeDataGenerator
     /**
      * Use this function when processing animals from old declare births.
      *
-     * @param $animals
+     * @param Animal[] $animals
      * @param null $location
+     * @param CommandUtil $commandUtil
+     * @param int $startAnimalId
      * @return Animal[]
      */
-    public function generateScrapieGenotypeData($animals, $location = null)
+    public function generateScrapieGenotypeData($animals, $location = null, CommandUtil $commandUtil, $startAnimalId = 1)
     {
+        $this->cmdUtil = $commandUtil;
+        $this->startAnimalId = $startAnimalId;
+
         return $this->generateBase(
             $animals,
             $location,
@@ -122,6 +141,13 @@ class PedigreeDataGenerator
         $this->inBatchSize = 0;
         $this->totalUpdateCount = 0;
 
+        $this->lastFlushedAnimalId = 0;
+        $this->lastCheckedAnimalId = $this->startAnimalId ? $this->startAnimalId : 1;
+
+        if ($this->cmdUtil) {
+            $this->cmdUtil->setStartTimeAndPrintIt(count($animals), 1);
+        }
+
         try {
 
             foreach ($animals as $key => $animal) {
@@ -131,13 +157,21 @@ class PedigreeDataGenerator
                     $ignoreNonScrapieGenotypeGeneration
                 );
 
-                if ($this->inBatchSize%$batchSize === 0 && $this->totalUpdateCount > 0) {
+                $this->lastCheckedAnimalId = $animal->getId();
+
+                if ($this->inBatchSize%$batchSize === 0 && $this->inBatchSize > 0) {
                     $this->flushBatch();
                 }
+
+                $this->advanceProgressBar();
             }
 
             if ($this->isAnyValueUpdated) {
                 $this->flushBatch();
+            }
+
+            if ($this->cmdUtil) {
+                $this->cmdUtil->setEndTimeAndPrintFinalOverview();
             }
 
         } catch (\Exception $exception) {
@@ -146,6 +180,7 @@ class PedigreeDataGenerator
         }
 
         $this->em->getRepository(ScrapieGenotypeSource::class)->clearSearchArrays();
+        $this->resetCounters();
 
         return $animals;
     }
@@ -187,7 +222,19 @@ class PedigreeDataGenerator
         $this->totalUpdateCount += $this->inBatchSize;
         $this->inBatchSize = 0;
         $this->isAnyValueUpdated =  false;
-        $this->logger->notice($this->totalUpdateCount. ' total values updated');
+        $this->lastFlushedAnimalId = $this->lastCheckedAnimalId;
+    }
+
+
+    private function advanceProgressBar()
+    {
+        if ($this->cmdUtil) {
+            $this->cmdUtil->advanceProgressBar(
+                1,
+                'inBatch|TotalUpdateCount: '.$this->inBatchSize.'|'.$this->totalUpdateCount
+                .'  lastAnimalId(checked|flushed): '.$this->lastCheckedAnimalId.'|'.$this->lastFlushedAnimalId
+                );
+        }
     }
 
 
@@ -619,4 +666,12 @@ class PedigreeDataGenerator
     }
 
 
+    private function resetCounters()
+    {
+        $this->inBatchSize = 0;
+        $this->totalUpdateCount = 0;
+        $this->lastFlushedAnimalId = 0;
+        $this->lastCheckedAnimalId = 0;
+        $this->startAnimalId = 0;
+    }
 }

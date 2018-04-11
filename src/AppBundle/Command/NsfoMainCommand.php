@@ -670,8 +670,8 @@ class NsfoMainCommand extends ContainerAwareCommand
         switch ($option) {
             case 1: $this->getContainer()->get('app.datafix.birth.measurements.missing')->run(); break;
             case 2: $this->getContainer()->get('AppBundle\Service\DataFix\MissingUbnOfBirthFillerService')->run(); break;
-            case 3: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->run(); break;
-            case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScrapieGenotypeReprocessor')->run(); break;
+            case 3: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->run($this->cmdUtil); break;
+            case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScrapieGenotypeReprocessor')->run($this->cmdUtil); break;
 
             default: $this->writeLn('Exit menu'); return;
         }
