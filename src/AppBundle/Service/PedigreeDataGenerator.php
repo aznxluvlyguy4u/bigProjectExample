@@ -25,7 +25,7 @@ use Symfony\Bridge\Monolog\Logger;
 
 class PedigreeDataGenerator
 {
-    const BATCH_SIZE = 100;
+    const BATCH_SIZE = 1000;
 
     /** @var EntityManagerInterface */
     private $em;
