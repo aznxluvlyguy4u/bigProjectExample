@@ -2010,9 +2010,10 @@ class AnimalRepository extends BaseRepository
 
     /**
      * @param boolean $onlyIncludeCurrentLivestockAnimals
+     * @param int $minAnimalId
      * @return array|Animal[]
      */
-    public function getAllAnimalsFromDeclareBirth($onlyIncludeCurrentLivestockAnimals)
+    public function getAllAnimalsFromDeclareBirth($onlyIncludeCurrentLivestockAnimals, $minAnimalId = 0)
     {
         $qb = $this->getManager()->createQueryBuilder();
 
@@ -2034,6 +2035,7 @@ class AnimalRepository extends BaseRepository
                         $qb->expr()->eq('b.requestState', "'".RequestStateType::FINISHED."'"),
                         $qb->expr()->eq('b.requestState', "'".RequestStateType::FINISHED_WITH_WARNING."'")
                     ),
+                    $qb->expr()->gte('animal.id', $minAnimalId),
                     $notNullLocationQuery,
                     $animalIsAliveQuery
                 )
@@ -2053,6 +2055,9 @@ class AnimalRepository extends BaseRepository
                 $animals[$animal->getId()] = $animal;
             }
         }
+
+        ksort($animals);
+
         return $animals;
     }
 
