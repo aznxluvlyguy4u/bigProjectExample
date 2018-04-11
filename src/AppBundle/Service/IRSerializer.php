@@ -739,8 +739,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 ProductionCacher::updateProductionValuesByLitter($this->conn, $litter);
             }
 
-            // TODO activate this when pedigreeDataGenerator has been completed
-            // $children = $this->pedigreeDataGenerator->generate($children, $location,false);
+            $children = $this->pedigreeDataGenerator->generate($children, $location);
 
         } catch (UniqueConstraintViolationException $exception) {
             //Reset tags to UNASSIGNED
