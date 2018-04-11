@@ -221,7 +221,7 @@ class PedigreeDataGenerator
         $this->em->flush();
         $this->totalUpdateCount += $this->inBatchSize;
         $this->inBatchSize = 0;
-        $this->isAnyValueUpdated =  false;
+        $this->isAnyValueUpdated = false;
         $this->lastFlushedAnimalId = $this->lastCheckedAnimalId;
     }
 
@@ -445,7 +445,7 @@ class PedigreeDataGenerator
             $this->getLocation($animal)->getLocationHealth()->getCurrentScrapieStatus() === ScrapieStatus::RESISTANT)
         {
             $animal->setScrapieGenotype(ScrapieGenotypeType::ARR_ARR);
-            $animal->setScrapieGenotype($this->getScrapieGenotypeAdministrativeSource());
+            $animal->setScrapieGenotypeSource($this->getScrapieGenotypeAdministrativeSource());
             $this->valueWasUpdated();
         }
 
