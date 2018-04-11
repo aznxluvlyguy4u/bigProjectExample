@@ -79,6 +79,8 @@ class PedigreeDataReprocessorBase
      */
     protected function askForStartAnimalId(CommandUtil $commandUtil)
     {
-        return $commandUtil->generateQuestion('insert animalId to start from (default = '.self::DEFAULT_START_ANIMAL_ID.')', self::DEFAULT_START_ANIMAL_ID);
+        $animalId = $commandUtil->generateQuestion('insert animalId to start from (default = '.self::DEFAULT_START_ANIMAL_ID.')', self::DEFAULT_START_ANIMAL_ID);
+        $this->logger->notice('Selected animalId: '.$animalId);
+        return $animalId;
     }
 }
