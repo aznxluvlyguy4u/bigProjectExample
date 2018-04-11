@@ -7,10 +7,14 @@ namespace AppBundle\Cache;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\ResultTableBreedGrades;
+use AppBundle\Enumerator\MixBlupType;
+use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValueService;
+use AppBundle\Service\NormalDistributionService;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 
 /**
@@ -21,7 +25,7 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class BreedValuesResultTableUpdater
 {
-    /** @var ObjectManager */
+    /** @var ObjectManager|EntityManagerInterface */
     private $em;
     /** @var Connection */
     private $conn;
@@ -29,22 +33,27 @@ class BreedValuesResultTableUpdater
     private $logger;
     /** @var BreedValueService */
     private $breedValueService;
+    /** @var BreedIndexService */
+    private $breedIndexService;
+    /** @var NormalDistributionService */
+    private $normalDistributionService;
 
     /** @var string */
     private $resultTableName;
 
-    /**
-     * BreedValuesResultTableUpdater constructor.
-     * @param ObjectManager $em
-     * @param Logger $logger
-     */
-    public function __construct(ObjectManager $em, Logger $logger)
+    public function __construct(EntityManagerInterface $em,
+                                Logger $logger,
+                                BreedValueService $breedValueService,
+                                BreedIndexService $breedIndexService,
+                                NormalDistributionService $normalDistributionService)
     {
         $this->em = $em;
-        $this->conn = $em->getConnection();
+        $this->conn = $this->em->getConnection();
         $this->logger = $logger;
 
-        $this->breedValueService = new BreedValueService($em, $logger);
+        $this->breedValueService = $breedValueService;
+        $this->breedIndexService = $breedIndexService;
+        $this->normalDistributionService = $normalDistributionService;
 
         $this->resultTableName = ResultTableBreedGrades::getTableName();
     }
@@ -92,18 +101,42 @@ class BreedValuesResultTableUpdater
     }
 
 
-    public function update(array $analysisTypes = [])
+    /**
+     * @param array $analysisTypes
+     * @param boolean $updateBreedIndexes
+     * @param boolean $updateNormalDistributions
+     * @param string $generationDateString if null, then the generationDate of the latest inserted breedValue will be used
+     * @throws \Exception
+     */
+    public function update(array $analysisTypes = [], $updateBreedIndexes = false, $updateNormalDistributions = false, $generationDateString = null)
     {
         $this->insertMissingBlankRecords();
+        $generationDateString = $this->getGenerationDateString($generationDateString);
 
         /*
          * NOTE! Without genetic bases the corrected breedValues cannot be calculated, so do this first!
          */
         $this->breedValueService->initializeBlankGeneticBases();
 
-        /*
-         * Updating breedValue result table values and accuracies
-         */
+        if ($updateBreedIndexes) {
+            $this->updateBreedIndexesByOutputFileType($generationDateString, $analysisTypes);
+        }
+
+        if ($updateNormalDistributions) {
+            $this->updateNormalDistributions($generationDateString, $analysisTypes);
+        }
+
+
+        $this->updateBreedValueResultTableValuesAndAccuracies($analysisTypes);
+    }
+
+
+    /**
+     * @param $analysisTypes
+     * @throws \Exception
+     */
+    private function updateBreedValueResultTableValuesAndAccuracies($analysisTypes)
+    {
         $results = $this->getResultTableVariables();
 
         $totalBreedValueUpdateCount = 0;
@@ -126,6 +159,28 @@ class BreedValuesResultTableUpdater
         $breedIndexUpdateCount = $this->updateResultTableByBreedValueIndexType();
         $messagePrefix = $breedIndexUpdateCount > 0 ? 'In total '.$breedIndexUpdateCount : 'In total NO';
         $this->write($messagePrefix. ' breed Index&Accuracy sets were updated');
+    }
+
+
+    /**
+     * @param $generationDateString
+     * @return mixed
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
+     */
+    public function getGenerationDateString($generationDateString)
+    {
+        if (is_string($generationDateString) && $generationDateString != '') {
+            return $generationDateString;
+        }
+
+        $sql = "SELECT generation_date FROM breed_value WHERE id = (SELECT MAX(id) FROM breed_value) LIMIT 1";
+        $generationDateString = $this->conn->query($sql)->fetch()['generation_date'];
+        if ($generationDateString === null) {
+            throw new \Exception('There are no breed_value records in the database');
+        }
+
+        return $generationDateString;
     }
 
 
@@ -372,6 +427,92 @@ class BreedValuesResultTableUpdater
         }
 
         return $totalUpdateCount;
+    }
+
+    /**
+     * @param array $analysisTypes
+     * @return bool
+     */
+    private function processLambMeatIndexAnalysis(array $analysisTypes)
+    {
+        return $this->processAnalysisType($analysisTypes, MixBlupType::LAMB_MEAT_INDEX);
+    }
+
+    /**
+     * @param array $analysisTypes
+     * @return bool
+     */
+    private function processExteriorAnalysis(array $analysisTypes)
+    {
+        return $this->processAnalysisType($analysisTypes, MixBlupType::EXTERIOR);
+    }
+
+    /**
+     * @param array $analysisTypes
+     * @return bool
+     */
+    private function processFertilityAnalysis(array $analysisTypes)
+    {
+        return $this->processAnalysisType($analysisTypes, MixBlupType::FERTILITY);
+    }
+
+    /**
+     * @param array $analysisTypes
+     * @return bool
+     */
+    private function processWormAnalysis(array $analysisTypes)
+    {
+        return $this->processAnalysisType($analysisTypes, MixBlupType::WORM);
+    }
+
+    /**
+     * @param array $analysisTypesPresent
+     * @param $analysisTypeToProcess
+     * @return bool
+     */
+    private function processAnalysisType(array $analysisTypesPresent = [], $analysisTypeToProcess)
+    {
+        return count($analysisTypesPresent) === 0
+            || in_array($analysisTypeToProcess, $analysisTypesPresent)
+            || key_exists($analysisTypeToProcess, $analysisTypesPresent)
+            ;
+    }
+
+
+    private function updateBreedIndexesByOutputFileType($generationDateString, $analysisTypes = [])
+    {
+        if ($generationDateString) {
+            if ($this->processLambMeatIndexAnalysis($analysisTypes)) {
+                // Make sure the following code already has run once
+                // $this->breedValueService->initializeBlankGeneticBases();
+
+                $this->logger->notice('Processing new LambMeatIndexes...');
+                $this->breedIndexService->updateLambMeatIndexes($generationDateString);
+            }
+        }
+    }
+
+
+    /**
+     * @param string $generationDateString
+     * @param array $analysisTypes
+     * @throws \Exception
+     */
+    private function updateNormalDistributions($generationDateString, $analysisTypes)
+    {
+        if ($generationDateString) {
+
+            if ($this->processLambMeatIndexAnalysis($analysisTypes)) {
+                $this->logger->notice('Processing new LambMeatIndex NormalDistribution...');
+                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString);
+            }
+
+            if ($this->processWormAnalysis($analysisTypes)) {
+                $this->logger->notice('Processing new WormResistance OdinBC NormalDistribution...');
+                $this->normalDistributionService
+                    ->persistBreedValueTypeMeanAndStandardDeviation(BreedValueTypeConstant::ODIN_BC, $generationDateString);
+            }
+        }
     }
 
 

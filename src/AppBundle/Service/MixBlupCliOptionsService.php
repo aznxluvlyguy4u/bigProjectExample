@@ -17,6 +17,7 @@ use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -129,11 +130,11 @@ class MixBlupCliOptionsService
             '11: Initialize MixBlupAnalysisTypes', "\n",
             '12: Delete all duplicate breedValues', "\n",
             '========================================================================', "\n",
-            '13: Update result_table_breed_grades values and accuracies for all breedValue and breedIndex types', "\n",
-            '14: Update result_table_breed_grades values and accuracies for '.MixBlupType::LAMB_MEAT_INDEX.' types', "\n",
-            '15: Update result_table_breed_grades values and accuracies for '.MixBlupType::FERTILITY.' types', "\n",
-            '16: Update result_table_breed_grades values and accuracies for '.MixBlupType::WORM.' types', "\n",
-            '17: Update result_table_breed_grades values and accuracies for '.MixBlupType::EXTERIOR.' types', "\n",
+            '13: Update result_table_breed_grades values and accuracies for all breedValue and breedIndex types (including prerequisite options)', "\n",
+            '14: Update result_table_breed_grades values and accuracies for '.MixBlupType::LAMB_MEAT_INDEX.' types (excluding prerequisites)', "\n",
+            '15: Update result_table_breed_grades values and accuracies for '.MixBlupType::FERTILITY.' types (excluding prerequisites)', "\n",
+            '16: Update result_table_breed_grades values and accuracies for '.MixBlupType::WORM.' types (excluding prerequisites)', "\n",
+            '17: Update result_table_breed_grades values and accuracies for '.MixBlupType::EXTERIOR.' types (excluding prerequisites)', "\n",
             '========================================================================', "\n",
             '18: Initialize lambMeatIndexCoefficients', "\n",
             '19: Initialize wormResistanceIndexCoefficients', "\n",
@@ -181,7 +182,7 @@ class MixBlupCliOptionsService
                 $this->cmdUtil->writeln($message);
                 break;
 
-            case 13: $this->breedValuesResultTableUpdater->update(); break;
+            case 13: $this->updateAllResultTableValuesAndPrerequisites(); break;
             case 14: $this->breedValuesResultTableUpdater->update([MixBlupType::LAMB_MEAT_INDEX]); break;
             case 15: $this->breedValuesResultTableUpdater->update([MixBlupType::FERTILITY]); break;
             case 16: $this->breedValuesResultTableUpdater->update([MixBlupType::WORM]); break;
@@ -220,6 +221,34 @@ class MixBlupCliOptionsService
             default: return;
         }
         $this->run($this->cmdUtil);
+    }
+
+
+    /**
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
+     */
+    private function updateAllResultTableValuesAndPrerequisites()
+    {
+        /*
+         * Options
+         */
+        $updateBreedIndexes = $this->cmdUtil->generateConfirmationQuestion('Update BreedIndexes? (y/n, default is false)');
+        $this->logger->notice('Update BreedIndexes: '. StringUtil::getBooleanAsString($updateBreedIndexes));
+
+        $updateNormalDistributions = $this->cmdUtil->generateConfirmationQuestion('Update NormalDistributions? (y/n, default is false)');
+        $this->logger->notice('Update NormalDistributions: '. StringUtil::getBooleanAsString($updateNormalDistributions));
+
+        $generationDateString = $this->cmdUtil->generateQuestion('Insert custom GenerationDateString (default: The generationDateString of the last inserted breedValue will be used)', null);
+        $this->logger->notice('GenerationDateString to be used: '.$this->breedValuesResultTableUpdater->getGenerationDateString($generationDateString));
+        // End of options
+
+        $this->breedValuesResultTableUpdater->update(
+            [],
+            $updateBreedIndexes,
+            $updateNormalDistributions,
+            $generationDateString
+        );
     }
 
 
