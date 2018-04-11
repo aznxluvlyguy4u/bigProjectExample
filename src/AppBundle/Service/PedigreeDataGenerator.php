@@ -130,11 +130,13 @@ class PedigreeDataGenerator
 
                 if ($this->inBatchSize%$batchSize === 0) {
                     $this->em->flush();
+                    $this->logger->notice($this->inBatchSize. ' values updated');
                 }
             }
 
             if ($this->isAnyValueUpdated) {
                 $this->em->flush();
+                $this->logger->notice($this->inBatchSize. ' values updated');
             }
 
         } catch (\Exception $exception) {
