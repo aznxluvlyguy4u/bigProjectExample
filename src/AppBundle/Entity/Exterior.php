@@ -236,10 +236,14 @@ class Exterior extends Measurement
 
     /**
      * @param string $kind
+     *
+     * @return Exterior
      */
     public function setKind($kind)
     {
         $this->kind = $kind;
+
+        return $this;
     }
 
     /**
@@ -315,11 +319,15 @@ class Exterior extends Measurement
     }
 
     /**
+     * @return Exterior
+     *
      * @param float $progress
      */
     public function setProgress($progress)
     {
         $this->progress = $progress;
+
+        return $this;
     }
 
     /**

@@ -370,11 +370,15 @@ abstract class Measurement
     }
 
     /**
+     * @return Measurement|Exterior
+     *
      * @param boolean $isActive
      */
     public function setIsActive($isActive)
     {
         $this->isActive = $isActive;
+
+        return $this;
     }
 
 
