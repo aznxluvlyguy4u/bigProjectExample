@@ -41,6 +41,8 @@ class PedigreeDataGenerator
     private $isAnimalValueUpdated;
     /** @var int */
     private $inBatchSize;
+    /** @var int */
+    private $totalUpdateCount;
 
     public function __construct(EntityManagerInterface $em, Logger $logger)
     {
@@ -118,6 +120,7 @@ class PedigreeDataGenerator
         $this->location = $location;
         $this->overwriteExistingData = $overwriteExistingData;
         $this->inBatchSize = 0;
+        $this->totalUpdateCount = 0;
 
         try {
 
@@ -128,15 +131,13 @@ class PedigreeDataGenerator
                     $ignoreNonScrapieGenotypeGeneration
                 );
 
-                if ($this->inBatchSize%$batchSize === 0) {
-                    $this->em->flush();
-                    $this->logger->notice($this->inBatchSize. ' values updated');
+                if ($this->inBatchSize%$batchSize === 0 && $this->totalUpdateCount > 0) {
+                    $this->flushBatch();
                 }
             }
 
             if ($this->isAnyValueUpdated) {
-                $this->em->flush();
-                $this->logger->notice($this->inBatchSize. ' values updated');
+                $this->flushBatch();
             }
 
         } catch (\Exception $exception) {
@@ -177,6 +178,16 @@ class PedigreeDataGenerator
         }
 
         return $animal;
+    }
+
+
+    private function flushBatch()
+    {
+        $this->em->flush();
+        $this->totalUpdateCount += $this->inBatchSize;
+        $this->inBatchSize = 0;
+        $this->isAnyValueUpdated =  false;
+        $this->logger->notice($this->totalUpdateCount. ' total values updated');
     }
 
 
