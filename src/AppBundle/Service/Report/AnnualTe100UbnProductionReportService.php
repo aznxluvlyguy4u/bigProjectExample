@@ -76,40 +76,56 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
     {
         $this->activateColumnHeaderTranslation();
 
+        $y1 = '_'.$this->translateColumnHeader('year1');
+        $y2plus = '_'.$this->translateColumnHeader('year2plus');
+        $registrationActivationDate = TimeUtil::getDayOfDateTime($pedigreeActiveEndDateLimit)->format('Y-m-d');
+        $registrationActivationDateLabel = strtr($registrationActivationDate, ['-' => '']);
+        
         return "SELECT
-                  vld.ubn as ".$this->translateColumnHeader('ubn').",
-                  vld.breeder_numbers as ".$this->translateColumnHeader('breedernumber').",
+                  bnubn.ubn_of_birth as ".$this->translateColumnHeader('ubn').",
+                  bnubn.breeder_number as ".$this->translateColumnHeader('breedernumber').",
                   vld.owner_full_name as ".$this->translateColumnHeader('breedername').",
                   vld.city as ".$this->translateColumnHeader('city').",
                   vld.state as ".$this->translateColumnHeader('state').",
                   vld.pedigree_register_abbreviations as ".$this->translateColumnHeader('pedigree_register').",
-                  COALESCE(register_activity.has_active_pedigree_register, FALSE) as ".$this->translateColumnHeader('has_active_pedigree_register').",
-                  set1.litter_count as ".$this->translateColumnHeader('litter_count_year_min_1').",
-                  set1.average_total_born_count as ".$this->translateColumnHeader('average_total_born_count_year_min_1').",
-                  set1.average_born_alive_count as ".$this->translateColumnHeader('average_born_alive_count_year_min_1').",
-                  set1.average_still_born_count as ".$this->translateColumnHeader('average_still_born_count_year_min_1').",
-                  set1.still_born_percentage as ".$this->translateColumnHeader('still_born_percentage_year_min_1').",
-                  set2.litter_count as ".$this->translateColumnHeader('litter_count_year_min_2_or_more').",
-                  set2.average_total_born_count as ".$this->translateColumnHeader('average_total_born_count_year_min_2_or_more').",
-                  set2.average_born_alive_count as ".$this->translateColumnHeader('average_born_alive_count_year_min_2_or_more').",
-                  set2.average_still_born_count as ".$this->translateColumnHeader('average_still_born_count_year_min_2_or_more').",
-                  set2.still_born_percentage as ".$this->translateColumnHeader('still_born_percentage_year_min_2_or_more').",
-                  set2.average_age_in_days_of_mom_during_whelp as ".$this->translateColumnHeader('average_age_in_days_of_mom_during_whelp_year_min_2_or_more').",
-                  set2.average_previous_litter_count_during_whelp as ".$this->translateColumnHeader('average_previous_litter_count_during_whelp_year_min_2_or_more')."
-                FROM view_location_details vld
+                  COALESCE(register_activity.has_active_pedigree_register, FALSE) as ".$this->translateColumnHeader('has_active_pedigree_register').'_'.$registrationActivationDateLabel.",
+                  set1.litter_count as ".$this->translateColumnHeader('litter_count').$y1.",
+                  set1.average_total_born_count as ".$this->translateColumnHeader('avg_total_born_count').$y1.",
+                  set1.average_born_alive_count as ".$this->translateColumnHeader('avg_born_alive_count').$y1.",
+                  set1.average_still_born_count as ".$this->translateColumnHeader('avg_still_born_count').$y1.",
+                  set1.still_born_percentage as ".$this->translateColumnHeader('still_born_percentage').$y1.",
+                  set2.litter_count as ".$this->translateColumnHeader('litter_count').$y2plus.",
+                  set2.average_total_born_count as ".$this->translateColumnHeader('avg_total_born_count').$y2plus.",
+                  set2.average_born_alive_count as ".$this->translateColumnHeader('avg_born_alive_count').$y2plus.",
+                  set2.average_still_born_count as ".$this->translateColumnHeader('avg_still_born_count').$y2plus.",
+                  set2.still_born_percentage as ".$this->translateColumnHeader('still_born_percentage').$y2plus.",
+                  set2.average_age_in_days_of_mom_during_whelp as ".$this->translateColumnHeader('avg_age_in_days_of_mom_during_whelp').$y2plus.",
+                  set2.average_litter_count_during_whelp as ".$this->translateColumnHeader('avg_litter_count_during_whelp').$y2plus."
+                FROM (
+                  SELECT
+                    vlitter.breeder_number,
+                    MAX(vlitter.ubn_of_birth) as ubn_of_birth, -- each location_of_birth_id is only linked to one ubn_of_birth
+                    vlitter.location_of_birth_id
+                  FROM view_litter_details vlitter
+                    WHERE location_of_birth_id NOTNULL AND breeder_number NOTNULL AND is_completed -- ignore imported litters
+                      -- Only litters inserted through the NSFO system will be included, which will all have a location_of_birth_id
+                  GROUP BY breeder_number, location_of_birth_id
+                )bnubn
+                  INNER JOIN view_location_details vld ON vld.location_id = bnubn.location_of_birth_id
                   INNER JOIN (
                               SELECT
                                 location_id, true as has_active_pedigree_register
                               FROM pedigree_register_registration
-                              WHERE end_date ISNULL OR end_date > '".TimeUtil::getDayOfDateTime($pedigreeActiveEndDateLimit)->format('Y-m-d')."'
+                              WHERE end_date ISNULL OR end_date > '".$registrationActivationDate."'
                               GROUP BY location_id
                             )register_activity ON register_activity.location_id = vld.location_id
                   LEFT JOIN (
                             ".$this->getLitterDataQuery($year, true)."
-                    )set1 ON set1.ubn = vld.ubn
+                            )set1 ON set1.location_of_birth_id = bnubn.location_of_birth_id AND set1.breeder_number = bnubn.breeder_number
                   LEFT JOIN (
                             ".$this->getLitterDataQuery($year, false)."
-                            )set2 ON set2.ubn = vld.ubn";
+                            )set2 ON set2.location_of_birth_id = bnubn.location_of_birth_id AND set2.breeder_number = bnubn.breeder_number
+                ORDER BY bnubn.ubn_of_birth, bnubn.breeder_number ";
     }
 
 
@@ -125,7 +141,8 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
 
         return "SELECT
                       -- Set 1 & 2
-                      COALESCE(b.ubn, mom_ubn.ubn) as ubn,
+                      vld.location_of_birth_id,
+                      vld.breeder_number,
                       COUNT(l.id) as litter_count,
                       ROUND(AVG(l.born_alive_count + l.stillborn_count),$avgDecCount) as average_total_born_count,
                       ROUND(AVG(l.born_alive_count),$avgDecCount) as average_born_alive_count,
@@ -136,37 +153,17 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
                             ),$percentDecCount) as still_born_percentage".($isSet1 ? '' : ',')."
                       -- Only for Set 2
                       ".($isSet1 ? '-- ' : '')."EXTRACT(DAYS FROM AVG(l.litter_date - mom.date_of_birth)) as average_age_in_days_of_mom_during_whelp,
-                      ".($isSet1 ? '-- ' : '')."ROUND(AVG(l.litter_ordinal - 1),$avgDecCount) as average_previous_litter_count_during_whelp
+                      ".($isSet1 ? '-- ' : '')."ROUND(AVG(l.litter_ordinal),$avgDecCount) as average_litter_count_during_whelp
                     FROM litter l
+                      INNER JOIN view_litter_details vld ON vld.litter_id = l.id
                       INNER JOIN declare_nsfo_base b ON b.id = l.id
                       INNER JOIN animal mom ON mom.id = l.animal_mother_id
-                      LEFT JOIN (
-                                  -- Get the current ubn or unique historic ubn of the mom
-                                  SELECT
-                                    COALESCE(current_location.ubn, historic_location.ubn) as ubn,
-                                    unique_historic_l.animal_id
-                                  FROM location historic_location
-                                    INNER JOIN (
-                                                 SELECT
-                                                   animal_id,
-                                                   max(location_id) as location_id
-                                                 FROM (
-                                                        SELECT
-                                                          animal_id, location_id
-                                                        FROM animal_residence r
-                                                        GROUP BY animal_id, location_id HAVING COUNT(*) = 1
-                                                      )r
-                                                 GROUP BY animal_id
-                                               )unique_historic_l ON unique_historic_l.location_id = historic_location.id
-                                    INNER JOIN animal a ON a.id = unique_historic_l.animal_id
-                                    INNER JOIN location current_location ON a.location_id = current_location.id
-                                )mom_ubn ON mom_ubn.animal_id = mom.id
                       LEFT JOIN mate m ON m.id = l.mate_id
                     WHERE mom.breed_code = 'TE100'
-                          AND (l.status = '".RequestStateType::COMPLETED."' OR l.status = '".RequestStateType::IMPORTED."')
-                          AND l.litter_date NOTNULL
+                          AND l.status = '".RequestStateType::COMPLETED."' -- ignore imported litters
+                          AND mom.date_of_birth NOTNULL
                           AND (m.pmsg ISNULL OR m.pmsg = FALSE)
-                          AND DATE_PART('YEAR', l.litter_date) ".($isSet1 ? '=' : '<')." $year - 1
-                    GROUP BY COALESCE(b.ubn, mom_ubn.ubn)";
+                          AND DATE_PART('YEAR', mom.date_of_birth) ".($isSet1 ? '=' : '<')." $year - 1
+                    GROUP BY vld.location_of_birth_id, vld.breeder_number";
     }
 }
