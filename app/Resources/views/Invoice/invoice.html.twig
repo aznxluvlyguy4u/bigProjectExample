@@ -1,7 +1,196 @@
-{% extends 'base.html.twig' %}
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="file://{{ rootDirectory }}/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="file://{{ rootDirectory }}/assets/css/invoice.css">
 
-{% block body %}
-    <div class="invoice-wrapper">
-
+    <script src="file://{{ rootDirectory }}/assets/js/jquery-3.3.1.min.js"></script>
+    <script src="file://{{ rootDirectory }}/assets/js/popper.min.js"></script>
+    <script src="file://{{ rootDirectory }}/assets/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-6 offset-6">
+            <img src="file://{{ rootDirectory }}/assets/images/nsfo-logo.png" class="img-fluid" alt="">
+        </div>
     </div>
-{% endblock %}
+    <div class="row">
+        <div class="col-12">
+            <span class="invoice-title">
+                <b>
+                    <u>
+                        Factuur
+                    </u>
+                </b>
+            </span>
+        </div>
+    </div>
+    <div class="row sender-recipient-details">
+        <div class="sender-wrapper table-responsive d-inline-block col-4">
+            <table class="table borderless ">
+                <tbody>
+                <tr>
+                    <td class="height-auto">
+                        Factuur nummer:
+                    </td>
+                    <td class="height-auto">
+                        {{ invoice.invoiceNumber }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="height-auto">
+                        Factuur datum:
+                    </td>
+                    <td class="height-auto">
+                        {{ invoice.invoiceDate | date("d-m-Y") }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="height-auto">
+                        Debiteur nummer:
+                    </td>
+                    <td class="height-auto">
+                        {{ invoice.companyDebtorNumber }}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="recipient-wrapper table-responsive d-inline-block col-4 offset-3">
+            <table class="table borderless">
+                <tr>
+                    <td class="height-auto">
+                        {{ invoice.companyName }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="height-auto">
+                        {{ invoice.companyAddress.streetName }} {{ invoice.companyAddress.addressNumber }}
+                        {% if invoice.companyAddress.addressNumberSuffix is not null %}
+                            {{ invoice.companyAddress.addressNumberSuffix }}
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="height-auto">
+                        {{ invoice.companyAddress.postalCode }} {{ invoice.companyAddress.state | upper }}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <table class="table borderless invoice-rule-table invoice-rule-table-spacing">
+                <tr class="only-bottom-border">
+                    <th scope="col" class="align-left">
+                        <b>
+                            Artikelomschrijving
+                        </b>
+                    </th>
+                    <th scope="col" class="align-left">
+                        <b>
+                            Datum
+                        </b>
+                    </th>
+                    <th scope="col" class="align-left">
+                        <b>
+                            Aantal
+                        </b>
+                    </th>
+                    <th scope="col" class="align-left">
+                        <b>
+                            Stuksprijs
+                        </b>
+                    </th>
+                    <th scope="col" class="align-left">
+                        <b>
+                            Totaalprijs
+                        </b>
+                    </th>
+                    <th scope="col" class="align-left">
+                        <b>
+                            BTW
+                        </b>
+                    </th>
+                </tr>
+                {% for selection in invoice.invoiceRuleSelections %}
+                    <tr>
+                        <td class="height-auto">
+                            {{ selection.invoiceRule.description }}
+                        </td>
+                        <td class="height-auto">
+                            {{ selection.date | date("d-m-Y") }}
+                        </td>
+                        <td class="height-auto">
+                            {{ selection.amount | number_format(2, '.', ',') }}
+                        </td>
+                        <td class="height-auto">
+                            {{ selection.invoiceRule.priceExclVat | number_format(2, '.', ',') }}
+                        </td>
+                        <td class="height-auto">
+                            {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, '.', ',') }}
+                        </td>
+                        <td class="height-auto">
+                            {{ selection.invoiceRule.vatPercentageRate | number_format(2, '.', ',') }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    <footer class="footer invoice-footer-spacing">
+        <div class="container-fluid invoice-footer">
+            <div class="row invoice-footer-border">
+                <div class="col-5 no-left-padding">
+                    <table class="table borderless">
+                        {% for vatBreakdownRecord in vatBreakdown.records %}
+                            <tr>
+                                <td>
+                                    {{ vatBreakdownRecord.vatPercentageRate }}% BTW over {{ vatBreakdownRecord.priceExclVatTotal | number_format(2, '.', ',') }}
+                                </td>
+                                <td>
+                                    =
+                                </td>
+                                <td>
+                                    {{ vatBreakdownRecord.vat | number_format(2, '.', ',') }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                <div class="col-4 offset-3">
+                    <table class="table borderless">
+                        <tr class="no-borders">
+                            <td>
+                                Subtotaal:
+                            </td>
+                            <td class="align-right">
+                                {{ vatBreakdown.totalExclVat | number_format(2, '.', ',') }}
+                            </td>
+                        </tr>
+                        <tr class="no-borders">
+                            <td>
+                                BTW:
+                            </td>
+                            <td class="align-right">
+                                {{ vatBreakdown.vat | number_format(2, '.', ',') }}
+                            </td>
+                        </tr>
+                        <tr class="totals-top-bottom-border">
+                            <td>
+                                <b>Totaal: &#0128;</b>
+                            </td>
+                            <td class="align-right">
+                                <b>{{ vatBreakdown.totalInclVat | number_format(2, '.', ',') }}</b>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="disclaimer-wrapper">
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+</body>
