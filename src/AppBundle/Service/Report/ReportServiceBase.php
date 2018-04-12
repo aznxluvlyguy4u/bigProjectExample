@@ -23,6 +23,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
@@ -362,9 +363,13 @@ class ReportServiceBase
 
         $localFilePath = FilesystemUtil::concatDirAndFilename($dir, $filenameWithExtension);
 
-        $writeResult = SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
-        if (!$writeResult) {
-            return ResultUtil::errorResult($this->trans('FAILED WRITING THE CSV FILE'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        try {
+            $writeResult = SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
+            if (!$writeResult) {
+                return ResultUtil::errorResult($this->trans('FAILED WRITING THE CSV FILE'), Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        } catch (\Exception $exception) {
+            return ResultUtil::errorResult($this->translateErrorMessages($exception->getMessage()), $exception->getCode());
         }
 
         if ($uploadToS3) {

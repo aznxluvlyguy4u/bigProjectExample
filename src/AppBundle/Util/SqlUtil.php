@@ -15,7 +15,9 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SqlUtil
 {
@@ -656,15 +658,20 @@ class SqlUtil
      * @param string $filepath
      * @param Logger|null $logger
      * @return bool
+     * @throws \Exception
      */
     public static function writeToFile(Connection $conn, $selectQuery, $filepath, Logger $logger = null)
     {
+        $isDataMissing = false;
+
         try {
             $stmt = $conn->query($selectQuery);
 
             if ($firstRow = $stmt->fetch()) {
                 self::writeRowToFile($filepath, array_keys($firstRow)); //write headers
                 self::writeRowToFile($filepath, $firstRow);
+            } else {
+                $isDataMissing = true;
             }
 
             while ($row = $stmt->fetch()) {
@@ -680,6 +687,10 @@ class SqlUtil
                 $logger->error($exception->getTraceAsString());
             }
             return false;
+        }
+
+        if ($isDataMissing) {
+            throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
         }
 
         return true;
