@@ -49,6 +49,9 @@ services:
         arguments:
           - '@doctrine.orm.default_entity_manager'
           - '@logger'
+          - '@app.breed.value'
+          - '@app.breed.index'
+          - '@AppBundle\Service\NormalDistributionService'
 
     app.info.parameters:
         class: AppBundle\Service\InfoService
@@ -244,6 +247,8 @@ services:
         parent: app.datafix.base
         class: AppBundle\Service\DataFix\MissingBirthMeasurementsService
 
+    AppBundle\Service\DataFix\MissingUbnOfBirthFillerService:
+        parent: app.datafix.base
 
     app.migrator.vsm:
         class: AppBundle\Service\Migration\VsmMigratorService
@@ -341,6 +346,9 @@ services:
           - '@logger'
 
     AppBundle\Service\Migration\LedgerCategoryMigrator:
+        parent: app.migrator.base
+
+    AppBundle\Service\Migration\PedigreeCodeInitializer:
         parent: app.migrator.base
 
     AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator:
@@ -482,6 +490,9 @@ services:
         class: AppBundle\Service\Report\LiveStockReportService
 
     AppBundle\Service\Report\AnimalsOverviewReportService:
+        parent: app.report.breedvalues.base
+
+    AppBundle\Service\Report\AnnualTe100UbnProductionReportService:
         parent: app.report.breedvalues.base
 
     app.report.pedigree_certificates:
@@ -795,6 +806,19 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
+
+    app.pedigree_data_reprocessor.base:
+        abstract: true
+        arguments:
+          - '@doctrine.orm.default_entity_manager'
+          - '@logger'
+          - '@AppBundle\Service\PedigreeDataGenerator'
+
+    AppBundle\Service\Migration\PedigreeDataReprocessor:
+        parent: app.pedigree_data_reprocessor.base
+
+    AppBundle\Service\Migration\ScrapieGenotypeReprocessor:
+        parent: app.pedigree_data_reprocessor.base
 
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:

@@ -22,8 +22,11 @@ class QueryParameter
     const USER_ACTION_TYPE = 'user_action_type';
     const USER_ACCOUNT_ID = 'user_account_id';
     const LANGUAGE = 'language';
+    const PEDIGREE_ACTIVE_END_DATE = 'pedigree_active_end_date';
     const PLAIN_TEXT_INPUT = 'plain_text_input';
+    const REFERENCE_DATE = 'reference_date';
     const ASSOCIATIVE_ARRAY_OUTPUT = 'associative_array_output';
     const IS_EWES_WITH_LAST_MATE = 'is_ewes_with_last_mate';
     const MAX_DAYS = 'max_days';
+    const YEAR = 'year';
 }

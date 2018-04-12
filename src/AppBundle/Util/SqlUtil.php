@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
@@ -14,6 +15,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SqlUtil
 {
@@ -499,6 +501,19 @@ class SqlUtil
 
 
     /**
+     * @param array $values
+     * @param boolean $valueIsBetweenSingleQuotationMarks
+     * @return null|string
+     */
+    public static function valueString($values = [], $valueIsBetweenSingleQuotationMarks)
+    {
+        if(count($values) === 0) { return null; }
+
+        $quotationMark = $valueIsBetweenSingleQuotationMarks ? "'" : '';
+        return "($quotationMark".implode("$quotationMark),($quotationMark", $values) . "$quotationMark)";
+    }
+
+    /**
      * @param array $dutchByEnglishValues
      * @param bool $isOnlyCapitalizeFirstLetterKey
      * @param bool $isOnlyCapitalizeFirstLetterValue
@@ -612,6 +627,31 @@ class SqlUtil
 
     /**
      * @param Connection $conn
+     * @param $animalIds
+     * @param bool $sortResults
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getMissingAnimalIds(Connection $conn, $animalIds, $sortResults = false)
+    {
+        if (count($animalIds) === 0) { return []; }
+
+        $wrappedAnimalIds = SqlUtil::valueString($animalIds, false);
+
+        $sql = "SELECT
+                  missing.animal_id
+                FROM
+                  (VALUES $wrappedAnimalIds) AS missing(animal_id)
+                  LEFT JOIN animal a ON a.id = missing.animal_id
+                WHERE a.id ISNULL";
+        $missingAnimalIds = $conn->query($sql)->fetchAll();
+
+        return SqlUtil::getSingleValueGroupedSqlResults('animal_id', $missingAnimalIds,true, $sortResults);
+    }
+
+
+    /**
+     * @param Connection $conn
      * @param string $selectQuery
      * @param string $filepath
      * @param Logger|null $logger
@@ -620,12 +660,20 @@ class SqlUtil
     public static function writeToFile(Connection $conn, $selectQuery, $filepath, Logger $logger = null)
     {
         try {
-            $sql = "COPY (
-                $selectQuery
-                ) TO '$filepath'  With CSV HEADER DELIMITER ';'";
-            $conn->exec($sql);
+            $stmt = $conn->query($selectQuery);
+
+            if ($firstRow = $stmt->fetch()) {
+                self::writeRowToFile($filepath, array_keys($firstRow)); //write headers
+                self::writeRowToFile($filepath, $firstRow);
+            }
+
+            while ($row = $stmt->fetch()) {
+                self::writeRowToFile($filepath, $row);
+            }
 
         } catch (\Exception $exception) {
+
+            FilesystemUtil::deleteFile($filepath);
 
             if ($logger) {
                 $logger->error($exception->getMessage());
@@ -635,5 +683,16 @@ class SqlUtil
         }
 
         return true;
+    }
+
+
+    /**
+     * @param string $filepath
+     * @param array $values
+     * @param string $separator
+     */
+    private static function writeRowToFile($filepath, array $values, $separator = CsvOptions::DEFAULT_SEPARATOR)
+    {
+        file_put_contents($filepath, implode($separator, $values) ."\n",FILE_APPEND);
     }
 }

@@ -82,6 +82,17 @@ class FilesystemUtil
 
 
     /**
+     * @param $filepath
+     */
+    public static function deleteFile($filepath)
+    {
+        $fs = new Filesystem();
+        $fs->remove($filepath);
+        $fs = null;
+    }
+
+
+    /**
      * Copy the contents of a directory to another directory
      * @param $src
      * @param $dst

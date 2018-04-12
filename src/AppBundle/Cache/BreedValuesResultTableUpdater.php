@@ -7,10 +7,14 @@ namespace AppBundle\Cache;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\ResultTableBreedGrades;
+use AppBundle\Enumerator\MixBlupType;
+use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValueService;
+use AppBundle\Service\NormalDistributionService;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 
 /**
@@ -21,7 +25,7 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class BreedValuesResultTableUpdater
 {
-    /** @var ObjectManager */
+    /** @var ObjectManager|EntityManagerInterface */
     private $em;
     /** @var Connection */
     private $conn;
@@ -29,22 +33,27 @@ class BreedValuesResultTableUpdater
     private $logger;
     /** @var BreedValueService */
     private $breedValueService;
+    /** @var BreedIndexService */
+    private $breedIndexService;
+    /** @var NormalDistributionService */
+    private $normalDistributionService;
 
     /** @var string */
     private $resultTableName;
 
-    /**
-     * BreedValuesResultTableUpdater constructor.
-     * @param ObjectManager $em
-     * @param Logger $logger
-     */
-    public function __construct(ObjectManager $em, Logger $logger)
+    public function __construct(EntityManagerInterface $em,
+                                Logger $logger,
+                                BreedValueService $breedValueService,
+                                BreedIndexService $breedIndexService,
+                                NormalDistributionService $normalDistributionService)
     {
         $this->em = $em;
-        $this->conn = $em->getConnection();
+        $this->conn = $this->em->getConnection();
         $this->logger = $logger;
 
-        $this->breedValueService = new BreedValueService($em, $logger);
+        $this->breedValueService = $breedValueService;
+        $this->breedIndexService = $breedIndexService;
+        $this->normalDistributionService = $normalDistributionService;
 
         $this->resultTableName = ResultTableBreedGrades::getTableName();
     }
@@ -92,18 +101,42 @@ class BreedValuesResultTableUpdater
     }
 
 
-    public function update(array $analysisTypes = [])
+    /**
+     * @param array $analysisTypes
+     * @param boolean $updateBreedIndexes
+     * @param boolean $updateNormalDistributions
+     * @param string $generationDateString if null, then the generationDate of the latest inserted breedValue will be used
+     * @throws \Exception
+     */
+    public function update(array $analysisTypes = [], $updateBreedIndexes = false, $updateNormalDistributions = false, $generationDateString = null)
     {
         $this->insertMissingBlankRecords();
+        $generationDateString = $this->getGenerationDateString($generationDateString);
 
         /*
          * NOTE! Without genetic bases the corrected breedValues cannot be calculated, so do this first!
          */
         $this->breedValueService->initializeBlankGeneticBases();
 
-        /*
-         * Updating breedValue result table values and accuracies
-         */
+        if ($updateBreedIndexes) {
+            $this->updateBreedIndexesByOutputFileType($generationDateString, $analysisTypes);
+        }
+
+        if ($updateNormalDistributions) {
+            $this->updateNormalDistributions($generationDateString, $analysisTypes);
+        }
+
+
+        $this->updateBreedValueResultTableValuesAndAccuracies($analysisTypes);
+    }
+
+
+    /**
+     * @param $analysisTypes
+     * @throws \Exception
+     */
+    private function updateBreedValueResultTableValuesAndAccuracies($analysisTypes)
+    {
         $results = $this->getResultTableVariables();
 
         $totalBreedValueUpdateCount = 0;
@@ -126,6 +159,28 @@ class BreedValuesResultTableUpdater
         $breedIndexUpdateCount = $this->updateResultTableByBreedValueIndexType();
         $messagePrefix = $breedIndexUpdateCount > 0 ? 'In total '.$breedIndexUpdateCount : 'In total NO';
         $this->write($messagePrefix. ' breed Index&Accuracy sets were updated');
+    }
+
+
+    /**
+     * @param $generationDateString
+     * @return mixed
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
+     */
+    public function getGenerationDateString($generationDateString)
+    {
+        if (is_string($generationDateString) && $generationDateString != '') {
+            return $generationDateString;
+        }
+
+        $sql = "SELECT generation_date FROM breed_value WHERE id = (SELECT MAX(id) FROM breed_value) LIMIT 1";
+        $generationDateString = $this->conn->query($sql)->fetch()['generation_date'];
+        if ($generationDateString === null) {
+            throw new \Exception('There are no breed_value records in the database');
+        }
+
+        return $generationDateString;
     }
 
 
@@ -223,7 +278,34 @@ class BreedValuesResultTableUpdater
                 WHERE result_table_breed_grades.animal_id = v.animal_id";
         $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
 
-        //Update obsolete value to null
+        /*
+         * Update obsolete value to null
+         * NOTE! This should be done BEFORE calculating the values for the children,
+         * to prevent cascading calculation for children breedValues based on other calculated values
+         */
+        $removeCount = $this->setResultTableValueToNullWhereBreedValueIsMissing($valueVar, $accuracyVar);
+        $updateCount += $removeCount;
+
+        //Calculate breed values and accuracies of children without one, based on the values of both parents
+        $childrenUpdateCount = $this->updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar);
+        $updateCount += $childrenUpdateCount;
+
+        $records = $valueVar.' and '.$accuracyVar. ' records';
+        $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.', removed: '.$removeCount.') '. $records. ' updated.': 'No '.$records.' updated.';
+        $this->write($message);
+
+        return $updateCount;
+    }
+
+
+    /**
+     * @param $valueVar
+     * @param $accuracyVar
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function setResultTableValueToNullWhereBreedValueIsMissing($valueVar, $accuracyVar)
+    {
         $sql = "UPDATE result_table_breed_grades
                     SET $valueVar = NULL, $accuracyVar = NULL
                     WHERE animal_id IN (
@@ -235,34 +317,28 @@ class BreedValuesResultTableUpdater
                             INNER JOIN breed_value_type t ON t.id = b.type_id
                           WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
                         )i ON r.animal_id = i.animal_id
-                      WHERE i.id ISNULL AND (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL)
-                    )";
-        $updateCount += SqlUtil::updateWithCount($this->conn, $sql);
-
-        if ($valueVar === 'odin_bc') {
-            $updateCount += $this->updateOdinBcValuesOfChildrenBasedOnValuesOfParents();
-        }
-
-        $records = $valueVar.' and '.$accuracyVar. ' records';
-        $message = $updateCount > 0 ? $updateCount . ' '. $records. ' updated.': 'No '.$records.' updated.';
-        $this->write($message);
-
-        return $updateCount;
+                      WHERE
+                        i.id ISNULL AND 
+                        (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL)
+                      )";
+        return SqlUtil::updateWithCount($this->conn, $sql);
     }
 
 
     /**
+     * @param string $valueVar
+     * @param string $accuracyVar
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function updateOdinBcValuesOfChildrenBasedOnValuesOfParents()
+    private function updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar)
     {
-        $sql = "UPDATE result_table_breed_grades SET odin_bc = calc.odin_bc, odin_bc_accuracy = calc.odin_bc_accuracy
+        $sql = "UPDATE result_table_breed_grades SET $valueVar = calc.breed_value, $accuracyVar = calc.accuracy
                 FROM (
                   SELECT
                     ra.animal_id,
-                    (rf.odin_bc + rm.odin_bc) / 2 as calculated_odin_bc,
-                    SQRT(0.25*rf.odin_bc_accuracy*rf.odin_bc_accuracy + 0.25*rm.odin_bc_accuracy*rm.odin_bc_accuracy) as calculated_odin_bc_accuracy
+                    (rf.$valueVar + rm.$valueVar) / 2 as calculated_breed_value,
+                    SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar) as calculated_accuracy
                   FROM result_table_breed_grades ra
                     INNER JOIN animal a ON ra.animal_id = a.id
                     INNER JOIN result_table_breed_grades rf ON a.parent_father_id = rf.animal_id
@@ -270,18 +346,18 @@ class BreedValuesResultTableUpdater
                   WHERE
                     a.parent_father_id NOTNULL AND
                     a.parent_mother_id NOTNULL AND
-                    (ra.odin_bc ISNULL OR ra.odin_bc_accuracy ISNULL) AND
-                    (rf.odin_bc NOTNULL OR rf.odin_bc_accuracy NOTNULL) AND
-                    (rm.odin_bc NOTNULL OR rm.odin_bc_accuracy NOTNULL) AND
-                    SQRT(0.25*rf.odin_bc_accuracy*rf.odin_bc_accuracy + 0.25*rm.odin_bc_accuracy*rm.odin_bc_accuracy)
-                    >= (SELECT SQRT(min_reliability) FROM breed_value_type WHERE nl = '".BreedValueTypeConstant::ODIN_BC."')
-                ) AS calc(animal_id, odin_bc, odin_bc_accuracy)
+                    (ra.$valueVar ISNULL OR ra.$accuracyVar ISNULL) AND
+                    (rf.$valueVar NOTNULL OR rf.$accuracyVar NOTNULL) AND
+                    (rm.$valueVar NOTNULL OR rm.$accuracyVar NOTNULL) AND
+                    SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar)
+                    >= (SELECT SQRT(min_reliability) as min_accuracy FROM breed_value_type WHERE result_table_value_variable = '$valueVar')
+                ) AS calc(animal_id, breed_value, accuracy)
                 WHERE result_table_breed_grades.animal_id = calc.animal_id
                   AND (
-                        result_table_breed_grades.odin_bc ISNULL OR
-                        result_table_breed_grades.odin_bc_accuracy ISNULL OR
-                        result_table_breed_grades.odin_bc <> calc.odin_bc OR
-                        result_table_breed_grades.odin_bc_accuracy <> calc.odin_bc_accuracy
+                        result_table_breed_grades.$valueVar ISNULL OR
+                        result_table_breed_grades.$accuracyVar ISNULL OR
+                        result_table_breed_grades.$valueVar <> calc.breed_value OR
+                        result_table_breed_grades.$accuracyVar <> calc.accuracy
                       )";
         return SqlUtil::updateWithCount($this->conn, $sql);
     }
@@ -351,6 +427,92 @@ class BreedValuesResultTableUpdater
         }
 
         return $totalUpdateCount;
+    }
+
+    /**
+     * @param array $analysisTypes
+     * @return bool
+     */
+    private function processLambMeatIndexAnalysis(array $analysisTypes)
+    {
+        return $this->processAnalysisType($analysisTypes, MixBlupType::LAMB_MEAT_INDEX);
+    }
+
+    /**
+     * @param array $analysisTypes
+     * @return bool
+     */
+    private function processExteriorAnalysis(array $analysisTypes)
+    {
+        return $this->processAnalysisType($analysisTypes, MixBlupType::EXTERIOR);
+    }
+
+    /**
+     * @param array $analysisTypes
+     * @return bool
+     */
+    private function processFertilityAnalysis(array $analysisTypes)
+    {
+        return $this->processAnalysisType($analysisTypes, MixBlupType::FERTILITY);
+    }
+
+    /**
+     * @param array $analysisTypes
+     * @return bool
+     */
+    private function processWormAnalysis(array $analysisTypes)
+    {
+        return $this->processAnalysisType($analysisTypes, MixBlupType::WORM);
+    }
+
+    /**
+     * @param array $analysisTypesPresent
+     * @param $analysisTypeToProcess
+     * @return bool
+     */
+    private function processAnalysisType(array $analysisTypesPresent = [], $analysisTypeToProcess)
+    {
+        return count($analysisTypesPresent) === 0
+            || in_array($analysisTypeToProcess, $analysisTypesPresent)
+            || key_exists($analysisTypeToProcess, $analysisTypesPresent)
+            ;
+    }
+
+
+    private function updateBreedIndexesByOutputFileType($generationDateString, $analysisTypes = [])
+    {
+        if ($generationDateString) {
+            if ($this->processLambMeatIndexAnalysis($analysisTypes)) {
+                // Make sure the following code already has run once
+                // $this->breedValueService->initializeBlankGeneticBases();
+
+                $this->logger->notice('Processing new LambMeatIndexes...');
+                $this->breedIndexService->updateLambMeatIndexes($generationDateString);
+            }
+        }
+    }
+
+
+    /**
+     * @param string $generationDateString
+     * @param array $analysisTypes
+     * @throws \Exception
+     */
+    private function updateNormalDistributions($generationDateString, $analysisTypes)
+    {
+        if ($generationDateString) {
+
+            if ($this->processLambMeatIndexAnalysis($analysisTypes)) {
+                $this->logger->notice('Processing new LambMeatIndex NormalDistribution...');
+                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString);
+            }
+
+            if ($this->processWormAnalysis($analysisTypes)) {
+                $this->logger->notice('Processing new WormResistance OdinBC NormalDistribution...');
+                $this->normalDistributionService
+                    ->persistBreedValueTypeMeanAndStandardDeviation(BreedValueTypeConstant::ODIN_BC, $generationDateString);
+            }
+        }
     }
 
 

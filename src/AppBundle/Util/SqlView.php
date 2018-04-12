@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EnumInfo;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\TableExistsException;
@@ -13,6 +14,7 @@ class SqlView
     use EnumInfo;
 
     const VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS = 'view_animal_livestock_overview_details';
+    const VIEW_LITTER_DETAILS = 'view_litter_details';
     const VIEW_LOCATION_DETAILS = 'view_location_details';
     const VIEW_MINIMAL_PARENT_DETAILS = 'view_minimal_parent_details';
     const VIEW_PEDIGREE_REGISTER_ABBREVIATION = 'view_pedigree_register_abbreviation';
@@ -89,6 +91,7 @@ class SqlView
     {
         switch ($viewName) {
             case self::VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS: return self::animalLiveStockOverviewDetails();
+            case self::VIEW_LITTER_DETAILS: return self::litterDetails();
             case self::VIEW_LOCATION_DETAILS: return self::locationDetails();
             case self::VIEW_MINIMAL_PARENT_DETAILS: return self::minimalParentDetails();
             case self::VIEW_PEDIGREE_REGISTER_ABBREVIATION: return self::pedigreeRegisterAbbreviation();
@@ -101,19 +104,72 @@ class SqlView
     /**
      * @return string
      */
+    private static function litterDetails()
+    {
+        return "SELECT
+                  l.litter_id,
+                  r.id as pedigree_register_registration_id,
+                  l.breeder_number,
+                  l.breed_code,
+                  l.location_of_birth_id,
+                  l.ubn_of_birth,
+                  litter.status = '".RequestStateType::COMPLETED."' as is_completed
+                FROM (
+                  SELECT
+                    litter_id,
+                    MAX(NULLIF(breed_code,'')) as breed_code,
+                    MAX(NULLIF(NULLIF(SUBSTR(pedigree_number, 1,5),''),'00000')) as breeder_number,
+                    MAX(location_of_birth_id) as location_of_birth_id,
+                    MAX(NULLIF(ubn_of_birth,'')) as ubn_of_birth
+                  FROM animal a
+                  GROUP BY litter_id
+                )l
+                LEFT JOIN pedigree_register_registration r ON r.breeder_number = l.breeder_number
+                INNER JOIN litter ON litter.id = l.litter_id";
+    }
+
+
+    /**
+     * @return string
+     */
     private static function locationDetails()
     {
         return
             "SELECT
-                l.id as location_id,
-                l.ubn as ubn,
-                NULLIF(TRIM(CONCAT(p.first_name,' ',p.last_name)),'') as owner_full_name,
-                a.city as city,
-                a.state as state
-              FROM location l
-                INNER JOIN company c ON l.company_id = c.id
-                INNER JOIN person p ON p.id = c.owner_id
-                INNER JOIN address a ON a.id = c.address_id";
+              l.id as location_id,
+              l.ubn as ubn,
+              NULLIF(TRIM(CONCAT(p.first_name,' ',p.last_name)),'') as owner_full_name,
+              a.city as city,
+              a.state as state,
+              prs.pedigree_register_abbreviations,
+              te_prs.te_pedigree_register_abbreviations,
+              prs.breeder_numbers,
+              te_prs.te_breeder_numbers
+            FROM location l
+              INNER JOIN company c ON l.company_id = c.id
+              INNER JOIN person p ON p.id = c.owner_id
+              INNER JOIN address a ON a.id = c.address_id
+              LEFT JOIN (
+                          SELECT
+                            prr.location_id,
+                            TRIM(BOTH '{,}' FROM CAST(array_agg(pr.abbreviation ORDER BY abbreviation) AS TEXT)) as pedigree_register_abbreviations,
+                            TRIM(BOTH '{,}' FROM CAST(array_agg(prr.breeder_number ORDER BY breeder_number) AS TEXT)) as breeder_numbers
+                          FROM pedigree_register_registration prr
+                            INNER JOIN pedigree_register pr ON prr.pedigree_register_id = pr.id
+                          GROUP BY location_id
+                        )prs ON prs.location_id = l.id
+              LEFT JOIN (
+                          SELECT
+                            prr.location_id,
+                            TRIM(BOTH '{,}' FROM CAST(array_agg(pr.abbreviation ORDER BY abbreviation) AS TEXT)) as te_pedigree_register_abbreviations,
+                            TRIM(BOTH '{,}' FROM CAST(array_agg(prr.breeder_number ORDER BY breeder_number) AS TEXT)) as te_breeder_numbers
+                          FROM pedigree_register_registration prr
+                            INNER JOIN pedigree_register pr ON prr.pedigree_register_id = pr.id
+                            INNER JOIN pedigree_register_pedigree_codes codes ON pr.id = codes.pedigree_register_id
+                            INNER JOIN pedigree_code c ON codes.pedigree_code_id = c.id
+                          WHERE c.code = 'TE'
+                          GROUP BY location_id
+                        )te_prs ON te_prs.location_id = l.id";
     }
 
 
@@ -245,4 +301,6 @@ class SqlView
                 ".SqlUtil::createSqlValuesString(Translation::getEnglishPredicateToAbbreviationArray())."
                 ) AS predicate(english, abbreviation) ON predicate.english = a.predicate";
     }
+
+
 }

@@ -28,8 +28,10 @@ use AppBundle\Util\NumberUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -137,10 +139,10 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
 
 
-    /** @var string */
-    private $sqlBatchString;
-    /** @var string */
-    private $prefix;
+    /** @var array */
+    private $sqlBatchSets;
+    /** @var int */
+    private $persistenceSetErrorsCount;
     /** @var int */
     private $totalSavedCount;
     /** @var int */
@@ -330,6 +332,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                 }
 
 
+                if ($this->persistenceSetErrorsCount > 0) {
+                    $this->logger->error('WARNING THERE HAVE BEEN '
+                        .$this->persistenceSetErrorsCount
+                        . ' PERSISTENCE ERRORS!');
+                }
+
+
                 $this->removeDuplicateBreedValues();
 
                 //TODO figure out how to deal with errors
@@ -356,10 +365,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->logger->notice('No animalIds were missing in the database');
                 }
 
-                $this->breedValueService->initializeBlankGeneticBases();
-                $this->updateBreedIndexesByOutputFileType();
-                $this->updateNormalDistributions();
-                $this->updateResultTableBreedValues();
+                $this->updateResultTableBreedValuesAndTheirPrerequisites();
 
             } else {
                 // Handle unsuccessful download
@@ -737,8 +743,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
     private function processBreedValuesBase($relaniType, $hasIndirectSuffix = false)
     {
-        $this->sqlBatchString = '';
-        $this->prefix = '';
+        $this->sqlBatchSets = [];
+        $this->persistenceSetErrorsCount = 0;
         $this->totalSavedCount = 0;
         $this->toSaveBatchCount = 0;
         $this->valueAlreadyExistsCount = 0;
@@ -767,7 +773,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                         $this->processBreedValue($dutchBreedValueTypeKeyInSolaniArray, $dutchBreedValueTypeForDatabase, $animalId, $relani, $breedValueTypeId);
                     }
 
-                    if($this->sqlBatchString != '') { $this->persistBreedValueBySql(); }
+                    if(count($this->sqlBatchSets) > 0) { $this->persistBreedValueBySql(); }
                     $this->logger->notice('Finished processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues.');
                 }
 
@@ -798,7 +804,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                         $this->processBreedValue($dutchBreedValueTypeKeyInSolaniArray, $dutchBreedValueTypeForDatabase, $animalId, $relani, $breedValueTypeId);
                     }
 
-                    if($this->sqlBatchString != '') { $this->persistBreedValueBySql(); }
+                    if(count($this->sqlBatchSets) > 0) { $this->persistBreedValueBySql(); }
                     $this->logger->notice('Finished processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues.');
                 }
 
@@ -822,7 +828,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                         $this->processBreedValue($dutchBreedValueTypeKeyInSolaniArray, $dutchBreedValueTypeForDatabase, $animalId, $relani, $breedValueTypeId);
                     }
 
-                    if($this->sqlBatchString != '') { $this->persistBreedValueBySql(); }
+                    if(count($this->sqlBatchSets) > 0) { $this->persistBreedValueBySql(); }
                     $this->logger->notice('Finished processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues.');
                 }
 
@@ -867,17 +873,15 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                 $breedValueInsertString = $this->writeBreedValueInsertValuesString($breedValueTypeId, $animalId, $solani, $relani);
 
-                $this->sqlBatchString = $this->sqlBatchString . $breedValueInsertString;
+                $this->sqlBatchSets[$animalId] = $breedValueInsertString;
                 $this->totalSavedCount++;
                 $this->toSaveBatchCount++;
-                $this->prefix = ',';
 
                 $this->addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueTypeForDatabase, $animalId);
 
                 if($this->totalSavedCount%self::BATCH_SIZE === 0) {
                     $this->persistBreedValueBySql();
-                    $this->sqlBatchString = '';
-                    $this->prefix = '';
+                    $this->sqlBatchSets = [];
                     $this->toSaveBatchCount = 0;
 
                     $this->printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray);
@@ -994,51 +998,27 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     }
 
 
-    private function updateBreedIndexesByOutputFileType()
-    {
-        $generationDateString = $this->getGenerationDateStringFromKey();
-        if ($generationDateString) {
-            if ($this->hasLambMeatOutputFiles()) {
-                $this->breedValueService->initializeBlankGeneticBases();
-
-                $this->logger->notice('LambMeatOutputFilename found in message. 
-                Processing new LambMeatIndexes...');
-                $this->breedIndexService->updateLambMeatIndexes($generationDateString);
-            }
-        }
-    }
-
-
-    private function updateNormalDistributions()
-    {
-        $generationDateString = $this->getGenerationDateStringFromKey();
-        if ($generationDateString) {
-
-            if ($this->hasLambMeatOutputFiles()) {
-                $this->logger->notice('LambMeatOutputFilename found in message. 
-                Processing new LambMeatIndex NormalDistribution...');
-                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString);
-            }
-
-            if ($this->hasWormResistanceOutputFiles()) {
-                $this->logger->notice('WormResistanceOutputFilename found in message. 
-                Processing new WormResistance OdinBC NormalDistribution...');
-                $this->normalDistributionService
-                    ->persistBreedValueTypeMeanAndStandardDeviation(BreedValueTypeConstant::ODIN_BC, $generationDateString);
-            }
-        }
-    }
-
-
-    private function updateResultTableBreedValues()
+    private function updateResultTableBreedValuesAndTheirPrerequisites()
     {
         $detectedAnalysisTypes = [];
-        if ($this->hasLambMeatOutputFiles()) { $detectedAnalysisTypes[MixBlupType::LAMB_MEAT_INDEX] = MixBlupType::LAMB_MEAT_INDEX; }
-        if ($this->hasExteriorOutputFiles()) { $detectedAnalysisTypes[MixBlupType::EXTERIOR] = MixBlupType::EXTERIOR; }
-        if ($this->hasFertilityOutputFiles()) { $detectedAnalysisTypes[MixBlupType::FERTILITY] = MixBlupType::FERTILITY; }
-        if ($this->hasWormResistanceOutputFiles()) { $detectedAnalysisTypes[MixBlupType::WORM] = MixBlupType::WORM; }
+        if ($this->hasLambMeatOutputFiles()) {
+            $detectedAnalysisTypes[MixBlupType::LAMB_MEAT_INDEX] = MixBlupType::LAMB_MEAT_INDEX;
+            $this->logger->notice('LambMeatOutputFilename found in message...');
+        }
+        if ($this->hasExteriorOutputFiles()) {
+            $detectedAnalysisTypes[MixBlupType::EXTERIOR] = MixBlupType::EXTERIOR;
+            $this->logger->notice('ExteriorOutputFilename found in message...');
+        }
+        if ($this->hasFertilityOutputFiles()) {
+            $detectedAnalysisTypes[MixBlupType::FERTILITY] = MixBlupType::FERTILITY;
+            $this->logger->notice('FertilityOutputFilename found in message...');
+        }
+        if ($this->hasWormResistanceOutputFiles()) {
+            $detectedAnalysisTypes[MixBlupType::WORM] = MixBlupType::WORM;
+            $this->logger->notice('WormOutputFilename found in message...');
+        }
 
-        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes);
+        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes, true, true, $this->getGenerationDateStringFromKey());
     }
 
 
@@ -1061,7 +1041,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
      */
     private function writeBreedValueInsertValuesString($breedValueTypeId, $animalId, $solani, $relani)
     {
-        return $this->prefix."(nextval('breed_value_id_seq'),".$animalId.",".$breedValueTypeId.",NOW(),'".$this->key."','". $solani."','".$relani."')";
+        return "(nextval('breed_value_id_seq'),".$animalId.",".$breedValueTypeId.",NOW(),'".$this->key."','". $solani."','".$relani."')";
     }
 
 
@@ -1070,19 +1050,49 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
      */
     private function persistBreedValueBySql()
     {
-        if($this->sqlBatchString == '') { return 0; }
+        if(count($this->sqlBatchSets) === 0) { return 0; }
 
-        $sql = "INSERT INTO breed_value (id, animal_id, type_id, log_date, generation_date, value, reliability) VALUES ".$this->sqlBatchString;
-        $this->conn->exec($sql);
+        $updateCount = 0;
 
-        $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+        try {
 
-        $this->sqlBatchString = '';
-        $this->prefix = '';
+            $sql = "INSERT INTO breed_value (id, animal_id, type_id, log_date, generation_date, value, reliability) VALUES ".implode(',', $this->sqlBatchSets);
+            $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+
+
+        } catch (\Exception $exception) {
+
+            if (Validator::isMissingAnimalIdForeignKeyException($exception)) {
+                $removedAnyMissingAnimals = $this->removeMissingAnimalsFromSqlBatchSets();
+                if ($removedAnyMissingAnimals) {
+                    return $this->persistBreedValueBySql();
+                }
+            }
+            $this->logger->error($exception->getTraceAsString());
+            $this->logger->error($exception->getMessage());
+            $this->persistenceSetErrorsCount += count($this->sqlBatchSets);
+        }
+
+        $this->sqlBatchSets = [];
         $this->toSaveBatchCount = 0;
         $this->totalSavedCount += $updateCount;
 
         return $updateCount;
+    }
+
+
+    /**
+     * @return bool is true if any missing animals were removed
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function removeMissingAnimalsFromSqlBatchSets()
+    {
+        $missingAnimalIds = SqlUtil::getMissingAnimalIds($this->conn, array_keys($this->sqlBatchSets));
+        if (count($missingAnimalIds) === 0) {
+            return false;
+        }
+        $this->sqlBatchSets = ArrayUtil::removeKeys($this->sqlBatchSets, $missingAnimalIds);
+        return true;
     }
 
 

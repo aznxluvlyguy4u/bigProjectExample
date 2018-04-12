@@ -7,6 +7,7 @@ namespace AppBundle\Service\Report;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Locale;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
@@ -17,6 +18,9 @@ use Symfony\Component\Translation\TranslatorInterface;
 class BreedValuesReportQueryGenerator
 {
     const ACCURACY_TABLE_LABEL_SUFFIX = '_acc';
+
+    const BREED_VALUE_DECIMAL_SPACES = 2;
+    const NORMALIZED_BREED_VALUE_DECIMAL_SPACES = 0;
 
     /** @var EntityManagerInterface */
     private $em;
@@ -93,7 +97,7 @@ class BreedValuesReportQueryGenerator
 
         //Create breed value batch query parts
 
-        $sql = "SELECT nl, result_table_value_variable, result_table_accuracy_variable
+        $sql = "SELECT nl, result_table_value_variable, result_table_accuracy_variable, use_normal_distribution
                 FROM breed_value_type bvt
                 WHERE
                   (
@@ -125,24 +129,36 @@ class BreedValuesReportQueryGenerator
             foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
 
                 foreach ($columnValuesSets as $columnValueSet) {
-                    $breedValueLabel = $this->translatedBreedValueColumnHeader($columnValueSet['nl']);
+                    $breedValueLabel = BreedValuesReportQueryGenerator::translatedBreedValueColumnHeader($columnValueSet['nl']);
                     $resultTableValueVar = $columnValueSet['result_table_value_variable'];
                     $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
+                    $useNormalDistribution = $columnValueSet['use_normal_distribution'];
 
-                    $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix . "NULLIF(CONCAT(
-                         ".$resultTableValueVar."_plus_sign.mark,
-                         COALESCE(CAST(ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), 2) AS TEXT),''),'/',
+                    if ($useNormalDistribution) {
+
+                        $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix . "NULLIF(CONCAT(
+                         COALESCE(CAST(ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC),".self::NORMALIZED_BREED_VALUE_DECIMAL_SPACES.") AS TEXT),''),'/',
                          COALESCE(CAST(ROUND(bg.".$resultTableAccuracyVar."*100) AS TEXT),'')
                      ),'/') as ".$breedValueLabel;
 
-                    $valuesPrefix = ",
-                        ";
+                    } else {
 
-                    $this->breedValuesPlusSignsQueryJoinPart = $this->breedValuesPlusSignsQueryJoinPart . "LEFT JOIN (VALUES (true, '+'),(false, '')) AS ".$resultTableValueVar."_plus_sign(is_positive, mark) ON (bg.".$resultTableValueVar." > 0) = ".$resultTableValueVar."_plus_sign.is_positive
+                        $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix . "NULLIF(CONCAT(
+                         ".$resultTableValueVar."_plus_sign.mark,
+                         COALESCE(CAST(ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC),".self::BREED_VALUE_DECIMAL_SPACES.") AS TEXT),''),'/',
+                         COALESCE(CAST(ROUND(bg.".$resultTableAccuracyVar."*100) AS TEXT),'')
+                     ),'/') as ".$breedValueLabel;
+
+                        $this->breedValuesPlusSignsQueryJoinPart = $this->breedValuesPlusSignsQueryJoinPart . "LEFT JOIN (VALUES (true, '+'),(false, '')) AS ".$resultTableValueVar."_plus_sign(is_positive, mark) ON (bg.".$resultTableValueVar." > 0) = ".$resultTableValueVar."_plus_sign.is_positive
                     ";
+
+                    }
 
                     $this->breedValuesNullFilter = $this->breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
                     ";
+
+                    $valuesPrefix = ",
+                        ";
 
                     $filterPrefix = ' OR ';
                 }
@@ -154,21 +170,23 @@ class BreedValuesReportQueryGenerator
             foreach ([$existingBreedIndexColumnValues, $existingBreedValueColumnValues] as $columnValuesSets) {
 
                 foreach ($columnValuesSets as $columnValueSet) {
-                    $breedValueLabel = $this->translatedBreedValueColumnHeader($columnValueSet['nl']);
+                    $breedValueLabel = BreedValuesReportQueryGenerator::translatedBreedValueColumnHeader($columnValueSet['nl']);
                     $resultTableValueVar = $columnValueSet['result_table_value_variable'];
                     $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
+                    $useNormalDistribution = $columnValueSet['use_normal_distribution'];
+
+                    $breedValueDecimalSpaces = $useNormalDistribution ?
+                        self::NORMALIZED_BREED_VALUE_DECIMAL_SPACES : self::BREED_VALUE_DECIMAL_SPACES;
 
                     $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix
-                        . " ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), 2) as ".$breedValueLabel .",
+                        . " ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), ".$breedValueDecimalSpaces.") as ".$breedValueLabel .",
                         ROUND(bg.".$resultTableAccuracyVar."*100) as ". $breedValueLabel. self::ACCURACY_TABLE_LABEL_SUFFIX;
-
-                    $valuesPrefix = ",
-                        ";
-
-                    //keep  $this->breedValuesNullFilter blank
 
                     $this->breedValuesNullFilter = $this->breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
                     ";
+
+                    $valuesPrefix = ",
+                        ";
 
                     $filterPrefix = ' OR ';
                 }
@@ -189,11 +207,21 @@ class BreedValuesReportQueryGenerator
      * @param string $breedValueTypeNl
      * @return string
      */
-    public function translatedBreedValueColumnHeader($breedValueTypeNl)
+    public static function translatedBreedValueColumnHeader($breedValueTypeNl)
     {
-        return strtr($breedValueTypeNl, [
-           BreedValueTypeConstant::ODIN_BC => 'WormRes'
-        ]);
+        $translateArrayInput = [
+            BreedValueTypeConstant::ODIN_BC => 'WormRes'
+        ];
+
+        $translateArray = [];
+        foreach ($translateArrayInput as $breedValueType => $translatedBreedValueType) {
+            $translateArray[$breedValueType] = $translatedBreedValueType;
+            $translateArray[strtolower($breedValueType)] = strtolower($translatedBreedValueType);
+        }
+
+        $translateArrayInput = null;
+
+        return strtr($breedValueTypeNl, $translateArray);
     }
 
 
@@ -474,6 +502,7 @@ class BreedValuesReportQueryGenerator
      * @param bool $includeAnimalsWithoutAnyBreedValues
      * @param bool $ignoreHiddenBreedValueTypes
      * @param int $maxCurrentAnimalAgeInYears
+     * @param string $activeUbnReferenceDateString
      * @param \DateTime $pedigreeActiveEndDateLimit
      * @return string
      * @throws DBALException
@@ -482,6 +511,7 @@ class BreedValuesReportQueryGenerator
                                                      $includeAnimalsWithoutAnyBreedValues = true,
                                                      $ignoreHiddenBreedValueTypes = false,
                                                      $maxCurrentAnimalAgeInYears,
+                                                     $activeUbnReferenceDateString,
                                                      $pedigreeActiveEndDateLimit
     )
     {
@@ -574,11 +604,15 @@ class BreedValuesReportQueryGenerator
                 breeder.city as ".$this->translateColumnHeader('breeder_city').",
                 breeder.state as ".$this->translateColumnHeader('breeder_state').",
                 
+                ".$this->activeUbnOnReferenceDateSelectPart($activeUbnReferenceDateString).",
                 holder.ubn as ".$this->translateColumnHeader('current_ubn').",
                 holder.owner_full_name as ".$this->translateColumnHeader('holdername').",
                 holder.city as ".$this->translateColumnHeader('holder_city').",
                 holder.state as ".$this->translateColumnHeader('holder_state').",
                 COALESCE(register_activity.has_active_pedigree_register, FALSE) as ".$this->translateColumnHeader('has_active_pedigree_register').",
+                
+                last_declare.depart_date as ".$this->translateColumnHeader('last departure date').",
+                last_declare.declare_type as ".$this->translateColumnHeader('last departure type').",
                   
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
@@ -588,6 +622,9 @@ class BreedValuesReportQueryGenerator
                 LEFT JOIN view_minimal_parent_details dad ON a.parent_father_id = dad.animal_id
                 LEFT JOIN view_location_details holder ON holder.location_id = a.location_id
                 LEFT JOIN view_location_details breeder ON breeder.location_id = a.location_of_birth_id
+                
+                LEFT JOIN (".$this->lastDepartExportOrLossQuery().")last_declare ON last_declare.animal_id = a.animal_id
+                ".$this->activeUbnOnReferenceDateJoin($activeUbnReferenceDateString)."
                 
                 LEFT JOIN result_table_breed_grades bg ON a.animal_id = bg.animal_id
                 LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
@@ -600,13 +637,136 @@ class BreedValuesReportQueryGenerator
                           )register_activity ON register_activity.location_id = a.location_id
                 ".$this->breedValuesPlusSignsQueryJoinPart."
             ".$filterString
-            //.' LIMIT 100'
         ;
 
-        ReportServiceWithBreedValuesBase::closeColumnHeaderTranslation();
+        ReportServiceBase::closeColumnHeaderTranslation();
 
         return $sql;
     }
+
+
+    /**
+     * @return string
+     */
+    private function lastDepartExportOrLossQuery()
+    {
+        $declaresSelectQuery = "SELECT
+                    depart.animal_id,
+                    depart.depart_date as depart_date,
+                    '".$this->translateColumnHeader('declare depart')."' as declare_type
+                  FROM declare_base b
+                    INNER JOIN declare_depart depart ON depart.id = b.id
+                  WHERE (request_state = '".RequestStateType::FINISHED."' OR request_state = '".RequestStateType::FINISHED_WITH_WARNING."')
+                  UNION
+                  SELECT
+                    loss.animal_id,
+                    loss.date_of_death as depart_date,
+                    '".$this->translateColumnHeader('declare loss')."' as declare_type
+                  FROM declare_base b
+                    INNER JOIN declare_loss loss ON loss.id = b.id
+                  WHERE (request_state = '".RequestStateType::FINISHED."' OR request_state = '".RequestStateType::FINISHED_WITH_WARNING."')
+                  UNION
+                  SELECT
+                    export.animal_id,
+                    export.export_date as depart_date,
+                    '".$this->translateColumnHeader('declare export')."' as declare_type
+                  FROM declare_base b
+                    INNER JOIN declare_export export ON export.id = b.id
+                  WHERE (request_state = '".RequestStateType::FINISHED."' OR request_state = '".RequestStateType::FINISHED_WITH_WARNING."')";
+
+        return "SELECT
+                  declare.animal_id,
+                  DATE(declare.depart_date) as depart_date,
+                  declare.declare_type
+                FROM (
+                  $declaresSelectQuery
+                )declare
+                INNER JOIN (
+                    SELECT
+                      animal_id,
+                      MAX(depart_date) as last_depart_date
+                    FROM (
+                           $declaresSelectQuery
+                         )last_declare
+                    GROUP BY animal_id
+                    )last_declare ON last_declare.animal_id = declare.animal_id
+                                  AND last_declare.last_depart_date = declare.depart_date";
+    }
+
+
+    /**
+     * @param string $dateString
+     * @return string
+     */
+    private function activeUbnOnReferenceDateJoin($dateString)
+    {
+        if(!TimeUtil::isFormatYYYYMMDD($dateString, false)) {
+            return ' ';
+        }
+
+        return "LEFT JOIN (
+    SELECT
+      r.animal_id,
+      l.ubn as active_ubn_at_reference_date,
+      1 as priority
+    FROM (
+           SELECT
+             r.animal_id,
+             max(id) as max_id
+           FROM animal_residence r
+           WHERE
+             start_date NOTNULL AND end_date NOTNULL AND
+             DATE(start_date) <= '$dateString' AND DATE(end_date) >= '$dateString'
+             AND is_pending = FALSE
+           GROUP BY r.animal_id
+         )closed_residence
+      INNER JOIN animal_residence r ON r.id = closed_residence.max_id
+      INNER JOIN location l ON r.location_id = l.id
+    )closed_residence ON closed_residence.animal_id = a.animal_id
+LEFT JOIN (
+    SELECT
+      open_residence.animal_id,
+      l.ubn as active_ubn_at_reference_date,
+      2 as priority
+    FROM (
+           SELECT
+             open_residence.animal_id,
+             open_residence.max_start_date,
+             max(id) as max_id
+           FROM (
+                  SELECT
+                    r.animal_id,
+                    max(start_date) as max_start_date
+                  FROM animal_residence r
+                  WHERE
+                    start_date NOTNULL AND end_date ISNULL AND
+                    DATE(start_date) <= '$dateString'
+                    AND is_pending = FALSE
+                  GROUP BY animal_id
+                )open_residence
+             INNER JOIN animal_residence r ON r.animal_id = open_residence.animal_id AND r.start_date = open_residence.max_start_date
+           GROUP BY open_residence.animal_id, open_residence.max_start_date
+         )open_residence
+      INNER JOIN animal_residence r ON r.id = open_residence.max_id
+      INNER JOIN location l ON r.location_id = l.id
+    )open_residence ON open_residence.animal_id = a.animal_id";
+    }
+
+
+    /**
+     * @param string $dateString
+     * @return string
+     */
+    private function activeUbnOnReferenceDateSelectPart($dateString)
+    {
+        if(!TimeUtil::isFormatYYYYMMDD($dateString, false)) {
+            return ' ';
+        }
+
+        return "COALESCE(closed_residence.active_ubn_at_reference_date, open_residence.active_ubn_at_reference_date) 
+        as ".$this->translateColumnHeader('active ubn at reference date').'_'.strtr($dateString, ['-' => '']);
+    }
+
 
 
     private function getGenderLetterTranslationValues()
@@ -627,7 +787,7 @@ class BreedValuesReportQueryGenerator
      */
     private function translateColumnHeader($columnHeader)
     {
-        return ReportServiceWithBreedValuesBase::translateColumnHeader($this->translator, $columnHeader);
+        return ReportServiceBase::staticTranslateColumnHeader($this->translator, $columnHeader);
     }
 
 }

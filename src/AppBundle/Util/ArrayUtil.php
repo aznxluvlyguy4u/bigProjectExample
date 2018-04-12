@@ -187,4 +187,32 @@ class ArrayUtil
 
         return $removeNullValues ? self::removeEmptyValues($values) : $values;
     }
+
+
+    /**
+     * @param $array
+     * @param array $keys
+     * @return array
+     */
+    public static function removeKeys($array, $keys = array())
+    {
+        if(empty($array) || (!is_array($array))) {
+            return $array;
+        }
+
+        if(is_string($keys)) {
+            $keys = explode(',', $keys);
+        }
+
+        if(!is_array($keys) || count($array) === 0) {
+            return $array;
+        }
+
+        $assocKeys = array();
+        foreach($keys as $key) {
+            $assocKeys[$key] = true;
+        }
+
+        return array_diff_key($array, $assocKeys);
+    }
 }

@@ -1409,7 +1409,7 @@ class AnimalRepository extends BaseRepository
     /**
      * @return array
      */
-    public function getAnimalPrimaryKeysByUlnStringArray($isCountryCodeSeparatedByString = false)
+    public function getAnimalPrimaryKeysByUlnStringArrayIncludingTagReplaces($isCountryCodeSeparatedByString = false)
     {
         $array = [];
         foreach ($this->getAnimalPrimaryKeysByUlnStringResults($isCountryCodeSeparatedByString) as $result) {
@@ -1422,7 +1422,14 @@ class AnimalRepository extends BaseRepository
             }
         }
 
-        return $array;
+        return $this->includeAnimalIdsByUlnsFromDeclareTagReplacesToSearchArray($array);
+    }
+
+
+    private function includeAnimalIdsByUlnsFromDeclareTagReplacesToSearchArray(array $animalIdsByUlnArray)
+    {
+        $animalIdsByUlnArrayFromTagReplaces = $this->getManager()->getRepository(DeclareTagReplace::class)->getAnimalIdsByUlns();
+        return ArrayUtil::concatArrayValues([$animalIdsByUlnArray, $animalIdsByUlnArrayFromTagReplaces],false);
     }
 
 
@@ -1999,5 +2006,59 @@ class AnimalRepository extends BaseRepository
         $results = $this->getConnection()->query($sql)->fetchAll();
         return SqlUtil::groupSqlResultsOfKey1ByKey2('count', 'stn', $results,true, false);
     }
-    
+
+
+    /**
+     * @param boolean $onlyIncludeCurrentLivestockAnimals
+     * @param int $minAnimalId
+     * @return array|Animal[]
+     */
+    public function getAllAnimalsFromDeclareBirth($onlyIncludeCurrentLivestockAnimals, $minAnimalId = 0)
+    {
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $notNullLocationQuery = null;
+        $animalIsAliveQuery = null;
+
+        if ($onlyIncludeCurrentLivestockAnimals) {
+            $notNullLocationQuery = $qb->expr()->isNotNull('animal.location');
+            $animalIsAliveQuery = $qb->expr()->eq('animal.isAlive', 'true');
+        }
+
+        $qb
+            ->select('b', 'animal')
+            ->from(DeclareBirth::class, 'b')
+            ->innerJoin('b.animal', 'animal', Join::WITH, $qb->expr()->eq('b.animal', 'animal.id'))
+            ->where(
+                $qb->expr()->andX(
+                    $qb->expr()->orX(
+                        $qb->expr()->eq('b.requestState', "'".RequestStateType::FINISHED."'"),
+                        $qb->expr()->eq('b.requestState', "'".RequestStateType::FINISHED_WITH_WARNING."'")
+                    ),
+                    $qb->expr()->gte('animal.id', $minAnimalId),
+                    $notNullLocationQuery,
+                    $animalIsAliveQuery
+                )
+            );
+
+        $animals = [];
+
+        /** @var DeclareBirth $declareBirth */
+        foreach ($qb->getQuery()->getResult() as $declareBirth)
+        {
+            $animal = $declareBirth->getAnimal();
+            if (!$animal) {
+                continue;
+            }
+
+            if (!key_exists($animal->getId(), $animals)) {
+                $animals[$animal->getId()] = $animal;
+            }
+        }
+
+        ksort($animals);
+
+        return $animals;
+    }
+
 }

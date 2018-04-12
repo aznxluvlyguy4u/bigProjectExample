@@ -4,14 +4,22 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Criteria\ExteriorCriteria;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Neuter;
 use AppBundle\Entity\PedigreeRegisterRegistration;
+use AppBundle\Entity\Ram;
 use AppBundle\Entity\ScrapieGenotypeSource;
+use AppBundle\Enumerator\BreedCodeType;
+use AppBundle\Enumerator\BreedType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\BreedCodeUtil;
+use AppBundle\Util\CommandUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 
@@ -23,6 +31,8 @@ class PedigreeDataGenerator
     private $em;
     /** @var Logger */
     private $logger;
+    /** @var CommandUtil */
+    private $cmdUtil;
 
     /** @var boolean */
     private $overwriteExistingData;
@@ -34,6 +44,14 @@ class PedigreeDataGenerator
     private $isAnimalValueUpdated;
     /** @var int */
     private $inBatchSize;
+    /** @var int */
+    private $totalUpdateCount;
+    /** @var int */
+    private $lastFlushedAnimalId;
+    /** @var int */
+    private $lastCheckedAnimalId;
+    /** @var int */
+    private $startAnimalId;
 
     public function __construct(EntityManagerInterface $em, Logger $logger)
     {
@@ -41,51 +59,153 @@ class PedigreeDataGenerator
         $this->logger = $logger;
     }
 
+
+    /**
+     * This function is intended to be used, right after the declareBirths of a litter.
+     *
+     * @param Animal[] $animals The animals array should contain the necessary pedigree and parent data.
+     * @param Location $location The current location of all given animals. If empty the current location of each animal is used
+     * @return Animal[]
+     */
+    public function generate($animals, $location)
+    {
+        return $this->generateBase($animals, $location);
+    }
+
+
+    /**
+     * Use this function when processing animals from old declare births.
+     *
+     * @param Animal[] $animals
+     * @param CommandUtil $commandUtil
+     * @param int $startAnimalId
+     * @return Animal[]
+     */
+    public function generateBreedAndPedigreeData($animals, CommandUtil $commandUtil, $startAnimalId = 1)
+    {
+        $this->cmdUtil = $commandUtil;
+        $this->startAnimalId = $startAnimalId;
+
+        return $this->generateBase(
+            $animals,
+            null,
+            true,
+            false
+        );
+    }
+
+
+    /**
+     * Use this function when processing animals from old declare births.
+     *
+     * @param Animal[] $animals
+     * @param null $location
+     * @param CommandUtil $commandUtil
+     * @param int $startAnimalId
+     * @return Animal[]
+     */
+    public function generateScrapieGenotypeData($animals, $location = null, CommandUtil $commandUtil, $startAnimalId = 1)
+    {
+        $this->cmdUtil = $commandUtil;
+        $this->startAnimalId = $startAnimalId;
+
+        return $this->generateBase(
+            $animals,
+            $location,
+            false,
+            true
+        );
+    }
+
+
     /**
      * @param Animal[] $animals The animals array should contain the necessary pedigree and parent data.
      * @param Location $location The current location of all given animals. If empty the current location of each animal is used.
+     * @param boolean $ignoreScrapieGenotypeGeneration
+     * @param boolean $ignoreNonScrapieGenotypeGeneration
      * @param boolean $overwriteExistingData
      * @param int $batchSize
      * @return Animal[]
      */
-    public function generate($animals, $location, $overwriteExistingData, $batchSize = self::BATCH_SIZE)
+    private function generateBase($animals,
+                                  $location = null,
+                                  $ignoreScrapieGenotypeGeneration = false,
+                                  $ignoreNonScrapieGenotypeGeneration = false,
+                                  $overwriteExistingData = false,
+                                  $batchSize = self::BATCH_SIZE
+    )
     {
         $this->isAnyValueUpdated = false;
         $this->location = $location;
         $this->overwriteExistingData = $overwriteExistingData;
         $this->inBatchSize = 0;
+        $this->totalUpdateCount = 0;
 
-        foreach ($animals as $key => $animal) {
-            $animals[$key] = $this->generatePedigreeData($animal);
+        $this->lastFlushedAnimalId = 0;
+        $this->lastCheckedAnimalId = $this->startAnimalId ? $this->startAnimalId : 1;
 
-            if ($this->inBatchSize%$batchSize === 0) {
-                $this->em->flush();
-            }
+        if ($this->cmdUtil) {
+            $this->cmdUtil->setStartTimeAndPrintIt(count($animals), 1);
         }
 
-        if ($this->isAnyValueUpdated) {
-            $this->em->flush();
+        try {
+
+            foreach ($animals as $key => $animal) {
+                $animals[$key] = $this->generatePedigreeData(
+                    $animal,
+                    $ignoreScrapieGenotypeGeneration,
+                    $ignoreNonScrapieGenotypeGeneration
+                );
+
+                $this->lastCheckedAnimalId = $animal->getId();
+
+                if ($this->inBatchSize%$batchSize === 0 && $this->inBatchSize > 0) {
+                    $this->flushBatch();
+                }
+
+                $this->advanceProgressBar();
+            }
+
+            if ($this->isAnyValueUpdated) {
+                $this->flushBatch();
+            }
+
+            if ($this->cmdUtil) {
+                $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+            }
+
+        } catch (\Exception $exception) {
+            $this->logger->error($exception->getTraceAsString());
+            $this->logger->error($exception->getMessage());
         }
 
         $this->em->getRepository(ScrapieGenotypeSource::class)->clearSearchArrays();
+        $this->resetCounters();
 
         return $animals;
     }
 
 
     /**
+     * @param boolean $ignoreScrapieGenotypeGeneration
+     * @param boolean $ignoreNonScrapieGenotypeGeneration
      * @param Animal $animal
      * @return Animal
      */
-    private function generatePedigreeData(Animal $animal)
+    private function generatePedigreeData(Animal $animal, $ignoreScrapieGenotypeGeneration, $ignoreNonScrapieGenotypeGeneration)
     {
         $this->isAnimalValueUpdated = false;
 
-        $animal = $this->generatePedigreeCountryCodeAndNumber($animal);
-        $animal = $this->generateMissingBreedCodes($animal);
-        $animal = $this->generatePedigreeRegister($animal);
-        $animal = $this->generateScrapieGenotype($animal);
-        $animal = $this->generateBreedType($animal);
+        // NOTE! Run these functions in this order!
+        if (!$ignoreNonScrapieGenotypeGeneration) {
+            $animal = $this->generateMissingBreedCodes($animal);
+            $animal = $this->generatePedigreeCountryCodeAndNumber($animal);
+            $animal = $this->generateBreedType($animal);
+        }
+
+        if (!$ignoreScrapieGenotypeGeneration) {
+            $animal = $this->generateScrapieGenotype($animal);
+        }
 
         if ($this->isAnimalValueUpdated) {
             $this->em->persist($animal);
@@ -93,6 +213,28 @@ class PedigreeDataGenerator
         }
 
         return $animal;
+    }
+
+
+    private function flushBatch()
+    {
+        $this->em->flush();
+        $this->totalUpdateCount += $this->inBatchSize;
+        $this->inBatchSize = 0;
+        $this->isAnyValueUpdated = false;
+        $this->lastFlushedAnimalId = $this->lastCheckedAnimalId;
+    }
+
+
+    private function advanceProgressBar()
+    {
+        if ($this->cmdUtil) {
+            $this->cmdUtil->advanceProgressBar(
+                1,
+                'inBatch|TotalUpdateCount: '.$this->inBatchSize.'|'.$this->totalUpdateCount
+                .'  lastAnimalId(checked|flushed): '.$this->lastCheckedAnimalId.'|'.$this->lastFlushedAnimalId
+                );
+        }
     }
 
 
@@ -165,28 +307,48 @@ class PedigreeDataGenerator
     }
 
 
-    private function getBreederNumber($animal)
+    /**
+     * @param Animal $animal
+     * @return null|string
+     */
+    private function getBreederNumber(Animal $animal)
     {
-        $registrations = $this->getLocation($animal)->getPedigreeRegisterRegistrations();
+        $locationOfBirth = $animal->getLocationOfBirth();
+        if (!$locationOfBirth) {
+            return null;
+        }
+
+        $registrations = $locationOfBirth->getPedigreeRegisterRegistrations();
         if (count($registrations) === 0) {
             return null;
         }
 
-        $registration = null;
-        if (count($registrations) === 1) {
-            $registration = $registrations->first();
-            // TODO CHECK IF PEDIGREE MATCHES
-        }
 
-        // count > 1
-        // TODO FIND MATCHING PEDIGREE
-
-        if (!($registration instanceof PedigreeRegisterRegistration)) {
+        if (!$animal->getParentMother()) {
             return null;
         }
 
-        if (!(is_string($registration->getBreederNumber()) && strlen($registration->getBreederNumber()) === 5)) {
-            $this->logError('INVALID BREEDER NUMBER: '.$registration->getBreederNumber(), $animal);
+        $biggestBreedCodeOfMother = $animal->getParentMother()->getBiggestBreedCodePartFromValidatedBreedCodeString();
+        if (!$biggestBreedCodeOfMother) {
+            return null;
+        }
+
+
+        /** @var PedigreeRegisterRegistration $registration */
+        $foundRegistration = null;
+        foreach ($registrations as $registration) {
+            if ($registration->getPedigreeRegister()->hasPedigreeCode($biggestBreedCodeOfMother)) {
+                $foundRegistration = $registration;
+                break;
+            }
+        }
+
+        if (!($foundRegistration instanceof PedigreeRegisterRegistration)) {
+            return null;
+        }
+
+        if (!(is_string($foundRegistration->getBreederNumber()) && strlen($foundRegistration->getBreederNumber()) === 5)) {
+            $this->logError('INVALID BREEDER NUMBER: '.$foundRegistration->getBreederNumber(), $animal);
             return null;
         }
 
@@ -236,20 +398,6 @@ class PedigreeDataGenerator
     }
 
 
-    private function generatePedigreeRegister(Animal $animal)
-    {
-        if ($animal->getPedigreeRegister() !== null && !$this->overwriteExistingData) {
-            return $animal;
-        }
-
-        // TODO ?
-
-        $this->valueWasUpdated();
-
-        return $animal;
-    }
-
-
     /**
      * @param Animal $animal
      * @return Animal
@@ -260,16 +408,17 @@ class PedigreeDataGenerator
             return $animal;
         }
 
-        $breedCodeChild = BreedCodeUtil::calculateBreedCodeFromParents(
+        $calculatedBreedCodeChild = BreedCodeUtil::calculateBreedCodeFromParents(
             $animal->getParentFather(),
             $animal->getParentMother(),
             null,
             true
         );
 
-        $animal->setBreedCode($breedCodeChild);
-
-        $this->valueWasUpdated();
+        if ($calculatedBreedCodeChild !== $animal->getBreedCode()) {
+            $animal->setBreedCode($calculatedBreedCodeChild);
+            $this->valueWasUpdated();
+        }
 
         return $animal;
     }
@@ -282,7 +431,7 @@ class PedigreeDataGenerator
     private function generateScrapieGenotype(Animal $animal)
     {
         if ($animal->getScrapieGenotype() && !$animal->getScrapieGenotypeSource()) {
-            $animal->setScrapieGenotype($this->getScrapieGenotypeAdministrativeSource());
+            $animal->setScrapieGenotypeSource($this->getScrapieGenotypeAdministrativeSource());
             $this->valueWasUpdated();
             return $animal;
         }
@@ -296,7 +445,7 @@ class PedigreeDataGenerator
             $this->getLocation($animal)->getLocationHealth()->getCurrentScrapieStatus() === ScrapieStatus::RESISTANT)
         {
             $animal->setScrapieGenotype(ScrapieGenotypeType::ARR_ARR);
-            $animal->setScrapieGenotype($this->getScrapieGenotypeAdministrativeSource());
+            $animal->setScrapieGenotypeSource($this->getScrapieGenotypeAdministrativeSource());
             $this->valueWasUpdated();
         }
 
@@ -309,22 +458,200 @@ class PedigreeDataGenerator
      */
     private function getScrapieGenotypeAdministrativeSource()
     {
-        return $this->em->getRepository(ScrapieGenotypeSource::class)->getAdministrativeSource();
+        return $this->em->getRepository(ScrapieGenotypeSource::class)->getAdministrativeSource(false);
     }
 
 
-
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
     private function generateBreedType(Animal $animal)
     {
         if ($animal->getBreedType() !== null && !$this->overwriteExistingData) {
             return $animal;
         }
 
-        // TODO
-
-        $this->valueWasUpdated();
+        $biggestBreedCodePart = $animal->getBiggestBreedCodePartFromValidatedBreedCodeString();
+        switch ($biggestBreedCodePart) {
+            case BreedCodeType::NH: $animal = $this->generateNHBreedType($animal); break;
+            case BreedCodeType::CF: $animal = $this->generateCFBreedType($animal); break;
+            case BreedCodeType::BM: $animal = $this->generateBMBreedType($animal); break;
+            case BreedCodeType::TE: $animal = $this->generateTEBreedType($animal); break;
+            default: break;
+        }
 
         return $animal;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
+    private function generateNHBreedType(Animal $animal)
+    {
+        // Default for Ram and Ewe
+        $calculatedBreedType = BreedType::REGISTER;
+
+        if ($animal->getGender() === GenderType::FEMALE) {
+            if ($animal->getParentFather() && $animal->getParentFather()->getBreedType() === BreedType::PURE_BRED) {
+                if ($animal->getParentFather()->getBreedCode() === 'NH100'
+                || $animal->getParentFather()->getBreedCode() === 'NH88TE12'
+                || $animal->getParentFather()->getBreedCode() === 'NH75TE25'
+                || $animal->getParentFather()->getBreedCode() === 'NH50TE50'
+                ) {
+                    $calculatedBreedType = BreedType::PURE_BRED;
+                }
+            }
+        }
+
+        if ($animal->getBreedType() !== $calculatedBreedType) {
+            $animal->setBreedType($calculatedBreedType);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
+    private function generateCFBreedType(Animal $animal)
+    {
+        if ($animal->getBreedType() !== BreedType::REGISTER) {
+            $animal->setBreedType(BreedType::REGISTER);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
+    private function generateBMBreedType(Animal $animal)
+    {
+        $calculatedBreedType = BreedType::REGISTER;
+
+        if ($animal->getDateOfBirth()
+            && $this->hasPureBredValidatedBMParent($animal, true)
+            && $this->hasPureBredValidatedBMParent($animal, false)
+        ) {
+            $calculatedBreedType = BreedType::PURE_BRED;
+        }
+
+        if ($animal->getBreedType() !== $calculatedBreedType) {
+            $animal->setBreedType($calculatedBreedType);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param $isFather
+     * @return bool
+     */
+    private function hasPureBredValidatedBMParent(Animal $animal, $isFather)
+    {
+        $parent = $isFather ? $animal->getParentFather() : $animal->getParentMother();
+
+        if (!$parent || !$parent->getDateOfBirth() || $parent->getBreedCode() !== 'BM100') {
+            return false;
+        }
+
+        $age = abs(TimeUtil::getAgeInDays($parent->getDateOfBirth(), $animal->getDateOfBirth()));
+        return $parent->getExteriorMeasurements()
+                ->matching(ExteriorCriteria::pureBredBMParentExterior($age))
+                ->count() > 0;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
+    private function generateTEBreedType(Animal $animal)
+    {
+        $calculatedBreedType = BreedType::REGISTER;
+
+        if ($this->isPureBredAndTE100($animal->getParentFather())
+            && $this->hasPureBredValidatedTEParent($animal, true)
+            && $this->hasPureBredValidatedTEParent($animal, false)
+        ) {
+            $calculatedBreedType = BreedType::PURE_BRED;
+        }
+
+        if ($animal->getBreedType() !== $calculatedBreedType) {
+            $animal->setBreedType($calculatedBreedType);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param $isFather
+     * @return bool
+     */
+    private function hasPureBredValidatedTEParent(Animal $animal, $isFather)
+    {
+        $parent = $isFather ? $animal->getParentFather() : $animal->getParentMother();
+
+        if (!$parent || !$parent->getDateOfBirth() || !$parent->getBreedCode() ||
+            !$animal->getDateOfBirth() || $animal instanceof Neuter) {
+            return false;
+        }
+
+        $age = abs(TimeUtil::getAgeInDays($parent->getDateOfBirth(), $animal->getDateOfBirth()));
+
+        if ($isFather) {
+            return $this->isPureBredAndTE100($parent)
+                && $parent->getExteriorMeasurements()
+                    ->matching(ExteriorCriteria::pureBredTEFatherExterior($age))
+                    ->count() > 0;
+        }
+
+        // for Mothers
+        if ($animal instanceof Ram) {
+
+            return $this->isPureBredAndTE100($parent)
+                && $parent->getExteriorMeasurements()
+                    ->matching(ExteriorCriteria::pureBredTEMotherOfRamExterior($age))
+                    ->count() > 0;
+
+        }
+        // animal is Ewe
+
+        return (
+                    $this->isPureBredAndTE100($parent) ||
+                    BreedCodeUtil::hasBreedCodePart($parent->getBreedCode(), 'TE', 88)
+               )
+                && $parent->getExteriorMeasurements()
+                ->matching(ExteriorCriteria::pureBredTEMotherOfEweExterior())
+                ->count() > 0;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return bool
+     */
+    private function isPureBredAndTE100($animal)
+    {
+        return $animal
+            && $animal->getBreedCode() === 'TE100'
+            && $animal->getBreedType() === BreedType::PURE_BRED
+            ;
     }
 
 
@@ -339,4 +666,12 @@ class PedigreeDataGenerator
     }
 
 
+    private function resetCounters()
+    {
+        $this->inBatchSize = 0;
+        $this->totalUpdateCount = 0;
+        $this->lastFlushedAnimalId = 0;
+        $this->lastCheckedAnimalId = 0;
+        $this->startAnimalId = 0;
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Criteria\PedigreeCodeCriteria;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -317,7 +318,7 @@ class PedigreeRegister
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|PedigreeCode[]
      */
     public function getPedigreeCodes()
     {
@@ -361,6 +362,22 @@ class PedigreeRegister
         $this->getPedigreeCodes()->removeElement($pedigreeCode);
         return $this->pedigreeCodes;
     }
+
+
+    /**
+     * @param string|PedigreeCode $code
+     * @return boolean
+     */
+    public function hasPedigreeCode($code)
+    {
+        if ($code instanceof PedigreeCode) {
+            $code = $code->getCode();
+        }
+
+        $pedigreeCodes = $this->pedigreeCodes->matching(PedigreeCodeCriteria::byCode($code));
+        return $pedigreeCodes->count() > 0;
+    }
+
 
     /**
      * @return boolean

@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
@@ -985,6 +986,7 @@ abstract class Animal
         $this->tailLengthMeasurements = new ArrayCollection();
         $this->weightMeasurements = new ArrayCollection();
         $this->declareWeights = new ArrayCollection();
+        $this->exteriorMeasurements = new ArrayCollection();
         $this->flags = new ArrayCollection();
         $this->ulnHistory = new ArrayCollection();
         $this->genderHistory = new ArrayCollection();
@@ -2601,10 +2603,9 @@ abstract class Animal
      *
      * @return Animal
      */
-    public function addExteriorMeasurement(\AppBundle\Entity\Exterior $exteriorMeasurement)
+    public function addExteriorMeasurement($exteriorMeasurement)
     {
-        $this->exteriorMeasurements[] = $exteriorMeasurement;
-
+        $this->getExteriorMeasurements()->add($exteriorMeasurement);
         return $this;
     }
 
@@ -2621,10 +2622,14 @@ abstract class Animal
     /**
      * Get exteriorMeasurements
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection|ArrayCollection
      */
     public function getExteriorMeasurements()
     {
+        if ($this->exteriorMeasurements === null) {
+            $this->exteriorMeasurements = new ArrayCollection();
+        }
+
         return $this->exteriorMeasurements;
     }
 
@@ -2963,6 +2968,15 @@ abstract class Animal
     {
         $this->nLing = $nLing;
         return $this;
+    }
+
+
+    /**
+     * @return string|null
+     */
+    public function getBiggestBreedCodePartFromValidatedBreedCodeString()
+    {
+        return BreedCodeUtil::getBiggestBreedCodePartFromValidatedBreedCodeString($this->breedCode);
     }
 
 

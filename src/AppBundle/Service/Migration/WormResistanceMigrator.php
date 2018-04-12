@@ -43,7 +43,7 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         $this->writeLn('Get animalIds by vsmId search array ...');
         $this->animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
         $this->writeLn('Get animalIds by uln search array ...');
-        $this->animalIdsByUln = $this->animalRepository->getAnimalPrimaryKeysByUlnStringArray();
+        $this->animalIdsByUln = $this->animalRepository->getAnimalPrimaryKeysByUlnStringArrayIncludingTagReplaces();
         $this->writeLn('Get animalIds by unique stn search array ...');
         $this->animalIdsByUniqueStn = $this->animalRepository->getAnimalPrimaryKeysByUniqueStnArray();
 

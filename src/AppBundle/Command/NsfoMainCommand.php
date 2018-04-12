@@ -616,6 +616,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             '3: TreatmentType', "\n",
             '4: LedgerCategory', "\n",
             '5: ScrapieGenotypeSource', "\n",
+            '6: PedigreeCodes & PedigreeRegister-PedigreeCode relationships', "\n",
             '=====================================', "\n",
             '10: StoredProcedures: initialize if not exist', "\n",
             '11: StoredProcedures: overwrite all', "\n",
@@ -637,6 +638,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 $updateCount = $this->em->getRepository(ScrapieGenotypeSource::class)->initializeRecords();
                 $this->writeLn(($updateCount ? $updateCount : 'No').' ScrapieGenotypeSources have been inserted');
                 break;
+            case 6: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeCodeInitializer')->run($this->cmdUtil); break;
 
             case 10: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->initialize(); break;
             case 11: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->update(); break;
@@ -658,12 +660,18 @@ class NsfoMainCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '=====================================', "\n",
             '1: Birth Weight and TailLength', "\n",
+            '2: UbnOfBirth (string) in Animal', "\n",
+            '3: Fill empty breedCode, breedType and pedigree (stn) data for all declareBirth animals (no data is overwritten)', "\n",
+            '4: Fill empty scrapieGenotype data for all declareBirth animals currently on livestocks (no data is overwritten)', "\n",
             "\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1: $this->getContainer()->get('app.datafix.birth.measurements.missing')->run(); break;
+            case 2: $this->getContainer()->get('AppBundle\Service\DataFix\MissingUbnOfBirthFillerService')->run(); break;
+            case 3: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->run($this->cmdUtil); break;
+            case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScrapieGenotypeReprocessor')->run($this->cmdUtil); break;
 
             default: $this->writeLn('Exit menu'); return;
         }

@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 use AppBundle\Cache\GeneDiversityUpdater;
+use AppBundle\Cache\ProductionCacher;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
@@ -733,7 +734,12 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 $this->getManager()->flush();
             }
 
-            $children = $this->pedigreeDataGenerator->generate($children, $location,false);
+            if (count($children) === 0) {
+                // Immediately update production values if all births are stillborn
+                ProductionCacher::updateProductionValuesByLitter($this->conn, $litter);
+            }
+
+            $children = $this->pedigreeDataGenerator->generate($children, $location);
 
         } catch (UniqueConstraintViolationException $exception) {
             //Reset tags to UNASSIGNED
