@@ -8,6 +8,7 @@ use AppBundle\Criteria\ExteriorCriteria;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
+use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\PedigreeRegisterRegistration;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\ScrapieGenotypeSource;
@@ -201,6 +202,7 @@ class PedigreeDataGenerator
             $animal = $this->generateMissingBreedCodes($animal);
             $animal = $this->generatePedigreeCountryCodeAndNumber($animal);
             $animal = $this->generateBreedType($animal);
+            $animal = $this->matchMissingPedigreeRegisterByBreederNumberInStn($animal);
         }
 
         if (!$ignoreScrapieGenotypeGeneration) {
@@ -657,6 +659,33 @@ class PedigreeDataGenerator
             && $animal->getBreedCode() === 'TE100'
             && $animal->getBreedType() === BreedType::PURE_BRED
             ;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
+    private function matchMissingPedigreeRegisterByBreederNumberInStn(Animal $animal)
+    {
+        if (!$animal || !$animal->getPedigreeNumber()) {
+            return $animal;
+        }
+
+        $breederNumber = StringUtil::getBreederNumberFromPedigreeNumber($animal->getPedigreeNumber());
+        $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)->findOneByBreederNumber($breederNumber);
+
+        if (!$pedigreeRegister) {
+            return $animal;
+        }
+
+        if (!$animal->getPedigreeRegister() ||
+            $animal->getPedigreeRegister()->getId() !== $pedigreeRegister->getId()) {
+            $animal->setPedigreeRegister($pedigreeRegister);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
     }
 
 

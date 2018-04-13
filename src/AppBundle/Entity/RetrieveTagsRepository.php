@@ -36,9 +36,7 @@ class RetrieveTagsRepository extends BaseRepository {
             ->setMaxResults(1)
         ;
 
-        $results = $qb->getQuery()->getResult();
-
-        return count($results) === 0 ? null : array_shift($results);
+        return $this->returnFirstQueryResult($qb->getQuery()->getResult());
     }
 
 }
