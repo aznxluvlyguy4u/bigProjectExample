@@ -164,6 +164,7 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
                           AND mom.date_of_birth NOTNULL
                           AND (m.pmsg ISNULL OR m.pmsg = FALSE)
                           AND DATE_PART('YEAR', mom.date_of_birth) ".($isSet1 ? '=' : '<')." $year - 1
+                          AND DATE_PART('YEAR', l.litter_date) = ". $year."
                     GROUP BY vld.location_of_birth_id, vld.breeder_number";
     }
 }
