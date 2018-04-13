@@ -18,4 +18,9 @@ class PedigreeDataReprocessor extends PedigreeDataReprocessorBase
             $startAnimalId
         );
     }
+
+    public function batchMatchMissingPedigreeRegisterByBreederNumberInStn()
+    {
+        $this->getPedigreeDataGenerator()->batchMatchMissingPedigreeRegisterByBreederNumberInStn();
+    }
 }

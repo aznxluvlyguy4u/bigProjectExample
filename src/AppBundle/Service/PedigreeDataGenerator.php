@@ -19,6 +19,7 @@ use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\ORM\EntityManagerInterface;
@@ -686,6 +687,42 @@ class PedigreeDataGenerator
         }
 
         return $animal;
+    }
+
+
+    /**
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function batchMatchMissingPedigreeRegisterByBreederNumberInStn()
+    {
+        $updateCount = 0;
+        foreach (['TRUE', 'FALSE'] as $boolVal) {
+            $sql = "UPDATE animal SET pedigree_register_id = v.pedigree_register_id
+                FROM (
+                  SELECT
+                    a.id as animal_id,
+                    pedigree_number,
+                    prr.pedigree_register_id
+                  FROM animal a
+                    INNER JOIN (
+                                 SELECT
+                                   breeder_number,
+                                   MAX(pedigree_register_id) as pedigree_register_id
+                                 FROM pedigree_register_registration
+                                 WHERE is_active = $boolVal
+                                 GROUP BY breeder_number
+                               )prr ON prr.breeder_number = substr(pedigree_number, 1, 5)
+                  WHERE a.pedigree_register_id ISNULL
+                ) AS v(animal_id, pedigree_number, pedigree_register_id) WHERE animal.id = v.animal_id 
+                AND animal.pedigree_register_id ISNULL";
+
+            $updateCount += SqlUtil::updateWithCount($this->em->getConnection(), $sql);
+        }
+
+        $this->logger->notice(($updateCount === 0 ? 'No' : $updateCount).' missing pedigreeRegisterIds were matched to animals');
+
+        return $updateCount;
     }
 
 
