@@ -1064,11 +1064,13 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     {
         $retrieveTags = new RetrieveTags();
 
+        //set default values
+        $retrieveTags->setTagType(TagType::FREE);
+        $retrieveTags->setAnimalType(AnimalType::sheep);
+        $retrieveTags->setIsManual(false);
+
         //No custom filter content given, revert to default values
         if($contentArray->count() == 0) {
-            $retrieveTags->setTagType(TagType::FREE);
-            $retrieveTags->setAnimalType(AnimalType::sheep);
-
             return $retrieveTags;
         }
 
@@ -1080,6 +1082,11 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         //set tagType
         if($contentArray->containsKey(Constant::TAG_TYPE_SNAKE_CASE_NAMESPACE)) {
             $retrieveTags->setTagType($contentArray->get(Constant::TAG_TYPE_SNAKE_CASE_NAMESPACE));
+        }
+
+        //set isManual
+        if($contentArray->containsKey(Constant::IS_MANUAL)) {
+            $retrieveTags->setIsManual($contentArray->get(Constant::IS_MANUAL));
         }
 
         return $retrieveTags;

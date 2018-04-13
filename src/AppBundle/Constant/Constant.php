@@ -38,6 +38,7 @@ class Constant
     const DATA = 'data';
 
     //Tags
+    const IS_MANUAL = 'is_manual';
     const TAGS_NAMESPACE = "tags";
     const TAG_NAMESPACE = "tag";
     const TAG_TYPE_NAMESPACE = "tagType";
