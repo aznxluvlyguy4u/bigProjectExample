@@ -92,6 +92,7 @@ abstract class Person implements UserInterface
    *     "GHOST_LOGIN",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
+   *     "MINIMAL",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -116,6 +117,7 @@ abstract class Person implements UserInterface
    *     "GHOST_LOGIN",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
+   *     "MINIMAL",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"

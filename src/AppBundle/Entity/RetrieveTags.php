@@ -29,6 +29,9 @@ class RetrieveTags
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "MINIMAL"
+     * })
      */
     private $logDate;
 
@@ -52,6 +55,9 @@ class RetrieveTags
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "MINIMAL"
+     * })
      */
     private $requestState;
 
@@ -102,6 +108,9 @@ class RetrieveTags
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "MINIMAL"
+     * })
      */
     private $actionBy;
 
@@ -114,6 +123,7 @@ class RetrieveTags
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "BASIC",
+     *     "MINIMAL"
      * })
      */
     private $isManual;

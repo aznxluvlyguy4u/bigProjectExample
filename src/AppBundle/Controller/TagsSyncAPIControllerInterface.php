@@ -28,4 +28,10 @@ interface TagsSyncAPIControllerInterface
    */
   public function getRetrieveTags(Request $request);
 
+
+  /**
+   * @param Request $request
+   * @return mixed
+   */
+  public function getRetrieveTagsStatusOverview(Request $request);
 }

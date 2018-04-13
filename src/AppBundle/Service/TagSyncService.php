@@ -7,8 +7,11 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Controller\TagsSyncAPIControllerInterface;
+use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -73,5 +76,25 @@ class TagSyncService extends DeclareControllerServiceBase implements TagsSyncAPI
         $messageArray = $this->sendMessageObjectToQueue($retrieveEartagsRequest);
 
         return new JsonResponse($messageArray, 200);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getRetrieveTagsStatusOverview(Request $request)
+    {
+        $location = $this->getSelectedLocation($request);
+        $lastRetrieveTagsRequest = $this->getManager()->getRepository(RetrieveTags::class)->findLastManual($location);
+
+        $inProgressCount = $this->getManager()->getRepository(DeclareBirth::class)
+            ->inProgressCount($location);
+
+        return ResultUtil::successResult([
+            'last_retrieve_tags' => $this->getBaseSerializer()->getDecodedJson($lastRetrieveTagsRequest,JmsGroup::MINIMAL),
+            'births_in_progress' => $inProgressCount[RequestStateType::OPEN],
+            'birth_revokes_in_progress' => $inProgressCount[RequestStateType::REVOKING]
+        ]);
     }
 }
