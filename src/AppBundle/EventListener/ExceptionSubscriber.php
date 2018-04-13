@@ -56,6 +56,14 @@ class ExceptionSubscriber implements EventSubscriberInterface
 
     public function onKernelException(GetResponseForExceptionEvent $event)
     {
+        /**
+         * This function catches exceptions and immediately let the controller return the response,
+         * UNLESS the exception was caught in a try-catch block.
+         *
+         * TODO only activate the code below AFTER testing-&-refactoring the exception-response flow in all location in the code!
+         */
+        return;
+
         $exception = $event->getException();
         $defaultErrorMessage = ResultUtil::getDefaultErrorMessage(Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -87,8 +95,8 @@ class ExceptionSubscriber implements EventSubscriberInterface
             $defaultErrorMessage = ResultUtil::getDefaultErrorMessage(Response::HTTP_BAD_REQUEST);
         }
 
-        $this->setErrorResponse($event, $exception, $defaultErrorMessage);
         $this->logException($exception);
+        $this->setErrorResponse($event, $exception, $defaultErrorMessage);
 
     }
 
