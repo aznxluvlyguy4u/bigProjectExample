@@ -115,4 +115,32 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
   {
       return $this->get('app.tag.sync')->createRetrieveTags($request);
   }
+
+
+    /**
+    *
+    * Get a status overview for the manual retrieveTags
+    *
+    * @ApiDoc(
+    *   section = "Tag Syncs",
+    *   requirements={
+    *     {
+    *       "name"="AccessToken",
+    *       "dataType"="string",
+    *       "requirement"="",
+    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+    *     }
+    *   },
+    *   resource = true,
+    *   description = "Get a status overview for the manual retrieveTags"
+    * )
+    * @param Request $request
+    * @return JsonResponse
+    * @Route("-status")
+    * @Method("GET")
+    */
+    public function getRetrieveTagsStatusOverview(Request $request)
+    {
+        return $this->get('app.tag.sync')->getRetrieveTagsStatusOverview($request);
+    }
 }
