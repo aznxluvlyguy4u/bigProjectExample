@@ -201,7 +201,7 @@ class PedigreeDataGenerator
         // NOTE! Run these functions in this order!
         if (!$ignoreNonScrapieGenotypeGeneration) {
             $animal = $this->generateMissingBreedCodes($animal);
-            $animal = $this->generatePedigreeCountryCodeAndNumber($animal);
+            $animal = $this->generatePedigreeCountryCodeAndNumberAndPedigreeRegister($animal);
             $animal = $this->generateBreedType($animal);
             $animal = $this->matchMissingPedigreeRegisterByBreederNumberInStn($animal);
         }
@@ -262,7 +262,7 @@ class PedigreeDataGenerator
      * @param Animal $animal
      * @return Animal
      */
-    private function generatePedigreeCountryCodeAndNumber(Animal $animal)
+    private function generatePedigreeCountryCodeAndNumberAndPedigreeRegister(Animal $animal)
     {
         if($animal->getPedigreeCountryCode() !== null && $animal->getPedigreeNumber() !== null
         && !$this->overwriteExistingData) {
@@ -274,7 +274,20 @@ class PedigreeDataGenerator
             return $animal;
         }
 
-        $breederNumber = $this->getBreederNumber($animal);
+        $pedigreeRegisterRegistration = $this->getPedigreeRegisterRegistration($animal);
+        if (!$pedigreeRegisterRegistration) {
+            return $animal;
+        }
+
+        if ($pedigreeRegisterRegistration->getPedigreeRegister() && $pedigreeRegisterRegistration->getPedigreeRegister()->getId()) {
+            if (!$animal->getPedigreeRegister() ||
+                ($animal->getPedigreeRegister()->getId() !== $pedigreeRegisterRegistration->getId() && $this->overwriteExistingData)) {
+                $animal->setPedigreeRegister($pedigreeRegisterRegistration->getPedigreeRegister());
+                $this->valueWasUpdated();
+            }
+        }
+
+        $breederNumber = $this->getBreederNumber($pedigreeRegisterRegistration);
         if (!$breederNumber) {
             return $animal;
         }
@@ -311,10 +324,29 @@ class PedigreeDataGenerator
 
 
     /**
-     * @param Animal $animal
+     * @param PedigreeRegisterRegistration $foundRegistration
      * @return null|string
      */
-    private function getBreederNumber(Animal $animal)
+    private function getBreederNumber(PedigreeRegisterRegistration $foundRegistration)
+    {
+        if (!$foundRegistration) {
+            return null;
+        }
+
+        if (!(is_string($foundRegistration->getBreederNumber()) && strlen($foundRegistration->getBreederNumber()) === 5)) {
+            $this->logError('INVALID BREEDER NUMBER: '.$foundRegistration->getBreederNumber(), $animal);
+            return null;
+        }
+
+        return $foundRegistration->getBreederNumber();
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return PedigreeRegisterRegistration|null
+     */
+    private function getPedigreeRegisterRegistration(Animal $animal)
     {
         $locationOfBirth = $animal->getLocationOfBirth();
         if (!$locationOfBirth) {
@@ -350,12 +382,7 @@ class PedigreeDataGenerator
             return null;
         }
 
-        if (!(is_string($foundRegistration->getBreederNumber()) && strlen($foundRegistration->getBreederNumber()) === 5)) {
-            $this->logError('INVALID BREEDER NUMBER: '.$foundRegistration->getBreederNumber(), $animal);
-            return null;
-        }
-
-        return $registration->getBreederNumber();
+        return $foundRegistration;
     }
 
 
@@ -669,7 +696,9 @@ class PedigreeDataGenerator
      */
     private function matchMissingPedigreeRegisterByBreederNumberInStn(Animal $animal)
     {
-        if (!$animal || !$animal->getPedigreeNumber()) {
+        if (!$animal || !$animal->getPedigreeNumber() ||
+            ($animal->getPedigreeRegister() && $animal->getPedigreeRegister()->getId())
+        ) {
             return $animal;
         }
 
