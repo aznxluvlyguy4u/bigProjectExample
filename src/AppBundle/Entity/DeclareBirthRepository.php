@@ -202,4 +202,38 @@ class DeclareBirthRepository extends BaseRepository {
 
     return $query->getResult();
   }
+
+
+    /**
+     * @param Location $location
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+  public function inProgressCount(Location $location)
+  {
+      $results = [
+          RequestStateType::OPEN => 0,
+          RequestStateType::REVOKING => 0,
+      ];
+
+      if (!$location || !$location->getId()) {
+          return $results;
+      }
+
+      $sql = "SELECT
+                  request_state,
+                  COUNT(*) as count
+                FROM declare_birth b
+                  INNER JOIN declare_base db ON b.id = db.id
+                WHERE (db.request_state = '".RequestStateType::OPEN."' OR db.request_state = '".RequestStateType::REVOKING."')
+                      AND location_id = ".$location->getId()."
+                GROUP BY request_state";
+      $data = $this->getConnection()->query($sql)->fetchAll();
+
+      foreach ($data as $record) {
+          $results[$record['request_state']] = $record['count'];
+      }
+
+      return $results;
+  }
 }
