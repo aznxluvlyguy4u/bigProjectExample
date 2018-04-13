@@ -79,6 +79,59 @@ class InvoiceService extends ControllerServiceBase
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoice, $type));
     }
 
+    /**
+     * @param $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+    function getInvoicePdf(Request $request, $id)
+    {
+        /** @var Invoice $invoice */
+        $invoice = $this->getManager()->getRepository(Invoice::class)->find($id);
+        if ($invoice->getCompany()->getAddress()->getState() != null) {
+            switch ($invoice->getCompany()->getAddress()->getState()) {
+                case "DR":
+                    $invoice->getCompany()->getAddress()->setState("Drenthe");
+                    break;
+                case "FL":
+                    $invoice->getCompany()->getAddress()->setState("Flevoland");
+                    break;
+                case "FR":
+                    $invoice->getCompany()->getAddress()->setState("Friesland");
+                    break;
+                case "GD":
+                    $invoice->getCompany()->getAddress()->setState("Gelderland");
+                    break;
+                case "GR":
+                    $invoice->getCompany()->getAddress()->setState("Groningen");
+                    break;
+                case "LB":
+                    $invoice->getCompany()->getAddress()->setState("Limburg");
+                    break;
+                case "NB":
+                    $invoice->getCompany()->getAddress()->setState("Noord-Brabant");
+                    break;
+                case "NH":
+                    $invoice->getCompany()->getAddress()->setState("Noord-Holland");
+                    break;
+                case "OV":
+                    $invoice->getCompany()->getAddress()->setState("Overijssel");
+                    break;
+                case "UT":
+                    $invoice->getCompany()->getAddress()->setState("Utrecht");
+                    break;
+                case "ZH":
+                    $invoice->getCompany()->getAddress()->setState("Zuid-Holland");
+                    break;
+                case "ZL":
+                    $invoice->getCompany()->getAddress()->setState("Zeeland");
+                    break;
+                default:
+                    break;
+            }
+        }
+        return $this->invoicePdfGeneratorService->getInvoicePdfBase(self::TWIG_FILE, $invoice);
+    }
 
     /**
      * @param Location $selectedLocation
@@ -132,6 +185,19 @@ class InvoiceService extends ControllerServiceBase
 
         if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
+
+            $client = $this->getAccountOwner($request);
+            $message = new Message();
+            $message->setSender($client);
+            $message->setType(InvoiceMessages::NEW_INVOICE_TYPE);
+            $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
+            $message->setMessage(InvoiceMessages::NEW_INVOICE_MESSAGE);
+            $message->setReceiver($invoice->getCompany()->getOwner());
+            /** @var LocationRepository $repository */
+            $repository = $this->getManager()->getRepository(Location::class);
+            $location = $repository->findOneByActiveUbn($invoice->getUbn());
+            $message->setReceiverLocation($location);
+            $this->persistAndFlush($message);
         }
 
         /** @var Company $company */
@@ -261,6 +327,29 @@ class InvoiceService extends ControllerServiceBase
         $invoice->copyValues($temporaryInvoice);
         if ($invoice->getStatus() === InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
+
+            $client = $this->getAccountOwner($request);
+            $message = new Message();
+            $message->setSender($client);
+            $message->setType(InvoiceMessages::NEW_INVOICE_TYPE);
+            $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
+            $message->setMessage(InvoiceMessages::NEW_INVOICE_MESSAGE);
+            $message->setReceiver($invoice->getCompany()->getOwner());
+            $message->setHidden(false);
+            /** @var LocationRepository $repository */
+            $repository = $this->getManager()->getRepository(Location::class);
+            $senderLocation = $repository->findOneByActiveUbn(2198556);
+            $location = $repository->findOneByActiveUbn($invoice->getUbn());
+            $message->setReceiverLocation($location);
+            $this->persistAndFlush($message);
+        }
+        else {
+            $details = $this->retrieveValidatedSenderDetails($temporaryInvoice);
+            if ($details instanceof JsonResponse) {
+                return $details;
+            }
+
+            $invoice->setSenderDetails($details);
         }
         $invoice->updateTotal();
 
