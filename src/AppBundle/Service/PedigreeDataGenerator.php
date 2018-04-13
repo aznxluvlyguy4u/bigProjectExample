@@ -360,9 +360,11 @@ class PedigreeDataGenerator
      * @param EntityManagerInterface $em
      * @param string $breederNumber
      * @param string $animalOrderNumber
+     * @param int $animalId
      * @return string
      */
-    public static function generateDuplicateCheckedPedigreeNumber(EntityManagerInterface $em, $breederNumber, $animalOrderNumber)
+    public static function generateDuplicateCheckedPedigreeNumber(EntityManagerInterface $em, $breederNumber,
+                                                                  $animalOrderNumber, $animalId)
     {
         $isFirstLoop = true;
         $newPedigreeNumber = $breederNumber . '-' . $animalOrderNumber;
@@ -373,7 +375,7 @@ class PedigreeDataGenerator
                 $newPedigreeNumber = StringUtil::bumpPedigreeNumber($newPedigreeNumber);
             }
 
-            $pedigreeNumberAlreadyExists = self::pedigreeNumberAlreadyExists($em, $newPedigreeNumber);
+            $pedigreeNumberAlreadyExists = self::pedigreeNumberAlreadyExists($em, $newPedigreeNumber, $animalId);
             $isFirstLoop = false;
 
         } while ($pedigreeNumberAlreadyExists);
@@ -385,15 +387,18 @@ class PedigreeDataGenerator
     /**
      * @param EntityManagerInterface $em
      * @param string $pedigreeNumber
+     * @param int $animalId pedigreeNumber is not considered a duplicate if it already exists for this animal
      * @return bool
      */
-    public static function pedigreeNumberAlreadyExists(EntityManagerInterface $em, $pedigreeNumber)
+    public static function pedigreeNumberAlreadyExists(EntityManagerInterface $em, $pedigreeNumber, $animalId = null)
     {
         if (!$pedigreeNumber) {
             return false;
         }
 
-        $sql = "SELECT COUNT(*) as count FROM animal WHERE pedigree_number = '".$pedigreeNumber."'";
+        $animalIdFilter = is_int($animalId) || ctype_digit($animalId) ? ' AND id <> '.$animalId.' ' : ' ';
+
+        $sql = "SELECT COUNT(*) as count FROM animal WHERE pedigree_number = '".$pedigreeNumber."'".$animalIdFilter;
         return $em->getConnection()->query($sql)->fetch()['count'] > 0;
     }
 
