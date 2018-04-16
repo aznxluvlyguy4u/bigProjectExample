@@ -129,6 +129,7 @@ class InvoiceService extends ControllerServiceBase
             ? $this->getManager()->getRepository(Company::class)->find($invoice->getCompany()->getId()) : null;
         if ($company !== null) {
             $invoice->setCompany($company);
+            $invoice->setCompanyAddress($company->getAddress());
             $company->addInvoice($invoice);
             $this->getManager()->persist($company);
         }
@@ -226,12 +227,14 @@ class InvoiceService extends ControllerServiceBase
                     $oldCompany->removeInvoice($invoice);
                     $newCompany->addInvoice($invoice);
                     $invoice->setCompany($newCompany);
+                    $invoice->setCompanyAddress($newCompany->getAddress());
                     $this->getManager()->persist($oldCompany);
                     $this->getManager()->persist($newCompany);
                 }
 
             } else {
                 $invoice->setCompany($newCompany);
+                $invoice->setCompanyAddress($newCompany->getAddress());
                 $newCompany->addInvoice($invoice);
                 $this->getManager()->persist($newCompany);
             }
