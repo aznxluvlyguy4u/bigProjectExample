@@ -294,7 +294,12 @@ class PedigreeDataGenerator
 
         $animal = $this->fixIncongruentAnimalOrderNumber($animal);
 
-        $newPedigreeNumber = self::generateDuplicateCheckedPedigreeNumber($this->em, $breederNumber, $animal->getAnimalOrderNumber());
+        $newPedigreeNumber = self::generateDuplicateCheckedPedigreeNumber(
+            $this->em,
+            $breederNumber,
+            $animal->getAnimalOrderNumber(),
+            $animal->getId()
+        );
         if (!$newPedigreeNumber) {
             return null;
         }
