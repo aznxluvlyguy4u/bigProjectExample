@@ -2039,7 +2039,9 @@ class AnimalRepository extends BaseRepository
                     $notNullLocationQuery,
                     $animalIsAliveQuery
                 )
-            );
+            )
+            ->orderBy('b.dateOfBirth', Criteria::ASC)
+        ;
 
         $animals = [];
 
@@ -2055,8 +2057,6 @@ class AnimalRepository extends BaseRepository
                 $animals[$animal->getId()] = $animal;
             }
         }
-
-        ksort($animals);
 
         return $animals;
     }
