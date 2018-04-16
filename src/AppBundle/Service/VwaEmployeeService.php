@@ -9,6 +9,7 @@ use AppBundle\Controller\VwaEmployeeAPIControllerInterface;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Output\MenuBarOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
@@ -51,7 +52,13 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
         if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::SUPER_ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $vwaEmployees = $this->getManager()->getRepository(VwaEmployee::class)->findAll();
+        $activeOnly = RequestUtil::getBooleanQuery($request, QueryParameter::ACTIVE_ONLY, false);
+        if ($activeOnly) {
+            $vwaEmployees = $this->getManager()->getRepository(VwaEmployee::class)->findActiveOnly();
+        } else {
+            $vwaEmployees = $this->getManager()->getRepository(VwaEmployee::class)->findAll();
+        }
+
         $output = $this->getBaseSerializer()->getDecodedJson($vwaEmployees, [JmsGroup::VWA]);
         return ResultUtil::successResult($output);
     }

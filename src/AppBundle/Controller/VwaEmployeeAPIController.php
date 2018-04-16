@@ -57,6 +57,15 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="active_only",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="only retrieve active users if set to true, default=false",
+     *        "format"="?active_only=true"
+     *      }
+     *   },
      *   resource = true,
      *   statusCodes={
      *     200="Returned when successful",
