@@ -146,6 +146,14 @@ class Invoice
     private $companyVatNumber;
 
     /**
+     * @var Address $companyAddress
+     * @ORM\ManyToOne(targetEntity="Address")
+     * @ORM\JoinColumn(name="company_address_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Address")
+     */
+    private $companyAddress;
+
+    /**
      * @var string
      * @ORM\Column(type="string", name="company_debtor_number", nullable=true)
      * @JMS\Type("string")
@@ -303,6 +311,22 @@ class Invoice
     {
         $this->invoiceRuleSelections = $invoiceRuleSelections;
         return $this;
+    }
+
+    /**
+     * @return Address
+     */
+    public function getCompanyAddress()
+    {
+        return $this->companyAddress;
+    }
+
+    /**
+     * @param Address $companyAddress
+     */
+    public function setCompanyAddress($companyAddress)
+    {
+        $this->companyAddress = $companyAddress;
     }
 
     /**
