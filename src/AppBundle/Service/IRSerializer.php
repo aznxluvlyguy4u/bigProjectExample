@@ -491,7 +491,14 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
             $birthProgress = StringUtil::convertEmptyStringToNull(
                 ArrayUtil::get('birth_progress', $child, null)
             );
-            $hasLambar = ArrayUtil::get('has_lambar', $child, false);
+
+            if (key_exists('has_lambar', $child)) {
+                $hasLambar = ArrayUtil::get('has_lambar', $child, false);
+            } else {
+                $nurtureType = ArrayUtil::get('nurture_type', $child,  null);
+                $hasLambar = $nurtureType === 'LAMBAR';
+            }
+
             $tailLengthValue = ArrayUtil::get('tail_length', $child, $tailLengthEmptyValue);
             $birthWeightValue = ArrayUtil::get('birth_weight', $child, $birthWeightEmptyValue);
 
