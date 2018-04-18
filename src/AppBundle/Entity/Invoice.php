@@ -221,6 +221,31 @@ class Invoice
     private $isDeleted = false;
 
     /**
+     * @var boolean
+     * @ORM\Column(name="is_batch", type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $isBatch = false;
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("vat_breakdown")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     * @return VatBreakdown
+     */
+    public function getVatBreakdownRecords()
+    {
+        return VatCalculator::calculateVatBreakdown($this->getInvoiceRuleSelections());
+    }
+
+    /**
      * Invoice constructor.
      */
     public function __construct()
@@ -535,6 +560,22 @@ class Invoice
     public function setMollieId($mollieId)
     {
         $this->mollieId = $mollieId;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBatch()
+    {
+        return $this->isBatch;
+    }
+
+    /**
+     * @param bool $isBatch
+     */
+    public function setIsBatch($isBatch)
+    {
+        $this->isBatch = $isBatch;
     }
 
     public function copyValues(Invoice $invoice){
