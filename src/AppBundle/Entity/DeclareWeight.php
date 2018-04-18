@@ -21,7 +21,7 @@ class DeclareWeight extends DeclareNsfoBase
     /**
      * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy = "declareWeights", cascade={"persist"})
-     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;
