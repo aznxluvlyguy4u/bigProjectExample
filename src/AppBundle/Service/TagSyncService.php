@@ -73,7 +73,7 @@ class TagSyncService extends DeclareControllerServiceBase implements TagsSyncAPI
         $this->persist($retrieveEartagsRequest);
 
         //Send it to the queue and persist/update any changed state to the database
-        $messageArray = $this->sendMessageObjectToQueue($retrieveEartagsRequest);
+        $messageArray = $this->sendMessageObjectToQueue($retrieveEartagsRequest, false, JmsGroup::RVO);
 
         return new JsonResponse($messageArray, 200);
     }

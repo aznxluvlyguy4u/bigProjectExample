@@ -82,9 +82,10 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     /**
      * @param DeclareBase $messageObject
      * @param bool $isUpdate
+     * @param string|array $jmsGroups
      * @return array
      */
-    protected function sendMessageObjectToQueue($messageObject, $isUpdate = false) {
+    protected function sendMessageObjectToQueue($messageObject, $isUpdate = false, $jmsGroups = null) {
 
         $requestId = $messageObject->getRequestId();
         //$repository = $this->getManager()->getRepository(Utils::getRepositoryNameSpace($messageObject));
@@ -94,7 +95,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
         if($messageArray == null) {
             //These objects do not have a customized minimal json output for the queue yet
-            $jsonMessage = $this->irSerializer->serializeToJSON($messageObject);
+            $jsonMessage = $this->irSerializer->serializeToJSON($messageObject, $jmsGroups);
             $messageArray = json_decode($jsonMessage, true);
         } else {
             //Use the minimized custom output

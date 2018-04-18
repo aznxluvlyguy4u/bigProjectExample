@@ -30,7 +30,8 @@ class RetrieveTags
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "MINIMAL"
+     *     "MINIMAL",
+     *     "RVO"
      * })
      */
     private $logDate;
@@ -40,6 +41,9 @@ class RetrieveTags
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $requestId;
 
@@ -48,6 +52,9 @@ class RetrieveTags
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $messageId;
 
@@ -56,7 +63,8 @@ class RetrieveTags
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "MINIMAL"
+     *     "MINIMAL",
+     *     "RVO"
      * })
      */
     private $requestState;
@@ -66,6 +74,9 @@ class RetrieveTags
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $relationNumberKeeper;
 
@@ -76,6 +87,9 @@ class RetrieveTags
      * @Assert\NotBlank
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $ubn;
 
@@ -85,6 +99,9 @@ class RetrieveTags
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $tagType;
 
@@ -93,6 +110,9 @@ class RetrieveTags
      * @ORM\ManyToOne(targetEntity="Location")
      * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $location;
 
@@ -100,6 +120,9 @@ class RetrieveTags
      * @var integer
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $animalType;
 
@@ -109,7 +132,9 @@ class RetrieveTags
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
      * @JMS\Groups({
-     *     "MINIMAL"
+     *     "BASIC",
+     *     "MINIMAL",
+     *     "RVO"
      * })
      */
     private $actionBy;
@@ -123,7 +148,8 @@ class RetrieveTags
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "BASIC",
-     *     "MINIMAL"
+     *     "MINIMAL",
+     *     "RVO"
      * })
      */
     private $isManual;
@@ -136,7 +162,8 @@ class RetrieveTags
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "BASIC",
-     *     "MINIMAL"
+     *     "MINIMAL",
+     *     "RVO"
      * })
      */
     private $hasForceDeleteAnimalsFailed;
