@@ -128,9 +128,23 @@ class RetrieveTags
      */
     private $isManual;
 
+    /**
+     *
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @Assert\NotBlank
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "BASIC",
+     *     "MINIMAL"
+     * })
+     */
+    private $hasForceDeleteAnimalsFailed;
+
     public function __construct() {
         $this->setLogDate(new \DateTime());
         $this->isManual = false;
+        $this->hasForceDeleteAnimalsFailed = false;
     }
 
     /**
@@ -393,6 +407,25 @@ class RetrieveTags
         $this->isManual = $isManual;
         return $this;
     }
+
+    /**
+     * @return bool
+     */
+    public function isHasForceDeleteAnimalsFailed()
+    {
+        return $this->hasForceDeleteAnimalsFailed;
+    }
+
+    /**
+     * @param bool $hasForceDeleteAnimalsFailed
+     * @return RetrieveTags
+     */
+    public function setHasForceDeleteAnimalsFailed($hasForceDeleteAnimalsFailed)
+    {
+        $this->hasForceDeleteAnimalsFailed = $hasForceDeleteAnimalsFailed;
+        return $this;
+    }
+
 
 
 }
