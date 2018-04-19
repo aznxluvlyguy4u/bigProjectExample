@@ -263,6 +263,42 @@ class ReportAPIController extends APIController {
 
 
     /**
+     * Generate offspring report.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="language",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+     *        "format"="?language=en"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate offspring report"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/offspring")
+     * @Method("POST")
+     */
+    public function getOffspringReport(Request $request)
+    {
+        return $this->get('AppBundle\Service\Report\OffspringReportService')->getReport($request);
+    }
+
+
+    /**
      * Generate pedigree register xls report by abbreviation in query parameter 'type'
      *
      * @ApiDoc(

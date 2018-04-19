@@ -781,6 +781,122 @@ LEFT JOIN (
     }
 
 
+
+    /**
+     * @param bool $concatBreedValuesAndAccuracies
+     * @param bool $includeAnimalsWithoutAnyBreedValues
+     * @param bool $ignoreHiddenBreedValueTypes
+     * @param int $parents
+     * @return string
+     * @throws DBALException
+     */
+    public function createOffspringReportQuery($concatBreedValuesAndAccuracies = true,
+                                                     $includeAnimalsWithoutAnyBreedValues = true,
+                                                     $ignoreHiddenBreedValueTypes = true,
+                                                     $parents
+    )
+    {
+        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
+            $ignoreHiddenBreedValueTypes);
+
+        // TODO
+        $filterString = "WHERE (
+                          mom.animal_id IN (14351) OR
+                          dad.animal_id IN (14351)
+                         )";
+
+        $filterString .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
+
+        $sql = "SELECT DISTINCT
+                  aa.uln as ".$this->translateColumnHeader('uln').",
+                  aa.stn as ".$this->translateColumnHeader('stn').",
+                  aa.n_ling as n_ling, -- sql header cannot have a dash so do not translate it
+                  gender.translated_char as ".$this->translateColumnHeader('gender').",
+                  aa.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('date_of_birth').",
+                  a.nickname as ".$this->translateColumnHeader('name').",
+                  aa.production as ".$this->translateColumnHeader('production').",
+                  dad.uln as ".$this->translateColumnHeader('f_uln').",
+                  dad.stn as ".$this->translateColumnHeader('f_stn').",
+                  mom.uln as ".$this->translateColumnHeader('m_uln').",
+                  mom.stn as ".$this->translateColumnHeader('m_stn').",
+                  aa.breed_code as ".$this->translateColumnHeader('breed_code').",
+                  aa.breed_type_as_dutch_first_letter as ".$this->translateColumnHeader('dutch_breed_status').",
+                  a.ubn_of_birth as ".$this->translateColumnHeader('ubn_of_birth').",
+                  l.ubn as ".$this->translateColumnHeader('current_ubn').",
+                  aa.is_alive as ".$this->translateColumnHeader('is_alive').",
+                  c.birth_weight as ".$this->translateColumnHeader('birth_weight').",
+                  a.birth_progress as ".$this->translateColumnHeader('birth_progress').",
+                  aa.tail_length as ".$this->translateColumnHeader('tail_length').",
+                  aa.fat1 as ".$this->translateColumnHeader('fat1').",
+                  aa.fat2 as ".$this->translateColumnHeader('fat2').",
+                  aa.fat3 as ".$this->translateColumnHeader('fat3').",
+                  aa.muscle_thickness as ".$this->translateColumnHeader('muscle_thickness').",
+                  c.last_weight as ".$this->translateColumnHeader('scan_weight').",
+                  aa.skull as ".$this->translateColumnHeader('skull').",
+                  aa.progress as ".$this->translateColumnHeader('progress').",
+                  aa.muscularity as ".$this->translateColumnHeader('muscularity').",
+                  aa.proportion as ".$this->translateColumnHeader('proportion').",
+                  aa.exterior_type as ".$this->translateColumnHeader('exterior_type').",
+                  aa.leg_work as ".$this->translateColumnHeader('leg_work').",
+                  aa.fur as ".$this->translateColumnHeader('fur').",
+                  aa.general_appearance as ".$this->translateColumnHeader('general_appearance').",
+                  aa.height as ".$this->translateColumnHeader('height').",
+                  aa.breast_depth as ".$this->translateColumnHeader('breast_depth').",
+                  aa.torso_length as ".$this->translateColumnHeader('torso_length').",
+                  aa.kind as ".$this->translateColumnHeader('kind').",
+                  aa.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('measurement_date').",
+                  aa.formatted_predicate as ".$this->translateColumnHeader('predicate').",
+                  
+                  --BREED VALUES
+                  ".$this->breedValuesSelectQueryPart
+                  .($this->breedValuesSelectQueryPart !== '' ? ',' : '' )."
+                  
+                  dad.skull as ".$this->translateColumnHeader('f_skull').",
+                  dad.progress as ".$this->translateColumnHeader('f_progress').",
+                  dad.muscularity as ".$this->translateColumnHeader('f_muscularity').",
+                  dad.proportion as ".$this->translateColumnHeader('f_proportion').",
+                  dad.exterior_type as ".$this->translateColumnHeader('f_exterior_type').",
+                  dad.leg_work as ".$this->translateColumnHeader('f_leg_work').",
+                  dad.fur as ".$this->translateColumnHeader('f_fur').",
+                  dad.general_appearance as ".$this->translateColumnHeader('f_general_appearance').",
+                  dad.height as ".$this->translateColumnHeader('f_height').",
+                  dad.breast_depth as ".$this->translateColumnHeader('f_breast_depth').",
+                  dad.torso_length as ".$this->translateColumnHeader('f_torso_length').",
+                  dad.kind as ".$this->translateColumnHeader('f_kind').",
+                  dad.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('f_measurement_date').",
+                  
+                  mom.skull as ".$this->translateColumnHeader('m_skull').",
+                  mom.progress as ".$this->translateColumnHeader('m_progress').",
+                  mom.muscularity as ".$this->translateColumnHeader('m_muscularity').",
+                  mom.proportion as ".$this->translateColumnHeader('m_proportion').",
+                  mom.exterior_type as ".$this->translateColumnHeader('m_exterior_type').",
+                  mom.leg_work as ".$this->translateColumnHeader('m_leg_work').",
+                  mom.fur as ".$this->translateColumnHeader('m_fur').",
+                  mom.general_appearance as ".$this->translateColumnHeader('m_general_appearance').",
+                  mom.height as ".$this->translateColumnHeader('m_height').",
+                  mom.breast_depth as ".$this->translateColumnHeader('m_breast_depth').",
+                  mom.torso_length as ".$this->translateColumnHeader('m_torso_length').",
+                  mom.kind as ".$this->translateColumnHeader('m_kind').",
+                  mom.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('m_measurement_date')."
+                
+                FROM animal a
+                  INNER JOIN view_animal_livestock_overview_details aa ON a.id = aa.animal_id
+                  LEFT JOIN view_animal_livestock_overview_details mom ON a.parent_mother_id = mom.animal_id
+                  LEFT JOIN view_animal_livestock_overview_details dad ON a.parent_father_id = dad.animal_id
+                  LEFT JOIN location l ON l.id = a.location_id
+                  LEFT JOIN result_table_breed_grades bg ON bg.animal_id = a.id
+                  LEFT JOIN animal_cache c ON c.animal_id = a.id
+                  LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
+                  ".$this->breedValuesPlusSignsQueryJoinPart."
+                " . $filterString;
+
+        ReportServiceBase::closeColumnHeaderTranslation();
+
+        return $sql;
+    }
+
+
+
     /**
      * @param string $columnHeader
      * @return string
