@@ -46,7 +46,7 @@ abstract class BreedIndex
     /**
      * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal")
-     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @JMS\Groups({
      *     "MIXBLUP"
