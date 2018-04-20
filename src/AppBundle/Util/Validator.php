@@ -778,4 +778,59 @@ class Validator
         }
         return false;
     }
+
+
+    /**
+     * @param $animalsArray
+     * @param bool $throwExceptions
+     * @return bool
+     * @throws \Exception
+     */
+    public static function validateUlnKeysInArray($animalsArray, $throwExceptions = true)
+    {
+        $missingKeys = [];
+        foreach ($animalsArray as $animalData)
+        {
+            if (!key_exists(JsonInputConstant::ULN_COUNTRY_CODE, $animalData)) {
+                $missingKeys[] = JsonInputConstant::ULN_COUNTRY_CODE;
+            }
+
+            if (!key_exists(JsonInputConstant::ULN_NUMBER, $animalData)) {
+                $missingKeys[] = JsonInputConstant::ULN_NUMBER;
+            }
+
+            if (count($missingKeys) > 0) {
+                if ($throwExceptions) {
+                    throw new \Exception('The following keys are missing: '.implode(',', $missingKeys),
+                        Response::HTTP_PRECONDITION_REQUIRED);
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * @param array $arrayOfIntegers
+     * @param boolean $cannotBeEmpty
+     * @param string $emptyArrayErrorMessage
+     * @param string $nonIntegerErrorMessage
+     * @throws \Exception
+     */
+    public static function validateIntegerArray($arrayOfIntegers, $cannotBeEmpty,
+                                                $emptyArrayErrorMessage = 'array is empty',
+                                                $nonIntegerErrorMessage = 'array contains non integer values'
+    )
+    {
+        if (count($arrayOfIntegers) === 0 && $cannotBeEmpty) {
+            throw new \Exception($emptyArrayErrorMessage, Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        foreach ($arrayOfIntegers as $value) {
+            if (!is_int($value) && !ctype_digit($value)) {
+                throw new \Exception($nonIntegerErrorMessage, Response::HTTP_PRECONDITION_REQUIRED);
+            }
+        }
+    }
 }

@@ -39,6 +39,7 @@ use Symfony\Component\Cache\Adapter\TraceableAdapter;
 use Doctrine\ORM\Query\Parameter;
 use Symfony\Component\Console\Output\OutputInterface;
 use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class AnimalRepository
@@ -2061,4 +2062,74 @@ class AnimalRepository extends BaseRepository
         return $animals;
     }
 
+
+    /**
+     * @param array $animalsArray
+     * @return array
+     * @throws \Exception
+     */
+    public function getAnimalIdsFromAnimalsArray($animalsArray = [])
+    {
+        if (count($animalsArray) === 0) {
+            return [];
+        }
+
+        Validator::validateUlnKeysInArray($animalsArray, true);
+
+        $sql = '';
+        $prefix = 'SELECT a.id FROM animal a WHERE ';
+        foreach ($animalsArray as $animalData)
+        {
+            $ulnCountryCode = $animalData['uln_country_code'];
+            $ulnNumber = $animalData['uln_number'];
+            $sql .= $prefix."(a.uln_country_code = '$ulnCountryCode' AND a.uln_number = '$ulnNumber')";
+            $prefix = ' OR ';
+        }
+
+        return $this->getConnection()->query($sql)->fetchAll();
+    }
+
+    /**
+     * @param array $animalsArray
+     * @param int $locationId
+     * @return array
+     * @throws \Exception
+     */
+    public function getCurrentAndHistoricAnimalIdsFromAnimalsArray($animalsArray = [], $locationId)
+    {
+        if (count($animalsArray) === 0) {
+            return [];
+        }
+
+        if (!is_int($locationId) && !ctype_digit($locationId)) {
+            throw new \Exception('Location id is missing', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        Validator::validateUlnKeysInArray($animalsArray, true);
+
+        $sql = '';
+        $prefix = "SELECT
+                      a.id,
+                      CONCAT(a.uln_country_code, a.uln_number) as uln,
+                      COALESCE(a.location_id = $locationId OR r.animal_id NOTNULL, FALSE) as is_historic_livestock_animal
+                    FROM animal a
+                    LEFT JOIN (
+                        SELECT
+                          animal_id
+                        FROM animal_residence
+                        WHERE location_id = $locationId
+                        GROUP BY animal_id
+                        )r ON r.animal_id = a.id
+                        WHERE ";
+
+        foreach ($animalsArray as $animalData)
+        {
+            $ulnCountryCode = $animalData['uln_country_code'];
+            $ulnNumber = $animalData['uln_number'];
+            $sql .= $prefix."(a.uln_country_code = '$ulnCountryCode' AND a.uln_number = '$ulnNumber')";
+            $prefix = ' OR ';
+        }
+
+        return $this->getConnection()->query($sql)->fetchAll();
+    }
 }

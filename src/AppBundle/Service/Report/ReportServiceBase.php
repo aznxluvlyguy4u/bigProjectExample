@@ -4,7 +4,9 @@
 namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
@@ -625,4 +627,66 @@ class ReportServiceBase
     }
 
 
+    /**
+     * @param Request $request
+     * @return Location|null
+     */
+    protected function getSelectedLocation(Request $request)
+    {
+        return $this->userService->getSelectedLocation($request);
+    }
+
+
+    /**
+     * @param array $animalsArray
+     * @return JsonResponse|array
+     * @throws \Exception
+     */
+    protected function getAnyAnimalIdsFromBody($animalsArray)
+    {
+        $results = $this->em->getRepository(Animal::class)->getAnimalIdsFromAnimalsArray($animalsArray);
+
+        if (count($results) === 0) {
+            throw new \Exception($this->translateErrorMessages('NO ANIMALS FOUND FOR GIVEN INPUT'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        return $results;
+    }
+
+
+    /**
+     * @param array $animalsArray
+     * @param Location $location
+     * @return array
+     * @throws \Exception
+     */
+    protected function getCurrentAndHistoricAnimalIdsFromBody($animalsArray, Location $location)
+    {
+        $results = $this->em->getRepository(Animal::class)
+            ->getCurrentAndHistoricAnimalIdsFromAnimalsArray(
+                $animalsArray,
+                $location->getId()
+            );
+
+        if (count($results) === 0) {
+            throw new \Exception($this->translateErrorMessages('NO ANIMALS FOUND FOR GIVEN INPUT'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $nonHistoricAnimalUlns = [];
+        $animalIds = [];
+        foreach ($results as $result)
+        {
+            $animalIds[] = $result['id'];
+
+            if (!$result['is_historic_livestock_animal']) {
+                $nonHistoricAnimalUlns[] = $result['uln'];
+            }
+        }
+
+        if (count($nonHistoricAnimalUlns) > 0) {
+            throw new \Exception($this->translateErrorMessages('THE FOLLOWING ANIMALS ARE NOT CURRENT LIVESTOCK OR HISTORIC LIVESTOCK ANIMALS OF THIS UBN').', '.$location->getUbn().': '.implode(',',$nonHistoricAnimalUlns), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        return $animalIds;
+    }
 }

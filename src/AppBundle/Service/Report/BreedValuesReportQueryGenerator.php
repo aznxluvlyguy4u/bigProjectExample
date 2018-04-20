@@ -11,6 +11,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -786,23 +787,25 @@ LEFT JOIN (
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
      * @param bool $ignoreHiddenBreedValueTypes
-     * @param int $parents
+     * @param array $parentIds
      * @return string
-     * @throws DBALException
+     * @throws \Exception
      */
     public function createOffspringReportQuery($concatBreedValuesAndAccuracies = true,
-                                                     $includeAnimalsWithoutAnyBreedValues = true,
-                                                     $ignoreHiddenBreedValueTypes = true,
-                                                     $parents
+                                               $includeAnimalsWithoutAnyBreedValues = true,
+                                               $ignoreHiddenBreedValueTypes = true,
+                                               $parentIds
     )
     {
+        Validator::validateIntegerArray($parentIds, true);
+
         $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
             $ignoreHiddenBreedValueTypes);
 
-        // TODO
+        $parentIdsString = implode(',',$parentIds);
         $filterString = "WHERE (
-                          mom.animal_id IN (14351) OR
-                          dad.animal_id IN (14351)
+                          mom.animal_id IN ($parentIdsString) OR
+                          dad.animal_id IN ($parentIdsString)
                          )";
 
         $filterString .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
