@@ -92,21 +92,22 @@ class GeneDiversityUpdater
      */
     public static function updateByParentIds(Connection $conn, array $parentIds = [], $recalculateAllValues = true, $cmdUtil = null)
     {
-        if($parentIds === null || !is_array($parentIds)) { return 0; }
+        if($parentIds === null || !is_array($parentIds) || count($parentIds) === 0) { return 0; }
 
         $updateCount = 0;
+        $parentIdsString = implode(',', $parentIds);
 
         $updateCount += self::updateAnimalsAndLittersWithAMissingParent($conn);
         $updateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn);
 
         $sql = "SELECT id FROM animal
-                WHERE parent_father_id IN (".$parentIds.") OR parent_mother_id IN (".$parentIds.")";
+                WHERE parent_father_id IN (".$parentIdsString.") OR parent_mother_id IN (".$parentIdsString.")";
         $results = $conn->query($sql)->fetchAll();
         $animalIds[] = ArrayUtil::concatArrayValues(ArrayUtil::get('id', SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results), []), $parentIds);
         $updateCount += self::updateByAnimalIds($conn, $animalIds, $recalculateAllValues, null, $cmdUtil, false);
 
         $sql = "SELECT id FROM litter
-                WHERE animal_father_id IN (".$parentIds.") OR animal_mother_id IN (".$parentIds.")";
+                WHERE animal_father_id IN (".$parentIdsString.") OR animal_mother_id IN (".$parentIdsString.")";
         $results = $conn->query($sql)->fetchAll();
         $litterIds = ArrayUtil::get('id', SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results), []);
         $updateCount += self::updateByLitterIds($conn, $litterIds, $recalculateAllValues, null, $cmdUtil, false);
