@@ -282,6 +282,13 @@ class ReportAPIController extends APIController {
      *        "required"=false,
      *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
      *        "format"="?language=en"
+     *     },
+     *     {
+     *        "name"="concat_value_and_accuracy",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="Choose if the value and accuracy breedValue numbers should be combined into one column. false is default",
+     *        "format"="?concat_value_and_accuracy=true"
      *     }
      *   },
      *   resource = true,
@@ -367,6 +374,49 @@ class ReportAPIController extends APIController {
     public function getBreedValuesReportOverview(Request $request)
     {
         return $this->get('app.report.breed_values_overview')->request($request, $this->getEmployee());
+    }
+
+
+    /**
+     * Generate fertilizer accounting report by 'file_type' xls/csv.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="reference_date",
+     *        "dataType"="date",
+     *        "required"=false,
+     *        "description"="The date of the last month included in the report, default is current date",
+     *        "format"="?reference_date=2018-05-01"
+     *     },
+     *     {
+     *        "name"="file_type",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
+     *        "format"="?file_type=csv"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate fertilizer accounting report by 'file_type' xls/csv."
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/fertilizer-accounting")
+     * @Method("GET")
+     */
+    public function getFertilizerAccountingReport(Request $request)
+    {
+        return $this->get('AppBundle\Service\Report\FertilizerAccountingReport')->getReport($request);
     }
 
 

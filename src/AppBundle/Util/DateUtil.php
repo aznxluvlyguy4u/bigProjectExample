@@ -124,4 +124,63 @@ class DateUtil
 
         return intval($date->format('Y'));
     }
+
+
+    /**
+     * @param $dateTime
+     * @return \DateTime|null
+     */
+    public static function getFirstDateOfGivenDateTime($dateTime)
+    {
+        if (!($dateTime instanceof \DateTime)) {
+            return null;
+        }
+
+        return new \DateTime($dateTime->format('Y-m-01'));
+    }
+
+
+    /**
+     * @param \DateTime $dateTime
+     * @param int $months
+     * @return \DateTime|null|static
+     */
+    public static function addMonths(\DateTime $dateTime, $months)
+    {
+        if (!($dateTime instanceof \DateTime)) {
+            return null;
+        }
+
+        $newDateTime = clone $dateTime;
+
+        if ($months === 0) {
+            return $newDateTime;
+        }
+
+        $dateInterval = self::monthsDateInterval($newDateTime, abs($months));
+
+        return $months > 0 ? $newDateTime->add($dateInterval) : $newDateTime->sub($dateInterval);
+    }
+
+
+    /**
+     * @param \DateTime $dateTime
+     * @param int $months
+     * @return bool|\DateInterval|\DateTime
+     */
+    private static function monthsDateInterval(\DateTime $dateTime, $months)
+    {
+        if ($months === 0) {
+            return $dateTime;
+        }
+
+        $next = new \DateTime($dateTime->format('d-m-Y H:i:s'));
+        $next->modify('last day of +'.$months.' month');
+
+        if( $dateTime->format('d') > $next->format('d') ) {
+            return $dateTime->diff($next);
+        } else {
+            return new \DateInterval('P'.$months.'M');
+        }
+    }
 }

@@ -79,6 +79,8 @@ class ReportServiceBase
     /** @var string */
     protected $filename;
     /** @var string */
+    protected $fileType;
+    /** @var string */
     protected $folderName;
     /** @var string */
     protected $extension;
@@ -629,11 +631,22 @@ class ReportServiceBase
 
     /**
      * @param Request $request
+     * @param boolean $nullCheck
      * @return Location|null
+     * @throws \Exception
      */
-    protected function getSelectedLocation(Request $request)
+    protected function getSelectedLocation(Request $request, $nullCheck = false)
     {
-        return $this->userService->getSelectedLocation($request);
+        $location = $this->userService->getSelectedLocation($request);
+        if ($nullCheck) {
+            if (!$location || !$location->getId()) {
+                throw new \Exception('No location given', Response::HTTP_PRECONDITION_REQUIRED);
+            }
+            if (!$location->getUbn()) {
+                throw new \Exception('UBN of location is missing', Response::HTTP_PRECONDITION_REQUIRED);
+            }
+        }
+        return $location;
     }
 
 

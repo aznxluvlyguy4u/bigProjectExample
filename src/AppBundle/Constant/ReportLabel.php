@@ -131,4 +131,9 @@ class ReportLabel
     //Position
     const START = 'START';
     const END = 'END';
+
+    //Fertilizer
+    const AVERAGE_YEARLY_ANIMAL_COUNT = 'average_yearly_animal_count';
+    const NITROGEN = 'nitrogen';
+    const PHOSPHATE = 'phosphate';
 }
