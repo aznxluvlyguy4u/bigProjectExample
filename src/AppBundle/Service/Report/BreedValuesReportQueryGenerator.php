@@ -810,6 +810,9 @@ LEFT JOIN (
 
         $filterString .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
 
+        $selectBirthProgress = $this->translator->getLocale() === Locale::NL ?
+            'birth_progress.dutch_description' : 'a.birth_progress';
+
         $sql = "SELECT DISTINCT
                   aa.uln as ".$this->translateColumnHeader('uln').",
                   aa.stn as ".$this->translateColumnHeader('stn').",
@@ -828,7 +831,7 @@ LEFT JOIN (
                   l.ubn as ".$this->translateColumnHeader('current_ubn').",
                   aa.is_alive as ".$this->translateColumnHeader('is_alive').",
                   c.birth_weight as ".$this->translateColumnHeader('birth_weight').",
-                  a.birth_progress as ".$this->translateColumnHeader('birth_progress').",
+                  $selectBirthProgress as ".$this->translateColumnHeader('birth_progress').",
                   aa.tail_length as ".$this->translateColumnHeader('tail_length').",
                   aa.fat1 as ".$this->translateColumnHeader('fat1').",
                   aa.fat2 as ".$this->translateColumnHeader('fat2').",
@@ -887,6 +890,7 @@ LEFT JOIN (
                   LEFT JOIN view_animal_livestock_overview_details mom ON a.parent_mother_id = mom.animal_id
                   LEFT JOIN view_animal_livestock_overview_details dad ON a.parent_father_id = dad.animal_id
                   LEFT JOIN location l ON l.id = a.location_id
+                  LEFT JOIN birth_progress birth_progress ON birth_progress.description = a.birth_progress
                   LEFT JOIN result_table_breed_grades bg ON bg.animal_id = a.id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
                   LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
