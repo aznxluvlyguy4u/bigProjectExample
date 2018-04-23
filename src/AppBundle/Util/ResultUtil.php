@@ -78,6 +78,17 @@ class ResultUtil
 
 
     /**
+     * @param \Exception $exception
+     * @return JsonResponse
+     */
+    public static function errorResultByException(\Exception $exception)
+    {
+        $errorCode = $exception->getCode() === 0 ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
+        return ResultUtil::errorResult($exception->getMessage(), $errorCode);
+    }
+
+
+    /**
      * @param string $message
      * @param int $code The HTTP code
      * @param array $errors
