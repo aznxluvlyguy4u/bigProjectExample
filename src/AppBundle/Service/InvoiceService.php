@@ -205,7 +205,7 @@ class InvoiceService extends ControllerServiceBase
             Invoice::class
         );
 
-        if ($invoice->getStatus() === InvoiceStatus::UNPAID) {
+        if ($temporaryInvoice->getStatus() === InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
         }
         else {
@@ -259,6 +259,9 @@ class InvoiceService extends ControllerServiceBase
 
         $temporaryInvoice->setCompany($newCompany);
         $invoice->copyValues($temporaryInvoice);
+        if ($invoice->getStatus() === InvoiceStatus::UNPAID) {
+            $invoice->setInvoiceDate(new \DateTime());
+        }
         $invoice->updateTotal();
 
         $this->persistAndFlush($invoice);
