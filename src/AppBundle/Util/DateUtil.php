@@ -107,6 +107,15 @@ class DateUtil
 
 
     /**
+     * @return int
+     */
+    public static function currentYear()
+    {
+        return self::getYearFromDateStringOrDateTime(new \DateTime());
+    }
+
+
+    /**
      * @param string|\DateTime $dateTime
      * @return null|int
      */

@@ -49,7 +49,7 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
 
             $this->prepareDatabaseValues();
 
-            return $this->generateCsvFileBySqlQuery($this->getFilename(), $this->getSqlQuery($year, $pedigreeActiveEndDateLimit), !$this->outputReportsToCacheFolderForLocalTesting);
+            return $this->generateCsvFileBySqlQuery($this->getFilename(), $this->getSqlQuery($year, $pedigreeActiveEndDateLimit));
 
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());

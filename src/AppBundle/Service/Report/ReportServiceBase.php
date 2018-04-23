@@ -79,8 +79,6 @@ class ReportServiceBase
     /** @var string */
     protected $filename;
     /** @var string */
-    protected $fileType;
-    /** @var string */
     protected $folderName;
     /** @var string */
     protected $extension;
@@ -142,11 +140,12 @@ class ReportServiceBase
 
     /**
      * @param string $value
+     * @param array $parameters
      * @return string
      */
-    protected function trans($value)
+    protected function trans($value, $parameters = [])
     {
-        return $this->translator->trans($value);
+        return $this->translator->trans($value, $parameters);
     }
 
 
@@ -358,10 +357,9 @@ class ReportServiceBase
     /**
      * @param string $filenameWithExtension
      * @param string $selectQuery
-     * @param boolean $uploadToS3
      * @return JsonResponse
      */
-    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery, $uploadToS3)
+    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery)
     {
         $dir = CsvFromSqlResultsWriterService::csvCacheDir($this->cacheDir);
 
@@ -376,10 +374,6 @@ class ReportServiceBase
             return ResultUtil::errorResult($this->translateErrorMessages($exception->getMessage()), $exception->getCode());
         }
 
-        if ($uploadToS3) {
-            return $this->uploadReportFileToS3($localFilePath);
-        }
-
         return ResultUtil::successResult($localFilePath);
     }
 
@@ -390,6 +384,10 @@ class ReportServiceBase
      */
     protected function uploadReportFileToS3($filePath)
     {
+        if($this->outputReportsToCacheFolderForLocalTesting) {
+            return ResultUtil::successResult($filePath);
+        }
+
         $s3Service = $this->storageService;
         $url = $s3Service->uploadFromFilePath(
             $filePath,

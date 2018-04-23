@@ -5,7 +5,6 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FertilizerCategory;
@@ -13,6 +12,8 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DateUtil;
+use AppBundle\Util\DsvWriterUtil;
+use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ProcessUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -21,10 +22,23 @@ use Symfony\Component\HttpFoundation\Response;
 
 class FertilizerAccountingReport extends ReportServiceBase implements ReportServiceInterface
 {
+    const TITLE = 'fertilizer_accounting';
+    const FOLDER_NAME = self::TITLE;
+    const FILENAME = self::TITLE;
+
     const PROCESS_TIME_LIMIT_IN_MINUTES = 5;
+
+    const ANIMAL_COUNT_DECIMAL_PRECISION = 2;
+    const NITROGEN_DECIMAL_PRECISION = 2;
+    const PHOSPHATE_DECIMAL_PRECISION = 2;
 
     /** @var Location $location */
     private $location;
+
+    /** @var string $newestReferenceDate */
+    private $newestReferenceDate;
+    /** @var string $oldestReferenceDate */
+    private $oldestReferenceDate;
 
     /**
      * @inheritDoc
@@ -35,8 +49,8 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             $this->location = $this->getSelectedLocation($request, true);
             $referenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
 
-            $this->fileType = FileType::CSV;
-            $this->fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
+            $this->extension = FileType::CSV;
+            $this->extension = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
 
             ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 
@@ -50,19 +64,68 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             }
 
             $totalResults = $this->yearlyAveragesWithFertilizerOutput($historicLiveStockCountsByFertilizerCategory);
-
-            $this->deactivateColumnHeaderTranslation();
+            $this->retrieveNewestAndOldestReferenceDate($historicLiveStockCountsByFertilizerCategory);
 
             if ($request->query->get(QueryParameter::FILE_TYPE_QUERY) === FileType::CSV) {
-                // TODO merge results && print csv file
+                return $this->createCsvFile($historicLiveStockCountsByFertilizerCategory, $totalResults);
             } else {
                 // TODO pass result arrays to twig and generate pdf file
+                $this->deactivateColumnHeaderTranslation();
             }
 
+            throw new \Exception('INVALID FILE TYPE', Response::HTTP_PRECONDITION_REQUIRED);
+
         } catch (\Exception $exception) {
-            return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
+            $this->logger->error($exception->getTraceAsString());
+            $this->logger->error($exception->getMessage());
+            return ResultUtil::errorResultByException($exception);
         }
 
+    }
+
+
+    /**
+     * @param array $historicLiveStockCountsByFertilizerCategory
+     * @param array $totalResults
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    private function createCsvFile($historicLiveStockCountsByFertilizerCategory, $totalResults)
+    {
+        $mergedSet = $this->mergeDataForCsvFile($historicLiveStockCountsByFertilizerCategory, $totalResults);
+        $filepath = $this->getFertilizerAccountingFilepath();
+        DsvWriterUtil::writeNestedRecordToFile($mergedSet, $filepath);
+        $this->deactivateColumnHeaderTranslation();
+
+        return $this->uploadReportFileToS3($filepath);
+    }
+
+
+    /**
+     * @return string
+     */
+    private function getFertilizerAccountingFilepath()
+    {
+        $this->folderName = self::FOLDER_NAME;
+        $this->filename = $this->translateColumnHeader(self::FILENAME).'-'.$this->location->getUbn()
+        .'__'.$this->newestReferenceDate.'--'.$this->oldestReferenceDate.'_'.$this->translateColumnHeader('GENERATED ON');
+        return FilesystemUtil::concatDirAndFilename($this->getCacheSubFolder(),$this->getFilename());
+    }
+
+
+    /**
+     * @param array $historicLiveStockCountsByFertilizerCategory
+     */
+    private function retrieveNewestAndOldestReferenceDate(array $historicLiveStockCountsByFertilizerCategory)
+    {
+        $referenceDates = [];
+        foreach ($historicLiveStockCountsByFertilizerCategory as $record)
+        {
+            $referenceDates[] = ArrayUtil::get($this->getReferenceDateLabel(), $record);
+        }
+
+        $this->newestReferenceDate = max($referenceDates);
+        $this->oldestReferenceDate = min($referenceDates);
     }
 
 
@@ -104,6 +167,49 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
 
 
     /**
+     * @param $historicLiveStockCountsByFertilizerCategory
+     * @param $totalResults
+     * @return array
+     */
+    private function mergeDataForCsvFile($historicLiveStockCountsByFertilizerCategory, $totalResults)
+    {
+        $mergedSet = [];
+
+        $nitrogenLabelWithKg = $this->getNitrogenLabel().'(kg)';
+        $phosphateLabelWithKg = $this->getPhosphateLabel().'(kg)';
+
+        foreach ($historicLiveStockCountsByFertilizerCategory as $key => $record)
+        {
+            $mergedSet[$key] = $record;
+            $mergedSet[$key][$nitrogenLabelWithKg] = null;
+            $mergedSet[$key][$phosphateLabelWithKg] = null;
+        }
+
+        foreach ($totalResults as $animalCategory => $record)
+        {
+            $mergedSet[] = [
+                $this->getReferenceDateLabel() => $this->translate('ROLLING YEARLY AVERAGE'),
+                $this->getAnimalCategoryLabel() => $animalCategory,
+                $this->getAnimalCountLabel() => $record[ReportLabel::AVERAGE_YEARLY_ANIMAL_COUNT],
+                $nitrogenLabelWithKg => $record[$this->getNitrogenLabel()],
+                $phosphateLabelWithKg => $record[$this->getPhosphateLabel()],
+            ];
+        }
+
+        $mergedSet[] = [
+            $this->getReferenceDateLabel() => null,
+            $this->getAnimalCategoryLabel() => null,
+            $this->getAnimalCountLabel() => null,
+            $nitrogenLabelWithKg => null,
+            $phosphateLabelWithKg => null,
+            'footnote' => $this->getFootnote(),
+        ];
+
+        return $mergedSet;
+    }
+
+
+    /**
      * @return string
      */
     private function getReferenceDateLabel()
@@ -127,6 +233,24 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
     private function getAnimalCountLabel()
     {
         return $this->translateColumnHeader('animal count');
+    }
+
+
+    /**
+     * @return string
+     */
+    private function getPhosphateLabel()
+    {
+        return $this->translateColumnHeader(ReportLabel::PHOSPHATE);
+    }
+
+
+    /**
+     * @return string
+     */
+    private function getNitrogenLabel()
+    {
+        return $this->translateColumnHeader(ReportLabel::NITROGEN);
     }
 
 
@@ -277,12 +401,16 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
         $results = [];
         foreach ($countsByCategory as $fertilizerCategory => $count)
         {
-            $yearlyAverageCount = $count/12;
+            $yearlyAverageCount = round($count/12, self::ANIMAL_COUNT_DECIMAL_PRECISION);
 
             $results[$fertilizerCategory] = [
                 ReportLabel::AVERAGE_YEARLY_ANIMAL_COUNT => $yearlyAverageCount,
-                ReportLabel::NITROGEN => $yearlyAverageCount * self::getNitrogenKgFlatRateExcretionStandard($fertilizerCategory),
-                ReportLabel::PHOSPHATE => $yearlyAverageCount * self::getPhosphateKgFlatRateExcretionStandard($fertilizerCategory),
+                $this->getNitrogenLabel() =>
+                    round($yearlyAverageCount * self::getNitrogenKgFlatRateExcretionStandard($fertilizerCategory),
+                    self::NITROGEN_DECIMAL_PRECISION),
+                $this->getPhosphateLabel() =>
+                    round($yearlyAverageCount * self::getPhosphateKgFlatRateExcretionStandard($fertilizerCategory),
+                        self::PHOSPHATE_DECIMAL_PRECISION),
             ];
         }
 
@@ -319,6 +447,15 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             case FertilizerCategory::_552: return 2.2;
             default: throw new \Exception('Invalid FertilizerCategory: '.$fertilizerCategory, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+
+    /**
+     * @return string
+     */
+    private function getFootnote()
+    {
+        return $this->trans('FERTILIZER ACCOUNTING NOTE', ['%year%' => DateUtil::currentYear()]);
     }
 
 
