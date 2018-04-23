@@ -235,6 +235,12 @@ class ReportServiceBase
     }
 
 
+    protected function getImagesDirectory()
+    {
+        return FilesystemUtil::getImagesDirectory($this->rootDir);
+    }
+
+
     /**
      * @param array $csvData
      * @return array

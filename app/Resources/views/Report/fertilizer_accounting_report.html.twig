@@ -1,0 +1,228 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    <!-- set variables -->
+    {% set date = variables.date %}
+    {% set months = variables.months %}
+    {% set totals = variables.totals %}
+    {% set ubn = variables.ubn %}
+    {% set footnote = variables.footnote %}
+    {% set columnHeaders = variables.columnHeaders %}
+
+    {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+
+    {# HEADER #}
+
+    <div id="page-without-break">
+
+        <div class="header">
+            <div class="nsfo-logo">
+                <img src="{{ imagesDirectory }}"/>
+            </div>
+            <div class="title">
+                {{ "FERTILIZER_ACCOUNTING" | trans() }}
+            </div>
+
+            <div class="ubn">
+                UBN {{ ubn }}
+            </div>
+        </div>
+        <div class="sub-header">
+           <div class="left"> {{ 'GENERATED ON'|trans()|lower }}: {{ date }}</div>
+           <div class="right"> {{ 'REFERENCE DATE'|trans()|lower }}: {{ variables.referenceDate }} </div>
+        </div>
+
+       {# MONTHS #}
+
+        <h4>
+            {{ variables.animalCountsByCategoryHeader }}
+        </h4>
+
+        <table class="reference-date-table">
+            <thead>
+                <tr>
+                    <th>{{ columnHeaders.referenceDate }}</th>
+                    <th>550</th>
+                    <th>551</th>
+                    <th>552</th>
+                </tr>
+            </thead>
+            <tbody>
+
+
+            {% for firstDateStringOfMonth, records in months %}
+                <tr>
+                    <td>
+                        {{ firstDateStringOfMonth }}
+                    </td>
+                    {% for animalCategory, animalCount in records %}
+                            <td>
+                                {{ animalCount }}
+                            </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+
+
+        <h4>
+            {{ variables.totalHeader }}
+        </h4>
+
+
+        <table class="overview-table">
+            <thead>
+            <tr>
+                <th>{{ columnHeaders.animalCategory }}</th>
+                <th>{{ columnHeaders.animalCount }}</th>
+                <th>{{ columnHeaders.nitrogen }} (kg)</th>
+                <th>{{ columnHeaders.phosphate }} (kg)</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            {% for animalCategory, records in totals %}
+                <tr>
+                    <td>
+                        {{ animalCategory }}
+                    </td>
+                    {% for key, value in records %}
+                        <td>
+                            {#{{ key }} : {{ value }}#} {# DEACTIVATE THIS TO TEST IF THE DATA MATCHES THE COLUMN HEADERS #}
+                            {{ value }}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+
+        <hr>
+
+        <p class="info">{{ variables.footnote }}</p>
+
+    </div>
+
+{% endblock %}
+
+{% block stylesheets %}
+
+    <style type="text/css">
+        html {
+            font-family: Sans-Serif;
+            font-stretch: semi-condensed;
+        }
+
+        #page-without-break {
+            overflow: hidden;
+            page-break-after: avoid;
+        }
+
+        .header {
+            border-bottom: solid 2px #000;
+            font-size: 6mm;
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        .nsfo-logo {
+            display: inline-block;
+            width: 25%;
+        }
+
+        .nsfo-logo img {
+            height: auto;
+            width: 100%;
+        }
+
+        .title {
+            display: inline-block;
+            vertical-align: top;
+            width: 50%;
+            font-weight: 700;
+            font-size: 7.5mm;
+            text-align: center;
+        }
+
+        .ubn {
+            float: right;
+            font-size: 5.5mm;
+            font-weight: bold;
+            margin-top: 2.5mm;
+        }
+
+        .sub-header {
+            padding-top: 1mm;
+            font-size: 4.5mm;
+        }
+
+        .sub-header .left {
+            float: left;
+        }
+
+        .sub-header .right {
+            float: right;
+            font-weight: bold;
+        }
+
+        .info {
+            position: absolute;
+            left: 6cm;
+            width: 60%;
+        }
+
+        .legend-container .info p span {
+            font-weight: 700;
+        }
+
+        .legend-container ul {
+            position: absolute;
+            right: 0;
+            padding: 1.5mm;
+            background-color: #efe8dd;
+        }
+
+        .legend-container ul li {
+            list-style: none;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 10mm;
+            font-size: 4.1mm;
+            border-collapse: collapse;
+            vertical-align: text-bottom;
+        }
+
+        table.reference-date-table {
+            margin: 10mm auto 25mm auto;
+            width: 40%;
+        }
+
+        table.overview-table {
+            margin: 10mm auto 25mm auto;
+            width: 60%;
+        }
+
+        tr {
+            border-bottom: solid 1px #000000;
+        }
+
+        td, th {
+            text-align: right;
+            padding: 1mm 1mm 1mm 1mm;
+        }
+
+        h4 {
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+    </style>
+
+
+{% endblock %}

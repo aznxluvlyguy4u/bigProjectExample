@@ -17,6 +17,7 @@ use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ProcessUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\TimeUtil;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -31,6 +32,8 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
     const ANIMAL_COUNT_DECIMAL_PRECISION = 2;
     const NITROGEN_DECIMAL_PRECISION = 2;
     const PHOSPHATE_DECIMAL_PRECISION = 2;
+
+    const TWIG_FILE = 'Report/fertilizer_accounting_report.html.twig';
 
     /** @var Location $location */
     private $location;
@@ -69,13 +72,13 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             if ($request->query->get(QueryParameter::FILE_TYPE_QUERY) === FileType::CSV) {
                 return $this->createCsvFile($historicLiveStockCountsByFertilizerCategory, $totalResults);
             } else {
-                // TODO pass result arrays to twig and generate pdf file
-                $this->deactivateColumnHeaderTranslation();
+                return $this->getPdfReport($historicLiveStockCountsByFertilizerCategory, $totalResults);
             }
 
             throw new \Exception('INVALID FILE TYPE', Response::HTTP_PRECONDITION_REQUIRED);
 
         } catch (\Exception $exception) {
+            dump($exception);die;
             $this->logger->error($exception->getTraceAsString());
             $this->logger->error($exception->getMessage());
             return ResultUtil::errorResultByException($exception);
@@ -98,6 +101,52 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
         $this->deactivateColumnHeaderTranslation();
 
         return $this->uploadReportFileToS3($filepath);
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    private function getPdfReport($historicLiveStockCountsByFertilizerCategory, $totalResults)
+    {
+        $dataByMonth = [];
+
+        foreach ($historicLiveStockCountsByFertilizerCategory as $record)
+        {
+            $referenceDate = $record[$this->getReferenceDateLabel()];
+            $animalCategory = $record[$this->getAnimalCategoryLabel()];
+            $animalCount = $record[$this->getAnimalCountLabel()];
+
+            $dataByMonth[$referenceDate][intval($animalCategory)] = $animalCount;
+            ksort($dataByMonth[$referenceDate]);
+        }
+        ksort($dataByMonth);
+
+        $newestReferenceDate = (new \DateTime($this->newestReferenceDate))->format($this->trans('DATEFORMAT'));
+        $oldestReferenceDate = (new \DateTime($this->oldestReferenceDate))->format($this->trans('DATEFORMAT'));
+
+        $data = [
+            ReportLabel::MONTHS => $dataByMonth,
+            ReportLabel::TOTALS => $totalResults,
+            ReportLabel::FOOTNOTE => $this->getFootnote(),
+            ReportLabel::UBN=> $this->location->getUbn(),
+            ReportLabel::IMAGES_DIRECTORY => $this->getImagesDirectory(),
+            ReportLabel::DATE => TimeUtil::getTimeStampToday('d-m-Y'),
+            ReportLabel::REFERENCE_DATE => $newestReferenceDate,
+            'animalCountsByCategoryHeader' => ucfirst(strtolower($this->trans('ANIMAL COUNTS').' '.$this->trans('BY').' '.$this->trans('ANIMAL CATEGORY'))),
+            'totalHeader' => ucfirst(strtolower($this->trans('ROLLING YEARLY AVERAGE').' '.$this->trans('FROM').' '.$oldestReferenceDate.' '.$this->trans('UNTIL').' '.$newestReferenceDate.' '.$this->trans('WITH').' '.$this->trans('TOTAL FERTILIZER PRODUCTION'))),
+            ReportLabel::COLUMN_HEADERS => [
+                ReportLabel::REFERENCE_DATE => $this->getReferenceDateLabel(),
+                ReportLabel::ANIMAL_CATEGORY => $this->getAnimalCategoryLabel(),
+                ReportLabel::ANIMAL_COUNT => $this->getAnimalCountLabel(),
+                ReportLabel::PHOSPHATE => $this->getPhosphateLabel(),
+                ReportLabel::NITROGEN => $this->getNitrogenLabel(),
+                ReportLabel::AVERAGE_YEARLY_ANIMAL_COUNT => $this->translate('ROLLING YEARLY AVERAGE'),
+            ]
+        ];
+        $filepath = $this->getFertilizerAccountingFilepath();
+        $this->deactivateColumnHeaderTranslation();
+        return $this->getPdfReportBase(self::TWIG_FILE, $data, false);
     }
 
 
