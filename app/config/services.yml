@@ -758,14 +758,9 @@ services:
         class: AppBundle\Service\MessageService
 
     app.mollie.payment:
+        parent: app.abstract_base.controller
         class: AppBundle\Service\MolliePaymentService
         arguments:
-          - '@app.serializer.base'
-          - '@app.cache'
-          - '@doctrine.orm.entity_manager'
-          - '@app.user'
-          - '@translator'
-          - '@logger'
           - '@app.mollie.service'
           - '%mollie_test_api_key%'
           - '%mollie_prod_api_key%'
