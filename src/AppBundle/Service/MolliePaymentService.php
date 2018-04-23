@@ -10,7 +10,9 @@ use AppBundle\Enumerator\MollieEnums;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class MolliePaymentService extends ControllerServiceBase
 {
@@ -19,9 +21,9 @@ class MolliePaymentService extends ControllerServiceBase
 
     private $key;
 
-    public function __construct(BaseSerializer $baseSerializer, CacheService $cacheService, EntityManagerInterface $manager, UserService $userService, MollieService $mollieService, $testApiKey, $prodApiKey, $environment)
+    public function __construct(BaseSerializer $baseSerializer, CacheService $cacheService, EntityManagerInterface $manager, UserService $userService, TranslatorInterface $translator, Logger $logger, MollieService $mollieService, $testApiKey, $prodApiKey, $environment)
     {
-        parent::__construct($baseSerializer, $cacheService, $manager, $userService);
+        parent::__construct($baseSerializer, $cacheService, $manager, $userService, $translator, $logger);
 
         $this->mollieService = $mollieService;
 
@@ -32,7 +34,6 @@ class MolliePaymentService extends ControllerServiceBase
             $this->key = $testApiKey;
         }
     }
-
 
     /**
      * @param Request $request
@@ -63,6 +64,7 @@ class MolliePaymentService extends ControllerServiceBase
         switch ($payment->status){
             case MollieEnums::PAID_STATUS:
                 $invoice->setStatus(InvoiceStatus::PAID);
+                $invoice->setPaidDate(new \DateTime());
                 break;
 
             case MollieEnums::CANCELLED_STATUS:
