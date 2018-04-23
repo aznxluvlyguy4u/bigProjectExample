@@ -4,7 +4,6 @@
 namespace AppBundle\Util;
 
 
-use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
@@ -16,8 +15,6 @@ use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SqlUtil
 {
@@ -668,14 +665,14 @@ class SqlUtil
             $stmt = $conn->query($selectQuery);
 
             if ($firstRow = $stmt->fetch()) {
-                self::writeRowToFile($filepath, array_keys($firstRow)); //write headers
-                self::writeRowToFile($filepath, $firstRow);
+                DsvWriterUtil::writeNestedRowToFile($filepath, array_keys($firstRow)); //write headers
+                DsvWriterUtil::writeNestedRowToFile($filepath, $firstRow);
             } else {
                 $isDataMissing = true;
             }
 
             while ($row = $stmt->fetch()) {
-                self::writeRowToFile($filepath, $row);
+                DsvWriterUtil::writeNestedRowToFile($filepath, $row);
             }
 
         } catch (\Exception $exception) {
@@ -697,13 +694,4 @@ class SqlUtil
     }
 
 
-    /**
-     * @param string $filepath
-     * @param array $values
-     * @param string $separator
-     */
-    private static function writeRowToFile($filepath, array $values, $separator = CsvOptions::DEFAULT_SEPARATOR)
-    {
-        file_put_contents($filepath, implode($separator, $values) ."\n",FILE_APPEND);
-    }
 }
