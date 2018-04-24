@@ -13,25 +13,51 @@ use AppBundle\Entity\InvoiceRuleSelection;
 use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Entity\LedgerCategory;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationRepository;
+use AppBundle\Entity\Message;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Serializer\PreSerializer\InvoicePreSerializer;
+use AppBundle\Service\Invoice\InvoicePdfGeneratorService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class InvoiceService extends ControllerServiceBase
 {
+    const TWIG_FILE = "Invoice/invoice.html.twig";
+
     /** @var array */
     private $ledgerCategoriesById;
     /** @var array */
     private $invalidLedgerCategoryIds;
+
+    /** @var  InvoicePdfGeneratorService */
+    private $invoicePdfGeneratorService;
+
+    public function __construct(
+        BaseSerializer $baseSerializer,
+        CacheService $cacheService,
+        EntityManagerInterface $manager,
+        UserService $userService,
+        TranslatorInterface $translator,
+        Logger $logger,
+        InvoicePdfGeneratorService $invoicePdfGeneratorService
+    )
+    {
+        parent::__construct($baseSerializer, $cacheService, $manager, $userService, $translator, $logger);
+        $this->invoicePdfGeneratorService = $invoicePdfGeneratorService;
+    }
 
     /**
      * @param Request $request
