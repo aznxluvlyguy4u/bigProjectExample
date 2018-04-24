@@ -274,7 +274,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      * @param Invoice $invoice
      */
     public function getInvoicePdf(Request $request, Invoice $invoice) {
-
+        return $this->get('app.invoice')->getInvoicePdf($request, $invoice);
     }
 
 }
