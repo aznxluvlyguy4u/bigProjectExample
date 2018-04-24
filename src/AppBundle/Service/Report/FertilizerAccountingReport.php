@@ -53,7 +53,7 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             $referenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
 
             $this->extension = FileType::CSV;
-            $this->extension = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
+            $this->extension = strtolower($request->query->get(QueryParameter::FILE_TYPE_QUERY));
 
             ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 
@@ -69,7 +69,7 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             $totalResults = $this->yearlyAveragesWithFertilizerOutput($historicLiveStockCountsByFertilizerCategory);
             $this->retrieveNewestAndOldestReferenceDate($historicLiveStockCountsByFertilizerCategory);
 
-            if ($request->query->get(QueryParameter::FILE_TYPE_QUERY) === FileType::CSV) {
+            if ($this->extension === FileType::CSV) {
                 return $this->createCsvFile($historicLiveStockCountsByFertilizerCategory, $totalResults);
             } else {
                 return $this->getPdfReport($historicLiveStockCountsByFertilizerCategory, $totalResults);
