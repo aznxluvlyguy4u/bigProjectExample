@@ -364,6 +364,7 @@ class ReportServiceBase
      * @param string $filenameWithExtension
      * @param string $selectQuery
      * @return JsonResponse
+     * @throws \Exception
      */
     protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery)
     {
@@ -371,14 +372,7 @@ class ReportServiceBase
 
         $localFilePath = FilesystemUtil::concatDirAndFilename($dir, $filenameWithExtension);
 
-        try {
-            $writeResult = SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
-            if (!$writeResult) {
-                return ResultUtil::errorResult($this->trans('FAILED WRITING THE CSV FILE'), Response::HTTP_INTERNAL_SERVER_ERROR);
-            }
-        } catch (\Exception $exception) {
-            return ResultUtil::errorResult($this->translateErrorMessages($exception->getMessage()), $exception->getCode());
-        }
+        SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
 
         return $this->uploadReportFileToS3($localFilePath);
     }

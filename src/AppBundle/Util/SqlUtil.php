@@ -654,7 +654,6 @@ class SqlUtil
      * @param string $selectQuery
      * @param string $filepath
      * @param Logger|null $logger
-     * @return bool
      * @throws \Exception
      */
     public static function writeToFile(Connection $conn, $selectQuery, $filepath, Logger $logger = null)
@@ -679,18 +678,17 @@ class SqlUtil
 
             FilesystemUtil::deleteFile($filepath);
 
+            // Hide error details from user
             if ($logger) {
                 $logger->error($exception->getMessage());
                 $logger->error($exception->getTraceAsString());
             }
-            return false;
+            throw new \Exception('FAILED WRITING THE CSV FILE', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         if ($isDataMissing) {
             throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
         }
-
-        return true;
     }
 
 

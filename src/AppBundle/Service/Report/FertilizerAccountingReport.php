@@ -72,7 +72,6 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             throw new \Exception('INVALID FILE TYPE', Response::HTTP_PRECONDITION_REQUIRED);
 
         } catch (\Exception $exception) {
-            dump($exception);die;
             $this->logger->error($exception->getTraceAsString());
             $this->logger->error($exception->getMessage());
             return ResultUtil::errorResultByException($exception);
@@ -205,7 +204,7 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
         }
 
         return $sql . '
-        ORDER BY reference_date DESC, category';
+        ORDER BY '.$this->getReferenceDateLabel().' DESC, '.$this->getAnimalCategoryLabel();
     }
 
 
