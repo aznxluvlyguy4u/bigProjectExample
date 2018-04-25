@@ -6,11 +6,16 @@ namespace AppBundle\Constant;
 class ReportLabel
 {
     //General
+    const COLUMN_HEADERS = 'columnHeaders';
     const ENTITY = 'entity';
     const IS_PROD_ENV = 'isProdEnv';
     const IMAGES_DIRECTORY = 'imagesDirectory';
     const DATE = 'date';
+    const FOOTNOTE = 'footnote';
+    const REFERENCE_DATE = 'referenceDate';
     const INVALID = 'invalid';
+    const MONTHS = 'months';
+    const TOTALS = 'totals';
 
     //Person
     const OWNER_NAME = "ownerName";
@@ -49,6 +54,8 @@ class ReportLabel
 
     //Animal
     const ANIMALS = 'animals';
+    const ANIMAL_COUNT = 'animalCount';
+    const ANIMAL_CATEGORY = 'animalCategory';
     const RAM = 'ram';
     const EWE = 'ewe';
     const EWES = 'ewes';
@@ -131,4 +138,9 @@ class ReportLabel
     //Position
     const START = 'START';
     const END = 'END';
+
+    //Fertilizer
+    const AVERAGE_YEARLY_ANIMAL_COUNT = 'average_yearly_animal_count';
+    const NITROGEN = 'nitrogen';
+    const PHOSPHATE = 'phosphate';
 }

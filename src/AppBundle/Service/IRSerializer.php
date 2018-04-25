@@ -416,6 +416,11 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         foreach ($childrenContent as $childArray) {
             $surrogate = null;
             if(array_key_exists('surrogate_mother', $childArray)) {
+
+                if($this->hasLambar($childArray)) {
+                    return Validator::createJsonResponse("Als een pleegmoeder is opgegeven mag het kind geen lambar hebben.", $statusCode);
+                }
+
                 /** @var Animal $surrogate */
                 $surrogate = $animalRepository->getAnimalByUlnOrPedigree($childArray['surrogate_mother']);
 
@@ -492,12 +497,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 ArrayUtil::get('birth_progress', $child, null)
             );
 
-            if (key_exists('has_lambar', $child)) {
-                $hasLambar = ArrayUtil::get('has_lambar', $child, false);
-            } else {
-                $nurtureType = ArrayUtil::get('nurture_type', $child,  null);
-                $hasLambar = $nurtureType === 'LAMBAR';
-            }
+            $hasLambar = $this->hasLambar($child);
 
             $tailLengthValue = ArrayUtil::get('tail_length', $child, $tailLengthEmptyValue);
             $birthWeightValue = ArrayUtil::get('birth_weight', $child, $birthWeightEmptyValue);
@@ -758,6 +758,31 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         }
         
         return $declareBirthRequests;
+    }
+
+
+    /**
+     * @param array $childArray
+     * @return bool
+     */
+    private function hasLambar(array $childArray)
+    {
+        if (key_exists('has_lambar', $childArray)) {
+           $hasLambar = ArrayUtil::get('has_lambar', $childArray, false);
+
+           if (is_bool($hasLambar)) {
+               return $hasLambar;
+           }
+
+           if (is_string($hasLambar)) {
+               return strtolower($hasLambar) === 'true';
+           }
+
+           return false;
+        }
+
+        $nurtureType = ArrayUtil::get('nurture_type', $childArray,  null);
+        return $nurtureType === 'LAMBAR';
     }
 
     /**

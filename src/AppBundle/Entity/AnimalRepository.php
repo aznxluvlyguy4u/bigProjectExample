@@ -2086,7 +2086,7 @@ class AnimalRepository extends BaseRepository
             $prefix = ' OR ';
         }
 
-        return $this->getConnection()->query($sql)->fetchAll();
+        return SqlUtil::getSingleValueGroupedSqlResults('id', $this->getConnection()->query($sql)->fetchAll(), true);
     }
 
     /**
