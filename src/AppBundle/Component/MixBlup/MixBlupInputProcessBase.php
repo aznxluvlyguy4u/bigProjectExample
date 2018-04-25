@@ -5,6 +5,7 @@ namespace AppBundle\Component\MixBlup;
 
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -104,15 +105,10 @@ class MixBlupInputProcessBase
             $filePath = $this->outputFolderPath.'/'.$filename;
         }
 
-        //purge current file content
-        file_put_contents($filePath, "");
-
-        $lastKey = ArrayUtil::lastKey($records);
-
-        $newLine = "\n";
-        foreach ($records as $key => $record) {
-            if($key === $lastKey) { $newLine = ''; }
-            file_put_contents($filePath, $record.$newLine, FILE_APPEND);
+        try {
+            DsvWriterUtil::writeToFile($records, $filePath);
+        } catch (\Exception $exception) {
+            return false;
         }
 
         return true;

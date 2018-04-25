@@ -353,7 +353,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase implements Re
     private function getPdfReport()
     {
         $reportData = $this->reportResults->getData();
-        $reportData[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
+        $reportData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
 
         return $this->getPdfReportBase(self::TWIG_FILE, $reportData, false);
     }

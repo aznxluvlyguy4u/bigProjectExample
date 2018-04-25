@@ -140,11 +140,12 @@ class ReportServiceBase
 
     /**
      * @param string $value
+     * @param array $parameters
      * @return string
      */
-    protected function trans($value)
+    protected function trans($value, $parameters = [])
     {
-        return $this->translator->trans($value);
+        return $this->translator->trans($value, $parameters);
     }
 
 
@@ -231,6 +232,12 @@ class ReportServiceBase
     public static function closeColumnHeaderTranslation()
     {
         self::$translationSet = null;
+    }
+
+
+    protected function getImagesDirectory()
+    {
+        return FilesystemUtil::getImagesDirectory($this->rootDir);
     }
 
 
@@ -356,29 +363,18 @@ class ReportServiceBase
     /**
      * @param string $filenameWithExtension
      * @param string $selectQuery
-     * @param boolean $uploadToS3
      * @return JsonResponse
+     * @throws \Exception
      */
-    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery, $uploadToS3)
+    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery)
     {
         $dir = CsvFromSqlResultsWriterService::csvCacheDir($this->cacheDir);
 
         $localFilePath = FilesystemUtil::concatDirAndFilename($dir, $filenameWithExtension);
 
-        try {
-            $writeResult = SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
-            if (!$writeResult) {
-                return ResultUtil::errorResult($this->trans('FAILED WRITING THE CSV FILE'), Response::HTTP_INTERNAL_SERVER_ERROR);
-            }
-        } catch (\Exception $exception) {
-            return ResultUtil::errorResult($this->translateErrorMessages($exception->getMessage()), $exception->getCode());
-        }
+        SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
 
-        if ($uploadToS3) {
-            return $this->uploadReportFileToS3($localFilePath);
-        }
-
-        return ResultUtil::successResult($localFilePath);
+        return $this->uploadReportFileToS3($localFilePath);
     }
 
 
@@ -388,6 +384,10 @@ class ReportServiceBase
      */
     protected function uploadReportFileToS3($filePath)
     {
+        if($this->outputReportsToCacheFolderForLocalTesting) {
+            return ResultUtil::successResult($filePath);
+        }
+
         $s3Service = $this->storageService;
         $url = $s3Service->uploadFromFilePath(
             $filePath,
@@ -629,11 +629,22 @@ class ReportServiceBase
 
     /**
      * @param Request $request
+     * @param boolean $nullCheck
      * @return Location|null
+     * @throws \Exception
      */
-    protected function getSelectedLocation(Request $request)
+    protected function getSelectedLocation(Request $request, $nullCheck = false)
     {
-        return $this->userService->getSelectedLocation($request);
+        $location = $this->userService->getSelectedLocation($request);
+        if ($nullCheck) {
+            if (!$location || !$location->getId()) {
+                throw new \Exception('No location given', Response::HTTP_PRECONDITION_REQUIRED);
+            }
+            if (!$location->getUbn()) {
+                throw new \Exception('UBN of location is missing', Response::HTTP_PRECONDITION_REQUIRED);
+            }
+        }
+        return $location;
     }
 
 
