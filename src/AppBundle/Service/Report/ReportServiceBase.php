@@ -380,7 +380,7 @@ class ReportServiceBase
             return ResultUtil::errorResult($this->translateErrorMessages($exception->getMessage()), $exception->getCode());
         }
 
-        return ResultUtil::successResult($localFilePath);
+        return $this->uploadReportFileToS3($localFilePath);
     }
 
 
