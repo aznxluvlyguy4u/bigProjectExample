@@ -369,6 +369,9 @@ class InvoiceService extends ControllerServiceBase
             $message->setReceiverLocation($location);
             $this->persistAndFlush($message);
         }
+        if ($invoice->getStatus() == InvoiceStatus::PAID) {
+            $invoice->setPaidDate(new \DateTime());
+        }
         else {
             $details = $this->retrieveValidatedSenderDetails($temporaryInvoice);
             if ($details instanceof JsonResponse) {
