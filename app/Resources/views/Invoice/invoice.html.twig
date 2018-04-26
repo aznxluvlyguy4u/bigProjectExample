@@ -122,16 +122,16 @@
                             {{ selection.date | date("d-m-Y") }}
                         </td>
                         <td class="height-auto">
-                            {{ selection.amount | number_format(2, '.', '.') }}
+                            {{ selection.amount | number_format(2, '.', ',') }}
                         </td>
                         <td class="height-auto">
-                            {{ selection.invoiceRule.priceExclVat | number_format(2, '.', '.') }}
+                            {{ selection.invoiceRule.priceExclVat | number_format(2, '.', ',') }}
                         </td>
                         <td class="height-auto">
-                            {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, '.', '.') }}
+                            {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, '.', ',') }}
                         </td>
                         <td class="height-auto">
-                            {{ selection.invoiceRule.vatPercentageRate | number_format(2, '.', '.') }}
+                            {{ selection.invoiceRule.vatPercentageRate | number_format(2, '.', ',') }}
                         </td>
                     </tr>
                 {% endfor %}
