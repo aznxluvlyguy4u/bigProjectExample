@@ -65,15 +65,17 @@
                 </tr>
                 <tr>
                     <td class="height-auto">
-                        {{ invoice.company.address.streetName }} {{ invoice.company.address.addressNumber }}
-                        {% if invoice.company.address.addressNumberSuffix is not null %}
-                            {{ invoice.company.address.addressNumberSuffix }}
+                        {% if invoice.companyAddress %}
+                            {{ invoice.companyAddress.streetName }} {{ invoice.companyAddress.addressNumber }}
+                            {% if invoice.companyAddress.addressNumberSuffix is not null %}
+                                {{ invoice.companyAddress.addressNumberSuffix }}
+                            {% endif %}
                         {% endif %}
                     </td>
                 </tr>
                 <tr>
                     <td class="height-auto">
-                        {{ invoice.companyAddress.postalCode }} {{ invoice.companyAddress.state | upper }}
+                        {{ invoice.companyAddress ? invoice.companyAddress.postalCode : "" }} {{ invoice.companyAddress ? invoice.companyAddress.state | upper : ""}}
                     </td>
                 </tr>
             </table>
