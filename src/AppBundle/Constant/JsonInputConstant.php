@@ -47,6 +47,7 @@ class JsonInputConstant
     const MOTHER = 'mother';
     const FATHER_ID = 'father_id';
     const FATHER = 'father';
+    const PARENTS = 'parents';
     const STN = 'stn';
     const SCRAPIE_GENOTYPE = 'scrapie_genotype';
     const BREED = 'breed';

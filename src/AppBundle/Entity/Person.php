@@ -36,6 +36,7 @@ use JMS\Serializer\Annotation\Expose;
  *     "ERROR_DETAILS",
  *     "GHOST_LOGIN",
  *     "INVOICE",
+ *     "RVO",
  *     "TREATMENT_TEMPLATE",
  *     "UBN",
  *     "USER_MEASUREMENT",
@@ -68,6 +69,7 @@ abstract class Person implements UserInterface
    *     "GHOST_LOGIN",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
+   *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -92,6 +94,8 @@ abstract class Person implements UserInterface
    *     "GHOST_LOGIN",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
+   *     "MINIMAL",
+   *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"
@@ -116,6 +120,8 @@ abstract class Person implements UserInterface
    *     "GHOST_LOGIN",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
+   *     "MINIMAL",
+   *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
    *     "VWA"

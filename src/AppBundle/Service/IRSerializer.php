@@ -416,6 +416,11 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         foreach ($childrenContent as $childArray) {
             $surrogate = null;
             if(array_key_exists('surrogate_mother', $childArray)) {
+
+                if($this->hasLambar($childArray)) {
+                    return Validator::createJsonResponse("Als een pleegmoeder is opgegeven mag het kind geen lambar hebben.", $statusCode);
+                }
+
                 /** @var Animal $surrogate */
                 $surrogate = $animalRepository->getAnimalByUlnOrPedigree($childArray['surrogate_mother']);
 
@@ -491,7 +496,9 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
             $birthProgress = StringUtil::convertEmptyStringToNull(
                 ArrayUtil::get('birth_progress', $child, null)
             );
-            $hasLambar = ArrayUtil::get('has_lambar', $child, false);
+
+            $hasLambar = $this->hasLambar($child);
+
             $tailLengthValue = ArrayUtil::get('tail_length', $child, $tailLengthEmptyValue);
             $birthWeightValue = ArrayUtil::get('birth_weight', $child, $birthWeightEmptyValue);
 
@@ -751,6 +758,31 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         }
         
         return $declareBirthRequests;
+    }
+
+
+    /**
+     * @param array $childArray
+     * @return bool
+     */
+    private function hasLambar(array $childArray)
+    {
+        if (key_exists('has_lambar', $childArray)) {
+           $hasLambar = ArrayUtil::get('has_lambar', $childArray, false);
+
+           if (is_bool($hasLambar)) {
+               return $hasLambar;
+           }
+
+           if (is_string($hasLambar)) {
+               return strtolower($hasLambar) === 'true';
+           }
+
+           return false;
+        }
+
+        $nurtureType = ArrayUtil::get('nurture_type', $childArray,  null);
+        return $nurtureType === 'LAMBAR';
     }
 
     /**
@@ -1064,11 +1096,13 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     {
         $retrieveTags = new RetrieveTags();
 
+        //set default values
+        $retrieveTags->setTagType(TagType::FREE);
+        $retrieveTags->setAnimalType(AnimalType::sheep);
+        $retrieveTags->setIsManual(false);
+
         //No custom filter content given, revert to default values
         if($contentArray->count() == 0) {
-            $retrieveTags->setTagType(TagType::FREE);
-            $retrieveTags->setAnimalType(AnimalType::sheep);
-
             return $retrieveTags;
         }
 
@@ -1080,6 +1114,11 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         //set tagType
         if($contentArray->containsKey(Constant::TAG_TYPE_SNAKE_CASE_NAMESPACE)) {
             $retrieveTags->setTagType($contentArray->get(Constant::TAG_TYPE_SNAKE_CASE_NAMESPACE));
+        }
+
+        //set isManual
+        if($contentArray->containsKey(Constant::IS_MANUAL)) {
+            $retrieveTags->setIsManual($contentArray->get(Constant::IS_MANUAL));
         }
 
         return $retrieveTags;

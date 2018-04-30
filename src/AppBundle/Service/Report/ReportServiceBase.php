@@ -4,7 +4,9 @@
 namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
@@ -23,6 +25,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
@@ -137,11 +140,12 @@ class ReportServiceBase
 
     /**
      * @param string $value
+     * @param array $parameters
      * @return string
      */
-    protected function trans($value)
+    protected function trans($value, $parameters = [])
     {
-        return $this->translator->trans($value);
+        return $this->translator->trans($value, $parameters);
     }
 
 
@@ -228,6 +232,12 @@ class ReportServiceBase
     public static function closeColumnHeaderTranslation()
     {
         self::$translationSet = null;
+    }
+
+
+    protected function getImagesDirectory()
+    {
+        return FilesystemUtil::getImagesDirectory($this->rootDir);
     }
 
 
@@ -353,25 +363,18 @@ class ReportServiceBase
     /**
      * @param string $filenameWithExtension
      * @param string $selectQuery
-     * @param boolean $uploadToS3
      * @return JsonResponse
+     * @throws \Exception
      */
-    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery, $uploadToS3)
+    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery)
     {
         $dir = CsvFromSqlResultsWriterService::csvCacheDir($this->cacheDir);
 
         $localFilePath = FilesystemUtil::concatDirAndFilename($dir, $filenameWithExtension);
 
-        $writeResult = SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
-        if (!$writeResult) {
-            return ResultUtil::errorResult($this->trans('FAILED WRITING THE CSV FILE'), Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
 
-        if ($uploadToS3) {
-            return $this->uploadReportFileToS3($localFilePath);
-        }
-
-        return ResultUtil::successResult($localFilePath);
+        return $this->uploadReportFileToS3($localFilePath);
     }
 
 
@@ -381,6 +384,10 @@ class ReportServiceBase
      */
     protected function uploadReportFileToS3($filePath)
     {
+        if($this->outputReportsToCacheFolderForLocalTesting) {
+            return ResultUtil::successResult($filePath);
+        }
+
         $s3Service = $this->storageService;
         $url = $s3Service->uploadFromFilePath(
             $filePath,
@@ -620,4 +627,77 @@ class ReportServiceBase
     }
 
 
+    /**
+     * @param Request $request
+     * @param boolean $nullCheck
+     * @return Location|null
+     * @throws \Exception
+     */
+    protected function getSelectedLocation(Request $request, $nullCheck = false)
+    {
+        $location = $this->userService->getSelectedLocation($request);
+        if ($nullCheck) {
+            if (!$location || !$location->getId()) {
+                throw new \Exception('No location given', Response::HTTP_PRECONDITION_REQUIRED);
+            }
+            if (!$location->getUbn()) {
+                throw new \Exception('UBN of location is missing', Response::HTTP_PRECONDITION_REQUIRED);
+            }
+        }
+        return $location;
+    }
+
+
+    /**
+     * @param array $animalsArray
+     * @return JsonResponse|array
+     * @throws \Exception
+     */
+    protected function getAnyAnimalIdsFromBody($animalsArray)
+    {
+        $results = $this->em->getRepository(Animal::class)->getAnimalIdsFromAnimalsArray($animalsArray);
+
+        if (count($results) === 0) {
+            throw new \Exception($this->translateErrorMessages('NO ANIMALS FOUND FOR GIVEN INPUT'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        return $results;
+    }
+
+
+    /**
+     * @param array $animalsArray
+     * @param Location $location
+     * @return array
+     * @throws \Exception
+     */
+    protected function getCurrentAndHistoricAnimalIdsFromBody($animalsArray, Location $location)
+    {
+        $results = $this->em->getRepository(Animal::class)
+            ->getCurrentAndHistoricAnimalIdsFromAnimalsArray(
+                $animalsArray,
+                $location->getId()
+            );
+
+        if (count($results) === 0) {
+            throw new \Exception($this->translateErrorMessages('NO ANIMALS FOUND FOR GIVEN INPUT'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $nonHistoricAnimalUlns = [];
+        $animalIds = [];
+        foreach ($results as $result)
+        {
+            $animalIds[] = $result['id'];
+
+            if (!$result['is_historic_livestock_animal']) {
+                $nonHistoricAnimalUlns[] = $result['uln'];
+            }
+        }
+
+        if (count($nonHistoricAnimalUlns) > 0) {
+            throw new \Exception($this->translateErrorMessages('THE FOLLOWING ANIMALS ARE NOT CURRENT LIVESTOCK OR HISTORIC LIVESTOCK ANIMALS OF THIS UBN').', '.$location->getUbn().': '.implode(',',$nonHistoricAnimalUlns), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        return $animalIds;
+    }
 }

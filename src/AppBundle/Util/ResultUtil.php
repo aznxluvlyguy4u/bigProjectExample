@@ -39,6 +39,27 @@ class ResultUtil
 
 
     /**
+     * @param int $errorCode
+     * @param string $errorMessage
+     * @return JsonResponse
+     */
+    public static function standardErrorResult($errorCode, $errorMessage = null)
+    {
+        return ResultUtil::errorResult($errorMessage ? $errorMessage : Response::$statusTexts[$errorCode], $errorCode);
+    }
+
+
+    /**
+     * @param $errorCode
+     * @return mixed|null
+     */
+    public static function getDefaultErrorMessage($errorCode)
+    {
+        return ArrayUtil::get($errorCode, Response::$statusTexts, Response::$statusTexts[Response::HTTP_INTERNAL_SERVER_ERROR]);
+    }
+
+
+    /**
      * @return JsonResponse
      */
     public static function internalServerError()
@@ -53,6 +74,17 @@ class ResultUtil
     public static function badRequest()
     {
         return ResultUtil::errorResult('BAD REQUEST', Response::HTTP_BAD_REQUEST);
+    }
+
+
+    /**
+     * @param \Exception $exception
+     * @return JsonResponse
+     */
+    public static function errorResultByException(\Exception $exception)
+    {
+        $errorCode = $exception->getCode() === 0 ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
+        return ResultUtil::errorResult($exception->getMessage(), $errorCode);
     }
 
 

@@ -29,6 +29,10 @@ class RetrieveTags
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "MINIMAL",
+     *     "RVO"
+     * })
      */
     private $logDate;
 
@@ -37,6 +41,9 @@ class RetrieveTags
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $requestId;
 
@@ -45,6 +52,9 @@ class RetrieveTags
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $messageId;
 
@@ -52,6 +62,10 @@ class RetrieveTags
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "MINIMAL",
+     *     "RVO"
+     * })
      */
     private $requestState;
 
@@ -60,6 +74,9 @@ class RetrieveTags
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $relationNumberKeeper;
 
@@ -70,6 +87,9 @@ class RetrieveTags
      * @Assert\NotBlank
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $ubn;
 
@@ -79,6 +99,9 @@ class RetrieveTags
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $tagType;
 
@@ -87,6 +110,9 @@ class RetrieveTags
      * @ORM\ManyToOne(targetEntity="Location")
      * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $location;
 
@@ -94,6 +120,9 @@ class RetrieveTags
      * @var integer
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $animalType;
 
@@ -102,6 +131,11 @@ class RetrieveTags
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "BASIC",
+     *     "MINIMAL",
+     *     "RVO"
+     * })
      */
     private $actionBy;
 
@@ -114,13 +148,30 @@ class RetrieveTags
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "BASIC",
+     *     "MINIMAL",
+     *     "RVO"
      * })
      */
     private $isManual;
 
+    /**
+     *
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @Assert\NotBlank
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "BASIC",
+     *     "MINIMAL",
+     *     "RVO"
+     * })
+     */
+    private $hasForceDeleteAnimalsFailed;
+
     public function __construct() {
         $this->setLogDate(new \DateTime());
         $this->isManual = false;
+        $this->hasForceDeleteAnimalsFailed = false;
     }
 
     /**
@@ -383,6 +434,25 @@ class RetrieveTags
         $this->isManual = $isManual;
         return $this;
     }
+
+    /**
+     * @return bool
+     */
+    public function isHasForceDeleteAnimalsFailed()
+    {
+        return $this->hasForceDeleteAnimalsFailed;
+    }
+
+    /**
+     * @param bool $hasForceDeleteAnimalsFailed
+     * @return RetrieveTags
+     */
+    public function setHasForceDeleteAnimalsFailed($hasForceDeleteAnimalsFailed)
+    {
+        $this->hasForceDeleteAnimalsFailed = $hasForceDeleteAnimalsFailed;
+        return $this;
+    }
+
 
 
 }

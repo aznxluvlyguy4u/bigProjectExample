@@ -31,7 +31,8 @@ class Location
    * @JMS\Type("integer")
    * @JMS\Groups({
    *     "INVOICE",
-   *     "INVOICE_NO_COMPANY"
+   *     "INVOICE_NO_COMPANY",
+   *     "RVO"
    * })
    *
    */
@@ -48,7 +49,8 @@ class Location
      *     "BASIC",
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
-     *     "MINIMAL"
+     *     "MINIMAL",
+     *     "RVO"
      * })
      * @Expose
      */
@@ -69,6 +71,7 @@ class Location
    *     "INVOICE_NO_COMPANY",
    *     "LIVESTOCK",
    *     "MINIMAL",
+   *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "TREATMENT_TEMPLATE_MIN",
    *     "UBN"

@@ -124,9 +124,22 @@ class InvoiceRule
     private $isDeleted = false;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", name="is_batch", options={"default":false})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $isBatch = false;
+
+    /**
      * @var ArrayCollection
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\InvoiceRuleSelection", mappedBy="invoiceRule", cascade={"persist", "remove"}, orphanRemoval=true)
      * @JMS\Type("ArrayCollection<AppBundle\Entity\InvoiceRuleSelection>")
+     * @JMS\Exclude()
      * @JMS\Groups({
      *     "INVOICE_RULE",
      *     "INVOICE",
@@ -312,5 +325,19 @@ class InvoiceRule
         $this->setVatPercentageRate($invoiceRuleTemplate->getVatPercentageRate());
     }
 
+    /**
+     * @return bool
+     */
+    public function isBatch()
+    {
+        return $this->isBatch;
+    }
 
+    /**
+     * @param bool $isBatch
+     */
+    public function setIsBatch($isBatch)
+    {
+        $this->isBatch = $isBatch;
+    }
 }

@@ -59,7 +59,7 @@ class GenderHistoryItem
     /**
      * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="genderHistory")
-     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private $animal;
 

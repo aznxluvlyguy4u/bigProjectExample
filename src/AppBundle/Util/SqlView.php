@@ -286,7 +286,16 @@ class SqlView
                 c.torso_length as torso_length,
                 p.full_name as exterior_inspector_full_name,
                 
-                pr.abbreviation as pedigree_register_abbreviation
+                pr.abbreviation as pedigree_register_abbreviation,
+                
+                tail_length.length as tail_length,
+                to_char(tail_length.measurement_date, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_tail_length_measurement_date,
+                muscle_thickness.muscle_thickness as muscle_thickness,
+                to_char(muscle_thickness.measurement_date, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_muscle_thickness_measurement_date,          
+                body_fat.fat1 as fat1,
+                body_fat.fat2 as fat2,
+                body_fat.fat3 as fat3,
+                to_char(body_fat.measurement_date, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_body_fat_measurement_date
                 
               FROM animal a
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
@@ -299,7 +308,67 @@ class SqlView
                 LEFT JOIN view_pedigree_register_abbreviation pr ON pr.pedigree_register_id = a.pedigree_register_id
                 LEFT JOIN (VALUES
                 ".SqlUtil::createSqlValuesString(Translation::getEnglishPredicateToAbbreviationArray())."
-                ) AS predicate(english, abbreviation) ON predicate.english = a.predicate";
+                ) AS predicate(english, abbreviation) ON predicate.english = a.predicate
+                
+                LEFT JOIN (
+                    SELECT
+                      m.animal_id,
+                      m.length,
+                      m3.measurement_date
+                    FROM tail_length m
+                      INNER JOIN (
+                                   SELECT
+                                     m.animal_id,
+                                     MAX(m.id) as max_id
+                                   FROM tail_length m
+                                     INNER JOIN measurement m2 ON m.id = m2.id
+                                   WHERE m2.is_active
+                                   GROUP BY m.animal_id
+                                 )g ON g.max_id = m.id
+                      INNER JOIN measurement m3 ON m.id = m3.id
+                )tail_length ON tail_length.animal_id = a.id
+                
+                LEFT JOIN (
+                    SELECT
+                      m.animal_id,
+                      m.muscle_thickness,
+                      m3.measurement_date
+                    FROM muscle_thickness m
+                      INNER JOIN (
+                                   SELECT
+                                     m.animal_id,
+                                     MAX(m.id) as max_id
+                                   FROM muscle_thickness m
+                                     INNER JOIN measurement m2 ON m.id = m2.id
+                                   WHERE m2.is_active
+                                   GROUP BY m.animal_id
+                                 )g ON g.max_id = m.id
+                      INNER JOIN measurement m3 ON m.id = m3.id
+                )muscle_thickness ON muscle_thickness.animal_id = a.id
+                
+                LEFT JOIN (
+                    SELECT
+                      m.animal_id,
+                      f1.fat as fat1,
+                      f2.fat as fat2,
+                      f3.fat as fat3,
+                      m3.measurement_date
+                    FROM body_fat m
+                      INNER JOIN (
+                                   SELECT
+                                     m.animal_id,
+                                     MAX(m.id) as max_id
+                                   FROM body_fat m
+                                     INNER JOIN measurement m2 ON m.id = m2.id
+                                   WHERE m2.is_active
+                                   GROUP BY m.animal_id
+                                 )g ON g.max_id = m.id
+                      INNER JOIN fat1 f1 ON m.fat1_id = f1.id
+                      INNER JOIN fat2 f2 ON m.fat2_id = f2.id
+                      INNER JOIN fat3 f3 ON m.fat3_id = f3.id
+                      INNER JOIN measurement m3 ON m.id = m3.id
+                )body_fat ON body_fat.animal_id = a.id
+                ";
     }
 
 

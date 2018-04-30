@@ -43,6 +43,8 @@ class JmsGroup
     const PARENTS = 'PARENTS';
     const PARENT_DATA = 'PARENT_DATA';
 
+    const RVO = 'RVO';
+
     const TREATMENT_TEMPLATE = 'TREATMENT_TEMPLATE';
     const TREATMENT_TEMPLATE_MIN = 'TREATMENT_TEMPLATE_MIN';
 

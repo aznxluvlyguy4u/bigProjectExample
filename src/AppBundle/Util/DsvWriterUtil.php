@@ -4,8 +4,10 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Setting\MixBlupSetting;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\HttpFoundation\Response;
 
 class DsvWriterUtil
 {
@@ -74,5 +76,79 @@ class DsvWriterUtil
     {
         $value = ArrayUtil::get($key, $data, $nullReplacement);
         return DsvWriterUtil::pad($value, $columnWidth, $useColumnPadding);
+    }
+
+
+    /**
+     * @param array $records
+     * @param string $filepath
+     * @throws \Exception
+     */
+    public static function writeToFile(array $records, $filepath)
+    {
+        $lastKey = self::writeToFileBase($records, $filepath);
+
+        $newLine = "\n";
+        foreach ($records as $key => $record) {
+            if($key === $lastKey) { $newLine = ''; }
+            file_put_contents($filepath, $record.$newLine, FILE_APPEND);
+        }
+    }
+
+
+    /**
+     * @param array $records
+     * @param string $filepath
+     * @param string $separatorSymbol
+     * @throws \Exception
+     */
+    public static function writeNestedRecordToFile(array $records, $filepath, $separatorSymbol = CsvOptions::DEFAULT_SEPARATOR)
+    {
+        $lastKey = self::writeToFileBase($records, $filepath);
+
+        DsvWriterUtil::writeNestedRowToFile($filepath, array_keys(ArrayUtil::firstValue($records, true))); //write headers
+
+        $newLine = "\n";
+        foreach ($records as $key => $values) {
+            if($key === $lastKey) { $newLine = ''; }
+            $record = implode($separatorSymbol, $values);
+            file_put_contents($filepath, $record.$newLine, FILE_APPEND);
+        }
+    }
+
+
+    /**
+     * @param string $filepath
+     * @param array $values
+     * @param string $separator
+     */
+    public static function writeNestedRowToFile($filepath, array $values, $separator = CsvOptions::DEFAULT_SEPARATOR)
+    {
+        file_put_contents($filepath, implode($separator, $values) ."\n",FILE_APPEND);
+    }
+
+
+    /**
+     * @param array $records
+     * @param string $filepath
+     * @return string|int lastKey as $records
+     * @throws \Exception
+     */
+    private static function writeToFileBase(array $records, $filepath)
+    {
+        if(!is_string($filepath) || $filepath == '') {
+            throw new \Exception('INVALID FILEPATH FOR CSV GENERATION', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        if(count($records) === 0) {
+            throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
+        }
+
+        NullChecker::createFolderPathIfNull(dirname($filepath));
+
+        //purge current file content
+        file_put_contents($filepath, "");
+
+        return ArrayUtil::lastKey($records);
     }
 }

@@ -181,7 +181,7 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase implements
             $this->data[ReportLabel::UBN] = $this->location->getUbn();
             $this->data[ReportLabel::NAME.'_and_'.ReportLabel::ADDRESS] = $this->parseNameAddressString();
             $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($this->em, $this->location, true);
-            $this->data[ReportLabel::IMAGES_DIRECTORY] = FilesystemUtil::getImagesDirectory($this->rootDir);
+            $this->data[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
             $this->data[ReportLabel::ANIMALS] = $this->retrieveLiveStockDataForPdf();
         }
     }

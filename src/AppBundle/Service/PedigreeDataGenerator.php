@@ -8,6 +8,7 @@ use AppBundle\Criteria\ExteriorCriteria;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
+use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\PedigreeRegisterRegistration;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\ScrapieGenotypeSource;
@@ -18,6 +19,7 @@ use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\ORM\EntityManagerInterface;
@@ -199,8 +201,9 @@ class PedigreeDataGenerator
         // NOTE! Run these functions in this order!
         if (!$ignoreNonScrapieGenotypeGeneration) {
             $animal = $this->generateMissingBreedCodes($animal);
-            $animal = $this->generatePedigreeCountryCodeAndNumber($animal);
+            $animal = $this->generatePedigreeCountryCodeAndNumberAndPedigreeRegister($animal);
             $animal = $this->generateBreedType($animal);
+            $animal = $this->matchMissingPedigreeRegisterByBreederNumberInStn($animal);
         }
 
         if (!$ignoreScrapieGenotypeGeneration) {
@@ -259,7 +262,7 @@ class PedigreeDataGenerator
      * @param Animal $animal
      * @return Animal
      */
-    private function generatePedigreeCountryCodeAndNumber(Animal $animal)
+    private function generatePedigreeCountryCodeAndNumberAndPedigreeRegister(Animal $animal)
     {
         if($animal->getPedigreeCountryCode() !== null && $animal->getPedigreeNumber() !== null
         && !$this->overwriteExistingData) {
@@ -271,14 +274,32 @@ class PedigreeDataGenerator
             return $animal;
         }
 
-        $breederNumber = $this->getBreederNumber($animal);
+        $pedigreeRegisterRegistration = $this->getPedigreeRegisterRegistration($animal);
+        if (!$pedigreeRegisterRegistration) {
+            return $animal;
+        }
+
+        if ($pedigreeRegisterRegistration->getPedigreeRegister() && $pedigreeRegisterRegistration->getPedigreeRegister()->getId()) {
+            if (!$animal->getPedigreeRegister() ||
+                ($animal->getPedigreeRegister()->getId() !== $pedigreeRegisterRegistration->getId() && $this->overwriteExistingData)) {
+                $animal->setPedigreeRegister($pedigreeRegisterRegistration->getPedigreeRegister());
+                $this->valueWasUpdated();
+            }
+        }
+
+        $breederNumber = $this->getBreederNumber($pedigreeRegisterRegistration);
         if (!$breederNumber) {
             return $animal;
         }
 
         $animal = $this->fixIncongruentAnimalOrderNumber($animal);
 
-        $newPedigreeNumber = self::generateDuplicateCheckedPedigreeNumber($this->em, $breederNumber, $animal->getAnimalOrderNumber());
+        $newPedigreeNumber = self::generateDuplicateCheckedPedigreeNumber(
+            $this->em,
+            $breederNumber,
+            $animal->getAnimalOrderNumber(),
+            $animal->getId()
+        );
         if (!$newPedigreeNumber) {
             return null;
         }
@@ -308,10 +329,29 @@ class PedigreeDataGenerator
 
 
     /**
-     * @param Animal $animal
+     * @param PedigreeRegisterRegistration $foundRegistration
      * @return null|string
      */
-    private function getBreederNumber(Animal $animal)
+    private function getBreederNumber(PedigreeRegisterRegistration $foundRegistration)
+    {
+        if (!$foundRegistration) {
+            return null;
+        }
+
+        if (!(is_string($foundRegistration->getBreederNumber()) && strlen($foundRegistration->getBreederNumber()) === 5)) {
+            $this->logError('INVALID BREEDER NUMBER: '.$foundRegistration->getBreederNumber(), $animal);
+            return null;
+        }
+
+        return $foundRegistration->getBreederNumber();
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return PedigreeRegisterRegistration|null
+     */
+    private function getPedigreeRegisterRegistration(Animal $animal)
     {
         $locationOfBirth = $animal->getLocationOfBirth();
         if (!$locationOfBirth) {
@@ -347,12 +387,7 @@ class PedigreeDataGenerator
             return null;
         }
 
-        if (!(is_string($foundRegistration->getBreederNumber()) && strlen($foundRegistration->getBreederNumber()) === 5)) {
-            $this->logError('INVALID BREEDER NUMBER: '.$foundRegistration->getBreederNumber(), $animal);
-            return null;
-        }
-
-        return $registration->getBreederNumber();
+        return $foundRegistration;
     }
 
 
@@ -360,9 +395,11 @@ class PedigreeDataGenerator
      * @param EntityManagerInterface $em
      * @param string $breederNumber
      * @param string $animalOrderNumber
+     * @param int $animalId
      * @return string
      */
-    public static function generateDuplicateCheckedPedigreeNumber(EntityManagerInterface $em, $breederNumber, $animalOrderNumber)
+    public static function generateDuplicateCheckedPedigreeNumber(EntityManagerInterface $em, $breederNumber,
+                                                                  $animalOrderNumber, $animalId)
     {
         $isFirstLoop = true;
         $newPedigreeNumber = $breederNumber . '-' . $animalOrderNumber;
@@ -373,7 +410,7 @@ class PedigreeDataGenerator
                 $newPedigreeNumber = StringUtil::bumpPedigreeNumber($newPedigreeNumber);
             }
 
-            $pedigreeNumberAlreadyExists = self::pedigreeNumberAlreadyExists($em, $newPedigreeNumber);
+            $pedigreeNumberAlreadyExists = self::pedigreeNumberAlreadyExists($em, $newPedigreeNumber, $animalId);
             $isFirstLoop = false;
 
         } while ($pedigreeNumberAlreadyExists);
@@ -385,15 +422,18 @@ class PedigreeDataGenerator
     /**
      * @param EntityManagerInterface $em
      * @param string $pedigreeNumber
+     * @param int $animalId pedigreeNumber is not considered a duplicate if it already exists for this animal
      * @return bool
      */
-    public static function pedigreeNumberAlreadyExists(EntityManagerInterface $em, $pedigreeNumber)
+    public static function pedigreeNumberAlreadyExists(EntityManagerInterface $em, $pedigreeNumber, $animalId = null)
     {
         if (!$pedigreeNumber) {
             return false;
         }
 
-        $sql = "SELECT COUNT(*) as count FROM animal WHERE pedigree_number = '".$pedigreeNumber."'";
+        $animalIdFilter = is_int($animalId) || ctype_digit($animalId) ? ' AND id <> '.$animalId.' ' : ' ';
+
+        $sql = "SELECT COUNT(*) as count FROM animal WHERE pedigree_number = '".$pedigreeNumber."'".$animalIdFilter;
         return $em->getConnection()->query($sql)->fetch()['count'] > 0;
     }
 
@@ -652,6 +692,71 @@ class PedigreeDataGenerator
             && $animal->getBreedCode() === 'TE100'
             && $animal->getBreedType() === BreedType::PURE_BRED
             ;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
+    private function matchMissingPedigreeRegisterByBreederNumberInStn(Animal $animal)
+    {
+        if (!$animal || !$animal->getPedigreeNumber() ||
+            ($animal->getPedigreeRegister() && $animal->getPedigreeRegister()->getId())
+        ) {
+            return $animal;
+        }
+
+        $breederNumber = StringUtil::getBreederNumberFromPedigreeNumber($animal->getPedigreeNumber());
+        $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)->findOneByBreederNumber($breederNumber);
+
+        if (!$pedigreeRegister) {
+            return $animal;
+        }
+
+        if (!$animal->getPedigreeRegister() ||
+            $animal->getPedigreeRegister()->getId() !== $pedigreeRegister->getId()) {
+            $animal->setPedigreeRegister($pedigreeRegister);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
+    }
+
+
+    /**
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function batchMatchMissingPedigreeRegisterByBreederNumberInStn()
+    {
+        $updateCount = 0;
+        foreach (['TRUE', 'FALSE'] as $boolVal) {
+            $sql = "UPDATE animal SET pedigree_register_id = v.pedigree_register_id
+                FROM (
+                  SELECT
+                    a.id as animal_id,
+                    pedigree_number,
+                    prr.pedigree_register_id
+                  FROM animal a
+                    INNER JOIN (
+                                 SELECT
+                                   breeder_number,
+                                   MAX(pedigree_register_id) as pedigree_register_id
+                                 FROM pedigree_register_registration
+                                 WHERE is_active = $boolVal
+                                 GROUP BY breeder_number
+                               )prr ON prr.breeder_number = substr(pedigree_number, 1, 5)
+                  WHERE a.pedigree_register_id ISNULL
+                ) AS v(animal_id, pedigree_number, pedigree_register_id) WHERE animal.id = v.animal_id 
+                AND animal.pedigree_register_id ISNULL";
+
+            $updateCount += SqlUtil::updateWithCount($this->em->getConnection(), $sql);
+        }
+
+        $this->logger->notice(($updateCount === 0 ? 'No' : $updateCount).' missing pedigreeRegisterIds were matched to animals');
+
+        return $updateCount;
     }
 
 

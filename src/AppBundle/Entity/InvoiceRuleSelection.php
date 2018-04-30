@@ -70,6 +70,18 @@ class InvoiceRuleSelection
     private $amount;
 
     /**
+     * @var \DateTime
+     * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $date;
+
+    /**
      * @return int
      */
     public function getId()
@@ -141,5 +153,19 @@ class InvoiceRuleSelection
         return $this;
     }
 
+    /**
+     * @return \DateTime
+     */
+    public function getDate()
+    {
+        return $this->date;
+    }
 
+    /**
+     * @param \DateTime $date
+     */
+    public function setDate($date)
+    {
+        $this->date = $date;
+    }
 }

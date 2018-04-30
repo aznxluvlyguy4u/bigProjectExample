@@ -349,4 +349,14 @@ class BaseRepository extends EntityRepository
         }
         return 0;
     }
+
+
+    /**
+     * @param array $results
+     * @return mixed|null
+     */
+    protected function returnFirstQueryResult($results)
+    {
+        return count($results) === 0 ? null : array_shift($results);
+    }
 }

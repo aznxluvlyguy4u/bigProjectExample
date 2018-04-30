@@ -4,7 +4,6 @@
 namespace AppBundle\Util;
 
 
-use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
@@ -15,7 +14,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class SqlUtil
 {
@@ -655,44 +654,42 @@ class SqlUtil
      * @param string $selectQuery
      * @param string $filepath
      * @param Logger|null $logger
-     * @return bool
+     * @throws \Exception
      */
     public static function writeToFile(Connection $conn, $selectQuery, $filepath, Logger $logger = null)
     {
+        $isDataMissing = false;
+
         try {
             $stmt = $conn->query($selectQuery);
 
             if ($firstRow = $stmt->fetch()) {
-                self::writeRowToFile($filepath, array_keys($firstRow)); //write headers
-                self::writeRowToFile($filepath, $firstRow);
+                DsvWriterUtil::writeNestedRowToFile($filepath, array_keys($firstRow)); //write headers
+                DsvWriterUtil::writeNestedRowToFile($filepath, $firstRow);
+            } else {
+                $isDataMissing = true;
             }
 
             while ($row = $stmt->fetch()) {
-                self::writeRowToFile($filepath, $row);
+                DsvWriterUtil::writeNestedRowToFile($filepath, $row);
             }
 
         } catch (\Exception $exception) {
 
             FilesystemUtil::deleteFile($filepath);
 
+            // Hide error details from user
             if ($logger) {
                 $logger->error($exception->getMessage());
                 $logger->error($exception->getTraceAsString());
             }
-            return false;
+            throw new \Exception('FAILED WRITING THE CSV FILE', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return true;
+        if ($isDataMissing) {
+            throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
+        }
     }
 
 
-    /**
-     * @param string $filepath
-     * @param array $values
-     * @param string $separator
-     */
-    private static function writeRowToFile($filepath, array $values, $separator = CsvOptions::DEFAULT_SEPARATOR)
-    {
-        file_put_contents($filepath, implode($separator, $values) ."\n",FILE_APPEND);
-    }
 }

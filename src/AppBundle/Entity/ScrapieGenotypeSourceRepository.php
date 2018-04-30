@@ -92,7 +92,7 @@ class ScrapieGenotypeSourceRepository extends BaseRepository
 
         $updateCount = 0;
         foreach ($sourceDescriptions as $sourceDescription) {
-            $source = $this->getSourceByDescription($sourceDescription);
+            $source = $this->getSourceByDescription($sourceDescription, false);
             if (!$source) {
                 $source = new ScrapieGenotypeSource();
                 $source->setDescription($sourceDescription);

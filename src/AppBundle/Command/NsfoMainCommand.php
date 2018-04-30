@@ -663,6 +663,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             '2: UbnOfBirth (string) in Animal', "\n",
             '3: Fill empty breedCode, breedType and pedigree (stn) data for all declareBirth animals (no data is overwritten)', "\n",
             '4: Fill empty scrapieGenotype data for all declareBirth animals currently on livestocks (no data is overwritten)', "\n",
+            '5: Fill missing pedigreeRegisterIds by breedNumber in STN (no data is overwritten)', "\n",
             "\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
@@ -672,6 +673,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 2: $this->getContainer()->get('AppBundle\Service\DataFix\MissingUbnOfBirthFillerService')->run(); break;
             case 3: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->run($this->cmdUtil); break;
             case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScrapieGenotypeReprocessor')->run($this->cmdUtil); break;
+            case 5: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->batchMatchMissingPedigreeRegisterByBreederNumberInStn(); break;
 
             default: $this->writeLn('Exit menu'); return;
         }

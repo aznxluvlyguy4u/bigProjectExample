@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\VatCalculator;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -146,6 +147,14 @@ class Invoice
     private $companyVatNumber;
 
     /**
+     * @var Address $companyAddress
+     * @ORM\ManyToOne(targetEntity="Address")
+     * @ORM\JoinColumn(name="company_address_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Address")
+     */
+    private $companyAddress;
+
+    /**
      * @var string
      * @ORM\Column(type="string", name="company_debtor_number", nullable=true)
      * @JMS\Type("string")
@@ -190,7 +199,17 @@ class Invoice
      */
     private $ubn;
 
-
+    /**
+     * @var DateTime
+     * @ORM\Column(type="datetime", name="paid_date", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $paidDate;
     /**
      * @var bool
      * @ORM\Column(name="is_deleted", type="boolean", nullable=false, options={"default":false})
@@ -203,6 +222,31 @@ class Invoice
     private $isDeleted = false;
 
     /**
+     * @var boolean
+     * @ORM\Column(name="is_batch", type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $isBatch = false;
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("vat_breakdown")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     * @return VatBreakdown
+     */
+    public function getVatBreakdownRecords()
+    {
+        return VatCalculator::calculateVatBreakdown($this->getInvoiceRuleSelections());
+    }
+
+    /**
      * Invoice constructor.
      */
     public function __construct()
@@ -212,6 +256,22 @@ class Invoice
 
     public function getId() {
         return $this->id;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getPaidDate()
+    {
+        return $this->paidDate;
+    }
+
+    /**
+     * @param DateTime $paidDate
+     */
+    public function setPaidDate($paidDate)
+    {
+        $this->paidDate = $paidDate;
     }
 
     /**
@@ -306,6 +366,22 @@ class Invoice
     }
 
     /**
+     * @return Address
+     */
+    public function getCompanyAddress()
+    {
+        return $this->companyAddress;
+    }
+
+    /**
+     * @param Address $companyAddress
+     */
+    public function setCompanyAddress($companyAddress)
+    {
+        $this->companyAddress = $companyAddress;
+    }
+
+    /**
      * @param InvoiceRuleSelection $invoiceRuleSelection
      * @return Invoice
      */
@@ -341,6 +417,18 @@ class Invoice
     public function setTotal($total)
     {
         $this->total = $total;
+    }
+
+
+    /**
+     * Update total based on the values in the InvoiceRuleSelections
+     */
+    public function updateTotal()
+    {
+        $this->setTotal(
+            VatCalculator::calculateVatBreakdown($this->getInvoiceRuleSelections())
+                ->getTotalInclVat()
+        );
     }
 
     /**
@@ -485,6 +573,22 @@ class Invoice
     public function setMollieId($mollieId)
     {
         $this->mollieId = $mollieId;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBatch()
+    {
+        return $this->isBatch;
+    }
+
+    /**
+     * @param bool $isBatch
+     */
+    public function setIsBatch($isBatch)
+    {
+        $this->isBatch = $isBatch;
     }
 
     public function copyValues(Invoice $invoice){

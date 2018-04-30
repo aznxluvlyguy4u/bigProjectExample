@@ -1,6 +1,8 @@
 <?php
 
 namespace AppBundle\Entity;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\Query\Expr\Join;
 
 /**
  * Class PedigreeRegisterRepository
@@ -38,5 +40,32 @@ class PedigreeRegisterRepository extends BaseRepository {
     {
         return $this->findBy(['isRegisteredWithNsfo' => true], ['abbreviation' => 'ASC']);
     }
-    
+
+
+    /**
+     * @param $breederNumber
+     * @return PedigreeRegister|null
+     */
+    public function findOneByBreederNumber($breederNumber)
+    {
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $qb
+            ->select('rr', 'r')
+            ->from(PedigreeRegisterRegistration::class, 'rr')
+            ->innerJoin('rr.pedigreeRegister', 'r', Join::WITH, $qb->expr()->eq('rr.pedigreeRegister', 'r.id'))
+            ->where(
+                $qb->expr()->eq('rr.breederNumber', "'".$breederNumber."'")
+            )
+            ->orderBy('rr.isActive', Criteria::DESC)
+            ->setMaxResults(1)
+        ;
+
+        $pedigreeRegisterRegistration = $this->returnFirstQueryResult($qb->getQuery()->getResult());
+        if($pedigreeRegisterRegistration instanceof PedigreeRegisterRegistration) {
+            return $pedigreeRegisterRegistration->getPedigreeRegister();
+        }
+
+        return null;
+    }
 }
