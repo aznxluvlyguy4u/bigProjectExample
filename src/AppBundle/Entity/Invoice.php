@@ -149,35 +149,35 @@ class Invoice
     /**
      * @var string $companyAddressStreetName
      * @ORM\Column(name="company_address_street_name", nullable=true)
-     * @JMS\Type("String")
+     * @JMS\Type("string")
      */
     private $companyAddressStreetName;
 
     /**
      * @var int $companyAddressStreetNumber
      * @ORM\Column(name="company_address_street_number", type="integer", nullable=true)
-     * @JMS\Type("Integer")
+     * @JMS\Type("integer")
      */
     private $companyAddressStreetNumber;
 
     /**
      * @var string $companyAddressStreetName
      * @ORM\Column(name="company_address_postal_code", nullable=true)
-     * @JMS\Type("String")
+     * @JMS\Type("string")
      */
     private $companyAddressPostalCode;
 
     /**
      * @var string $companyAddressStreetName
      * @ORM\Column(name="company_address_street_number_suffix", nullable=true)
-     * @JMS\Type("String")
+     * @JMS\Type("string")
      */
     private $companyAddressStreetNumberSuffix;
 
     /**
      * @var string
      * @ORM\Column(name="company_address_state", nullable=true)
-     * @JMS\Type("String")
+     * @JMS\Type("string")
      */
     private $companyAddressState;
 
