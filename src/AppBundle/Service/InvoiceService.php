@@ -114,43 +114,43 @@ class InvoiceService extends ControllerServiceBase
     {
         /** @var Invoice $invoice */
         $invoice = $this->getManager()->getRepository(Invoice::class)->find($id);
-        if ($invoice->getCompany()->getAddress()->getState() != null) {
-            switch ($invoice->getCompany()->getAddress()->getState()) {
+        if ($invoice->getCompanyAddressState()) {
+            switch ($invoice->getCompanyAddressState()) {
                 case "DR":
-                    $invoice->getCompany()->getAddress()->setState("Drenthe");
+                    $invoice->setCompanyAddressState("Drenthe");
                     break;
                 case "FL":
-                    $invoice->getCompany()->getAddress()->setState("Flevoland");
+                    $invoice->setCompanyAddressState("Flevoland");
                     break;
                 case "FR":
-                    $invoice->getCompany()->getAddress()->setState("Friesland");
+                    $invoice->setCompanyAddressState("Friesland");
                     break;
                 case "GD":
-                    $invoice->getCompany()->getAddress()->setState("Gelderland");
+                    $invoice->setCompanyAddressState("Gelderland");
                     break;
                 case "GR":
-                    $invoice->getCompany()->getAddress()->setState("Groningen");
+                    $invoice->setCompanyAddressState("Groningen");
                     break;
                 case "LB":
-                    $invoice->getCompany()->getAddress()->setState("Limburg");
+                    $invoice->setCompanyAddressState("Limburg");
                     break;
                 case "NB":
-                    $invoice->getCompany()->getAddress()->setState("Noord-Brabant");
+                    $invoice->setCompanyAddressState("Noord-Brabant");
                     break;
                 case "NH":
-                    $invoice->getCompany()->getAddress()->setState("Noord-Holland");
+                    $invoice->setCompanyAddressState("Noord-Holland");
                     break;
                 case "OV":
-                    $invoice->getCompany()->getAddress()->setState("Overijssel");
+                    $invoice->setCompanyAddressState("Overijssel");
                     break;
                 case "UT":
-                    $invoice->getCompany()->getAddress()->setState("Utrecht");
+                    $invoice->setCompanyAddressState("Utrecht");
                     break;
                 case "ZH":
-                    $invoice->getCompany()->getAddress()->setState("Zuid-Holland");
+                    $invoice->setCompanyAddressState("Zuid-Holland");
                     break;
                 case "ZL":
-                    $invoice->getCompany()->getAddress()->setState("Zeeland");
+                    $invoice->setCompanyAddressState("Zeeland");
                     break;
                 default:
                     break;
@@ -231,13 +231,22 @@ class InvoiceService extends ControllerServiceBase
             ? $this->getManager()->getRepository(Company::class)->find($invoice->getCompany()->getId()) : null;
         if ($company !== null) {
             $invoice->setCompany($company);
-            $invoice->setCompanyAddress($company->getAddress());
+            $invoice->setCompanyAddressStreetName($company->getBillingAddress()->getStreetName());
+            $invoice->setCompanyAddressStreetNumber($company->getBillingAddress()->getAddressNumber());
+            $invoice->setCompanyAddressPostalCode($company->getBillingAddress()->getPostalCode());
+            if ($company->getBillingAddress()->getAddressNumberSuffix() != null && $company->getBillingAddress()->getAddressNumberSuffix() != "") {
+                $invoice->setCompanyAddressStreetNumberSuffix($company->getBillingAddress()->getAddressNumberSuffix());
+            }
+            if ($company->getBillingAddress()->getState() != null && $company->getBillingAddress()->getState() != "") {
+                $invoice->setCompanyAddressState($company->getBillingAddress()->getState());
+            }
             $company->addInvoice($invoice);
             $this->getManager()->persist($company);
         }
 
         $year = new \DateTime();
         $year = $year->format('Y');
+        /** @var Invoice $previousInvoice */
         $previousInvoice = $this->getManager()->getRepository(Invoice::class)->getInvoiceOfCurrentYearWithLastInvoiceNumber($year);
         $number = $previousInvoice === null ?
             (int)$year * 10000 :
@@ -329,14 +338,30 @@ class InvoiceService extends ControllerServiceBase
                     $oldCompany->removeInvoice($invoice);
                     $newCompany->addInvoice($invoice);
                     $invoice->setCompany($newCompany);
-                    $invoice->setCompanyAddress($newCompany->getAddress());
+                    $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
+                    $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
+                    $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
+                    if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
+                        $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
+                    }
+                    if ($newCompany->getBillingAddress()->getState() != null && $newCompany->getBillingAddress()->getState() != "") {
+                        $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
+                    }
                     $this->getManager()->persist($oldCompany);
                     $this->getManager()->persist($newCompany);
                 }
 
             } else {
                 $invoice->setCompany($newCompany);
-                $invoice->setCompanyAddress($newCompany->getAddress());
+                $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
+                $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
+                $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
+                if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
+                    $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
+                }
+                if ($newCompany->getBillingAddress()->getState() != null && $newCompany->getBillingAddress()->getState() != "") {
+                    $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
+                }
                 $newCompany->addInvoice($invoice);
                 $this->getManager()->persist($newCompany);
             }

@@ -65,15 +65,14 @@
                 </tr>
                 <tr>
                     <td class="height-auto">
-                        {{ invoice.company.address.streetName }} {{ invoice.company.address.addressNumber }}
-                        {% if invoice.company.address.addressNumberSuffix is not null %}
-                            {{ invoice.company.address.addressNumberSuffix }}
-                        {% endif %}
+                        {{ invoice.companyAddressStreetName ? invoice.companyAddressStreetName : "" }}
+                        {{ invoice.companyAddressStreetNumber ? invoice.companyAddressStreetNumber : "" }}
+                        {{ invoice.companyAddressStreetNumberSuffix ? invoice.companyAddressStreetNumberSuffix : "" }}
                     </td>
                 </tr>
                 <tr>
                     <td class="height-auto">
-                        {{ invoice.companyAddress ? invoice.companyAddress.postalCode : '' }} {{ invoice.companyAddress ? (invoice.companyAddress.state | upper) : '' }}
+                        {{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressState ? invoice.companyAddressState | upper : ""}}
                     </td>
                 </tr>
             </table>
@@ -123,16 +122,16 @@
                             {{ selection.date | date("d-m-Y") }}
                         </td>
                         <td class="height-auto">
-                            {{ selection.amount | number_format(2, '.', '.') }}
+                            {{ selection.amount | number_format(2, '.', ',') }}
                         </td>
                         <td class="height-auto">
-                            {{ selection.invoiceRule.priceExclVat | number_format(2, '.', '.') }}
+                            {{ selection.invoiceRule.priceExclVat | number_format(2, '.', ',') }}
                         </td>
                         <td class="height-auto">
-                            {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, '.', '.') }}
+                            {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, '.', ',') }}
                         </td>
                         <td class="height-auto">
-                            {{ selection.invoiceRule.vatPercentageRate | number_format(2, '.', '.') }}
+                            {{ selection.invoiceRule.vatPercentageRate | number_format(2, '.', ',') }}
                         </td>
                     </tr>
                 {% endfor %}
