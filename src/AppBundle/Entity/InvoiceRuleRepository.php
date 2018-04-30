@@ -31,19 +31,36 @@ class InvoiceRuleRepository extends BaseRepository
 
         if ($type != null) {
             $qb->andWhere(
-                $qb->expr()->eq("q.type", ":type")
+                $qb->expr()->andX(
+                    $qb->expr()->eq("q.type", ":type"),
+                    $qb->expr()->eq("q.isBatch", 'false')
+                )
             );
             $qb->setParameter("type", $type);
         }
 
         if ($activeOnly) {
             $qb->andWhere(
-                $qb->expr()->eq('q.isDeleted', 'false')
+                $qb->expr()->andX(
+                    $qb->expr()->eq('q.isDeleted', 'false'),
+                    $qb->expr()->eq("q.isBatch", 'false')
+                )
             );
         }
 
         return $qb->getQuery()->getResult();
     }
 
+
+    public function findBatchRules() {
+        $qb = $this->_em->createQueryBuilder();
+        $qb->select("ir")
+            ->from(InvoiceRule::class, "ir")
+            ->where(
+                $qb->expr()->eq("ir.isBatch", "true")
+            );
+
+        return $qb->getQuery()->getResult();
+    }
 
 }
