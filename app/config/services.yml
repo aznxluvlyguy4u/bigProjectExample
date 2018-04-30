@@ -351,6 +351,9 @@ services:
     AppBundle\Service\Migration\PedigreeCodeInitializer:
         parent: app.migrator.base
 
+    AppBundle\Service\Invoice\BatchInvoiceRuleInitializer:
+        parent: app.migrator.base
+
     AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator:
         parent: app.migrator.base
 
@@ -739,6 +742,9 @@ services:
             - '%kernel.root_dir%'
             - '%output_reports_to_cache_folder_for_local_testing%'
             - '%display_report_pdf_output_as_html%'
+
+    AppBundle\Service\Invoice\BatchInvoiceService:
+        parent: app.abstract_base.controller
 
     app.loss:
         parent: app.abstract_base.declare
