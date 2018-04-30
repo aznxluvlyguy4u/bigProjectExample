@@ -28,10 +28,15 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
     public function getInvoiceRules(Request $request)
     {
         $type = $request->query->get(QueryParameter::TYPE_QUERY);
+        $isBatch = $request->query->get(QueryParameter::IS_BATCH);
         $activeOnly = RequestUtil::getBooleanQuery($request,QueryParameter::ACTIVE_ONLY,false);
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
+        if ($isBatch) {
+            $rules = $this->getManager()->getRepository(InvoiceRule::class)->findBatchRules();
+            return ResultUtil::successResult($rules);
+        }
         $rules = $this->getManager()->getRepository(InvoiceRule::class)->findByType($type, $activeOnly);
         $output = $this->getBaseSerializer()->getDecodedJson($rules, JmsGroup::INVOICE_RULE);
 
