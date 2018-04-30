@@ -156,6 +156,12 @@ class InvoiceRule
         $this->invoiceRuleSelections = new ArrayCollection();
     }
 
+    function __clone()
+    {
+     $this->id = null;
+     $this->isBatch = false;
+    }
+
     /**
      * @return int
      */
