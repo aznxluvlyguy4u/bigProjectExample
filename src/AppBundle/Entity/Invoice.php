@@ -147,12 +147,39 @@ class Invoice
     private $companyVatNumber;
 
     /**
-     * @var Address $companyAddress
-     * @ORM\ManyToOne(targetEntity="Address")
-     * @ORM\JoinColumn(name="company_address_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Address")
+     * @var string $companyAddressStreetName
+     * @ORM\Column(name="company_address_street_name", nullable=true)
+     * @JMS\Type("String")
      */
-    private $companyAddress;
+    private $companyAddressStreetName;
+
+    /**
+     * @var int $companyAddressStreetNumber
+     * @ORM\Column(name="company_address_street_number", type="integer", nullable=true)
+     * @JMS\Type("Integer")
+     */
+    private $companyAddressStreetNumber;
+
+    /**
+     * @var string $companyAddressStreetName
+     * @ORM\Column(name="company_address_postal_code", nullable=true)
+     * @JMS\Type("String")
+     */
+    private $companyAddressPostalCode;
+
+    /**
+     * @var string $companyAddressStreetName
+     * @ORM\Column(name="company_address_street_number_suffix", nullable=true)
+     * @JMS\Type("String")
+     */
+    private $companyAddressStreetNumberSuffix;
+
+    /**
+     * @var string
+     * @ORM\Column(name="company_address_state", nullable=true)
+     * @JMS\Type("String")
+     */
+    private $companyAddressState;
 
     /**
      * @var string
@@ -366,22 +393,6 @@ class Invoice
     }
 
     /**
-     * @return Address
-     */
-    public function getCompanyAddress()
-    {
-        return $this->companyAddress;
-    }
-
-    /**
-     * @param Address $companyAddress
-     */
-    public function setCompanyAddress($companyAddress)
-    {
-        $this->companyAddress = $companyAddress;
-    }
-
-    /**
      * @param InvoiceRuleSelection $invoiceRuleSelection
      * @return Invoice
      */
@@ -589,6 +600,86 @@ class Invoice
     public function setIsBatch($isBatch)
     {
         $this->isBatch = $isBatch;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressStreetName()
+    {
+        return $this->companyAddressStreetName;
+    }
+
+    /**
+     * @param string $companyAddressStreetName
+     */
+    public function setCompanyAddressStreetName($companyAddressStreetName)
+    {
+        $this->companyAddressStreetName = $companyAddressStreetName;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCompanyAddressStreetNumber()
+    {
+        return $this->companyAddressStreetNumber;
+    }
+
+    /**
+     * @param int $companyAddressStreetNumber
+     */
+    public function setCompanyAddressStreetNumber($companyAddressStreetNumber)
+    {
+        $this->companyAddressStreetNumber = $companyAddressStreetNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressPostalCode()
+    {
+        return $this->companyAddressPostalCode;
+    }
+
+    /**
+     * @param string $companyAddressPostalCode
+     */
+    public function setCompanyAddressPostalCode($companyAddressPostalCode)
+    {
+        $this->companyAddressPostalCode = $companyAddressPostalCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressStreetNumberSuffix()
+    {
+        return $this->companyAddressStreetNumberSuffix;
+    }
+
+    /**
+     * @param string $companyAddressStreetNumberSuffix
+     */
+    public function setCompanyAddressStreetNumberSuffix($companyAddressStreetNumberSuffix)
+    {
+        $this->companyAddressStreetNumberSuffix = $companyAddressStreetNumberSuffix;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressState()
+    {
+        return $this->companyAddressState;
+    }
+
+    /**
+     * @param string $companyAddressState
+     */
+    public function setCompanyAddressState($companyAddressState)
+    {
+        $this->companyAddressState = $companyAddressState;
     }
 
     public function copyValues(Invoice $invoice){
