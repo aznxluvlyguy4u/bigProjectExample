@@ -84,12 +84,12 @@
                 <tr class="only-bottom-border">
                     <th scope="col" class="align-left">
                         <b>
-                            Artikelomschrijving
+                            Datum
                         </b>
                     </th>
                     <th scope="col" class="align-left">
                         <b>
-                            Datum
+                            Artikelomschrijving
                         </b>
                     </th>
                     <th scope="col" class="align-left">
@@ -116,10 +116,10 @@
                 {% for selection in invoice.invoiceRuleSelections %}
                     <tr>
                         <td class="height-auto">
-                            {{ selection.invoiceRule.description }}
+                            {{ selection.date | date("d-m-Y") }}
                         </td>
                         <td class="height-auto">
-                            {{ selection.date | date("d-m-Y") }}
+                            {{ selection.invoiceRule.description }}
                         </td>
                         <td class="height-auto">
                             {{ selection.amount | number_format(2, '.', ',') }}
