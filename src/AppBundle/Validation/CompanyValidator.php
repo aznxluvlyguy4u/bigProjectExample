@@ -40,8 +40,18 @@ class CompanyValidator extends BaseValidator
     {
         //First check if topLevel ArrayKeys exist
         $areTopLevelArrayKeysMissing = false;
-        $topLevelArrayKeys = ['owner', 'unpaid_invoices', 'billing_address', 'locations', 'deleted_locations',
-        'users', 'deleted_users', 'pedigrees', 'company_name', 'animal_health_subscription', 'subscription_date'];
+        $topLevelArrayKeys = [
+            'owner',
+            'unpaid_invoices',
+            'billing_address',
+            'locations',
+            'deleted_locations',
+            'users',
+            'deleted_users',
+            'company_name',
+            'animal_health_subscription',
+            'subscription_date'
+        ];
         foreach ($topLevelArrayKeys as $topLevelArrayKey) {
             if(!$this->content->containsKey($topLevelArrayKey)) {
                 $this->errors[] = "The arrayKey '".$topLevelArrayKey."' is missing";
