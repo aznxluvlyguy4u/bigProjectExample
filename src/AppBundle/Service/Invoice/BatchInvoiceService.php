@@ -1,0 +1,303 @@
+<?php
+
+
+namespace AppBundle\Service\Invoice;
+
+
+use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Entity\Address;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
+use AppBundle\Entity\Invoice;
+use AppBundle\Entity\InvoiceRule;
+use AppBundle\Entity\InvoiceRuleSelection;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Enumerator\EmailPrefix;
+use AppBundle\Enumerator\InvoiceRuleType;
+use AppBundle\Service\ControllerServiceBase;
+use AppBundle\Util\ResultUtil;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
+use Symfony\Component\HttpFoundation\Request;
+
+
+class BatchInvoiceService extends ControllerServiceBase
+{
+    private $invoiceNumber;
+
+    const ONLINE_EWE_TYPE = "AdministrationOnlineEwe";
+    const OFFLINE_EWE_TYPE = "AdministrationOfflineEwe";
+    const BASE_ADMINISTRATION = "";
+
+    public function createBatchInvoices(Request $request) {
+        $companies = $this->getManager()->getRepository(Company::class)->findBy(array("isActive" => true));
+        $requestJson = $request->getContent();
+        $requestJson = json_decode($requestJson, true);
+        $date = $requestJson["controlDate"];
+        $date = new \DateTime($date);
+        $animalsByCompanyResult = $this->getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate($date);
+        $registerCounts = $this->setupAnimalDataByCompanyLocation($companies, $animalsByCompanyResult);
+        $rules = new ArrayCollection($this->getManager()->getRepository(InvoiceRule::class)->findBy(array("isBatch" => true)));
+        $newRules = $this->createRuleCopiesForBatch($rules, $date);
+        $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date);
+        $this->getManager()->flush();
+        return ResultUtil::successResult($invoices);
+    }
+
+    /**
+     * @param ArrayCollection $originalRules
+     * @param \DateTime $controlDate
+     * @return ArrayCollection
+     */
+    private function createRuleCopiesForBatch(ArrayCollection $originalRules, $controlDate) {
+        $registers = $this->getManager()->getRepository(PedigreeRegister::class)->findAll();
+        $newRules = new ArrayCollection();
+        foreach ($originalRules as $rule) {
+            /** @var InvoiceRule $newRule */
+            $newRule = clone $rule;
+            if ($newRule->getType() == InvoiceRuleType::BASE_ADMINISTRATION) {
+                $newRules->add($newRule);
+                $this->getManager()->persist($newRule);
+                continue;
+            }
+
+            if ($newRule->getType() == InvoiceRuleType::ADMINISTRATION_ONLINE_EWE || $newRule->getType() == InvoiceRuleType::ADMINISTRATION_OFFLINE_EWE) {
+                /** @var PedigreeRegister $register */
+                foreach ($registers as $register) {
+                    $registerRule = clone $newRule;
+                    $registerDescription = $registerRule->getDescription()." - ".$register->getAbbreviation()." - ".$controlDate->format("d-m-Y");
+                    $registerRule->setDescription($registerDescription);
+                    $this->getManager()->persist($registerRule);
+                    $newRules->add($registerRule);
+                }
+                continue;
+            }
+            if ($newRule->getType() == InvoiceRuleType::SUBSCRIPTION_NSFO_ONLINE || $newRule->getType() == InvoiceRuleType::SUBSCRIPTION_ANIMAL_HEALTH) {
+                $newRule->setDescription($newRule->getDescription()." - ".$controlDate->format("Y"));
+                $this->getManager()->persist($newRule);
+                $newRules->add($newRule);
+                continue;
+            }
+        }
+        $this->getManager()->flush();
+        return $newRules;
+    }
+
+    private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date){
+        $this->createInvoiceNumber();
+        $invoices = array();
+        /** @var Company $company */
+        foreach ($companies as $company) {
+            if (array_key_exists($company->getId(), $animalData)) {
+                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $animalData[$company->getId()]);
+            } else {
+                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date);
+            }
+            if (sizeof($invoiceSet) > 0) {
+                foreach ($invoiceSet as $invoice) {
+                    $invoices[] = $invoice;
+                }
+            }
+        }
+
+        return $invoices;
+    }
+
+    private function setupAnimalDataByCompanyLocation(array $companies,array $animalData){
+        $animalCountsByRegister = array();
+        /** @var Company $company */
+        foreach ($companies as $company) {
+            if (!array_key_exists($company->getId(), $animalData)) {
+                continue;
+            }
+            $administration = $animalData[$company->getId()];
+            foreach ($administration as $locationRegister) {
+                if (isset($animalCountsByRegister[$company->getId()][$locationRegister["location_id"]][$locationRegister["abbreviation"]])) {
+                    $animalCountsByRegister[$company->getId()][$locationRegister["location_id"]][$locationRegister["abbreviation"]] += $locationRegister["animal_count"];
+                    continue;
+                }
+                $animalCountsByRegister[$company->getId()][$locationRegister["location_id"]][$locationRegister["abbreviation"]] = $locationRegister["animal_count"];
+            }
+        }
+        return $animalCountsByRegister;
+    }
+
+    private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, array $data = null) {
+        $invoiceSet = array();
+        /** @var Location $location */
+        foreach ($company->getLocations() as $location) {
+            $invoice = new Invoice();
+            $invoice->setIsBatch(true);
+            $this->setAddressProperties($invoice, $company->getBillingAddress());
+            $invoice->setStatus("UNPAID");
+            $invoice->setInvoiceDate(new \DateTime());
+            $invoice->setCompanyDebtorNumber($company->getDebtorNumber());
+            $invoice->setCompanyLocalId($company->getCompanyId());
+            $invoice->setCompanyName($company->getCompanyName());
+            $invoice->setUbn($location->getUbn());
+            $invoice->setCompany($company);
+            $invoice->setCompanyVatNumber($company->getVatNumber());
+            $invoice->setInvoiceNumber($this->invoiceNumber);
+            if ($data && array_key_exists($location->getId(), $data)) {
+                $dataSet = $data[$location->getId()];
+                $this->addAnimalDataInvoiceRulesToInvoice($invoice, $company, $dataSet, $batchRules, $date);
+            }
+            if ($company->getAnimalHealthSubscription() != null && $company->getAnimalHealthSubscription()) {
+                $this->addAnimalHealthSubscriptionInvoiceRule($invoice, $batchRules, $date);
+            }
+            $breakdown = $invoice->getVatBreakdownRecords();
+            if ($breakdown->getTotalExclVat() != 0) {
+                $invoiceSet[] = $invoice;
+                $this->invoiceNumber++;
+//                $this->getManager()->persist($invoice);
+            }
+        }
+        return $invoiceSet;
+    }
+
+    private function setAddressProperties(Invoice $invoice, Address $address) {
+        $address->getState() != null && $address->getState() != "" ?
+            $invoice->setCompanyAddressState($address->getState()) : null;
+
+        $address->getAddressNumberSuffix() != null && $address->getAddressNumberSuffix() != "" ?
+            $invoice->setCompanyAddressStreetNumberSuffix($address->getAddressNumberSuffix()) : null;
+
+        $invoice->setCompanyAddressStreetNumber($address->getAddressNumber());
+        $invoice->setCompanyAddressStreetName($address->getStreetName());
+        $invoice->setCompanyAddressPostalCode($address->getPostalCode());
+    }
+
+    private function addNSFOOnlineSubscriptionInvoiceRule(Invoice $invoice, array $dataSet, ArrayCollection $batchRules, \DateTime $date) {
+        $selection = new InvoiceRuleSelection();
+        /** @var InvoiceRule $newRule */
+        $newRule = $this->getRulesByType($batchRules, InvoiceRuleType::SUBSCRIPTION_NSFO_ONLINE)->first();
+        $selection->setInvoice($invoice);
+        $selection->setInvoiceRule($newRule);
+        $selection->setAmount(1);
+        $selection->setDate($date);
+    }
+
+    private function addAnimalHealthSubscriptionInvoiceRule(Invoice $invoice, ArrayCollection $batchRules, \DateTime $date){
+        $selection = new InvoiceRuleSelection();
+        /** @var InvoiceRule $newRule */
+        $newRule = $this->getRulesByType($batchRules, InvoiceRuleType::SUBSCRIPTION_ANIMAL_HEALTH)->first();
+        $selection->setInvoice($invoice);
+        $selection->setInvoiceRule($newRule);
+        $selection->setDate($date);
+        $selection->setAmount(1);
+        $invoice->addInvoiceRuleSelection($selection);
+    }
+
+    private function createInvoiceNumber() {
+        $year = new \DateTime();
+        $year = $year->format('Y');
+        /** @var Invoice $previousInvoice */
+        $previousInvoice = $this->getManager()->getRepository(Invoice::class)->getInvoiceOfCurrentYearWithLastInvoiceNumber($year);
+        $number = $previousInvoice === null ?
+            (int)$year * 10000 :
+            (int)$previousInvoice->getInvoiceNumber() + 1
+        ;
+       $this->invoiceNumber = $number;
+    }
+
+    private function addAnimalDataInvoiceRulesToInvoice(Invoice $invoice,  Company $company, array $dataSet, ArrayCollection $batchRules, \DateTime $date) {
+        $selection = new InvoiceRuleSelection();
+        $rule = $this->getRulesByType($batchRules, InvoiceRuleType::BASE_ADMINISTRATION);
+        $selection->setInvoiceRule($rule->first());
+        $selection->setInvoice($invoice);
+        $selection->setAmount(sizeof($dataSet));
+        $selection->setDate($date);
+        $invoice->addInvoiceRuleSelection($selection);
+        if ($this->hasLegitimateAccount($company)) {
+            $this->addNSFOOnlineSubscriptionInvoiceRule($invoice, $dataSet, $batchRules, $date);
+            $rules = $this->getRulesByType($batchRules, InvoiceRuleType::ADMINISTRATION_ONLINE_EWE);
+        } else {
+            $rules = $this->getRulesByType($batchRules, InvoiceRuleType::ADMINISTRATION_OFFLINE_EWE);
+        }
+        foreach ($dataSet as $animalRegisterAbbreviation => $animalRegisterCount) {
+            /** @var InvoiceRule $registerRule */
+            $abbreviationDate = $animalRegisterAbbreviation." - ".$date->format("d-m-Y");
+            /** @var InvoiceRule $batchRule */
+            $batchRule = $this->getRulesByDescription($rules, $abbreviationDate)->first();
+            $selection = new InvoiceRuleSelection();
+            $selection->setInvoice($invoice);
+            $selection->setInvoiceRule($batchRule);
+            $selection->setAmount($animalRegisterCount);
+            $selection->setDate($date);
+            $invoice->addInvoiceRuleSelection($selection);
+        }
+    }
+
+    /**
+     * @param Company $company
+     * @return bool
+     */
+    private function hasLegitimateAccount(Company $company) {
+        $clients = $this->getManager()->getRepository(Client::class)->findBy(array("employer" => $company));
+        $validClients = new ArrayCollection();
+        /** @var Client $client */
+        foreach ($clients as $client) {
+            if (substr($client->getEmailAddress(), 0, 8) != EmailPrefix::INVALID_PREFIX) {
+                $validClients->add($client);
+            }
+        }
+        if ($validClients->count() >= 1) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param ArrayCollection $rules
+     * @param string $type
+     * @return ArrayCollection
+     */
+    private function getRulesByType(ArrayCollection $rules, $type) {
+        $criteria = Criteria::create()->where(
+            Criteria::expr()->eq("type", $type)
+        );
+        return $rules->matching($criteria);
+    }
+
+    private function getRulesByDescription(ArrayCollection $rules, $abbreviationDate) {
+        $criteria = Criteria::create()->where(
+            Criteria::expr()->contains("description", $abbreviationDate)
+        );
+        return $rules->matching($criteria);
+    }
+
+    private function getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate(\DateTime $controlDate) {
+        $dateString = $controlDate->format('d-m-Y H:i:s');
+        $sql = "SELECT
+  g.company_id as company_id,
+  g.id as location_id,
+  pr.abbreviation,
+  g.count as animal_count
+FROM pedigree_register pr
+  INNER JOIN (
+               SELECT l.id, l.company_id, prr.pedigree_register_id, COUNT(a.id) FROM location l
+                 INNER JOIN
+                            (
+                              SELECT prr.location_id, prr.pedigree_register_id FROM pedigree_register_registration prr
+                              WHERE
+                                (
+                                  ( prr.is_active = TRUE  AND prr.end_date ISNULL AND prr.start_date ISNULL)
+                                  OR (prr.start_date <= '$dateString' AND prr.end_date ISNULL)
+                                  OR ('$dateString' BETWEEN prr.start_date AND prr.end_date)
+                                )
+                            )prr ON prr.location_id = l.id
+                 INNER JOIN (
+                              SELECT ar.animal_id, ar.location_id FROM animal_residence ar
+                              WHERE (('$dateString' BETWEEN ar.start_date AND ar.end_date)
+                                     OR (ar.start_date <= '$dateString' AND ar.end_date ISNULL))
+                              GROUP BY animal_id, location_id
+                            ) AS ar ON ar.location_id = l.id
+                 INNER JOIN animal a ON a.pedigree_register_id = prr.pedigree_register_id AND ar.animal_id = a.id
+               GROUP BY l.company_id, l.id ,prr.pedigree_register_id
+             )g ON g.pedigree_register_id = pr.id
+ORDER BY company_id";
+
+        return $this->getManager()->getConnection()->query($sql)->fetchAll(\PDO::FETCH_GROUP);
+    }
+}
