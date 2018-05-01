@@ -6,5 +6,9 @@ namespace AppBundle\Enumerator;
 
 class InvoiceAction
 {
-
+    const NEW_INVOICE = "INVOICE_CREATED";
+    const INVOICE_SEND = "INVOICE_SEND_TO_RECEIVER";
+    const INVOICE_PAID_MOLLIE = "INVOICE_PAID_THROUGH_MOLLIE";
+    const INVOICE_PAID_ADMIN = "INVOICE_SET_PAID_BY_ADMIN";
+    const BATCH_INVOICES_SEND = "SEND_BATCH_OF_INVOICES";
 }
