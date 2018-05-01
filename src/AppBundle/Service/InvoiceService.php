@@ -36,6 +36,7 @@ use Symfony\Component\Translation\TranslatorInterface;
 class InvoiceService extends ControllerServiceBase
 {
     const TWIG_FILE = "Invoice/invoice.html.twig";
+    const FOOTER_FILE = "Invoice/_footer.html.twig";
 
     /** @var array */
     private $ledgerCategoriesById;
@@ -156,7 +157,7 @@ class InvoiceService extends ControllerServiceBase
                     break;
             }
         }
-        return $this->invoicePdfGeneratorService->getInvoicePdfBase(self::TWIG_FILE, $invoice);
+        return $this->invoicePdfGeneratorService->getInvoicePdfBase(self::TWIG_FILE, self::FOOTER_FILE, $invoice);
     }
 
     /**
