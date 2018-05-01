@@ -24,10 +24,10 @@
 </head>
 <body>
 <span class="contact-info-text">
-    NSFO <span class="green-divider">|</span> Postbus 160 <span class="green-divider">|</span> 5300 AD Zaltbommel <span class="green-divider">|</span>  Telefoon:0418-561712 <span class="green-divider">|</span> Fax:0418-561194 <span class="green-divider">|</span> Email:kantoor@nsfo.nl <span class="green-divider">|</span> Internet: www.nsfo-online.nl
+    {{ details.name }} <span class="green-divider">|</span> Postbus 160 <span class="green-divider">|</span> {{ details.address.postalCode }} {{ details.address.city }} <span class="green-divider">|</span>  Telefoon:0418-561712 <span class="green-divider">|</span> Fax:0418-561194 <span class="green-divider">|</span> Email:kantoor@nsfo.nl <span class="green-divider">|</span> Internet: www.nsfo-online.nl
 </span>
 <span class="contact-info-text bottom-margin">
-Rabobank 32.80.03.085 <span class="green-divider">|</span> K.v.K. 08108352 <span class="green-divider">|</span> VAT NL 811241610B1 <span class="green-divider">|</span> BIC RABONL2U <span class="green-divider">|</span> IBAN NL51RABO0328003085 <span class="green-divider">|</span> BTW nummer NL8112.41.610.B01
+Rabobank 32.80.03.085 <span class="green-divider">|</span> K.v.K. {{ details.chamberOfCommerceNumber }} <span class="green-divider">|</span> BIC RABONL2U <span class="green-divider">|</span> IBAN {{ details.iban }} <span class="green-divider">|</span> BTW nummer {{ details.vatNumber }}
 </span>
 </body>
 </html>
