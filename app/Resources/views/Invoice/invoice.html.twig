@@ -31,7 +31,7 @@
                 <tbody>
                 <tr>
                     <td class="height-auto">
-                        Factuur nummer:
+                        Factuurnummer:
                     </td>
                     <td class="height-auto">
                         {{ invoice.invoiceNumber }}
@@ -47,7 +47,7 @@
                 </tr>
                 <tr>
                     <td class="height-auto">
-                        Debiteur nummer:
+                        Debiteurnummer:
                     </td>
                     <td class="height-auto">
                         {{ invoice.companyDebtorNumber }}
@@ -72,7 +72,7 @@
                 </tr>
                 <tr>
                     <td class="height-auto">
-                        {{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressState ? invoice.companyAddressState | upper : ""}}
+                        {{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressState ? invoice.companyAddressState | upper : ""}} {{ invoice.companyAddressCountry ? invoice.companyAddressCountry | upper : "" }}
                     </td>
                 </tr>
             </table>
