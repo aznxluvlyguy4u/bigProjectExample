@@ -114,7 +114,7 @@ class InvoiceService extends ControllerServiceBase
     {
         /** @var Invoice $invoice */
         $invoice = $this->getManager()->getRepository(Invoice::class)->find($id);
-        if ($invoice->getCompanyAddressState()) {
+        if ($invoice->getCompanyAddressState() && $invoice->getCompanyAddressCountry()) {
             switch ($invoice->getCompanyAddressState()) {
                 case "DR":
                     $invoice->setCompanyAddressState("Drenthe");
@@ -234,6 +234,7 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setCompanyAddressStreetName($company->getBillingAddress()->getStreetName());
             $invoice->setCompanyAddressStreetNumber($company->getBillingAddress()->getAddressNumber());
             $invoice->setCompanyAddressPostalCode($company->getBillingAddress()->getPostalCode());
+            $invoice->setCompanyAddressCountry($company->getBillingAddress()->getCountry());
             if ($company->getBillingAddress()->getAddressNumberSuffix() != null && $company->getBillingAddress()->getAddressNumberSuffix() != "") {
                 $invoice->setCompanyAddressStreetNumberSuffix($company->getBillingAddress()->getAddressNumberSuffix());
             }
@@ -341,6 +342,7 @@ class InvoiceService extends ControllerServiceBase
                     $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
                     $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
                     $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
+                    $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
                     if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
                         $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
                     }
@@ -356,6 +358,7 @@ class InvoiceService extends ControllerServiceBase
                 $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
                 $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
                 $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
+                $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
                 if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
                     $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
                 }
