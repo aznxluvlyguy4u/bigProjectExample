@@ -315,6 +315,7 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
                       $fertilizerCategory as $fertilizerCategoryLabel,
                       COUNT(a.id) as $animalCountLabel
                     FROM animal a
+                      INNER JOIN view_animal_livestock_overview_details va ON a.id = va.animal_id
                       LEFT JOIN (
                                   SELECT
                                     r.animal_id,
@@ -359,14 +360,6 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
                                        )open_residence
                                     INNER JOIN animal_residence r ON r.id = open_residence.max_id
                                 )open_residence ON open_residence.animal_id = a.id
-                      LEFT JOIN (
-                        SELECT
-                          mom.id,
-                          COUNT(mom.id) > 0 as has_children_as_mom
-                        FROM animal mom
-                          INNER JOIN animal child ON child.parent_mother_id = mom.id
-                        GROUP BY mom.id
-                        )child_status ON child_status.id = a.id
                     WHERE (open_residence.animal_id NOTNULL OR closed_residence.animal_id NOTNULL)
       AND
       ".$this->fertilizerCategoryQueryFilter($referenceDateString, $fertilizerCategory);
@@ -388,7 +381,7 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             case FertilizerCategory::_550:
                 return "--Animal Category 550: Animals for milk and meat production
                         (
-                         (a.gender = 'FEMALE' AND child_status.has_children_as_mom) OR
+                         (a.gender = 'FEMALE' AND va.has_children_as_mom) OR
                          (a.ubn_of_birth = '$ubn' AND
                           EXTRACT(YEAR FROM AGE('$referenceDateString', a.date_of_birth)) * 12 +
                           EXTRACT(MONTH FROM AGE('$referenceDateString', a.date_of_birth)) <= 4 --age in months on reference_date
