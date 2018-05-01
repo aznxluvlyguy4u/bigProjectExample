@@ -84,6 +84,10 @@ class ResultUtil
     public static function errorResultByException(\Exception $exception)
     {
         $errorCode = $exception->getCode() === 0 ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
+        if ($errorCode === Response::HTTP_INTERNAL_SERVER_ERROR) {
+            // hide exception details, for security reasons
+            return self::internalServerError();
+        }
         return ResultUtil::errorResult($exception->getMessage(), $errorCode);
     }
 
