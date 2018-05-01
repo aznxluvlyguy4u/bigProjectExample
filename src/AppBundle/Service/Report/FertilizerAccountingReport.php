@@ -57,8 +57,7 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
 
             ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 
-            $sql = $this->getHistoricLiveStockCountsByFertilizerCategoryQuery($referenceDate);
-            $historicLiveStockCountsByFertilizerCategory = $this->em->getConnection()->query($sql)->fetchAll();
+            $historicLiveStockCountsByFertilizerCategory = $this->getHistoricLiveStockCountsByFertilizerCategory($referenceDate);
 
             $totalResults = $this->yearlyAveragesWithFertilizerOutput($historicLiveStockCountsByFertilizerCategory);
             $this->retrieveNewestAndOldestReferenceDate($historicLiveStockCountsByFertilizerCategory);
@@ -77,6 +76,40 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             return ResultUtil::errorResultByException($exception);
         }
 
+    }
+
+
+    /**
+     * @param \DateTime $referenceDate
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
+     */
+    private function getHistoricLiveStockCountsByFertilizerCategory(\DateTime $referenceDate)
+    {
+        $historicLiveStockCountsByFertilizerCategory = [];
+
+        $referenceDate = DateUtil::getFirstDateOfGivenDateTime($referenceDate);
+
+        for($i = 0; $i < 12; $i++)
+        {
+            $referenceDateString = $referenceDate->format('Y-m-d');
+
+            foreach(
+                [
+                    FertilizerCategory::_550,
+                    FertilizerCategory::_551,
+                    FertilizerCategory::_552
+                ] as $fertilizerCategory)
+            {
+                $sql = $this->getHistoricLiveStockCountsByFertilizerCategoryQueryBase($referenceDateString, $fertilizerCategory);
+                $historicLiveStockCountsByFertilizerCategory[] = $this->em->getConnection()->query($sql)->fetch();
+            }
+
+            $referenceDate = DateUtil::addMonths($referenceDate, -1);
+        }
+
+        return $historicLiveStockCountsByFertilizerCategory;
     }
 
 
