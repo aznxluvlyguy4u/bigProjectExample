@@ -27,7 +27,7 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
 
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 10;
+    const PROCESS_TIME_LIMIT_IN_MINUTES = 20;
 
     const ANIMAL_COUNT_DECIMAL_PRECISION = 2;
     const NITROGEN_DECIMAL_PRECISION = 2;
