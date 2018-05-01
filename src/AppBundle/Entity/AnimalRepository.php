@@ -2132,4 +2132,37 @@ class AnimalRepository extends BaseRepository
 
         return $this->getConnection()->query($sql)->fetchAll();
     }
+
+    public function getAnimalCountsByCompanyLocationPedigreeRegisterOnControlDate($controlDateString) {
+        $sql = "SELECT
+  g.company_id as company_id,
+  g.id as location_id,
+  pr.abbreviation,
+  g.count as animal_count
+FROM pedigree_register pr
+  INNER JOIN (
+               SELECT l.id, l.company_id, prr.pedigree_register_id, COUNT(a.id) FROM location l
+                 INNER JOIN
+                            (
+                              SELECT prr.location_id, prr.pedigree_register_id FROM pedigree_register_registration prr
+                              WHERE
+                                (
+                                  ( prr.is_active = TRUE  AND prr.end_date ISNULL AND prr.start_date ISNULL)
+                                  OR (prr.start_date <= '$controlDateString' AND prr.end_date ISNULL)
+                                  OR ('$controlDateString' BETWEEN prr.start_date AND prr.end_date)
+                                )
+                            )prr ON prr.location_id = l.id
+                 INNER JOIN (
+                              SELECT ar.animal_id, ar.location_id FROM animal_residence ar
+                              WHERE (('$controlDateString' BETWEEN ar.start_date AND ar.end_date)
+                                     OR (ar.start_date <= '$controlDateString' AND ar.end_date ISNULL))
+                              GROUP BY animal_id, location_id
+                            ) AS ar ON ar.location_id = l.id
+                 INNER JOIN animal a ON a.pedigree_register_id = prr.pedigree_register_id AND ar.animal_id = a.id
+               GROUP BY l.company_id, l.id ,prr.pedigree_register_id
+             )g ON g.pedigree_register_id = pr.id
+ORDER BY company_id";
+
+        return $this->getManager()->getConnection()->query($sql)->fetchAll(\PDO::FETCH_GROUP);
+    }
 }

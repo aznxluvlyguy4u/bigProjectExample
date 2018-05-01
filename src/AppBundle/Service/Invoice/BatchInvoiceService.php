@@ -5,7 +5,9 @@ namespace AppBundle\Service\Invoice;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Address;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
@@ -14,6 +16,7 @@ use AppBundle\Entity\InvoiceRuleSelection;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\EmailPrefix;
+use AppBundle\Enumerator\InvoiceAction;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Service\ControllerServiceBase;
 use AppBundle\Util\ResultUtil;
@@ -41,7 +44,9 @@ class BatchInvoiceService extends ControllerServiceBase
         $rules = new ArrayCollection($this->getManager()->getRepository(InvoiceRule::class)->findBy(array("isBatch" => true)));
         $newRules = $this->createRuleCopiesForBatch($rules, $date);
         $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date);
-        $this->getManager()->flush();
+        $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::BATCH_INVOICES_SEND);
+        $this->getManager()->persist($log);
+        //$this->getManager()->flush();
         return ResultUtil::successResult($invoices);
     }
 
@@ -80,7 +85,6 @@ class BatchInvoiceService extends ControllerServiceBase
                 continue;
             }
         }
-        $this->getManager()->flush();
         return $newRules;
     }
 
@@ -269,35 +273,7 @@ class BatchInvoiceService extends ControllerServiceBase
 
     private function getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate(\DateTime $controlDate) {
         $dateString = $controlDate->format('d-m-Y H:i:s');
-        $sql = "SELECT
-  g.company_id as company_id,
-  g.id as location_id,
-  pr.abbreviation,
-  g.count as animal_count
-FROM pedigree_register pr
-  INNER JOIN (
-               SELECT l.id, l.company_id, prr.pedigree_register_id, COUNT(a.id) FROM location l
-                 INNER JOIN
-                            (
-                              SELECT prr.location_id, prr.pedigree_register_id FROM pedigree_register_registration prr
-                              WHERE
-                                (
-                                  ( prr.is_active = TRUE  AND prr.end_date ISNULL AND prr.start_date ISNULL)
-                                  OR (prr.start_date <= '$dateString' AND prr.end_date ISNULL)
-                                  OR ('$dateString' BETWEEN prr.start_date AND prr.end_date)
-                                )
-                            )prr ON prr.location_id = l.id
-                 INNER JOIN (
-                              SELECT ar.animal_id, ar.location_id FROM animal_residence ar
-                              WHERE (('$dateString' BETWEEN ar.start_date AND ar.end_date)
-                                     OR (ar.start_date <= '$dateString' AND ar.end_date ISNULL))
-                              GROUP BY animal_id, location_id
-                            ) AS ar ON ar.location_id = l.id
-                 INNER JOIN animal a ON a.pedigree_register_id = prr.pedigree_register_id AND ar.animal_id = a.id
-               GROUP BY l.company_id, l.id ,prr.pedigree_register_id
-             )g ON g.pedigree_register_id = pr.id
-ORDER BY company_id";
-
-        return $this->getManager()->getConnection()->query($sql)->fetchAll(\PDO::FETCH_GROUP);
+        return $this->getManager()->getRepository(Animal::class)
+            ->getAnimalCountsByCompanyLocationPedigreeRegisterOnControlDate($dateString);
     }
 }
