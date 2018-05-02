@@ -13,6 +13,7 @@ use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceRuleSelection;
+use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\EmailPrefix;
@@ -129,9 +130,14 @@ class BatchInvoiceService extends ControllerServiceBase
 
     private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, array $data = null) {
         $invoiceSet = array();
+
+        $details = $this->getManager()->getRepository(InvoiceSenderDetails::class)->findBy(array(), array("id" => "DESC"),1);
+        $details = $details[0];
+
         /** @var Location $location */
         foreach ($company->getLocations() as $location) {
             $invoice = new Invoice();
+            $invoice->setSenderDetails($details);
             $invoice->setIsBatch(true);
             $this->setAddressProperties($invoice, $company->getBillingAddress());
             $invoice->setStatus("UNPAID");
