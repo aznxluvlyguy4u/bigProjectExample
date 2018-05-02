@@ -160,7 +160,7 @@ class BatchInvoiceService extends ControllerServiceBase
             if ($breakdown->getTotalExclVat() != 0) {
                 $invoiceSet[] = $invoice;
                 $this->invoiceNumber++;
-//                $this->getManager()->persist($invoice);
+                $this->getManager()->persist($invoice);
             }
         }
         return $invoiceSet;
