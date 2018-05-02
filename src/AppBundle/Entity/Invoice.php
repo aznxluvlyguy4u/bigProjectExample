@@ -149,30 +149,37 @@ class Invoice
     /**
      * @var string $companyAddressStreetName
      * @ORM\Column(name="company_address_street_name", nullable=true)
-     * @JMS\Type("String")
+     * @JMS\Type("string")
      */
     private $companyAddressStreetName;
 
     /**
      * @var int $companyAddressStreetNumber
      * @ORM\Column(name="company_address_street_number", type="integer", nullable=true)
-     * @JMS\Type("Integer")
+     * @JMS\Type("integer")
      */
     private $companyAddressStreetNumber;
 
     /**
      * @var string $companyAddressStreetName
      * @ORM\Column(name="company_address_postal_code", nullable=true)
-     * @JMS\Type("String")
+     * @JMS\Type("string")
      */
     private $companyAddressPostalCode;
 
     /**
      * @var string $companyAddressStreetName
      * @ORM\Column(name="company_address_street_number_suffix", nullable=true)
-     * @JMS\Type("String")
+     * @JMS\Type("string")
      */
     private $companyAddressStreetNumberSuffix;
+
+    /**
+     * @var string $companyAddressCountry
+     * @ORM\Column(name="company_address_country", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $companyAddressCountry;
 
     /**
      * @var string
@@ -680,6 +687,22 @@ class Invoice
     public function setCompanyAddressState($companyAddressState)
     {
         $this->companyAddressState = $companyAddressState;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressCountry()
+    {
+        return $this->companyAddressCountry;
+    }
+
+    /**
+     * @param string $companyAddressCountry
+     */
+    public function setCompanyAddressCountry($companyAddressCountry)
+    {
+        $this->companyAddressCountry = $companyAddressCountry;
     }
 
     public function copyValues(Invoice $invoice){
