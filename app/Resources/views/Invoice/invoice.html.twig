@@ -11,7 +11,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-6 offset-6">
-            <img src="file://{{ rootDirectory }}/assets/images/nsfo-logo.png" class="img-fluid" alt="">
+            <img src="file://{{ rootDirectory }}/assets/images/nsfo-logo.png" class="img-fluid header-image" alt="">
         </div>
     </div>
     <div class="row">
@@ -92,22 +92,22 @@
                             Datum
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             Aantal
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             Stuksprijs
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             Totaalprijs
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             BTW
                         </b>
@@ -121,16 +121,16 @@
                         <td class="height-auto">
                             {{ selection.date | date("d-m-Y") }}
                         </td>
-                        <td class="height-auto">
+                        <td class="height-auto align-right">
                             {{ selection.amount | number_format(2, '.', ',') }}
                         </td>
-                        <td class="height-auto">
+                        <td class="height-auto align-right">
                             {{ selection.invoiceRule.priceExclVat | number_format(2, '.', ',') }}
                         </td>
-                        <td class="height-auto">
+                        <td class="height-auto align-right">
                             {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, '.', ',') }}
                         </td>
-                        <td class="height-auto">
+                        <td class="height-auto align-right">
                             {{ selection.invoiceRule.vatPercentageRate | number_format(2, '.', ',') }}
                         </td>
                     </tr>
