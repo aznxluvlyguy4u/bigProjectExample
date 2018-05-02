@@ -115,7 +115,7 @@ class InvoiceService extends ControllerServiceBase
     {
         /** @var Invoice $invoice */
         $invoice = $this->getManager()->getRepository(Invoice::class)->find($id);
-        if ($invoice->getCompanyAddressState() && $invoice->getCompanyAddressCountry()) {
+        if ($invoice->getCompanyAddressState() && $invoice->getCompanyAddressCountry() === "Netherlands") {
             switch ($invoice->getCompanyAddressState()) {
                 case "DR":
                     $invoice->setCompanyAddressState("Drenthe");
