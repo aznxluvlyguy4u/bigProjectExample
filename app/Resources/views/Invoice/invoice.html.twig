@@ -131,7 +131,7 @@
                             {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, ',', '.') }}
                         </td>
                         <td class="height-auto align-right">
-                            {{ selection.invoiceRule.vatPercentageRate | number_format(2, ',', '.') }}
+                            {{ selection.invoiceRule.vatPercentageRate }} %
                         </td>
                     </tr>
                 {% endfor %}
