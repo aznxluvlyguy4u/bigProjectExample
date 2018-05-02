@@ -175,6 +175,13 @@ class Invoice
     private $companyAddressStreetNumberSuffix;
 
     /**
+     * @var string $companyAddressCountry
+     * @ORM\Column(name="company_address_country", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $companyAddressCountry;
+
+    /**
      * @var string
      * @ORM\Column(name="company_address_state", nullable=true)
      * @JMS\Type("string")
@@ -680,6 +687,22 @@ class Invoice
     public function setCompanyAddressState($companyAddressState)
     {
         $this->companyAddressState = $companyAddressState;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressCountry()
+    {
+        return $this->companyAddressCountry;
+    }
+
+    /**
+     * @param string $companyAddressCountry
+     */
+    public function setCompanyAddressCountry($companyAddressCountry)
+    {
+        $this->companyAddressCountry = $companyAddressCountry;
     }
 
     public function copyValues(Invoice $invoice){

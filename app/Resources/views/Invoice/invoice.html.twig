@@ -31,7 +31,7 @@
                 <tbody>
                 <tr>
                     <td class="height-auto">
-                        Factuur nummer:
+                        Factuurnummer:
                     </td>
                     <td class="height-auto">
                         {{ invoice.invoiceNumber }}
@@ -39,7 +39,7 @@
                 </tr>
                 <tr>
                     <td class="height-auto">
-                        Factuur datum:
+                        Factuurdatum:
                     </td>
                     <td class="height-auto">
                         {{ invoice.invoiceDate | date("d-m-Y") }}
@@ -47,7 +47,7 @@
                 </tr>
                 <tr>
                     <td class="height-auto">
-                        Debiteur nummer:
+                        Debiteurnummer:
                     </td>
                     <td class="height-auto">
                         {{ invoice.companyDebtorNumber }}
@@ -72,7 +72,7 @@
                 </tr>
                 <tr>
                     <td class="height-auto">
-                        {{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressState ? invoice.companyAddressState | upper : ""}}
+                        {{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressState ? invoice.companyAddressState | upper : ""}} {{ invoice.companyAddressCountry ? invoice.companyAddressCountry | upper : "" }}
                     </td>
                 </tr>
             </table>
@@ -84,12 +84,12 @@
                 <tr class="only-bottom-border">
                     <th scope="col" class="align-left">
                         <b>
-                            Artikelomschrijving
+                            Datum
                         </b>
                     </th>
                     <th scope="col" class="align-left">
                         <b>
-                            Datum
+                            Artikelomschrijving
                         </b>
                     </th>
                     <th scope="col" class="align-left">
@@ -116,10 +116,10 @@
                 {% for selection in invoice.invoiceRuleSelections %}
                     <tr>
                         <td class="height-auto">
-                            {{ selection.invoiceRule.description }}
+                            {{ selection.date | date("d-m-Y") }}
                         </td>
                         <td class="height-auto">
-                            {{ selection.date | date("d-m-Y") }}
+                            {{ selection.invoiceRule.description }}
                         </td>
                         <td class="height-auto">
                             {{ selection.amount | number_format(2, '.', ',') }}

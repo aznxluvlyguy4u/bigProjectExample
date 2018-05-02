@@ -192,7 +192,7 @@ class InvoicePdfGeneratorService
      * @param boolean $isLandscape
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse|Response
      */
-    public function getInvoicePdfBase($twigFile, $data, $isLandscape = true)
+    public function getInvoicePdfBase($twigFile, $footerFile, $data, $isLandscape = true)
     {
         /**
          * @var Invoice $data
@@ -200,7 +200,7 @@ class InvoicePdfGeneratorService
          */
         $vatBreakdown = $data->getVatBreakdownRecords();
         $html = $this->renderView($twigFile, ['invoice' => $data, 'rootDirectory' => $this->rootDir."/../web", 'vatBreakdown' => $vatBreakdown]);
-
+        $footer = $this->renderView($footerFile, ["details" => $data->getSenderDetails()]);
         if ($this->displayReportPdfOutputAsHtml) {
             $response = new Response($html);
             $response->headers->set('Content-Type', 'text/html');
@@ -210,7 +210,7 @@ class InvoicePdfGeneratorService
         $this->extension = FileType::PDF;
 
         $pdfOptions = array(
-            'footer-html' => $this->rootDir."/Resources/views/Invoice/_footer.html",
+            'footer-html' => $footer,
             'orientation'=>'Portrait',
             'default-header'=>false,
             'disable-smart-shrinking'=>false,
