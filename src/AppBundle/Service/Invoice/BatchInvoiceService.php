@@ -30,10 +30,10 @@ class BatchInvoiceService extends ControllerServiceBase
 {
     private $invoiceNumber;
 
-    const ONLINE_EWE_TYPE = "AdministrationOnlineEwe";
-    const OFFLINE_EWE_TYPE = "AdministrationOfflineEwe";
-    const BASE_ADMINISTRATION = "";
-
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function createBatchInvoices(Request $request) {
         $companies = $this->getManager()->getRepository(Company::class)->findBy(array("isActive" => true));
         $requestJson = $request->getContent();
@@ -89,6 +89,13 @@ class BatchInvoiceService extends ControllerServiceBase
         return $newRules;
     }
 
+    /**
+     * @param array $animalData
+     * @param array $companies
+     * @param ArrayCollection $batchRules
+     * @param \DateTime $date
+     * @return array
+     */
     private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date){
         $this->createInvoiceNumber();
         $invoices = array();
@@ -109,6 +116,11 @@ class BatchInvoiceService extends ControllerServiceBase
         return $invoices;
     }
 
+    /**
+     * @param array $companies
+     * @param array $animalData
+     * @return array
+     */
     private function setupAnimalDataByCompanyLocation(array $companies,array $animalData){
         $animalCountsByRegister = array();
         /** @var Company $company */
@@ -128,6 +140,13 @@ class BatchInvoiceService extends ControllerServiceBase
         return $animalCountsByRegister;
     }
 
+    /**
+     * @param Company $company
+     * @param ArrayCollection $batchRules
+     * @param \DateTime $date
+     * @param array|null $data
+     * @return array
+     */
     private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, array $data = null) {
         $invoiceSet = array();
 
@@ -166,6 +185,10 @@ class BatchInvoiceService extends ControllerServiceBase
         return $invoiceSet;
     }
 
+    /**
+     * @param Invoice $invoice
+     * @param Address $address
+     */
     private function setAddressProperties(Invoice $invoice, Address $address) {
         $address->getState() != null && $address->getState() != "" ?
             $invoice->setCompanyAddressState($address->getState()) : null;
@@ -188,6 +211,11 @@ class BatchInvoiceService extends ControllerServiceBase
         $selection->setDate($date);
     }
 
+    /**
+     * @param Invoice $invoice
+     * @param ArrayCollection $batchRules
+     * @param \DateTime $date
+     */
     private function addAnimalHealthSubscriptionInvoiceRule(Invoice $invoice, ArrayCollection $batchRules, \DateTime $date){
         $selection = new InvoiceRuleSelection();
         /** @var InvoiceRule $newRule */
@@ -211,6 +239,13 @@ class BatchInvoiceService extends ControllerServiceBase
        $this->invoiceNumber = $number;
     }
 
+    /**
+     * @param Invoice $invoice
+     * @param Company $company
+     * @param array $dataSet
+     * @param ArrayCollection $batchRules
+     * @param \DateTime $date
+     */
     private function addAnimalDataInvoiceRulesToInvoice(Invoice $invoice,  Company $company, array $dataSet, ArrayCollection $batchRules, \DateTime $date) {
         $selection = new InvoiceRuleSelection();
         $rule = $this->getRulesByType($batchRules, InvoiceRuleType::BASE_ADMINISTRATION);
@@ -270,6 +305,11 @@ class BatchInvoiceService extends ControllerServiceBase
         return $rules->matching($criteria);
     }
 
+    /**
+     * @param ArrayCollection $rules
+     * @param $abbreviationDate
+     * @return ArrayCollection
+     */
     private function getRulesByDescription(ArrayCollection $rules, $abbreviationDate) {
         $criteria = Criteria::create()->where(
             Criteria::expr()->contains("description", $abbreviationDate)
@@ -277,6 +317,10 @@ class BatchInvoiceService extends ControllerServiceBase
         return $rules->matching($criteria);
     }
 
+    /**
+     * @param \DateTime $controlDate
+     * @return mixed
+     */
     private function getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate(\DateTime $controlDate) {
         $dateString = $controlDate->format('d-m-Y H:i:s');
         return $this->getManager()->getRepository(Animal::class)
