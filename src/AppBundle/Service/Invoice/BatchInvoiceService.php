@@ -47,7 +47,7 @@ class BatchInvoiceService extends ControllerServiceBase
         $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date);
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::BATCH_INVOICES_SEND);
         $this->getManager()->persist($log);
-        //$this->getManager()->flush();
+        $this->getManager()->flush();
         return ResultUtil::successResult($invoices);
     }
 
