@@ -156,6 +156,9 @@ class InvoiceRule
         $this->invoiceRuleSelections = new ArrayCollection();
     }
 
+    /**
+     * InvoiceRule clone
+     */
     function __clone()
     {
      $this->id = null;

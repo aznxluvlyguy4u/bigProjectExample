@@ -51,7 +51,9 @@ class InvoiceRuleRepository extends BaseRepository
         return $qb->getQuery()->getResult();
     }
 
-
+    /**
+     * @return array
+     */
     public function findBatchRules() {
         $qb = $this->_em->createQueryBuilder();
         $qb->select("ir")

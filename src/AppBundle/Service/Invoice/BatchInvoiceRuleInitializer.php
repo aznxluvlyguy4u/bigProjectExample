@@ -37,7 +37,7 @@ class BatchInvoiceRuleInitializer extends MigratorServiceBase
     }
 
     /**
-     * Load data fixtures of real Clients
+     * Load batch invoice rule set
      *
      */
     public function load() {

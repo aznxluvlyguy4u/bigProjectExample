@@ -2133,6 +2133,10 @@ class AnimalRepository extends BaseRepository
         return $this->getConnection()->query($sql)->fetchAll();
     }
 
+    /**
+     * @param $controlDateString
+     * @return array
+     */
     public function getAnimalCountsByCompanyLocationPedigreeRegisterOnControlDate($controlDateString) {
         $sql = "SELECT
   g.company_id as company_id,
