@@ -46,6 +46,16 @@ class InvoiceService extends ControllerServiceBase
     /** @var  InvoicePdfGeneratorService */
     private $invoicePdfGeneratorService;
 
+    /**
+     * InvoiceService constructor.
+     * @param BaseSerializer $baseSerializer
+     * @param CacheService $cacheService
+     * @param EntityManagerInterface $manager
+     * @param UserService $userService
+     * @param TranslatorInterface $translator
+     * @param Logger $logger
+     * @param InvoicePdfGeneratorService $invoicePdfGeneratorService
+     */
     public function __construct(
         BaseSerializer $baseSerializer,
         CacheService $cacheService,
