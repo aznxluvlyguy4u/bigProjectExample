@@ -48,6 +48,10 @@ parameters:
 
     test_email: ~
 
+    twinfield_user: ~
+    twinfield_password: ~
+    twinfield_organisation: ~
+
     locale: en
 
     output_reports_to_cache_folder_for_local_testing: false
