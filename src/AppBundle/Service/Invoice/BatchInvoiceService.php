@@ -19,6 +19,7 @@ use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\EmailPrefix;
 use AppBundle\Enumerator\InvoiceAction;
 use AppBundle\Enumerator\InvoiceRuleType;
+use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Service\ControllerServiceBase;
 use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -159,7 +160,7 @@ class BatchInvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
             $invoice->setIsBatch(true);
             $this->setAddressProperties($invoice, $company->getBillingAddress());
-            $invoice->setStatus("UNPAID");
+            $invoice->setStatus(InvoiceStatus::UNPAID);
             $invoice->setInvoiceDate(new \DateTime());
             $invoice->setCompanyDebtorNumber($company->getDebtorNumber());
             $invoice->setCompanyLocalId($company->getCompanyId());
