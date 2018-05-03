@@ -854,6 +854,13 @@ services:
     AppBundle\Service\Migration\ScrapieGenotypeReprocessor:
         parent: app.pedigree_data_reprocessor.base
 
+    AppBundle\Service\Invoice\TwinfieldService:
+        parent: app.abstract_base.controller
+        arguments:
+          - '%twinfield_user%'
+          - '%twinfield_password%'
+          - '%twinfield_organisation%'
+
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:
         class: AppBundle\Serializer\CustomDateTimeHandler
