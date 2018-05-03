@@ -161,8 +161,8 @@ class InvoiceRule
      */
     function __clone()
     {
-     $this->id = null;
-     $this->isBatch = false;
+        $this->id = null;
+        $this->isBatch = false;
     }
 
     /**
