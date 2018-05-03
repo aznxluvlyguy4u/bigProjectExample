@@ -80,7 +80,7 @@ class InvoiceService extends ControllerServiceBase
         $repo = $this->getManager()->getRepository(Invoice::class);
         $status = $request->get('status');
         $invoices = $repo->findBy(array('isDeleted' => false), array('invoiceDate' => 'ASC'));
-        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoices, [JmsGroup::INVOICE_NO_COMPANY]));
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoices, [JmsGroup::INVOICE_OVERVIEW]));
     }
 
 
