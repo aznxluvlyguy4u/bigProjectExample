@@ -15,6 +15,7 @@ class JmsGroup
     const BASIC = 'BASIC';
 
     const CONTACT_INFO = 'CONTACT_INFO';
+    const DOSSIER = "DOSSIER";
 
     const DECLARE_ = 'DECLARE';
     const DETAILS = 'DETAILS';
