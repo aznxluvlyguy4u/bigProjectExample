@@ -244,6 +244,7 @@ class InvoiceService extends ControllerServiceBase
             if ($company->getBillingAddress()->getState() != null && $company->getBillingAddress()->getState() != "") {
                 $invoice->setCompanyAddressState($company->getBillingAddress()->getState());
             }
+            $company->getTwinfieldCode() != null ? $invoice->setCompanyTwinfieldCode($company->getTwinfieldCode()) : null;
             $company->addInvoice($invoice);
             $this->getManager()->persist($company);
         }
@@ -347,6 +348,7 @@ class InvoiceService extends ControllerServiceBase
                     $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
                     $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
                     $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
+                    $newCompany->getTwinfieldCode() != null ? $invoice->setCompanyTwinfieldCode($newCompany->getTwinfieldCode()) : null;
                     if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
                         $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
                     }
@@ -363,6 +365,7 @@ class InvoiceService extends ControllerServiceBase
                 $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
                 $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
                 $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
+                $newCompany->getTwinfieldCode() != null ? $invoice->setCompanyTwinfieldCode($newCompany->getTwinfieldCode()) : null;
                 if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
                     $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
                 }
