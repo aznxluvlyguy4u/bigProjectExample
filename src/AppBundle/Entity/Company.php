@@ -272,6 +272,17 @@ class Company
      */
     private $isRevealHistoricAnimals;
 
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $twinfieldCode;
+
   /**
    * Company constructor.
    */
@@ -763,6 +774,22 @@ class Company
 
     public function removeInvoice(Invoice $invoice){
         $this->invoices->removeElement($invoice);
+    }
+
+    /**
+     * @return int
+     */
+    public function getTwinfieldCode(): int
+    {
+        return $this->twinfieldCode;
+    }
+
+    /**
+     * @param int $twinfieldCode
+     */
+    public function setTwinfieldCode(int $twinfieldCode)
+    {
+        $this->twinfieldCode = $twinfieldCode;
     }
 
     /**
