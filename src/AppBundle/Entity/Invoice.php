@@ -267,6 +267,17 @@ class Invoice
     private $isBatch = false;
 
     /**
+     * @var integer
+     * @ORM\Column(name="company_twinfield_code", type="integer", nullable=true)
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $companyTwinfieldCode;
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("vat_breakdown")
      * @JMS\Groups({
@@ -703,6 +714,22 @@ class Invoice
     public function setCompanyAddressCountry($companyAddressCountry)
     {
         $this->companyAddressCountry = $companyAddressCountry;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCompanyTwinfieldCode(): int
+    {
+        return $this->companyTwinfieldCode;
+    }
+
+    /**
+     * @param int $companyTwinfieldCode
+     */
+    public function setCompanyTwinfieldCode(int $companyTwinfieldCode)
+    {
+        $this->companyTwinfieldCode = $companyTwinfieldCode;
     }
 
     public function copyValues(Invoice $invoice){
