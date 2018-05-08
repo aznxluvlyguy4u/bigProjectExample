@@ -148,6 +148,7 @@ class CompanyService extends AuthServiceBase
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
+        $company->setTwinfieldCode($content->get("twinfield_code"));
         if($content->get('subscription_date')) {
             $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
         }
@@ -264,10 +265,7 @@ class CompanyService extends AuthServiceBase
         $company = $this->getManager()->getRepository(Company::class)->findOneByCompanyId($companyId);
         $this->deactivateFilter(ActiveInvoiceFilter::NAME);
 
-        // Generate Company Details
-        $result = CompanyOutput::createCompany($company, $this->getBaseSerializer());
-
-        return ResultUtil::successResult($result);
+        return ResultUtil::successResult($company);
     }
 
 
@@ -378,7 +376,7 @@ class CompanyService extends AuthServiceBase
         $company->setDebtorNumber($content->get('debtor_number'));
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
-
+        $company->setTwinfieldCode($content->get("twinfield_code"));
         if ($company->getAnimalHealthSubscription() != $content->get('animal_health_subscription')) {
             $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
             AdminActionLogWriter::updateAnimalHealthSubscription($this->getManager(), $admin, $company);
