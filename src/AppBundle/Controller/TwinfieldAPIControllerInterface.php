@@ -4,7 +4,9 @@
 namespace AppBundle\Controller;
 
 
-class TwinfieldAPIControllerInterface
-{
+use Symfony\Component\HttpFoundation\Request;
 
+interface TwinfieldAPIControllerInterface
+{
+    function getCustomers(Request $request);
 }
