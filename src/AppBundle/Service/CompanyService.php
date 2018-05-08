@@ -265,7 +265,7 @@ class CompanyService extends AuthServiceBase
         $company = $this->getManager()->getRepository(Company::class)->findOneByCompanyId($companyId);
         $this->deactivateFilter(ActiveInvoiceFilter::NAME);
 
-        return ResultUtil::successResult($company);
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($company, [JmsGroup::DOSSIER]));
     }
 
 
