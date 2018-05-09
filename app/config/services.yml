@@ -745,6 +745,11 @@ services:
 
     AppBundle\Service\Invoice\BatchInvoiceService:
         parent: app.abstract_base.controller
+        calls:
+          - method: initializeServices
+            arguments:
+              - '@AppBundle\Service\Twinfield\TwinfieldInvoiceService'
+
 
     app.loss:
         parent: app.abstract_base.declare
@@ -854,12 +859,32 @@ services:
     AppBundle\Service\Migration\ScrapieGenotypeReprocessor:
         parent: app.pedigree_data_reprocessor.base
 
-    AppBundle\Service\Invoice\TwinfieldService:
+    AppBundle\Service\Twinfield\TwinfieldAuthService:
         parent: app.abstract_base.controller
-        arguments:
-          - '%twinfield_user%'
-          - '%twinfield_password%'
-          - '%twinfield_organisation%'
+        calls:
+            - method: initializeAuthenticationConnection
+              arguments:
+                - '%twinfield_user%'
+                - '%twinfield_password%'
+                - '%twinfield_organisation%'
+
+    AppBundle\Service\Twinfield\TwinfieldInvoiceService:
+        parent: AppBundle\Service\Twinfield\TwinfieldAuthService
+        calls:
+            - method: initializeConnector
+
+    AppBundle\Service\Twinfield\TwinfieldCustomerService:
+        parent: AppBundle\Service\Twinfield\TwinfieldAuthService
+        calls:
+            - method: initializeConnector
+            - method: initializeOtherServices
+              arguments:
+                - '@AppBundle\Service\Twinfield\TwinfieldOfficeService'
+
+    AppBundle\Service\Twinfield\TwinfieldOfficeService:
+        parent: AppBundle\Service\Twinfield\TwinfieldAuthService
+        calls:
+            - method: initializeConnector
 
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:
