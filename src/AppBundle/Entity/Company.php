@@ -321,6 +321,18 @@ class Company
      */
     private $twinfieldCode;
 
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER"
+     * })
+     */
+    private $twinfieldOfficeCode;
+
   /**
    * Company constructor.
    */
@@ -815,9 +827,9 @@ class Company
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getTwinfieldCode(): int
+    public function getTwinfieldCode(): ?int
     {
         return $this->twinfieldCode;
     }
@@ -828,6 +840,22 @@ class Company
     public function setTwinfieldCode(int $twinfieldCode)
     {
         $this->twinfieldCode = $twinfieldCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTwinfieldOfficeCode(): string
+    {
+        return $this->twinfieldOfficeCode;
+    }
+
+    /**
+     * @param string $twinfieldOfficeCode
+     */
+    public function setTwinfieldOfficeCode(string $twinfieldOfficeCode)
+    {
+        $this->twinfieldOfficeCode = $twinfieldOfficeCode;
     }
 
     /**

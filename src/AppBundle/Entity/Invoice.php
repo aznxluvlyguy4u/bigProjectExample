@@ -278,6 +278,17 @@ class Invoice
     private $companyTwinfieldCode;
 
     /**
+     * @var string
+     * @ORM\Column(name="company_twinfield_office_code", type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $companyTwinfieldOfficeCode;
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("vat_breakdown")
      * @JMS\Groups({
@@ -730,6 +741,22 @@ class Invoice
     public function setCompanyTwinfieldCode(int $companyTwinfieldCode)
     {
         $this->companyTwinfieldCode = $companyTwinfieldCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyTwinfieldOfficeCode(): string
+    {
+        return $this->companyTwinfieldOfficeCode;
+    }
+
+    /**
+     * @param string $companyTwinfieldOfficeCode
+     */
+    public function setCompanyTwinfieldOfficeCode(string $companyTwinfieldOfficeCode)
+    {
+        $this->companyTwinfieldOfficeCode = $companyTwinfieldOfficeCode;
     }
 
     public function copyValues(Invoice $invoice){
