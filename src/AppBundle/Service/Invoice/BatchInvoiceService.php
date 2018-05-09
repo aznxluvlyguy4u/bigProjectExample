@@ -19,7 +19,9 @@ use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\EmailPrefix;
 use AppBundle\Enumerator\InvoiceAction;
 use AppBundle\Enumerator\InvoiceRuleType;
+use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Service\ControllerServiceBase;
+use AppBundle\Service\Twinfield\TwinfieldInvoiceService;
 use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
@@ -29,6 +31,13 @@ use Symfony\Component\HttpFoundation\Request;
 class BatchInvoiceService extends ControllerServiceBase
 {
     private $invoiceNumber;
+
+    private $twinfieldInvoiceService;
+
+
+    public function initializeServices(TwinfieldInvoiceService $invoiceService) {
+        $this->twinfieldInvoiceService = $invoiceService;
+    }
 
     /**
      * @param Request $request
@@ -49,6 +58,18 @@ class BatchInvoiceService extends ControllerServiceBase
         $this->getManager()->persist($log);
         $this->getManager()->flush();
         return ResultUtil::successResult($invoices);
+    }
+
+    private function sendInvoicesToTwinfield(ArrayCollection $invoices) {
+        $unpaidInvoices = $this->getUnpaidInvoices($invoices);
+        $this->twinfieldInvoiceService->sendInvoices($unpaidInvoices);
+    }
+
+    private function getUnpaidInvoices(ArrayCollection $invoices) {
+        $criteria = Criteria::create()->where(
+            Criteria::expr()->eq("status", InvoiceStatus::UNPAID)
+        );
+        return $invoices->matching($criteria);
     }
 
     /**
@@ -159,8 +180,12 @@ class BatchInvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
             $invoice->setIsBatch(true);
             $this->setAddressProperties($invoice, $company->getBillingAddress());
-            $invoice->setStatus("UNPAID");
-            $invoice->setInvoiceDate(new \DateTime());
+            if ($company->getTwinfieldCode()) {
+                $invoice->setStatus("UNPAID");
+                $invoice->setInvoiceDate(new \DateTime());
+            } else {
+                $invoice->setStatus(InvoiceStatus::NOT_SEND);
+            }
             $invoice->setCompanyDebtorNumber($company->getDebtorNumber());
             $invoice->setCompanyLocalId($company->getCompanyId());
             $invoice->setCompanyName($company->getCompanyName());
