@@ -851,6 +851,15 @@ services:
         parent: app.pedigree_data_reprocessor.base
 
 
+    AppBundle\SqlView\SqlViewManager:
+        arguments:
+          - '@AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewLitterDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewLocationDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewPedigreeRegisterAbbreviationRepository'
+          - '@AppBundle\SqlView\Repository\ViewPersonFullNameRepository'
+
     app.sqlview.repository.base:
         abstract: true
         arguments:
@@ -858,6 +867,7 @@ services:
           - '@doctrine.orm.default_entity_manager'
         calls:
           - method: init
+        lazy: true
 
     AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository:
         parent: app.sqlview.repository.base
