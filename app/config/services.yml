@@ -769,17 +769,15 @@ services:
     app.mollie.payment:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MolliePaymentService
-        arguments:
-          - '@app.serializer.base'
-          - '@app.cache'
-          - '@doctrine.orm.default_entity_manager'
-          - '@app.user'
-          - '@translator'
-          - '@logger'
-          - '@app.mollie.service'
-          - '%mollie_test_api_key%'
-          - '%mollie_prod_api_key%'
-          - '%environment%'
+        calls:
+          - method: instantiateServices
+            arguments:
+              - '@app.mollie.service'
+          - method: setKeys
+            arguments:
+              - '%mollie_test_api_key%'
+              - '%mollie_prod_api_key%'
+              - '%environment%'
 
     app.pedigree_register:
         parent: app.abstract_base.controller

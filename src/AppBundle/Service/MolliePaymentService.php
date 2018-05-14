@@ -21,12 +21,11 @@ class MolliePaymentService extends ControllerServiceBase
 
     private $key;
 
-    public function __construct(BaseSerializer $baseSerializer, CacheService $cacheService, EntityManagerInterface $manager, UserService $userService, TranslatorInterface $translator, Logger $logger, MollieService $mollieService, $testApiKey, $prodApiKey, $environment)
-    {
-        parent::__construct($baseSerializer, $cacheService, $manager, $userService, $translator, $logger);
-
+    public function instantiateServices(MollieService $mollieService) {
         $this->mollieService = $mollieService;
+    }
 
+    public function setKeys($prodApiKey, $testApiKey, $environment) {
         if ($environment == Environment::PROD){
             $this->key = $prodApiKey;
         }
@@ -34,6 +33,7 @@ class MolliePaymentService extends ControllerServiceBase
             $this->key = $testApiKey;
         }
     }
+
 
     /**
      * @param Request $request
