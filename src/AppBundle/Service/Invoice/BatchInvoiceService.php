@@ -52,7 +52,6 @@ class BatchInvoiceService extends ControllerServiceBase
         $date = $requestJson["controlDate"];
         $date = new \DateTime($date);
         $animalsByCompanyResult = $this->getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate($date);
-        return ResultUtil::successResult($animalsByCompanyResult);
         $registerCounts = $this->setupAnimalDataByCompanyLocation($companies, $animalsByCompanyResult);
         $rules = new ArrayCollection($this->getManager()->getRepository(InvoiceRule::class)->findBy(array("isBatch" => true)));
         $newRules = $this->createRuleCopiesForBatch($rules, $date);
