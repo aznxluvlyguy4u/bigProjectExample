@@ -24,6 +24,7 @@ class CsvFromSqlResultsWriterService
     const DEFAULT_SEPARATOR = ';';
     const DEFAULT_SUBDIR = 'csv';
     const NEW_LINE = "\n";
+    const BOOLEAN_NULL_REPLACEMENT_VALUE = null;
 
     /** @var ObjectManager|EntityManagerInterface */
     private $em;
@@ -226,9 +227,10 @@ class CsvFromSqlResultsWriterService
     /**
      * @param string $selectQuery
      * @param string $filepath
+     * @param array $booleanColumns
      * @throws \Exception
      */
-    public function writeToFileFromSqlQuery($selectQuery, $filepath)
+    public function writeToFileFromSqlQuery($selectQuery, $filepath, $booleanColumns = [])
     {
         $isDataMissing = false;
 
@@ -236,6 +238,10 @@ class CsvFromSqlResultsWriterService
             $stmt = $this->getConnection()->query($selectQuery);
 
             if ($firstRow = $stmt->fetch()) {
+                ArrayUtil::validateIfKeysExist($booleanColumns, $firstRow, false);
+
+                $firstRow = $this->translateSqlResultBooleanValue($firstRow, $booleanColumns);
+
                 DsvWriterUtil::writeNestedRowToFile($filepath, array_keys($firstRow)); //write headers
                 DsvWriterUtil::writeNestedRowToFile($filepath, $firstRow);
             } else {
@@ -243,6 +249,7 @@ class CsvFromSqlResultsWriterService
             }
 
             while ($row = $stmt->fetch()) {
+                $row = $this->translateSqlResultBooleanValue($row, $booleanColumns);
                 DsvWriterUtil::writeNestedRowToFile($filepath, $row);
             }
 
@@ -259,6 +266,35 @@ class CsvFromSqlResultsWriterService
         if ($isDataMissing) {
             throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
         }
+    }
+
+
+    /**
+     * @param array $row
+     * @param array $booleanColumns
+     * @return array
+     */
+    private function translateSqlResultBooleanValue($row, $booleanColumns)
+    {
+        if (count($booleanColumns) === 0) {
+            return $row;
+        }
+
+        foreach ($booleanColumns as $column)
+        {
+            $boolVal = ArrayUtil::get($column, $row);
+
+            $printValue = self::BOOLEAN_NULL_REPLACEMENT_VALUE;
+            if ($boolVal === true) {
+                $printValue = strtoupper($this->translator->trans('TRUE'));
+            } elseif ($boolVal === false) {
+                $printValue = strtoupper($this->translator->trans('FALSE'));
+            }
+
+            $row[$column] = $printValue;
+        }
+
+        return $row;
     }
 
 }
