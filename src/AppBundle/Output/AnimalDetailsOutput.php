@@ -35,9 +35,11 @@ class AnimalDetailsOutput
     /**
      * @param ObjectManager|EntityManagerInterface $em
      * @param Animal $animal
+     * @param boolean $includeAscendants
      * @return array
+     * @throws \Exception
      */
-    public static function create(ObjectManager $em, Animal $animal)
+    public static function create(ObjectManager $em, Animal $animal, $includeAscendants = false)
     {
         $replacementString = "";
 
@@ -124,9 +126,7 @@ class AnimalDetailsOutput
             }
         }
 
-        $ascendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($em->getConnection(), [$animal->getId()],self::NESTED_GENERATION_LIMIT);
-
-        $result = array(
+        $result = [
             JsonInputConstant::UBN => $animal->getUbn(),
             Constant::ULN_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
             Constant::ULN_NUMBER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnNumber(), $replacementString),
@@ -179,8 +179,12 @@ class AnimalDetailsOutput
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
             "declare_log" => self::getLog($em, $animal, $animal->getLocation(), $replacementString),
             "children" => $animalRepository->getOffspringLogDataBySql($animal, $replacementString),
-            "ascendants" => ArrayUtil::get($animal->getUln(), $ascendants, []),
-        );
+        ];
+
+        if ($includeAscendants) {
+            $ascendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($em->getConnection(), [$animal->getId()],self::NESTED_GENERATION_LIMIT);
+            $result["ascendants"] = ArrayUtil::get($animal->getUln(), $ascendants, []);
+        }
 
         if ($animal->getPedigreeRegister()) {
             $result["pedigree_register"] = [
