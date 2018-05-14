@@ -499,6 +499,18 @@ class BreedValuesReportQueryGenerator
 
 
     /**
+     * @return array
+     */
+    public function getAnimalsOverviewReportBooleanColumns()
+    {
+        return [
+            $this->translateColumnHeader('is_alive'),
+            $this->translateColumnHeader('has_active_pedigree_register'),
+        ];
+    }
+
+
+    /**
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
      * @param bool $ignoreHiddenBreedValueTypes
