@@ -20,6 +20,9 @@ use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
+use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
+use AppBundle\SqlView\SqlViewManagerInterface;
+use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\PedigreeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -34,12 +37,17 @@ class AnimalDetailsOutput
 
     /**
      * @param ObjectManager|EntityManagerInterface $em
+     * @param SqlViewManagerInterface $sqlViewManager
      * @param Animal $animal
      * @param boolean $includeAscendants
      * @return array
      * @throws \Exception
      */
-    public static function create(ObjectManager $em, Animal $animal, $includeAscendants = false)
+    public static function create(EntityManagerInterface $em,
+                                  SqlViewManagerInterface $sqlViewManager,
+                                  Animal $animal,
+                                  $includeAscendants = false
+    )
     {
         $replacementString = "";
 
@@ -76,7 +84,20 @@ class AnimalDetailsOutput
         $tailLengthRepository = $em->getRepository(TailLength::class);
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $em->getRepository(Animal::class);
+        /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
+        $viewMinimalParentDetailsRepository = $sqlViewManager->get(ViewMinimalParentDetails::class);
 
+        $animalId = $animal->getId();
+        $fatherId = $animal->getParentFatherId();
+        $motherId = $animal->getParentMotherId();
+
+        $animalIds[] = $animalId;
+        if ($fatherId) { $animalIds[] = $fatherId; }
+        if ($motherId) { $animalIds[] = $motherId; }
+
+        $viewMinimalParentDetails = $viewMinimalParentDetailsRepository->findByAnimalIds($animalIds);
+        /** @var ViewMinimalParentDetails $viewMinimalAnimalDetails */
+        $viewMinimalAnimalDetails = $viewMinimalParentDetails->get($animalId);
 
         $bodyFats = $animal->getBodyFatMeasurements();
         if (sizeof($bodyFats) == 0) {
@@ -147,7 +168,7 @@ class AnimalDetailsOutput
             "blind_factor" => Utils::fillNullOrEmptyString("", $replacementString),
             "scrapie_genotype" => Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), $replacementString),
             "breed" => Utils::fillNullOrEmptyString($animal->getBreedCode(), $replacementString),
-            "predicate" => Utils::fillNullOrEmptyString("", $replacementString),
+            "predicate" => Utils::fillNullOrEmptyString($viewMinimalAnimalDetails->getFormattedPredicate(), $replacementString),
             "breed_status" => Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
             JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
             "measurement" =>
@@ -179,7 +200,16 @@ class AnimalDetailsOutput
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
             "declare_log" => self::getLog($em, $animal, $animal->getLocation(), $replacementString),
             "children" => $animalRepository->getOffspringLogDataBySql($animal, $replacementString),
+            "production" => $viewMinimalAnimalDetails->getProduction(),
         ];
+
+        if ($fatherId) {
+            $result["parentFather"] = $viewMinimalParentDetails->get($fatherId);
+        }
+
+        if ($motherId) {
+            $result["parentMother"] = $viewMinimalParentDetails->get($motherId);
+        }
 
         if ($includeAscendants) {
             $ascendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($em->getConnection(), [$animal->getId()],self::NESTED_GENERATION_LIMIT);
