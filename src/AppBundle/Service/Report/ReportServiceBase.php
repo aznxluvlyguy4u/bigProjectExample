@@ -372,7 +372,7 @@ class ReportServiceBase
 
         $localFilePath = FilesystemUtil::concatDirAndFilename($dir, $filenameWithExtension);
 
-        SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
+        $this->csvWriter->writeToFileFromSqlQuery($selectQuery, $localFilePath);
 
         return $this->uploadReportFileToS3($localFilePath);
     }

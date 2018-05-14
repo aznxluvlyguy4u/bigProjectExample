@@ -6,11 +6,15 @@ namespace AppBundle\Service;
 
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\FilesystemUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class CsvFromSqlResultsWriterService
@@ -28,6 +32,11 @@ class CsvFromSqlResultsWriterService
     /** @var Filesystem */
     private $fs;
 
+    /** @var Logger */
+    private $logger;
+    /** @var TranslatorInterface */
+    private $translator;
+
     /** @var string */
     private $cacheDir;
     /** @var string */
@@ -36,17 +45,31 @@ class CsvFromSqlResultsWriterService
     /**
      * CsvFromSqlResultsWriterService constructor.
      * @param ObjectManager|EntityManagerInterface $em
+     * @param Logger $logger
+     * @param TranslatorInterface $translator
      * @param string $cacheDir
      */
-    public function __construct(EntityManagerInterface $em, $cacheDir)
+    public function __construct(EntityManagerInterface $em, Logger $logger, TranslatorInterface $translator, $cacheDir)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
+
+        $this->logger = $logger;
+        $this->translator = $translator;
 
         $this->cacheDir = $cacheDir;
         $this->fs = new Filesystem();
 
         $this->separator = self::DEFAULT_SEPARATOR;
+    }
+
+
+    /**
+     * @return Connection
+     */
+    protected function getConnection()
+    {
+        return $this->em->getConnection();
     }
 
 
@@ -198,4 +221,44 @@ class CsvFromSqlResultsWriterService
     {
         $this->fs->remove($filename);
     }
+
+
+    /**
+     * @param string $selectQuery
+     * @param string $filepath
+     * @throws \Exception
+     */
+    public function writeToFileFromSqlQuery($selectQuery, $filepath)
+    {
+        $isDataMissing = false;
+
+        try {
+            $stmt = $this->getConnection()->query($selectQuery);
+
+            if ($firstRow = $stmt->fetch()) {
+                DsvWriterUtil::writeNestedRowToFile($filepath, array_keys($firstRow)); //write headers
+                DsvWriterUtil::writeNestedRowToFile($filepath, $firstRow);
+            } else {
+                $isDataMissing = true;
+            }
+
+            while ($row = $stmt->fetch()) {
+                DsvWriterUtil::writeNestedRowToFile($filepath, $row);
+            }
+
+        } catch (\Exception $exception) {
+
+            FilesystemUtil::deleteFile($filepath);
+
+            // Hide error details from user
+            $this->logger->error($exception->getMessage());
+            $this->logger->error($exception->getTraceAsString());
+            throw new \Exception('FAILED WRITING THE CSV FILE', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        if ($isDataMissing) {
+            throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
+        }
+    }
+
 }
