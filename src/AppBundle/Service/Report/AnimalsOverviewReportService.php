@@ -64,7 +64,11 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase impl
                 .'__'.$this->translate('generated on');
             $this->extension = FileType::CSV;
 
-            return $this->generateCsvFileBySqlQuery($this->getFilename(), $sql);
+            return $this->generateCsvFileBySqlQuery(
+                $this->getFilename(),
+                $sql,
+                $this->breedValuesReportQueryGenerator->getAnimalsOverviewReportBooleanColumns()
+            );
 
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());

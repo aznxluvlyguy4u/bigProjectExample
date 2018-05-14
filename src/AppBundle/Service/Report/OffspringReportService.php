@@ -64,7 +64,11 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase implements
                 .'_'.$this->getFilenameParentPart($location, count($animalIds));
             $this->extension = FileType::CSV;
 
-            return $this->generateCsvFileBySqlQuery($this->getFilename(), $sql);
+            return $this->generateCsvFileBySqlQuery(
+                $this->getFilename(),
+                $sql,
+                $this->breedValuesReportQueryGenerator->getOffSpringReportBooleanColumns()
+            );
 
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());

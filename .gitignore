@@ -108,6 +108,7 @@ app/*.cache
 nsfo_dev
 *.backup
 *.sql
+*.zip
 
 # NSFO import files:
 /app/Resources/corrections/
