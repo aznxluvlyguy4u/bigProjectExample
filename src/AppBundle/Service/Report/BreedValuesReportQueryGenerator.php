@@ -782,6 +782,17 @@ LEFT JOIN (
     }
 
 
+    /**
+     * @return array
+     */
+    public function getOffSpringReportBooleanColumns()
+    {
+        return [
+            $this->translateColumnHeader('is_alive'),
+        ];
+    }
+
+
 
     /**
      * @param bool $concatBreedValuesAndAccuracies
