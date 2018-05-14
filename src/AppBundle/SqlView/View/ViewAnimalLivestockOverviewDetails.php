@@ -277,6 +277,14 @@ class ViewAnimalLivestockOverviewDetails implements SqlViewInterface
     /**
      * @return int
      */
+    public function getPrimaryKey()
+    {
+        return $this->getAnimalId();
+    }
+
+    /**
+     * @return int
+     */
     public function getAnimalId()
     {
         return $this->animalId;

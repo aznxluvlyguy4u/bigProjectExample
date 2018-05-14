@@ -57,6 +57,15 @@ class ViewLitterDetails implements SqlViewInterface
         return 'litter_id';
     }
 
+
+    /**
+     * @return int
+     */
+    public function getPrimaryKey()
+    {
+        return $this->getLitterId();
+    }
+
     /**
      * @return int
      */

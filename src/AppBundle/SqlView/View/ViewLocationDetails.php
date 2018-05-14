@@ -69,6 +69,15 @@ class ViewLocationDetails implements SqlViewInterface
         return 'location_id';
     }
 
+
+    /**
+     * @return int
+     */
+    public function getPrimaryKey()
+    {
+        return $this->getLocationId();
+    }
+
     /**
      * @return int
      */

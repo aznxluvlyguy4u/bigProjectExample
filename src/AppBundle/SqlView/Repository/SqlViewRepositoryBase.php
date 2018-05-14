@@ -5,6 +5,7 @@ namespace AppBundle\SqlView\Repository;
 
 
 use AppBundle\Service\BaseSerializer;
+use AppBundle\SqlView\View\SqlViewInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -111,7 +112,13 @@ class SqlViewRepositoryBase
     {
         $sqlResults = $this->getResults($primaryKeys);
         $objects = $this->denormalizeToObjects($sqlResults);
-        return new ArrayCollection($objects);
+
+        $results = new ArrayCollection();
+        /** @var SqlViewInterface $object */
+        foreach ($objects as $object) {
+            $results->set($object->getPrimaryKey(), $object);
+        }
+        return $results;
     }
 
 

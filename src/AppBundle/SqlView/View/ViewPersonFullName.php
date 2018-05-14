@@ -27,6 +27,15 @@ class ViewPersonFullName implements SqlViewInterface
         return 'person_id';
     }
 
+
+    /**
+     * @return int
+     */
+    public function getPrimaryKey()
+    {
+        return $this->getPersonId();
+    }
+
     /**
      * @return int
      */

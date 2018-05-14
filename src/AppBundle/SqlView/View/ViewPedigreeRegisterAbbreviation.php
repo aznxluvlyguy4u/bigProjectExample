@@ -30,6 +30,14 @@ class ViewPedigreeRegisterAbbreviation implements SqlViewInterface
     /**
      * @return int
      */
+    public function getPrimaryKey()
+    {
+        return $this->getPedigreeRegisterId();
+    }
+
+    /**
+     * @return int
+     */
     public function getPedigreeRegisterId()
     {
         return $this->pedigreeRegisterId;

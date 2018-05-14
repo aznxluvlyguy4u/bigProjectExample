@@ -88,6 +88,13 @@ class ViewMinimalParentDetails implements SqlViewInterface
         return 'animal_id';
     }
 
+    /**
+     * @return int
+     */
+    public function getPrimaryKey()
+    {
+        return $this->getAnimalId();
+    }
 
     /**
      * @return int
