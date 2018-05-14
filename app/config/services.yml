@@ -850,6 +850,33 @@ services:
     AppBundle\Service\Migration\ScrapieGenotypeReprocessor:
         parent: app.pedigree_data_reprocessor.base
 
+
+    app.sqlview.repository.base:
+        abstract: true
+        arguments:
+          - '@app.serializer.base'
+          - '@doctrine.orm.default_entity_manager'
+        calls:
+          - method: init
+
+    AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewLitterDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewLocationDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewPedigreeRegisterAbbreviationRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewPersonFullNameRepository:
+        parent: app.sqlview.repository.base
+
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:
         class: AppBundle\Serializer\CustomDateTimeHandler
