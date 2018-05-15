@@ -16,15 +16,20 @@ use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\MuscleThicknessRepository;
+use AppBundle\Entity\ParentInterface;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
+use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Service\BaseSerializer;
 use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
 use AppBundle\SqlView\SqlViewManagerInterface;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\PedigreeUtil;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -38,6 +43,7 @@ class AnimalDetailsOutput
     /**
      * @param ObjectManager|EntityManagerInterface $em
      * @param SqlViewManagerInterface $sqlViewManager
+     * @param BaseSerializer $serializer
      * @param Animal $animal
      * @param boolean $includeAscendants
      * @return array
@@ -45,6 +51,7 @@ class AnimalDetailsOutput
      */
     public static function create(EntityManagerInterface $em,
                                   SqlViewManagerInterface $sqlViewManager,
+                                  BaseSerializer $serializer,
                                   Animal $animal,
                                   $includeAscendants = false
     )
@@ -199,7 +206,7 @@ class AnimalDetailsOutput
             "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
             "declare_log" => self::getLog($em, $animal, $animal->getLocation(), $replacementString),
-            "children" => $animalRepository->getOffspringLogDataBySql($animal, $replacementString),
+            "children" => self::getChildren($serializer, $viewMinimalParentDetailsRepository, $animal),
             "production" => $viewMinimalAnimalDetails->getProduction(),
         ];
 
@@ -225,6 +232,58 @@ class AnimalDetailsOutput
         }
 
         return $result;
+    }
+
+
+    private static function getChildren(BaseSerializer $serializer,
+                                        ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository,
+                                        Animal $animal)
+    {
+        $genderPrimaryParent = $animal->getGender();
+
+        $children = [];
+
+        if ($animal instanceof ParentInterface) {
+
+            foreach ($animal->getChildren() as $child) {
+
+                $childArray = $serializer->getDecodedJson($child, [JmsGroup::CHILD],true);
+
+                /** @var ViewMinimalParentDetails $viewDetails */
+                $viewDetails = $viewMinimalParentDetailsRepository->findOneByAnimalId($child->getId());
+                if ($viewDetails) {
+                    $childArray[JsonInputConstant::PRODUCTION] = $viewDetails->getProduction();
+                    $childArray[JsonInputConstant::N_LING] = $viewDetails->getNLing();
+                    $childArray[JsonInputConstant::GENERAL_APPEARANCE] = $viewDetails->getGeneralAppearance();
+                }
+
+                switch ($genderPrimaryParent) {
+                    case GenderType::FEMALE:
+                        $secondaryParent = $child->getParentFather();
+                        $secondaryParentKey = 'parent_father';
+                        break;
+
+                    case GenderType::MALE:
+                        $secondaryParent = $child->getParentMother();
+                        $secondaryParentKey = 'parent_mother';
+                        break;
+
+                    default:
+                        $secondaryParent = null;
+                        $secondaryParentKey = null;
+                        break;
+                }
+
+                if ($secondaryParent && $secondaryParentKey) {
+                    $childArray[$secondaryParentKey] = $serializer->getDecodedJson($secondaryParent, [JmsGroup::PARENT_OF_CHILD],true);;
+                }
+
+                $children[] = $childArray;
+            }
+
+        }
+
+        return $children;
     }
 
 

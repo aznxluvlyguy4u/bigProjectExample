@@ -298,7 +298,12 @@ abstract class ControllerServiceBase
      */
     protected function getAnimalDetailsOutputForUserEnvironment(Animal $animal)
     {
-        $output = AnimalDetailsOutput::create($this->getManager(), $this->sqlViewManager, $animal);
+        $output = AnimalDetailsOutput::create(
+            $this->getManager(),
+            $this->sqlViewManager,
+            $this->baseSerializer,
+            $animal
+        );
         return ResultUtil::successResult($output);
     }
 
