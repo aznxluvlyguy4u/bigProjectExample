@@ -122,6 +122,8 @@ class ErrorTest extends WebTestCase
     public function testUpdate()
     {
         //TODO
+
+        $this->assertEquals(1,1,'PLACEHOLDER');
     }
 
     /*

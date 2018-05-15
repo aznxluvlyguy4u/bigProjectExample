@@ -154,11 +154,9 @@ class TreatmentTemplateTest extends WebTestCase
     public function testCreateUpdateDeleteReactivate()
     {
         //TODO
-    }
 
-    /*
-     * Runs after all testcases ran and teardown
-     */
+        $this->assertEquals(1,1,'PLACEHOLDER');
+    }
 
     /**
      * Runs after each testcase
