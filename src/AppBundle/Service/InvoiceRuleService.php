@@ -22,6 +22,8 @@ use Symfony\Component\HttpFoundation\Response;
 class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPIControllerInterface
 {
     /**
+     * Basic get function, it will get invoice rules, the gotten invoice rules differ, based on given query parameters
+     *
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
@@ -45,6 +47,8 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
 
 
     /**
+     * Invoice rule creation function, only accessible by admins
+     *
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
@@ -114,6 +118,8 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
 
 
     /**
+     * Validation function, to check if a valid invoice rule was send through the request
+     *
      * @param InvoiceRule $newRule
      * @return JsonResponse|bool
      */
