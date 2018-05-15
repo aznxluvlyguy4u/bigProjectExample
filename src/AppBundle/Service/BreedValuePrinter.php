@@ -25,7 +25,7 @@ class BreedValuePrinter
     private $conn;
     /** @var Logger */
     private $logger;
-    /** @var String */
+    /** @var string */
     private $cacheDir;
     /** @var Filesystem */
     private $fs;

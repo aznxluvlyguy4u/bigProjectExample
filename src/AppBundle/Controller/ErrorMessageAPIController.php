@@ -71,7 +71,7 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      *   description = "Get ErrorMessage details by id"
      * )
      * @param Request $request the request object
-     * @param String $messageId
+     * @param string $messageId
      * @return JsonResponse
      * @Route("/{messageId}")
      * @Method("GET")
@@ -100,7 +100,7 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      *   description = "Get ErrorMessage details by id"
      * )
      * @param Request $request the request object
-     * @param String $messageId
+     * @param string $messageId
      * @return JsonResponse
      * @Route("/non-ir/{messageId}")
      * @Method("GET")
@@ -157,7 +157,7 @@ class ErrorMessageAPIController extends APIController implements ErrorMessageAPI
      *   description = "hide an error response for any non-IR-declaration"
      * )
      * @param Request $request the request object
-     * @param String $messageId
+     * @param string $messageId
      * @return JsonResponse
      * @Route("-nsfo/{messageId}")
      * @Method("PUT")

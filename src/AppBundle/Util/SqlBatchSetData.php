@@ -14,7 +14,7 @@ class SqlBatchSetData
     const LABELS = 'skipped|already||inBatch|done: ';
     const LABELS_MINIMAL = 's|a||ib|done: ';
 
-    /** @var String */
+    /** @var string */
     private $key;
 
     /** @var Connection */

@@ -34,7 +34,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * )
      *
      * @param Request $request the request object
-     * @param String $ulnString
+     * @param string $ulnString
      * @return jsonResponse
      * @Route("/{ulnString}/exteriors")
      * @Method("POST")
@@ -64,8 +64,8 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * )
      *
      * @param Request $request the request object
-     * @param String $ulnString
-     * @param String $measurementDateString
+     * @param string $ulnString
+     * @param string $measurementDateString
      * @return jsonResponse
      * @Route("/{ulnString}/exteriors/{measurementDateString}")
      * @Method("PUT")
@@ -95,7 +95,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * )
      *
      * @param Request $request the request object
-     * @param String $ulnString
+     * @param string $ulnString
      * @return jsonResponse
      * @Route("/{ulnString}/exteriors/kinds")
      * @Method("GET")
@@ -126,8 +126,8 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * )
      *
      * @param Request $request the request object
-     * @param String $ulnString
-     * @param String $measurementDateString
+     * @param string $ulnString
+     * @param string $measurementDateString
      * @return jsonResponse
      * @Route("/{ulnString}/exteriors/kinds/{measurementDateString}")
      * @Method("GET")

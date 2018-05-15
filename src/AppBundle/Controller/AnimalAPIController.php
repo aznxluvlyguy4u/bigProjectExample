@@ -390,7 +390,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *   description = "Retrieve an Animal by ULN"
    * )
    * @param Request $request the request object
-   * @param String $ulnString
+   * @param string $ulnString
    * @return JsonResponse
    * @Route("-details/{ulnString}")
    * @Method("GET")

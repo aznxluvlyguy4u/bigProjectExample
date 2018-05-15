@@ -32,7 +32,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      *   description = "Get all births for a given litter"
      * )
      * @param Request $request the request object
-     * @param String $litterId
+     * @param string $litterId
      * @return JsonResponse
      * @Route("/{litterId}")
      * @Method("GET")

@@ -19,7 +19,7 @@ class ReportBase
     protected $conn;
     /** @var Client */
     protected $client;
-    /** @var String */
+    /** @var string */
     protected $fileNameType;
     /** @var string */
     protected $fileNameWithoutExtension;
