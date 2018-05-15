@@ -106,6 +106,9 @@ class AnimalDetailsOutput
         /** @var ViewMinimalParentDetails $viewMinimalAnimalDetails */
         $viewMinimalAnimalDetails = $viewMinimalParentDetails->get($animalId);
 
+        $predicate = $viewMinimalAnimalDetails ? $viewMinimalAnimalDetails->getFormattedPredicate() : null;
+        $production = $viewMinimalAnimalDetails ? $viewMinimalAnimalDetails->getProduction() : null;
+
         $bodyFats = $animal->getBodyFatMeasurements();
         if (sizeof($bodyFats) == 0) {
             $bodyFat = 0.00;
@@ -175,7 +178,7 @@ class AnimalDetailsOutput
             "blind_factor" => Utils::fillNullOrEmptyString("", $replacementString),
             "scrapie_genotype" => Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), $replacementString),
             "breed" => Utils::fillNullOrEmptyString($animal->getBreedCode(), $replacementString),
-            "predicate" => Utils::fillNullOrEmptyString($viewMinimalAnimalDetails->getFormattedPredicate(), $replacementString),
+            "predicate" => Utils::fillNullOrEmptyString($predicate, $replacementString),
             "breed_status" => Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
             JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
             "measurement" =>
@@ -207,7 +210,7 @@ class AnimalDetailsOutput
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
             "declare_log" => self::getLog($em, $animal, $animal->getLocation(), $replacementString),
             "children" => self::getChildren($serializer, $viewMinimalParentDetailsRepository, $animal),
-            "production" => $viewMinimalAnimalDetails->getProduction(),
+            "production" => $production,
         ];
 
         if ($fatherId) {
