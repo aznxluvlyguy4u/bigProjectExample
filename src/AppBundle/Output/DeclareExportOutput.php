@@ -8,7 +8,7 @@ use AppBundle\Entity\DeclareExport;
 /**
  * Class DeclareExportOutput
  */
-class DeclareExportOutput
+class DeclareExportOutput extends Output
 {
     /**
      * @param DeclareExport $export
@@ -48,7 +48,7 @@ class DeclareExportOutput
             "location"=>
             array("id" => $export->getLocation()->getId(),
                   "ubn" => $export->getLocation()->getUbn()),
-            "action_by" => $export->getActionBy()
+            "action_by" => self::actionByOutput($export->getActionBy())
         );
 
         return $result;

@@ -61,7 +61,7 @@ class DeclareImportOutput extends Output
                         "scrapie_status" => self::$scrapieStatus,
                         "scrapie_check_date" => self::$scrapieCheckDate,
                     )),
-            "action_by" => $import->getActionBy()
+            "action_by" => self::actionByOutput($import->getActionBy())
         );
 
         return $result;

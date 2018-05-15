@@ -8,7 +8,7 @@ use AppBundle\Entity\DeclareDepart;
 /**
  * Class DeclareDepartOutput
  */
-class DeclareDepartOutput
+class DeclareDepartOutput extends Output
 {
     /**
      * @param DeclareDepart $depart
@@ -50,7 +50,7 @@ class DeclareDepartOutput
             "location"=>
             array("id" => $depart->getLocation()->getId(),
                   "ubn" => $depart->getLocation()->getUbn()),
-            "action_by" => $depart->getActionBy()
+            "action_by" => self::actionByOutput($depart->getActionBy())
         );
 
         return $result;

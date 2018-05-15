@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -60,7 +61,7 @@ class DeclareArrivalOutput extends Output
                       "scrapie_status" => self::$scrapieStatus,
                       "scrapie_check_date" => self::$scrapieCheckDate,
                   )),
-            "action_by" => $arrival->getActionBy()
+            "action_by" => self::actionByOutput($arrival->getActionBy())
         );
 
         return $result;

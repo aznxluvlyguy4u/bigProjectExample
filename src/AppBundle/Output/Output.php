@@ -3,8 +3,13 @@
 namespace AppBundle\Output;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\Person;
+use AppBundle\Entity\PersonImplementationInterface;
+use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\Finder;
@@ -138,5 +143,30 @@ abstract class Output
         ];
 
         return new JsonResponse($result, $code);
+    }
+
+
+    /**
+     * @param PersonImplementationInterface $person
+     * @return array
+     */
+    public static function actionByOutput($person)
+    {
+        $actionByArray = [];
+
+        if ($person) {
+
+            $actionByArray = [
+                'first_name' => $person->getFirstName(),
+                'last_name' => $person->getFirstName(),
+                'objectType' => $person->getObjectType(),
+            ];
+
+            if ($person instanceof Client) {
+                $actionByArray['relation_number_keeper'] = $person->getRelationNumberKeeper();
+            }
+        }
+
+        return $actionByArray;
     }
 }
