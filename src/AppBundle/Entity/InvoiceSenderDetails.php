@@ -22,7 +22,8 @@ class InvoiceSenderDetails
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $id;
@@ -34,7 +35,8 @@ class InvoiceSenderDetails
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $name;
@@ -46,7 +48,8 @@ class InvoiceSenderDetails
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $iban;
@@ -58,7 +61,8 @@ class InvoiceSenderDetails
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $chamberOfCommerceNumber;
@@ -70,7 +74,8 @@ class InvoiceSenderDetails
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $vatNumber;
@@ -82,7 +87,8 @@ class InvoiceSenderDetails
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $address;
@@ -94,7 +100,8 @@ class InvoiceSenderDetails
      * @JMS\Groups({
      *     "INVOICE_SENDER_DETAILS",
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $paymentDeadlineInDays;
