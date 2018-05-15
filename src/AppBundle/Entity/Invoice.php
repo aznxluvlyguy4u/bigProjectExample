@@ -257,7 +257,8 @@ class Invoice
      * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $senderDetails;
