@@ -110,7 +110,8 @@ class RevokeDeclaration extends DeclareBase
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      * @Expose
      */

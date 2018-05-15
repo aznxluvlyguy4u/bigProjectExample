@@ -30,7 +30,8 @@ class Client extends Person implements PersonImplementationInterface
      *     "ACTION_LOG_USER",
      *     "BASIC",
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "RVO"
      * })
     * @Expose
     */
@@ -42,6 +43,10 @@ class Client extends Person implements PersonImplementationInterface
     * @Assert\NotBlank
     * @ORM\Column(type="string")
     * @JMS\Type("string")
+    * @JMS\Groups({
+    *     "RVO"
+    * })
+    * @Expose
     *
     */
     private $objectType;

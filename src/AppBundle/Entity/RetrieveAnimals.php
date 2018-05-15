@@ -27,6 +27,7 @@ class RetrieveAnimals
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
      *     "BASIC",
+     *     "RVO"
      * })
      */
     private $id;
@@ -38,6 +39,7 @@ class RetrieveAnimals
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "BASIC",
+     *     "RVO"
      * })
      */
     private $logDate;
@@ -49,6 +51,7 @@ class RetrieveAnimals
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "BASIC",
+     *     "RVO"
      * })
      */
     private $requestId;
@@ -60,6 +63,7 @@ class RetrieveAnimals
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "BASIC",
+     *     "RVO"
      * })
      */
     private $messageId;
@@ -70,6 +74,7 @@ class RetrieveAnimals
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "BASIC",
+     *     "RVO"
      * })
      */
     private $requestState;
@@ -81,6 +86,7 @@ class RetrieveAnimals
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "BASIC",
+     *     "RVO"
      * })
      */
     private $relationNumberKeeper;
@@ -94,6 +100,7 @@ class RetrieveAnimals
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "BASIC",
+     *     "RVO"
      * })
      */
     private $ubn;
@@ -121,6 +128,7 @@ class RetrieveAnimals
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
      * @JMS\Groups({
      *     "BASIC",
+     *     "RVO"
      * })
      */
     private $actionBy;
@@ -132,6 +140,7 @@ class RetrieveAnimals
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "BASIC",
+     *     "RVO"
      * })
      */
     private $isRvoLeading;

@@ -65,6 +65,9 @@ abstract class DeclareBase implements DeclareLogInterface
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     protected $id;
 
@@ -74,7 +77,8 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     protected $logDate;
@@ -84,6 +88,9 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     protected $requestId;
 
@@ -95,7 +102,8 @@ abstract class DeclareBase implements DeclareLogInterface
      * @JMS\Groups({
      *     "ADMIN_HIDDEN_STATUS",
      *     "ERROR_DETAILS",
-     *     "HIDDEN_STATUS"
+     *     "HIDDEN_STATUS",
+     *     "RVO"
      * })
      */
     protected $messageId;
@@ -107,7 +115,8 @@ abstract class DeclareBase implements DeclareLogInterface
      * @JMS\Groups({
      *     "ADMIN_HIDDEN_STATUS",
      *     "ERROR_DETAILS",
-     *     "HIDDEN_STATUS"
+     *     "HIDDEN_STATUS",
+     *     "RVO"
      * })
      */
     protected $requestState;
@@ -117,6 +126,9 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\Length(max = 1)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     protected $action;
 
@@ -126,6 +138,9 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\Length(max = 1)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     protected $recoveryIndicator;
 
@@ -136,7 +151,8 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     protected $relationNumberKeeper;
@@ -149,7 +165,8 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     protected $ubn;
@@ -159,7 +176,8 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     protected $messageNumberToRecover;
@@ -171,7 +189,8 @@ abstract class DeclareBase implements DeclareLogInterface
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     protected $actionBy;
