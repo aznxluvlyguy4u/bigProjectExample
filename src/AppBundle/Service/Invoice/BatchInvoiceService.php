@@ -15,9 +15,12 @@ use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceRuleSelection;
 use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationRepository;
+use AppBundle\Entity\Message;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\EmailPrefix;
 use AppBundle\Enumerator\InvoiceAction;
+use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Service\ControllerServiceBase;
@@ -55,7 +58,7 @@ class BatchInvoiceService extends ControllerServiceBase
         $registerCounts = $this->setupAnimalDataByCompanyLocation($companies, $animalsByCompanyResult);
         $rules = new ArrayCollection($this->getManager()->getRepository(InvoiceRule::class)->findBy(array("isBatch" => true)));
         $newRules = $this->createRuleCopiesForBatch($rules, $date);
-        $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date);
+        $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date, $request);
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::BATCH_INVOICES_SEND);
         $this->getManager()->persist($log);
         $this->getManager()->flush();
@@ -112,15 +115,15 @@ class BatchInvoiceService extends ControllerServiceBase
      * @param \DateTime $date
      * @return array
      */
-    private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date){
+    private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date, Request $request){
         $this->createInvoiceNumber();
         $invoices = array();
         /** @var Company $company */
         foreach ($companies as $company) {
             if (array_key_exists($company->getId(), $animalData)) {
-                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $animalData[$company->getId()]);
+                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $request, $animalData[$company->getId()]);
             } else {
-                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date);
+                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $request);
             }
             if (sizeof($invoiceSet) > 0) {
                 foreach ($invoiceSet as $invoice) {
@@ -167,9 +170,10 @@ class BatchInvoiceService extends ControllerServiceBase
      * @param ArrayCollection $batchRules
      * @param \DateTime $date
      * @param array|null $data
+     * @param Request $request
      * @return array
      */
-    private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, array $data = null) {
+    private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, Request $request, array $data = null) {
         $invoiceSet = array();
 
         $details = $this->getManager()->getRepository(InvoiceSenderDetails::class)->findBy(array(), array("id" => "DESC"),1);
@@ -181,8 +185,6 @@ class BatchInvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
             $invoice->setIsBatch(true);
             $this->setAddressProperties($invoice, $company->getBillingAddress());
-            $invoice->setStatus(InvoiceStatus::UNPAID);
-            $invoice->setInvoiceDate(new \DateTime());
             $invoice->setCompanyDebtorNumber($company->getDebtorNumber());
             $invoice->setCompanyLocalId($company->getCompanyId());
             $invoice->setCompanyName($company->getCompanyName());
@@ -190,6 +192,20 @@ class BatchInvoiceService extends ControllerServiceBase
             $invoice->setCompany($company);
             $invoice->setCompanyVatNumber($company->getVatNumber());
             $invoice->setInvoiceNumber($this->invoiceNumber);
+            $message = new Message();
+            if (!$company->getDebtorNumber()) {
+                $invoice->setStatus(InvoiceStatus::NOT_SEND);
+            } else {
+                $invoice->setStatus(InvoiceStatus::UNPAID);
+                $invoice->setInvoiceDate(new \DateTime());
+                $client = $this->getAccountOwner($request);
+                $message->setSender($client);
+                $message->setType(InvoiceMessages::NEW_INVOICE_TYPE);
+                $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
+                $message->setMessage(InvoiceMessages::NEW_INVOICE_MESSAGE);
+                $message->setReceiver($invoice->getCompany()->getOwner());
+                $message->setReceiverLocation($location);
+            }
             if ($data && array_key_exists($location->getId(), $data)) {
                 $dataSet = $data[$location->getId()];
                 $this->addAnimalDataInvoiceRulesToInvoice($invoice, $company, $dataSet, $batchRules, $date);
@@ -198,11 +214,15 @@ class BatchInvoiceService extends ControllerServiceBase
                 $this->addAnimalHealthSubscriptionInvoiceRule($invoice, $batchRules, $date);
             }
             $breakdown = $invoice->getVatBreakdownRecords();
-            if ($breakdown->getTotalExclVat() != 0) {
-                $invoiceSet[] = $invoice;
-                $this->invoiceNumber++;
-                $this->getManager()->persist($invoice);
+            if ($breakdown->getTotalExclVat() == 0) {
+                continue;
             }
+            $invoiceSet[] = $invoice;
+            $this->invoiceNumber++;
+            if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
+                $this->persist($message);
+            }
+            $this->getManager()->persist($invoice);
         }
         return $invoiceSet;
     }
