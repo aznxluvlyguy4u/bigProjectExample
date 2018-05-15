@@ -17,7 +17,7 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class Employee extends Person
+class Employee extends Person implements PersonImplementationInterface
 {
     use EntityClassInfo;
 

@@ -15,7 +15,7 @@ use AppBundle\Traits\EntityClassInfo;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\VwaEmployeeRepository")
  * @package AppBundle\Entity
  */
-class VwaEmployee extends Person
+class VwaEmployee extends Person implements PersonImplementationInterface
 {
     use EntityClassInfo;
 
