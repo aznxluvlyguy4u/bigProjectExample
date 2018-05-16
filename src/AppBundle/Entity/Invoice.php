@@ -305,7 +305,8 @@ class Invoice
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $isBatch = false;
