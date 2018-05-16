@@ -709,6 +709,10 @@ services:
     app.invoice:
         parent: app.abstract_base.controller
         class: AppBundle\Service\InvoiceService
+        calls:
+          - method: instantiateServices
+            arguments:
+              - '@app.invoice.pdf.generator.service'
 
     app.invoice.rule:
         parent: app.abstract_base.controller

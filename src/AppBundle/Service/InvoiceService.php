@@ -48,17 +48,7 @@ class InvoiceService extends ControllerServiceBase
     /** @var  InvoicePdfGeneratorService */
     private $invoicePdfGeneratorService;
 
-    public function __construct(
-        BaseSerializer $baseSerializer,
-        CacheService $cacheService,
-        EntityManagerInterface $manager,
-        UserService $userService,
-        TranslatorInterface $translator,
-        Logger $logger,
-        InvoicePdfGeneratorService $invoicePdfGeneratorService
-    )
-    {
-        parent::__construct($baseSerializer, $cacheService, $manager, $userService, $translator, $logger);
+    public function instantiateServices(InvoicePdfGeneratorService $invoicePdfGeneratorService) {
         $this->invoicePdfGeneratorService = $invoicePdfGeneratorService;
     }
 
