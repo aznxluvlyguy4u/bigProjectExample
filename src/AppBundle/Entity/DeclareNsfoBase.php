@@ -35,7 +35,8 @@ use JMS\Serializer\Annotation\Expose;
  *     groups = {
  *     "ANIMALS_BATCH_EDIT",
  *     "BASIC",
- *     "ERROR_DETAILS"
+ *     "ERROR_DETAILS",
+ *     "RVO"
  * })
  *
  * @package AppBundle\Entity\DeclareNsfoBase
