@@ -52,7 +52,8 @@ use \DateTime;
  *     "DECLARE",
  *     "ERROR_DETAILS",
  *     "ADMIN_HIDDEN_STATUS",
- *     "HIDDEN_STATUS"
+ *     "HIDDEN_STATUS",
+ *     "RVO"
  * })
  *
  * @package AppBundle\Entity\DeclareBase
