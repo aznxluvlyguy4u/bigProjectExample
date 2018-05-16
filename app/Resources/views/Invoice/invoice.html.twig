@@ -11,7 +11,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-6 offset-6">
-            <img src="file://{{ rootDirectory }}/assets/images/nsfo-logo.png" class="img-fluid" alt="">
+            <img src="file://{{ rootDirectory }}/assets/images/nsfo-logo.png" class="img-fluid header-image" alt="">
         </div>
     </div>
     <div class="row">
@@ -92,22 +92,22 @@
                             Artikelomschrijving
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             Aantal
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             Stuksprijs
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             Totaalprijs
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             BTW
                         </b>
@@ -121,17 +121,17 @@
                         <td class="height-auto">
                             {{ selection.invoiceRule.description }}
                         </td>
-                        <td class="height-auto">
-                            {{ selection.amount | number_format(2, '.', ',') }}
+                        <td class="height-auto align-right">
+                            {{ selection.amount | number_format(2, ',', '.') }}
                         </td>
-                        <td class="height-auto">
-                            {{ selection.invoiceRule.priceExclVat | number_format(2, '.', ',') }}
+                        <td class="height-auto align-right">
+                            {{ selection.invoiceRule.priceExclVat | number_format(2, ',', '.') }}
                         </td>
-                        <td class="height-auto">
-                            {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, '.', ',') }}
+                        <td class="height-auto align-right">
+                            {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, ',', '.') }}
                         </td>
-                        <td class="height-auto">
-                            {{ selection.invoiceRule.vatPercentageRate | number_format(2, '.', ',') }}
+                        <td class="height-auto align-right">
+                            {{ selection.invoiceRule.vatPercentageRate }} %
                         </td>
                     </tr>
                 {% endfor %}
@@ -146,26 +146,26 @@
                         {% for vatBreakdownRecord in vatBreakdown.records %}
                             <tr>
                                 <td>
-                                    {{ vatBreakdownRecord.vatPercentageRate }}% BTW over {{ vatBreakdownRecord.priceExclVatTotal | number_format(2, '.', ',') }}
+                                    {{ vatBreakdownRecord.vatPercentageRate }}% BTW over {{ vatBreakdownRecord.priceExclVatTotal | number_format(2, ',', '.') }}
                                 </td>
                                 <td>
                                     =
                                 </td>
                                 <td>
-                                    {{ vatBreakdownRecord.vat | number_format(2, '.', ',') }}
+                                    {{ vatBreakdownRecord.vat | number_format(2, ',', '.') }}
                                 </td>
                             </tr>
                         {% endfor %}
                     </table>
                 </div>
-                <div class="col-4 offset-3">
+                <div class="col-4 offset-3 no-padding">
                     <table class="table borderless">
                         <tr class="no-borders">
                             <td>
                                 Subtotaal:
                             </td>
                             <td class="align-right">
-                                {{ vatBreakdown.totalExclVat | number_format(2, '.', ',') }}
+                                {{ vatBreakdown.totalExclVat | number_format(2, ',', '.') }}
                             </td>
                         </tr>
                         <tr class="no-borders">
@@ -173,7 +173,7 @@
                                 BTW:
                             </td>
                             <td class="align-right">
-                                {{ vatBreakdown.vat | number_format(2, '.', ',') }}
+                                {{ vatBreakdown.vat | number_format(2, ',', '.') }}
                             </td>
                         </tr>
                         <tr class="totals-top-bottom-border">
@@ -181,7 +181,7 @@
                                 <b>Totaal: &#0128;</b>
                             </td>
                             <td class="align-right">
-                                <b>{{ vatBreakdown.totalInclVat | number_format(2, '.', ',') }}</b>
+                                <b>{{ vatBreakdown.totalInclVat | number_format(2, ',', '.') }}</b>
                             </td>
                         </tr>
                     </table>
