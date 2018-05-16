@@ -33,7 +33,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    *   description = "Retrieve a Health status for the given ubn"
    * )
    * @param Request $request the request object
-   * @param String $ubn
+   * @param string $ubn
    * @return JsonResponse
    * @Route("/ubn/{ubn}")
    * @Method("GET")
@@ -48,7 +48,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    * Edit Health statuses of the given ubn.
    *
    * @param Request $request the request object
-   * @param String $ubn
+   * @param string $ubn
    * @return JsonResponse
    * @Route("/ubn/{ubn}")
    * @Method("PUT")
@@ -60,7 +60,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
 
     /**
      * @param Request $request the request object
-     * @param String $companyId
+     * @param string $companyId
      * @return JsonResponse
      * @Route("/company/{companyId}")
      * @Method("GET")

@@ -8,7 +8,7 @@ use AppBundle\Entity\DeclareLoss;
 /**
  * Class DeclareLossOutput
  */
-class DeclareLossOutput
+class DeclareLossOutput extends Output
 {
     /**
      * @param DeclareLoss $loss
@@ -36,7 +36,7 @@ class DeclareLossOutput
                 "animal_type" => $loss->getAnimalType(),
                 "type" => $loss->getAnimalObjectType()
             ),
-            "action_by" => $loss->getActionBy()
+            "action_by" => self::actionByOutput($loss->getActionBy())
         );
 
         return $result;

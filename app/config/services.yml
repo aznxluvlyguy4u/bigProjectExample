@@ -527,6 +527,8 @@ services:
         class: AppBundle\Service\CsvFromSqlResultsWriterService
         arguments:
             - '@doctrine.orm.entity_manager'
+            - '@logger'
+            - '@translator'
             - '%kernel.cache_dir%'
 
 
@@ -574,6 +576,7 @@ services:
           - '@app.user'
           - '@translator'
           - '@logger'
+          - '@AppBundle\SqlView\SqlViewManager'
 
     app.abstract_base.auth:
         parent: app.abstract_base.controller
@@ -706,8 +709,6 @@ services:
     app.invoice:
         parent: app.abstract_base.controller
         class: AppBundle\Service\InvoiceService
-        arguments:
-            - '@app.invoice.pdf.generator.service'
 
     app.invoice.rule:
         parent: app.abstract_base.controller
@@ -720,14 +721,6 @@ services:
     app.invoice.sender.details:
         parent: app.abstract_base.controller
         class: AppBundle\Service\InvoiceSenderDetailsService
-        arguments:
-            - '@app.serializer.base'
-            - '@app.cache'
-            - '@doctrine.orm.entity_manager'
-            - '@app.user'
-            - '@translator'
-            - '@logger'
-            - '@templating'
 
     app.invoice.pdf.generator.service:
         class: AppBundle\Service\Invoice\InvoicePdfGeneratorService
@@ -851,6 +844,43 @@ services:
 
     AppBundle\Service\Migration\ScrapieGenotypeReprocessor:
         parent: app.pedigree_data_reprocessor.base
+
+
+    AppBundle\SqlView\SqlViewManager:
+        arguments:
+          - '@AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewLitterDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewLocationDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewPedigreeRegisterAbbreviationRepository'
+          - '@AppBundle\SqlView\Repository\ViewPersonFullNameRepository'
+
+    app.sqlview.repository.base:
+        abstract: true
+        arguments:
+          - '@app.serializer.base'
+          - '@doctrine.orm.default_entity_manager'
+        calls:
+          - method: init
+        lazy: true
+
+    AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewLitterDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewLocationDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewPedigreeRegisterAbbreviationRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewPersonFullNameRepository:
+        parent: app.sqlview.repository.base
 
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:

@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Class TagReplaceTest
  * @package AppBundle\Tests\Controller
  * @group tag-replace
+ * @group rvo
  */
 class TagReplaceTest extends WebTestCase
 {

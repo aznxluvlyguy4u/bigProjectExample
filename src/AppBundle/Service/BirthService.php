@@ -560,6 +560,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         if($succeeded) {
             $litter->setStatus(RequestStateType::REVOKED);
             $litter->setRequestState(RequestStateType::REVOKED);
+            $litter->setMate(null);
             $litter->setRevokeDate(new \DateTime());
             $litter->setRevokedBy($loggedInUser);
 

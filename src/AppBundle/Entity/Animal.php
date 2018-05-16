@@ -98,6 +98,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK",
@@ -120,6 +121,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK",
@@ -183,6 +185,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "LIVESTOCK",
      *     "MINIMAL",
@@ -218,6 +221,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK",
@@ -432,6 +436,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK",
@@ -456,6 +461,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK",
@@ -969,6 +975,45 @@ abstract class Animal
 
 
     /**
+     * Get full uln, country code + number
+     *
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("uln")
+     * @JMS\Groups({
+     *     "PARENT_OF_CHILD"
+     * })
+     * @return string
+     */
+    public function getUln()
+    {
+        if ($this->isUlnExists()) {
+            return $this->ulnCountryCode . $this->ulnNumber;
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("stn")
+     * @JMS\Groups({
+     *     "PARENT_OF_CHILD"
+     * })
+     * @param string $nullFiller
+     * @return null|string
+     */
+    public function getPedigreeString($nullFiller = null)
+    {
+        if (NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber)) {
+            return $this->pedigreeCountryCode . $this->pedigreeNumber;
+        } else {
+            return $nullFiller;
+        }
+    }
+
+
+    /**
      * Animal constructor.
      */
     public function __construct()
@@ -1082,20 +1127,6 @@ abstract class Animal
 
 
     /**
-     * @param string $nullFiller
-     * @return null|string
-     */
-    public function getPedigreeString($nullFiller = null)
-    {
-        if (NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber)) {
-            return $this->pedigreeCountryCode . $this->pedigreeNumber;
-        } else {
-            return $nullFiller;
-        }
-    }
-
-
-    /**
      * Get ulnCountryCode
      *
      * @return string
@@ -1113,20 +1144,6 @@ abstract class Animal
     public function getUlnNumber()
     {
         return $this->ulnNumber;
-    }
-
-    /**
-     * Get full uln, country code + number
-     *
-     * @return string
-     */
-    public function getUln()
-    {
-        if ($this->isUlnExists()) {
-            return $this->ulnCountryCode . $this->ulnNumber;
-        } else {
-            return null;
-        }
     }
 
 

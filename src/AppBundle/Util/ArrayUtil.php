@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\HttpFoundation\Response;
 
 
 /**
@@ -214,5 +215,39 @@ class ArrayUtil
         }
 
         return array_diff_key($array, $assocKeys);
+    }
+
+
+    /**
+     * @param array $needles
+     * @param array $haystack
+     * @param boolean $hayStackIsSetOfArrays
+     * @throws \Exception
+     */
+    public static function validateIfKeysExist($needles, $haystack, $hayStackIsSetOfArrays)
+    {
+        if (count($needles) === 0) {
+            return;
+        }
+
+        if ($hayStackIsSetOfArrays) {
+            $haystack = reset($haystack);
+        }
+
+        if ($haystack === false || count($haystack) === 0) {
+            throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
+        }
+
+        $missingKeys = [];
+        foreach ($needles as $needle)
+        {
+            if (!key_exists($needle, $haystack)) {
+                $missingKeys[] = $needle;
+            }
+        }
+
+        if (count($missingKeys) > 0) {
+            throw new \Exception('Array is missing the following keys: '.implode(', ', $missingKeys));
+        }
     }
 }

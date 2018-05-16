@@ -14,6 +14,7 @@ class JmsGroup
 
     const BASIC = 'BASIC';
 
+    const CHILD = 'CHILD';
     const CONTACT_INFO = 'CONTACT_INFO';
 
     const DECLARE_ = 'DECLARE';
@@ -43,6 +44,7 @@ class JmsGroup
 
     const PARENTS = 'PARENTS';
     const PARENT_DATA = 'PARENT_DATA';
+    const PARENT_OF_CHILD = 'PARENT_OF_CHILD';
 
     const RVO = 'RVO';
 

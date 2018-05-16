@@ -34,6 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Class BirthTest
  * @package AppBundle\Tests\Controller
  * @group birth
+ * @group rvo
  */
 class BirthTest extends WebTestCase
 {

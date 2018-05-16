@@ -1435,41 +1435,6 @@ class AnimalRepository extends BaseRepository
 
 
   /**
-   * @param Animal $animal
-   * @param string $replacementString
-   * @return array
-   */
-  public function getOffspringLogDataBySql($animal, $replacementString)
-  {
-    $results = [];
-
-    if ($animal instanceof Ewe) {
-      $filter = "parent_mother_id = " . $animal->getId();
-    } elseif ($animal instanceof Ram) {
-      $filter = "parent_father_id = " . $animal->getId();
-    } else {
-      return $results;
-    }
-
-    $sql = "SELECT uln_country_code, uln_number, pedigree_country_code, pedigree_number, gender, date_of_birth FROM animal
-            WHERE " . $filter;
-    $retrievedData = $this->getManager()->getConnection()->query($sql)->fetchAll();
-
-    foreach ($retrievedData as $record) {
-      $results[] = [
-          JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
-          JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
-          JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['pedigree_country_code'], $replacementString),
-          JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($record['pedigree_number'], $replacementString),
-          JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
-          JsonInputConstant::DATE_OF_BIRTH => TimeUtil::getDateTimeFromNullCheckedArrayValue('date_of_birth', $record, $replacementString),
-      ];
-    }
-    return $results;
-  }
-
-
-  /**
    * @param $animalId
    * @return int
    */

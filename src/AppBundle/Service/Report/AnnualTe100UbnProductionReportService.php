@@ -49,7 +49,11 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
 
             $this->prepareDatabaseValues();
 
-            return $this->generateCsvFileBySqlQuery($this->getFilename(), $this->getSqlQuery($year, $pedigreeActiveEndDateLimit));
+            return $this->generateCsvFileBySqlQuery(
+                $this->getFilename(),
+                $this->getSqlQuery($year, $pedigreeActiveEndDateLimit),
+                $this->getBooleanColumns($pedigreeActiveEndDateLimit)
+            );
 
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
@@ -68,6 +72,40 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
 
 
     /**
+     * @param \DateTime $pedigreeActiveEndDateLimit
+     * @return array
+     */
+    public function getBooleanColumns($pedigreeActiveEndDateLimit)
+    {
+        return [
+            $this->hasActivePedigreeRegisterWithRegistrationActivationLabel($pedigreeActiveEndDateLimit),
+        ];
+    }
+
+
+    /**
+     * @param \DateTime $pedigreeActiveEndDateLimit
+     * @return string
+     */
+    private function getRegistrationActivationDate($pedigreeActiveEndDateLimit)
+    {
+        return TimeUtil::getDayOfDateTime($pedigreeActiveEndDateLimit)->format('Y-m-d');
+    }
+
+
+    /**
+     * @param \DateTime $pedigreeActiveEndDateLimit
+     * @return string
+     */
+    private function hasActivePedigreeRegisterWithRegistrationActivationLabel($pedigreeActiveEndDateLimit)
+    {
+        $registrationActivationDate = $this->getRegistrationActivationDate($pedigreeActiveEndDateLimit);
+        $registrationActivationDateLabel = strtr($registrationActivationDate, ['-' => '']);
+        return $this->translateColumnHeader('has_active_pedigree_register').'_'.$registrationActivationDateLabel;
+    }
+
+
+    /**
      * @param int $year
      * @param \DateTime $pedigreeActiveEndDateLimit
      * @return string
@@ -78,9 +116,7 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
 
         $y1 = '_'.$this->translateColumnHeader('year1');
         $y2plus = '_'.$this->translateColumnHeader('year2plus');
-        $registrationActivationDate = TimeUtil::getDayOfDateTime($pedigreeActiveEndDateLimit)->format('Y-m-d');
-        $registrationActivationDateLabel = strtr($registrationActivationDate, ['-' => '']);
-        
+
         return "SELECT
                   bnubn.ubn_of_birth as ".$this->translateColumnHeader('ubn').",
                   bnubn.breeder_number as ".$this->translateColumnHeader('breedernumber').",
@@ -88,7 +124,7 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
                   vld.city as ".$this->translateColumnHeader('city').",
                   vld.state as ".$this->translateColumnHeader('state').",
                   vld.pedigree_register_abbreviations as ".$this->translateColumnHeader('pedigree_register').",
-                  COALESCE(register_activity.has_active_pedigree_register, FALSE) as ".$this->translateColumnHeader('has_active_pedigree_register').'_'.$registrationActivationDateLabel.",
+                  COALESCE(register_activity.has_active_pedigree_register, FALSE) as ".$this->hasActivePedigreeRegisterWithRegistrationActivationLabel($pedigreeActiveEndDateLimit).",
                   set1.litter_count as ".$this->translateColumnHeader('litter_count').$y1.",
                   set1.average_total_born_count as ".$this->translateColumnHeader('avg_total_born_count').$y1.",
                   set1.average_born_alive_count as ".$this->translateColumnHeader('avg_born_alive_count').$y1.",
@@ -116,7 +152,7 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
                               SELECT
                                 location_id, true as has_active_pedigree_register
                               FROM pedigree_register_registration
-                              WHERE end_date ISNULL OR end_date > '".$registrationActivationDate."'
+                              WHERE end_date ISNULL OR end_date > '".$this->getRegistrationActivationDate($pedigreeActiveEndDateLimit)."'
                               GROUP BY location_id
                             )register_activity ON register_activity.location_id = vld.location_id
                   LEFT JOIN (

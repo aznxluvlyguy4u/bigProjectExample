@@ -33,6 +33,7 @@ use AppBundle\Entity\Token;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\AnimalDetailsOutput;
+use AppBundle\SqlView\SqlViewManagerInterface;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
@@ -59,6 +60,8 @@ abstract class ControllerServiceBase
     protected $translator;
     /** @var Logger */
     private $logger;
+    /** @var SqlViewManagerInterface */
+    private $sqlViewManager;
 
     /** @var string */
     private $actionLogEditMessage;
@@ -68,7 +71,8 @@ abstract class ControllerServiceBase
                                 EntityManagerInterface $manager,
                                 UserService $userService,
                                 TranslatorInterface $translator,
-                                Logger $logger
+                                Logger $logger,
+                                SqlViewManagerInterface $sqlViewManager
     )
     {
         $this->baseSerializer = $baseSerializer;
@@ -77,6 +81,7 @@ abstract class ControllerServiceBase
         $this->userService = $userService;
         $this->translator = $translator;
         $this->logger = $logger;
+        $this->sqlViewManager = $sqlViewManager;
     }
 
 
@@ -293,7 +298,12 @@ abstract class ControllerServiceBase
      */
     protected function getAnimalDetailsOutputForUserEnvironment(Animal $animal)
     {
-        $output = AnimalDetailsOutput::create($this->getManager(), $animal);
+        $output = AnimalDetailsOutput::create(
+            $this->getManager(),
+            $this->sqlViewManager,
+            $this->baseSerializer,
+            $animal
+        );
         return ResultUtil::successResult($output);
     }
 

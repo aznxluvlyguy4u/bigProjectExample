@@ -9,7 +9,7 @@ use AppBundle\Entity\DeclareBirth;
 /**
  * Class DeclareBirthOutput
  */
-class DeclareBirthOutput
+class DeclareBirthOutput extends Output
 {
     /**
      * @param DeclareBirth $birth
@@ -40,7 +40,7 @@ class DeclareBirthOutput
             "litter_size" => $birth->getLitterSize(),
             "birth_weight" => $birth->getBirthWeight(),
             "birth_tail_length" => $birth->getBirthTailLength(),
-            "action_by" => $birth->getActionBy(),
+            "action_by" => self::actionByOutput($birth->getActionBy()),
             "type" => "DeclareBirth",
             "animal" => array(
                 "uln_country_code" => $birth->getUlnCountryCode(),

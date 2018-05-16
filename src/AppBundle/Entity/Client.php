@@ -17,7 +17,7 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class Client extends Person
+class Client extends Person implements PersonImplementationInterface
 {
     use EntityClassInfo;
 
@@ -30,7 +30,8 @@ class Client extends Person
      *     "ACTION_LOG_USER",
      *     "BASIC",
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "RVO"
      * })
     * @Expose
     */
@@ -42,6 +43,10 @@ class Client extends Person
     * @Assert\NotBlank
     * @ORM\Column(type="string")
     * @JMS\Type("string")
+    * @JMS\Groups({
+    *     "RVO"
+    * })
+    * @Expose
     *
     */
     private $objectType;

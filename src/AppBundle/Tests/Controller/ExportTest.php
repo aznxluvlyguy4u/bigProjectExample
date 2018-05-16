@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Class ExportTest
  * @package AppBundle\Tests\Controller
  * @group export
+ * @group rvo
  */
 class ExportTest extends WebTestCase
 {

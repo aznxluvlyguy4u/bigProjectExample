@@ -649,47 +649,4 @@ class SqlUtil
     }
 
 
-    /**
-     * @param Connection $conn
-     * @param string $selectQuery
-     * @param string $filepath
-     * @param Logger|null $logger
-     * @throws \Exception
-     */
-    public static function writeToFile(Connection $conn, $selectQuery, $filepath, Logger $logger = null)
-    {
-        $isDataMissing = false;
-
-        try {
-            $stmt = $conn->query($selectQuery);
-
-            if ($firstRow = $stmt->fetch()) {
-                DsvWriterUtil::writeNestedRowToFile($filepath, array_keys($firstRow)); //write headers
-                DsvWriterUtil::writeNestedRowToFile($filepath, $firstRow);
-            } else {
-                $isDataMissing = true;
-            }
-
-            while ($row = $stmt->fetch()) {
-                DsvWriterUtil::writeNestedRowToFile($filepath, $row);
-            }
-
-        } catch (\Exception $exception) {
-
-            FilesystemUtil::deleteFile($filepath);
-
-            // Hide error details from user
-            if ($logger) {
-                $logger->error($exception->getMessage());
-                $logger->error($exception->getTraceAsString());
-            }
-            throw new \Exception('FAILED WRITING THE CSV FILE', Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        if ($isDataMissing) {
-            throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
-        }
-    }
-
-
 }

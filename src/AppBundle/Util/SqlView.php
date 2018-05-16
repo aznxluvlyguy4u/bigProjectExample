@@ -212,7 +212,7 @@ class SqlView
                 to_char(a.date_of_birth, 'DD-MM-YYYY') as dd_mm_yyyy_date_of_birth,
                 c.general_appearance,
                 c.muscularity,
-                NULLIF(trim(trailing '-ling' from c.n_ling),'') as n_ling,
+                NULLIF(COALESCE(NULLIF(trim(trailing '-ling' from c.n_ling),''), CAST(a.n_ling AS TEXT)),'') as n_ling,
                 NULLIF(CONCAT(
                            COALESCE(CAST(c.production_age AS TEXT), '-'),'/',
                            COALESCE(CAST(c.litter_count AS TEXT), '-'),'/',
@@ -253,7 +253,7 @@ class SqlView
                 a.is_alive,
                 to_char(a.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_date_of_birth,
                 to_char(a.date_of_death, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_date_of_death,
-                NULLIF(trim(trailing '-ling' from c.n_ling),'') as n_ling,
+                NULLIF(COALESCE(NULLIF(trim(trailing '-ling' from c.n_ling),''), CAST(a.n_ling AS TEXT)),'') as n_ling,
                 a.gender,
                 a.animal_order_number,
                 a.ubn_of_birth,
