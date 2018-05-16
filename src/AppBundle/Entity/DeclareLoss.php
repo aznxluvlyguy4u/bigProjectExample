@@ -130,7 +130,7 @@ class DeclareLoss extends DeclareBase
 
     /**
      * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="loss", cascade={"persist"})
-     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
      * @Expose
      */
