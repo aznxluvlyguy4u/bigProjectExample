@@ -18,6 +18,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\Message;
 use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Enumerator\DateTimeFormats;
 use AppBundle\Enumerator\EmailPrefix;
 use AppBundle\Enumerator\InvoiceAction;
 use AppBundle\Enumerator\InvoiceMessages;
@@ -89,7 +90,7 @@ class BatchInvoiceService extends ControllerServiceBase
                 /** @var PedigreeRegister $register */
                 foreach ($registers as $register) {
                     $registerRule = clone $newRule;
-                    $registerDescription = $registerRule->getDescription()." - ".$register->getAbbreviation()." - ".$controlDate->format("d-m-Y");
+                    $registerDescription = $registerRule->getDescription()." - ".$register->getAbbreviation()." - ".$controlDate->format(DateTimeFormats::DAY_MONTH_YEAR);
                     $registerRule->setDescription($registerDescription);
                     $this->getManager()->persist($registerRule);
                     $newRules->add($registerRule);
@@ -97,7 +98,7 @@ class BatchInvoiceService extends ControllerServiceBase
                 continue;
             }
             if ($newRule->getType() == InvoiceRuleType::SUBSCRIPTION_NSFO_ONLINE || $newRule->getType() == InvoiceRuleType::SUBSCRIPTION_ANIMAL_HEALTH) {
-                $newRule->setDescription($newRule->getDescription()." - ".$controlDate->format("Y"));
+                $newRule->setDescription($newRule->getDescription()." - ".$controlDate->format(DateTimeFormats::YEAR));
                 $this->getManager()->persist($newRule);
                 $newRules->add($newRule);
                 continue;
@@ -323,7 +324,7 @@ class BatchInvoiceService extends ControllerServiceBase
         }
         foreach ($dataSet as $animalRegisterAbbreviation => $animalRegisterCount) {
             /** @var InvoiceRule $registerRule */
-            $abbreviationDate = $animalRegisterAbbreviation." - ".$date->format("d-m-Y");
+            $abbreviationDate = $animalRegisterAbbreviation." - ".$date->format(DateTimeFormats::DAY_MONTH_YEAR);
             /** @var InvoiceRule $batchRule */
             $batchRule = $this->getRulesByDescription($rules, $abbreviationDate)->first();
             $selection = new InvoiceRuleSelection();
@@ -395,7 +396,7 @@ class BatchInvoiceService extends ControllerServiceBase
      * @return mixed
      */
     private function getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate(\DateTime $controlDate) {
-        $dateString = $controlDate->format('d-m-Y H:i:s');
+        $dateString = $controlDate->format(DateTimeFormats::DAY_MONTH_YEAR_HOUR_MINUTE_SECOND);
         return $this->getManager()->getRepository(Animal::class)
             ->getAnimalCountsByCompanyLocationPedigreeRegisterOnControlDate($dateString);
     }
