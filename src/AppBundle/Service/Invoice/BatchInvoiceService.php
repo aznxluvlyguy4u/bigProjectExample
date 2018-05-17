@@ -8,6 +8,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Address;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
@@ -397,7 +398,10 @@ class BatchInvoiceService extends ControllerServiceBase
      */
     private function getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate(\DateTime $controlDate) {
         $dateString = $controlDate->format(DateTimeFormats::DAY_MONTH_YEAR_HOUR_MINUTE_SECOND);
-        return $this->getManager()->getRepository(Animal::class)
-            ->getAnimalCountsByCompanyLocationPedigreeRegisterOnControlDate($dateString);
+
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getManager()->getRepository(Animal::class);
+
+        return $animalRepository->getAnimalCountsByCompanyLocationPedigreeRegisterOnControlDate($dateString);
     }
 }
