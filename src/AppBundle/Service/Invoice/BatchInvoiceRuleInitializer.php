@@ -52,7 +52,10 @@ class BatchInvoiceRuleInitializer extends MigratorServiceBase
         $administrationCostsCategory = $this->em->getRepository(LedgerCategory::class)->findOneBy(array("code" => self::ADMINISTRATION_COSTS_CODE));
         /** @var LedgerCategory $NSFOSubscriptionsCategory */
         $NSFOSubscriptionsCategory = $this->em->getRepository(LedgerCategory::class)->findOneBy(array("code" => self::NSFO_SUBSCRIPTION_CODE));
-
+        $rules =         $this->em->getRepository(InvoiceRule::class)->findBy(array("isBatch" => true));
+        if (sizeof($rules) > 0) {
+            return;
+        }
 
         /**
          * Instantiate fixtures
