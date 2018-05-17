@@ -160,6 +160,7 @@ abstract class Output
                 'first_name' => $person->getFirstName(),
                 'last_name' => $person->getFirstName(),
                 'objectType' => $person->getObjectType(),
+                'type' => $person->getObjectType(),
             ];
 
             if ($person instanceof Client) {

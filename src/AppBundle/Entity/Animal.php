@@ -391,7 +391,7 @@ abstract class Animal
      * @var Tag
      *
      * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
-     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=true)
+     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      * @JMS\Type("AppBundle\Entity\Tag")
      */
     protected $assignedTag;
