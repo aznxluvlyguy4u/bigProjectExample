@@ -289,7 +289,6 @@ abstract class Person implements UserInterface
      */
     private $passwordResetToken;
 
-
     /**
      * @var \DateTime
      *
@@ -299,6 +298,11 @@ abstract class Person implements UserInterface
      */
     protected $passwordResetTokenCreationDate;
 
+    /**
+     * @ORM\OneToOne(targetEntity="EmailChangeConfirmation", mappedBy="person", cascade={"persist", "remove"})
+     *
+     */
+    private $emailChangeToken;
 
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
@@ -560,6 +564,7 @@ abstract class Person implements UserInterface
       foreach($this->tokens as $token) {
         if($token->getType() == TokenType::ACCESS) {
           $token->setCode($accessToken);
+          $token->setCreationDateTime(new \DateTime());
           return;
         }
       }
@@ -808,6 +813,23 @@ abstract class Person implements UserInterface
     public function setPasswordResetTokenCreationDate($passwordResetTokenCreationDate)
     {
         $this->passwordResetTokenCreationDate = $passwordResetTokenCreationDate;
+        return $this;
+    }
+
+    /**
+     * @param
+     * @return EmailChangeConfirmation
+     */
+    public function getEmailChangeToken(){
+        return $this->emailChangeToken;
+    }
+
+    /**
+     * @param $token
+     * @return Person
+     */
+    public function setEmailChangeToken($token){
+        $this->emailChangeToken = $token;
         return $this;
     }
 
