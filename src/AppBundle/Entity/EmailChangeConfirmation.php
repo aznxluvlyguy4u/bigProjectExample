@@ -74,6 +74,7 @@ class EmailChangeConfirmation
 
     public function __construct()
     {
+        $this->creationDate = new \DateTime();
     }
 
     /**

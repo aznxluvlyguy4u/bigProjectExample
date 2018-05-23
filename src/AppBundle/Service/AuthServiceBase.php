@@ -270,10 +270,11 @@ class AuthServiceBase extends ControllerServiceBase
                     $token = new EmailChangeConfirmation();
                 }
 
-                $token->setCreationDate(new \DateTime())
+                $token
                     ->setToken(StringUtil::getResetToken())
                     ->setEmailAddress($emailAddress)
-                    ->setPerson($person);
+                    ->setPerson($person)
+                ;
 
                 $person->setEmailChangeToken($token);
                 $this->getManager()->persist($person);
@@ -304,6 +305,7 @@ class AuthServiceBase extends ControllerServiceBase
 
         $emailToken = null;
         if ($token !== null) {
+            /** @var EmailChangeConfirmation $emailToken */
             $emailToken = $this->getManager()
                 ->getRepository(EmailChangeConfirmation::class)
                 ->findOneBy(['token' => $token]);
