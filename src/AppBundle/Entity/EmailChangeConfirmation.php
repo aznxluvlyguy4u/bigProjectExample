@@ -30,6 +30,7 @@ class EmailChangeConfirmation
 
     /**
      * @ORM\OneToOne(targetEntity="Person", inversedBy="emailChangeToken", cascade={"persist"})
+     * @ORM\JoinColumn(name="person_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Person")
      * @Exclude
      */
