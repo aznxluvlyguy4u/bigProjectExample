@@ -250,4 +250,29 @@ class AuthAPIController extends APIController {
         return $this->get('app.security.auth')->passwordResetConfirmation($resetToken);
     }
 
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/email-change")
+     * @Method("POST")
+     */
+    public function emailChangeRequest(Request $request)
+    {
+        return $this->get('app.security.auth')->emailChangeRequest($request);
+    }
+
+
+    /**
+     * @param Request $request the request object
+     * @return string
+     * @Route("/email-change/{resetToken}")
+     * @Method("GET")
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @throws \Twig\Error\Error
+     */
+    public function emailChangeConfirmation(Request $request, $resetToken)
+    {
+        return $this->get('app.security.auth')->emailChangeConfirmation($resetToken);
+    }
+
 }
