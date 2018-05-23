@@ -5,10 +5,9 @@ namespace AppBundle\Entity;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\TimeUtil;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Exclude;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use JMS\Serializer\Annotation\ExclusionPolicy;
-use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class EmailChangeConfirmation
@@ -23,12 +22,16 @@ class EmailChangeConfirmation
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @Expose
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
      */
     protected $id;
 
     /**
      * @ORM\OneToOne(targetEntity="Person", inversedBy="emailChangeToken", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Person")
+     * @Exclude
      */
     private $person;
 
@@ -39,11 +42,8 @@ class EmailChangeConfirmation
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "BASIC",
-     *     "GHOST_LOGIN",
-     *     "VWA"
+     *     "DETAILS"
      * })
-     * @Expose
      */
     protected $emailAddress;
 
@@ -57,7 +57,6 @@ class EmailChangeConfirmation
      * @JMS\Groups({
      *     "DETAILS"
      * })
-     * @Expose
      */
     protected $creationDate;
 
@@ -65,6 +64,9 @@ class EmailChangeConfirmation
      * @var string
      * @ORM\Column(type="string", unique=true, nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
      */
     private $token;
 
@@ -118,7 +120,7 @@ class EmailChangeConfirmation
 
     /**
      * @param $token
-     * @return $this
+     * @return EmailChangeConfirmation
      */
     public function setToken($token)
     {
@@ -145,8 +147,8 @@ class EmailChangeConfirmation
     }
 
     /**
-     * @param $person
-     * @return $this
+     * @param Person $person
+     * @return EmailChangeConfirmation
      */
     public function setPerson($person)
     {
@@ -155,7 +157,7 @@ class EmailChangeConfirmation
     }
 
     /**
-     * @return mixed
+     * @return Person
      */
     public function getPerson()
     {
@@ -164,7 +166,7 @@ class EmailChangeConfirmation
 
 
     /**
-     * @return bool|mixed
+     * @return bool|int
      */
     public function getEmailConfirmationTokenAgeInDays()
     {

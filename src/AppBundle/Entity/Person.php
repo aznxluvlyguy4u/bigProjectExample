@@ -300,7 +300,10 @@ abstract class Person implements UserInterface
 
     /**
      * @ORM\OneToOne(targetEntity="EmailChangeConfirmation", mappedBy="person", cascade={"persist", "remove"})
-     *
+     * @JMS\Type("AppBundle\Entity\EmailChangeConfirmation")
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
      */
     private $emailChangeToken;
 
