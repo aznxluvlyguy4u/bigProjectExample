@@ -260,8 +260,6 @@ class AuthServiceBase extends ControllerServiceBase
                 return ResultUtil::errorResult('Er bestaat al een gebruiker met dit e-mail', Response::HTTP_BAD_REQUEST);
         }
 
-        $log = ActionLogWriter::passwordResetRequest($this->getManager(), $person, $userActionType, $emailAddress);
-
         if ($person !== null && $personType != null) {
             try {
                 if(!$this->encoder->isPasswordValid($person, $password))
@@ -283,7 +281,7 @@ class AuthServiceBase extends ControllerServiceBase
 
                 $isEmailSent = $this->emailService->emailChangeConfirmationToken($person);
                 if ($isEmailSent) {
-                    ActionLogWriter::completeActionLog($this->getManager(), $log);
+                    return ResultUtil::successResult('E-mail change request processed for email address: ' . $emailAddress);
                 }
 
             } catch (\Exception $exception) {
