@@ -7,6 +7,7 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AccessLevelType;
@@ -19,6 +20,7 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 
 class TagReplaceService extends DeclareControllerServiceBase
@@ -84,6 +86,37 @@ class TagReplaceService extends DeclareControllerServiceBase
         ActionLogWriter::completeActionLog($this->getManager(), $log);
 
         return new JsonResponse($messageArray, 200);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function resendOpenTagReplaceRequest(Request $request)
+    {
+        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::DEVELOPER)) {
+            return ResultUtil::unauthorized();
+        }
+
+        $content = RequestUtil::getContentAsArray($request);
+        $minId = $content->get('min_id');
+
+        if (!$minId) {
+            return ResultUtil::errorResult('min_id missing', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $openTagReplaces = $this->getManager()->getRepository(DeclareTagReplace::class)->findOpen($minId);
+
+        /** @var DeclareTagReplace $declareTagReplace */
+        foreach ($openTagReplaces as $declareTagReplace) {
+
+            //Send it to the queue and persist/update any changed state to the database
+            $messageArray = $this->sendMessageObjectToQueue($declareTagReplace);
+
+        }
+
+        return new JsonResponse(count($openTagReplaces), 200);
     }
 
 

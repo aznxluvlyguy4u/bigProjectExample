@@ -42,6 +42,35 @@ class TagsReplaceAPIController extends APIController {
       return $this->get('app.tag.replace')->createTagReplaceRequest($request);
   }
 
+
+    /**
+     *
+     * Resend open DeclareTagReplace requests
+     *
+     * @ApiDoc(
+     *   section = "Tag Replace",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Post a new DeclareTagReplace request, containing a Tag to be replaced"
+     * )
+     * @param Request $request
+     * @return JsonResponse
+     * @Route("-resend")
+     * @Method("POST")
+     */
+    public function resendOpenTagReplaceRequest(Request $request)
+    {
+        return $this->get('app.tag.replace')->resendOpenTagReplaceRequest($request);
+    }
+
+
     /**
     * @param Request $request
     * @return JsonResponse

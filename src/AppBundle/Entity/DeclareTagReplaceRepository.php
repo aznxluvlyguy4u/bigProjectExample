@@ -119,5 +119,26 @@ class DeclareTagReplaceRepository extends BaseRepository {
         }
         return $searchArray;
     }
-    
+
+
+    /**
+     * @param int $minId
+     * @return array
+     */
+    public function findOpen($minId = 1)
+    {
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $query = $qb
+            ->select('tagReplace')
+            ->from(DeclareTagReplace::class, 'tagReplace')
+            ->where($qb->expr()->andX(
+                $qb->expr()->gte('tagReplace.id', $minId),
+                $qb->expr()->eq('tagReplace.requestState', "'".RequestStateType::OPEN."'")
+            ))
+            ->orderBy('tagReplace.id' ,'ASC')
+            ->getQuery();
+
+        return $query->getResult();
+    }
 }
