@@ -262,7 +262,7 @@ class AuthServiceBase extends ControllerServiceBase
         $password = base64_decode($content->get(JsonInputConstant::PASSWORD));
 
         if (!filter_var($newEmailAddress, FILTER_VALIDATE_EMAIL)) {
-            return ResultUtil::errorResult('Dit is geen valide e-mail', Response::HTTP_BAD_REQUEST);
+            return ResultUtil::errorResult($this->translator->trans('THIS IS NOT A VALID EMAIL ADDRESS'), Response::HTTP_BAD_REQUEST);
         }
         $dashboardType = $dashboardType === null ? $content->get(JsonInputConstant::DASHBOARD_TYPE) : $dashboardType;
 
@@ -273,12 +273,12 @@ class AuthServiceBase extends ControllerServiceBase
             $personByNewEmailAddress = self::getPersonByEmailAddressAndDashboardType($newEmailAddress, $dashboardType);
 
             if ($personByNewEmailAddress) {
-                return ResultUtil::errorResult('Er bestaat al een gebruiker met dit e-mail', Response::HTTP_BAD_REQUEST);
+                return ResultUtil::errorResult($this->translator->trans('A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS'), Response::HTTP_BAD_REQUEST);
             }
 
             if ($loggedInUser !== null) {
                 if(!$this->encoder->isPasswordValid($loggedInUser, $password))
-                    return ResultUtil::errorResult('Het wachtwoord is niet correct', Response::HTTP_BAD_REQUEST);
+                    return ResultUtil::errorResult($this->translator->trans('THE PASSWORD IS INCORRECT'), Response::HTTP_BAD_REQUEST);
 
                 $token = $loggedInUser->getEmailChangeToken();
                 if($token == null){
