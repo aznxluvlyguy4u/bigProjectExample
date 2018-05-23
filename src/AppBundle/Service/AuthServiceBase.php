@@ -277,8 +277,9 @@ class AuthServiceBase extends ControllerServiceBase
             }
 
             if ($loggedInUser !== null) {
-                if(!$this->encoder->isPasswordValid($loggedInUser, $password))
+                if(!$this->encoder->isPasswordValid($loggedInUser, $password)) {
                     return ResultUtil::errorResult($this->translator->trans('THE PASSWORD IS INCORRECT'), Response::HTTP_BAD_REQUEST);
+                }
 
                 $token = $loggedInUser->getEmailChangeToken();
                 if($token == null){
@@ -294,11 +295,9 @@ class AuthServiceBase extends ControllerServiceBase
 
                 $loggedInUser->setEmailChangeToken($token);
                 $this->getManager()->persist($loggedInUser);
-
-                $userActionType = self::getUserActionTypeByDashboardType($dashboardType);
-                // TODO action log
-
                 $this->getManager()->flush();
+
+                // ActionLog is only persisted for successful email change
 
                 $isEmailSent = $this->emailService->emailChangeConfirmationToken($loggedInUser);
                 if ($isEmailSent) {
@@ -337,18 +336,21 @@ class AuthServiceBase extends ControllerServiceBase
                     $person = $emailToken->getPerson();
                     if($person != null) {
 
+                        $oldEmailAddress = $person->getEmailAddress();
+                        $newEmailAddress = $emailToken->getEmailAddress();
 
-                        $person->setEmailAddress($emailToken->getEmailAddress());
+                        $person->setEmailAddress($newEmailAddress);
                         $person->setEmailChangeToken(null);
                         $this->getManager()->remove($emailToken);
                         $person->setAccessToken(Utils::generateTokenCode());
                         $this->getManager()->persist($person);
                         $this->getManager()->flush();
+
+                        ActionLogWriter::emailChangeConfirmation($this->getManager(), $person, $oldEmailAddress, $newEmailAddress);
+
                         return $this->getTemplatingService()->renderResponse('Status/email_change_success.html.twig', [], $response);
                     }
                 }
-                //ActionLogWriter::passwordResetConfirmation($this->getManager(), $person);
-
 
             } catch (\Exception $exception) {
                 //TODO ActionLog error
