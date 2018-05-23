@@ -265,7 +265,7 @@ class AuthAPIController extends APIController {
     /**
      * @param Request $request the request object
      * @return string
-     * @Route("/email-change/{resetToken}")
+     * @Route("/email-change-verification/{resetToken}")
      * @Method("GET")
      * @return \Symfony\Component\HttpFoundation\Response
      * @throws \Twig\Error\Error
