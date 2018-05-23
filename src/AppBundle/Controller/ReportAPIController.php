@@ -250,7 +250,7 @@ class ReportAPIController extends APIController {
      * @Route("/annual-active-livestock")
      * @Method("GET")
      */
-    public function geAnnualActiveLivestockReport(Request $request)
+    public function getAnnualActiveLivestockReport(Request $request)
     {
         return $this->get('AppBundle\Service\Report\AnnualActiveLivestockReportService')->getReport($request);
     }
@@ -293,7 +293,7 @@ class ReportAPIController extends APIController {
      * @Route("/annual-active-livestock-ram-mates")
      * @Method("GET")
      */
-    public function geAnnualActiveLivestockRamMatesReport(Request $request)
+    public function getAnnualActiveLivestockRamMatesReport(Request $request)
     {
         return $this->get('AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService')->getReport($request);
     }
