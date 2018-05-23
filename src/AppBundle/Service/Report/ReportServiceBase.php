@@ -8,6 +8,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
@@ -700,5 +701,14 @@ class ReportServiceBase
         }
 
         return $animalIds;
+    }
+
+
+    /**
+     * @return string
+     */
+    protected function getGenderLetterTranslationValues()
+    {
+        return SqlUtil::getGenderLetterTranslationValues($this->translator);
     }
 }
