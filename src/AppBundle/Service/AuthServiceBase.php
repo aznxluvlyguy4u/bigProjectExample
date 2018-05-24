@@ -294,6 +294,7 @@ class AuthServiceBase extends ControllerServiceBase
                 ;
 
                 $loggedInUser->setEmailChangeToken($token);
+                $this->getManager()->persist($token);
                 $this->getManager()->persist($loggedInUser);
                 $this->getManager()->flush();
 
@@ -330,35 +331,35 @@ class AuthServiceBase extends ControllerServiceBase
                 ->findOneBy(['token' => $token]);
         }
 
-        if ($emailToken) {
-            try {
-                if($emailToken->getEmailConfirmationTokenAgeInDays() < self::PASSWORD_RESET_EXPIRATION_DAYS) {
-                    $person = $emailToken->getPerson();
-                    if($person != null) {
-
-                        $oldEmailAddress = $person->getEmailAddress();
-                        $newEmailAddress = $emailToken->getEmailAddress();
-
-                        $person->setEmailAddress($newEmailAddress);
-                        $person->setEmailChangeToken(null);
-                        $this->getManager()->remove($emailToken);
-                        $person->setAccessToken(Utils::generateTokenCode());
-                        $this->getManager()->persist($person);
-                        $this->getManager()->flush();
-
-                        ActionLogWriter::emailChangeConfirmation($this->getManager(), $person, $oldEmailAddress, $newEmailAddress);
-
-                        return $this->getTemplatingService()->renderResponse('Status/email_change_success.html.twig', [], $response);
-                    }
-                }
-
-            } catch (\Exception $exception) {
-                //TODO ActionLog error
-
+        try {
+            if (!$emailToken ||
+                $emailToken->getEmailConfirmationTokenAgeInDays() >= self::PASSWORD_RESET_EXPIRATION_DAYS)
+            {
+                return $this->getTemplatingService()->renderResponse('Status/email_change_expired.html.twig', [], $response);
             }
-            //TODO ActionLog error
+
+            $person = $emailToken->getPerson();
+            if($person != null) {
+
+                $oldEmailAddress = $person->getEmailAddress();
+                $newEmailAddress = $emailToken->getEmailAddress();
+
+                $person->setEmailAddress($newEmailAddress);
+                $person->setEmailChangeToken(null);
+                $this->getManager()->remove($emailToken);
+                $person->setAccessToken(Utils::generateTokenCode());
+                $this->getManager()->persist($person);
+                $this->getManager()->flush();
+
+                ActionLogWriter::emailChangeConfirmation($this->getManager(), $person, $oldEmailAddress, $newEmailAddress);
+
+                return $this->getTemplatingService()->renderResponse('Status/email_change_success.html.twig', [], $response);
+            }
+
+        } catch (\Exception $exception) {
+            $this->logExceptionAsError($exception);
+            return $this->getTemplatingService()->renderResponse('Status/email_change_failed.html.twig', [], $response);
         }
-        //TODO ActionLog error
 
         return $this->getTemplatingService()->renderResponse('Status/email_change_failed.html.twig', [], $response);
     }
