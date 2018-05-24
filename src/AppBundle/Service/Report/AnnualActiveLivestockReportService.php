@@ -82,19 +82,19 @@ class AnnualActiveLivestockReportService extends ReportServiceBase implements Re
         $year = intval($referenceYear);
         $referenceDateString = $year.'-12-31';
 
-        $animalResidenceJoin = SqlUtil::animalResidenceSqlJoin($referenceDateString,'a.id');
+        $animalResidenceJoin = SqlUtil::animalResidenceSqlJoin($referenceDateString,'vda.animal_id');
         $animalResidenceWhereCondition = SqlUtil::animalResidenceWhereCondition();
 
         return "SELECT
-                  CONCAT(uln_country_code, uln_number) as ".$this->translateColumnHeader('uln').",
-                  CONCAT(pedigree_country_code, pedigree_number) as ".$this->translateColumnHeader('stn').",
+                  vda.uln as ".$this->translateColumnHeader('uln').",
+                  vda.stn as ".$this->translateColumnHeader('stn').",
                   gender.translated_char as ".$this->translateColumnHeader('gender').",
-                  DATE(date_of_birth) as ".$this->translateColumnHeader('date_of_birth').",
-                  breed_code as ".$this->translateColumnHeader('breed_code').",
-                  p.abbreviation as ".$this->translateColumnHeader('pedigree_register')."
-                FROM animal a
-                  LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
-                  LEFT JOIN pedigree_register p ON a.pedigree_register_id = p.id
+                  vda.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('date_of_birth').",
+                  vda.breed_code as ".$this->translateColumnHeader('breed_code').",
+                  vda.breed_type_as_dutch_first_letter as ".$this->translateColumnHeader('breed type').",
+                  vda.pedigree_register_abbreviation as ".$this->translateColumnHeader('pedigree_register')."
+                FROM view_animal_livestock_overview_details vda
+                  LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON vda.gender = gender.english_full
                       $animalResidenceJoin
                 WHERE $animalResidenceWhereCondition";
     }
