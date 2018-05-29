@@ -224,6 +224,7 @@ class BatchInvoiceService extends ControllerServiceBase
             if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
                 $this->persist($message);
             }
+            $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
             $this->getManager()->persist($invoice);
         }
         return $invoiceSet;

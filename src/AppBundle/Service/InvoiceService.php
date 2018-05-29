@@ -407,7 +407,7 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
         }
         $invoice->updateTotal();
-
+        $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
         $this->persistAndFlush($invoice);
         return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }
