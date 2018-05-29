@@ -195,7 +195,7 @@ class BatchInvoiceService extends ControllerServiceBase
             $invoice->setCompanyVatNumber($company->getVatNumber());
             $invoice->setInvoiceNumber($this->invoiceNumber);
             $message = new Message();
-            if (!$company->getDebtorNumber()) {
+            if (!$company->getDebtorNumber() || $company->getDebtorNumber() == "") {
                 $invoice->setStatus(InvoiceStatus::NOT_SEND);
             } else {
                 $invoice->setStatus(InvoiceStatus::UNPAID);
