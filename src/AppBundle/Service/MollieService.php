@@ -55,7 +55,7 @@ class MollieService
         $payment = $this->client->payments->create(
                     array(
                         'description' => 'NSFO factuur',
-                        'amount' => $invoice->getTotal(),
+                        'amount' => $invoice->getVatBreakdownRecords()->getTotalInclVat(),
                         'redirectUrl' => $this->webHostAddress.Endpoint::FRONTEND_INVOICE_DETAILS_ENDPOINT.'/'.$invoice->getId(),
                         'webhookUrl' => $this->apiHostAddress.Endpoint::MOLLIE_ENDPOINT.'/update/'.$invoice->getId(),
                         'method' => 'ideal',
