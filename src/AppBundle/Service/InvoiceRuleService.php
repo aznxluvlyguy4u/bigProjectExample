@@ -22,16 +22,23 @@ use Symfony\Component\HttpFoundation\Response;
 class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPIControllerInterface
 {
     /**
+     * Basic get function, it will get invoice rules, the gotten invoice rules differ, based on given query parameters
+     *
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
     public function getInvoiceRules(Request $request)
     {
         $type = $request->query->get(QueryParameter::TYPE_QUERY);
+        $isBatch = $request->query->get(QueryParameter::IS_BATCH);
         $activeOnly = RequestUtil::getBooleanQuery($request,QueryParameter::ACTIVE_ONLY,false);
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
+        if ($isBatch) {
+            $rules = $this->getManager()->getRepository(InvoiceRule::class)->findBatchRules();
+            return ResultUtil::successResult($rules);
+        }
         $rules = $this->getManager()->getRepository(InvoiceRule::class)->findByType($type, $activeOnly);
         $output = $this->getBaseSerializer()->getDecodedJson($rules, JmsGroup::INVOICE_RULE);
 
@@ -40,6 +47,8 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
 
 
     /**
+     * Invoice rule creation function, only accessible by admins
+     *
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
@@ -109,6 +118,8 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
 
 
     /**
+     * Validation function, to check if a valid invoice rule was send through the request
+     *
      * @param InvoiceRule $newRule
      * @return JsonResponse|bool
      */

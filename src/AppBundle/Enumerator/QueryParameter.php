@@ -29,4 +29,5 @@ class QueryParameter
     const IS_EWES_WITH_LAST_MATE = 'is_ewes_with_last_mate';
     const MAX_DAYS = 'max_days';
     const YEAR = 'year';
+    const IS_BATCH = "isBatch";
 }

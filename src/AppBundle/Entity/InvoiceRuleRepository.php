@@ -28,7 +28,9 @@ class InvoiceRuleRepository extends BaseRepository
         $qb = $this->_em->createQueryBuilder();
         $qb->select("q")
             ->from(InvoiceRule::class, "q");
-
+        $qb->where(
+            $qb->expr()->eq("q.isBatch", 'false')
+        );
         if ($type != null) {
             $qb->andWhere(
                 $qb->expr()->eq("q.type", ":type")
@@ -45,5 +47,18 @@ class InvoiceRuleRepository extends BaseRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * @return array
+     */
+    public function findBatchRules() {
+        $qb = $this->_em->createQueryBuilder();
+        $qb->select("ir")
+            ->from(InvoiceRule::class, "ir")
+            ->where(
+                $qb->expr()->eq("ir.isBatch", "true")
+            );
+
+        return $qb->getQuery()->getResult();
+    }
 
 }

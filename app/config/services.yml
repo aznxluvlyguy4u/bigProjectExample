@@ -351,6 +351,9 @@ services:
     AppBundle\Service\Migration\PedigreeCodeInitializer:
         parent: app.migrator.base
 
+    AppBundle\Service\Invoice\BatchInvoiceRuleInitializer:
+        parent: app.migrator.base
+
     AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator:
         parent: app.migrator.base
 
@@ -712,6 +715,10 @@ services:
     app.invoice:
         parent: app.abstract_base.controller
         class: AppBundle\Service\InvoiceService
+        calls:
+          - method: instantiateServices
+            arguments:
+              - '@app.invoice.pdf.generator.service'
 
     app.invoice.rule:
         parent: app.abstract_base.controller
@@ -739,6 +746,9 @@ services:
             - '%output_reports_to_cache_folder_for_local_testing%'
             - '%display_report_pdf_output_as_html%'
 
+    AppBundle\Service\Invoice\BatchInvoiceService:
+        parent: app.abstract_base.controller
+
     app.loss:
         parent: app.abstract_base.declare
         class: AppBundle\Service\LossService
@@ -762,17 +772,15 @@ services:
     app.mollie.payment:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MolliePaymentService
-        arguments:
-          - '@app.serializer.base'
-          - '@app.cache'
-          - '@doctrine.orm.default_entity_manager'
-          - '@app.user'
-          - '@translator'
-          - '@logger'
-          - '@app.mollie.service'
-          - '%mollie_test_api_key%'
-          - '%mollie_prod_api_key%'
-          - '%environment%'
+        calls:
+          - method: instantiateServices
+            arguments:
+              - '@app.mollie.service'
+          - method: setKeys
+            arguments:
+              - '%mollie_test_api_key%'
+              - '%mollie_prod_api_key%'
+              - '%environment%'
 
     app.pedigree_register:
         parent: app.abstract_base.controller
