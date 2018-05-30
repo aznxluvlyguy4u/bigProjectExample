@@ -28,23 +28,19 @@ class InvoiceRuleRepository extends BaseRepository
         $qb = $this->_em->createQueryBuilder();
         $qb->select("q")
             ->from(InvoiceRule::class, "q");
-
+        $qb->where(
+            $qb->expr()->eq("q.isBatch", 'false')
+        );
         if ($type != null) {
             $qb->andWhere(
-                $qb->expr()->andX(
-                    $qb->expr()->eq("q.type", ":type"),
-                    $qb->expr()->eq("q.isBatch", 'false')
-                )
+                $qb->expr()->eq("q.type", ":type")
             );
             $qb->setParameter("type", $type);
         }
 
         if ($activeOnly) {
             $qb->andWhere(
-                $qb->expr()->andX(
-                    $qb->expr()->eq('q.isDeleted', 'false'),
-                    $qb->expr()->eq("q.isBatch", 'false')
-                )
+                $qb->expr()->eq("q.isBatch", 'false')
             );
         }
 
