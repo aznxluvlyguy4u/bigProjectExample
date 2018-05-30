@@ -17,6 +17,7 @@ use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ProcessUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -337,11 +338,16 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
      */
     private function getHistoricLiveStockCountsByFertilizerCategoryQueryBase($referenceDateString, $fertilizerCategory)
     {
-        $locationId = $this->location->getId();
-
         $referenceDateLabel = $this->getReferenceDateLabel();
         $fertilizerCategoryLabel = $this->getAnimalCategoryLabel();
         $animalCountLabel = $this->getAnimalCountLabel();
+
+        $animalResidenceJoin = SqlUtil::animalResidenceSqlJoin(
+            $referenceDateString,
+            'a.id',
+            $this->location->getId()
+        );
+        $animalResidenceWhereCondition = SqlUtil::animalResidenceWhereCondition();
 
         return "SELECT
                       '$referenceDateString' as $referenceDateLabel,
@@ -349,51 +355,8 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
                       COUNT(a.id) as $animalCountLabel
                     FROM animal a
                       INNER JOIN view_animal_livestock_overview_details va ON a.id = va.animal_id
-                      LEFT JOIN (
-                                  SELECT
-                                    r.animal_id,
-                                    1 as priority
-                                  FROM (
-                                         SELECT
-                                           r.animal_id,
-                                           max(id) as max_id
-                                         FROM animal_residence r
-                                         WHERE
-                                           start_date NOTNULL AND end_date NOTNULL AND
-                                           DATE(start_date) <= '$referenceDateString' AND DATE(end_date) >= '$referenceDateString'
-                                           AND is_pending = FALSE
-                                           AND location_id = $locationId
-                                         GROUP BY r.animal_id
-                                       )closed_residence
-                                    INNER JOIN animal_residence r ON r.id = closed_residence.max_id
-                                )closed_residence ON closed_residence.animal_id = a.id
-                      LEFT JOIN (
-                                  SELECT
-                                    open_residence.animal_id,
-                                    2 as priority
-                                  FROM (
-                                         SELECT
-                                           open_residence.animal_id,
-                                           open_residence.max_start_date,
-                                           max(id) as max_id
-                                         FROM (
-                                                SELECT
-                                                  r.animal_id,
-                                                  max(start_date) as max_start_date
-                                                FROM animal_residence r
-                                                WHERE
-                                                  start_date NOTNULL AND end_date ISNULL AND
-                                                  DATE(start_date) <= '$referenceDateString'
-                                                  AND is_pending = FALSE
-                                                  AND location_id = $locationId
-                                                GROUP BY animal_id
-                                              )open_residence
-                                           INNER JOIN animal_residence r ON r.animal_id = open_residence.animal_id AND r.start_date = open_residence.max_start_date
-                                         GROUP BY open_residence.animal_id, open_residence.max_start_date
-                                       )open_residence
-                                    INNER JOIN animal_residence r ON r.id = open_residence.max_id
-                                )open_residence ON open_residence.animal_id = a.id
-                    WHERE (open_residence.animal_id NOTNULL OR closed_residence.animal_id NOTNULL)
+                      $animalResidenceJoin
+                    WHERE $animalResidenceWhereCondition
       AND
       ".$this->fertilizerCategoryQueryFilter($referenceDateString, $fertilizerCategory);
     }

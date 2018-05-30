@@ -391,7 +391,7 @@ abstract class Animal
      * @var Tag
      *
      * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
-     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=true)
+     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      * @JMS\Type("AppBundle\Entity\Tag")
      */
     protected $assignedTag;
@@ -846,7 +846,8 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "ANIMALS_BATCH_EDIT"
+     *     "ANIMALS_BATCH_EDIT",
+     *     "LIVESTOCK"
      * })
      */
     protected $collarColor;
@@ -857,7 +858,8 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "ANIMALS_BATCH_EDIT"
+     *     "ANIMALS_BATCH_EDIT",
+     *     "LIVESTOCK"
      * })
      */
     protected $collarNumber;

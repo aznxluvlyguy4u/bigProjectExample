@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRepository;
@@ -16,6 +17,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\Message;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\InvoiceAction;
 use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
@@ -46,17 +48,7 @@ class InvoiceService extends ControllerServiceBase
     /** @var  InvoicePdfGeneratorService */
     private $invoicePdfGeneratorService;
 
-    public function __construct(
-        BaseSerializer $baseSerializer,
-        CacheService $cacheService,
-        EntityManagerInterface $manager,
-        UserService $userService,
-        TranslatorInterface $translator,
-        Logger $logger,
-        InvoicePdfGeneratorService $invoicePdfGeneratorService
-    )
-    {
-        parent::__construct($baseSerializer, $cacheService, $manager, $userService, $translator, $logger);
+    public function instantiateServices(InvoicePdfGeneratorService $invoicePdfGeneratorService) {
         $this->invoicePdfGeneratorService = $invoicePdfGeneratorService;
     }
 
@@ -77,8 +69,8 @@ class InvoiceService extends ControllerServiceBase
         }
         $repo = $this->getManager()->getRepository(Invoice::class);
         $status = $request->get('status');
-        $invoices = $repo->findBy(array('isDeleted' => false), array('invoiceDate' => 'ASC'));
-        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoices, [JmsGroup::INVOICE]));
+        $invoices = $repo->findBy(array('isDeleted' => false), array('invoiceNumber' => 'DESC'));
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoices, [JmsGroup::INVOICE_OVERVIEW]));
     }
 
 
@@ -203,7 +195,7 @@ class InvoiceService extends ControllerServiceBase
         }
 
         $invoice->setSenderDetails($details);
-
+        $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::NEW_INVOICE);
         /**
          * NOTE!
          *
@@ -257,6 +249,7 @@ class InvoiceService extends ControllerServiceBase
         $invoice->setInvoiceNumber($number);
 
         $this->persistAndFlush($invoice);
+        $this->persistAndFlush($log);
         return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }
 
@@ -381,6 +374,7 @@ class InvoiceService extends ControllerServiceBase
         $temporaryInvoice->setCompany($newCompany);
         $invoice->copyValues($temporaryInvoice);
         if ($invoice->getStatus() === InvoiceStatus::UNPAID) {
+            $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_SEND);
             $invoice->setInvoiceDate(new \DateTime());
 
             $client = $this->getAccountOwner($request);
@@ -397,6 +391,12 @@ class InvoiceService extends ControllerServiceBase
             $location = $repository->findOneByActiveUbn($invoice->getUbn());
             $message->setReceiverLocation($location);
             $this->persistAndFlush($message);
+            $this->persistAndFlush($log);
+        }
+        if ($invoice->getStatus() == InvoiceStatus::PAID) {
+            $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_PAID_ADMIN);
+            $invoice->setPaidDate(new \DateTime());
+            $this->persistAndFlush($log);
         }
         else {
             $details = $this->retrieveValidatedSenderDetails($temporaryInvoice);
@@ -407,7 +407,7 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
         }
         $invoice->updateTotal();
-
+        $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
         $this->persistAndFlush($invoice);
         return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }

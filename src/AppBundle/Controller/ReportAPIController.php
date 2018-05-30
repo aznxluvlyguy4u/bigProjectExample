@@ -213,6 +213,93 @@ class ReportAPIController extends APIController {
 
 
     /**
+     * Generate annual active livestock report, needed to report to RVO.
+     * The reference date is set on 31 December of the given reference year.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="language",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+     *        "format"="?language=en"
+     *     },
+     *     {
+     *        "name"="year",
+     *        "dataType"="int",
+     *        "required"=true,
+     *        "description"="Year of the annual report",
+     *        "format"="?year=2018"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate annual active livestock report, needed to report to RVO"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/annual-active-livestock")
+     * @Method("GET")
+     */
+    public function getAnnualActiveLivestockReport(Request $request)
+    {
+        return $this->get('AppBundle\Service\Report\AnnualActiveLivestockReportService')->getReport($request);
+    }
+
+
+    /**
+     * Generate ram mates of annual active livestock report, needed to report to RVO.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="language",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+     *        "format"="?language=en"
+     *     },
+     *     {
+     *        "name"="year",
+     *        "dataType"="int",
+     *        "required"=true,
+     *        "description"="Year of the annual report",
+     *        "format"="?year=2018"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate ram mates of annual active livestock report, needed to report to RVO"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/annual-active-livestock-ram-mates")
+     * @Method("GET")
+     */
+    public function getAnnualActiveLivestockRamMatesReport(Request $request)
+    {
+        return $this->get('AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService')->getReport($request);
+    }
+
+
+    /**
      * Generate annual TE100 production csv report.
      *
      * @ApiDoc(

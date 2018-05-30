@@ -31,7 +31,8 @@ class DeclareTagReplace extends DeclareBase
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     private $ulnNumberToReplace;
@@ -41,7 +42,8 @@ class DeclareTagReplace extends DeclareBase
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     private $ulnCountryCodeToReplace;
@@ -50,6 +52,9 @@ class DeclareTagReplace extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $animalOrderNumberToReplace;
 
@@ -58,7 +63,8 @@ class DeclareTagReplace extends DeclareBase
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     private $ulnNumberReplacement;
@@ -68,7 +74,8 @@ class DeclareTagReplace extends DeclareBase
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     private $ulnCountryCodeReplacement;
@@ -77,6 +84,9 @@ class DeclareTagReplace extends DeclareBase
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $animalOrderNumberReplacement;
 
@@ -87,7 +97,8 @@ class DeclareTagReplace extends DeclareBase
      * @Assert\NotBlank
      * @JMS\Type("integer")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     private $animalType;
@@ -99,7 +110,8 @@ class DeclareTagReplace extends DeclareBase
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RVO"
      * })
      */
     private $replaceDate;
@@ -107,6 +119,9 @@ class DeclareTagReplace extends DeclareBase
     /**
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="tagTransfers", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $location;
 
@@ -125,7 +140,7 @@ class DeclareTagReplace extends DeclareBase
 
     /**
      * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="tagReplace", cascade={"persist"})
-     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
      */
     private $revoke;
