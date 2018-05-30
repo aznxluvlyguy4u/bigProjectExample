@@ -906,9 +906,14 @@ services:
           - '@app.serializer.base'
           - '@doctrine.orm.default_entity_manager'
           - '@AppBundle\SqlView\SqlViewManager'
+          - '@translator'
 
     AppBundle\Output\AnimalDetailsOutput:
         parent: app.output.base
+        calls:
+          - method: setBreedValuesOutput
+            arguments:
+              - '@AppBundle\Output\BreedValuesOutput'
 
     AppBundle\Output\BreedValuesOutput:
         parent: app.output.base
