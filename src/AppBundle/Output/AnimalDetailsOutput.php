@@ -193,7 +193,7 @@ class AnimalDetailsOutput
                     "birth_weight" => Utils::fillZero($birthWeight, $replacementString),
                     "birth_progress" => Utils::fillZero("", $replacementString)
                 ),
-            "breed_values" => self::createBreedValuesSetArray($em, $animal),
+            "breed_values" => self::createBreedValuesSetArray($serializer, $animal),
             "breeder" =>
                 array(
                     "breeder" => Utils::fillNullOrEmptyString($breederName, $replacementString),
@@ -291,17 +291,17 @@ class AnimalDetailsOutput
 
 
     /**
-     * @param ObjectManager $em
+     * @param BaseSerializer $em
      * @param Animal $animal
      * @return array
      */
-    private static function createBreedValuesSetArray(ObjectManager $em, Animal $animal)
+    private static function createBreedValuesSetArray(BaseSerializer $baseSerializer, Animal $animal)
     {
-        $results = array();
+        if($animal->getLatestBreedGrades() != null) {
+            return $baseSerializer->normalizeToArray($animal->getLatestBreedGrades());
+        }
 
-        //TODO include breedValues and breedIndices here
-
-        return $results;
+        return [];
     }
 
 

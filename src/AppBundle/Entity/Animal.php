@@ -817,7 +817,7 @@ abstract class Animal
     /**
      * @var ResultTableBreedGrades
      * @ORM\OneToOne(targetEntity="ResultTableBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\ResultTableBreedGrades>")
+     * @JMS\Type("AppBundle\Entity\ResultTableBreedGrades")
      */
     protected $latestBreedGrades;
 
