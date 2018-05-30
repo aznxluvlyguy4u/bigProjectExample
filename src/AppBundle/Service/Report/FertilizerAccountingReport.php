@@ -17,6 +17,7 @@ use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ProcessUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,7 +28,7 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
 
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 10;
+    const PROCESS_TIME_LIMIT_IN_MINUTES = 20;
 
     const ANIMAL_COUNT_DECIMAL_PRECISION = 2;
     const NITROGEN_DECIMAL_PRECISION = 2;
@@ -57,8 +58,7 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
 
             ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 
-            $sql = $this->getHistoricLiveStockCountsByFertilizerCategoryQuery($referenceDate);
-            $historicLiveStockCountsByFertilizerCategory = $this->em->getConnection()->query($sql)->fetchAll();
+            $historicLiveStockCountsByFertilizerCategory = $this->getHistoricLiveStockCountsByFertilizerCategory($referenceDate);
 
             $totalResults = $this->yearlyAveragesWithFertilizerOutput($historicLiveStockCountsByFertilizerCategory);
             $this->retrieveNewestAndOldestReferenceDate($historicLiveStockCountsByFertilizerCategory);
@@ -77,6 +77,40 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             return ResultUtil::errorResultByException($exception);
         }
 
+    }
+
+
+    /**
+     * @param \DateTime $referenceDate
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
+     */
+    private function getHistoricLiveStockCountsByFertilizerCategory(\DateTime $referenceDate)
+    {
+        $historicLiveStockCountsByFertilizerCategory = [];
+
+        $referenceDate = DateUtil::getFirstDateOfGivenDateTime($referenceDate);
+
+        for($i = 0; $i < 12; $i++)
+        {
+            $referenceDateString = $referenceDate->format('Y-m-d');
+
+            foreach(
+                [
+                    FertilizerCategory::_550,
+                    FertilizerCategory::_551,
+                    FertilizerCategory::_552
+                ] as $fertilizerCategory)
+            {
+                $sql = $this->getHistoricLiveStockCountsByFertilizerCategoryQueryBase($referenceDateString, $fertilizerCategory);
+                $historicLiveStockCountsByFertilizerCategory[] = $this->em->getConnection()->query($sql)->fetch();
+            }
+
+            $referenceDate = DateUtil::addMonths($referenceDate, -1);
+        }
+
+        return $historicLiveStockCountsByFertilizerCategory;
     }
 
 
@@ -304,70 +338,25 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
      */
     private function getHistoricLiveStockCountsByFertilizerCategoryQueryBase($referenceDateString, $fertilizerCategory)
     {
-        $locationId = $this->location->getId();
-
         $referenceDateLabel = $this->getReferenceDateLabel();
         $fertilizerCategoryLabel = $this->getAnimalCategoryLabel();
         $animalCountLabel = $this->getAnimalCountLabel();
+
+        $animalResidenceJoin = SqlUtil::animalResidenceSqlJoin(
+            $referenceDateString,
+            'a.id',
+            $this->location->getId()
+        );
+        $animalResidenceWhereCondition = SqlUtil::animalResidenceWhereCondition();
 
         return "SELECT
                       '$referenceDateString' as $referenceDateLabel,
                       $fertilizerCategory as $fertilizerCategoryLabel,
                       COUNT(a.id) as $animalCountLabel
                     FROM animal a
-                      LEFT JOIN (
-                                  SELECT
-                                    r.animal_id,
-                                    1 as priority
-                                  FROM (
-                                         SELECT
-                                           r.animal_id,
-                                           max(id) as max_id
-                                         FROM animal_residence r
-                                         WHERE
-                                           start_date NOTNULL AND end_date NOTNULL AND
-                                           DATE(start_date) <= '$referenceDateString' AND DATE(end_date) >= '$referenceDateString'
-                                           AND is_pending = FALSE
-                                           AND location_id = $locationId
-                                         GROUP BY r.animal_id
-                                       )closed_residence
-                                    INNER JOIN animal_residence r ON r.id = closed_residence.max_id
-                                )closed_residence ON closed_residence.animal_id = a.id
-                      LEFT JOIN (
-                                  SELECT
-                                    open_residence.animal_id,
-                                    2 as priority
-                                  FROM (
-                                         SELECT
-                                           open_residence.animal_id,
-                                           open_residence.max_start_date,
-                                           max(id) as max_id
-                                         FROM (
-                                                SELECT
-                                                  r.animal_id,
-                                                  max(start_date) as max_start_date
-                                                FROM animal_residence r
-                                                WHERE
-                                                  start_date NOTNULL AND end_date ISNULL AND
-                                                  DATE(start_date) <= '$referenceDateString'
-                                                  AND is_pending = FALSE
-                                                  AND location_id = $locationId
-                                                GROUP BY animal_id
-                                              )open_residence
-                                           INNER JOIN animal_residence r ON r.animal_id = open_residence.animal_id AND r.start_date = open_residence.max_start_date
-                                         GROUP BY open_residence.animal_id, open_residence.max_start_date
-                                       )open_residence
-                                    INNER JOIN animal_residence r ON r.id = open_residence.max_id
-                                )open_residence ON open_residence.animal_id = a.id
-                      LEFT JOIN (
-                        SELECT
-                          mom.id,
-                          COUNT(mom.id) > 0 as has_children_as_mom
-                        FROM animal mom
-                          INNER JOIN animal child ON child.parent_mother_id = mom.id
-                        GROUP BY mom.id
-                        )child_status ON child_status.id = a.id
-                    WHERE (open_residence.animal_id NOTNULL OR closed_residence.animal_id NOTNULL)
+                      INNER JOIN view_animal_livestock_overview_details va ON a.id = va.animal_id
+                      $animalResidenceJoin
+                    WHERE $animalResidenceWhereCondition
       AND
       ".$this->fertilizerCategoryQueryFilter($referenceDateString, $fertilizerCategory);
     }
@@ -388,7 +377,7 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
             case FertilizerCategory::_550:
                 return "--Animal Category 550: Animals for milk and meat production
                         (
-                         (a.gender = 'FEMALE' AND child_status.has_children_as_mom) OR
+                         (a.gender = 'FEMALE' AND va.has_children_as_mom) OR
                          (a.ubn_of_birth = '$ubn' AND
                           EXTRACT(YEAR FROM AGE('$referenceDateString', a.date_of_birth)) * 12 +
                           EXTRACT(MONTH FROM AGE('$referenceDateString', a.date_of_birth)) <= 4 --age in months on reference_date

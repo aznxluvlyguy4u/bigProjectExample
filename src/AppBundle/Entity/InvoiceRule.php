@@ -157,6 +157,15 @@ class InvoiceRule
     }
 
     /**
+     * InvoiceRule clone
+     */
+    function __clone()
+    {
+     $this->id = null;
+     $this->isBatch = false;
+    }
+
+    /**
      * @return int
      */
     public function getId()

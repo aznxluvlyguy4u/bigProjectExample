@@ -212,7 +212,7 @@ class SqlView
                 to_char(a.date_of_birth, 'DD-MM-YYYY') as dd_mm_yyyy_date_of_birth,
                 c.general_appearance,
                 c.muscularity,
-                NULLIF(trim(trailing '-ling' from c.n_ling),'') as n_ling,
+                NULLIF(COALESCE(NULLIF(trim(trailing '-ling' from c.n_ling),''), CAST(a.n_ling AS TEXT)),'') as n_ling,
                 NULLIF(CONCAT(
                            COALESCE(CAST(c.production_age AS TEXT), '-'),'/',
                            COALESCE(CAST(c.litter_count AS TEXT), '-'),'/',
@@ -253,7 +253,7 @@ class SqlView
                 a.is_alive,
                 to_char(a.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_date_of_birth,
                 to_char(a.date_of_death, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_date_of_death,
-                NULLIF(trim(trailing '-ling' from c.n_ling),'') as n_ling,
+                NULLIF(COALESCE(NULLIF(trim(trailing '-ling' from c.n_ling),''), CAST(a.n_ling AS TEXT)),'') as n_ling,
                 a.gender,
                 a.animal_order_number,
                 a.ubn_of_birth,
@@ -295,7 +295,9 @@ class SqlView
                 body_fat.fat1 as fat1,
                 body_fat.fat2 as fat2,
                 body_fat.fat3 as fat3,
-                to_char(body_fat.measurement_date, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_body_fat_measurement_date
+                to_char(body_fat.measurement_date, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_body_fat_measurement_date,
+                 
+                COALESCE(child_status.has_children_as_mom, FALSE) as has_children_as_mom
                 
               FROM animal a
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
@@ -368,6 +370,14 @@ class SqlView
                       INNER JOIN fat3 f3 ON m.fat3_id = f3.id
                       INNER JOIN measurement m3 ON m.id = m3.id
                 )body_fat ON body_fat.animal_id = a.id
+                LEFT JOIN (
+                  SELECT
+                    mom.id,
+                    COUNT(mom.id) > 0 as has_children_as_mom
+                  FROM animal mom
+                    INNER JOIN animal child ON child.parent_mother_id = mom.id
+                  GROUP BY mom.id
+                )child_status ON child_status.id = a.id
                 ";
     }
 

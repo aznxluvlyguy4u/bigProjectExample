@@ -152,7 +152,7 @@ class DeclareExport extends DeclareBase
 
     /**
      * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="export", cascade={"persist"})
-     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
      * @Expose
      */

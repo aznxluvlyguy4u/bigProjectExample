@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceRuleSelection;
+use AppBundle\Service\Invoice\BatchInvoiceService;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Entity\Invoice;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -94,6 +95,30 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     function createInvoice(Request $request)
     {
         return $this->get('app.invoice')->createInvoice($request);
+    }
+
+    /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Create a batch of invoices automatically"
+     * )
+     *
+     * @param Request $request
+     * @Method("POST")
+     * @Route("/batch")
+     * @return JsonResponse
+     */
+    function creatInvoiceBatch(Request $request) {
+        return $this->get(BatchInvoiceService::class)->createBatchInvoices($request);
     }
 
     /**
@@ -274,7 +299,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      * @param Invoice $invoice
      */
     public function getInvoicePdf(Request $request, Invoice $invoice) {
-
+        return $this->get('app.invoice')->getInvoicePdf($request, $invoice);
     }
 
 }

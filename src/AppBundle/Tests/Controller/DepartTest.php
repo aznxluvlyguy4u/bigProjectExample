@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Class DepartTest
  * @package AppBundle\Tests\Controller
  * @group depart
+ * @group rvo
  */
 class DepartTest extends WebTestCase
 {

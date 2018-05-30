@@ -8,13 +8,16 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\DutchGender;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestTypeIRDutchInformal;
 use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
+use AppBundle\Service\Report\ReportServiceWithBreedValuesBase;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class SqlUtil
 {
@@ -650,46 +653,88 @@ class SqlUtil
 
 
     /**
-     * @param Connection $conn
-     * @param string $selectQuery
-     * @param string $filepath
-     * @param Logger|null $logger
-     * @throws \Exception
+     * @param TranslatorInterface $translator
+     * @return string
      */
-    public static function writeToFile(Connection $conn, $selectQuery, $filepath, Logger $logger = null)
+    public static function getGenderLetterTranslationValues(TranslatorInterface $translator)
     {
-        $isDataMissing = false;
+        $translations = [
+            GenderType::NEUTER => $translator->trans(ReportServiceWithBreedValuesBase::NEUTER_SINGLE_CHAR),
+            GenderType::FEMALE => $translator->trans(ReportServiceWithBreedValuesBase::FEMALE_SINGLE_CHAR),
+            GenderType::MALE => $translator->trans(ReportServiceWithBreedValuesBase::MALE_SINGLE_CHAR),
+        ];
 
-        try {
-            $stmt = $conn->query($selectQuery);
-
-            if ($firstRow = $stmt->fetch()) {
-                DsvWriterUtil::writeNestedRowToFile($filepath, array_keys($firstRow)); //write headers
-                DsvWriterUtil::writeNestedRowToFile($filepath, $firstRow);
-            } else {
-                $isDataMissing = true;
-            }
-
-            while ($row = $stmt->fetch()) {
-                DsvWriterUtil::writeNestedRowToFile($filepath, $row);
-            }
-
-        } catch (\Exception $exception) {
-
-            FilesystemUtil::deleteFile($filepath);
-
-            // Hide error details from user
-            if ($logger) {
-                $logger->error($exception->getMessage());
-                $logger->error($exception->getTraceAsString());
-            }
-            throw new \Exception('FAILED WRITING THE CSV FILE', Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        if ($isDataMissing) {
-            throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
-        }
+        return SqlUtil::createSqlValuesString($translations);
     }
 
 
+    /**
+     * @param string|\DateTime $referenceDate
+     * @param string $animalIdParentLabel
+     * @param string|null $locationId
+     * @return string
+     */
+    public static function animalResidenceSqlJoin($referenceDate, $animalIdParentLabel = 'a.id', $locationId = null)
+    {
+        $animalIdParentLabel = strtr($animalIdParentLabel, [' ' => '']);
+        if (is_string($referenceDate)) {
+            $referenceDate = (new \DateTime($referenceDate));
+        }
+        $referenceDateString = $referenceDate->format('Y-m-d');
+        $locationFilter = is_int($locationId) ? 'AND location_id = '.$locationId : '';
+
+        return "LEFT JOIN (
+                          SELECT
+                            r.animal_id,
+                            1 as priority
+                          FROM (
+                                 SELECT
+                                   r.animal_id,
+                                   max(id) as max_id
+                                 FROM animal_residence r
+                                 WHERE
+                                   start_date NOTNULL AND end_date NOTNULL AND
+                                   DATE(start_date) <= '$referenceDateString' AND DATE(end_date) >= '$referenceDateString'
+                                   AND is_pending = FALSE
+                                   $locationFilter
+                                 GROUP BY r.animal_id
+                               )closed_residence
+                            INNER JOIN animal_residence r ON r.id = closed_residence.max_id
+                        )closed_residence ON closed_residence.animal_id = $animalIdParentLabel
+              LEFT JOIN (
+                          SELECT
+                            open_residence.animal_id,
+                            2 as priority
+                          FROM (
+                                 SELECT
+                                   open_residence.animal_id,
+                                   open_residence.max_start_date,
+                                   max(id) as max_id
+                                 FROM (
+                                        SELECT
+                                          r.animal_id,
+                                          max(start_date) as max_start_date
+                                        FROM animal_residence r
+                                        WHERE
+                                          start_date NOTNULL AND end_date ISNULL AND
+                                          DATE(start_date) <= '$referenceDateString'
+                                          AND is_pending = FALSE
+                                          $locationFilter
+                                        GROUP BY animal_id
+                                      )open_residence
+                                   INNER JOIN animal_residence r ON r.animal_id = open_residence.animal_id AND r.start_date = open_residence.max_start_date
+                                 GROUP BY open_residence.animal_id, open_residence.max_start_date
+                               )open_residence
+                            INNER JOIN animal_residence r ON r.id = open_residence.max_id
+                        )open_residence ON open_residence.animal_id = $animalIdParentLabel";
+    }
+
+
+    /**
+     * @return string
+     */
+    public static function animalResidenceWhereCondition()
+    {
+        return ' (open_residence.animal_id NOTNULL OR closed_residence.animal_id NOTNULL) ';
+    }
 }

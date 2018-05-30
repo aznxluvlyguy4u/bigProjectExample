@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Class TagTransferTest
  * @package AppBundle\Tests\Controller
  * @group tag-transfer
+ * @group rvo
  */
 class TagTransferTest extends WebTestCase
 {

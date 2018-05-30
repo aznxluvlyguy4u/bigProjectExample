@@ -23,7 +23,7 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  *
  */
-class Ram extends Animal
+class Ram extends Animal implements ParentInterface
 {
     use EntityClassInfo;
 
@@ -127,7 +127,7 @@ class Ram extends Animal
     /**
      * Get children
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection|Animal[]
      */
     public function getChildren()
     {

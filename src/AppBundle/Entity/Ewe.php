@@ -20,7 +20,7 @@ use JMS\Serializer\Annotation\Expose;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\EweRepository")
  * @package AppBundle\Entity
  */
-class Ewe extends Animal
+class Ewe extends Animal implements ParentInterface
 {
     use EntityClassInfo;
 
@@ -31,6 +31,7 @@ class Ewe extends Animal
     private $children;
 
     /**
+     * @var ArrayCollection
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="surrogate")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      */
@@ -154,7 +155,7 @@ class Ewe extends Animal
     /**
      * Get children
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection|Animal[]
      */
     public function getChildren()
     {

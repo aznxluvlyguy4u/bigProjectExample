@@ -499,6 +499,18 @@ class BreedValuesReportQueryGenerator
 
 
     /**
+     * @return array
+     */
+    public function getAnimalsOverviewReportBooleanColumns()
+    {
+        return [
+            $this->translateColumnHeader('is_alive'),
+            $this->translateColumnHeader('has_active_pedigree_register'),
+        ];
+    }
+
+
+    /**
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
      * @param bool $ignoreHiddenBreedValueTypes
@@ -769,16 +781,23 @@ LEFT JOIN (
     }
 
 
-
+    /**
+     * @return string
+     */
     private function getGenderLetterTranslationValues()
     {
-        $translations = [
-          GenderType::NEUTER => $this->translator->trans(ReportServiceWithBreedValuesBase::NEUTER_SINGLE_CHAR),
-          GenderType::FEMALE => $this->translator->trans(ReportServiceWithBreedValuesBase::FEMALE_SINGLE_CHAR),
-          GenderType::MALE => $this->translator->trans(ReportServiceWithBreedValuesBase::MALE_SINGLE_CHAR),
-        ];
+        return SqlUtil::getGenderLetterTranslationValues($this->translator);
+    }
 
-        return SqlUtil::createSqlValuesString($translations);
+
+    /**
+     * @return array
+     */
+    public function getOffSpringReportBooleanColumns()
+    {
+        return [
+            $this->translateColumnHeader('is_alive'),
+        ];
     }
 
 

@@ -30,7 +30,7 @@ class PedigreeCodeInitializer extends MigratorServiceBase implements IMigratorSe
             self::PEDIGREE_CODES => self::PEDIGREE_CODES,
         );
 
-        $this->getCsvOptions()->setPipeSeparator();
+        $this->getCsvOptions()->setPipeSeparator()->includeFirstLine();
         $this->pedigreeCodes = [];
         $this->pedigreeRegisters = [];
     }

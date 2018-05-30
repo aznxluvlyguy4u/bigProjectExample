@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
  * @package AppBundle\Tests\Controller
  * @group sync
  * @group tag-sync
+ * @group rvo
  */
 class RetrieveTagsTest extends WebTestCase
 {

@@ -25,7 +25,8 @@ class Invoice
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     protected $id;
@@ -36,7 +37,8 @@ class Invoice
      * @ORM\Column(type="string",  unique=true, nullable=true)
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $invoiceNumber;
@@ -49,7 +51,8 @@ class Invoice
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $invoiceDate;
@@ -62,7 +65,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $status;
@@ -96,7 +100,8 @@ class Invoice
      * @JMS\Type("float")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $total;
@@ -119,7 +124,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $companyLocalId;
@@ -130,7 +136,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $companyName;
@@ -141,18 +148,83 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $companyVatNumber;
 
     /**
-     * @var Address $companyAddress
-     * @ORM\ManyToOne(targetEntity="Address")
-     * @ORM\JoinColumn(name="company_address_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Address")
+     * @var string $companyAddressStreetName
+     * @ORM\Column(name="company_address_street_name", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     * @JMS\Type("string")
      */
-    private $companyAddress;
+    private $companyAddressStreetName;
+
+    /**
+     * @var int $companyAddressStreetNumber
+     * @ORM\Column(name="company_address_street_number", type="integer", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     * @JMS\Type("integer")
+     */
+    private $companyAddressStreetNumber;
+
+    /**
+     * @var string $companyAddressStreetName
+     * @ORM\Column(name="company_address_postal_code", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     * @JMS\Type("string")
+     */
+    private $companyAddressPostalCode;
+
+    /**
+     * @var string $companyAddressStreetName
+     * @ORM\Column(name="company_address_street_number_suffix", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     * @JMS\Type("string")
+     */
+    private $companyAddressStreetNumberSuffix;
+
+    /**
+     * @var string $companyAddressCountry
+     * @ORM\Column(name="company_address_country", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     * @JMS\Type("string")
+     */
+    private $companyAddressCountry;
+
+    /**
+     * @var string
+     * @ORM\Column(name="company_address_state", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     * @JMS\Type("string")
+     */
+    private $companyAddressState;
 
     /**
      * @var string
@@ -160,7 +232,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $companyDebtorNumber;
@@ -171,7 +244,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $mollieId;
@@ -183,7 +257,8 @@ class Invoice
      * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $senderDetails;
@@ -194,7 +269,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $ubn;
@@ -206,7 +282,8 @@ class Invoice
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $paidDate;
@@ -216,7 +293,8 @@ class Invoice
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $isDeleted = false;
@@ -227,7 +305,8 @@ class Invoice
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $isBatch = false;
@@ -363,22 +442,6 @@ class Invoice
     {
         $this->invoiceRuleSelections = $invoiceRuleSelections;
         return $this;
-    }
-
-    /**
-     * @return Address
-     */
-    public function getCompanyAddress()
-    {
-        return $this->companyAddress;
-    }
-
-    /**
-     * @param Address $companyAddress
-     */
-    public function setCompanyAddress($companyAddress)
-    {
-        $this->companyAddress = $companyAddress;
     }
 
     /**
@@ -589,6 +652,102 @@ class Invoice
     public function setIsBatch($isBatch)
     {
         $this->isBatch = $isBatch;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressStreetName()
+    {
+        return $this->companyAddressStreetName;
+    }
+
+    /**
+     * @param string $companyAddressStreetName
+     */
+    public function setCompanyAddressStreetName($companyAddressStreetName)
+    {
+        $this->companyAddressStreetName = $companyAddressStreetName;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCompanyAddressStreetNumber()
+    {
+        return $this->companyAddressStreetNumber;
+    }
+
+    /**
+     * @param int $companyAddressStreetNumber
+     */
+    public function setCompanyAddressStreetNumber($companyAddressStreetNumber)
+    {
+        $this->companyAddressStreetNumber = $companyAddressStreetNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressPostalCode()
+    {
+        return $this->companyAddressPostalCode;
+    }
+
+    /**
+     * @param string $companyAddressPostalCode
+     */
+    public function setCompanyAddressPostalCode($companyAddressPostalCode)
+    {
+        $this->companyAddressPostalCode = $companyAddressPostalCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressStreetNumberSuffix()
+    {
+        return $this->companyAddressStreetNumberSuffix;
+    }
+
+    /**
+     * @param string $companyAddressStreetNumberSuffix
+     */
+    public function setCompanyAddressStreetNumberSuffix($companyAddressStreetNumberSuffix)
+    {
+        $this->companyAddressStreetNumberSuffix = $companyAddressStreetNumberSuffix;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressState()
+    {
+        return $this->companyAddressState;
+    }
+
+    /**
+     * @param string $companyAddressState
+     */
+    public function setCompanyAddressState($companyAddressState)
+    {
+        $this->companyAddressState = $companyAddressState;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressCountry()
+    {
+        return $this->companyAddressCountry;
+    }
+
+    /**
+     * @param string $companyAddressCountry
+     */
+    public function setCompanyAddressCountry($companyAddressCountry)
+    {
+        $this->companyAddressCountry = $companyAddressCountry;
     }
 
     public function copyValues(Invoice $invoice){

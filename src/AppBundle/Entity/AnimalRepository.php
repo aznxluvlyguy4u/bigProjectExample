@@ -1435,41 +1435,6 @@ class AnimalRepository extends BaseRepository
 
 
   /**
-   * @param Animal $animal
-   * @param string $replacementString
-   * @return array
-   */
-  public function getOffspringLogDataBySql($animal, $replacementString)
-  {
-    $results = [];
-
-    if ($animal instanceof Ewe) {
-      $filter = "parent_mother_id = " . $animal->getId();
-    } elseif ($animal instanceof Ram) {
-      $filter = "parent_father_id = " . $animal->getId();
-    } else {
-      return $results;
-    }
-
-    $sql = "SELECT uln_country_code, uln_number, pedigree_country_code, pedigree_number, gender, date_of_birth FROM animal
-            WHERE " . $filter;
-    $retrievedData = $this->getManager()->getConnection()->query($sql)->fetchAll();
-
-    foreach ($retrievedData as $record) {
-      $results[] = [
-          JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
-          JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
-          JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['pedigree_country_code'], $replacementString),
-          JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($record['pedigree_number'], $replacementString),
-          JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
-          JsonInputConstant::DATE_OF_BIRTH => TimeUtil::getDateTimeFromNullCheckedArrayValue('date_of_birth', $record, $replacementString),
-      ];
-    }
-    return $results;
-  }
-
-
-  /**
    * @param $animalId
    * @return int
    */
@@ -2131,5 +2096,45 @@ class AnimalRepository extends BaseRepository
         }
 
         return $this->getConnection()->query($sql)->fetchAll();
+    }
+
+    /**
+     * This function gets the animal counts for each pedigree register on a location on the given input dateString
+     * and returns them grouped by the location company
+     *
+     * @param $controlDateString
+     * @return array
+     */
+    public function getAnimalCountsByCompanyLocationPedigreeRegisterOnControlDate($controlDateString) {
+        $sql = "SELECT
+        g.company_id as company_id,
+        g.id as location_id,
+        pr.abbreviation,
+        g.count as animal_count
+        FROM pedigree_register pr
+          INNER JOIN (
+               SELECT l.id, l.company_id, prr.pedigree_register_id, COUNT(a.id) FROM location l
+                 INNER JOIN
+                            (
+                              SELECT prr.location_id, prr.pedigree_register_id FROM pedigree_register_registration prr
+                              WHERE
+                                (
+                                  ( prr.is_active = TRUE  AND prr.end_date ISNULL AND prr.start_date ISNULL)
+                                  OR (prr.start_date <= '$controlDateString' AND prr.end_date ISNULL)
+                                  OR ('$controlDateString' BETWEEN prr.start_date AND prr.end_date)
+                                )
+                            )prr ON prr.location_id = l.id
+                 INNER JOIN (
+                              SELECT ar.animal_id, ar.location_id FROM animal_residence ar
+                              WHERE (('$controlDateString' BETWEEN ar.start_date AND ar.end_date)
+                                     OR (ar.start_date <= '$controlDateString' AND ar.end_date ISNULL))
+                              GROUP BY animal_id, location_id
+                            ) AS ar ON ar.location_id = l.id
+                 INNER JOIN animal a ON a.pedigree_register_id = prr.pedigree_register_id AND ar.animal_id = a.id
+               GROUP BY l.company_id, l.id ,prr.pedigree_register_id
+             )g ON g.pedigree_register_id = pr.id
+        ORDER BY company_id";
+
+        return $this->getManager()->getConnection()->query($sql)->fetchAll(\PDO::FETCH_GROUP);
     }
 }

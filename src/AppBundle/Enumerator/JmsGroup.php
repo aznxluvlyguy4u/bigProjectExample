@@ -14,6 +14,7 @@ class JmsGroup
 
     const BASIC = 'BASIC';
 
+    const CHILD = 'CHILD';
     const CONTACT_INFO = 'CONTACT_INFO';
 
     const DECLARE_ = 'DECLARE';
@@ -27,6 +28,7 @@ class JmsGroup
 
     const INVOICE = 'INVOICE';
     const INVOICE_NO_COMPANY = 'INVOICE_NO_COMPANY';
+    const INVOICE_OVERVIEW = 'INVOICE_OVERVIEW';
     const INVOICE_RULE = 'INVOICE_RULE';
     const INVOICE_RULE_TEMPLATE = 'INVOICE_RULE_TEMPLATE';
     const INVOICE_SENDER_DETAILS = 'INVOICE_SENDER_DETAILS';
@@ -42,6 +44,7 @@ class JmsGroup
 
     const PARENTS = 'PARENTS';
     const PARENT_DATA = 'PARENT_DATA';
+    const PARENT_OF_CHILD = 'PARENT_OF_CHILD';
 
     const RVO = 'RVO';
 

@@ -1,0 +1,106 @@
+.display-inline-block {
+    display: inline-block;
+}
+
+.align-left {
+    text-align: left;
+}
+
+.align-right {
+    text-align: right;
+}
+
+thead {
+    display: table-header-group;
+}
+
+.borderless td, .borderless th {
+    padding: 2px 0 2px 13px;
+    border: none;
+}
+
+.borderless tr {
+    padding: 2px 0 2px 0;
+    border: none;
+}
+
+.invoice-rule-table tr {
+    margin: 2px 0 2px 0;
+    padding: 2px 0 2px 0;
+}
+
+.invoice-rule-table td {
+    margin: 2px 0 2px 0;
+    padding: 2px 0 2px 13px;
+}
+
+.footer-wrapper {
+    border-top: 2px solid lightgrey;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+.totals-top-bottom-border td {
+    border-top: 2px solid lightgrey;
+    border-bottom: 2px solid lightgrey;
+}
+
+.no-borders {
+    border: none;
+}
+
+.only-bottom-border {
+    border-bottom: 2px solid lightgrey !important;
+}
+
+.invoice-rule-table-spacing {
+    margin: 60px 0 0 0;
+}
+
+.invoice-footer-border {
+    border-top: 2px solid lightgrey;
+    padding: 20px 0 0 0;
+}
+
+.invoice-footer-spacing {
+    margin: 20px 0 0 0;
+}
+
+.invoice-footer {
+    page-break-inside: avoid;
+}
+
+.green-divider {
+    color: #3ec140;
+}
+
+.contact-info-text {
+    color: #626262;
+    margin: 0 20px 0 20px;
+    text-align: center;
+    font-size: 11px;
+}
+
+.row {
+    margin: 25px 0 25px 0;
+}
+
+.invoice-title {
+    font-size: 25px;
+    margin: 0 0 30px 0;
+    padding: 0 0 0 13px;
+}
+
+.no-left-padding {
+    padding-left: 0;
+}
+
+.img-spacing {
+    margin: 25px 0 0 0;
+}
+
+.no-padding {
+    padding: 0;
+}

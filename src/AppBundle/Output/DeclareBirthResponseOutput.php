@@ -70,6 +70,7 @@ class DeclareBirthResponseOutput extends Output
         //Add stillborn to children collection
         foreach ($stillborns as $stillborn) {
             $childTemp = array();
+            $childTemp['is_stillborn'] = true;
             $childTemp['is_alive'] = false;
             $childTemp['gender'] = $stillborn->getGender();
             $childTemp['birth_progress'] = Utils::fillNull($stillborn->getBirthProgress());
@@ -84,6 +85,7 @@ class DeclareBirthResponseOutput extends Output
             $childTemp = array();
 
             /** @var Animal $child */
+            $childTemp['is_stillborn'] = false;
             $childTemp['is_alive'] = $child->getIsAlive();
             $childTemp['uln_country_code'] = $child->getUlnCountryCode();
             $childTemp['uln_number'] = $child->getUlnNumber();
