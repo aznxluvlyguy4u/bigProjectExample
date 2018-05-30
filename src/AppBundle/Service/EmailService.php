@@ -262,6 +262,44 @@ class EmailService
         return $this->swiftMailer->send($message) > 0;
     }
 
+    /**
+     * @param Person $person
+     * @return boolean false if email not sent to anyone
+     */
+    public function emailChangeConfirmationToken(Person $person)
+    {
+        $type = 'NSFO Online'; //TODO
+        if ($person instanceof Employee) {
+            $type = 'NSFO Online ADMIN'; //TODO
+        } elseif ($person instanceof VwaEmployee) {
+            $type = 'NSFO Online Derden'; //TODO
+        }
+
+        $subjectHeader = $type . ': bevestiging e-mail';
+
+        //Confirmation message back to the sender
+        $message = \Swift_Message::newInstance()
+            ->setSubject($subjectHeader)
+            ->setFrom($this->mailerSourceAddress)
+            ->setTo($person->getEmailChangeToken()->getEmailAddress())
+            ->setBody(
+                $this->templating->render(
+                // app/Resources/views/...
+                    'User/email_change_request_email.html.twig',
+                    ['person' => $person, 'salutation' => $this->getSalutationByPersonType($person)]
+                ),
+                'text/html'
+            )
+            ->setSender($this->mailerSourceAddress)
+        ;
+
+        //Only send BCC in prod env
+        if ($this->environment === Environment::PROD) {
+            $message->setBcc($this->mailerSourceAddress);
+        }
+
+        return $this->swiftMailer->send($message) > 0;
+    }
 
     /**
      * @param $person
