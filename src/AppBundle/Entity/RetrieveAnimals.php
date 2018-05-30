@@ -118,6 +118,10 @@ class RetrieveAnimals
      * @var integer
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
+     * @JMS\Groups({
+     *     "BASIC",
+     *     "RVO"
+     * })
      */
     private $animalType;
 

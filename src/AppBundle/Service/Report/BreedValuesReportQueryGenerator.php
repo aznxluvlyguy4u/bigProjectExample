@@ -781,16 +781,12 @@ LEFT JOIN (
     }
 
 
-
+    /**
+     * @return string
+     */
     private function getGenderLetterTranslationValues()
     {
-        $translations = [
-          GenderType::NEUTER => $this->translator->trans(ReportServiceWithBreedValuesBase::NEUTER_SINGLE_CHAR),
-          GenderType::FEMALE => $this->translator->trans(ReportServiceWithBreedValuesBase::FEMALE_SINGLE_CHAR),
-          GenderType::MALE => $this->translator->trans(ReportServiceWithBreedValuesBase::MALE_SINGLE_CHAR),
-        ];
-
-        return SqlUtil::createSqlValuesString($translations);
+        return SqlUtil::getGenderLetterTranslationValues($this->translator);
     }
 
 

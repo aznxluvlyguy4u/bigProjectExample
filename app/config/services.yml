@@ -490,6 +490,12 @@ services:
     AppBundle\Service\Report\AnimalsOverviewReportService:
         parent: app.report.breedvalues.base
 
+    AppBundle\Service\Report\AnnualActiveLivestockReportService:
+        parent: app.report.base
+
+    AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService:
+        parent: app.report.base
+
     AppBundle\Service\Report\AnnualTe100UbnProductionReportService:
         parent: app.report.breedvalues.base
 

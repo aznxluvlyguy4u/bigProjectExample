@@ -5,8 +5,10 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\EmailChangeConfirmation;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\VwaEmployee;
@@ -98,59 +100,99 @@ class AuthServiceBase extends ControllerServiceBase
         $emailAddress = trim(strtolower($content->get(JsonInputConstant::EMAIL_ADDRESS)));
         $dashboardType = $dashboardType === null ? $content->get(JsonInputConstant::DASHBOARD_TYPE) : $dashboardType;
 
-        switch ($dashboardType) {
-            case DashboardType::ADMIN:
-                $person = $this->getManager()->getRepository(Employee::class)
-                    ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
-                $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
-                break;
-            case DashboardType::CLIENT:
-                $person = $this->getManager()->getRepository(Client::class)
-                    ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
-                $userActionType = UserActionType::USER_PASSWORD_RESET;
-                break;
-            case DashboardType::VWA;
-                $person = $this->getManager()->getRepository(VwaEmployee::class)
-                    ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
-                $userActionType = UserActionType::VWA_PASSWORD_RESET;
-                break;
-            default:
-                $message = "Valid '".JsonInputConstant::DASHBOARD_TYPE."' is missing. Allowed values: " . implode(', ', DashboardType::getConstants());
-                return ResultUtil::errorResult($message, 428);
-        }
+        try {
 
-        $log = ActionLogWriter::passwordResetRequest($this->getManager(), $person, $userActionType, $emailAddress);
+            $person = self::getPersonByEmailAddressAndDashboardType($emailAddress, $dashboardType);
+            $userActionType = self::getUserActionTypeByDashboardType($dashboardType);
 
-        if ($person !== null) {
-            try {
+            $log = ActionLogWriter::passwordResetRequest($this->getManager(), $person, $userActionType, $emailAddress);
 
-                $resetToken = false;
-                if ($person->getPasswordResetToken() === null || $person->getPasswordResetTokenCreationDate() === null) {
-                    $resetToken = true;
-                } elseif ($person->getPasswordResetTokenAgeInDays() > self::PASSWORD_RESET_EXPIRATION_DAYS) {
-                    $resetToken = true;
-                }
+            if ($person !== null) {
 
-                if ($resetToken) {
-                    $person->setPasswordResetToken(StringUtil::getResetToken());
-                    $person->setPasswordResetTokenCreationDate(new \DateTime());
-                    $this->getManager()->persist($person);
-                    $this->getManager()->flush();
-                }
 
-                $isEmailSent = $this->emailService->emailPasswordResetToken($person);
-                if ($isEmailSent) {
-                    ActionLogWriter::completeActionLog($this->getManager(), $log);
-                }
+                    $resetToken = false;
+                    if ($person->getPasswordResetToken() === null || $person->getPasswordResetTokenCreationDate() === null) {
+                        $resetToken = true;
+                    } elseif ($person->getPasswordResetTokenAgeInDays() > self::PASSWORD_RESET_EXPIRATION_DAYS) {
+                        $resetToken = true;
+                    }
 
-            } catch (\Exception $exception) {
-                //TODO ActionLog error
+                    if ($resetToken) {
+                        $person->setPasswordResetToken(StringUtil::getResetToken());
+                        $person->setPasswordResetTokenCreationDate(new \DateTime());
+                        $this->getManager()->persist($person);
+                        $this->getManager()->flush();
+                    }
 
-                return ResultUtil::errorResult('Er is iets fouts gegaan, probeer het nogmaals', Response::HTTP_CONFLICT);
+                    $isEmailSent = $this->emailService->emailPasswordResetToken($person);
+                    if ($isEmailSent) {
+                        ActionLogWriter::completeActionLog($this->getManager(), $log);
+                    }
             }
+
+        } catch (\Exception $exception) {
+            //TODO ActionLog error
+
+            return ResultUtil::errorResult('Er is iets fouts gegaan, probeer het nogmaals', Response::HTTP_CONFLICT);
         }
 
-        return ResultUtil::successResult('Password reset request processed for email address: '.$emailAddress);
+        return ResultUtil::successResult('Password reset request processed for email address: ' . $emailAddress);
+    }
+
+
+    /**
+     * @param string $dashboardType
+     * @return string
+     * @throws \Exception
+     */
+    public static function getUserActionTypeByDashboardType($dashboardType)
+    {
+        switch ($dashboardType) {
+            case DashboardType::ADMIN: return UserActionType::ADMIN_PASSWORD_RESET;
+            case DashboardType::CLIENT: return UserActionType::USER_PASSWORD_RESET;
+            case DashboardType::VWA; return UserActionType::VWA_PASSWORD_RESET;
+            default: throw self::invalidDashboardTypeException();
+        }
+    }
+
+
+    /**
+     * @param string $dashboardType
+     * @return string
+     * @throws \Exception
+     */
+    public static function getPersonChildClazzByDashboardType($dashboardType)
+    {
+        switch ($dashboardType) {
+            case DashboardType::ADMIN: return Employee::class;
+            case DashboardType::CLIENT: return Client::class;
+            case DashboardType::VWA; return VwaEmployee::class;
+            default: throw self::invalidDashboardTypeException();
+        }
+    }
+
+
+    /**
+     * @throws \Exception
+     */
+    private static function invalidDashboardTypeException()
+    {
+        $message = "Valid '" . JsonInputConstant::DASHBOARD_TYPE . "' is missing. Allowed values: " . implode(', ', DashboardType::getConstants());
+        return new \Exception($message, Response::HTTP_PRECONDITION_REQUIRED);
+    }
+
+
+    /**
+     * @param string $emailAddress
+     * @param string $dashboardType
+     * @return Client|Employee|VwaEmployee|Person
+     * @throws \Exception
+     */
+    protected function getPersonByEmailAddressAndDashboardType($emailAddress, $dashboardType)
+    {
+        $clazz = self::getPersonChildClazzByDashboardType($dashboardType);
+        return $this->getManager()->getRepository($clazz)
+            ->findOneBy(['isActive' => true, 'emailAddress' => $emailAddress]);
     }
 
 
@@ -195,5 +237,130 @@ class AuthServiceBase extends ControllerServiceBase
         //TODO ActionLog error
 
         return $this->getTemplatingService()->renderResponse('Status/password_reset_failed.html.twig', [], $response);
+    }
+
+    /**
+     *
+     *  Json body example
+     *  {
+     *      "dashboard_type":"admin/client/vwa",
+     *      "email_address":"example@example.com"
+     *  }
+     *
+     * @param Request $request
+     * @param string $dashboardType
+     * @return JsonResponse
+     */
+    function emailChangeRequest(Request $request, $dashboardType = null)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+        if (!$content->containsKey(JsonInputConstant::EMAIL_ADDRESS)) {
+            return ResultUtil::errorResult(self::ERROR_EMAIL_ADDRESS_EMPTY, Response::HTTP_BAD_REQUEST);
+        }
+
+        $newEmailAddress = trim(strtolower(base64_decode($content->get(JsonInputConstant::EMAIL_ADDRESS))));
+        $password = base64_decode($content->get(JsonInputConstant::PASSWORD));
+
+        if (!filter_var($newEmailAddress, FILTER_VALIDATE_EMAIL)) {
+            return ResultUtil::errorResult($this->translator->trans('THIS IS NOT A VALID EMAIL ADDRESS'), Response::HTTP_BAD_REQUEST);
+        }
+        $dashboardType = $dashboardType === null ? $content->get(JsonInputConstant::DASHBOARD_TYPE) : $dashboardType;
+
+        $loggedInUser = $this->getAccountOwner($request);
+
+        try {
+
+            $personByNewEmailAddress = self::getPersonByEmailAddressAndDashboardType($newEmailAddress, $dashboardType);
+
+            if ($personByNewEmailAddress) {
+                return ResultUtil::errorResult($this->translator->trans('A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS'), Response::HTTP_BAD_REQUEST);
+            }
+
+            if ($loggedInUser !== null) {
+                if(!$this->encoder->isPasswordValid($loggedInUser, $password)) {
+                    return ResultUtil::errorResult($this->translator->trans('THE PASSWORD IS INCORRECT'), Response::HTTP_BAD_REQUEST);
+                }
+
+                $token = $loggedInUser->getEmailChangeToken();
+                if($token == null){
+                    $token = new EmailChangeConfirmation();
+                }
+
+                $token
+                    ->setCreationDate(new \DateTime())
+                    ->setToken(StringUtil::getResetToken())
+                    ->setEmailAddress($newEmailAddress)
+                    ->setPerson($loggedInUser)
+                ;
+
+                $loggedInUser->setEmailChangeToken($token);
+                $this->getManager()->persist($token);
+                $this->getManager()->persist($loggedInUser);
+                $this->getManager()->flush();
+
+                // ActionLog is only persisted for successful email change
+
+                $isEmailSent = $this->emailService->emailChangeConfirmationToken($loggedInUser);
+                if ($isEmailSent) {
+                    return ResultUtil::successResult('E-mail change request processed for email address: ' . $newEmailAddress);
+                }
+            }
+
+        } catch (\Exception $exception) {
+            return ResultUtil::errorResult($exception->getMessage(), Response::HTTP_CONFLICT);
+        }
+
+        return ResultUtil::successResult('E-mail change request processed for email address: ' . $newEmailAddress);
+    }
+
+    /**
+     * @param $token
+     * @return Response
+     * @throws \Twig\Error\Error
+     */
+    function emailChangeConfirmation($token)
+    {
+        $response = new Response();
+        $response->headers->set('Content-Type', 'text/html');
+
+        $emailToken = null;
+        if ($token !== null) {
+            /** @var EmailChangeConfirmation $emailToken */
+            $emailToken = $this->getManager()
+                ->getRepository(EmailChangeConfirmation::class)
+                ->findOneBy(['token' => $token]);
+        }
+
+        try {
+            if (!$emailToken ||
+                $emailToken->getEmailConfirmationTokenAgeInDays() >= self::PASSWORD_RESET_EXPIRATION_DAYS)
+            {
+                return $this->getTemplatingService()->renderResponse('Status/email_change_expired.html.twig', [], $response);
+            }
+
+            $person = $emailToken->getPerson();
+            if($person != null) {
+
+                $oldEmailAddress = $person->getEmailAddress();
+                $newEmailAddress = $emailToken->getEmailAddress();
+
+                $person->setEmailAddress($newEmailAddress);
+                $person->setEmailChangeToken(null);
+                $this->getManager()->remove($emailToken);
+                $person->setAccessToken(Utils::generateTokenCode());
+                $this->getManager()->persist($person);
+                $this->getManager()->flush();
+
+                ActionLogWriter::emailChangeConfirmation($this->getManager(), $person, $oldEmailAddress, $newEmailAddress);
+
+                return $this->getTemplatingService()->renderResponse('Status/email_change_success.html.twig', [], $response);
+            }
+
+        } catch (\Exception $exception) {
+            $this->logExceptionAsError($exception);
+            return $this->getTemplatingService()->renderResponse('Status/email_change_failed.html.twig', [], $response);
+        }
+
+        return $this->getTemplatingService()->renderResponse('Status/email_change_failed.html.twig', [], $response);
     }
 }
