@@ -10,7 +10,6 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
-use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
@@ -24,12 +23,10 @@ use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
-use AppBundle\Service\BaseSerializer;
 use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\PedigreeUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -38,6 +35,20 @@ use Doctrine\Common\Persistence\ObjectManager;
 class AnimalDetailsOutput extends OutputServiceBase
 {
     const NESTED_GENERATION_LIMIT = 4;
+
+    /** @var BreedValuesOutput */
+    private $breedValuesOutput;
+
+    /**
+     * @required
+     *
+     * @param BreedValuesOutput $breedValuesOutput
+     */
+    public function setBreedValuesOutput(BreedValuesOutput $breedValuesOutput)
+    {
+        $this->breedValuesOutput = $breedValuesOutput;
+    }
+
 
     /**
      * @param Animal $animal
@@ -195,7 +206,7 @@ class AnimalDetailsOutput extends OutputServiceBase
                     "birth_weight" => Utils::fillZero($birthWeight, $replacementString),
                     "birth_progress" => Utils::fillZero("", $replacementString)
                 ),
-            "breed_values" => $this->createBreedValuesSetArray($animal),
+            "breed_values" => $this->breedValuesOutput->get($animal),
             "breeder" =>
                 array(
                     "breeder" => Utils::fillNullOrEmptyString($breederName, $replacementString),
@@ -290,56 +301,6 @@ class AnimalDetailsOutput extends OutputServiceBase
         }
 
         return $children;
-    }
-
-
-    /**
-     * @param Animal $animal
-     * @return array
-     */
-    private function createBreedValuesSetArray(Animal $animal)
-    {
-        if ($animal->getLatestBreedGrades() === null) {
-            return [];
-        }
-
-        /** @var BreedValueType[] $breedValueTypes */
-        $breedValueTypes = $this->getManager()->getRepository(BreedValueType::class)->findAll();
-
-        $breedValues = $this->getSerializer()->normalizeToArray($animal->getLatestBreedGrades());
-
-        $breedValueSets = [];
-        foreach ($breedValueTypes as $breedValueType)
-        {
-            if (!$breedValueType->isShowResult()) { // TODO
-                continue;
-            }
-
-            $value = ArrayUtil::get($breedValueType->getResultTableValueVariable(), $breedValues);
-            $normalizedValue = $value ? $value * 100 : 0; //TODO
-
-            $accuracy = round(ArrayUtil::get($breedValueType->getResultTableAccuracyVariable(), $breedValues));
-            $order = $breedValueType->getId(); // TODO
-
-            $chartLabel = $breedValueType->getNl(); // TODO
-            $chartGroup = $breedValueType->getMixBlupAnalysisType()->getEn(); // TODO
-            $chartGroupColor = $breedValueType->getMixBlupAnalysisType()->getEn(); // TODO
-
-            $breedValueSets[$order] = [
-                'order' => $order,
-                'nl' => $breedValueType->getNl(),
-                'chart_label' => $chartLabel,
-                'chart_group' => $chartGroup,
-                'chart_group_color' => $chartGroupColor,
-                'value' => $value,
-                'normalized_value' => round($normalizedValue, 2),
-                'accuracy' => $accuracy,
-            ];
-        }
-
-        ksort($breedValueSets);
-        
-        return $breedValueSets;
     }
 
 

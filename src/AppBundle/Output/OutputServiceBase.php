@@ -7,6 +7,7 @@ namespace AppBundle\Output;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\SqlView\SqlViewManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class OutputServiceBase
 {
@@ -16,14 +17,18 @@ class OutputServiceBase
     private $em;
     /** @var SqlViewManagerInterface */
     private $sqlViewManager;
+    /** @var TranslatorInterface */
+    private $translator;
 
     public function __construct(BaseSerializer $serializer,
                                 EntityManagerInterface $em,
-                                SqlViewManagerInterface $sqlViewManager)
+                                SqlViewManagerInterface $sqlViewManager,
+                                TranslatorInterface $translator)
     {
         $this->serializer = $serializer;
         $this->em = $em;
         $this->sqlViewManager = $sqlViewManager;
+        $this->translator = $translator;
     }
 
     /**
@@ -48,6 +53,14 @@ class OutputServiceBase
     public function getSqlViewManager()
     {
         return $this->sqlViewManager;
+    }
+
+    /**
+     * @return TranslatorInterface
+     */
+    public function getTranslator()
+    {
+        return $this->translator;
     }
 
 
