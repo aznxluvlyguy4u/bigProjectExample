@@ -299,4 +299,60 @@ class BreedValueService
 
         return $updateCount;
     }
+
+
+    /**
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function initializeGraphOrdinalData()
+    {
+        $values = [
+            BreedValueTypeConstant::TOTAL_BORN => 1,
+            BreedValueTypeConstant::STILL_BORN => 2,
+            BreedValueTypeConstant::EARLY_FERTILITY => 3,
+            BreedValueTypeConstant::BIRTH_INTERVAL => 4,
+            BreedValueTypeConstant::BIRTH_DELIVERY_PROGRESS => 5,
+            BreedValueTypeConstant::BIRTH_WEIGHT => 6,
+            BreedValueTypeConstant::BIRTH_PROGRESS => 7,
+            BreedValueTypeConstant::WEIGHT_AT_8_WEEKS => 8,
+            BreedValueTypeConstant::WEIGHT_AT_20_WEEKS => 9,
+            BreedValueTypeConstant::MUSCLE_THICKNESS => 10,
+            BreedValueTypeConstant::FAT_THICKNESS_3 => 11,
+            BreedValueTypeConstant::MUSCULARITY_VG_V => 12,
+            BreedValueTypeConstant::MUSCULARITY_VG_M => 12,
+            BreedValueTypeConstant::MUSCULARITY_DF => 12,
+            BreedValueTypeConstant::PROPORTION_VG_M => 13,
+            BreedValueTypeConstant::PROPORTION_DF => 13,
+            BreedValueTypeConstant::SKULL_VG_M => 14,
+            BreedValueTypeConstant::SKULL_DF => 14,
+            BreedValueTypeConstant::EXTERIOR_TYPE_DF => 15,
+            BreedValueTypeConstant::EXTERIOR_TYPE_VG_M => 15,
+            BreedValueTypeConstant::LEG_WORK_VG_M => 16,
+            BreedValueTypeConstant::LEG_WORK_DF => 16,
+            BreedValueTypeConstant::PROGRESS_VG_M => 17,
+            BreedValueTypeConstant::PROGRESS_DF => 17,
+            BreedValueTypeConstant::ODIN_BC => 18,
+            BreedValueTypeConstant::TAIL_LENGTH => 19,
+        ];
+
+        $setsAsString = '';
+        $prefix = '';
+        foreach ($values as $breedValue => $ordinal) {
+            $setsAsString .= $prefix."('".$breedValue."',".$ordinal.")";
+            $prefix = ',';
+        }
+
+        $sql = "UPDATE breed_value_type SET graph_ordinal = v.graph_ordinal FROM (
+                SELECT * FROM (VALUES $setsAsString) AS v(nl, graph_ordinal)
+                ) AS v(nl, graph_ordinal) WHERE breed_value_type.nl = v.nl";
+
+        $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+
+        $message = ($updateCount > 0 ? $updateCount : 'No') . ' breedValueType graph ordinals were set';
+
+        $this->logger->notice($message);
+
+        return $updateCount;
+    }
 }
