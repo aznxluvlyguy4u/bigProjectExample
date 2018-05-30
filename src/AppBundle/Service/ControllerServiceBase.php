@@ -296,22 +296,6 @@ abstract class ControllerServiceBase
      * @param Animal $animal
      * @return JsonResponse
      */
-    protected function getAnimalDetailsOutputForUserEnvironment(Animal $animal)
-    {
-        $output = AnimalDetailsOutput::create(
-            $this->getManager(),
-            $this->sqlViewManager,
-            $this->baseSerializer,
-            $animal
-        );
-        return ResultUtil::successResult($output);
-    }
-
-
-    /**
-     * @param Animal $animal
-     * @return JsonResponse
-     */
     protected function getAnimalDetailsOutputForAdminEnvironment($animal)
     {
         return ResultUtil::successResult($this->getDecodedJsonForAnimalDetailsOutputFromAdminEnvironment($animal));

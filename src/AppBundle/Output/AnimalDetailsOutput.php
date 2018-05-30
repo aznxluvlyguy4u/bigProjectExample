@@ -10,6 +10,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
+use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
@@ -25,36 +26,37 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
-use AppBundle\SqlView\SqlViewManagerInterface;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\PedigreeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Class DeclareAnimalDetailsOutput
  */
-class AnimalDetailsOutput
+class AnimalDetailsOutput extends OutputServiceBase
 {
     const NESTED_GENERATION_LIMIT = 4;
 
     /**
-     * @param ObjectManager|EntityManagerInterface $em
-     * @param SqlViewManagerInterface $sqlViewManager
-     * @param BaseSerializer $serializer
+     * @param Animal $animal
+     * @param bool $includeAscendants
+     * @return array
+     * @throws \Exception
+     */
+    public function getForUserEnvironment(Animal $animal, $includeAscendants = false)
+    {
+        return $this->get($animal, $includeAscendants);
+    }
+
+    /**
      * @param Animal $animal
      * @param boolean $includeAscendants
      * @return array
      * @throws \Exception
      */
-    public static function create(EntityManagerInterface $em,
-                                  SqlViewManagerInterface $sqlViewManager,
-                                  BaseSerializer $serializer,
-                                  Animal $animal,
-                                  $includeAscendants = false
-    )
+    public function get(Animal $animal, $includeAscendants = false)
     {
         $replacementString = "";
 
@@ -80,19 +82,19 @@ class AnimalDetailsOutput
         }
 
         /** @var BodyFatRepository $bodyFatRepository */
-        $bodyFatRepository = $em->getRepository(BodyFat::class);
+        $bodyFatRepository = $this->getManager()->getRepository(BodyFat::class);
         /** @var ExteriorRepository $exteriorRepository */
-        $exteriorRepository = $em->getRepository(Exterior::class);
+        $exteriorRepository = $this->getManager()->getRepository(Exterior::class);
         /** @var WeightRepository $weightRepository */
-        $weightRepository = $em->getRepository(Weight::class);
+        $weightRepository = $this->getManager()->getRepository(Weight::class);
         /** @var MuscleThicknessRepository $muscleThicknessRepository */
-        $muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
+        $muscleThicknessRepository = $this->getManager()->getRepository(MuscleThickness::class);
         /** @var TailLengthRepository $tailLengthRepository */
-        $tailLengthRepository = $em->getRepository(TailLength::class);
+        $tailLengthRepository = $this->getManager()->getRepository(TailLength::class);
         /** @var AnimalRepository $animalRepository */
-        $animalRepository = $em->getRepository(Animal::class);
+        $animalRepository = $this->getManager()->getRepository(Animal::class);
         /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
-        $viewMinimalParentDetailsRepository = $sqlViewManager->get(ViewMinimalParentDetails::class);
+        $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
 
         $animalId = $animal->getId();
         $fatherId = $animal->getParentFatherId();
@@ -193,7 +195,7 @@ class AnimalDetailsOutput
                     "birth_weight" => Utils::fillZero($birthWeight, $replacementString),
                     "birth_progress" => Utils::fillZero("", $replacementString)
                 ),
-            "breed_values" => self::createBreedValuesSetArray($serializer, $animal),
+            "breed_values" => $this->createBreedValuesSetArray($animal),
             "breeder" =>
                 array(
                     "breeder" => Utils::fillNullOrEmptyString($breederName, $replacementString),
@@ -208,8 +210,8 @@ class AnimalDetailsOutput
             "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal, $replacementString),
             "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
-            "declare_log" => self::getLog($em, $animal, $animal->getLocation(), $replacementString),
-            "children" => self::getChildren($serializer, $viewMinimalParentDetailsRepository, $animal),
+            "declare_log" => $this->getLog($animal, $animal->getLocation(), $replacementString),
+            "children" => $this->getChildren($animal),
             "production" => $production,
         ];
 
@@ -222,7 +224,7 @@ class AnimalDetailsOutput
         }
 
         if ($includeAscendants) {
-            $ascendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($em->getConnection(), [$animal->getId()],self::NESTED_GENERATION_LIMIT);
+            $ascendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($this->getManager()->getConnection(), [$animal->getId()],self::NESTED_GENERATION_LIMIT);
             $result["ascendants"] = ArrayUtil::get($animal->getUln(), $ascendants, []);
         }
 
@@ -238,10 +240,11 @@ class AnimalDetailsOutput
     }
 
 
-    private static function getChildren(BaseSerializer $serializer,
-                                        ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository,
-                                        Animal $animal)
+    private function getChildren(Animal $animal)
     {
+        /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
+        $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
+
         $genderPrimaryParent = $animal->getGender();
 
         $children = [];
@@ -250,7 +253,7 @@ class AnimalDetailsOutput
 
             foreach ($animal->getChildren() as $child) {
 
-                $childArray = $serializer->getDecodedJson($child, [JmsGroup::CHILD],true);
+                $childArray = $this->getSerializer()->getDecodedJson($child, [JmsGroup::CHILD],true);
 
                 /** @var ViewMinimalParentDetails $viewDetails */
                 $viewDetails = $viewMinimalParentDetailsRepository->findOneByAnimalId($child->getId());
@@ -278,7 +281,7 @@ class AnimalDetailsOutput
                 }
 
                 if ($secondaryParent && $secondaryParentKey) {
-                    $childArray[$secondaryParentKey] = $serializer->getDecodedJson($secondaryParent, [JmsGroup::PARENT_OF_CHILD],true);;
+                    $childArray[$secondaryParentKey] = $this->getSerializer()->getDecodedJson($secondaryParent, [JmsGroup::PARENT_OF_CHILD],true);;
                 }
 
                 $children[] = $childArray;
@@ -291,30 +294,65 @@ class AnimalDetailsOutput
 
 
     /**
-     * @param BaseSerializer $em
      * @param Animal $animal
      * @return array
      */
-    private static function createBreedValuesSetArray(BaseSerializer $baseSerializer, Animal $animal)
+    private function createBreedValuesSetArray(Animal $animal)
     {
-        if($animal->getLatestBreedGrades() != null) {
-            return $baseSerializer->normalizeToArray($animal->getLatestBreedGrades());
+        if ($animal->getLatestBreedGrades() === null) {
+            return [];
         }
 
-        return [];
+        /** @var BreedValueType[] $breedValueTypes */
+        $breedValueTypes = $this->getManager()->getRepository(BreedValueType::class)->findAll();
+
+        $breedValues = $this->getSerializer()->normalizeToArray($animal->getLatestBreedGrades());
+
+        $breedValueSets = [];
+        foreach ($breedValueTypes as $breedValueType)
+        {
+            if (!$breedValueType->isShowResult()) { // TODO
+                continue;
+            }
+
+            $value = ArrayUtil::get($breedValueType->getResultTableValueVariable(), $breedValues);
+            $normalizedValue = $value ? $value * 100 : 0; //TODO
+
+            $accuracy = round(ArrayUtil::get($breedValueType->getResultTableAccuracyVariable(), $breedValues));
+            $order = $breedValueType->getId(); // TODO
+
+            $chartLabel = $breedValueType->getNl(); // TODO
+            $chartGroup = $breedValueType->getMixBlupAnalysisType()->getEn(); // TODO
+            $chartGroupColor = $breedValueType->getMixBlupAnalysisType()->getEn(); // TODO
+
+            $breedValueSets[$order] = [
+                'order' => $order,
+                'nl' => $breedValueType->getNl(),
+                'chart_label' => $chartLabel,
+                'chart_group' => $chartGroup,
+                'chart_group_color' => $chartGroupColor,
+                'value' => $value,
+                'normalized_value' => round($normalizedValue, 2),
+                'accuracy' => $accuracy,
+            ];
+        }
+
+        ksort($breedValueSets);
+        
+        return $breedValueSets;
     }
 
 
     /**
-     * @param ObjectManager $em
+     * @param ObjectManager $this->getManager()
      * @param Animal $animal
      * @param Location $location
      * @param string $replacementText
      * @return array
      */
-    private static function getLog(ObjectManager $em, Animal $animal, $location, $replacementText)
+    private function getLog(Animal $animal, $location, $replacementText)
     {
-        return $em->getRepository(DeclareBase::class)->getLog($animal, $location, $replacementText);
+        return $this->getManager()->getRepository(DeclareBase::class)->getLog($animal, $location, $replacementText);
     }
 
 }
