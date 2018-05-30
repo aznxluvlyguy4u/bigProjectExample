@@ -40,7 +40,7 @@ class InvoiceRuleRepository extends BaseRepository
 
         if ($activeOnly) {
             $qb->andWhere(
-                $qb->expr()->eq("q.isBatch", 'false')
+                $qb->expr()->eq('q.isDeleted', 'false')
             );
         }
 
