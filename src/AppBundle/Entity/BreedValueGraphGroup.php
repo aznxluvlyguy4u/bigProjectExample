@@ -30,6 +30,15 @@ class BreedValueGraphGroup
     private $id;
 
     /**
+     * Currently used only to label the groups, not to order them by.
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=false, unique=true)
+     * @JMS\Type("integer")
+     */
+    private $ordinal;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="string", nullable=false)
@@ -61,6 +70,24 @@ class BreedValueGraphGroup
     public function setId($id)
     {
         $this->id = $id;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOrdinal()
+    {
+        return $this->ordinal;
+    }
+
+    /**
+     * @param int $ordinal
+     * @return BreedValueGraphGroup
+     */
+    public function setOrdinal($ordinal)
+    {
+        $this->ordinal = $ordinal;
         return $this;
     }
 
