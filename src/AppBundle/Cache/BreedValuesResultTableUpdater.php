@@ -6,6 +6,8 @@ namespace AppBundle\Cache;
 
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\BreedIndex;
+use AppBundle\Entity\BreedValueType;
+use AppBundle\Entity\NormalDistribution;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Entity\ResultTableNormalizedBreedGrades;
 use AppBundle\Enumerator\MixBlupType;
@@ -13,6 +15,7 @@ use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValueService;
 use AppBundle\Service\NormalDistributionService;
 use AppBundle\Util\SqlUtil;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -617,19 +620,51 @@ class BreedValuesResultTableUpdater
     {
         if ($generationDateString) {
 
-            if ($this->processLambMeatIndexAnalysis($analysisTypes)) {
+            $processLambMeatIndexAnalysis = $this->processLambMeatIndexAnalysis($analysisTypes);
+            $processFertilityAnalysis = $this->processFertilityAnalysis($analysisTypes);
+            $processExteriorAnalysis = $this->processExteriorAnalysis($analysisTypes);
+            $processWormAnalysis = $this->processWormAnalysis($analysisTypes);
+
+            // Indexes
+
+            if ($processLambMeatIndexAnalysis) {
                 $this->logger->notice('Processing new LambMeatIndex NormalDistribution...');
                 $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString);
             }
 
-            if ($this->processWormAnalysis($analysisTypes)) {
-                $this->logger->notice('Processing new WormResistance OdinBC NormalDistribution...');
-                $this->normalDistributionService
-                    ->persistBreedValueTypeMeanAndStandardDeviation(BreedValueTypeConstant::ODIN_BC, $generationDateString);
+
+            // Breed Values
+
+            foreach ($this->getBreedValueTypesWithNormalDistribution() as $breedValueType)
+            {
+                $analysisTypeNl = $breedValueType->getMixBlupAnalysisType()
+                    ? $breedValueType->getMixBlupAnalysisType()->getNl() : null;
+
+                switch ($analysisTypeNl) {
+                    case MixBlupType::LAMB_MEAT_INDEX: $generate = $processLambMeatIndexAnalysis; break;
+                    case MixBlupType::FERTILITY: $generate = $processFertilityAnalysis; break;
+                    case MixBlupType::EXTERIOR: $generate = $processExteriorAnalysis; break;
+                    case MixBlupType::WORM: $generate = $processWormAnalysis; break;
+                    default: $generate = false; break;
+                }
+
+                if ($generate) {
+                    $normalDistributionLabel = $breedValueType->getNl();
+                    $this->logger->notice('Processing new '.$normalDistributionLabel.' NormalDistribution...');
+                    $this->normalDistributionService
+                        ->persistBreedValueTypeMeanAndStandardDeviation($normalDistributionLabel, $generationDateString);
+                }
             }
         }
     }
 
+    /**
+     * @return array|BreedValueType[]
+     */
+    private function getBreedValueTypesWithNormalDistribution()
+    {
+        return $this->em->getRepository(BreedValueType::class)->findBy(['useNormalDistribution' => true]);
+    }
 
     /**
      * @param $line
