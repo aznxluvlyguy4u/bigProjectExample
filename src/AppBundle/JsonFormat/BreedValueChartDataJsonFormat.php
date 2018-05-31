@@ -70,6 +70,14 @@ class BreedValueChartDataJsonFormat
      */
     private $normalizedValue;
 
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     */
+    private $exteriorKind;
 
     /**
      * @return  bool
@@ -209,6 +217,24 @@ class BreedValueChartDataJsonFormat
     public function setNormalizedValue($normalizedValue)
     {
         $this->normalizedValue = $normalizedValue;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getExteriorKind()
+    {
+        return $this->exteriorKind;
+    }
+
+    /**
+     * @param string $exteriorKind
+     * @return BreedValueChartDataJsonFormat
+     */
+    public function setExteriorKind($exteriorKind)
+    {
+        $this->exteriorKind = $exteriorKind;
         return $this;
     }
 

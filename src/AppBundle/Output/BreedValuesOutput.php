@@ -6,15 +6,19 @@ namespace AppBundle\Output;
 
 use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Constant\BreedValueTypeConstant;
+use AppBundle\Criteria\BreedValueTypeCriteria;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BreedValueType;
+use AppBundle\Entity\MixBlupAnalysisType;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\JsonFormat\BreedValueChartDataJsonFormat;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\StringUtil;
+use Doctrine\Common\Collections\ArrayCollection;
 
 class BreedValuesOutput extends OutputServiceBase
 {
-    /** @var BreedValueType[] $breedValueTypes */
+    /** @var BreedValueType[]|ArrayCollection $breedValueTypes */
     private $breedValueTypes;
 
     /** @var array|float[] */
@@ -31,7 +35,7 @@ class BreedValuesOutput extends OutputServiceBase
         }
 
         /** @var BreedValueType[] $breedValueTypes */
-        $this->breedValueTypes = $this->getManager()->getRepository(BreedValueType::class)->findAll();
+        $this->breedValueTypes = new ArrayCollection($this->getManager()->getRepository(BreedValueType::class)->findAll());
         $this->breedValuesAndAccuracies = $this->getSerializer()->normalizeToArray($animal->getLatestBreedGrades());
 
         $breedValueSets = $this->getGeneralBreedValues();
@@ -70,32 +74,94 @@ class BreedValuesOutput extends OutputServiceBase
 
 
     /**
+     * @return ArrayCollection|BreedValueType[]
+     */
+    private function getExteriorBreedValueTypes()
+    {
+        if ($this->breedValueTypes === null) {
+            return [];
+        }
+
+        return $this->breedValueTypes->filter(function(BreedValueType $breedValueType) {
+            return $breedValueType->getMixBlupAnalysisType()
+                ? $breedValueType->getMixBlupAnalysisType()->getNl() === MixBlupType::EXTERIOR
+                : false;
+        });
+    }
+
+
+    /**
+     * @var array $breedValueSets
      * @return array
      */
     private function addExteriorBreedValues(array $breedValueSets = [])
     {
-        // TODO custom logic for exterior breed values
+        $exteriorBreedValueTypes = $this->getExteriorBreedValueTypes();
 
-        foreach ($this->breedValueTypes as $breedValueType)
-        {
-            $order = $breedValueType->getGraphOrdinal();
+        $dfSuffix = '_df';
 
-            if (!is_int($order) ||
-                !self::isExteriorAnalysisType($breedValueType)) {
+        $resultTableValueVariables = [];
+        foreach ($exteriorBreedValueTypes as $exteriorBreedValueType) {
+            $resultTableValueVariable = $exteriorBreedValueType->getResultTableValueVariable();
+            if (!StringUtil::containsSubstring($dfSuffix, $resultTableValueVariable)) {
                 continue;
             }
 
-            $breedValueSets[$order] = $this->getBreedValueGraphOutput($breedValueType);
+            $base = strtr($resultTableValueVariable, [$dfSuffix => '']);
+            $resultTableValueVariables[] = $base;
+        }
+
+        foreach ($resultTableValueVariables as $resultTableValueVariableBase) {
+            foreach ([ // check the variables in this order
+                        $dfSuffix,
+                        '_vg_m',
+                         '_vg_v'
+                     ] as $suffix) {
+
+                $resultTableValueVariable = $resultTableValueVariableBase.$suffix;
+                if (key_exists($resultTableValueVariable, $this->breedValuesAndAccuracies)) {
+
+                    /** @var BreedValueType $breedValueType */
+                    $breedValueType = $this->breedValueTypes
+                        ->matching(BreedValueTypeCriteria::byResultTableValueVariable($resultTableValueVariable))
+                        ->first()
+                    ;
+
+                    if ($breedValueType === false) {
+                        continue;
+                    }
+
+                    $breedValueType->setEn(strtr($breedValueType->getEn(), [
+                        '_DF' => '', '_VG_M' => '', '_VG_V' => ''
+                    ]));
+
+                    $breedValueSets[$breedValueType->getGraphOrdinal()] =
+                        $this->getBreedValueGraphOutput($breedValueType, $this->getExteriorKindFromSuffix($suffix));
+                    break;
+                }
+            }
         }
 
         return $breedValueSets;
     }
 
+
     /**
+     * @param $suffix
+     * @return string
+     */
+    private function getExteriorKindFromSuffix($suffix)
+    {
+        return $suffix ? strtoupper(explode('_', $suffix)[1]) : null;
+    }
+
+
+    /**
+     * @param string $exteriorKind
      * @param BreedValueType $breedValueType
      * @return BreedValueChartDataJsonFormat
      */
-    private function getBreedValueGraphOutput(BreedValueType $breedValueType)
+    private function getBreedValueGraphOutput(BreedValueType $breedValueType, $exteriorKind = null)
     {
         $order = $breedValueType->getGraphOrdinal();
 
@@ -115,6 +181,7 @@ class BreedValuesOutput extends OutputServiceBase
             ->setValue($value)
             ->setAccuracy($accuracy)
             ->setNormalizedValue($normalizedValue)
+            ->setExteriorKind($exteriorKind)
         ;
     }
 
