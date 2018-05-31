@@ -70,6 +70,22 @@ class BreedValueChartDataJsonFormat
      */
     private $normalizedValue;
 
+
+    /**
+     * @return  bool
+     * @JMS\Type("bool")
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("has_data")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     */
+    public function hasData()
+    {
+        return $this->value !== null && $this->accuracy !== null && $this->normalizedValue !== null;
+    }
+
+
     /**
      * @return int
      */
