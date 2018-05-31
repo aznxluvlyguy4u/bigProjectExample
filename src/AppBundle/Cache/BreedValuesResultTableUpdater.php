@@ -7,6 +7,7 @@ namespace AppBundle\Cache;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\ResultTableBreedGrades;
+use AppBundle\Entity\ResultTableNormalizedBreedGrades;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValueService;
@@ -41,6 +42,9 @@ class BreedValuesResultTableUpdater
     /** @var string */
     private $resultTableName;
 
+    /** @var string */
+    private $normalizedResultTableName;
+
     public function __construct(EntityManagerInterface $em,
                                 Logger $logger,
                                 BreedValueService $breedValueService,
@@ -56,6 +60,7 @@ class BreedValuesResultTableUpdater
         $this->normalDistributionService = $normalDistributionService;
 
         $this->resultTableName = ResultTableBreedGrades::getTableName();
+        $this->normalizedResultTableName = ResultTableNormalizedBreedGrades::getTableName();
     }
 
 
@@ -127,7 +132,7 @@ class BreedValuesResultTableUpdater
         }
 
 
-        $this->updateBreedValueResultTableValuesAndAccuracies($analysisTypes);
+        $this->updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues($analysisTypes);
     }
 
 
@@ -135,11 +140,12 @@ class BreedValuesResultTableUpdater
      * @param $analysisTypes
      * @throws \Exception
      */
-    private function updateBreedValueResultTableValuesAndAccuracies($analysisTypes)
+    private function updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues($analysisTypes)
     {
         $results = $this->getResultTableVariables();
 
         $totalBreedValueUpdateCount = 0;
+        $totalNormalizedBreedValueUpdateCount = 0;
         foreach ($results as $result)
         {
             $valueVar = $result['result_table_value_variable'];
@@ -148,13 +154,21 @@ class BreedValuesResultTableUpdater
             $analysisTypeNl = $result['analysis_type_nl'];
 
             if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
-                $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar, $useNormalDistribution);
+                $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar);
+                if ($useNormalDistribution) {
+                    $totalNormalizedBreedValueUpdateCount += $this->updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar);   
+                }
             }
         }
 
-        $messagePrefix = $totalBreedValueUpdateCount > 0 ? 'In total '.$totalBreedValueUpdateCount : 'In total NO';
-        $this->write($messagePrefix. ' breed Value&Accuracy sets were updated');
-
+        foreach ([
+            'breed Value&Accuracy sets' => $totalBreedValueUpdateCount,
+            'normalized breedvalues' => $totalNormalizedBreedValueUpdateCount,
+                 ] as $label => $count)
+        {
+            $messagePrefix = $count > 0 ? 'In total '.$count : 'In total NO';
+            $this->write($messagePrefix. ' '.$label.' were updated');
+        }
 
         $breedIndexUpdateCount = $this->updateResultTableByBreedValueIndexType();
         $messagePrefix = $breedIndexUpdateCount > 0 ? 'In total '.$breedIndexUpdateCount : 'In total NO';
@@ -193,18 +207,22 @@ class BreedValuesResultTableUpdater
      */
     private function insertMissingBlankRecords()
     {
-        $this->write('Inserting blank records into '.$this->resultTableName.' table ...');
+        $insertCount = 0;
 
-        $sql = "INSERT INTO result_table_breed_grades (animal_id)
+        foreach ([$this->resultTableName, $this->normalizedResultTableName] as $tableName) {
+            $this->write('Inserting blank records into '.$tableName.' table ...');
+
+            $sql = "INSERT INTO $tableName (animal_id)
                      SELECT a.id as animal_id
                         FROM animal a
-                        LEFT JOIN result_table_breed_grades r ON r.animal_id = a.id
+                        LEFT JOIN $tableName r ON r.animal_id = a.id
                         WHERE r.id ISNULL";
 
-        $insertCount = SqlUtil::updateWithCount($this->conn, $sql);
+            $insertCount += SqlUtil::updateWithCount($this->conn, $sql);
 
-        $message = $insertCount > 0 ? $insertCount . ' records inserted.': 'No records inserted.';
-        $this->write($message);
+            $message = $insertCount > 0 ? $insertCount . ' records inserted.': 'No records inserted.';
+            $this->write($message);
+        }
 
         return $insertCount;
     }
@@ -213,42 +231,14 @@ class BreedValuesResultTableUpdater
     /**
      * @param string $valueVar
      * @param string $accuracyVar
-     * @param boolean $useNormalDistribution
      * @return int
      */
-    private function updateResultTableByBreedValueType($valueVar, $accuracyVar, $useNormalDistribution)
+    private function updateResultTableByBreedValueType($valueVar, $accuracyVar)
     {
         $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
 
-        if ($useNormalDistribution) {
-            $sqlResultTableValues = "SELECT
-                          b.animal_id,
-                          ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation)) as corrected_value,
-                          SQRT(b.reliability) as accuracy
-                        FROM breed_value b
-                          INNER JOIN breed_value_type t ON t.id = b.type_id
-                          INNER JOIN (
-                                       SELECT b.animal_id, b.type_id, max(generation_date) as max_generation_date
-                                       FROM breed_value b
-                                         INNER JOIN breed_value_type t ON t.id = b.type_id
-                                       WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                                       GROUP BY b.animal_id, b.type_id
-                                     )g ON g.animal_id = b.animal_id AND g.type_id = b.type_id AND g.max_generation_date = b.generation_date
-                          INNER JOIN result_table_breed_grades r ON r.animal_id = b.animal_id
-                          INNER JOIN normal_distribution n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
-                        WHERE
-                          t.result_table_value_variable = '$valueVar' AND
-                          (
-                            100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) <> r.$valueVar OR
-                            SQRT(b.reliability) <> r.$accuracyVar OR
-                            r.$valueVar ISNULL OR r.$accuracyVar ISNULL
-                          ) AND
-                          t.use_normal_distribution AND
-                          n.is_including_only_alive_animals = FALSE";
-
-        } else {
-            // Default: Using genetic base
-            $sqlResultTableValues = "SELECT
+        // Default: Using genetic base
+        $sqlResultTableValues = "SELECT
                           b.animal_id,
                           b.value - gb.value as corrected_value,
                           SQRT(b.reliability) as accuracy
@@ -268,7 +258,6 @@ class BreedValuesResultTableUpdater
                          (b.value - gb.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
                          r.$valueVar ISNULL OR r.$accuracyVar ISNULL) AND
                          t.use_normal_distribution = FALSE";
-        }
 
         $sql = "UPDATE result_table_breed_grades
                 SET $valueVar = v.corrected_value, $accuracyVar = v.accuracy
@@ -428,6 +417,132 @@ class BreedValuesResultTableUpdater
 
         return $totalUpdateCount;
     }
+
+
+    /**
+     * @param string $valueVar
+     * @param string $accuracyVar
+     * @return int
+     */
+    private function updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar)
+    {
+        $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->normalizedResultTableName.' ... ');
+
+        $sqlResultTableValues = "SELECT
+                          b.animal_id,
+                          ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation)) as corrected_value
+                        FROM breed_value b
+                          INNER JOIN breed_value_type t ON t.id = b.type_id
+                          INNER JOIN (
+                                       SELECT b.animal_id, b.type_id, max(generation_date) as max_generation_date
+                                       FROM breed_value b
+                                         INNER JOIN breed_value_type t ON t.id = b.type_id
+                                       WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                                       GROUP BY b.animal_id, b.type_id
+                                     )g ON g.animal_id = b.animal_id AND g.type_id = b.type_id AND g.max_generation_date = b.generation_date
+                          INNER JOIN $this->normalizedResultTableName r ON r.animal_id = b.animal_id
+                          INNER JOIN normal_distribution n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
+                        WHERE
+                          t.result_table_value_variable = '$valueVar' AND
+                          (
+                            100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) <> r.$valueVar OR
+                            SQRT(b.reliability) <> r.$accuracyVar OR
+                            r.$valueVar ISNULL OR r.$accuracyVar ISNULL
+                          ) AND
+                          t.use_normal_distribution AND
+                          n.is_including_only_alive_animals = FALSE";
+
+        $sql = "UPDATE $this->normalizedResultTableName
+                SET $valueVar = v.corrected_value
+                FROM (
+                      $sqlResultTableValues   
+                ) as v(animal_id, corrected_value)
+                WHERE $this->normalizedResultTableName.animal_id = v.animal_id";
+        $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+
+        /*
+         * Update obsolete value to null
+         * NOTE! This should be done BEFORE calculating the values for the children,
+         * to prevent cascading calculation for children breedValues based on other calculated values
+         */
+        $removeCount = $this->setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar, $accuracyVar);
+        $updateCount += $removeCount;
+
+        //Calculate breed values and accuracies of children without one, based on the values of both parents
+        $childrenUpdateCount = $this->updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar);
+        $updateCount += $childrenUpdateCount;
+
+        $records = $valueVar.' and '.$accuracyVar. ' records';
+        $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.', removed: '.$removeCount.') '. $records. ' updated.': 'No '.$records.' updated.';
+        $this->write($message);
+
+        return $updateCount;
+    }
+
+
+    /**
+     * @param $valueVar
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar)
+    {
+        $sql = "UPDATE $this->normalizedResultTableName
+                    SET $valueVar = NULL
+                    WHERE animal_id IN (
+                      SELECT r.animal_id
+                      FROM $this->normalizedResultTableName r
+                        LEFT JOIN
+                        (
+                          SELECT b.id, b.animal_id FROM breed_value b
+                            INNER JOIN breed_value_type t ON t.id = b.type_id
+                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                        )i ON r.animal_id = i.animal_id
+                      WHERE
+                        i.id ISNULL AND 
+                        r.$valueVar NOTNULL
+                      )";
+        return SqlUtil::updateWithCount($this->conn, $sql);
+    }
+
+
+    /**
+     * @param string $valueVar
+     * @param string $accuracyVar
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar)
+    {
+        $sql = "UPDATE $this->normalizedResultTableName SET $valueVar = calc.normalized_breed_value
+                FROM (
+                  SELECT
+                    ra.animal_id,
+                    (nrf.$valueVar + nrm.$valueVar) / 2 as calculated_normalized_breed_value
+                  FROM $this->resultTableName ra
+                    INNER JOIN animal a ON ra.animal_id = a.id
+                    INNER JOIN $this->resultTableName rf ON a.parent_father_id = rf.animal_id
+                    INNER JOIN $this->resultTableName rm ON a.parent_mother_id = rm.animal_id
+                    INNER JOIN $this->normalizedResultTableName nra ON nra.animal_id = a.id
+                    INNER JOIN $this->normalizedResultTableName nrf ON nrf.animal_id = a.parent_father_id
+                    INNER JOIN $this->normalizedResultTableName nrm ON nrm.animal_id = a.parent_mother_id
+                  WHERE
+                    a.parent_father_id NOTNULL AND
+                    a.parent_mother_id NOTNULL AND
+                    (nra.$valueVar ISNULL) AND
+                    (nrf.$valueVar NOTNULL) AND
+                    (nrm.$valueVar NOTNULL) AND
+                    SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar)
+                    >= (SELECT SQRT(min_reliability) as min_accuracy FROM breed_value_type WHERE result_table_value_variable = '$valueVar')
+                ) AS calc(animal_id, normalized_breed_value)
+                WHERE $this->resultTableName.animal_id = calc.animal_id
+                  AND (
+                        $this->normalizedResultTableName.$valueVar ISNULL OR
+                        $this->normalizedResultTableName.$valueVar <> calc.normalized_breed_value
+                      )";
+        return SqlUtil::updateWithCount($this->conn, $sql);
+    }
+    
 
     /**
      * @param array $analysisTypes
