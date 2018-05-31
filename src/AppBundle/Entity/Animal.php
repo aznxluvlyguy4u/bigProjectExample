@@ -822,6 +822,13 @@ abstract class Animal
     protected $latestBreedGrades;
 
     /**
+     * @var ResultTableNormalizedBreedGrades
+     * @ORM\OneToOne(targetEntity="ResultTableNormalizedBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("AppBundle\Entity\ResultTableNormalizedBreedGrades")
+     */
+    protected $latestNormalizedBreedGrades;
+
+    /**
      * @var ArrayCollection
      * @ORM\OrderBy({"description" = "ASC"})
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentAnimal", mappedBy="animal", cascade={"persist", "remove"})
@@ -2828,6 +2835,25 @@ abstract class Animal
     public function setLatestBreedGrades($latestBreedGrades)
     {
         $this->latestBreedGrades = $latestBreedGrades;
+        return $this;
+    }
+
+
+    /**
+     * @return ResultTableNormalizedBreedGrades
+     */
+    public function getLatestNormalizedBreedGrades()
+    {
+        return $this->latestNormalizedBreedGrades;
+    }
+
+    /**
+     * @param ResultTableNormalizedBreedGrades $latestNormalizedBreedGrades
+     * @return Animal
+     */
+    public function setLatestNormalizedBreedGrades($latestNormalizedBreedGrades)
+    {
+        $this->latestNormalizedBreedGrades = $latestNormalizedBreedGrades;
         return $this;
     }
 
