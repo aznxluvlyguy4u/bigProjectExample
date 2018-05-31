@@ -4,6 +4,7 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BreedValueType;
@@ -17,7 +18,7 @@ class BreedValuesOutput extends OutputServiceBase
     private $breedValueTypes;
 
     /** @var array|float[] */
-    private $breedValues;
+    private $breedValuesAndAccuracies;
 
     /**
      * @param Animal $animal
@@ -31,13 +32,13 @@ class BreedValuesOutput extends OutputServiceBase
 
         /** @var BreedValueType[] $breedValueTypes */
         $this->breedValueTypes = $this->getManager()->getRepository(BreedValueType::class)->findAll();
-        $this->breedValues = $this->getSerializer()->normalizeToArray($animal->getLatestBreedGrades());
+        $this->breedValuesAndAccuracies = $this->getSerializer()->normalizeToArray($animal->getLatestBreedGrades());
 
         $breedValueSets = $this->getGeneralBreedValues();
         $breedValueSets = $this->addExteriorBreedValues($breedValueSets);
 
         $this->breedValueTypes = null;
-        $this->breedValues = null;
+        $this->breedValuesAndAccuracies = null;
 
         ksort($breedValueSets);
 
@@ -119,14 +120,13 @@ class BreedValuesOutput extends OutputServiceBase
 
 
     /**
-     * TODO round to two decimals
-     * 
      * @param BreedValueType $breedValueType
-     * @return mixed|null
+     * @return float
      */
     private function getValue(BreedValueType $breedValueType)
     {
-        return ArrayUtil::get($breedValueType->getResultTableValueVariable(), $this->breedValues);
+        $value = ArrayUtil::get($breedValueType->getResultTableValueVariable(), $this->breedValuesAndAccuracies, null);
+        return $value !== null ? round($value,BreedFormat::DEFAULT_DECIMAL_ACCURACY) : null;
     }
 
 
@@ -138,13 +138,18 @@ class BreedValuesOutput extends OutputServiceBase
      */
     private function getNormalizedValue(BreedValueType $breedValueType)
     {
-        return ArrayUtil::get($breedValueType->getResultTableValueVariable(), $this->breedValues); // TODO
+        return $this->getValue($breedValueType); // TODO
     }
 
 
     private function getAccuracy(BreedValueType $breedValueType)
     {
-        return round(ArrayUtil::get($breedValueType->getResultTableAccuracyVariable(), $this->breedValues, 0)*100);
+        $accuracy = ArrayUtil::get($breedValueType->getResultTableAccuracyVariable(), $this->breedValuesAndAccuracies, null);
+        if ($accuracy === null) {
+            $keyVersion2 = strtr($breedValueType->getResultTableAccuracyVariable(), ['accuracy' => '_accuracy']);
+            $accuracy = ArrayUtil::get($keyVersion2, $this->breedValuesAndAccuracies, null);
+        }
+        return $accuracy !== null ? round($accuracy * 100) : null;
     }
 
 
@@ -169,7 +174,7 @@ class BreedValuesOutput extends OutputServiceBase
      */
     private function getChartGroup(BreedValueType $breedValueType)
     {
-        return $breedValueType->getMixBlupAnalysisType()->getEn(); // TODO
+        return $breedValueType->getGraphGroup() ? $breedValueType->getGraphGroup()->getOrdinal() : null;
     }
 
 
@@ -179,7 +184,7 @@ class BreedValuesOutput extends OutputServiceBase
      */
     private function getChartColor(BreedValueType $breedValueType)
     {
-        return $breedValueType->getMixBlupAnalysisType()->getEn(); // TODO
+        return $breedValueType->getGraphGroup() ? $breedValueType->getGraphGroup()->getColor() : null;
     }
 
 
