@@ -9,6 +9,7 @@ use AppBundle\Entity\BreedIndexType;
 use AppBundle\Entity\BreedIndexTypeRepository;
 use AppBundle\Entity\BreedValueGeneticBase;
 use AppBundle\Entity\BreedValueGeneticBaseRepository;
+use AppBundle\Entity\BreedValueGraphGroup;
 use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\BreedValueTypeRepository;
 use AppBundle\Setting\BreedGradingSetting;
@@ -338,8 +339,8 @@ class BreedValueService
 
         $setsAsString = '';
         $prefix = '';
-        foreach ($values as $breedValue => $ordinal) {
-            $setsAsString .= $prefix."('".$breedValue."',".$ordinal.")";
+        foreach ($values as $breedValueNl => $ordinal) {
+            $setsAsString .= $prefix."('".$breedValueNl."',".$ordinal.")";
             $prefix = ',';
         }
 
@@ -350,6 +351,115 @@ class BreedValueService
         $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
 
         $message = ($updateCount > 0 ? $updateCount : 'No') . ' breedValueType graph ordinals were set';
+
+        $this->logger->notice($message);
+
+        return $updateCount;
+    }
+
+
+    /**
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function linkBreedValueGraphGroups()
+    {
+        $this->initializeBreedValueGraphGroups();
+
+        $currentGraphGroups = $this->em->getRepository(BreedValueGraphGroup::class)->findAllWithOrdinalAsKey();
+
+        $breedValuesAndGraphGroupOrdinalPairs = [
+            BreedValueTypeConstant::TOTAL_BORN => 1,
+            BreedValueTypeConstant::STILL_BORN => 1,
+            BreedValueTypeConstant::EARLY_FERTILITY => 1,
+            BreedValueTypeConstant::BIRTH_INTERVAL => 1,
+            BreedValueTypeConstant::BIRTH_DELIVERY_PROGRESS => 1,
+            BreedValueTypeConstant::BIRTH_WEIGHT => 1,
+            BreedValueTypeConstant::BIRTH_PROGRESS => 2,
+            BreedValueTypeConstant::WEIGHT_AT_8_WEEKS => 2,
+            BreedValueTypeConstant::WEIGHT_AT_20_WEEKS => 2,
+            BreedValueTypeConstant::MUSCLE_THICKNESS => 2,
+            BreedValueTypeConstant::FAT_THICKNESS_3 => 2,
+            BreedValueTypeConstant::MUSCULARITY_VG_V => 3,
+            BreedValueTypeConstant::MUSCULARITY_VG_M => 3,
+            BreedValueTypeConstant::MUSCULARITY_DF => 3,
+            BreedValueTypeConstant::PROPORTION_VG_M => 3,
+            BreedValueTypeConstant::PROPORTION_DF => 3,
+            BreedValueTypeConstant::SKULL_VG_M => 3,
+            BreedValueTypeConstant::SKULL_DF => 3,
+            BreedValueTypeConstant::EXTERIOR_TYPE_DF => 3,
+            BreedValueTypeConstant::EXTERIOR_TYPE_VG_M => 3,
+            BreedValueTypeConstant::LEG_WORK_VG_M => 3,
+            BreedValueTypeConstant::LEG_WORK_DF => 3,
+            BreedValueTypeConstant::PROGRESS_VG_M => 3,
+            BreedValueTypeConstant::PROGRESS_DF => 3,
+            BreedValueTypeConstant::ODIN_BC => 4,
+            BreedValueTypeConstant::TAIL_LENGTH => 5,
+        ];
+
+        $breedValuesByGraphGroupIdPairs = [];
+        foreach ($breedValuesAndGraphGroupOrdinalPairs as $breedValueNl => $graphGroupOrdinal)
+        {
+            $breedValuesByGraphGroupIdPairs[$breedValueNl] = $currentGraphGroups[$graphGroupOrdinal]->getId();
+        }
+
+        $setsAsString = '';
+        $prefix = '';
+        foreach ($breedValuesByGraphGroupIdPairs as $breedValueNl => $ordinal) {
+            $setsAsString .= $prefix."('".$breedValueNl."',".$ordinal.")";
+            $prefix = ',';
+        }
+
+        $sql = "UPDATE breed_value_type SET graph_group_id = v.graph_group_id FROM (
+                SELECT * FROM (VALUES $setsAsString) AS v(nl, graph_group_id)
+                ) AS v(nl, graph_group_id) WHERE breed_value_type.nl = v.nl";
+
+        $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+
+        $message = ($updateCount > 0 ? $updateCount : 'No') . ' breedValueType and breedValueGraphGroups were linked';
+
+        $this->logger->notice($message);
+
+        return $updateCount;
+    }
+
+
+    /**
+     * @return int
+     */
+    private function initializeBreedValueGraphGroups()
+    {
+        $currentGraphGroups = $this->em->getRepository(BreedValueGraphGroup::class)->findAllWithOrdinalAsKey();
+
+        $initialGroups = [
+          1 => '#967383', // Fertility, brown
+          2 => '#E0B6B1', // Performance, beige
+          3 => '#46D0CC', // Exterior, teal
+          4 => '#E08DAC', // WormResistance, red
+          5 => '#459D68', // TailLength, blue
+        ];
+
+        $updateCount = 0;
+
+        foreach ($initialGroups as $ordinal => $color) {
+            if (key_exists($ordinal, $currentGraphGroups)) {
+                continue;
+            }
+
+            $graphGroup = (new BreedValueGraphGroup())
+                ->setOrdinal($ordinal)
+                ->setColor($color)
+            ;
+
+            $this->em->persist($graphGroup);
+            $updateCount++;
+        }
+
+        if ($updateCount > 0) {
+            $this->em->flush();
+        }
+
+        $message = ($updateCount > 0 ? $updateCount : 'No') . ' breedValueGraphGroups were inserted';
 
         $this->logger->notice($message);
 
