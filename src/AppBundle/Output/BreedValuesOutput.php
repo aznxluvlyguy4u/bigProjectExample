@@ -4,7 +4,6 @@
 namespace AppBundle\Output;
 
 
-use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Criteria\BreedValueTypeCriteria;
 use AppBundle\Entity\Animal;
@@ -24,6 +23,9 @@ class BreedValuesOutput extends OutputServiceBase
     /** @var array|float[] */
     private $breedValuesAndAccuracies;
 
+    /** @var array|float[] */
+    private $normalizedBreedValues;
+
     /**
      * @param Animal $animal
      * @return array
@@ -37,12 +39,14 @@ class BreedValuesOutput extends OutputServiceBase
         /** @var BreedValueType[] $breedValueTypes */
         $this->breedValueTypes = new ArrayCollection($this->getManager()->getRepository(BreedValueType::class)->findAll());
         $this->breedValuesAndAccuracies = $this->getSerializer()->normalizeToArray($animal->getLatestBreedGrades());
+        $this->normalizedBreedValues = $this->getSerializer()->normalizeToArray($animal->getLatestNormalizedBreedGrades());
 
         $breedValueSets = $this->getGeneralBreedValues();
         $breedValueSets = $this->addExteriorBreedValues($breedValueSets);
 
         $this->breedValueTypes = null;
         $this->breedValuesAndAccuracies = null;
+        $this->normalizedBreedValues = null;
 
         ksort($breedValueSets);
 
@@ -193,19 +197,18 @@ class BreedValuesOutput extends OutputServiceBase
     private function getValue(BreedValueType $breedValueType)
     {
         $value = ArrayUtil::get($breedValueType->getResultTableValueVariable(), $this->breedValuesAndAccuracies, null);
-        return $value !== null ? round($value,BreedFormat::DEFAULT_DECIMAL_ACCURACY) : null;
+        return $value !== null ? round($value,BreedValuesReportQueryGenerator::BREED_VALUE_DECIMAL_SPACES) : null;
     }
 
 
     /**
-     * TODO no normalized breed values are currently available, except for WormResistance
-     *
      * @param BreedValueType $breedValueType
      * @return mixed|null
      */
     private function getNormalizedValue(BreedValueType $breedValueType)
     {
-        return $this->getValue($breedValueType); // TODO
+        $value = ArrayUtil::get($breedValueType->getResultTableValueVariable(), $this->normalizedBreedValues, null);
+        return $value !== null ? round($value,BreedValuesReportQueryGenerator::NORMALIZED_BREED_VALUE_DECIMAL_SPACES) : null;
     }
 
 
