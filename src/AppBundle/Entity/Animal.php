@@ -746,7 +746,7 @@ abstract class Animal
      * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "ANIMALS_BATCH_EDIT"
+     *     "LITTER"
      * })
      */
     protected $litter;
@@ -881,7 +881,8 @@ abstract class Animal
      * @JMS\VirtualProperty
      * @JMS\SerializedName("merged_n_ling")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      * @return integer
      */

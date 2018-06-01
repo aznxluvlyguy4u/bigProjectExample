@@ -118,7 +118,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return ResultUtil::errorResult($exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $serializedAnimalsOutput = self::getSerializedAnimalsInBatchEditFormat($this, $animals);
+        $includeLitter = RequestUtil::getBooleanQuery($request, QueryParameter::INCLUDE_LITTER, false);
+        $serializedAnimalsOutput = self::getSerializedAnimalsInBatchEditFormat($this, $animals, $includeLitter);
 
         $ulnsWithMissingAnimals = [];
         $stnsWithMissingAnimals = [];
@@ -145,18 +146,23 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     }
 
 
-    public static function getSerializedAnimalsInBatchEditFormat(ControllerServiceBase $controllerServiceBase, array $animals = [])
+    public static function getSerializedAnimalsInBatchEditFormat(ControllerServiceBase $controllerServiceBase, array $animals = [], $includeLitter = false)
     {
         $foundUlns = [];
         $foundStns = [];
 
         $totalFoundAnimals = [];
 
+        $jmsGroups = [JmsGroup::ANIMALS_BATCH_EDIT];
+        if ($includeLitter) {
+            $jmsGroups[] = JmsGroup::LITTER;
+        }
+
         /** @var Animal $animal */
         foreach ($animals as $animal) {
             $serializedAnimal = $controllerServiceBase->getDecodedJsonOfAnimalWithParents(
                 $animal,
-                [JmsGroup::ANIMALS_BATCH_EDIT],
+                $jmsGroups,
                 true,
                 true
             );

@@ -36,6 +36,7 @@ class JmsGroup
     const IS_NOT_HISTORIC_ANIMAL = 'IS_NOT_HISTORIC_ANIMAL';
 
     const LAST_MATE = 'LAST_MATE';
+    const LITTER_EDIT = 'LITTER';
     const LIVESTOCK = 'LIVESTOCK';
 
     const MATINGS = 'MATINGS';
