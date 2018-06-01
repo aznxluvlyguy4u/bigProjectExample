@@ -282,6 +282,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 $animalsWithNewValue->setPredicateScore(null);
             }
 
+            if ($animalsWithNewValue->getNLing() === '') {
+                $animalsWithNewValue->setNLing(null);
+            }
+
             $animalsWithNewValues[$key] = $animalsWithNewValue;
         }
 
@@ -632,6 +636,13 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $oldName = $retrievedAnimal->getName();
             $retrievedAnimal->setName($newName);
             $this->updateCurrentActionLogMessage('aiind', $oldName, $newName);
+        }
+
+        $newNLing = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getNLing());
+        if($retrievedAnimal->getNLing() !== $newNLing) {
+            $oldNLing = $retrievedAnimal->getNLing();
+            $retrievedAnimal->setNLing($newNLing);
+            $this->updateCurrentActionLogMessage('N-Ling backup value', $oldNLing, $newNLing);
         }
 
         $newBlindnessFactor = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getBlindnessFactor());
@@ -1165,6 +1176,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             JsonInputConstant::BREED_TYPE => [],
             JsonInputConstant::BLINDNESS_FACTOR => [],
             JsonInputConstant::BIRTH_PROGRESS => [],
+            JsonInputConstant::N_LING => [],
         ];
 
         foreach ($animalsWithNewValues as $animalsWithNewValue) {
@@ -1185,6 +1197,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
             if (!Validator::hasValidBirthProgressType($this->getManager(), $animalsWithNewValue->getBirthProgress(), true)) {
                 $incorrectFormatSets[JsonInputConstant::BIRTH_PROGRESS][$animalId] = $animalsWithNewValue->getBirthProgress();
+            }
+
+            if (!is_int($animalsWithNewValue->getNLing()) && !ctype_digit($animalsWithNewValue->getNLing())) {
+                $incorrectFormatSets[JsonInputConstant::N_LING][$animalId] = $animalsWithNewValue->getNLing();
             }
         }
 
