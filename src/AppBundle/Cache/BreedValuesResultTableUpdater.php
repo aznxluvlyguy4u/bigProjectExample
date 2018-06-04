@@ -159,7 +159,7 @@ class BreedValuesResultTableUpdater
             if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
                 $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar);
                 if ($useNormalDistribution) {
-                    $totalNormalizedBreedValueUpdateCount += $this->updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar);   
+                    $totalNormalizedBreedValueUpdateCount += $this->updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar);
                 }
             }
         }
@@ -429,7 +429,7 @@ class BreedValuesResultTableUpdater
      */
     private function updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar)
     {
-        $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->normalizedResultTableName.' ... ');
+        $this->write('Updating '.$valueVar. ' values in '.$this->normalizedResultTableName.' ... ');
 
         $sqlResultTableValues = "SELECT
                           b.animal_id,
@@ -443,14 +443,15 @@ class BreedValuesResultTableUpdater
                                        WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
                                        GROUP BY b.animal_id, b.type_id
                                      )g ON g.animal_id = b.animal_id AND g.type_id = b.type_id AND g.max_generation_date = b.generation_date
-                          INNER JOIN $this->normalizedResultTableName r ON r.animal_id = b.animal_id
+                          INNER JOIN $this->normalizedResultTableName nr ON nr.animal_id = b.animal_id
+                          INNER JOIN $this->resultTableName r ON r.animal_id = b.animal_id
                           INNER JOIN normal_distribution n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
                         WHERE
                           t.result_table_value_variable = '$valueVar' AND
                           (
-                            100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) <> r.$valueVar OR
+                            100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) <> nr.$valueVar OR
                             SQRT(b.reliability) <> r.$accuracyVar OR
-                            r.$valueVar ISNULL OR r.$accuracyVar ISNULL
+                            nr.$valueVar ISNULL
                           ) AND
                           t.use_normal_distribution AND
                           n.is_including_only_alive_animals = FALSE";
@@ -468,14 +469,14 @@ class BreedValuesResultTableUpdater
          * NOTE! This should be done BEFORE calculating the values for the children,
          * to prevent cascading calculation for children breedValues based on other calculated values
          */
-        $removeCount = $this->setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar, $accuracyVar);
+        $removeCount = $this->setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar);
         $updateCount += $removeCount;
 
         //Calculate breed values and accuracies of children without one, based on the values of both parents
         $childrenUpdateCount = $this->updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar);
         $updateCount += $childrenUpdateCount;
 
-        $records = $valueVar.' and '.$accuracyVar. ' records';
+        $records = $valueVar. ' records';
         $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.', removed: '.$removeCount.') '. $records. ' updated.': 'No '.$records.' updated.';
         $this->write($message);
 
@@ -538,7 +539,7 @@ class BreedValuesResultTableUpdater
                     SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar)
                     >= (SELECT SQRT(min_reliability) as min_accuracy FROM breed_value_type WHERE result_table_value_variable = '$valueVar')
                 ) AS calc(animal_id, normalized_breed_value)
-                WHERE $this->resultTableName.animal_id = calc.animal_id
+                WHERE $this->normalizedResultTableName.animal_id = calc.animal_id
                   AND (
                         $this->normalizedResultTableName.$valueVar ISNULL OR
                         $this->normalizedResultTableName.$valueVar <> calc.normalized_breed_value
