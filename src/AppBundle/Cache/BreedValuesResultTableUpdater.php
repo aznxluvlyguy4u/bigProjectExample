@@ -259,8 +259,7 @@ class BreedValuesResultTableUpdater
                        WHERE
                          t.result_table_value_variable = '$valueVar' AND
                          (b.value - gb.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
-                         r.$valueVar ISNULL OR r.$accuracyVar ISNULL) AND
-                         t.use_normal_distribution = FALSE";
+                         r.$valueVar ISNULL OR r.$accuracyVar ISNULL)";
 
         $sql = "UPDATE result_table_breed_grades
                 SET $valueVar = v.corrected_value, $accuracyVar = v.accuracy
