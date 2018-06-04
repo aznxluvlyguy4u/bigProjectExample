@@ -50,7 +50,7 @@ class BreedValuesOutput extends OutputServiceBase
 
         ksort($breedValueSets);
 
-        return $breedValueSets;
+        return array_values($breedValueSets);
     }
 
 
