@@ -159,6 +159,9 @@ services:
           - method: setAnimalDetailsBatchUpdater
             arguments:
               - '@AppBundle\Service\AnimalDetailsBatchUpdaterService'
+          - method: setAnimalDetailsOutput
+            arguments:
+              - '@AppBundle\Output\AnimalDetailsOutput'
 
     AppBundle\Service\AnimalDetailsBatchUpdaterService:
         parent: app.abstract_base.controller
@@ -631,6 +634,10 @@ services:
     app.animal:
         parent: app.abstract_base.declare
         class: AppBundle\Service\AnimalService
+        calls:
+          - method: setAnimalDetailsOutput
+            arguments:
+              - '@AppBundle\Output\AnimalDetailsOutput'
 
     app.arrival:
         parent: app.abstract_base.declare
@@ -891,6 +898,25 @@ services:
 
     AppBundle\SqlView\Repository\ViewPersonFullNameRepository:
         parent: app.sqlview.repository.base
+
+
+    app.output.base:
+        abstract: true
+        arguments:
+          - '@app.serializer.base'
+          - '@doctrine.orm.default_entity_manager'
+          - '@AppBundle\SqlView\SqlViewManager'
+          - '@translator'
+
+    AppBundle\Output\AnimalDetailsOutput:
+        parent: app.output.base
+        calls:
+          - method: setBreedValuesOutput
+            arguments:
+              - '@AppBundle\Output\BreedValuesOutput'
+
+    AppBundle\Output\BreedValuesOutput:
+        parent: app.output.base
 
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:

@@ -69,6 +69,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
 
     /** @var AnimalDetailsBatchUpdaterService */
     private $animalDetailsBatchUpdater;
+    /** @var AnimalDetailsOutput */
+    private $animalDetailsOutput;
 
     /**
      * @required
@@ -78,6 +80,17 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     public function setAnimalDetailsBatchUpdater(AnimalDetailsBatchUpdaterService $animalDetailsBatchUpdater)
     {
         $this->animalDetailsBatchUpdater = $animalDetailsBatchUpdater;
+    }
+
+
+    /**
+     * @required
+     *
+     * @param AnimalDetailsOutput $animalDetailsOutput
+     */
+    public function setAnimalDetailsOutput(AnimalDetailsOutput $animalDetailsOutput)
+    {
+        $this->animalDetailsOutput = $animalDetailsOutput;
     }
 
 
@@ -148,7 +161,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $this->clearLivestockCacheForLocation($animal->getLocation());
         }
 
-        return $this->getAnimalDetailsOutputForUserEnvironment($animal);
+        return ResultUtil::successResult($this->animalDetailsOutput->getForUserEnvironment($animal));
     }
 
 
