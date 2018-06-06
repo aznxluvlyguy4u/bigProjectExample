@@ -227,11 +227,11 @@ class AnimalDetailsOutput extends OutputServiceBase
         ];
 
         if ($fatherId) {
-            $result["parentFather"] = $viewMinimalParentDetails->get($fatherId);
+            $result["parent_father"] = $viewMinimalParentDetails->get($fatherId);
         }
 
         if ($motherId) {
-            $result["parentMother"] = $viewMinimalParentDetails->get($motherId);
+            $result["parent_mother"] = $viewMinimalParentDetails->get($motherId);
         }
 
         if ($includeAscendants) {
