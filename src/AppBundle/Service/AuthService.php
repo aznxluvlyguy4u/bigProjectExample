@@ -7,6 +7,7 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\DashboardType;
@@ -82,11 +83,18 @@ class AuthService extends AuthServiceBase
      */
     public function authorizeUser(Request $request)
     {
-        $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
-        $credentials = str_replace('Basic ', '', $credentials);
-        $credentials = base64_decode($credentials);
+        if($request->getMethod() === 'GET') {
+            $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
+            $credentials = str_replace('Basic ', '', $credentials);
+            $credentials = base64_decode($credentials);
+            list($emailAddress, $password) = explode(":", $credentials);
+        } else {
+            $requestData = RequestUtil::getContentAsArray($request);
 
-        list($emailAddress, $password) = explode(":", $credentials);
+            $emailAddress = $requestData[JsonInputConstant::EMAIL_ADDRESS];
+            $password = $requestData[JsonInputConstant::PASSWORD];
+        }
+
         if($emailAddress != null && $password != null) {
             $emailAddress = strtolower($emailAddress);
             $client = $this->getManager()->getRepository(Client::class)->findActiveOneByEmailAddress($emailAddress);
@@ -95,7 +103,7 @@ class AuthService extends AuthServiceBase
             }
 
             if(!$client->getIsActive()) {
-                return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+                return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorizeds"), 401);
             }
 
             if($client->getEmployer() != null) {
