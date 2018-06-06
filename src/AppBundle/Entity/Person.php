@@ -307,10 +307,19 @@ abstract class Person implements UserInterface
      */
     private $emailChangeToken;
 
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="MobileDevice", mappedBy="owner", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\MobileDevice>")
+     */
+    private $mobileDevices;
+
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
   {
     $this->tokens = new ArrayCollection();
+    $this->mobileDevices = new ArrayCollection();
     
     $this->setFirstName($firstName);
     $this->setLastName($lastName);
@@ -836,6 +845,47 @@ abstract class Person implements UserInterface
         return $this;
     }
 
+    /**
+     * @return ArrayCollection
+     */
+    public function getMobileDevices()
+    {
+        if ($this->mobileDevices === null) {
+            $this->mobileDevices = new ArrayCollection();
+        }
+        return $this->mobileDevices;
+    }
+
+    /**
+     * @param ArrayCollection $mobileDevices
+     * @return Person
+     */
+    public function setMobileDevices($mobileDevices)
+    {
+        $this->mobileDevices = $mobileDevices;
+        return $this;
+    }
+
+
+    /**
+     * @param MobileDevice $mobileDevice
+     * @return $this
+     */
+    public function addMobileDevice($mobileDevice)
+    {
+        $this->getMobileDevices()->add($mobileDevice);
+        return $this;
+    }
+
+    /**
+     * @param MobileDevice $mobileDevice
+     * @return $this
+     */
+    public function removeMobileDevice($mobileDevice)
+    {
+        $this->getMobileDevices()->removeElement($mobileDevice);
+        return $this;
+    }
 
     /**
      * @return Person
