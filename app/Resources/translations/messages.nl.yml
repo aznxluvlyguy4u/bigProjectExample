@@ -366,3 +366,8 @@ FERTILIZER ACCOUNTING NOTE: De forfaitaire excretienormen waar in deze rapportag
 THIS IS NOT A VALID EMAIL ADDRESS: Dit is geen valide e-mailadres
 A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS: Er bestaat al een gebruiker met dit e-mailadres
 THE PASSWORD IS INCORRECT: Het wachtwoord is onjuist
+
+#Messages
+DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd
+DECLARE_DEPART: Automatisch een afvoer melding uitgevoerd
+NEW_INVOICE: U heeft een nieuwe factuur ontvangen

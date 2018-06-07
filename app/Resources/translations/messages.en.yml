@@ -358,3 +358,8 @@ FERTILIZER ACCOUNTING NOTE: The fixed excretion standards that are included in t
 THIS IS NOT A VALID EMAIL ADDRESS: This is not a valid email address
 A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS: A user already exists for this email address
 THE PASSWORD IS INCORRECT: The password is invalid
+
+#Messages
+DECLARE_ARRIVAL: Automatically issued an arrival notification
+DECLARE_DEPART: Automatically issued a departure notification
+NEW_INVOICE: U just received a new invoice
