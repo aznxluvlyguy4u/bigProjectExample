@@ -586,6 +586,9 @@ services:
           - '@translator'
           - '@logger'
           - '@AppBundle\SqlView\SqlViewManager'
+          - '@AppBundle\Service\Google\FireBaseService'
+
+    AppBundle\Service\Google\FireBaseService:
 
     app.abstract_base.auth:
         parent: app.abstract_base.controller
@@ -775,6 +778,9 @@ services:
     app.messages:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MessageService
+
+    AppBundle\Service\MobileService:
+        parent: app.abstract_base.controller
 
     app.mollie.payment:
         parent: app.abstract_base.controller
