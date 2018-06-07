@@ -846,7 +846,7 @@ abstract class Person implements UserInterface
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|MobileDevice[]
      */
     public function getMobileDevices()
     {
