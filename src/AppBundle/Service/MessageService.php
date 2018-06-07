@@ -27,7 +27,12 @@ class MessageService extends ControllerServiceBase
         $invoiceResults = $this->getManager()->getRepository(Message::class)->getInvoiceMessages($client, $location);
         $results = $this->getManager()->getRepository(Message::class)->getNonInvoiceMessages($client, $location);
         $results = array_merge($results, $invoiceResults);
-        return ResultUtil::successResult($results);
+        $newResults = [];
+        foreach($results as $result) {
+            $result['type_message'] = $this->translator->trans($result['type']);
+            $newResults[] = $result;
+        }
+        return ResultUtil::successResult($newResults);
     }
 
 

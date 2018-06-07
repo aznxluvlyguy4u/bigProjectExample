@@ -9,6 +9,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\MobileDevice;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\DashboardType;
 use AppBundle\Output\MenuBarOutput;
@@ -83,6 +84,8 @@ class AuthService extends AuthServiceBase
      */
     public function authorizeUser(Request $request)
     {
+        $registrationToken = null;
+        $deviceId = null;
         if($request->getMethod() === 'GET') {
             $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
             $credentials = str_replace('Basic ', '', $credentials);
@@ -93,6 +96,8 @@ class AuthService extends AuthServiceBase
 
             $emailAddress = $requestData[JsonInputConstant::EMAIL_ADDRESS];
             $password = $requestData[JsonInputConstant::PASSWORD];
+            $registrationToken = $requestData[JsonInputConstant::REGISTRATION_TOKEN];
+            $deviceId = $requestData[JsonInputConstant::DEVICE_ID];
         }
 
         if($emailAddress != null && $password != null) {
@@ -131,6 +136,24 @@ class AuthService extends AuthServiceBase
                 $client->setLastLoginDate(new \DateTime());
                 $this->getManager()->persist($client);
                 ActionLogWriter::loginUser($this->getManager(), $client, $client, true);
+
+                if(!empty($registrationToken) && !empty($deviceId)) {
+                    $mobileDevice = $this->getManager()->getRepository(MobileDevice::class)->findOneBy(['uuid' => $deviceId]);
+                    if($mobileDevice == null) {
+                        $mobileDevice = new MobileDevice();
+                        $mobileDevice->setUuid($deviceId);
+                        $mobileDevice->setOwner($client);
+                        $client->addMobileDevice($mobileDevice);
+                    }
+
+                    if($mobileDevice->getRegistrationToken() != $registrationToken) {
+                        $mobileDevice->setRegistrationToken($registrationToken);
+                        $mobileDevice->setUpdatedAt(new \DateTime());
+                    }
+                    $this->getManager()->persist($mobileDevice);
+                    $this->getManager()->persist($client);
+                    $this->getManager()->flush();
+                }
 
                 return new JsonResponse(array("access_token"=>$client->getAccessToken(),
                     Constant::RESULT_NAMESPACE => $result), 200);
