@@ -73,7 +73,8 @@ class Company
      *     "ANIMALS_BATCH_EDIT",
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
-     *     "UBN"
+     *     "UBN",
+     *     "DOSSIER"
      * })
     */
     private $companyName;
@@ -325,6 +326,7 @@ class Company
      * @var string
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\SerializedName("twinfield_administration_code")
      * @JMS\Groups({
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
