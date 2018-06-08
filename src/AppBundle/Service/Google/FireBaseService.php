@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service\Google;
 
+use AppBundle\Constant\Environment;
 use Kreait\Firebase\Exception\MessagingException;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\MessageToRegistrationToken;
@@ -14,9 +15,14 @@ class FireBaseService
     private $fireBase;
     private $messaging;
 
-    public function __construct()
+    public function __construct($environment)
     {
-        $serviceAccount = ServiceAccount::fromJsonFile('../firebase-credentials.json');
+        switch ($environment) {
+            case Environment::PROD: $filePath = '../firebase-credentials-production.json'; break;
+            default: $filePath = '../firebase-credentials-staging.json'; break;
+        }
+
+        $serviceAccount = ServiceAccount::fromJsonFile($filePath);
         $this->fireBase = (new Factory)
             ->withServiceAccount($serviceAccount)
             ->create();

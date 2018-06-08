@@ -588,6 +588,8 @@ services:
           - '@AppBundle\SqlView\SqlViewManager'
 
     AppBundle\Service\Google\FireBaseService:
+        arguments:
+          - '%environment%'
 
     app.abstract_base.auth:
         parent: app.abstract_base.controller
