@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Service\Invoice;
+namespace AppBundle\Service\Twinfield;
 
 
 use AppBundle\Entity\Invoice;
@@ -18,7 +18,7 @@ use PhpTwinfield\Secure\WebservicesAuthentication;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Translation\TranslatorInterface;
 
-class TwinfieldService extends ControllerServiceBase
+class TwinfieldInvoiceService extends ControllerServiceBase
 {
     private $authenticationConnection;
 
