@@ -21,6 +21,7 @@ use AppBundle\Enumerator\MessageType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -33,6 +34,17 @@ class DepartService extends DeclareControllerServiceBase
     /** @var string */
     private $environment;
 
+    /** @var FireBaseService */
+    private $fireBaseService;
+
+    /**
+     * @required
+     *
+     * @param FireBaseService $fireBaseService
+     */
+    public function setFireBaseService(FireBaseService $fireBaseService) {
+        $this->fireBaseService = $fireBaseService;
+    }
 
     /**
      * @required Set at initialization
@@ -178,6 +190,11 @@ class DepartService extends DeclareControllerServiceBase
             $message->setRequestMessage($messageObject);
             $message->setData($uln);
             $this->persist($message);
+
+            foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
+                $title = $this->translator->trans($message->getType());
+                $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
+            }
         }
 
         $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());

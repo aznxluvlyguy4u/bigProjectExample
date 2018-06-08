@@ -137,6 +137,10 @@ class JsonInputConstant
     const CELLPHONE_NUMBER = "cellphone_number";
     const RELATION_NUMBER_KEEPER = "relation_number_keeper";
 
+    //Mobile
+    const REGISTRATION_TOKEN = 'registration_token';
+    const DEVICE_ID = 'uuid';
+
     //Content Management System (cms)
     const DASHBOARD = 'dashboard';
     const CONTACT_INFO = 'contact_info';

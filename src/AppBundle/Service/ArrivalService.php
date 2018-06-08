@@ -21,6 +21,7 @@ use AppBundle\Enumerator\MessageType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -39,6 +40,17 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     private $animalLocationHistoryService;
     /** @var string */
     private $environment;
+    /** @var FireBaseService */
+    private $fireBaseService;
+
+    /**
+     * @required
+     *
+     * @param FireBaseService $fireBaseService
+     */
+    public function setFireBaseService(FireBaseService $fireBaseService) {
+        $this->fireBaseService = $fireBaseService;
+    }
 
     /**
      * @required
@@ -214,6 +226,10 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             $message->setRequestMessage($messageObject);
             $message->setData($uln);
             $this->persist($message);
+            foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
+                $title = $this->translator->trans($message->getType());
+                $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
+            }
         }
 
         $this->getManager()->flush();

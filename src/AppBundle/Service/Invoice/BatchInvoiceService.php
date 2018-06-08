@@ -26,6 +26,7 @@ use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Service\ControllerServiceBase;
+use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
@@ -42,6 +43,18 @@ use Symfony\Component\HttpFoundation\Request;
 class BatchInvoiceService extends ControllerServiceBase
 {
     private $invoiceNumber;
+
+    /** @var FireBaseService */
+    private $fireBaseService;
+
+    /**
+     * @required
+     *
+     * @param FireBaseService $fireBaseService
+     */
+    public function setFireBaseService(FireBaseService $fireBaseService) {
+        $this->fireBaseService = $fireBaseService;
+    }
 
     /**
      * This is the only public function in the service, that will call all other functions to create invoices for all
@@ -223,6 +236,10 @@ class BatchInvoiceService extends ControllerServiceBase
             $this->invoiceNumber++;
             if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
                 $this->persist($message);
+                foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
+                    $title = $this->translator->trans($message->getType());
+                    $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
+                }
             }
             $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
             $this->getManager()->persist($invoice);
