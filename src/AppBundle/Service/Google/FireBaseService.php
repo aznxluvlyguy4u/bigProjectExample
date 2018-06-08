@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: johnnieho
- * Date: 05/06/2018
- * Time: 09:44
- */
 
 namespace AppBundle\Service\Google;
 
