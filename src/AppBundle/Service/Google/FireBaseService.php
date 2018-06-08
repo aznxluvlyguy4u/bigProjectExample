@@ -2,7 +2,6 @@
 
 namespace AppBundle\Service\Google;
 
-use Kreait\Firebase\Exception\ApiException;
 use Kreait\Firebase\Exception\MessagingException;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\MessageToRegistrationToken;
