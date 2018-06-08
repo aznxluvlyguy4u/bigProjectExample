@@ -8,6 +8,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Address;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
@@ -15,9 +16,13 @@ use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceRuleSelection;
 use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationRepository;
+use AppBundle\Entity\Message;
 use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Enumerator\DateTimeFormats;
 use AppBundle\Enumerator\EmailPrefix;
 use AppBundle\Enumerator\InvoiceAction;
+use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Service\ControllerServiceBase;
@@ -27,7 +32,14 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Symfony\Component\HttpFoundation\Request;
 
-
+/**
+ * This service contains all functionality regarding the sending of a batch of invoices.
+ * It's purpose is to take all active companies and create an invoice for each location of that company, based on
+ * certain logic.
+ *
+ * Class BatchInvoiceService
+ * @package AppBundle\Service\Invoice
+ */
 class BatchInvoiceService extends ControllerServiceBase
 {
     private $invoiceNumber;
@@ -40,6 +52,9 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * This is the only public function in the service, that will call all other functions to create invoices for all
+     * active companies
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -53,7 +68,7 @@ class BatchInvoiceService extends ControllerServiceBase
         $registerCounts = $this->setupAnimalDataByCompanyLocation($companies, $animalsByCompanyResult);
         $rules = new ArrayCollection($this->getManager()->getRepository(InvoiceRule::class)->findBy(array("isBatch" => true)));
         $newRules = $this->createRuleCopiesForBatch($rules, $date);
-        $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date);
+        $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date, $request);
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::BATCH_INVOICES_SEND);
         $this->getManager()->persist($log);
         $this->getManager()->flush();
@@ -73,6 +88,9 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * To ensure that each batch of invoices has a unique set of rules, this function takes the base set of batch invoice rules
+     * Along with the control date for the new batch, and persists a new set of rules, for the batch.
+     *
      * @param ArrayCollection $originalRules
      * @param \DateTime $controlDate
      * @return ArrayCollection
@@ -93,7 +111,7 @@ class BatchInvoiceService extends ControllerServiceBase
                 /** @var PedigreeRegister $register */
                 foreach ($registers as $register) {
                     $registerRule = clone $newRule;
-                    $registerDescription = $registerRule->getDescription()." - ".$register->getAbbreviation()." - ".$controlDate->format("d-m-Y");
+                    $registerDescription = $registerRule->getDescription()." - ".$register->getAbbreviation()." - ".$controlDate->format(DateTimeFormats::DAY_MONTH_YEAR);
                     $registerRule->setDescription($registerDescription);
                     $this->getManager()->persist($registerRule);
                     $newRules->add($registerRule);
@@ -101,7 +119,7 @@ class BatchInvoiceService extends ControllerServiceBase
                 continue;
             }
             if ($newRule->getType() == InvoiceRuleType::SUBSCRIPTION_NSFO_ONLINE || $newRule->getType() == InvoiceRuleType::SUBSCRIPTION_ANIMAL_HEALTH) {
-                $newRule->setDescription($newRule->getDescription()." - ".$controlDate->format("Y"));
+                $newRule->setDescription($newRule->getDescription()." - ".$controlDate->format(DateTimeFormats::YEAR));
                 $this->getManager()->persist($newRule);
                 $newRules->add($newRule);
                 continue;
@@ -111,21 +129,23 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * This function takes the animal data, all active companies, the set of invoice rules for the batch, and the control date,
+     * and start executing logic to setup an invoice every location of each company.
      * @param array $animalData
      * @param array $companies
      * @param ArrayCollection $batchRules
      * @param \DateTime $date
      * @return array
      */
-    private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date){
+    private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date, Request $request){
         $this->createInvoiceNumber();
         $invoices = array();
         /** @var Company $company */
         foreach ($companies as $company) {
             if (array_key_exists($company->getId(), $animalData)) {
-                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $animalData[$company->getId()]);
+                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $request, $animalData[$company->getId()]);
             } else {
-                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date);
+                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $request);
             }
             if (sizeof($invoiceSet) > 0) {
                 foreach ($invoiceSet as $invoice) {
@@ -138,6 +158,8 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * This function takes the original animal data and all active companies, and puts the animal counts
+     * sorted by company, and then company location, and then each different pedigree register.
      * @param array $companies
      * @param array $animalData
      * @return array
@@ -162,13 +184,18 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * This function sets up an invoice for each location of a company, and adds invoice rules, based on the data array
+     * and if the company has certain subscriptions.
+     * This function also sets the company properties on the invoice.
+     *
      * @param Company $company
      * @param ArrayCollection $batchRules
      * @param \DateTime $date
      * @param array|null $data
+     * @param Request $request
      * @return array
      */
-    private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, array $data = null) {
+    private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, Request $request, array $data = null) {
         $invoiceSet = array();
 
         $details = $this->getManager()->getRepository(InvoiceSenderDetails::class)->findBy(array(), array("id" => "DESC"),1);
@@ -193,6 +220,20 @@ class BatchInvoiceService extends ControllerServiceBase
             $invoice->setCompany($company);
             $invoice->setCompanyVatNumber($company->getVatNumber());
             $invoice->setInvoiceNumber($this->invoiceNumber);
+            $message = new Message();
+            if (!$company->getDebtorNumber() || $company->getDebtorNumber() == "") {
+                $invoice->setStatus(InvoiceStatus::NOT_SEND);
+            } else {
+                $invoice->setStatus(InvoiceStatus::UNPAID);
+                $invoice->setInvoiceDate(new \DateTime());
+                $client = $this->getAccountOwner($request);
+                $message->setSender($client);
+                $message->setType(InvoiceMessages::NEW_INVOICE_TYPE);
+                $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
+                $message->setMessage(InvoiceMessages::NEW_INVOICE_MESSAGE);
+                $message->setReceiver($invoice->getCompany()->getOwner());
+                $message->setReceiverLocation($location);
+            }
             if ($data && array_key_exists($location->getId(), $data)) {
                 $dataSet = $data[$location->getId()];
                 $this->addAnimalDataInvoiceRulesToInvoice($invoice, $company, $dataSet, $batchRules, $date);
@@ -201,16 +242,23 @@ class BatchInvoiceService extends ControllerServiceBase
                 $this->addAnimalHealthSubscriptionInvoiceRule($invoice, $batchRules, $date);
             }
             $breakdown = $invoice->getVatBreakdownRecords();
-            if ($breakdown->getTotalExclVat() != 0) {
-                $invoiceSet[] = $invoice;
-                $this->invoiceNumber++;
-                $this->getManager()->persist($invoice);
+            if ($breakdown->getTotalExclVat() == 0) {
+                continue;
             }
+            $invoiceSet[] = $invoice;
+            $this->invoiceNumber++;
+            if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
+                $this->persist($message);
+            }
+            $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
+            $this->getManager()->persist($invoice);
         }
         return $invoiceSet;
     }
 
     /**
+     * This function sets the company address properties on the invoice.
+     *
      * @param Invoice $invoice
      * @param Address $address
      */
@@ -226,6 +274,14 @@ class BatchInvoiceService extends ControllerServiceBase
         $invoice->setCompanyAddressPostalCode($address->getPostalCode());
     }
 
+    /**
+     * This function adds the nsfo online subscription invoice rule to the given input invoice.
+     *
+     * @param Invoice $invoice
+     * @param array $dataSet
+     * @param ArrayCollection $batchRules
+     * @param \DateTime $date
+     */
     private function addNSFOOnlineSubscriptionInvoiceRule(Invoice $invoice, array $dataSet, ArrayCollection $batchRules, \DateTime $date) {
         $selection = new InvoiceRuleSelection();
         /** @var InvoiceRule $newRule */
@@ -237,6 +293,8 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * This function adds the animal health subscription invoice rule to the given input invoice
+     *
      * @param Invoice $invoice
      * @param ArrayCollection $batchRules
      * @param \DateTime $date
@@ -252,6 +310,9 @@ class BatchInvoiceService extends ControllerServiceBase
         $invoice->addInvoiceRuleSelection($selection);
     }
 
+    /**
+     * This function checks for existing invoices on the current year and sets the starting invoice number accordingly
+     */
     private function createInvoiceNumber() {
         $year = new \DateTime();
         $year = $year->format('Y');
@@ -265,6 +326,10 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * This function takes the input data set, along with the invoices and moves through the set, which contains the
+     * animal counts for every animal pedigree register that is used on the given location, on the control date, and
+     * adds administration invoice rules with amounts that are equal to the animal counts.
+     *
      * @param Invoice $invoice
      * @param Company $company
      * @param array $dataSet
@@ -287,7 +352,7 @@ class BatchInvoiceService extends ControllerServiceBase
         }
         foreach ($dataSet as $animalRegisterAbbreviation => $animalRegisterCount) {
             /** @var InvoiceRule $registerRule */
-            $abbreviationDate = $animalRegisterAbbreviation." - ".$date->format("d-m-Y");
+            $abbreviationDate = $animalRegisterAbbreviation." - ".$date->format(DateTimeFormats::DAY_MONTH_YEAR);
             /** @var InvoiceRule $batchRule */
             $batchRule = $this->getRulesByDescription($rules, $abbreviationDate)->first();
             $selection = new InvoiceRuleSelection();
@@ -300,6 +365,9 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * This function checks if a company has a legitimate user account to login. This function decides if
+     * the online or offline ewe invoice rule should be used for the invoice.
+     *
      * @param Company $company
      * @return bool
      */
@@ -319,6 +387,9 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * This function takes an input array collection of invoice rules and returns every rule that has the same type,
+     * as the given input type
+     *
      * @param ArrayCollection $rules
      * @param string $type
      * @return ArrayCollection
@@ -331,6 +402,9 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * This function takes an input array collection of invoice rules and returns every rule that of which the description
+     * contains the given input description
+     *
      * @param ArrayCollection $rules
      * @param $abbreviationDate
      * @return ArrayCollection
@@ -343,12 +417,18 @@ class BatchInvoiceService extends ControllerServiceBase
     }
 
     /**
+     * This function calls the animal repository to get all animal counts, sorted by company, the company location, and the
+     * pedigree register.
+     *
      * @param \DateTime $controlDate
      * @return mixed
      */
     private function getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate(\DateTime $controlDate) {
-        $dateString = $controlDate->format('d-m-Y H:i:s');
-        return $this->getManager()->getRepository(Animal::class)
-            ->getAnimalCountsByCompanyLocationPedigreeRegisterOnControlDate($dateString);
+        $dateString = $controlDate->format(DateTimeFormats::DAY_MONTH_YEAR_HOUR_MINUTE_SECOND);
+
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getManager()->getRepository(Animal::class);
+
+        return $animalRepository->getAnimalCountsByCompanyLocationPedigreeRegisterOnControlDate($dateString);
     }
 }

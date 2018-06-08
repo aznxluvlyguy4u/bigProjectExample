@@ -29,7 +29,7 @@ class BreedValueRepository extends BaseRepository
             throw new \Exception('Invalid generationDate entered for getReliableBreedValues with type: '.$breedValueTypeConstant);
         }
 
-        $yearOfBirth = $generationDate - BreedGradingSetting::GENETIC_BASE_YEAR_OFFSET;
+        $yearOfBirth = $generationYear - BreedGradingSetting::GENETIC_BASE_YEAR_OFFSET;
         $animalIsAliveFilter = $isIncludingOnlyAliveAnimals ? 'AND a.is_alive = TRUE' : '';
 
         $sql = "SELECT

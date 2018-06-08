@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Class LossTest
  * @package AppBundle\Tests\Controller
  * @group losses
+ * @group rvo
  */
 class LossTest extends WebTestCase
 {

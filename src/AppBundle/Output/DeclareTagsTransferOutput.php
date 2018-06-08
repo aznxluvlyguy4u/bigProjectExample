@@ -8,7 +8,7 @@ use AppBundle\Entity\DeclareTagsTransfer;
 /**
  * Class DeclareTagsTransferOutput
  */
-class DeclareTagsTransferOutput
+class DeclareTagsTransferOutput extends Output
 {
     /**
      * @param DeclareTagsTransfer $tagTransfer
@@ -29,7 +29,7 @@ class DeclareTagsTransferOutput
             "relation_number_acceptant" => $tagTransfer->getRelationNumberAcceptant(),
             "type" => "DeclareTagsTransfer",
             "tags" => self::tagsArray($tagTransfer),
-            "action_by" => $tagTransfer->getActionBy()
+            "action_by" => self::actionByOutput($tagTransfer->getActionBy())
         );
 
         return $result;

@@ -108,9 +108,13 @@ app/*.cache
 nsfo_dev
 *.backup
 *.sql
+*.zip
 
 # NSFO import files:
 /app/Resources/corrections/
 /app/Resources/imports/
 /app/Resources/outputs/
 /app/Resources/mutations/
+
+# credentials
+firebase-credentials.json

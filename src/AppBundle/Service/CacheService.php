@@ -19,7 +19,7 @@ class CacheService
 {
     const CACHE_LIFETIME_IN_SECONDS = 3600;
 
-    /** @var String */
+    /** @var string */
     private $redisHost;
 
     /** @var RedisAdapter */

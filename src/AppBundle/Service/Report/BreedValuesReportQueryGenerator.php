@@ -36,7 +36,7 @@ class BreedValuesReportQueryGenerator
     private $breedValuesPlusSignsQueryJoinPart;
     /** @var string */
     private $breedValuesNullFilter;
-    
+
 
     public function __construct(EntityManagerInterface $em, TranslatorInterface $translator)
     {
@@ -114,7 +114,7 @@ class BreedValuesReportQueryGenerator
                       GROUP BY type
                     )
                   ) ".($ignoreHiddenBreedValueTypes ? ' AND show_result' : '')."
-                
+
                 ORDER BY bvt.id ASC";
 
         $existingBreedValueColumnValues = $this->fetchAll($sql);
@@ -138,7 +138,7 @@ class BreedValuesReportQueryGenerator
                     if ($useNormalDistribution) {
 
                         $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix . "NULLIF(CONCAT(
-                         COALESCE(CAST(ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC),".self::NORMALIZED_BREED_VALUE_DECIMAL_SPACES.") AS TEXT),''),'/',
+                         COALESCE(CAST(ROUND(CAST(nbg.".$resultTableValueVar." AS NUMERIC),".self::NORMALIZED_BREED_VALUE_DECIMAL_SPACES.") AS TEXT),''),'/',
                          COALESCE(CAST(ROUND(bg.".$resultTableAccuracyVar."*100) AS TEXT),'')
                      ),'/') as ".$breedValueLabel;
 
@@ -179,8 +179,10 @@ class BreedValuesReportQueryGenerator
                     $breedValueDecimalSpaces = $useNormalDistribution ?
                         self::NORMALIZED_BREED_VALUE_DECIMAL_SPACES : self::BREED_VALUE_DECIMAL_SPACES;
 
+                    $resultTableAlias = $useNormalDistribution ? 'nbg' : 'bg';
+
                     $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix
-                        . " ROUND(CAST(bg.".$resultTableValueVar." AS NUMERIC), ".$breedValueDecimalSpaces.") as ".$breedValueLabel .",
+                        . " ROUND(CAST($resultTableAlias.".$resultTableValueVar." AS NUMERIC), ".$breedValueDecimalSpaces.") as ".$breedValueLabel .",
                         ROUND(bg.".$resultTableAccuracyVar."*100) as ". $breedValueLabel. self::ACCURACY_TABLE_LABEL_SUFFIX;
 
                     $this->breedValuesNullFilter = $this->breedValuesNullFilter . $filterPrefix . "bg.".$resultTableValueVar." NOTNULL
@@ -324,10 +326,10 @@ class BreedValuesReportQueryGenerator
             address.country as land_eigenaar,
             o.email_address as emailadres_eigenaar,
             NULLIF(o.cellphone_number,'') as mobiel_nummer_eigenaar,
-            
+
             --BREED VALUES
             ".$this->breedValuesSelectQueryPart."
-            
+
             FROM animal a
                 LEFT JOIN (
                           SELECT a.id as animal_id, l.ubn FROM animal a
@@ -338,6 +340,7 @@ class BreedValuesReportQueryGenerator
                 LEFT JOIN litter l ON l.id = a.litter_id
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
                 LEFT JOIN result_table_breed_grades bg ON bg.animal_id = a.id
+                LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
                 LEFT JOIN animal mom ON mom.id = a.parent_mother_id
                 LEFT JOIN animal dad ON dad.id = a.parent_father_id
                 LEFT JOIN animal_cache c_dad ON c_dad.animal_id = dad.id
@@ -402,7 +405,7 @@ class BreedValuesReportQueryGenerator
 
         $filterString .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
 
-        $sql = "SELECT DISTINCT 
+        $sql = "SELECT DISTINCT
                     CONCAT(a.uln_country_code, a.uln_number) as a_uln,
                     CONCAT(a.pedigree_country_code, a.pedigree_number) as a_stn,
                     CONCAT(mom.uln_country_code, mom.uln_number) as m_uln,
@@ -415,12 +418,12 @@ class BreedValuesReportQueryGenerator
                     to_char(a.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as a_date_of_birth,
                     to_char(mom.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as m_date_of_birth,
                     to_char(dad.date_of_birth, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as f_date_of_birth,
-                    
+
                     a_breed_types.dutch_first_letter as a_dutch_breed_status,
                     a.breed_code as a_breed_code,
                     mom_breed_types.dutch_first_letter as m_dutch_breed_status,
                     mom.breed_code as m_breed_code,
-                    dad_breed_types.dutch_first_letter as f_dutch_breed_status, 
+                    dad_breed_types.dutch_first_letter as f_dutch_breed_status,
                     dad.breed_code as f_breed_code,
 
                     a.scrapie_genotype as a_scrapie_genotype,
@@ -470,10 +473,10 @@ class BreedValuesReportQueryGenerator
                 a.ubn_of_birth,
                 -- location_of_birth.ubn as ubn_of_birth,
                 location.ubn as current_ubn,
-                  
+
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
-                  
+
               FROM animal a
                 LEFT JOIN animal mom ON a.parent_mother_id = mom.id
                 LEFT JOIN animal dad ON a.parent_father_id = dad.id
@@ -483,6 +486,7 @@ class BreedValuesReportQueryGenerator
                 LEFT JOIN location ON a.location_id = location.id
                 -- LEFT JOIN location location_of_birth ON a.location_of_birth_id = location_of_birth.id
                 LEFT JOIN result_table_breed_grades bg ON a.id = bg.animal_id
+                LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
                 -- LEFT JOIN (VALUES ".SqlUtil::genderTranslationValues().") AS gender(english, dutch) ON a.type = gender.english
                 LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS a_breed_types(english, dutch_first_letter) ON a.breed_type = a_breed_types.english
                 LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS mom_breed_types(english, dutch_first_letter) ON mom.breed_type = mom_breed_types.english
@@ -495,6 +499,18 @@ class BreedValuesReportQueryGenerator
             ." ORDER BY a.animal_order_number ASC";
 
         return $sql;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getAnimalsOverviewReportBooleanColumns()
+    {
+        return [
+            $this->translateColumnHeader('is_alive'),
+            $this->translateColumnHeader('has_active_pedigree_register'),
+        ];
     }
 
 
@@ -536,7 +552,7 @@ class BreedValuesReportQueryGenerator
 
         $filterString .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
 
-        $sql = "SELECT DISTINCT 
+        $sql = "SELECT DISTINCT
                     a.uln as ".$this->translateColumnHeader('a_uln').",
                     a.stn as ".$this->translateColumnHeader('a_stn').",
                     mom.uln as ".$this->translateColumnHeader('m_uln').",
@@ -550,12 +566,12 @@ class BreedValuesReportQueryGenerator
                     a.dd_mm_yyyy_date_of_death as ".$this->translateColumnHeader('a_date_of_death').",
                     mom.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('m_date_of_birth').",
                     dad.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('f_date_of_birth').",
-                    
+
                     a.breed_type_as_dutch_first_letter as ".$this->translateColumnHeader('a_dutch_breed_status').",
                     a.breed_code as ".$this->translateColumnHeader('a_breed_code').",
                     mom.breed_type_as_dutch_first_letter as ".$this->translateColumnHeader('m_dutch_breed_status').",
                     mom.breed_code as ".$this->translateColumnHeader('m_breed_code').",
-                    dad.breed_type_as_dutch_first_letter as ".$this->translateColumnHeader('f_dutch_breed_status').", 
+                    dad.breed_type_as_dutch_first_letter as ".$this->translateColumnHeader('f_dutch_breed_status').",
                     dad.breed_code as ".$this->translateColumnHeader('f_breed_code').",
 
                     a.scrapie_genotype as ".$this->translateColumnHeader('a_scrapie_genotype').",
@@ -565,24 +581,24 @@ class BreedValuesReportQueryGenerator
                     a.n_ling as ".$this->translateColumnHeader('a_')."n_ling , -- sql header cannot have a dash
                     mom.n_ling as ".$this->translateColumnHeader('m_')."n_ling , -- sql header cannot have a dash
                     dad.n_ling as ".$this->translateColumnHeader('f_')."n_ling , -- sql header cannot have a dash
-                    
+
                     a.formatted_predicate as ".$this->translateColumnHeader('a_predicate').",
                     mom.formatted_predicate as ".$this->translateColumnHeader('m_predicate').",
                     dad.formatted_predicate as ".$this->translateColumnHeader('f_predicate').",
-                    
+
                     mom.muscularity as ".$this->translateColumnHeader('m_muscularity').",
                     dad.muscularity as ".$this->translateColumnHeader('f_muscularity').",
-                    
+
                     mom.general_appearance as ".$this->translateColumnHeader('m_general_appearance').",
                     dad.general_appearance as ".$this->translateColumnHeader('f_general_appearance').",
-                    
+
                     a.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('a_measurement_date').",
                     a.kind as ".$this->translateColumnHeader('a_kind').",
                     a.skull as ".$this->translateColumnHeader('a_skull').",
                     a.progress as ".$this->translateColumnHeader('a_progress').",
                     a.muscularity as ".$this->translateColumnHeader('a_muscularity').",
                     a.proportion as ".$this->translateColumnHeader('a_proportion').",
-                    a.exterior_type as ".$this->translateColumnHeader('a_exterior_type').",                 
+                    a.exterior_type as ".$this->translateColumnHeader('a_exterior_type').",
                     a.leg_work as ".$this->translateColumnHeader('a_leg_work').",
                     a.fur as ".$this->translateColumnHeader('a_fur').",
                     a.general_appearance as ".$this->translateColumnHeader('a_general_appearance').",
@@ -590,44 +606,45 @@ class BreedValuesReportQueryGenerator
                     a.breast_depth as ".$this->translateColumnHeader('a_breast_depth').",
                     a.torso_length as ".$this->translateColumnHeader('a_torso_length').",
                     a.exterior_inspector_full_name as ".$this->translateColumnHeader('a_inspector').",
-                    
+
                     a.pedigree_register_abbreviation as ".$this->translateColumnHeader('pedigree_register').",
                     -- ADD pedigree_register subscription is_active here
-                   
+
                 a.production as ".$this->translateColumnHeader('production').",
                 dad.production as ".$this->translateColumnHeader('f_production').",
                 mom.production as ".$this->translateColumnHeader('m_production').",
-                
+
                 a.ubn_of_birth as ".$this->translateColumnHeader('ubn_of_birth_text_value').",
 
                 breeder.ubn as ".$this->translateColumnHeader('ubn_of_birth').",
                 breeder.owner_full_name as ".$this->translateColumnHeader('breedername').",
                 breeder.city as ".$this->translateColumnHeader('breeder_city').",
                 breeder.state as ".$this->translateColumnHeader('breeder_state').",
-                
+
                 ".$this->activeUbnOnReferenceDateSelectPart($activeUbnReferenceDateString).",
                 holder.ubn as ".$this->translateColumnHeader('current_ubn').",
                 holder.owner_full_name as ".$this->translateColumnHeader('holdername').",
                 holder.city as ".$this->translateColumnHeader('holder_city').",
                 holder.state as ".$this->translateColumnHeader('holder_state').",
                 COALESCE(register_activity.has_active_pedigree_register, FALSE) as ".$this->translateColumnHeader('has_active_pedigree_register').",
-                
+
                 last_declare.depart_date as ".$this->translateColumnHeader('last departure date').",
                 last_declare.declare_type as ".$this->translateColumnHeader('last departure type').",
-                  
+
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
-                  
+
               FROM view_animal_livestock_overview_details a
                 LEFT JOIN view_minimal_parent_details mom ON a.parent_mother_id = mom.animal_id
                 LEFT JOIN view_minimal_parent_details dad ON a.parent_father_id = dad.animal_id
                 LEFT JOIN view_location_details holder ON holder.location_id = a.location_id
                 LEFT JOIN view_location_details breeder ON breeder.location_id = a.location_of_birth_id
-                
+
                 LEFT JOIN (".$this->lastDepartExportOrLossQuery().")last_declare ON last_declare.animal_id = a.animal_id
                 ".$this->activeUbnOnReferenceDateJoin($activeUbnReferenceDateString)."
-                
+
                 LEFT JOIN result_table_breed_grades bg ON a.animal_id = bg.animal_id
+                LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
                 LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
                 LEFT JOIN (
                             SELECT
@@ -764,21 +781,28 @@ LEFT JOIN (
             return ' ';
         }
 
-        return "COALESCE(closed_residence.active_ubn_at_reference_date, open_residence.active_ubn_at_reference_date) 
+        return "COALESCE(closed_residence.active_ubn_at_reference_date, open_residence.active_ubn_at_reference_date)
         as ".$this->translateColumnHeader('active ubn at reference date').'_'.strtr($dateString, ['-' => '']);
     }
 
 
-
+    /**
+     * @return string
+     */
     private function getGenderLetterTranslationValues()
     {
-        $translations = [
-          GenderType::NEUTER => $this->translator->trans(ReportServiceWithBreedValuesBase::NEUTER_SINGLE_CHAR),
-          GenderType::FEMALE => $this->translator->trans(ReportServiceWithBreedValuesBase::FEMALE_SINGLE_CHAR),
-          GenderType::MALE => $this->translator->trans(ReportServiceWithBreedValuesBase::MALE_SINGLE_CHAR),
-        ];
+        return SqlUtil::getGenderLetterTranslationValues($this->translator);
+    }
 
-        return SqlUtil::createSqlValuesString($translations);
+
+    /**
+     * @return array
+     */
+    public function getOffSpringReportBooleanColumns()
+    {
+        return [
+            $this->translateColumnHeader('is_alive'),
+        ];
     }
 
 
@@ -852,11 +876,11 @@ LEFT JOIN (
                   aa.kind as ".$this->translateColumnHeader('kind').",
                   aa.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('measurement_date').",
                   aa.formatted_predicate as ".$this->translateColumnHeader('predicate').",
-                  
+
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart
                   .($this->breedValuesSelectQueryPart !== '' ? ',' : '' )."
-                  
+
                   dad.skull as ".$this->translateColumnHeader('f_skull').",
                   dad.progress as ".$this->translateColumnHeader('f_progress').",
                   dad.muscularity as ".$this->translateColumnHeader('f_muscularity').",
@@ -870,7 +894,7 @@ LEFT JOIN (
                   dad.torso_length as ".$this->translateColumnHeader('f_torso_length').",
                   dad.kind as ".$this->translateColumnHeader('f_kind').",
                   dad.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('f_measurement_date').",
-                  
+
                   mom.skull as ".$this->translateColumnHeader('m_skull').",
                   mom.progress as ".$this->translateColumnHeader('m_progress').",
                   mom.muscularity as ".$this->translateColumnHeader('m_muscularity').",
@@ -884,7 +908,7 @@ LEFT JOIN (
                   mom.torso_length as ".$this->translateColumnHeader('m_torso_length').",
                   mom.kind as ".$this->translateColumnHeader('m_kind').",
                   mom.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('m_measurement_date')."
-                
+
                 FROM animal a
                   INNER JOIN view_animal_livestock_overview_details aa ON a.id = aa.animal_id
                   LEFT JOIN view_animal_livestock_overview_details mom ON a.parent_mother_id = mom.animal_id
@@ -892,6 +916,7 @@ LEFT JOIN (
                   LEFT JOIN location l ON l.id = a.location_id
                   LEFT JOIN birth_progress birth_progress ON birth_progress.description = a.birth_progress
                   LEFT JOIN result_table_breed_grades bg ON bg.animal_id = a.id
+                  LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
                   LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
                   ".$this->breedValuesPlusSignsQueryJoinPart."

@@ -159,6 +159,9 @@ services:
           - method: setAnimalDetailsBatchUpdater
             arguments:
               - '@AppBundle\Service\AnimalDetailsBatchUpdaterService'
+          - method: setAnimalDetailsOutput
+            arguments:
+              - '@AppBundle\Output\AnimalDetailsOutput'
 
     AppBundle\Service\AnimalDetailsBatchUpdaterService:
         parent: app.abstract_base.controller
@@ -490,6 +493,12 @@ services:
     AppBundle\Service\Report\AnimalsOverviewReportService:
         parent: app.report.breedvalues.base
 
+    AppBundle\Service\Report\AnnualActiveLivestockReportService:
+        parent: app.report.base
+
+    AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService:
+        parent: app.report.base
+
     AppBundle\Service\Report\AnnualTe100UbnProductionReportService:
         parent: app.report.breedvalues.base
 
@@ -527,6 +536,8 @@ services:
         class: AppBundle\Service\CsvFromSqlResultsWriterService
         arguments:
             - '@doctrine.orm.entity_manager'
+            - '@logger'
+            - '@translator'
             - '%kernel.cache_dir%'
 
 
@@ -574,6 +585,7 @@ services:
           - '@app.user'
           - '@translator'
           - '@logger'
+          - '@AppBundle\SqlView\SqlViewManager'
 
     app.abstract_base.auth:
         parent: app.abstract_base.controller
@@ -622,6 +634,10 @@ services:
     app.animal:
         parent: app.abstract_base.declare
         class: AppBundle\Service\AnimalService
+        calls:
+          - method: setAnimalDetailsOutput
+            arguments:
+              - '@AppBundle\Output\AnimalDetailsOutput'
 
     app.arrival:
         parent: app.abstract_base.declare
@@ -706,8 +722,10 @@ services:
     app.invoice:
         parent: app.abstract_base.controller
         class: AppBundle\Service\InvoiceService
-        arguments:
-            - '@app.invoice.pdf.generator.service'
+        calls:
+          - method: instantiateServices
+            arguments:
+              - '@app.invoice.pdf.generator.service'
 
     app.invoice.rule:
         parent: app.abstract_base.controller
@@ -720,14 +738,6 @@ services:
     app.invoice.sender.details:
         parent: app.abstract_base.controller
         class: AppBundle\Service\InvoiceSenderDetailsService
-        arguments:
-            - '@app.serializer.base'
-            - '@app.cache'
-            - '@doctrine.orm.entity_manager'
-            - '@app.user'
-            - '@translator'
-            - '@logger'
-            - '@templating'
 
     app.invoice.pdf.generator.service:
         class: AppBundle\Service\Invoice\InvoicePdfGeneratorService
@@ -774,17 +784,15 @@ services:
     app.mollie.payment:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MolliePaymentService
-        arguments:
-          - '@app.serializer.base'
-          - '@app.cache'
-          - '@doctrine.orm.default_entity_manager'
-          - '@app.user'
-          - '@translator'
-          - '@logger'
-          - '@app.mollie.service'
-          - '%mollie_test_api_key%'
-          - '%mollie_prod_api_key%'
-          - '%environment%'
+        calls:
+          - method: instantiateServices
+            arguments:
+              - '@app.mollie.service'
+          - method: setKeys
+            arguments:
+              - '%mollie_test_api_key%'
+              - '%mollie_prod_api_key%'
+              - '%environment%'
 
     app.pedigree_register:
         parent: app.abstract_base.controller
@@ -885,6 +893,61 @@ services:
         parent: AppBundle\Service\Twinfield\TwinfieldAuthService
         calls:
             - method: initializeConnector
+
+    AppBundle\SqlView\SqlViewManager:
+        arguments:
+          - '@AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewLitterDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewLocationDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewPedigreeRegisterAbbreviationRepository'
+          - '@AppBundle\SqlView\Repository\ViewPersonFullNameRepository'
+
+    app.sqlview.repository.base:
+        abstract: true
+        arguments:
+          - '@app.serializer.base'
+          - '@doctrine.orm.default_entity_manager'
+        calls:
+          - method: init
+        lazy: true
+
+    AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewLitterDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewLocationDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewPedigreeRegisterAbbreviationRepository:
+        parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewPersonFullNameRepository:
+        parent: app.sqlview.repository.base
+
+
+    app.output.base:
+        abstract: true
+        arguments:
+          - '@app.serializer.base'
+          - '@doctrine.orm.default_entity_manager'
+          - '@AppBundle\SqlView\SqlViewManager'
+          - '@translator'
+
+    AppBundle\Output\AnimalDetailsOutput:
+        parent: app.output.base
+        calls:
+          - method: setBreedValuesOutput
+            arguments:
+              - '@AppBundle\Output\BreedValuesOutput'
+
+    AppBundle\Output\BreedValuesOutput:
+        parent: app.output.base
 
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:

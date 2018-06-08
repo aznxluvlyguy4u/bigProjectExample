@@ -41,6 +41,20 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
 {
+    /** @var AnimalDetailsOutput */
+    private $animalDetailsOutput;
+
+
+    /**
+     * @required
+     *
+     * @param AnimalDetailsOutput $animalDetailsOutput
+     */
+    public function setAnimalDetailsOutput(AnimalDetailsOutput $animalDetailsOutput)
+    {
+        $this->animalDetailsOutput = $animalDetailsOutput;
+    }
+
 
     /**
      * @param Request $request
@@ -493,7 +507,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return $this->getBasicAnimalDetailsByUln($ulnString);
         }
 
-        return $this->getAnimalDetailsOutputForUserEnvironment($animal);
+        return ResultUtil::successResult($this->animalDetailsOutput->getForUserEnvironment($animal));
     }
 
 

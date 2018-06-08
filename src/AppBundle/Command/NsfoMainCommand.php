@@ -640,7 +640,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 $this->writeLn(($updateCount ? $updateCount : 'No').' ScrapieGenotypeSources have been inserted');
                 break;
             case 6: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeCodeInitializer')->run($this->cmdUtil); break;
-            case 7: $this->getContainer()->get('AppBundle\Service\Invoice\BatchInvoiceRuleInitializer')->load();
+            case 7: $this->getContainer()->get('AppBundle\Service\Invoice\BatchInvoiceRuleInitializer')->load(); break;
 
             case 10: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->initialize(); break;
             case 11: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->update(); break;

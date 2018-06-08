@@ -42,7 +42,7 @@ thead {
     width: 100%;
 }
 
-.totals-top-bottom-border {
+.totals-top-bottom-border td {
     border-top: 2px solid lightgrey;
     border-bottom: 2px solid lightgrey;
 }
@@ -61,6 +61,7 @@ thead {
 
 .invoice-footer-border {
     border-top: 2px solid lightgrey;
+    padding: 20px 0 0 0;
 }
 
 .invoice-footer-spacing {
@@ -94,4 +95,12 @@ thead {
 
 .no-left-padding {
     padding-left: 0;
+}
+
+.img-spacing {
+    margin: 25px 0 0 0;
+}
+
+.no-padding {
+    padding: 0;
 }

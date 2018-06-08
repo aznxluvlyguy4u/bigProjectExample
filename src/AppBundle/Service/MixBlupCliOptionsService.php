@@ -172,6 +172,8 @@ class MixBlupCliOptionsService
                 $this->breedIndexService->initializeBreedIndexType();
                 $this->breedValueService->initializeBreedValueType();
                 $this->breedValueService->initializeCustomBreedValueTypeSettings();
+                $this->breedValueService->initializeGraphOrdinalData();
+                $this->breedValueService->linkBreedValueGraphGroups();
                 break;
             case 11:
                 $this->mixBlupAnalysisTypeMigrator->run($this->cmdUtil);

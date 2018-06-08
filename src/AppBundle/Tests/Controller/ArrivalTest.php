@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Class ArrivalTest
  * @package AppBundle\Tests\Controller
  * @group arrival
+ * @group rvo
  */
 class ArrivalTest extends WebTestCase
 {

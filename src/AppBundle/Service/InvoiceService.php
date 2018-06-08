@@ -48,17 +48,7 @@ class InvoiceService extends ControllerServiceBase
     /** @var  InvoicePdfGeneratorService */
     private $invoicePdfGeneratorService;
 
-    public function __construct(
-        BaseSerializer $baseSerializer,
-        CacheService $cacheService,
-        EntityManagerInterface $manager,
-        UserService $userService,
-        TranslatorInterface $translator,
-        Logger $logger,
-        InvoicePdfGeneratorService $invoicePdfGeneratorService
-    )
-    {
-        parent::__construct($baseSerializer, $cacheService, $manager, $userService, $translator, $logger);
+    public function instantiateServices(InvoicePdfGeneratorService $invoicePdfGeneratorService) {
         $this->invoicePdfGeneratorService = $invoicePdfGeneratorService;
     }
 
@@ -79,8 +69,8 @@ class InvoiceService extends ControllerServiceBase
         }
         $repo = $this->getManager()->getRepository(Invoice::class);
         $status = $request->get('status');
-        $invoices = $repo->findBy(array('isDeleted' => false), array('invoiceDate' => 'ASC'));
-        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoices, [JmsGroup::INVOICE_NO_COMPANY]));
+        $invoices = $repo->findBy(array('isDeleted' => false), array('invoiceNumber' => 'DESC'));
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($invoices, [JmsGroup::INVOICE_OVERVIEW]));
     }
 
 
@@ -420,7 +410,7 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
         }
         $invoice->updateTotal();
-
+        $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
         $this->persistAndFlush($invoice);
         return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }

@@ -30,6 +30,7 @@ use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\AnimalTransferStatus;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\RequestMessageOutputBuilder;
@@ -85,7 +86,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      * @param string|array $jmsGroups
      * @return array
      */
-    protected function sendMessageObjectToQueue($messageObject, $isUpdate = false, $jmsGroups = null) {
+    protected function sendMessageObjectToQueue($messageObject, $isUpdate = false, $jmsGroups = [JmsGroup::RVO]) {
 
         $requestId = $messageObject->getRequestId();
         //$repository = $this->getManager()->getRepository(Utils::getRepositoryNameSpace($messageObject));

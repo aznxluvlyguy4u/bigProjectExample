@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
  * @package AppBundle\Tests\Controller
  * @group sync
  * @group animal-sync
+ * @group rvo
  */
 class RetrieveAnimalsTest extends WebTestCase
 {

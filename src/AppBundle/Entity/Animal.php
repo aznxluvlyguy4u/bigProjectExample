@@ -98,6 +98,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK",
@@ -120,6 +121,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK",
@@ -183,6 +185,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "LIVESTOCK",
      *     "MINIMAL",
@@ -218,6 +221,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK",
@@ -387,7 +391,7 @@ abstract class Animal
      * @var Tag
      *
      * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
-     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=true)
+     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      * @JMS\Type("AppBundle\Entity\Tag")
      */
     protected $assignedTag;
@@ -432,6 +436,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK",
@@ -456,6 +461,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "LIVESTOCK",
@@ -811,9 +817,16 @@ abstract class Animal
     /**
      * @var ResultTableBreedGrades
      * @ORM\OneToOne(targetEntity="ResultTableBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\ResultTableBreedGrades>")
+     * @JMS\Type("AppBundle\Entity\ResultTableBreedGrades")
      */
     protected $latestBreedGrades;
+
+    /**
+     * @var ResultTableNormalizedBreedGrades
+     * @ORM\OneToOne(targetEntity="ResultTableNormalizedBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("AppBundle\Entity\ResultTableNormalizedBreedGrades")
+     */
+    protected $latestNormalizedBreedGrades;
 
     /**
      * @var ArrayCollection
@@ -840,7 +853,8 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "ANIMALS_BATCH_EDIT"
+     *     "ANIMALS_BATCH_EDIT",
+     *     "LIVESTOCK"
      * })
      */
     protected $collarColor;
@@ -851,7 +865,8 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "ANIMALS_BATCH_EDIT"
+     *     "ANIMALS_BATCH_EDIT",
+     *     "LIVESTOCK"
      * })
      */
     protected $collarNumber;
@@ -969,6 +984,45 @@ abstract class Animal
 
 
     /**
+     * Get full uln, country code + number
+     *
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("uln")
+     * @JMS\Groups({
+     *     "PARENT_OF_CHILD"
+     * })
+     * @return string
+     */
+    public function getUln()
+    {
+        if ($this->isUlnExists()) {
+            return $this->ulnCountryCode . $this->ulnNumber;
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("stn")
+     * @JMS\Groups({
+     *     "PARENT_OF_CHILD"
+     * })
+     * @param string $nullFiller
+     * @return null|string
+     */
+    public function getPedigreeString($nullFiller = null)
+    {
+        if (NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber)) {
+            return $this->pedigreeCountryCode . $this->pedigreeNumber;
+        } else {
+            return $nullFiller;
+        }
+    }
+
+
+    /**
      * Animal constructor.
      */
     public function __construct()
@@ -1082,20 +1136,6 @@ abstract class Animal
 
 
     /**
-     * @param string $nullFiller
-     * @return null|string
-     */
-    public function getPedigreeString($nullFiller = null)
-    {
-        if (NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber)) {
-            return $this->pedigreeCountryCode . $this->pedigreeNumber;
-        } else {
-            return $nullFiller;
-        }
-    }
-
-
-    /**
      * Get ulnCountryCode
      *
      * @return string
@@ -1113,20 +1153,6 @@ abstract class Animal
     public function getUlnNumber()
     {
         return $this->ulnNumber;
-    }
-
-    /**
-     * Get full uln, country code + number
-     *
-     * @return string
-     */
-    public function getUln()
-    {
-        if ($this->isUlnExists()) {
-            return $this->ulnCountryCode . $this->ulnNumber;
-        } else {
-            return null;
-        }
     }
 
 
@@ -2809,6 +2835,25 @@ abstract class Animal
     public function setLatestBreedGrades($latestBreedGrades)
     {
         $this->latestBreedGrades = $latestBreedGrades;
+        return $this;
+    }
+
+
+    /**
+     * @return ResultTableNormalizedBreedGrades
+     */
+    public function getLatestNormalizedBreedGrades()
+    {
+        return $this->latestNormalizedBreedGrades;
+    }
+
+    /**
+     * @param ResultTableNormalizedBreedGrades $latestNormalizedBreedGrades
+     * @return Animal
+     */
+    public function setLatestNormalizedBreedGrades($latestNormalizedBreedGrades)
+    {
+        $this->latestNormalizedBreedGrades = $latestNormalizedBreedGrades;
         return $this;
     }
 

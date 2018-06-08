@@ -68,6 +68,10 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
         $alreadyExistsCount = 0;
         $errors = 0;
 
+        $newlyInsertedBreederNumbers = [];
+        $duplicateBreederNumbersInFileOnSameUbn = [];
+        $duplicateBreederNumbersInFileOnDifferentUbn = [];
+
         foreach ($this->data as $record) {
 
             $breederNumber = $record[0];
@@ -101,18 +105,31 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
                 continue;
             }
 
+            if (key_exists($breederNumber, $newlyInsertedBreederNumbers)) {
+                if ($ubn === $newlyInsertedBreederNumbers[$breederNumber]) {
+                    $duplicateBreederNumbersInFileOnSameUbn[$breederNumber] = $ubn;
+                } else {
+                    $duplicateBreederNumbersInFileOnDifferentUbn[$breederNumber] = $ubn;
+                }
+                $errors++;
+                continue;
+            }
+
             $newRegistration = new PedigreeRegisterRegistration();
             $newRegistration->setPedigreeRegister($register);
             $newRegistration->setLocation($location);
             $newRegistration->setBreederNumber($breederNumber);
             $this->em->persist($newRegistration);
 
+            $newlyInsertedBreederNumbers[$breederNumber] = $ubn;
+
             $newCount++;
             $this->cmdUtil->advanceProgressBar(1);
         }
 
         $this->em->flush();
-        $this->cmdUtil->setProgressBarMessage('Records persisted new|alreadyExists|skipped: '.$newCount.'|'.$alreadyExistsCount.'|'.$skippedCount);
+        $this->cmdUtil->setProgressBarMessage('Records persisted new|alreadyExists|skipped: '.$newCount.'|'.$alreadyExistsCount.'|'.$skippedCount
+        .'  duplicate breederNumber input sameUbn|differentUbn: '.count($duplicateBreederNumbersInFileOnSameUbn).'|'.count($duplicateBreederNumbersInFileOnDifferentUbn));
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
         $this->printMissingData();
@@ -252,7 +269,7 @@ class PedigreeRegisterRegistrationMigrator extends MigratorServiceBase implement
         if (count($duplicateUbnAbbreviationCombinations) > 0) {
             $this->writeLn('There are duplicate ubn-pedigreeRegister combinations in the csv import file: '
                 . implode(', ', $duplicateUbnAbbreviationCombinations));
-            $isValid = false;
+            $isValid = true;
         }
 
         if (count($missingPedigreeRegisters) > 0) {

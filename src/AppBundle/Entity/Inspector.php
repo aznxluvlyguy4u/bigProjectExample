@@ -12,7 +12,7 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\InspectorRepository")
  * @package AppBundle\Entity
  */
-class Inspector extends Person
+class Inspector extends Person implements PersonImplementationInterface
 {
     use EntityClassInfo;
 

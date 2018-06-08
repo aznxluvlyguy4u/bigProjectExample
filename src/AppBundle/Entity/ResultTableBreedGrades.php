@@ -47,6 +47,7 @@ class ResultTableBreedGrades
      * @ORM\OneToOne(targetEntity="Animal", inversedBy="latestBreedGrades")
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", nullable=false, onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Exclude
      */
     private $animal;
 

@@ -8,6 +8,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
@@ -363,16 +364,17 @@ class ReportServiceBase
     /**
      * @param string $filenameWithExtension
      * @param string $selectQuery
+     * @param array $booleanColumns
      * @return JsonResponse
      * @throws \Exception
      */
-    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery)
+    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery, $booleanColumns = [])
     {
         $dir = CsvFromSqlResultsWriterService::csvCacheDir($this->cacheDir);
 
         $localFilePath = FilesystemUtil::concatDirAndFilename($dir, $filenameWithExtension);
 
-        SqlUtil::writeToFile($this->conn, $selectQuery, $localFilePath, $this->logger);
+        $this->csvWriter->writeToFileFromSqlQuery($selectQuery, $localFilePath, $booleanColumns);
 
         return $this->uploadReportFileToS3($localFilePath);
     }
@@ -699,5 +701,14 @@ class ReportServiceBase
         }
 
         return $animalIds;
+    }
+
+
+    /**
+     * @return string
+     */
+    protected function getGenderLetterTranslationValues()
+    {
+        return SqlUtil::getGenderLetterTranslationValues($this->translator);
     }
 }

@@ -833,4 +833,19 @@ class Validator
             }
         }
     }
+
+
+    /**
+     * @param string $year
+     * @return bool
+     */
+    public static function isYear($year)
+    {
+        if (!ctype_digit($year) && !is_int($year)) {
+            return false;
+        }
+
+        $year = intval($year);
+        return 1900 < $year && $year < 3000;
+    }
 }
