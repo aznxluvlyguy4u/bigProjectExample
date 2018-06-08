@@ -586,7 +586,6 @@ services:
           - '@translator'
           - '@logger'
           - '@AppBundle\SqlView\SqlViewManager'
-          - '@AppBundle\Service\Google\FireBaseService'
 
     AppBundle\Service\Google\FireBaseService:
 
@@ -646,6 +645,9 @@ services:
         parent: app.abstract_base.declare
         class: AppBundle\Service\ArrivalService
         calls:
+          - method: setFireBaseService
+            arguments:
+              - '@AppBundle\Service\Google\FireBaseService'
           - method: setHealthUpdaterService
             arguments:
               - '@app.health.updater'
@@ -714,6 +716,9 @@ services:
           - method: setEnvironment
             arguments:
               - '%kernel.environment%'
+          - method: setFireBaseService
+            arguments:
+              - '@AppBundle\Service\Google\FireBaseService'
     app.export:
         parent: app.abstract_base.declare
         class: AppBundle\Service\ExportService
@@ -729,6 +734,9 @@ services:
           - method: instantiateServices
             arguments:
               - '@app.invoice.pdf.generator.service'
+          - method: setFireBaseService
+            arguments:
+              - '@AppBundle\Service\Google\FireBaseService'
 
     app.invoice.rule:
         parent: app.abstract_base.controller
@@ -758,6 +766,10 @@ services:
 
     AppBundle\Service\Invoice\BatchInvoiceService:
         parent: app.abstract_base.controller
+        calls:
+          - method: setFireBaseService
+            arguments:
+              - '@AppBundle\Service\Google\FireBaseService'
 
     app.loss:
         parent: app.abstract_base.declare
