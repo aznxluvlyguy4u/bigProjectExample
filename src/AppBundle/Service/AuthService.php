@@ -104,16 +104,16 @@ class AuthService extends AuthServiceBase
             $emailAddress = strtolower($emailAddress);
             $client = $this->getManager()->getRepository(Client::class)->findActiveOneByEmailAddress($emailAddress);
             if($client == null) {
-                return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+                return ResultUtil::unauthorized();
             }
 
             if(!$client->getIsActive()) {
-                return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorizeds"), 401);
+                return ResultUtil::unauthorized();
             }
 
             if($client->getEmployer() != null) {
                 if(!$client->getEmployer()->isActive()) {
-                    return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+                    return ResultUtil::unauthorized();
                 }
             }
 
@@ -121,7 +121,7 @@ class AuthService extends AuthServiceBase
                 $companies = $client->getCompanies();
                 foreach ($companies as $company) {
                     if(!$company->isActive()){
-                        return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+                        return ResultUtil::unauthorized();
                     }
                 }
             }
@@ -161,7 +161,7 @@ class AuthService extends AuthServiceBase
             ActionLogWriter::loginUser($this->getManager(), $client, null, false);
         }
 
-        return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+        return ResultUtil::unauthorized();
 
     }
 
