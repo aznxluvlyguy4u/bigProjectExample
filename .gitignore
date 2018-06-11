@@ -117,4 +117,6 @@ nsfo_dev
 /app/Resources/mutations/
 
 # credentials
+firebase-credentials-production.json
+firebase-credentials-staging.json
 firebase-credentials.json
