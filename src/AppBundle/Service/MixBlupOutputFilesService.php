@@ -262,10 +262,21 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
     public function run()
     {
-        $this->processNextMessage();
+        do {
+
+            $newMessageProcessed =  $this->processNextMessage();
+
+            // wait a while before processing next possible message
+            sleep(5);
+
+            // continue until all messages are processed
+        } while ($newMessageProcessed);
     }
 
 
+    /**
+     * @return bool
+     */
     private function processNextMessage()
     {
         $response = $this->queueService->getNextMessage();
@@ -367,6 +378,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                 $this->updateResultTableBreedValuesAndTheirPrerequisites();
 
+                return true;
+
             } else {
                 // Handle unsuccessful download
                 $this->logger->error('Download of files from s3 bucket unsuccessful for key: '.$this->key);
@@ -377,7 +390,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         } else {
             $this->logger->notice('There is currently no message in the queue');
         }
-        
+
+        return false;
     }
 
 
