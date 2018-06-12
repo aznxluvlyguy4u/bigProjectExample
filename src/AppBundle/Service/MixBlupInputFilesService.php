@@ -61,6 +61,9 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     /** @var boolean */
     private $duplicateResultsToLocalFolder;
 
+    /** @var string */
+    private $key;
+
     /**
      * MixBlupInputFilesService constructor.
      * @param EntityManagerInterface $em
@@ -182,6 +185,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
 
         $this->deleteMixBlupFilesInCache();
         $this->fs = null;
+        $this->key = null;
         gc_collect_cycles();
     }
 
@@ -196,6 +200,18 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         }
 
         return $this->fs;
+    }
+
+
+    /**
+     * @return string
+     */
+    private function getKey()
+    {
+        if ($this->key === null) {
+            $this->key = TimeUtil::getTimeStampNow();
+        }
+        return $this->key;
     }
 
 
@@ -314,7 +330,6 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
      */
     private function upload()
     {
-        $key = TimeUtil::getTimeStampNow();
         $fileType = 'text/plain';
 
         $filesToUpload = [];
@@ -330,7 +345,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
                     }
 
                     $currentFileLocation = $folderPath . '/' . $file;
-                    $s3FilePath = MixBlupSetting::S3_MIXBLUP_INPUT_DIRECTORY . $key . '/' . $file;
+                    $s3FilePath = MixBlupSetting::S3_MIXBLUP_INPUT_DIRECTORY . $this->getKey() . '/' . $file;
 
                     $result = $this->s3Service->uploadFromFilePath($currentFileLocation, $s3FilePath, $fileType);
 
@@ -350,7 +365,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         }
 
         $messageToQueue = [
-            "key" => $key,
+            "key" => $this->getKey(),
             "files" => $filesToUpload,
             "instruction_files" => $instructionFilesToUpload,
             "failed_uploads" => $failedUploads,
