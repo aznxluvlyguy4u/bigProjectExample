@@ -22,6 +22,7 @@ use AppBundle\Util\TimeUtil;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Class MixBlupInputFilesService
@@ -29,6 +30,8 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class MixBlupInputFilesService implements MixBlupServiceInterface
 {
+    const LOCAL_FOLDER = 'local';
+
     /** @var Connection */
     private $conn;
     /** @var EntityManagerInterface */
@@ -49,12 +52,14 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     private $jsonUploadMessage;
     /** @var Logger */
     private $logger;
+    /** @var Filesystem */
+    private $fs;
 
     /** @var string */
     private $onlyUseThisProcessType;
 
     /** @var boolean */
-    private $purgeCacheAfterSuccessfulRun;
+    private $duplicateResultsToLocalFolder;
 
     /**
      * MixBlupInputFilesService constructor.
@@ -92,12 +97,12 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     protected function setCachePurgeSettingByEnvironment()
     {
         switch($this->currentEnvironment) {
-            case Environment::PROD:     $this->purgeCacheAfterSuccessfulRun = true; break;
-            case Environment::STAGE:    $this->purgeCacheAfterSuccessfulRun = true; break;
-            case Environment::DEV:      $this->purgeCacheAfterSuccessfulRun = false; break;
-            case Environment::TEST:     $this->purgeCacheAfterSuccessfulRun = false; break;
-            case Environment::LOCAL:    $this->purgeCacheAfterSuccessfulRun = false; break;
-            default;                    $this->purgeCacheAfterSuccessfulRun = true; break;
+            case Environment::PROD:     $this->duplicateResultsToLocalFolder = false; break;
+            case Environment::STAGE:    $this->duplicateResultsToLocalFolder = false; break;
+            case Environment::DEV:      $this->duplicateResultsToLocalFolder = true; break;
+            case Environment::TEST:     $this->duplicateResultsToLocalFolder = true; break;
+            case Environment::LOCAL:    $this->duplicateResultsToLocalFolder = true; break;
+            default;                    $this->duplicateResultsToLocalFolder = false; break;
         }
     }
 
@@ -172,16 +177,25 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $this->generateMissingAnimalCacheRecords();
         $this->updateLitterDetails();
         $this->deleteMixBlupFilesInCache();
-        $writeResult = $this->write();
-        if($writeResult) {
-            $allUploadsSuccessful = $this->upload();
-            $sendMessageResult = $this->sendMessage();
 
-            if($sendMessageResult && $this->purgeCacheAfterSuccessfulRun) {
-                $this->deleteMixBlupFilesInCache();
-            }
-        }
+        $writeResult = $this->write();
+
+        $this->deleteMixBlupFilesInCache();
+        $this->fs = null;
         gc_collect_cycles();
+    }
+
+
+    /**
+     * @return Filesystem
+     */
+    private function getFs()
+    {
+        if ($this->fs === null) {
+            $this->fs = new Filesystem();
+        }
+
+        return $this->fs;
     }
 
 
@@ -262,12 +276,34 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $mixBlupProcess = $this->mixBlupProcesses[$mixBlupType];
 
         $this->logger->notice('Writing MixBlup input files for: '.$mixBlupType);
+
+        $this->deleteMixBlupFilesInCache();
+
         $writeResult = $mixBlupProcess->write();
+
         if(!$writeResult) {
             $this->logger->critical('FAILED writing MixBlup input file for: '.$mixBlupType);
             return false;
         }
+
+        $allUploadsSuccessful = $this->upload();
+        $sendMessageResult = $this->sendMessage();
+
+        if ($this->duplicateResultsToLocalFolder) {
+            $this->copyOutputToLocalFolder();
+        }
+
+        $this->deleteMixBlupFilesInCache();
+
         return true;
+    }
+
+
+    private function copyOutputToLocalFolder()
+    {
+        FilesystemUtil::recurseCopy($this->getDataFolder(),$this->getLocalDataFolder(), $this->getFs(), $this->logger);
+        FilesystemUtil::recurseCopy($this->getPedigreeFolder(),$this->getLocalPedigreeFolder(), $this->getFs(), $this->logger);
+        FilesystemUtil::recurseCopy($this->getInstructionsFolder(),$this->getLocalInstructionsFolder(), $this->getFs(), $this->logger);
     }
 
 
@@ -388,4 +424,14 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     public function getInstructionsFolder() { return $this->workingFolder."/".MixBlupFolder::INSTRUCTIONS; }
     /** @return string */
     public function getPedigreeFolder() { return $this->workingFolder."/".MixBlupFolder::PEDIGREE; }
+
+    /** @return string */
+    private function getLocalWorkingFolder() { return $this->workingFolder."/".self::LOCAL_FOLDER."/"; }
+
+    /** @return string */
+    public function getLocalDataFolder() { return $this->getLocalWorkingFolder().MixBlupFolder::DATA; }
+    /** @return string */
+    public function getLocalInstructionsFolder() { return $this->getLocalWorkingFolder().MixBlupFolder::INSTRUCTIONS; }
+    /** @return string */
+    public function getLocalPedigreeFolder() { return $this->getLocalWorkingFolder().MixBlupFolder::PEDIGREE; }
 }
