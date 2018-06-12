@@ -26,31 +26,12 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
 
-    app.cli.mixblup:
-        class: AppBundle\Service\MixBlupCliOptionsService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@logger'
-          - '@app.report.breed_values_overview'
-          - '@app.breed.valueprinter'
-          - '@app.breed.value'
-          - '@app.breed.index'
-          - '@app.excel.service'
-          - '@AppBundle\Service\Migration\LambMeatIndexMigrator'
-          - '@AppBundle\Service\Migration\WormResistanceIndexMigrator'
-          - '@app.mixblup.input'
-          - '@app.mixblup.input.validate'
-          - '@app.mixblup.output'
-          - '@AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator'
-          - '@app.report.pedigree_register'
-          - '@AppBundle\Cache\BreedValuesResultTableUpdater'
-
     AppBundle\Cache\BreedValuesResultTableUpdater:
         arguments:
           - '@doctrine.orm.default_entity_manager'
           - '@logger'
-          - '@app.breed.value'
-          - '@app.breed.index'
+          - '@AppBundle\Service\BreedValueService'
+          - '@AppBundle\Service\BreedIndexService'
           - '@AppBundle\Service\NormalDistributionService'
 
     app.info.parameters:
@@ -176,8 +157,7 @@ services:
           - '@doctrine.orm.entity_manager'
           - '%environment%'
 
-    app.mixblup.input:
-        class: AppBundle\Service\MixBlupInputFilesService
+    AppBundle\Service\MixBlupInputFilesService:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.aws.storageservice'
@@ -186,22 +166,20 @@ services:
           - '%kernel.cache_dir%'
           - '@logger'
 
-    app.mixblup.output:
-        class: AppBundle\Service\MixBlupOutputFilesService
+    AppBundle\Service\MixBlupOutputFilesService:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.aws.storageservice'
           - '@app.aws.queueservice.mixblup_output'
-          - '@app.breed.index'
-          - '@app.breed.value'
+          - '@AppBundle\Service\BreedIndexService'
+          - '@AppBundle\Service\BreedValueService'
           - '@AppBundle\Cache\BreedValuesResultTableUpdater'
           - '@AppBundle\Service\NormalDistributionService'
           - '%environment%'
           - '%kernel.cache_dir%'
           - '@logger'
 
-    app.mixblup.input.validate:
-        class: AppBundle\Component\MixBlup\MixBlupInputFileValidator
+    AppBundle\Component\MixBlup\MixBlupInputFileValidator:
         arguments: ['%kernel.cache_dir%']
 
 
@@ -378,27 +356,23 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\WormResistanceMigrator
 
-    app.breed.index:
-        class: AppBundle\Service\BreedIndexService
+    AppBundle\Service\BreedIndexService:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
 
-    app.breed.value:
-        class: AppBundle\Service\BreedValueService
+    AppBundle\Service\BreedValueService:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
 
-    app.breed.valueprinter:
-        class: AppBundle\Service\BreedValuePrinter
+    AppBundle\Service\BreedValuePrinter:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
           - '%kernel.cache_dir%'
 
-    app.excel.service:
-        class: AppBundle\Service\ExcelService
+    AppBundle\Service\ExcelService:
         arguments:
           - '@phpexcel'
           - '%kernel.cache_dir%'
@@ -454,7 +428,7 @@ services:
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
-          - '@app.excel.service'
+          - '@AppBundle\Service\ExcelService'
           - '@logger'
           - '@app.aws.storageservice'
           - '@app.writer.csv_from_sql_results'
@@ -472,7 +446,7 @@ services:
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
-          - '@app.excel.service'
+          - '@AppBundle\Service\ExcelService'
           - '@logger'
           - '@app.aws.storageservice'
           - '@app.writer.csv_from_sql_results'
@@ -509,13 +483,11 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeCertificateReportService
 
-    app.report.pedigree_register:
+    AppBundle\Service\Report\PedigreeRegisterOverviewReportService:
         parent: app.report.base
-        class: AppBundle\Service\Report\PedigreeRegisterOverviewReportService
 
-    app.report.breed_values_overview:
+    AppBundle\Service\Report\BreedValuesOverviewReportService:
         parent: app.report.breedvalues.base
-        class: AppBundle\Service\Report\BreedValuesOverviewReportService
 
     app.report.inbreeding_coefficient:
         parent: app.report.base
