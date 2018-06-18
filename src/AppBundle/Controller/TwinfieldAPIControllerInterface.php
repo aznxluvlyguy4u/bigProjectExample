@@ -8,5 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 interface TwinfieldAPIControllerInterface
 {
-    function getCustomers(Request $request);
+    function getOffices(Request $request);
+
+    function getCustomers(Request $request, $office);
 }
