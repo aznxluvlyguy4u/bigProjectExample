@@ -726,6 +726,7 @@ services:
           - method: instantiateServices
             arguments:
               - '@app.invoice.pdf.generator.service'
+              - '@AppBundle\Service\Twinfield\TwinfieldInvoiceService'
 
     app.invoice.rule:
         parent: app.abstract_base.controller
@@ -867,32 +868,33 @@ services:
     AppBundle\Service\Migration\ScrapieGenotypeReprocessor:
         parent: app.pedigree_data_reprocessor.base
 
-    AppBundle\Service\Twinfield\TwinfieldAuthService:
+    AppBundle\Service\Twinfield\TwinfieldInvoiceService:
         parent: app.abstract_base.controller
         calls:
-            - method: initializeAuthenticationConnection
+            - method: instantiateServices
+              arguments:
+                - '%twinfield_user%'
+                - '%twinfield_password%'
+                - '%twinfield_organisation%'
+                - '@AppBundle\Service\Twinfield\TwinfieldCustomerService'
+
+    AppBundle\Service\Twinfield\TwinfieldCustomerService:
+        calls:
+            - method: instantiateServices
+              arguments:
+                - '%twinfield_user%'
+                - '%twinfield_password%'
+                - '%twinfield_organisation%'
+                - '@AppBundle\Service\Twinfield\TwinfieldOfficeService'
+
+    AppBundle\Service\Twinfield\TwinfieldOfficeService:
+        calls:
+            - method: instantiateServices
               arguments:
                 - '%twinfield_user%'
                 - '%twinfield_password%'
                 - '%twinfield_organisation%'
 
-    AppBundle\Service\Twinfield\TwinfieldInvoiceService:
-        parent: AppBundle\Service\Twinfield\TwinfieldAuthService
-        calls:
-            - method: initializeConnector
-
-    AppBundle\Service\Twinfield\TwinfieldCustomerService:
-        parent: AppBundle\Service\Twinfield\TwinfieldAuthService
-        calls:
-            - method: initializeConnector
-            - method: initializeOtherServices
-              arguments:
-                - '@AppBundle\Service\Twinfield\TwinfieldOfficeService'
-
-    AppBundle\Service\Twinfield\TwinfieldOfficeService:
-        parent: AppBundle\Service\Twinfield\TwinfieldAuthService
-        calls:
-            - method: initializeConnector
 
     AppBundle\SqlView\SqlViewManager:
         arguments:
