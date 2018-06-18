@@ -64,8 +64,12 @@ class BreedCodeUtil
     {
         $parts = Utils::separateLettersAndNumbersOfString($breedCodeString);
         $result = [];
-        $counter = 0;
 
+        if ($parts === null || $parts === false) {
+            return $result;
+        }
+
+        $counter = 0;
         $totalCount = count($parts);
 
         if(NumberUtil::isOdd($totalCount)) {

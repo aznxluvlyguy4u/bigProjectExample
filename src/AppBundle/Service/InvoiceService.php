@@ -23,6 +23,7 @@ use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Serializer\PreSerializer\InvoicePreSerializer;
+use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Service\Invoice\InvoicePdfGeneratorService;
 use AppBundle\Service\Twinfield\TwinfieldInvoiceService;
 use AppBundle\Util\ArrayUtil;
@@ -50,6 +51,20 @@ class InvoiceService extends ControllerServiceBase
 
     /** @var  InvoicePdfGeneratorService */
     private $invoicePdfGeneratorService;
+
+    /** @var FireBaseService */
+    private $fireBaseService;
+
+
+
+    /**
+     * @required
+     *
+     * @param FireBaseService $fireBaseService
+     */
+    public function setFireBaseService(FireBaseService $fireBaseService) {
+        $this->fireBaseService = $fireBaseService;
+    }
 
     public function instantiateServices(InvoicePdfGeneratorService $invoicePdfGeneratorService, TwinfieldInvoiceService $twinfieldInvoiceService) {
         $this->invoicePdfGeneratorService = $invoicePdfGeneratorService;
@@ -221,6 +236,11 @@ class InvoiceService extends ControllerServiceBase
             $location = $repository->findOneByActiveUbn($invoice->getUbn());
             $message->setReceiverLocation($location);
             $this->persistAndFlush($message);
+
+            foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
+                $title = $this->translator->trans($message->getType());
+                $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
+            }
         }
 
         /** @var Company $company */
@@ -389,6 +409,11 @@ class InvoiceService extends ControllerServiceBase
             $message->setReceiverLocation($location);
             $this->persistAndFlush($message);
             $this->persistAndFlush($log);
+
+            foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
+                $title = $this->translator->trans($message->getType());
+                $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
+            }
         }
         if ($invoice->getStatus() == InvoiceStatus::PAID) {
             $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_PAID_ADMIN);

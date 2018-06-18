@@ -40,7 +40,8 @@
         "ijanki/ftp-bundle": "^1.0",
         "mollie/mollie-api-php": "1.9.*",
         "php-twinfield/twinfield": "^2.0",
-        "ocramius/proxy-manager": "^1.0"
+        "ocramius/proxy-manager": "^1.0",
+        "kreait/firebase-php": "^4.0"
     },
     "require-dev": {
         "sensio/generator-bundle": "^3.0",
