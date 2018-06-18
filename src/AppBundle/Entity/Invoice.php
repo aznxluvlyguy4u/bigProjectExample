@@ -240,6 +240,18 @@ class Invoice
 
     /**
      * @var string
+     * @ORM\Column(type="string", name="company_twinfield_administration_code", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     */
+    private $companyTwinfieldAdministrationCode;
+
+    /**
+     * @var string
      * @ORM\Column(type="string", name="mollie_id", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
@@ -802,6 +814,22 @@ class Invoice
     public function setCompanyTwinfieldOfficeCode(string $companyTwinfieldOfficeCode)
     {
         $this->companyTwinfieldOfficeCode = $companyTwinfieldOfficeCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyTwinfieldAdministrationCode(): string
+    {
+        return $this->companyTwinfieldAdministrationCode;
+    }
+
+    /**
+     * @param string $companyTwinfieldAdministrationCode
+     */
+    public function setCompanyTwinfieldAdministrationCode(string $companyTwinfieldAdministrationCode): void
+    {
+        $this->companyTwinfieldAdministrationCode = $companyTwinfieldAdministrationCode;
     }
 
     public function copyValues(Invoice $invoice){
