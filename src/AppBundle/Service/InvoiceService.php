@@ -24,6 +24,7 @@ use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Serializer\PreSerializer\InvoicePreSerializer;
 use AppBundle\Service\Invoice\InvoicePdfGeneratorService;
+use AppBundle\Service\Twinfield\TwinfieldInvoiceService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -44,12 +45,15 @@ class InvoiceService extends ControllerServiceBase
     private $ledgerCategoriesById;
     /** @var array */
     private $invalidLedgerCategoryIds;
+    /** @var TwinfieldInvoiceService */
+    private $twinfieldInvoiceService;
 
     /** @var  InvoicePdfGeneratorService */
     private $invoicePdfGeneratorService;
 
-    public function instantiateServices(InvoicePdfGeneratorService $invoicePdfGeneratorService) {
+    public function instantiateServices(InvoicePdfGeneratorService $invoicePdfGeneratorService, TwinfieldInvoiceService $twinfieldInvoiceService) {
         $this->invoicePdfGeneratorService = $invoicePdfGeneratorService;
+        $this->twinfieldInvoiceService = $twinfieldInvoiceService;
     }
 
     /**
@@ -247,10 +251,16 @@ class InvoiceService extends ControllerServiceBase
             (int)$year * 10000 :
             $previousInvoice->getInvoiceNumber() + 1
         ;
+        if ($company->getTwinfieldOfficeCode()) {
+            $invoice->setCompanyTwinfieldAdministrationCode($company->getTwinfieldOfficeCode());
+        }
         $invoice->setInvoiceNumber($number);
-
+        if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
+            $this->twinfieldInvoiceService->sendInvoiceToTwinfield($invoice);
+        }
         $this->persistAndFlush($invoice);
         $this->persistAndFlush($log);
+
         return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }
 
@@ -330,42 +340,26 @@ class InvoiceService extends ControllerServiceBase
         if ($newCompany) {
 
             if ($oldCompany !== null){
+
                 if ($oldCompany->getCompanyId() !== $newCompany->getCompanyId()) {
                     $oldCompany->removeInvoice($invoice);
-                    $newCompany->addInvoice($invoice);
-                    $invoice->setCompany($newCompany);
-                    $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
-                    $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
-                    $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
-                    $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
-                    $newCompany->getTwinfieldCode() != null ? $invoice->setCompanyTwinfieldCode($newCompany->getTwinfieldCode()) : null;
-                    if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
-                        $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
-                    }
-                    if ($newCompany->getBillingAddress()->getState() != null && $newCompany->getBillingAddress()->getState() != "") {
-                        $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
-                    }
                     $this->getManager()->persist($oldCompany);
-                    $this->getManager()->persist($newCompany);
                 }
-
-            } else {
-                $invoice->setCompany($newCompany);
-                $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
-                $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
-                $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
-                $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
-                $newCompany->getTwinfieldCode() != null ? $invoice->setCompanyTwinfieldCode($newCompany->getTwinfieldCode()) : null;
-                if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
-                    $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
-                }
-                if ($newCompany->getBillingAddress()->getState() != null && $newCompany->getBillingAddress()->getState() != "") {
-                    $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
-                }
-                $newCompany->addInvoice($invoice);
-                $this->getManager()->persist($newCompany);
             }
-
+            $newCompany->addInvoice($invoice);
+            $invoice->setCompany($newCompany);
+            $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
+            $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
+            $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
+            $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
+            $newCompany->getTwinfieldCode() != null ? $invoice->setCompanyTwinfieldCode($newCompany->getTwinfieldCode()) : null;
+            if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
+                $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
+            }
+            if ($newCompany->getBillingAddress()->getState() != null && $newCompany->getBillingAddress()->getState() != "") {
+                $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
+            }
+            $this->getManager()->persist($newCompany);
         } else {
             if ($oldCompany !== null) {
                 $invoice->setCompany(null);
@@ -408,6 +402,12 @@ class InvoiceService extends ControllerServiceBase
             }
 
             $invoice->setSenderDetails($details);
+        }
+        if ($newCompany->getTwinfieldOfficeCode()) {
+            $invoice->setCompanyTwinfieldAdministrationCode($newCompany->getTwinfieldOfficeCode());
+        }
+        if ($invoice->getStatus() == InvoiceStatus::UNPAID && $invoice->getCompanyTwinfieldAdministrationCode()) {
+            return ResultUtil::successResult($this->twinfieldInvoiceService->sendInvoiceToTwinfield($invoice));
         }
         $invoice->updateTotal();
         $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
