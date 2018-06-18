@@ -819,7 +819,7 @@ class Invoice
     /**
      * @return string
      */
-    public function getCompanyTwinfieldAdministrationCode(): string
+    public function getCompanyTwinfieldAdministrationCode(): ?string
     {
         return $this->companyTwinfieldAdministrationCode;
     }
