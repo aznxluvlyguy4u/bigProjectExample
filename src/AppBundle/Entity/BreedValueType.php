@@ -123,6 +123,14 @@ class BreedValueType
     private $useNormalDistribution;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", options={"default":false})
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     */
+    private $prioritizeNormalizedValuesInReport;
+
+    /**
      * @var float
      * @ORM\Column(type="float", nullable=true)
      * @JMS\Type("float")
@@ -322,6 +330,24 @@ class BreedValueType
     public function setUseNormalDistribution($useNormalDistribution)
     {
         $this->useNormalDistribution = $useNormalDistribution;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPrioritizeNormalizedValuesInReport(): bool
+    {
+        return $this->prioritizeNormalizedValuesInReport;
+    }
+
+    /**
+     * @param bool $prioritizeNormalizedValuesInReport
+     * @return BreedValueType
+     */
+    public function setPrioritizeNormalizedValuesInReport(bool $prioritizeNormalizedValuesInReport): BreedValueType
+    {
+        $this->prioritizeNormalizedValuesInReport = $prioritizeNormalizedValuesInReport;
         return $this;
     }
 
