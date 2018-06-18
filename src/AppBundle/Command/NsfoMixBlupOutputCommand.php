@@ -24,7 +24,7 @@ class NsfoMixBlupOutputCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->mixBlupOutputFilesService = $this->getContainer()->get('app.mixblup.output');
+        $this->mixBlupOutputFilesService = $this->getContainer()->get('AppBundle\Service\MixBlupOutputFilesService');
         $this->mixBlupOutputFilesService->run();
     }
 

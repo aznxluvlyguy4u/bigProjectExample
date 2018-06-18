@@ -424,7 +424,7 @@ class ReportAPIController extends APIController {
      */
     public function getPedigreeRegisterOverview(Request $request)
     {
-        return $this->get('app.report.pedigree_register')->request($request);
+        return $this->get('AppBundle\Service\Report\PedigreeRegisterOverviewReportService')->request($request);
     }
 
 
@@ -460,7 +460,7 @@ class ReportAPIController extends APIController {
      */
     public function getBreedValuesReportOverview(Request $request)
     {
-        return $this->get('app.report.breed_values_overview')->request($request, $this->getEmployee());
+        return $this->get('AppBundle\Service\Report\BreedValuesOverviewReportService')->request($request, $this->getEmployee());
     }
 
 

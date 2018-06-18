@@ -27,7 +27,7 @@ class NsfoMixBlupInputCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->mixBlupInputFilesService = $this->getContainer()->get('app.mixblup.input');
+        $this->mixBlupInputFilesService = $this->getContainer()->get('AppBundle\Service\MixBlupInputFilesService');
 
         $option = intval(ltrim($input->getOption('option'),'='));
 
