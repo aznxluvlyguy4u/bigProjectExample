@@ -128,6 +128,24 @@ class BatchInvoiceRuleInitializer extends MigratorServiceBase
         self::$animalAdministrationOfflineEwe->setSortOrder(1);
         self::$subscriptionNSFOOnline->setSortOrder(1);
         self::$subscriptionNSFOAnimalHealth->setSortOrder(1);
+
+        /**
+         * Set the article code
+         */
+        self::$baseCostAnimalAdministration->setArticleCode("PLACEHOLDER");
+        self::$animalAdministrationOnlineEwe->setArticleCode("PLACEHOLDER");
+        self::$animalAdministrationOfflineEwe->setArticleCode("PLACEHOLDER");
+        self::$subscriptionNSFOOnline->setArticleCode("PLACEHOLDER");
+        self::$subscriptionNSFOAnimalHealth->setArticleCode("PLACEHOLDER");
+
+        /**
+         * Set the sub article code
+         */
+        self::$baseCostAnimalAdministration->setSubArticleCode("SUBHOLDER");
+        self::$animalAdministrationOnlineEwe->setSubArticleCode("SUBHOLDER");
+        self::$animalAdministrationOfflineEwe->setSubArticleCode("SUBHOLDER");
+        self::$subscriptionNSFOOnline->setSubArticleCode("SUBHOLDER");
+        self::$subscriptionNSFOAnimalHealth->setSubArticleCode("SUBHOLDER");
         
         $this->em->persist(self::$baseCostAnimalAdministration);
         $this->em->persist(self::$animalAdministrationOnlineEwe);
