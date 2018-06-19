@@ -113,6 +113,34 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   }
 
 
+    /**
+     *
+     * Resend open DeclareLoss Requests.
+     *
+     * @ApiDoc(
+     *   section = "Losses",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to a developer that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Resend open DeclareLoss Requests"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/resend")
+     * @Method("POST")
+     */
+    public function resendCreateLoss(Request $request)
+    {
+        return $this->get('app.loss')->resendCreateLoss($request);
+    }
+
+
   /**
    *
    * Update existing DeclareLoss Request.
