@@ -95,7 +95,7 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
         if ($validationResult instanceof JsonResponse) {
             return $validationResult;
         }
-
+        /** @var InvoiceRule $currentRule */
         $currentRule = $this->getManager()->getRepository(InvoiceRule::class)->find($updatedRule->getId());
         if(!$currentRule) {
             return ResultUtil::errorResult('THE INVOICE RULE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED);
@@ -109,6 +109,8 @@ class InvoiceRuleService extends ControllerServiceBase implements InvoiceRuleAPI
 
         $currentRule->copyValues($updatedRule);
         $currentRule->setLedgerCategory($ledgerCategory);
+        $currentRule->setArticleCode($updatedRule->getArticleCode());
+        $currentRule->setSubArticleCode($updatedRule->getSubArticleCode());
 
         $this->persistAndFlush($currentRule);
 
