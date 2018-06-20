@@ -34,6 +34,7 @@ class AppKernel extends Kernel
             new Knp\Bundle\SnappyBundle\KnpSnappyBundle(),
             new Liuggio\ExcelBundle\LiuggioExcelBundle(),
             new Ijanki\Bundle\FtpBundle\IjankiFtpBundle(),
+            new Enqueue\Bundle\EnqueueBundle(),
         ];
 
         if (in_array($this->getEnvironment(), ['dev', 'test'], true)) {
