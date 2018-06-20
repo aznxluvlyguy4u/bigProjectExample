@@ -272,6 +272,7 @@ class AnimalDetailsOutput extends OutputServiceBase
                     $childArray[JsonInputConstant::PRODUCTION] = $viewDetails->getProduction();
                     $childArray[JsonInputConstant::N_LING] = $viewDetails->getNLing();
                     $childArray[JsonInputConstant::GENERAL_APPEARANCE] = $viewDetails->getGeneralAppearance();
+                    $childArray[JsonInputConstant::IS_PUBLIC] = $viewDetails->isPublic();
                 }
 
                 switch ($genderPrimaryParent) {
