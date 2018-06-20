@@ -79,6 +79,12 @@ class ViewMinimalParentDetails implements SqlViewInterface
      */
     private $breedTypeAsDutchFirstLetter;
 
+    /**
+     * @var bool
+     * @JMS\Type("boolean")
+     */
+    private $isPublic;
+
 
     /**
      * @return string
@@ -312,5 +318,21 @@ class ViewMinimalParentDetails implements SqlViewInterface
         return $this;
     }
 
+    /**
+     * @return bool
+     */
+    public function isPublic(): bool
+    {
+        return $this->isPublic;
+    }
 
+    /**
+     * @param bool $isPublic
+     * @return ViewMinimalParentDetails
+     */
+    public function setIsPublic(bool $isPublic): ViewMinimalParentDetails
+    {
+        $this->isPublic = $isPublic;
+        return $this;
+    }
 }
