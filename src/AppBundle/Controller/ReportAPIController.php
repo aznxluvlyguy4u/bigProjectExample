@@ -2,6 +2,9 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Util\ResultUtil;
+use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -101,7 +104,7 @@ class ReportAPIController extends APIController {
    */
   public function getInbreedingCoefficientsReport(Request $request)
   {
-      return $this->get('app.report.inbreeding_coefficient')->getReport($request);
+      return $this->get('AppBundle\Service\PdfReportService')->createInbreedingCoefficientsReport($request);
   }
 
 
@@ -208,7 +211,8 @@ class ReportAPIController extends APIController {
      */
     public function getAnimalsOverviewReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\AnimalsOverviewReportService')->getReport($request);
+        return $this->get('AppBundle\Service\PdfReportService')->createAnimalsOverviewReport($request);
+        //return $this->get('AppBundle\Service\Report\AnimalsOverviewReportService')->getReport($request);
     }
 
 
@@ -252,7 +256,7 @@ class ReportAPIController extends APIController {
      */
     public function getAnnualActiveLivestockReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\AnnualActiveLivestockReportService')->getReport($request);
+        return $this->get('AppBundle\Service\PdfReportService')->createAnnualActiveLivestockReport($request);
     }
 
 
@@ -295,7 +299,7 @@ class ReportAPIController extends APIController {
      */
     public function getAnnualActiveLivestockRamMatesReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService')->getReport($request);
+        return $this->get('AppBundle\Service\PdfReportService')->createAnnualActiveLivestockRamMatesReport($request);
     }
 
 
@@ -345,7 +349,7 @@ class ReportAPIController extends APIController {
      */
     public function getAnnualTe100ProductionReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\AnnualTe100UbnProductionReportService')->getReport($request);
+        return $this->get('AppBundle\Service\PdfReportService')->createAnnualTe100UbnProductionReport($request);
     }
 
 
@@ -388,7 +392,7 @@ class ReportAPIController extends APIController {
      */
     public function getOffspringReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\OffspringReportService')->getReport($request);
+        return $this->get('AppBundle\Service\PdfReportService')->createOffspringReport($request);
     }
 
 
@@ -424,7 +428,7 @@ class ReportAPIController extends APIController {
      */
     public function getPedigreeRegisterOverview(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\PedigreeRegisterOverviewReportService')->request($request);
+        return $this->get('AppBundle\Service\PdfReportService')->createPedigreeRegisterOverview($request);
     }
 
 
@@ -503,7 +507,7 @@ class ReportAPIController extends APIController {
      */
     public function getFertilizerAccountingReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\FertilizerAccountingReport')->getReport($request);
+        return $this->get('AppBundle\Service\PdfReportService')->createFertilizerAccountingReport($request);
     }
 
 
