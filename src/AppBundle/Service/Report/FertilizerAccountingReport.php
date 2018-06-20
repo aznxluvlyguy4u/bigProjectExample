@@ -22,7 +22,7 @@ use AppBundle\Util\TimeUtil;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class FertilizerAccountingReport extends ReportServiceBase implements ReportServiceInterface
+class FertilizerAccountingReport extends ReportServiceBase
 {
     const TITLE = 'fertilizer_accounting';
     const FOLDER_NAME = self::TITLE;
@@ -47,26 +47,33 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
     /**
      * @inheritDoc
      */
-    function getReport(Request $request)
+    function getReport(Location $location, \DateTime $referenceDate, $extension)
     {
         try {
-            $this->location = $this->getSelectedLocation($request, true);
-            $referenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
+            $this->location = $location;
+            //$referenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
 
-            $this->extension = FileType::CSV;
-            $this->extension = strtolower($request->query->get(QueryParameter::FILE_TYPE_QUERY));
+            $this->extension = $extension;
 
             ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 
-            $historicLiveStockCountsByFertilizerCategory = $this->getHistoricLiveStockCountsByFertilizerCategory($referenceDate);
+            // TODO remove later
+            $useTestResults = true;
+            if ($useTestResults) {
+                $historicLiveStockCountsByFertilizerCategory = self::testResults();
+            } else {
+                $sql = $this->getHistoricLiveStockCountsByFertilizerCategoryQuery($referenceDate);
+                $historicLiveStockCountsByFertilizerCategory = $this->em->getConnection()->query($sql)->fetchAll();
+            }
+            //$historicLiveStockCountsByFertilizerCategory = $this->getHistoricLiveStockCountsByFertilizerCategory($referenceDate);
 
             $totalResults = $this->yearlyAveragesWithFertilizerOutput($historicLiveStockCountsByFertilizerCategory);
             $this->retrieveNewestAndOldestReferenceDate($historicLiveStockCountsByFertilizerCategory);
 
-            if ($this->extension === FileType::CSV) {
-                return $this->createCsvFile($historicLiveStockCountsByFertilizerCategory, $totalResults);
-            } else {
+            if ($this->extension === FileType::PDF) {
                 return $this->getPdfReport($historicLiveStockCountsByFertilizerCategory, $totalResults);
+            } else {
+                return $this->createCsvFile($historicLiveStockCountsByFertilizerCategory, $totalResults);
             }
 
             throw new \Exception('INVALID FILE TYPE', Response::HTTP_PRECONDITION_REQUIRED);
@@ -489,5 +496,189 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
         return $this->trans('FERTILIZER ACCOUNTING NOTE', ['%year%' => DateUtil::currentYear()]);
     }
 
-
+    private static function testResults()
+    {
+        return [
+            0 => [
+                "peildatum" => "2016-06-01",
+                "diercategorie" => 550,
+                "dieraantal" => 6,
+            ],
+            1 => [
+                "peildatum" => "2016-06-01",
+                "diercategorie" => 551,
+                "dieraantal" => 2,
+            ],
+            2 => [
+                "peildatum" => "2016-06-01",
+                "diercategorie" => 552,
+                "dieraantal" => 2,
+            ],
+            3 => [
+                "peildatum" => "2016-07-01",
+                "diercategorie" => 550,
+                "dieraantal" => 6,
+            ],
+            4 => [
+                "peildatum" => "2016-07-01",
+                "diercategorie" => 551,
+                "dieraantal" => 2,
+            ],
+            5 => [
+                "peildatum" => "2016-07-01",
+                "diercategorie" => 552,
+                "dieraantal" => 4,
+            ],
+            6 => [
+                "peildatum" => "2016-08-01",
+                "diercategorie" => 550,
+                "dieraantal" => 147,
+            ],
+            7 => [
+                "peildatum" => "2016-08-01",
+                "diercategorie" => 551,
+                "dieraantal" => 0,
+            ],
+            8 => [
+                "peildatum" => "2016-08-01",
+                "diercategorie" => 552,
+                "dieraantal" => 11,
+            ],
+            9 => [
+                "peildatum" => "2016-09-01",
+                "diercategorie" => 550,
+                "dieraantal" => 97,
+            ],
+            10 => [
+                "peildatum" => "2016-09-01",
+                "diercategorie" => 551,
+                "dieraantal" => 0,
+            ],
+            11 => [
+                "peildatum" => "2016-09-01",
+                "diercategorie" => 552,
+                "dieraantal" => 34,
+            ],
+            12 => [
+                "peildatum" => "2016-10-01",
+                "diercategorie" => 550,
+                "dieraantal" => 97,
+            ],
+            13 => [
+                "peildatum" => "2016-10-01",
+                "diercategorie" => 551,
+                "dieraantal" => 0,
+            ],
+            14 => [
+                "peildatum" => "2016-10-01",
+                "diercategorie" => 552,
+                "dieraantal" => 34,
+            ],
+            15 => [
+                "peildatum" => "2016-11-01",
+                "diercategorie" => 550,
+                "dieraantal" => 99,
+            ],
+            16 => [
+                "peildatum" => "2016-11-01",
+                "diercategorie" => 551,
+                "dieraantal" => 0,
+            ],
+            17 => [
+                "peildatum" => "2016-11-01",
+                "diercategorie" => 552,
+                "dieraantal" => 82,
+            ],
+            18 => [
+                "peildatum" => "2016-12-01",
+                "diercategorie" => 550,
+                "dieraantal" => 99,
+            ],
+            19 => [
+                "peildatum" => "2016-12-01",
+                "diercategorie" => 551,
+                "dieraantal" => 0,
+            ],
+            20 => [
+                "peildatum" => "2016-12-01",
+                "diercategorie" => 552,
+                "dieraantal" => 77,
+            ],
+            21 => [
+                "peildatum" => "2017-01-01",
+                "diercategorie" => 550,
+                "dieraantal" => 100,
+            ],
+            22 => [
+                "peildatum" => "2017-01-01",
+                "diercategorie" => 551,
+                "dieraantal" => 0,
+            ],
+            23 => [
+                "peildatum" => "2017-01-01",
+                "diercategorie" => 552,
+                "dieraantal" => 78,
+            ],
+            24 => [
+                "peildatum" => "2017-02-01",
+                "diercategorie" => 550,
+                "dieraantal" => 101,
+            ],
+            25 => [
+                "peildatum" => "2017-02-01",
+                "diercategorie" => 551,
+                "dieraantal" => 0,
+            ],
+            26 => [
+                "peildatum" => "2017-02-01",
+                "diercategorie" => 552,
+                "dieraantal" => 80,
+            ],
+            27 => [
+                "peildatum" => "2017-03-01",
+                "diercategorie" => 550,
+                "dieraantal" => 100,
+            ],
+            28 => [
+                "peildatum" => "2017-03-01",
+                "diercategorie" => 551,
+                "dieraantal" => 0,
+            ],
+            29 => [
+                "peildatum" => "2017-03-01",
+                "diercategorie" => 552,
+                "dieraantal" => 80,
+            ],
+            30 => [
+                "peildatum" => "2017-04-01",
+                "diercategorie" => 550,
+                "dieraantal" => 255,
+            ],
+            31 => [
+                "peildatum" => "2017-04-01",
+                "diercategorie" => 551,
+                "dieraantal" => 15,
+            ],
+            32 => [
+                "peildatum" => "2017-04-01",
+                "diercategorie" => 552,
+                "dieraantal" => 81,
+            ],
+            33 => [
+                "peildatum" => "2017-05-01",
+                "diercategorie" => 550,
+                "dieraantal" => 257,
+            ],
+            34 => [
+                "peildatum" => "2017-05-01",
+                "diercategorie" => 551,
+                "dieraantal" => 15,
+            ],
+            35 => [
+                "peildatum" => "2017-05-01",
+                "diercategorie" => 552,
+                "dieraantal" => 13,
+            ]
+        ];
+    }
 }

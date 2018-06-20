@@ -16,7 +16,7 @@ use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValuesBase implements ReportServiceInterface
+class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValuesBase
 {
     const TITLE = 'annual_te100_ubn_production';
     const FOLDER_NAME = self::TITLE;
@@ -28,21 +28,11 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
     /**
      * @inheritDoc
      */
-    function getReport(Request $request)
+    function getReport($year, $pedigreeActiveEndDateLimit)
     {
-        if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
-
         try {
 
-            $year = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR, null);
-            if (!$year) {
-                return ResultUtil::errorResult($this->translate('YEAR IS MISSING',false,true), Response::HTTP_PRECONDITION_REQUIRED);
-            }
-
-            $this->setLocaleFromQueryParameter($request);
-            $pedigreeActiveEndDateLimit = RequestUtil::getDateQuery($request,QueryParameter::END_DATE, new \DateTime());
+            //$this->setLocaleFromQueryParameter($request);
 
             $this->filename = $this->translate(self::FILENAME).'_'.$year;
             $this->extension = FileType::CSV;

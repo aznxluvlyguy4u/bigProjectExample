@@ -5,6 +5,7 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
@@ -13,10 +14,11 @@ use AppBundle\Util\ProcessUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class OffspringReportService extends ReportServiceWithBreedValuesBase implements ReportServiceInterface
+class OffspringReportService extends ReportServiceWithBreedValuesBase
 {
     const TITLE = 'offspring_report';
     const FOLDER_NAME = self::TITLE;
@@ -29,30 +31,30 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase implements
     /**
      * @inheritDoc
      */
-    function getReport(Request $request)
+    function getReport(Client $client, Location $location, ArrayCollection $content, $concatValueAndAccuracy)
     {
         try {
 
-            $this->validateRequestBody($request);
+            //$this->validateRequestBody($request);
+            $this->content = $content;
             $parentsArray = $this->content->get(JsonInputConstant::PARENTS);
 
-            if(AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+            if(AdminValidator::isAdmin($client, AccessLevelType::ADMIN)) {
                 ProcessUtil::setTimeLimitInMinutes(self::ADMIN_PROCESS_TIME_LIMIT_IN_MINUTES);
 
                 $animalIds = $this->getAnyAnimalIdsFromBody($parentsArray);
                 $location = null;
 
             } else {
-                $location = $this-> getSelectedLocation($request);
                 if (!$location || !$location->getId()) {
                     throw new \Exception('Location is missing', Response::HTTP_BAD_REQUEST);
                 }
                 $animalIds = $this->getCurrentAndHistoricAnimalIdsFromBody($parentsArray, $location);
             }
 
-            $this->concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT);
+            $this->concatValueAndAccuracy = $concatValueAndAccuracy;
 
-            $this->setLocaleFromQueryParameter($request);
+            //$this->setLocaleFromQueryParameter($request);
 
             $sql = $this->breedValuesReportQueryGenerator->createOffspringReportQuery(
                 $this->concatValueAndAccuracy,

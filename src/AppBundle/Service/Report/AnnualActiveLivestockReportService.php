@@ -17,7 +17,7 @@ use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class AnnualActiveLivestockReportService extends ReportServiceBase implements ReportServiceInterface
+class AnnualActiveLivestockReportService extends ReportServiceBase
 {
     const TITLE = 'annual_active_livestock_report';
     const FOLDER_NAME = self::TITLE;
@@ -28,24 +28,24 @@ class AnnualActiveLivestockReportService extends ReportServiceBase implements Re
     /**
      * @inheritDoc
      */
-    function getReport(Request $request)
+    function getReport($referenceYear)
     {
-        if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
+//        if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+//            return AdminValidator::getStandardErrorResponse();
+//        }
 
         try {
 
-            $referenceYear = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR, null);
-            if (!$referenceYear) {
-                $referenceYear = DateUtil::currentYear() - 1;
-            }
+//            $referenceYear = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR, null);
+//            if (!$referenceYear) {
+//                $referenceYear = DateUtil::currentYear() - 1;
+//            }
+//
+//            if (!Validator::isYear($referenceYear)) {
+//                return ResultUtil::errorResult('Invalid reference year', Response::HTTP_PRECONDITION_REQUIRED);
+//            }
 
-            if (!Validator::isYear($referenceYear)) {
-                return ResultUtil::errorResult('Invalid reference year', Response::HTTP_PRECONDITION_REQUIRED);
-            }
-
-            ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
+            //ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 
             $this->setFileNameValues($referenceYear);
 
