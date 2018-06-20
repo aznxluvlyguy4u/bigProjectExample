@@ -365,16 +365,27 @@ class InvoiceService extends ControllerServiceBase
 
                 if ($oldCompany->getCompanyId() !== $newCompany->getCompanyId()) {
                     $oldCompany->removeInvoice($invoice);
+                    $newCompany->addInvoice($invoice);
+                    $newCompany->getDebtorNumber() != null ? $invoice->setCompanyDebtorNumber($newCompany->getDebtorNumber()) : null;
+                    if ($newCompany->getTwinfieldOfficeCode()) {
+                        $invoice->setCompanyTwinfieldAdministrationCode($newCompany->getTwinfieldOfficeCode());
+                    } else {
+                        $invoice->setCompanyTwinfieldAdministrationCode(null);
+                    }
                     $this->getManager()->persist($oldCompany);
+                } else {
+                    if ($oldCompany->getDebtorNumber() != null) {
+                        $invoice->setCompanyDebtorNumber($oldCompany->getDebtorNumber());
+                        $invoice->setCompanyTwinfieldAdministrationCode($oldCompany->getTwinfieldOfficeCode());
+                    }
                 }
+
             }
-            $newCompany->addInvoice($invoice);
             $invoice->setCompany($newCompany);
             $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
             $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
             $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
             $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
-            $newCompany->getDebtorNumber() != null ? $invoice->setCompanyDebtorNumber($newCompany->getDebtorNumber()) : null;
             if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
                 $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
             }
@@ -400,9 +411,11 @@ class InvoiceService extends ControllerServiceBase
             $repository = $this->getManager()->getRepository(Location::class);
             $location = $repository->findOneByActiveUbn($invoice->getUbn());
             $this->persistAndFlush($log);
-            foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                $title = $this->translator->trans($message->getType());
-                $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
+            if ($location) {
+                foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
+                    $title = $this->translator->trans($message->getType());
+                    $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
+                }
             }
         }
         if ($invoice->getStatus() == InvoiceStatus::PAID) {
@@ -417,11 +430,6 @@ class InvoiceService extends ControllerServiceBase
             }
 
             $invoice->setSenderDetails($details);
-        }
-        if ($newCompany->getTwinfieldOfficeCode()) {
-            $invoice->setCompanyTwinfieldAdministrationCode($newCompany->getTwinfieldOfficeCode());
-        } else {
-            $invoice->setCompanyTwinfieldAdministrationCode(null);
         }
         if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
             return $this->validateAndSendToTwinfield($invoice);
