@@ -401,7 +401,7 @@ class InvoiceRule
     /**
      * @param string $subArticleCode
      */
-    public function setSubArticleCode(string $subArticleCode): void
+    public function setSubArticleCode(?string $subArticleCode): void
     {
         $this->subArticleCode = $subArticleCode;
     }
