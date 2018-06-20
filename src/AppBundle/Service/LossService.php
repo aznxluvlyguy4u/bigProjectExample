@@ -9,11 +9,14 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareLossResponse;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -179,5 +182,56 @@ class LossService extends DeclareControllerServiceBase
             ->getLossesWithLastHistoryResponses($location);
 
         return ResultUtil::successResult($declareLosses);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function resendCreateLoss(Request $request)
+    {
+        $loggedInUser = $this->getUser();
+        $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::DEVELOPER);
+        if(!$isAdmin) { return AdminValidator::getStandardErrorResponse(); }
+
+        $content = RequestUtil::getContentAsArray($request);
+        $minDateOfDeathString = $content->get('min_date_of_death');
+        $minDateOfDeath = new \DateTime($minDateOfDeathString);
+
+        $requestMessages = $this->getManager()->getRepository(DeclareLoss::class)->findBy(
+            ['requestState' => RequestStateType::OPEN]
+        );
+
+        $openCount = count($requestMessages);
+        $resentCount = 0;
+
+        if ($openCount > 0) {
+
+            //Creating request succeeded, send to Queue
+            /** @var DeclareLoss $requestMessage */
+            foreach ($requestMessages as $requestMessage) {
+
+                if ($requestMessage->getDateOfDeath() < $minDateOfDeath) {
+                    continue;
+                }
+
+                $location = $requestMessage->getLocation();
+                $client = $location ? $location->getOwner() : null;
+                $loggedInUser = $requestMessage->getActionBy();
+
+                $log = ActionLogWriter::declareLossPost($this->getManager(), $client, $loggedInUser,$location, $requestMessage);
+
+                if($requestMessage->getResponses()->count() === 0) {
+                    //Resend it to the queue and persist/update any changed state to the database
+                    $result[] = $this->sendMessageObjectToQueue($requestMessage);
+                    $resentCount++;
+                }
+
+                ActionLogWriter::completeActionLog($this->getManager(), $log);
+            }
+        }
+
+        return new JsonResponse(['DeclareLoss' => ['found open declares' => $openCount, 'open declares resent' => $resentCount]], 200);
     }
 }

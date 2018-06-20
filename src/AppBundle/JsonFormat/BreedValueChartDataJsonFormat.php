@@ -80,6 +80,15 @@ class BreedValueChartDataJsonFormat
     private $exteriorKind;
 
     /**
+     * @var boolean
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     */
+    private $prioritizeNormalizedValuesInTable;
+
+    /**
      * @return  bool
      * @JMS\Type("bool")
      * @JMS\VirtualProperty
@@ -235,6 +244,24 @@ class BreedValueChartDataJsonFormat
     public function setExteriorKind($exteriorKind)
     {
         $this->exteriorKind = $exteriorKind;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPrioritizeNormalizedValuesInTable(): bool
+    {
+        return $this->prioritizeNormalizedValuesInTable;
+    }
+
+    /**
+     * @param bool $prioritizeNormalizedValuesInTable
+     * @return BreedValueChartDataJsonFormat
+     */
+    public function setPrioritizeNormalizedValuesInTable(bool $prioritizeNormalizedValuesInTable): BreedValueChartDataJsonFormat
+    {
+        $this->prioritizeNormalizedValuesInTable = $prioritizeNormalizedValuesInTable;
         return $this;
     }
 
