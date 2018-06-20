@@ -49,6 +49,8 @@ class BatchInvoiceService extends ControllerServiceBase
     /** @var FireBaseService */
     private $fireBaseService;
 
+    private $invoicesSendCounter = 0;
+
     public function initializeServices(TwinfieldInvoiceService $invoiceService)
     {
         $this->twinfieldInvoiceService = $invoiceService;
@@ -85,18 +87,6 @@ class BatchInvoiceService extends ControllerServiceBase
         $this->getManager()->persist($log);
         $this->getManager()->flush();
         return ResultUtil::successResult($invoices);
-    }
-
-    private function sendInvoicesToTwinfield(ArrayCollection $invoices) {
-        $unpaidInvoices = $this->getUnpaidInvoices($invoices);
-        $this->twinfieldInvoiceService->sendInvoices($unpaidInvoices);
-    }
-
-    private function getUnpaidInvoices(ArrayCollection $invoices) {
-        $criteria = Criteria::create()->where(
-            Criteria::expr()->eq("status", InvoiceStatus::UNPAID)
-        );
-        return $invoices->matching($criteria);
     }
 
     /**
@@ -219,13 +209,14 @@ class BatchInvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
             $invoice->setIsBatch(true);
             $this->setAddressProperties($invoice, $company->getBillingAddress());
-            if ($company->getTwinfieldCode()) {
-                $invoice->setStatus("UNPAID");
+            if ($company->getDebtorNumber()) {
+                $invoice->setCompanyTwinfieldAdministrationCode($company->getTwinfieldOfficeCode());
+                $invoice->setStatus(InvoiceStatus::UNPAID);
+                $invoice->setCompanyDebtorNumber($company->getDebtorNumber());
                 $invoice->setInvoiceDate(new \DateTime());
             } else {
                 $invoice->setStatus(InvoiceStatus::NOT_SEND);
             }
-            $invoice->setCompanyDebtorNumber($company->getDebtorNumber());
             $invoice->setCompanyLocalId($company->getCompanyId());
             $invoice->setCompanyName($company->getCompanyName());
             $invoice->setUbn($location->getUbn());
@@ -268,7 +259,6 @@ class BatchInvoiceService extends ControllerServiceBase
                     $title = $this->translator->trans($message->getType());
                     $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
                 }
-                $this->validateAndSendToTwinfield($invoice);
             }
             $invoiceSet[] = $invoice;
             $this->getManager()->persist($invoice);
@@ -280,17 +270,24 @@ class BatchInvoiceService extends ControllerServiceBase
         $message = "Company debtor number and/or twinfield administration code are not filled out";
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
         if ($invoice->getCompanyTwinfieldAdministrationCode() && $invoice->getCompanyDebtorNumber()) {
+            if ($this->invoicesSendCounter >= 100) {
+                $this->twinfieldInvoiceService->reAuthenticate();
+                $this->invoicesSendCounter = 0;
+            }
             $result = $this->twinfieldInvoiceService->sendInvoiceToTwinfield($invoice);
+            $this->invoicesSendCounter++;
             if (is_a($result, \PhpTwinfield\Invoice::class)) {
                 $invoice->setInvoiceNumber($result->getInvoiceNumber());
                 $invoice->setInvoiceDate(new \DateTime());
-                $this->persistAndFlush($invoice);
+                $this->persist($invoice);
+                return;
             }
-       }
-        $invoice->setStatus(InvoiceStatus::NOT_SEND);
-        $invoice->setInvoiceDate(null);
-        $this->persistAndFlush($log);
-        $this->persistAndFlush($invoice);
+       } else {
+            $invoice->setStatus(InvoiceStatus::NOT_SEND);
+            $invoice->setInvoiceDate(null);
+            $this->persist($log);
+            $this->persist($invoice);
+        }
     }
 
     /**
