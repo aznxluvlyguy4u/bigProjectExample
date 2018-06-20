@@ -13,12 +13,12 @@ class SqlView
 {
     use EnumInfo;
 
+    const VIEW_PERSON_FULL_NAME = 'view_person_full_name';
     const VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS = 'view_animal_livestock_overview_details';
     const VIEW_LITTER_DETAILS = 'view_litter_details';
     const VIEW_LOCATION_DETAILS = 'view_location_details';
     const VIEW_MINIMAL_PARENT_DETAILS = 'view_minimal_parent_details';
     const VIEW_PEDIGREE_REGISTER_ABBREVIATION = 'view_pedigree_register_abbreviation';
-    const VIEW_PERSON_FULL_NAME = 'view_person_full_name';
 
 
     /**
@@ -223,8 +223,11 @@ class SqlView
                 NULLIF(CONCAT(predicate.abbreviation, NULLIF(CONCAT('(',GREATEST(a.predicate_score,13),')'), '(13)')),'') as formatted_predicate,
                 a.breed_code,
                 a.scrapie_genotype,
-                a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter
+                a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter,
+                COALESCE(comp.is_reveal_historic_animals, FALSE) as is_public
               FROM animal a
+                LEFT JOIN location l ON a.location_id = l.id
+                LEFT JOIN company comp ON l.company_id = comp.id
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
                 LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk_dad(bool_val, mark)
                   ON c.gave_birth_as_one_year_old = production_asterisk_dad.bool_val
