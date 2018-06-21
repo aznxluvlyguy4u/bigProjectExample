@@ -3,8 +3,8 @@
 namespace AppBundle\Entity;
 
 /**
- * Class PdfWorkerRepository
+ * Class ReportWorkerRepository
  * @package AppBundle\Entity
  */
-class PdfWorkerRepository extends BaseRepository {
+class ReportWorkerRepository extends BaseRepository {
 }

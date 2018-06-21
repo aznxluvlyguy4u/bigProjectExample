@@ -31,7 +31,7 @@ use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProcessor;
 use Symfony\Component\HttpFoundation\Response;
 
-class PdfReportProcessor implements PsrProcessor, CommandSubscriberInterface
+class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 {
     /**
      * @var AnnualActiveLivestockReportService
