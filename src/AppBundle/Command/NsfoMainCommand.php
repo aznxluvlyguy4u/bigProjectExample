@@ -844,7 +844,6 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             default: return;
         }
-        $this->run($this->cmdUtil);
     }
 
 
