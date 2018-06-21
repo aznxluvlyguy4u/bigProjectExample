@@ -6,11 +6,11 @@ use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Class PdfWorker
- * @ORM\Entity(repositoryClass="AppBundle\Entity\WorkerRepository")
+ * Class ReportWorker
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\ReportWorkerRepository")
  * @package AppBundle\Entity
  */
-class PdfWorker
+class ReportWorker
 {
     use EntityClassInfo;
 
@@ -28,7 +28,14 @@ class PdfWorker
      *
      * @ORM\Column(type="integer", nullable=false)
      */
-    private $pdfType;
+    private $reportType;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=false)
+     */
+    private $fileType;
 
     /**
      * @var string
@@ -40,7 +47,7 @@ class PdfWorker
     /**
      * @var Worker
      *
-     * @ORM\OneToOne(targetEntity="Worker", fetch="LAZY")
+     * @ORM\OneToOne(targetEntity="Worker", inversedBy="pdfWorker")
      * @ORM\JoinColumn(name="worker_id", nullable=false, referencedColumnName="id", onDelete="CASCADE")
      */
     private $worker;
@@ -66,7 +73,7 @@ class PdfWorker
 
     /**
      * @param int $id
-     * @return PdfWorker
+     * @return ReportWorker
      */
     public function setId($id)
     {
@@ -77,18 +84,36 @@ class PdfWorker
     /**
      * @return int
      */
-    public function getPdfType()
+    public function getReportType()
     {
-        return $this->pdfType;
+        return $this->reportType;
     }
 
     /**
-     * @param $pdfType
-     * @return PdfWorker
+     * @param $reportType
+     * @return ReportWorker
      */
-    public function setPdfType($pdfType)
+    public function setReportType($reportType)
     {
-        $this->pdfType = $pdfType;
+        $this->reportType = $reportType;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFileType()
+    {
+        return $this->fileType;
+    }
+
+    /**
+     * @param $fileType
+     * @return $this
+     */
+    public function setFileType($fileType)
+    {
+        $this->fileType = $fileType;
         return $this;
     }
 
@@ -102,7 +127,7 @@ class PdfWorker
 
     /**
      * @param $worker
-     * @return PdfWorker
+     * @return ReportWorker
      */
     public function setWorker($worker)
     {
@@ -120,7 +145,7 @@ class PdfWorker
 
     /**
      * @param $url
-     * @return PdfWorker
+     * @return ReportWorker
      */
     public function setDownloadUrl($url)
     {
@@ -138,7 +163,7 @@ class PdfWorker
 
     /**
      * @param $hash
-     * @return PdfWorker
+     * @return ReportWorker
      */
     public function setHash($hash)
     {

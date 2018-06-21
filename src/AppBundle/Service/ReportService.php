@@ -2,6 +2,7 @@
 
 
 namespace AppBundle\Service;
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Worker;
 use AppBundle\Enumerator\AccessLevelType;
@@ -16,13 +17,14 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\UlnValidator;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 use Enqueue\Client\ProducerInterface;
 use Enqueue\Util\JSON;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class PdfReportService
+class ReportService
 {
     /**
      * @var ProducerInterface
@@ -54,17 +56,36 @@ class PdfReportService
 
     /**
      * @param Request $request
+     * @return array|null
+     * @throws \Exception
+     */
+    public function getReports(Request $request): ?array
+    {
+        $date = new \DateTime();//now
+        $interval = new \DateInterval('P1M');// P[eriod] 1 M[onth]
+        $date->sub($interval);
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('owner', $this->userService->getAccountOwner()))
+            ->where(Criteria::expr()->gte('startedAt', $date))
+            ->orderBy(['startedAt' => Criteria::DESC])
+        ;
+        $workers = $this->em->getRepository(Worker::class)->matching($criteria);
+        return $workers->toArray();
+    }
+
+    /**
+     * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      * @throws \Exception
      */
-    public function createPedigreeCertificates(Request $request)
+    public function createPedigreeCertificates(Request $request): JsonResponse
     {
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
 
         $content = RequestUtil::getContentAsArray($request);
 
         //Validate if given ULNs are correct AND there should at least be one ULN given
-        $ulnValidator = new UlnValidator($this->em, $content, true, null, $location);
+        $ulnValidator = new UlnValidator($this->em, $content, true, null, $this->userService->getSelectedLocation($request));
         if(!$ulnValidator->getIsUlnSetValid()) {
             return $ulnValidator->createArrivalJsonErrorResponse();
         }
@@ -227,7 +248,7 @@ class PdfReportService
             $this->producer->sendCommand('generate_pdf',
                 [
                     'worker_id' => $workerId,
-                    'pdf_type' => ReportType::INBREEDING_COEFFICIENT,
+                    'pdf_type' => ReportType::ANIMALS_OVERVIEW,
                     'concat_value_and_accuracy' => $concatValueAndAccuracy,
                     'pedigree_active_end_date_limit' => $pedigreeActiveEndDateLimit->format('y-m-d H:i:s'),
                     'active_ubn_reference_date_string' => $activeUbnReferenceDate->format('y-m-d H:i:s'),

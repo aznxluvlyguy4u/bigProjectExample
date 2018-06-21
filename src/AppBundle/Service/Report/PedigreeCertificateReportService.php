@@ -53,6 +53,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
         $this->filename = $this->translate(self::FILENAME);
         $this->folderName = self::FOLDER_NAME;
 
+        $this->translator->setLocale('nl');
         //$this->setLocaleFromQueryParameter($request);
 
         $this->reportResults = new PedigreeCertificates($this->em, $content, $client, $location);

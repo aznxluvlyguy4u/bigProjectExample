@@ -568,14 +568,14 @@ services:
         arguments:
           - '%environment%'
 
-    AppBundle\Service\PdfReportService:
+    AppBundle\Service\ReportService:
         arguments:
           - '@enqueue.producer'
           - '@doctrine.orm.entity_manager'
           - '@app.user'
 
 
-    AppBundle\Processor\PdfReportProcessor:
+    AppBundle\Processor\ReportProcessor:
         arguments:
           - '@AppBundle\Service\Report\AnnualActiveLivestockReportService'
           - '@AppBundle\Service\Report\AnnualTe100UbnProductionReportService'

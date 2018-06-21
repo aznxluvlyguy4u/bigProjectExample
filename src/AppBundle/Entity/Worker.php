@@ -75,6 +75,11 @@ class Worker
      */
     private $finishedAt;
 
+    /**
+     * @ORM\OneToOne(targetEntity="ReportWorker", mappedBy="worker", fetch="EAGER")
+     */
+    private $reportWorker;
+
     public function __construct()
     {
         $this->startedAt = new \DateTime();
@@ -131,6 +136,24 @@ class Worker
     public function setOwner($owner)
     {
         $this->owner = $owner;
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getReportWorker()
+    {
+        return $this->reportWorker;
+    }
+
+    /**
+     * @param $worker
+     * @return $this
+     */
+    public function setReportWorker($worker)
+    {
+        $this->reportWorker = $worker;
         return $this;
     }
 

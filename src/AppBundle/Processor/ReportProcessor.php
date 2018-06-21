@@ -8,7 +8,7 @@
 
 namespace AppBundle\Processor;
 
-use AppBundle\Entity\PdfWorker;
+use AppBundle\Entity\ReportWorker;
 use AppBundle\Entity\Worker;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\ReportType;
@@ -120,15 +120,19 @@ class PdfReportProcessor implements PsrProcessor, CommandSubscriberInterface
             if (!$worker)
                 return self::REJECT;
 
-            $pdfWorker = new PdfWorker();
-            $pdfWorker->setPdfType($pdfType);
+            $pdfWorker = new ReportWorker();
+            $pdfWorker->setReportType($pdfType);
             $pdfWorker->setWorker($worker);
+            $pdfWorker->setFileType('CSV');
+            if($data['extension'])
+                $pdfWorker->setFileType($data['extension']);
 
             switch($pdfType) {
                 case ReportType::PEDIGREE_CERTIFICATE:
                     {
                         $fileType = $data['extension'];
                         $content = new ArrayCollection(json_decode($data['content'], true));
+                        $pdfWorker->setHash(hash('sha256', 'test'));
                         $data = $this->pedigreeCertificateReportService->getReport($worker->getOwner(), $worker->getLocation(), $fileType, $content);
                         break;
                     }
