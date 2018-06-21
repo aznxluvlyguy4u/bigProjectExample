@@ -186,6 +186,7 @@ class BreedValuesOutput extends OutputServiceBase
             ->setAccuracy($accuracy)
             ->setNormalizedValue($normalizedValue)
             ->setExteriorKind($exteriorKind)
+            ->setPrioritizeNormalizedValuesInTable($breedValueType->isPrioritizeNormalizedValuesInReport())
         ;
     }
 
