@@ -85,6 +85,20 @@ class ViewMinimalParentDetails implements SqlViewInterface
      */
     private $isPublic;
 
+    /**
+     * Array as json string
+     * @var string
+     * @JMS\Type("string")
+     */
+    private $historicUbns;
+
+    /**
+     * Array as json string
+     * @var string
+     * @JMS\Type("string")
+     */
+    private $historicLocationIds;
+
 
     /**
      * @return string
@@ -335,4 +349,57 @@ class ViewMinimalParentDetails implements SqlViewInterface
         $this->isPublic = $isPublic;
         return $this;
     }
+
+    /**
+     * @return array
+     */
+    public function getHistoricUbnsAsArray(): array
+    {
+        return empty($this->historicUbns) ? [] : json_decode($this->historicUbns);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getHistoricUbns()
+    {
+        return $this->historicUbns;
+    }
+
+    /**
+     * @param string $historicUbns
+     * @return ViewMinimalParentDetails
+     */
+    public function setHistoricUbns(string $historicUbns): ViewMinimalParentDetails
+    {
+        $this->historicUbns = $historicUbns;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHistoricLocationIdsAsArray(): array
+    {
+        return empty($this->historicLocationIds) ? [] : json_decode($this->historicLocationIds,false);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getHistoricLocationIds()
+    {
+        return $this->historicLocationIds;
+    }
+
+    /**
+     * @param string $historicLocationIds
+     * @return ViewMinimalParentDetails
+     */
+    public function setHistoricLocationIds(string $historicLocationIds): ViewMinimalParentDetails
+    {
+        $this->historicLocationIds = $historicLocationIds;
+        return $this;
+    }
+
 }
