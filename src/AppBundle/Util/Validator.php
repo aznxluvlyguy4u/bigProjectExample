@@ -651,10 +651,20 @@ class Validator
             if($animal->getLocation()->getId() == $locationOfUser->getId()) { return true; }
         }
 
+        //2. Always allow user to see his own historic animals
+        foreach ($animal->getAnimalResidenceHistory() as $animalResidence)
+        {
+            if ($animalResidence->getLocation() && $locationOfUser) {
+                if ($animalResidence->getLocation()->getId() == $locationOfUser->getId()) {
+                    return true;
+                }
+            }
+        }
+
         $locationOfBirth = $animal->getLocationOfBirth();
         if($locationOfBirth) {
 
-            //2. Always allow breeder to see his own animals!
+            //3. Always allow breeder to see his own animals!
             if($locationOfUser->getId() == $locationOfBirth->getId()) {
                 return true;
             }
@@ -662,18 +672,18 @@ class Validator
             $company = $locationOfBirth->getCompany();
             if($company) {
 
-                //3. Always allow, if location was deactivated
+                //4. Always allow, if location was deactivated
                 if(!$company->isActive()){
                     return true;
 
-                    //4. Else only show Animal if it is an historic animals and if owner ubnOfBirth allows it
+                    //5. Else only show Animal if it is an historic animals and if owner ubnOfBirth allows it
                 } else {
                     return $company->getIsRevealHistoricAnimals();
                 }
             }
         }
 
-        //5. If no locationOfBirth is registered, show if animal has animal has ever been on the location of the user.
+        //6. If no locationOfBirth is registered, show if animal has animal has ever been on the location of the user.
 
         /** @var \Doctrine\ORM\EntityManager $em */
         $queryBuilder = $em->createQueryBuilder();

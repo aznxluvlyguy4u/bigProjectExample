@@ -2054,7 +2054,7 @@ abstract class Animal
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|AnimalResidence[]
      */
     public function getAnimalResidenceHistory()
     {
