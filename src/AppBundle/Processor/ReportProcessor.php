@@ -124,7 +124,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             $pdfWorker->setReportType($pdfType);
             $pdfWorker->setWorker($worker);
             $pdfWorker->setFileType('CSV');
-            if($data['extension'])
+            if(array_key_exists('extension', $data))
                 $pdfWorker->setFileType($data['extension']);
 
             switch($pdfType) {
@@ -147,6 +147,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     }
                 case ReportType::OFF_SPRING:
                     {
+
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
                         $pdfWorker->setHash(hash('sha256', 'test'));
