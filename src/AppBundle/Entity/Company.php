@@ -370,7 +370,7 @@ class Company
     /**
      * Get locations
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection|Location[]
      */
     public function getLocations()
     {

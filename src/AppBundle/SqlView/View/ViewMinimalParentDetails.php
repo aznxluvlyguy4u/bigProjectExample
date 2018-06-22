@@ -99,6 +99,11 @@ class ViewMinimalParentDetails implements SqlViewInterface
      */
     private $historicLocationIds;
 
+    /**
+     * @var bool
+     * @JMS\Type("boolean")
+     */
+    private $isOwnHistoricAnimal;
 
     /**
      * @return string
@@ -401,5 +406,24 @@ class ViewMinimalParentDetails implements SqlViewInterface
         $this->historicLocationIds = $historicLocationIds;
         return $this;
     }
+
+    /**
+     * @return bool|null
+     */
+    public function isOwnHistoricAnimal(): ?bool
+    {
+        return $this->isOwnHistoricAnimal;
+    }
+
+    /**
+     * @param bool $isOwnHistoricAnimal
+     * @return ViewMinimalParentDetails
+     */
+    public function setIsOwnHistoricAnimal(bool $isOwnHistoricAnimal): ViewMinimalParentDetails
+    {
+        $this->isOwnHistoricAnimal = $isOwnHistoricAnimal;
+        return $this;
+    }
+
 
 }
