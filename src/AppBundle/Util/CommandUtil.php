@@ -245,6 +245,13 @@ class CommandUtil
         return $this->outputInterface;
     }
 
+    /**
+     * @return InputInterface
+     */
+    public function getInputInterface() {
+        return $this->inputInterface;
+    }
+
 
     /**
      * @param $line
