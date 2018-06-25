@@ -4,8 +4,10 @@
 namespace AppBundle\Service\Twinfield;
 
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRuleSelection;
+use AppBundle\Enumerator\TwinfieldEnums;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;
 use AppBundle\Service\ControllerServiceBase;
@@ -40,8 +42,19 @@ class TwinfieldInvoiceService extends ControllerServiceBase
     /** @var TwinfieldCustomerService */
     private $twinfieldCustomerService;
 
-    public function instantiateServices( $twinfieldUser, $twinfieldPassword, $twinfieldOrganisation, TwinfieldCustomerService $twinfieldCustomerService) {
-        $this->authenticationConnection = new WebservicesAuthentication($twinfieldUser, $twinfieldPassword, $twinfieldOrganisation);
+    public function instantiateServices(
+        $twinfieldUser,
+        $twinfieldPassword,
+        $twinfieldOrganisation,
+        TwinfieldCustomerService $twinfieldCustomerService
+    ) {
+        $this->authenticationConnection =
+            new WebservicesAuthentication(
+            $twinfieldUser,
+            $twinfieldPassword,
+            $twinfieldOrganisation
+            );
+
         $this->invoiceConnection = new InvoiceApiConnector($this->authenticationConnection);
         $this->twinfieldCustomerService = $twinfieldCustomerService;
         $this->user = $twinfieldUser;
@@ -51,46 +64,61 @@ class TwinfieldInvoiceService extends ControllerServiceBase
 
     public function sendInvoiceToTwinfield(Invoice $invoice) {
         /** @var Customer $customer */
-        $customer = $this->twinfieldCustomerService->getSingleCustomer($invoice->getCompanyDebtorNumber(), $invoice->getCompanyTwinfieldAdministrationCode());
+        $customer = $this->twinfieldCustomerService
+            ->getSingleCustomer(
+                $invoice->getCompanyDebtorNumber(),
+                $invoice->getCompanyTwinfieldAdministrationCode()
+            );
+        if (is_a($customer, JsonResponse::class)) {
+            return $customer;
+        }
         $customer->setCode($invoice->getCompanyDebtorNumber());
         $office = new Office();
         $office->setCode($invoice->getCompanyTwinfieldAdministrationCode());
         $twinfieldInvoice = new \PhpTwinfield\Invoice();
         $twinfieldInvoice->setInvoiceDate($invoice->getInvoiceDate());
-        $twinfieldInvoice->setCurrency("EUR");
-        $twinfieldInvoice->setInvoiceType("FACTUUR");
+        $twinfieldInvoice->setCurrency(TwinfieldEnums::CURRENCY_TYPE);
+        $twinfieldInvoice->setInvoiceType(TwinfieldEnums::INVOICE_TYPE);
         $twinfieldInvoice->setCustomer($customer);
         $twinfieldInvoice->setOffice($office);
-        $twinfieldInvoice->setStatus("concept");
-        $twinfieldInvoice->setPaymentMethod("cash");
+        $twinfieldInvoice->setStatus(TwinfieldEnums::INVOICE_STATUS);
+        $twinfieldInvoice->setPaymentMethod(TwinfieldEnums::PAYMENT_METHOD);
         /** @var InvoiceRuleSelection $selection */
         foreach ($invoice->getInvoiceRuleSelections() as $selection) {
-            $line = new InvoiceLine();
-            $line->setQuantity($selection->getAmount());
-            $line->setArticle($selection->getInvoiceRule()->getArticleCode());
-            switch ($selection->getInvoiceRule()->getVatPercentageRate()) {
-                case 0:
-                    $line->setVatCode("VN");
-                    break;
-
-                case 6:
-                    $line->setVatCode("VL");
-                    break;
-
-                case 21:
-                    $line->setVatCode("VH");
-                    break;
-            }
-            if ($selection->getInvoiceRule()->getSubArticleCode()) {
-                $line->setSubArticle($selection->getInvoiceRule()->getSubArticleCode());
-            }
-            $twinfieldInvoice->addLine($line);
+            $this->setupInvoiceLine($selection, $twinfieldInvoice);
         }
 
         try {
             return $this->invoiceConnection->send($twinfieldInvoice);
         } catch (Exception $e) {
-            return $e;
+            return [$e->getCode(), $e->getMessage()];
+        }
+    }
+
+    private function setupInvoiceLine(InvoiceRuleSelection $selection, \PhpTwinfield\Invoice $twinfieldInvoice) {
+        $line = new InvoiceLine();
+        $line->setQuantity($selection->getAmount());
+        $line->setArticle($selection->getInvoiceRule()->getArticleCode());
+        $this->setVatCode($selection, $line);
+        if ($selection->getInvoiceRule()->getSubArticleCode()) {
+            $line->setSubArticle($selection->getInvoiceRule()->getSubArticleCode());
+        }
+        $twinfieldInvoice->addLine($line);
+    }
+
+    private function setVatCode(InvoiceRuleSelection $selection, InvoiceLine $line) {
+        switch ($selection->getInvoiceRule()->getVatPercentageRate()) {
+            case 0:
+                $line->setVatCode(TwinfieldEnums::NO_VAT);
+                break;
+
+            case 6:
+                $line->setVatCode(TwinfieldEnums::LOW_VAT);
+                break;
+
+            case 21:
+                $line->setVatCode(TwinfieldEnums::HIGH_VAT);
+                break;
         }
     }
 
@@ -98,55 +126,4 @@ class TwinfieldInvoiceService extends ControllerServiceBase
         $this->authenticationConnection = new WebservicesAuthentication($this->user, $this->password, $this->organisation);
         $this->invoiceConnection = new InvoiceApiConnector($this->authenticationConnection);
     }
-
-    public function sendAllInvoicesToTwinfield($invoices) {
-        $resultSet = [];
-
-        /** @var Invoice $invoice */
-        foreach ($invoices as $invoice) {
-            /** @var Customer $customer */
-            $customer = $this->twinfieldCustomerService->getSingleCustomer($invoice->getCompanyDebtorNumber(), $invoice->getCompanyTwinfieldAdministrationCode());
-            $customer->setCode($invoice->getCompanyDebtorNumber());
-            $office = new Office();
-            $office->setCode($invoice->getCompanyTwinfieldAdministrationCode());
-            $twinfieldInvoice = new \PhpTwinfield\Invoice();
-            $twinfieldInvoice->setInvoiceDate($invoice->getInvoiceDate());
-            $twinfieldInvoice->setCurrency("EUR");
-            $twinfieldInvoice->setInvoiceType("FACTUUR");
-            $twinfieldInvoice->setCustomer($customer);
-            $twinfieldInvoice->setOffice($office);
-            $twinfieldInvoice->setStatus("concept");
-            $twinfieldInvoice->setPaymentMethod("cash");
-            /** @var InvoiceRuleSelection $selection */
-            foreach ($invoice->getInvoiceRuleSelections() as $selection) {
-                $line = new InvoiceLine();
-                $line->setQuantity($selection->getAmount());
-                $line->setArticle($selection->getInvoiceRule()->getArticleCode());
-                switch ($selection->getInvoiceRule()->getVatPercentageRate()) {
-                    case 0:
-                        $line->setVatCode("VN");
-                        break;
-
-                    case 6:
-                        $line->setVatCode("VL");
-                        break;
-
-                    case 21:
-                        $line->setVatCode("VH");
-                        break;
-                }
-                if ($selection->getInvoiceRule()->getSubArticleCode()) {
-                    $line->setSubArticle($selection->getInvoiceRule()->getSubArticleCode());
-                }
-                $twinfieldInvoice->addLine($line);
-            }
-            $resultSet[] = $twinfieldInvoice;
-        }
-        try {
-            return $this->invoiceConnection->sendAll($resultSet);
-        } catch (Exception $e) {
-            return $e;
-        }
-    }
-
 }
