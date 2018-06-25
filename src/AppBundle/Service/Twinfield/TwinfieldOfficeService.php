@@ -19,11 +19,11 @@ class TwinfieldOfficeService
         $this->officeConnection = new OfficeApiConnector($this->authenticationConnection);
     }
 
-    public function getAllOffices() {
+    public function getAllOfficesResponse() {
         return ResultUtil::successResult($this->officeConnection->listAll());
     }
 
-    public function getAllOfficesNotResponse() {
+    public function getAllOffices() {
         return $this->officeConnection->listAll();
     }
 }
