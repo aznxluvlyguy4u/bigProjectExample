@@ -247,7 +247,6 @@ class InvoiceService extends ControllerServiceBase
             if ($company->getBillingAddress()->getState() != null && $company->getBillingAddress()->getState() != "") {
                 $invoice->setCompanyAddressState($company->getBillingAddress()->getState());
             }
-            $company->getTwinfieldCode() != null ? $invoice->setCompanyTwinfieldCode($company->getTwinfieldCode()) : null;
             $company->addInvoice($invoice);
             if ($company->getTwinfieldOfficeCode()) {
                 $invoice->setCompanyTwinfieldAdministrationCode($company->getTwinfieldOfficeCode());
@@ -386,10 +385,10 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
             $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
             $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
-            if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
+            if (!empty($newCompany->getBillingAddress()->getAddressNumberSuffix())) {
                 $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
             }
-            if ($newCompany->getBillingAddress()->getState() != null && $newCompany->getBillingAddress()->getState() != "") {
+            if (!empty($newCompany->getBillingAddress()->getState())) {
                 $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
             }
             $this->getManager()->persist($newCompany);
