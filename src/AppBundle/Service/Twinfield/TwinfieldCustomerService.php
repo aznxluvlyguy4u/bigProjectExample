@@ -36,13 +36,16 @@ class TwinfieldCustomerService
             }
             return ResultUtil::successResult($resultWithCode);
         } catch (Exception $e) {
-            return $e;
+            return ResultUtil::errorResult($e->getMessage(), $e->getCode());
         }
     }
 
     public function getSingleCustomer($debtorNumber, $administrationCode) {
-        $offices = $this->twinfieldOfficeService->getAllOfficesNotResponse();
+        $offices = $this->twinfieldOfficeService->getAllOffices();
         $customerOffice = new Office();
+        if (!is_a($offices, Office::class[])) {
+            return ResultUtil::errorResult("Twinfield call failed", 404);
+        }
         /** @var Office $office */
         foreach ($offices as $office) {
             if ($office->getCode() == $administrationCode) {
@@ -53,7 +56,7 @@ class TwinfieldCustomerService
         try {
             return $this->customerConnection->get($debtorNumber, $customerOffice);
         } catch (Exception $e) {
-            return $e;
+            return [$e->getCode(), $e->getMessage()];
         }
     }
 
