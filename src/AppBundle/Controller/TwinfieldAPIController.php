@@ -67,6 +67,6 @@ class TwinfieldAPIController extends APIController implements TwinfieldAPIContro
      * @return JsonResponse
      */
     public function getOffices(Request $request) {
-        return $this->get(TwinfieldOfficeService::class)->getAllOffices();
+        return $this->get(TwinfieldOfficeService::class)->getAllOfficesResponse();
     }
 }
