@@ -18,6 +18,7 @@ use AppBundle\Service\Report\AnnualActiveLivestockReportService;
 use AppBundle\Service\Report\AnnualTe100UbnProductionReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
+use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\OffspringReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
@@ -83,8 +84,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      */
     private $pedigreeCertificateReportService;
 
+    /**
+     * @var LiveStockReportService
+     */
+    private $liveStockReportService;
+
     public function __construct(
-        AnnualActiveLivestockReportService $livestockReportService,
+        AnnualActiveLivestockReportService $annualActiveLivestockReportService,
         AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService,
         FertilizerAccountingReport $accountingReport,
         InbreedingCoefficientReportService $coefficientReportService,
@@ -93,10 +99,11 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         OffspringReportService $offspringReportService,
         PedigreeRegisterOverviewReportService $pedigreeRegisterOverviewReportService,
         PedigreeCertificateReportService $pedigreeCertificateReportService,
+        LiveStockReportService $liveStockReportService,
         EntityManager $em)
     {
         $this->em = $em;
-        $this->livestockReport = $livestockReportService;
+        $this->livestockReport = $annualActiveLivestockReportService;
         $this->annualTe = $annualTe100UbnProductionReportService;
         $this->fertilizerAccounting = $accountingReport;
         $this->coefficientReportService = $coefficientReportService;
@@ -105,6 +112,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->offspringReportService = $offspringReportService;
         $this->pedigreeRegisterOverviewReportService = $pedigreeRegisterOverviewReportService;
         $this->pedigreeCertificateReportService = $pedigreeCertificateReportService;
+        $this->liveStockReportService = $liveStockReportService;
     }
 
     public function process(PsrMessage $message, PsrContext $context)
@@ -127,11 +135,11 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
              */
             $pdfWorker = $worker->getReportWorker();
             $reportType = $pdfWorker->getReportType();
+            $fileType = $pdfWorker->getFileType();
 
             switch($reportType) {
                 case ReportType::PEDIGREE_CERTIFICATE:
                     {
-                        $fileType = $data['extension'];
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $data = $this->pedigreeCertificateReportService->getReport($worker->getOwner(), $worker->getLocation(), $fileType, $content);
                         break;
@@ -139,14 +147,12 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                 case ReportType::PEDIGREE_REGISTER_OVERVIEW:
                     {
                         $type = $data['type'];
-                        $fileType = $data['extension'];
                         $uploadToS3 = $data['upload_to_s3'];
                         $data = $this->pedigreeRegisterOverviewReportService->request($type, $fileType, $uploadToS3);
                         break;
                     }
                 case ReportType::OFF_SPRING:
                     {
-
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
                         $data = $this->offspringReportService->getReport($worker->getOwner(), $worker->getLocation(), $content, $concatValueAndAccuracy);
@@ -190,6 +196,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $year = $data['year'];
                         $pedigreeActiveEndDateLimit = new \DateTime($data['pedigree_active_end_date']);
                         $data = $this->annualTe->getReport($year, $pedigreeActiveEndDateLimit);
+                        break;
+                    }
+                case ReportType::LIVE_STOCK:
+                    {
+                        $content = new ArrayCollection(json_decode($data['content'], true));
+                        $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
+                        $data = $this->liveStockReportService->getReport($worker->getOwner(), $worker->getLocation(), $fileType, $content, $concatValueAndAccuracy);
                         break;
                     }
             }

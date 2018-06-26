@@ -15,4 +15,5 @@ class ReportType
     const ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES = 7;
     const OFF_SPRING = 8;
     const PEDIGREE_REGISTER_OVERVIEW = 9;
+    const LIVE_STOCK = 10;
 }

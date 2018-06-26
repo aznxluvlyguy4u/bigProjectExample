@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Service\ReportService;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -180,7 +181,7 @@ class ReportAPIController extends APIController {
    */
   public function getLiveStockReport(Request $request)
   {
-      return $this->get('app.report.livestock')->getReport($request);
+      return $this->get(ReportService::class)->createLiveStockReport($request);
   }
 
 

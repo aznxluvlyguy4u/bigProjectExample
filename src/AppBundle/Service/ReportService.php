@@ -76,6 +76,40 @@ class ReportService
 
     /**
      * @param Request $request
+     * @return JsonResponse
+     */
+    public function createLiveStockReport(Request $request): JsonResponse
+    {
+        $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::false);
+        $content = RequestUtil::getContentAsArray($request);
+
+        //Validate if given ULNs are correct AND there should at least be one ULN given
+        $ulnValidator = new UlnValidator($this->em, $content, true, null, $this->userService->getSelectedLocation($request));
+        if(!$ulnValidator->getIsUlnSetValid()) {
+            return $ulnValidator->createArrivalJsonErrorResponse();
+        }
+
+        try {
+            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::LIVE_STOCK);
+            if(!$workerId)
+                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
+
+            $this->producer->sendCommand('generate_pdf',
+                [
+                    'worker_id' => $workerId,
+                    'content' => JSON::encode($content->toArray()),
+                    'concat_value_and_accuracy' => $concatValueAndAccuracy,
+                ]
+            );
+        }
+        catch(\Exception $e) {
+            dump($e);
+        }
+        return ResultUtil::successResult('OK');
+    }
+
+    /**
+     * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      * @throws \Exception
      */

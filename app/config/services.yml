@@ -586,6 +586,7 @@ services:
           - '@AppBundle\Service\Report\OffspringReportService'
           - '@AppBundle\Service\Report\PedigreeRegisterOverviewReportService'
           - '@app.report.pedigree_certificates'
+          - '@app.report.livestock'
           - '@doctrine.orm.entity_manager'
         tags:
           - {name: 'enqueue.client.processor'}

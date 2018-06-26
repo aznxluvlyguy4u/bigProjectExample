@@ -10,6 +10,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\DisplayUtil;
@@ -21,7 +23,7 @@ use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Symfony\Component\HttpFoundation\Request;
 
-class LiveStockReportService extends ReportServiceWithBreedValuesBase implements ReportServiceInterface
+class LiveStockReportService extends ReportServiceWithBreedValuesBase
 {
     const TITLE = 'livestock_report';
     const TWIG_FILE = 'Report/livestock_report.html.twig';
@@ -36,21 +38,27 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase implements
 
 
     /**
-     * @param Request $request
-     * @return JsonResponse
+     * @param Person $person
+     * @param Location $location
+     * @param $fileType
+     * @param $concatValueAndAccuracy
+     * @param $content
+     * @return JsonResponse|bool
      */
-    public function getReport(Request $request)
+    public function getReport(Person $person, Location $location, $fileType, $concatValueAndAccuracy, $content)
     {
-        $this->client = $this->userService->getAccountOwner($request);
-        $this->location = $this->userService->getSelectedLocation($request);
-        $this->fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
-        $this->concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT);
-        $this->content = RequestUtil::getContentAsArray($request, true, null);
+        $this->client = $person;
+        $this->location = $location;
+        $this->fileType = $fileType;
+        $this->concatValueAndAccuracy = $concatValueAndAccuracy;
+        $this->content = $content;
 
         $validationResult = $this->validateContent();
         if ($validationResult instanceof JsonResponse) { return $validationResult; }
 
-        $this->setLocaleFromQueryParameter($request);
+        $this->translator->setLocale('nl');
+
+        //$this->setLocaleFromQueryParameter($request);
 
         $this->filename = $this->trans(self::FILE_NAME_REPORT_TYPE).'_'.$this->location->getUbn();
         $this->folderName = self::FOLDER_NAME;
