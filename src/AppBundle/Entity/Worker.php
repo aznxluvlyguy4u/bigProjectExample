@@ -43,7 +43,7 @@ class Worker
      * @var Person
      *
      * @ORM\ManyToOne(targetEntity="Person", inversedBy="workers", fetch="LAZY")
-     * @ORM\JoinColumn(name="owner_id", nullable=true, referencedColumnName="id", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="action_by_id", nullable=true, referencedColumnName="id", onDelete="CASCADE")
      */
     private $actionBy;
 
