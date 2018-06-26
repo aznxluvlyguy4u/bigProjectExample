@@ -33,17 +33,19 @@ class PedigreeCertificateReportService extends ReportServiceBase
 
     /**
      * @param Person $person
-     * @param Location $selectedLocation
+     * @param Location|null $selectedLocation
      * @param $fileType
      * @param ArrayCollection $content
-     * @param string $locale
+     * @param $locale
      * @return JsonResponse
      */
-    public function getReport(Person $person, Location $selectedLocation, $fileType, ArrayCollection $content, $locale)
+    public function getReport(Person $person, $selectedLocation, $fileType, ArrayCollection $content, $locale)
     {
+        $client = null;
         $location = null;
         if(!AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
             $location = $selectedLocation;
+            $client = $person;
         }
 
         //Validate if given ULNs are correct AND there should at least be one ULN given
@@ -57,7 +59,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
 
         $this->setLocaleFromQueryParameter($locale);
 
-        $this->reportResults = new PedigreeCertificates($this->em, $content, $person, $location);
+        $this->reportResults = new PedigreeCertificates($this->em, $content, $client, $location);
 
         //$fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
 

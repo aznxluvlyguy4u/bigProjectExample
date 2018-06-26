@@ -37,7 +37,7 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase
      * @param string $locale
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
-    function getReport(Person $person, Location $location, ArrayCollection $content, $concatValueAndAccuracy, $locale)
+    function getReport(Person $person, ?Location $location, ArrayCollection $content, $concatValueAndAccuracy, $locale)
     {
         try {
 

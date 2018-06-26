@@ -21,6 +21,7 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 
 class LiveStockReportService extends ReportServiceWithBreedValuesBase
@@ -43,9 +44,10 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
      * @param $fileType
      * @param $concatValueAndAccuracy
      * @param $content
+     * @param $locale
      * @return JsonResponse|bool
      */
-    public function getReport(Person $person, Location $location, $fileType, $concatValueAndAccuracy, $content, $locale)
+    public function getReport(Person $person, Location $location, $fileType, $concatValueAndAccuracy, ArrayCollection $content, $locale)
     {
         $this->client = $person;
         $this->location = $location;

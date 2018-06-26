@@ -573,6 +573,7 @@ services:
           - '@enqueue.producer'
           - '@doctrine.orm.entity_manager'
           - '@app.user'
+          - '@translator'
 
 
     AppBundle\Processor\ReportProcessor:

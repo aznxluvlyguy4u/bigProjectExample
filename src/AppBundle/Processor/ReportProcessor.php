@@ -142,7 +142,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                 case ReportType::PEDIGREE_CERTIFICATE:
                     {
                         $content = new ArrayCollection(json_decode($data['content'], true));
-                        $data = $this->pedigreeCertificateReportService->getReport($worker->getOwner(), $worker->getLocation(), $fileType, $content, $locale);
+                        $data = $this->pedigreeCertificateReportService->getReport($worker->getActionBy(), $worker->getLocation(), $fileType, $content, $locale);
                         break;
                     }
                 case ReportType::PEDIGREE_REGISTER_OVERVIEW:
@@ -156,7 +156,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     {
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
-                        $data = $this->offspringReportService->getReport($worker->getOwner(), $worker->getLocation(), $content, $concatValueAndAccuracy, $locale);
+                        $data = $this->offspringReportService->getReport($worker->getActionBy(), $worker->getLocation(), $content, $concatValueAndAccuracy, $locale);
                         break;
                     }
                 case ReportType::ANIMALS_OVERVIEW:
@@ -171,7 +171,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     {
                         $content = json_decode($data['content'], true);
                         $content = new ArrayCollection($content);
-                        $data = $this->coefficientReportService->getReport($worker->getOwner(), $content, $fileType, $locale);
+                        $data = $this->coefficientReportService->getReport($worker->getActionBy(), $content, $fileType, $locale);
                         break;
                     }
                 case ReportType::FERTILIZER_ACCOUNTING:
@@ -203,7 +203,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     {
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
-                        $data = $this->liveStockReportService->getReport($worker->getOwner(), $worker->getLocation(), $fileType, $content, $concatValueAndAccuracy, $locale);
+                        $data = $this->liveStockReportService->getReport($worker->getActionBy(), $worker->getLocation(), $fileType, $concatValueAndAccuracy, $content, $locale);
                         break;
                     }
             }

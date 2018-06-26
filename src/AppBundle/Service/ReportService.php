@@ -78,7 +78,8 @@ class ReportService
         $date = new \DateTime();//now
         $interval = new \DateInterval('P7D');// P[eriod] 1 M[onth]
         $date->sub($interval);
-        $isAdminEnvironment = $this->userService->getAccountOwner() == null;
+        $accountOwner = $this->userService->getAccountOwner($request);
+        $isAdminEnvironment = $accountOwner == null;
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('actionBy', $this->userService->getUser()))
@@ -89,7 +90,7 @@ class ReportService
         if($isAdminEnvironment)
             $criteria->where(Criteria::expr()->isNull('owner'));
         else
-            $criteria->where(Criteria::expr()->eq('owner', $this->userService->getAccountOwner()));
+            $criteria->where(Criteria::expr()->eq('owner', $accountOwner));
 
         $workers = $this->em->getRepository(Worker::class)->matching($criteria);
         return $workers->toArray();
@@ -101,14 +102,8 @@ class ReportService
      */
     public function createLiveStockReport(Request $request): JsonResponse
     {
-        $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::false);
+        $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
         $content = RequestUtil::getContentAsArray($request);
-
-        //Validate if given ULNs are correct AND there should at least be one ULN given
-        $ulnValidator = new UlnValidator($this->em, $content, true, null, $this->userService->getSelectedLocation($request));
-        if(!$ulnValidator->getIsUlnSetValid()) {
-            return $ulnValidator->createArrivalJsonErrorResponse();
-        }
 
         try {
             $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::LIVE_STOCK);
@@ -437,7 +432,8 @@ class ReportService
         try {
             $worker = new Worker();
             $worker->setWorkerType($workerType);
-            $worker->setOwner($this->userService->getAccountOwner());
+            $accountOwner = $this->userService->getAccountOwner($request);
+            $worker->setOwner($accountOwner);
             $worker->setActionBy($this->userService->getUser());
             $worker->setLocation($this->userService->getSelectedLocation($request));
 
