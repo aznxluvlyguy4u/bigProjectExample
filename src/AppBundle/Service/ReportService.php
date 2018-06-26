@@ -24,6 +24,7 @@ use Enqueue\Client\ProducerInterface;
 use Enqueue\Util\JSON;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class ReportService
 {
@@ -43,16 +44,28 @@ class ReportService
     private $userService;
 
     /**
-     * PdfReportService constructor.
+     * @var TranslatorInterface
+     */
+    private $translator;
+
+    /**
+     * ReportService constructor.
      * @param ProducerInterface $producer
      * @param EntityManager $em
      * @param UserService $userService
+     * @param TranslatorInterface $translator
      */
-    public function __construct(ProducerInterface $producer, EntityManager $em, UserService $userService)
+    public function __construct(
+        ProducerInterface $producer,
+        EntityManager $em,
+        UserService $userService,
+        TranslatorInterface $translator
+    )
     {
         $this->em = $em;
         $this->producer = $producer;
         $this->userService = $userService;
+        $this->translator = $translator;
     }
 
     /**
@@ -115,8 +128,6 @@ class ReportService
      */
     public function createPedigreeCertificates(Request $request): JsonResponse
     {
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
-
         $content = RequestUtil::getContentAsArray($request);
 
         //Validate if given ULNs are correct AND there should at least be one ULN given
@@ -322,8 +333,6 @@ class ReportService
     {
         $referenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
 
-        $extension = strtolower($request->query->get(QueryParameter::FILE_TYPE_QUERY));
-
         try {
             $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::FERTILIZER_ACCOUNTING);
             if(!$workerId)
@@ -425,9 +434,12 @@ class ReportService
 
             $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
 
+            $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
+
             $pdfWorker = new ReportWorker();
             $pdfWorker->setReportType($reportType);
             $pdfWorker->setWorker($worker);
+            $pdfWorker->setLocale($language);
             $pdfWorker->setFileType($fileType);
             $pdfWorker->setHash(hash('sha256', $workerType.$reportType.$this->userService->getUser()->getId()));
             $this->em->persist($pdfWorker);

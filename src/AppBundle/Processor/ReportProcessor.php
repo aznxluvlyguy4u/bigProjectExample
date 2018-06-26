@@ -136,12 +136,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             $pdfWorker = $worker->getReportWorker();
             $reportType = $pdfWorker->getReportType();
             $fileType = $pdfWorker->getFileType();
+            $locale = $pdfWorker->getLocale();
 
             switch($reportType) {
                 case ReportType::PEDIGREE_CERTIFICATE:
                     {
                         $content = new ArrayCollection(json_decode($data['content'], true));
-                        $data = $this->pedigreeCertificateReportService->getReport($worker->getOwner(), $worker->getLocation(), $fileType, $content);
+                        $data = $this->pedigreeCertificateReportService->getReport($worker->getOwner(), $worker->getLocation(), $fileType, $content, $locale);
                         break;
                     }
                 case ReportType::PEDIGREE_REGISTER_OVERVIEW:
@@ -155,7 +156,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     {
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
-                        $data = $this->offspringReportService->getReport($worker->getOwner(), $worker->getLocation(), $content, $concatValueAndAccuracy);
+                        $data = $this->offspringReportService->getReport($worker->getOwner(), $worker->getLocation(), $content, $concatValueAndAccuracy, $locale);
                         break;
                     }
                 case ReportType::ANIMALS_OVERVIEW:
@@ -163,20 +164,20 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
                         $pedigreeActiveEndDateLimit = new \DateTime($data['pedigree_active_end_date_limit']);
                         $activeUbnReferenceDate = new \DateTime($data['active_ubn_reference_date_string']);
-                        $data = $this->animalsOverviewReportService->getReport($concatValueAndAccuracy, $pedigreeActiveEndDateLimit, $activeUbnReferenceDate);
+                        $data = $this->animalsOverviewReportService->getReport($concatValueAndAccuracy, $pedigreeActiveEndDateLimit, $activeUbnReferenceDate, $locale);
                         break;
                     }
                 case ReportType::INBREEDING_COEFFICIENT:
                     {
                         $content = json_decode($data['content'], true);
                         $content = new ArrayCollection($content);
-                        $data = $this->coefficientReportService->getReport($worker->getOwner(), $content, $data['extension']);
+                        $data = $this->coefficientReportService->getReport($worker->getOwner(), $content, $fileType, $locale);
                         break;
                     }
                 case ReportType::FERTILIZER_ACCOUNTING:
                     {
                         $date = new \DateTime($data['reference_date']);
-                        $data = $this->fertilizerAccounting->getReport($worker->getLocation(), $date, $data['extension']);
+                        $data = $this->fertilizerAccounting->getReport($worker->getLocation(), $date, $fileType);
                         break;
                     }
                 case ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES:
@@ -195,14 +196,14 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     {
                         $year = $data['year'];
                         $pedigreeActiveEndDateLimit = new \DateTime($data['pedigree_active_end_date']);
-                        $data = $this->annualTe->getReport($year, $pedigreeActiveEndDateLimit);
+                        $data = $this->annualTe->getReport($year, $pedigreeActiveEndDateLimit, $locale);
                         break;
                     }
                 case ReportType::LIVE_STOCK:
                     {
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
-                        $data = $this->liveStockReportService->getReport($worker->getOwner(), $worker->getLocation(), $fileType, $content, $concatValueAndAccuracy);
+                        $data = $this->liveStockReportService->getReport($worker->getOwner(), $worker->getLocation(), $fileType, $content, $concatValueAndAccuracy, $locale);
                         break;
                     }
             }

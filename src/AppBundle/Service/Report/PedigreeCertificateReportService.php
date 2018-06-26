@@ -36,9 +36,10 @@ class PedigreeCertificateReportService extends ReportServiceBase
      * @param Location $selectedLocation
      * @param $fileType
      * @param ArrayCollection $content
+     * @param string $locale
      * @return JsonResponse
      */
-    public function getReport(Person $person, Location $selectedLocation, $fileType, ArrayCollection $content)
+    public function getReport(Person $person, Location $selectedLocation, $fileType, ArrayCollection $content, $locale)
     {
         $location = null;
         if(!AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
@@ -54,8 +55,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
         $this->filename = $this->translate(self::FILENAME);
         $this->folderName = self::FOLDER_NAME;
 
-        $this->translator->setLocale('nl');
-        //$this->setLocaleFromQueryParameter($request);
+        $this->setLocaleFromQueryParameter($locale);
 
         $this->reportResults = new PedigreeCertificates($this->em, $content, $person, $location);
 

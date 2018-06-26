@@ -93,10 +93,11 @@ class InbreedingCoefficientReportService extends ReportServiceBase
      * @param Person $person
      * @param $content
      * @param $fileType
+     * @param $locale
      * @return JsonResponse
      * @throws \Exception
      */
-    public function getReport(Person $person, $content, $fileType)
+    public function getReport(Person $person, $content, $fileType, $locale)
     {
         $this->content = $content;
         $this->client = $person;
@@ -106,8 +107,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
             return ResultUtil::errorResult('',Response::HTTP_BAD_REQUEST, $this->inputErrors);
         }
 
-        $this->translator->setLocale('nl');
-        //$this->setLocaleFromQueryParameter($request);
+        $this->setLocaleFromQueryParameter($locale);
 
         $this->setFileName();
         $this->setFolderName();

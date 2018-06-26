@@ -28,11 +28,11 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
     /**
      * @inheritDoc
      */
-    function getReport($year, $pedigreeActiveEndDateLimit)
+    function getReport($year, $pedigreeActiveEndDateLimit, $locale)
     {
         try {
 
-            //$this->setLocaleFromQueryParameter($request);
+            $this->setLocaleFromQueryParameter($locale);
 
             $this->filename = $this->translate(self::FILENAME).'_'.$year;
             $this->extension = FileType::CSV;

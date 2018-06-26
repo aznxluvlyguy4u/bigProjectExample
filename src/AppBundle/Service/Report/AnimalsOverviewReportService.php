@@ -30,18 +30,19 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase
     /**
      * @inheritDoc
      */
-    function getReport($concatValueAndAccuracy, \DateTime $pedigreeActiveEndDateLimit, \DateTime $activeUbnReferenceDate)
+    function getReport(
+        $concatValueAndAccuracy,
+        \DateTime $pedigreeActiveEndDateLimit,
+        \DateTime $activeUbnReferenceDate,
+        $locale
+    )
     {
-        if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
-
         try {
 
             $this->concatValueAndAccuracy = $concatValueAndAccuracy;
             $activeUbnReferenceDateString = $activeUbnReferenceDate->format('Y-m-d');
 
-            //$this->setLocaleFromQueryParameter($request);
+            $this->setLocaleFromQueryParameter($locale);
 
             ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 

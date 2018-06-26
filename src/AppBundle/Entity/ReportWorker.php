@@ -59,6 +59,13 @@ class ReportWorker
      */
     private $hash;
 
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=false)
+     */
+    private $locale;
+
     public function __construct()
     {
     }
@@ -170,4 +177,24 @@ class ReportWorker
         $this->hash = $hash;
         return $this;
     }
+
+    /**
+     * @return string
+     */
+    public function getLocale(): string
+    {
+        return $this->locale;
+    }
+
+    /**
+     * @param string $locale
+     * @return ReportWorker
+     */
+    public function setLocale(string $locale): ReportWorker
+    {
+        $this->locale = $locale;
+        return $this;
+    }
+
+
 }

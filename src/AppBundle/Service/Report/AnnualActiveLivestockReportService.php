@@ -30,23 +30,7 @@ class AnnualActiveLivestockReportService extends ReportServiceBase
      */
     function getReport($referenceYear)
     {
-//        if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-//            return AdminValidator::getStandardErrorResponse();
-//        }
-
         try {
-
-//            $referenceYear = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR, null);
-//            if (!$referenceYear) {
-//                $referenceYear = DateUtil::currentYear() - 1;
-//            }
-//
-//            if (!Validator::isYear($referenceYear)) {
-//                return ResultUtil::errorResult('Invalid reference year', Response::HTTP_PRECONDITION_REQUIRED);
-//            }
-
-            //ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
-
             $this->setFileNameValues($referenceYear);
 
             return $this->generateCsvFileBySqlQuery(

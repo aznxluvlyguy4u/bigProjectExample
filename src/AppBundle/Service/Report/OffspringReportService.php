@@ -30,9 +30,14 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase
     const ADMIN_PROCESS_TIME_LIMIT_IN_MINUTES = 3;
 
     /**
-     * @inheritDoc
+     * @param Person $person
+     * @param Location $location
+     * @param ArrayCollection $content
+     * @param $concatValueAndAccuracy
+     * @param string $locale
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
-    function getReport(Person $person, Location $location, ArrayCollection $content, $concatValueAndAccuracy)
+    function getReport(Person $person, Location $location, ArrayCollection $content, $concatValueAndAccuracy, $locale)
     {
         try {
 
@@ -55,7 +60,7 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase
 
             $this->concatValueAndAccuracy = $concatValueAndAccuracy;
 
-            //$this->setLocaleFromQueryParameter($request);
+            $this->setLocaleFromQueryParameter($locale);
 
             $sql = $this->breedValuesReportQueryGenerator->createOffspringReportQuery(
                 $this->concatValueAndAccuracy,
