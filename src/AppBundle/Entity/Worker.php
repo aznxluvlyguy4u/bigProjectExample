@@ -34,10 +34,18 @@ class Worker
     /**
      * @var Person
      *
-     * @ORM\ManyToOne(targetEntity="Person", inversedBy="workers", fetch="LAZY")
+     * @ORM\ManyToOne(targetEntity="Person", fetch="LAZY")
      * @ORM\JoinColumn(name="owner_id", nullable=true, referencedColumnName="id", onDelete="CASCADE")
      */
     private $owner;
+
+    /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person", inversedBy="workers", fetch="LAZY")
+     * @ORM\JoinColumn(name="owner_id", nullable=true, referencedColumnName="id", onDelete="CASCADE")
+     */
+    private $actionBy;
 
     /**
      * @var Location
@@ -136,6 +144,24 @@ class Worker
     public function setOwner($owner)
     {
         $this->owner = $owner;
+        return $this;
+    }
+
+    /**
+     * @return Person
+     */
+    public function getActionBy()
+    {
+        return $this->actionBy;
+    }
+
+    /**
+     * @param $actionBy
+     * @return Worker
+     */
+    public function setActionBy($actionBy)
+    {
+        $this->actionBy = $actionBy;
         return $this;
     }
 
