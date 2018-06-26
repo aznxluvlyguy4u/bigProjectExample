@@ -10,6 +10,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
@@ -17,6 +18,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\ParentInterface;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
@@ -39,6 +41,9 @@ class AnimalDetailsOutput extends OutputServiceBase
     /** @var BreedValuesOutput */
     private $breedValuesOutput;
 
+    /** @var array */
+    private $ownerUbns;
+
     /**
      * @required
      *
@@ -52,22 +57,24 @@ class AnimalDetailsOutput extends OutputServiceBase
 
     /**
      * @param Animal $animal
+     * @param Person $user
      * @param bool $includeAscendants
      * @return array
      * @throws \Exception
      */
-    public function getForUserEnvironment(Animal $animal, $includeAscendants = false)
+    public function getForUserEnvironment(Animal $animal, Person $user, $includeAscendants = false)
     {
-        return $this->get($animal, $includeAscendants);
+        return $this->get($animal, $user, $includeAscendants);
     }
 
     /**
      * @param Animal $animal
+     * @param Person $user
      * @param boolean $includeAscendants
      * @return array
      * @throws \Exception
      */
-    public function get(Animal $animal, $includeAscendants = false)
+    public function get(Animal $animal, Person $user, $includeAscendants = false)
     {
         $replacementString = "";
 
@@ -222,16 +229,22 @@ class AnimalDetailsOutput extends OutputServiceBase
             "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
             "declare_log" => $this->getLog($animal, $animal->getLocation(), $replacementString),
-            "children" => $this->getChildren($animal),
+            "children" => $this->getChildren($animal, $user),
             "production" => $production,
         ];
 
         if ($fatherId) {
-            $result["parent_father"] = $viewMinimalParentDetails->get($fatherId);
+            /** @var ViewMinimalParentDetails $viewParentFather */
+            $viewParentFather = $viewMinimalParentDetails->get($fatherId);
+            $result["parent_father"] = $viewParentFather;
+            $result["parent_father"]->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentFather, $user));
         }
 
         if ($motherId) {
-            $result["parent_mother"] = $viewMinimalParentDetails->get($motherId);
+            /** @var ViewMinimalParentDetails $viewParentMother */
+            $viewParentMother = $viewMinimalParentDetails->get($motherId);
+            $result["parent_mother"] = $viewParentMother;
+            $result["parent_mother"]->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentMother, $user));
         }
 
         if ($includeAscendants) {
@@ -247,11 +260,51 @@ class AnimalDetailsOutput extends OutputServiceBase
             ];
         }
 
+        $this->ownerUbns = null;
+
         return $result;
     }
 
 
-    private function getChildren(Animal $animal)
+    /**
+     * @param Person $user
+     * @return array|string[]
+     */
+    private function getOwnerUbns(Person $user)
+    {
+        if (!$this->ownerUbns) {
+            if ($user instanceof Client) {
+                $this->ownerUbns = $user->getUbns();
+            } else {
+                $this->ownerUbns = [];
+            }
+        }
+
+        return $this->ownerUbns;
+    }
+
+
+    /**
+     * @param ViewMinimalParentDetails $minimalParentDetails
+     * @param Person $user
+     * @return bool
+     */
+    private function isHistoricAnimalOfOwner(ViewMinimalParentDetails $minimalParentDetails, Person $user)
+    {
+        if (!($user instanceof Client)) {
+            return false;
+        }
+
+        foreach ($minimalParentDetails->getHistoricUbnsAsArray() as $historicUbn) {
+            if (in_array($historicUbn, $this->getOwnerUbns($user))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    private function getChildren(Animal $animal, Person $user)
     {
         /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
         $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
@@ -272,6 +325,8 @@ class AnimalDetailsOutput extends OutputServiceBase
                     $childArray[JsonInputConstant::PRODUCTION] = $viewDetails->getProduction();
                     $childArray[JsonInputConstant::N_LING] = $viewDetails->getNLing();
                     $childArray[JsonInputConstant::GENERAL_APPEARANCE] = $viewDetails->getGeneralAppearance();
+                    $childArray[JsonInputConstant::IS_PUBLIC] = $viewDetails->isPublic();
+                    $childArray[JsonInputConstant::IS_OWN_HISTORIC_ANIMAL] = $this->isHistoricAnimalOfOwner($viewDetails, $user);
                 }
 
                 switch ($genderPrimaryParent) {
