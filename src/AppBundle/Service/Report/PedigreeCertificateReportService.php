@@ -8,6 +8,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
@@ -31,16 +32,16 @@ class PedigreeCertificateReportService extends ReportServiceBase
 
 
     /**
-     * @param Client $client
+     * @param Person $person
      * @param Location $selectedLocation
      * @param $fileType
      * @param ArrayCollection $content
      * @return JsonResponse
      */
-    public function getReport(Client $client, Location $selectedLocation, $fileType, ArrayCollection $content)
+    public function getReport(Person $person, Location $selectedLocation, $fileType, ArrayCollection $content)
     {
         $location = null;
-        if(!AdminValidator::isAdmin($client, AccessLevelType::ADMIN)) {
+        if(!AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
             $location = $selectedLocation;
         }
 
@@ -56,7 +57,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
         $this->translator->setLocale('nl');
         //$this->setLocaleFromQueryParameter($request);
 
-        $this->reportResults = new PedigreeCertificates($this->em, $content, $client, $location);
+        $this->reportResults = new PedigreeCertificates($this->em, $content, $person, $location);
 
         //$fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
 

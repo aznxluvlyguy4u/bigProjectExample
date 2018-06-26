@@ -7,6 +7,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\Locale;
@@ -89,15 +90,16 @@ class InbreedingCoefficientReportService extends ReportServiceBase
 
 
     /**
-     * @param Client $client
+     * @param Person $person
      * @param $content
      * @param $fileType
      * @return JsonResponse
+     * @throws \Exception
      */
-    public function getReport(Client $client, $content, $fileType)
+    public function getReport(Person $person, $content, $fileType)
     {
         $this->content = $content;
-        $this->client = $client;
+        $this->client = $person;
         $this->retrieveAndValidateInput();
 
         if (count($this->inputErrors) > 0) {
@@ -110,7 +112,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         $this->setFolderName();
 
         $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->translator, $this->ramData, $this->ewesData,
-            $this->generationOfAscendants, $client);
+            $this->generationOfAscendants, $person);
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();

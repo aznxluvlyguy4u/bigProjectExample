@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\ReportWorker;
 use AppBundle\Entity\Worker;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
@@ -65,7 +66,7 @@ class ReportService
         $interval = new \DateInterval('P1M');// P[eriod] 1 M[onth]
         $date->sub($interval);
         $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('owner', $this->userService->getAccountOwner()))
+            ->where(Criteria::expr()->eq('owner', $this->userService->getUser()))
             ->where(Criteria::expr()->gte('startedAt', $date))
             ->orderBy(['startedAt' => Criteria::DESC])
         ;
@@ -91,16 +92,14 @@ class ReportService
         }
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT);
+            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::PEDIGREE_CERTIFICATE);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand('generate_pdf',
                 [
                     'worker_id' => $workerId,
-                    'pdf_type' => ReportType::PEDIGREE_CERTIFICATE,
                     'content' => JSON::encode($content->toArray()),
-                    'extension' => $fileType,
                 ]
             );
         }
@@ -121,20 +120,17 @@ class ReportService
         }
 
         $type = $request->query->get(QueryParameter::TYPE_QUERY);
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
         $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, !false);
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT);
+            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::PEDIGREE_REGISTER_OVERVIEW);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand('generate_pdf',
                 [
                     'worker_id' => $workerId,
-                    'pdf_type' => ReportType::OFF_SPRING,
                     'type' => $type,
-                    'extension' => $fileType,
                     'upload_to_s3' => $uploadToS3,
                 ]
             );
@@ -164,14 +160,13 @@ class ReportService
         $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT);
+            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::OFF_SPRING);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand('generate_pdf',
                 [
                     'worker_id' => $workerId,
-                    'pdf_type' => ReportType::OFF_SPRING,
                     'content' => JSON::encode($content->toArray()),
                     'concat_value_and_accuracy' => $concatValueAndAccuracy,
                 ]
@@ -203,14 +198,13 @@ class ReportService
         }
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT);
+            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand('generate_pdf',
                 [
                     'worker_id' => $workerId,
-                    'pdf_type' => ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES,
                     'year' => $referenceYear
                 ]
             );
@@ -228,11 +222,11 @@ class ReportService
      */
     public function createAnimalsOverviewReport(Request $request)
     {
-        if(!AdminValidator::isAdmin($this->userService->getAccountOwner(), AccessLevelType::ADMIN)) {
+        if(!AdminValidator::isAdmin($this->userService->getUser(), AccessLevelType::ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, self::CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT);
+        $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
         $pedigreeActiveEndDateLimit = RequestUtil::getDateQuery($request,QueryParameter::PEDIGREE_ACTIVE_END_DATE, new \DateTime());
         $activeUbnReferenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
 
@@ -241,14 +235,13 @@ class ReportService
         }
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT);
+            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::ANIMALS_OVERVIEW);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand('generate_pdf',
                 [
                     'worker_id' => $workerId,
-                    'pdf_type' => ReportType::ANIMALS_OVERVIEW,
                     'concat_value_and_accuracy' => $concatValueAndAccuracy,
                     'pedigree_active_end_date_limit' => $pedigreeActiveEndDateLimit->format('y-m-d H:i:s'),
                     'active_ubn_reference_date_string' => $activeUbnReferenceDate->format('y-m-d H:i:s'),
@@ -268,19 +261,16 @@ class ReportService
     public function createInbreedingCoefficientsReport(Request $request)
     {
         $content = RequestUtil::getContentAsArray($request);
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT);
+            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::INBREEDING_COEFFICIENT);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand('generate_pdf',
                 [
                     'worker_id' => $workerId,
-                    'pdf_type' => ReportType::INBREEDING_COEFFICIENT,
                     'content' => JSON::encode($content->toArray()),
-                    'extension' => $fileType
                 ]
             );
         }
@@ -301,16 +291,14 @@ class ReportService
         $extension = strtolower($request->query->get(QueryParameter::FILE_TYPE_QUERY));
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT);
+            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::FERTILIZER_ACCOUNTING);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand('generate_pdf',
                 [
                     'worker_id' => $workerId,
-                    'pdf_type' => ReportType::FERTILIZER_ACCOUNTING,
                     'reference_date' => $referenceDate->format('y-m-d H:i:s'),
-                    'extension' => $extension
                 ]
             );
         }
@@ -338,14 +326,13 @@ class ReportService
         $pedigreeActiveEndDateLimit = RequestUtil::getDateQuery($request,QueryParameter::END_DATE, new \DateTime());
 
         try {
-            $workerId = $this->createWorker(null, WorkerType::REPORT);
+            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::ANNUAL_TE_100);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand('generate_pdf',
                 [
                     'worker_id' => $workerId,
-                    'pdf_type' => ReportType::ANNUAL_TE_100,
                     'year' => $year,
                     'pedigree_active_end_date' => $pedigreeActiveEndDateLimit->format('y-m-d H:i:s'),
                 ]
@@ -377,14 +364,13 @@ class ReportService
         }
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT);
+            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::ANNUAL_ACTIVE_LIVE_STOCK);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand('generate_pdf',
                 [
                     'worker_id' => $workerId,
-                    'pdf_type' => ReportType::ANNUAL_ACTIVE_LIVE_STOCK,
                     'year' => $referenceYear
                 ]
             );
@@ -395,13 +381,22 @@ class ReportService
         return ResultUtil::successResult('OK');
     }
 
-    private function createWorker(Request $request, int $workerType) : ?int
+    private function createWorker(Request $request, int $workerType, int $reportType) : ?int
     {
         try {
             $worker = new Worker();
             $worker->setWorkerType($workerType);
-            $worker->setOwner($this->userService->getAccountOwner());
+            $worker->setOwner($this->userService->getUser());
             $worker->setLocation($this->userService->getSelectedLocation($request));
+
+            $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
+
+            $pdfWorker = new ReportWorker();
+            $pdfWorker->setReportType($reportType);
+            $pdfWorker->setWorker($worker);
+            $pdfWorker->setFileType($fileType);
+            $pdfWorker->setHash(hash('sha256', $workerType.$reportType.$this->userService->getUser()->getId()));
+            $this->em->persist($pdfWorker);
             $this->em->persist($worker);
             $this->em->flush();
 

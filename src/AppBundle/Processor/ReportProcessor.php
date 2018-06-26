@@ -114,25 +114,25 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             $data = JSON::decode($message->getBody());
 
             $workerId = $data['worker_id'];
-            $pdfType = $data['pdf_type'];
 
+            /**
+             * @var Worker $worker
+             */
             $worker = $this->em->getRepository(Worker::class)->find($workerId);
             if (!$worker)
                 return self::REJECT;
 
-            $pdfWorker = new ReportWorker();
-            $pdfWorker->setReportType($pdfType);
-            $pdfWorker->setWorker($worker);
-            $pdfWorker->setFileType('CSV');
-            if(array_key_exists('extension', $data))
-                $pdfWorker->setFileType($data['extension']);
+            /**
+             * @var ReportWorker $pdfWorker
+             */
+            $pdfWorker = $worker->getReportWorker();
+            $reportType = $pdfWorker->getReportType();
 
-            switch($pdfType) {
+            switch($reportType) {
                 case ReportType::PEDIGREE_CERTIFICATE:
                     {
                         $fileType = $data['extension'];
                         $content = new ArrayCollection(json_decode($data['content'], true));
-                        $pdfWorker->setHash(hash('sha256', 'test'));
                         $data = $this->pedigreeCertificateReportService->getReport($worker->getOwner(), $worker->getLocation(), $fileType, $content);
                         break;
                     }
@@ -141,7 +141,6 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $type = $data['type'];
                         $fileType = $data['extension'];
                         $uploadToS3 = $data['upload_to_s3'];
-                        $pdfWorker->setHash(hash('sha256', 'test'));
                         $data = $this->pedigreeRegisterOverviewReportService->request($type, $fileType, $uploadToS3);
                         break;
                     }
@@ -150,7 +149,6 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
-                        $pdfWorker->setHash(hash('sha256', 'test'));
                         $data = $this->offspringReportService->getReport($worker->getOwner(), $worker->getLocation(), $content, $concatValueAndAccuracy);
                         break;
                     }
@@ -159,7 +157,6 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
                         $pedigreeActiveEndDateLimit = new \DateTime($data['pedigree_active_end_date_limit']);
                         $activeUbnReferenceDate = new \DateTime($data['active_ubn_reference_date_string']);
-                        $pdfWorker->setHash(hash('sha256', 'test'));
                         $data = $this->animalsOverviewReportService->getReport($concatValueAndAccuracy, $pedigreeActiveEndDateLimit, $activeUbnReferenceDate);
                         break;
                     }
@@ -167,28 +164,24 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     {
                         $content = json_decode($data['content'], true);
                         $content = new ArrayCollection($content);
-                        $pdfWorker->setHash(hash('sha256', 'test'));
                         $data = $this->coefficientReportService->getReport($worker->getOwner(), $content, $data['extension']);
                         break;
                     }
                 case ReportType::FERTILIZER_ACCOUNTING:
                     {
                         $date = new \DateTime($data['reference_date']);
-                        $pdfWorker->setHash(hash('sha256', 'test'));
                         $data = $this->fertilizerAccounting->getReport($worker->getLocation(), $date, $data['extension']);
                         break;
                     }
                 case ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES:
                     {
                         $year = $data['year'];
-                        $pdfWorker->setHash(hash('sha256', $year));
                         $data = $this->annualActiveLivestockRamMatesReportService->getReport($year);
                         break;
                     }
                 case ReportType::ANNUAL_ACTIVE_LIVE_STOCK:
                     {
                         $year = $data['year'];
-                        $pdfWorker->setHash(hash('sha256', $year));
                         $data = $this->livestockReport->getReport($year);
                         break;
                     }
@@ -196,7 +189,6 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     {
                         $year = $data['year'];
                         $pedigreeActiveEndDateLimit = new \DateTime($data['pedigree_active_end_date']);
-                        $pdfWorker->setHash(hash('sha256', 'test'));
                         $data = $this->annualTe->getReport($year, $pedigreeActiveEndDateLimit);
                         break;
                     }
@@ -219,11 +211,16 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             }
         }
 
-        if($worker) {
-            $worker->setFinishedAt(new \DateTime());
-            $this->em->persist($worker);
+        try {
+            if ($worker) {
+                $worker->setFinishedAt(new \DateTime());
+                $this->em->persist($worker);
+            }
+            $this->em->flush();
         }
-        $this->em->flush();
+        catch (\Exception $e) {
+            //Database Exception
+        }
         return self::ACK;
     }
 

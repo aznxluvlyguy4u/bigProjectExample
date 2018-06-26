@@ -7,6 +7,7 @@ namespace AppBundle\Service\Report;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
@@ -31,7 +32,7 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase
     /**
      * @inheritDoc
      */
-    function getReport(Client $client, Location $location, ArrayCollection $content, $concatValueAndAccuracy)
+    function getReport(Person $person, Location $location, ArrayCollection $content, $concatValueAndAccuracy)
     {
         try {
 
@@ -39,7 +40,7 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase
             $this->content = $content;
             $parentsArray = $this->content->get(JsonInputConstant::PARENTS);
 
-            if(AdminValidator::isAdmin($client, AccessLevelType::ADMIN)) {
+            if(AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
                 ProcessUtil::setTimeLimitInMinutes(self::ADMIN_PROCESS_TIME_LIMIT_IN_MINUTES);
 
                 $animalIds = $this->getAnyAnimalIdsFromBody($parentsArray);
