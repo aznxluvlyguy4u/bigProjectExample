@@ -63,13 +63,21 @@ class ReportService
     public function getReports(Request $request): ?array
     {
         $date = new \DateTime();//now
-        $interval = new \DateInterval('P1M');// P[eriod] 1 M[onth]
+        $interval = new \DateInterval('P7D');// P[eriod] 1 M[onth]
         $date->sub($interval);
+        $isAdminEnvironment = $this->userService->getAccountOwner() == null;
+
         $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('owner', $this->userService->getUser()))
+            ->where(Criteria::expr()->eq('actionBy', $this->userService->getUser()))
             ->where(Criteria::expr()->gte('startedAt', $date))
             ->orderBy(['startedAt' => Criteria::DESC])
         ;
+
+        if($isAdminEnvironment)
+            $criteria->where(Criteria::expr()->isNull('owner'));
+        else
+            $criteria->where(Criteria::expr()->eq('owner', $this->userService->getAccountOwner()));
+
         $workers = $this->em->getRepository(Worker::class)->matching($criteria);
         return $workers->toArray();
     }
@@ -115,8 +123,6 @@ class ReportService
      */
     public function createPedigreeCertificates(Request $request): JsonResponse
     {
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
-
         $content = RequestUtil::getContentAsArray($request);
 
         //Validate if given ULNs are correct AND there should at least be one ULN given
@@ -420,7 +426,8 @@ class ReportService
         try {
             $worker = new Worker();
             $worker->setWorkerType($workerType);
-            $worker->setOwner($this->userService->getUser());
+            $worker->setOwner($this->userService->getAccountOwner());
+            $worker->setActionBy($this->userService->getUser());
             $worker->setLocation($this->userService->getSelectedLocation($request));
 
             $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
