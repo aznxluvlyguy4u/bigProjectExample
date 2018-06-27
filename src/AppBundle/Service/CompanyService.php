@@ -121,7 +121,9 @@ class CompanyService extends AuthServiceBase
 
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
-        $address->setState($contentAddress['state']);
+        if (isset($contentAddress['state'])) {
+            $address->setState($contentAddress['state']);
+        }
         $address->setCountry(ArrayUtil::get('country', $contentAddress, self::DEFAULT_COUNTRY));
 
         // Create Billing Address
@@ -189,7 +191,9 @@ class CompanyService extends AuthServiceBase
 
             $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
             $locationAddress->setCity($contentLocationAddress['city']);
-            $locationAddress->setState($contentLocationAddress['state']);
+            if (isset($contentLocationAddress['state'])) {
+                $locationAddress->setState($contentLocationAddress['state']);
+            }
             $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
 
             $location = new Location();
@@ -348,7 +352,9 @@ class CompanyService extends AuthServiceBase
 
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
-        $address->setState($contentAddress['state']);
+        if (isset($contentAddress['state'])) {
+            $address->setState($contentAddress['state']);
+        }
         $address->setCountry(ArrayUtil::get('country', $contentAddress, self::DEFAULT_COUNTRY));
 
         // Update Billing Address
@@ -443,7 +449,9 @@ class CompanyService extends AuthServiceBase
 
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
-                $locationAddress->setState($contentLocationAddress['state']);
+                if (isset($contentLocationAddress['state'])) {
+                    $locationAddress->setState($contentLocationAddress['state']);
+                }
                 $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
 
                 $this->getManager()->persist($location);
