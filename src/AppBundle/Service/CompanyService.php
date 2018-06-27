@@ -148,7 +148,6 @@ class CompanyService extends AuthServiceBase
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
-        $company->setTwinfieldCode($content->get("twinfield_code"));
         $company->setTwinfieldOfficeCode($content->get("twinfield_administration_code"));
         if($content->get('subscription_date')) {
             $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
@@ -377,7 +376,6 @@ class CompanyService extends AuthServiceBase
         $company->setDebtorNumber($content->get('debtor_number'));
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
-        $company->setTwinfieldCode($content->get("twinfield_code"));
         $company->setTwinfieldOfficeCode($content->get("twinfield_administration_code"));
         if ($company->getAnimalHealthSubscription() != $content->get('animal_health_subscription')) {
             $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
