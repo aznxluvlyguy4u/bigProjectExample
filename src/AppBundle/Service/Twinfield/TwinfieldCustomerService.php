@@ -36,7 +36,7 @@ class TwinfieldCustomerService
             }
             return ResultUtil::successResult($resultWithCode);
         } catch (Exception $e) {
-            return ResultUtil::errorResult($e->getMessage(), $e->getCode());
+            return ResultUtil::errorResult($e, 500);
         }
     }
 
@@ -56,7 +56,7 @@ class TwinfieldCustomerService
         try {
             return $this->customerConnection->get($debtorNumber, $customerOffice);
         } catch (Exception $e) {
-            return [$e->getCode(), $e->getMessage()];
+            return $e;
         }
     }
 

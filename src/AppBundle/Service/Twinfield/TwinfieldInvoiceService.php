@@ -91,7 +91,7 @@ class TwinfieldInvoiceService extends ControllerServiceBase
         try {
             return $this->invoiceConnection->send($twinfieldInvoice);
         } catch (Exception $e) {
-            return [$e->getCode(), $e->getMessage()];
+            return $e;
         }
     }
 
