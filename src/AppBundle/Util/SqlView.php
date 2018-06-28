@@ -224,7 +224,7 @@ class SqlView
                 a.breed_code,
                 a.scrapie_genotype,
                 a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter,
-                COALESCE(comp.is_reveal_historic_animals, FALSE) as is_public,
+                COALESCE(comp.is_reveal_historic_animals, TRUE) as is_public,
                 residences.historic_ubns,
                 residences.historic_location_ids
               FROM animal a
