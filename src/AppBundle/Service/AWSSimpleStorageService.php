@@ -140,7 +140,7 @@ class AWSSimpleStorageService
             'Key' => $key,
         ]);
 
-        $request = $this->s3Service->createPresignedRequest($command, '+20 minutes');
+        $request = $this->s3Service->createPresignedRequest($command, '+1day');
         $url = (string) $request->getUri(); //The S3 download link including the accesstoken
 
         return $url;
