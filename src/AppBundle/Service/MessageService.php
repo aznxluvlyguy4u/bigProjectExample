@@ -6,6 +6,8 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Message;
+use AppBundle\Enumerator\InvoiceMessages;
+use AppBundle\Enumerator\MessageType;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ResultUtil;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,11 +32,27 @@ class MessageService extends ControllerServiceBase
         $newResults = [];
         foreach($results as $result) {
             $result['type_message'] = $this->translator->trans($result['type']);
+            $result['url'] = $this->getMessageUrlByType($result['type']);
             $newResults[] = $result;
         }
         return ResultUtil::successResult($newResults);
     }
 
+    private function getMessageUrlByType($type) {
+        switch ($type) {
+            case MessageType::DECLARE_ARRIVAL: {
+                return 'main/arrival/history';
+            }
+            case MessageType::DECLARE_DEPART: {
+                return 'main/departure/history';
+            }
+            case InvoiceMessages::NEW_INVOICE_TYPE: {
+                return 'main/invoices/overview';
+            }
+            default:
+                return 'main/messages';
+        }
+    }
 
     /**
      * @param Request $request
