@@ -76,7 +76,7 @@ class ReportService
     public function getReports(Request $request): ?array
     {
         $date = new \DateTime();//now
-        $interval = new \DateInterval('P7D');// P[eriod] 1 M[onth]
+        $interval = new \DateInterval('P1D');// P[eriod] 1 M[onth]
         $date->sub($interval);
         $accountOwner = $this->userService->getAccountOwner($request);
         $isAdminEnvironment = $accountOwner == null;
