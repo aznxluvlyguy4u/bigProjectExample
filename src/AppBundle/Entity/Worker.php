@@ -82,12 +82,32 @@ abstract class Worker
     /**
      * @var string
      *
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      * @JMS\Groups({
      *     "BASIC"
      * })
      */
     private $errorMessage;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
+     */
+    private $debugErrorCode;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="text", nullable=true)
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
+     */
+    private $debugErrorMessage;
 
     /**
      * @var DateTime
@@ -237,6 +257,42 @@ abstract class Worker
     public function setErrorMessage($value)
     {
         $this->errorMessage = $value;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDebugErrorCode(): string
+    {
+        return $this->debugErrorCode;
+    }
+
+    /**
+     * @param string $debugErrorCode
+     * @return Worker
+     */
+    public function setDebugErrorCode(string $debugErrorCode): Worker
+    {
+        $this->debugErrorCode = $debugErrorCode;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDebugErrorMessage(): string
+    {
+        return $this->debugErrorMessage;
+    }
+
+    /**
+     * @param string $debugErrorMessage
+     * @return Worker
+     */
+    public function setDebugErrorMessage(string $debugErrorMessage): Worker
+    {
+        $this->debugErrorMessage = $debugErrorMessage;
         return $this;
     }
 
