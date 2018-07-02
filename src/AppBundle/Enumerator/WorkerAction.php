@@ -6,5 +6,5 @@ namespace AppBundle\Enumerator;
 
 class WorkerAction
 {
-    const GENERATE_REPORT = 0;
+    const GENERATE_REPORT = 'generate_report';
 }
