@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\WorkerType;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -10,18 +11,9 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\ReportWorkerRepository")
  * @package AppBundle\Entity
  */
-class ReportWorker
+class ReportWorker extends Worker
 {
     use EntityClassInfo;
-
-    /**
-     * @var integer
-     *
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     */
-    private $id;
 
     /**
      * @var int
@@ -45,14 +37,6 @@ class ReportWorker
     private $downloadUrl;
 
     /**
-     * @var Worker
-     *
-     * @ORM\OneToOne(targetEntity="Worker", inversedBy="pdfWorker")
-     * @ORM\JoinColumn(name="worker_id", nullable=false, referencedColumnName="id", onDelete="CASCADE")
-     */
-    private $worker;
-
-    /**
      * @var string
      *
      * @ORM\Column(type="string", nullable=false)
@@ -68,24 +52,8 @@ class ReportWorker
 
     public function __construct()
     {
-    }
-
-    /**
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * @param int $id
-     * @return ReportWorker
-     */
-    public function setId($id)
-    {
-        $this->id = $id;
-        return $this;
+        parent::__construct();
+        $this->setWorkerType(WorkerType::REPORT);
     }
 
     /**
@@ -121,24 +89,6 @@ class ReportWorker
     public function setFileType($fileType)
     {
         $this->fileType = $fileType;
-        return $this;
-    }
-
-    /**
-     * @return Worker
-     */
-    public function getWorker()
-    {
-        return $this->worker;
-    }
-
-    /**
-     * @param $worker
-     * @return ReportWorker
-     */
-    public function setWorker($worker)
-    {
-        $this->worker = $worker;
         return $this;
     }
 

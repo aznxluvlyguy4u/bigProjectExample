@@ -5,13 +5,27 @@ namespace AppBundle\Entity;
 use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class Worker
  * @ORM\Entity(repositoryClass="AppBundle\Entity\WorkerRepository")
+ * @ORM\InheritanceType("JOINED")
+ * @ORM\DiscriminatorColumn(name="type", type="string")
+ * @ORM\DiscriminatorMap(
+ *   {
+ *      "ReportWorker" = "ReportWorker"
+ *   }
+ * )
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                      "ReportWorker" : "AppBundle\Entity\ReportWorker"
+ *                      },
+ *     groups = {
+ *     "BASIC"
+ * })
  * @package AppBundle\Entity
  */
-class Worker
+abstract class Worker
 {
     use EntityClassInfo;
 
@@ -83,11 +97,6 @@ class Worker
      */
     private $finishedAt;
 
-    /**
-     * @ORM\OneToOne(targetEntity="ReportWorker", mappedBy="worker", fetch="EAGER")
-     */
-    private $reportWorker;
-
     public function __construct()
     {
         $this->startedAt = new \DateTime();
@@ -123,7 +132,7 @@ class Worker
      * @param $workerType
      * @return Worker
      */
-    public function setWorkerType($workerType)
+    protected function setWorkerType($workerType)
     {
         $this->workerType = $workerType;
         return $this;
@@ -162,24 +171,6 @@ class Worker
     public function setActionBy($actionBy)
     {
         $this->actionBy = $actionBy;
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getReportWorker()
-    {
-        return $this->reportWorker;
-    }
-
-    /**
-     * @param $worker
-     * @return $this
-     */
-    public function setReportWorker($worker)
-    {
-        $this->reportWorker = $worker;
         return $this;
     }
 
