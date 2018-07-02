@@ -52,12 +52,14 @@ class ReportWorkerRepository extends BaseRepository {
     function isSimilarNonExpiredReportAlreadyInProgress($hash)
     {
         $qb = $this->getManager()->createQueryBuilder();
-        $workerInProgress = $qb->select('w')
+        $qb->select('w')
             ->from(ReportWorker::class, 'w')
-            ->where($qb->expr()->eq('w.hash', $hash))
+            ->where($qb->expr()->eq('w.hash', "'".$hash."'"))
             ->andWhere($qb->expr()->isNull('w.finishedAt'))
             ->andWhere($qb->expr()->gte('w.startedAt', DateUtil::getQueryBuilderFormat(ReportService::getMaxNonExpiredDate())))
         ;
+
+        $workerInProgress = $qb->getQuery()->getResult();
 
         return !empty($workerInProgress);
     }
