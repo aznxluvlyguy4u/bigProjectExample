@@ -5,8 +5,8 @@ namespace AppBundle\Controller;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Service\Twinfield\ExternalProviderCustomerService;
-use AppBundle\Service\Twinfield\ExternalProviderOfficeService;
+use AppBundle\Service\ExternalProvider\ExternalProviderCustomerService;
+use AppBundle\Service\ExternalProvider\ExternalProviderOfficeService;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
