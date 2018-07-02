@@ -15,6 +15,7 @@ use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\OffspringReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
+use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Enqueue\Client\CommandSubscriberInterface;
@@ -22,6 +23,7 @@ use Enqueue\Util\JSON;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProcessor;
+use Symfony\Component\Debug\Exception\FatalThrowableError;
 use Symfony\Component\HttpFoundation\Response;
 
 class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
@@ -202,14 +204,16 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             }
             else {
                 $worker->setErrorCode($data->getStatusCode());
-                $worker->setErrorMessage($arrayData['result']['message']);
+                $worker->setErrorMessage(ResultUtil::getMessageStringFromErrorResult($arrayData));
             }
             $this->em->persist($worker);
         }
-        catch(\Exception $e) {
+        catch(\Throwable $e){
             if($worker) {
-                $worker->setErrorCode($e->getCode());
-                $worker->setErrorMessage($e->getMessage());
+                $worker->setDebugErrorCode($e->getCode());
+                $worker->setDebugErrorMessage($e->getMessage());
+                $worker->setErrorCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+                $worker->setErrorMessage('SOMETHING WENT WRONG');
             }
         }
 

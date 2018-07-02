@@ -134,6 +134,33 @@ class ResultUtil
 
 
     /**
+     * @param array $arrayData
+     * @return string
+     */
+    public static function getMessageStringFromErrorResult(array $arrayData): string
+    {
+        $results = $arrayData[JsonInputConstant::RESULT];
+        if (key_exists(Constant::MESSAGE_NAMESPACE, $results)) {
+            $message = $results[Constant::MESSAGE_NAMESPACE];
+            if (key_exists(Constant::DATA, $results)) {
+                $message .= $results[Constant::DATA];
+            }
+            return $message;
+        }
+
+        $message = '';
+        $prefix = '';
+        foreach ($results as $result) {
+            if (key_exists(Constant::MESSAGE_NAMESPACE, $results)) {
+                $message .= $prefix . $results[Constant::MESSAGE_NAMESPACE];
+                $prefix = '  ';
+            }
+        }
+        return $message;
+    }
+
+
+    /**
      * @return JsonResponse
      */
     public static function unauthorized()

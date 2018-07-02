@@ -100,7 +100,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     public function getReport(Person $person, $content, $fileType, $locale)
     {
         $this->content = $content;
-        $this->client = $person;
+        $this->client = $person instanceof Client ? $person : null;
         $this->retrieveAndValidateInput();
 
         if (count($this->inputErrors) > 0) {
@@ -113,7 +113,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         $this->setFolderName();
 
         $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->translator, $this->ramData, $this->ewesData,
-            $this->generationOfAscendants, $person);
+            $this->generationOfAscendants, $this->client);
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
@@ -345,7 +345,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
 
         //Check ownership if not admin
 
-        if (!AdminValidator::isAdmin($this->client, AccessLevelType::ADMIN)) {
+        if ($this->client instanceof Client) {
             $clientId = $this->client->getId();
             foreach ($this->ewesData as $ulnString => $eweData)
             if ($clientId !== $eweData['owner_id']) {
