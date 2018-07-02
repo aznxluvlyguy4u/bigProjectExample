@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Service\ReportService;
 use AppBundle\Util\DateUtil;
 use Doctrine\Common\Collections\Criteria;
 
@@ -22,9 +23,6 @@ class ReportWorkerRepository extends BaseRepository {
             return [];
         }
 
-        $date = new \DateTime();//now
-        $interval = new \DateInterval('P1D');// P[eriod] 1 D[ay]
-        $date->sub($interval);
         $isAdminEnvironment = $accountOwner == null;
 
         $qb = $this->getManager()->createQueryBuilder();
@@ -33,7 +31,7 @@ class ReportWorkerRepository extends BaseRepository {
             ->where(
                 $qb->expr()->eq('w.actionBy', $user->getId())
             )
-            ->andWhere($qb->expr()->gte('w.startedAt', DateUtil::getQueryBuilderFormat($date)))
+            ->andWhere($qb->expr()->gte('w.startedAt', DateUtil::getQueryBuilderFormat(ReportService::getMaxNonExpiredDate())))
             ->orderBy('w.startedAt', Criteria::DESC)
         ;
 
@@ -43,5 +41,24 @@ class ReportWorkerRepository extends BaseRepository {
             $qb->andWhere($qb->expr()->eq('w.owner', $accountOwner->getId()));
 
         return $qb->getQuery()->getResult();
+    }
+
+
+    /**
+     * @param string $hash
+     * @return bool
+     * @throws \Exception
+     */
+    function isSimilarNonExpiredReportAlreadyInProgress($hash)
+    {
+        $qb = $this->getManager()->createQueryBuilder();
+        $workerInProgress = $qb->select('w')
+            ->from(ReportWorker::class, 'w')
+            ->where($qb->expr()->eq('w.hash', $hash))
+            ->andWhere($qb->expr()->isNull('w.finishedAt'))
+            ->andWhere($qb->expr()->gte('w.startedAt', DateUtil::getQueryBuilderFormat(ReportService::getMaxNonExpiredDate())))
+        ;
+
+        return !empty($workerInProgress);
     }
 }

@@ -107,7 +107,7 @@ class ReportService
         try {
             $reportType = ReportType::LIVE_STOCK;
 
-            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
 
@@ -149,7 +149,7 @@ class ReportService
         try {
             $reportType = ReportType::PEDIGREE_CERTIFICATE;
 
-            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
 
@@ -187,7 +187,7 @@ class ReportService
         try {
             $reportType = ReportType::PEDIGREE_REGISTER_OVERVIEW;
 
-            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
 
@@ -232,7 +232,7 @@ class ReportService
         try {
             $reportType = ReportType::OFF_SPRING;
 
-            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
 
@@ -278,7 +278,7 @@ class ReportService
         try {
             $reportType = ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES;
 
-            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
 
@@ -325,7 +325,7 @@ class ReportService
         try {
             $reportType = ReportType::ANIMALS_OVERVIEW;
 
-            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
 
@@ -361,7 +361,7 @@ class ReportService
         try {
             $reportType = ReportType::INBREEDING_COEFFICIENT;
 
-            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
 
@@ -395,7 +395,7 @@ class ReportService
         try {
             $reportType = ReportType::FERTILIZER_ACCOUNTING;
 
-            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
 
@@ -439,7 +439,7 @@ class ReportService
         try {
             $reportType = ReportType::ANNUAL_TE_100;
 
-            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
 
@@ -485,7 +485,7 @@ class ReportService
         try {
             $reportType = ReportType::ANNUAL_ACTIVE_LIVE_STOCK;
 
-            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
 
@@ -513,16 +513,11 @@ class ReportService
      * @return bool
      * @throws \Exception
      */
-    private function isSimilarReportAlreadyInProgress(Request $request, int $reportType, string $inputForHash): bool
+    private function isSimilarNonExpiredReportAlreadyInProgress(Request $request, int $reportType, string $inputForHash): bool
     {
         $reportWorkerHash = $this->getReportWorkerHash($request, $reportType, $inputForHash);
 
-        $workerInProgress = $this->em->getRepository(ReportWorker::class)->findOneBy([
-           'hash' => $reportWorkerHash,
-           'finishedAt' => null
-        ]);
-
-        return $workerInProgress !== null;
+        return $this->em->getRepository(ReportWorker::class)->isSimilarNonExpiredReportAlreadyInProgress($reportWorkerHash);
     }
 
     private function createWorker(Request $request, int $reportType, $inputForHash = '') : ?int
@@ -581,7 +576,7 @@ class ReportService
             $language
         ;
 
-        return $inputForHash . $metaDataForHash;
+        return hash('sha256', $inputForHash . $metaDataForHash);
     }
 
 
@@ -601,5 +596,18 @@ class ReportService
     {
         $message = $this->translator->trans('A SIMILAR REPORT IS ALREADY BEING GENERATED');
         return ResultUtil::errorResult($message, Response::HTTP_PRECONDITION_REQUIRED);
+    }
+
+
+    /**
+     * @return \DateTime
+     * @throws \Exception
+     */
+    public static function getMaxNonExpiredDate(): \DateTime
+    {
+        $date = new \DateTime();//now
+        $interval = new \DateInterval('P1D');// P[eriod] 1 D[ay]
+        $date->sub($interval);
+        return $date;
     }
 }
