@@ -9,6 +9,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\ReportType;
+use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\RequestUtil;
@@ -109,7 +110,7 @@ class ReportService
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
-            $this->producer->sendCommand('generate_pdf',
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
                     'content' => JSON::encode($content->toArray()),
@@ -143,7 +144,7 @@ class ReportService
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
-            $this->producer->sendCommand('generate_pdf',
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
                     'content' => JSON::encode($content->toArray()),
@@ -174,7 +175,7 @@ class ReportService
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
-            $this->producer->sendCommand('generate_pdf',
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
                     'type' => $type,
@@ -211,7 +212,7 @@ class ReportService
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
-            $this->producer->sendCommand('generate_pdf',
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
                     'content' => JSON::encode($content->toArray()),
@@ -249,7 +250,7 @@ class ReportService
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
-            $this->producer->sendCommand('generate_pdf',
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
                     'year' => $referenceYear
@@ -286,7 +287,7 @@ class ReportService
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
-            $this->producer->sendCommand('generate_pdf',
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
                     'concat_value_and_accuracy' => $concatValueAndAccuracy,
@@ -314,7 +315,7 @@ class ReportService
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
-            $this->producer->sendCommand('generate_pdf',
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
                     'content' => JSON::encode($content->toArray()),
@@ -340,7 +341,7 @@ class ReportService
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
-            $this->producer->sendCommand('generate_pdf',
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
                     'reference_date' => $referenceDate->format('y-m-d H:i:s'),
@@ -375,7 +376,7 @@ class ReportService
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
-            $this->producer->sendCommand('generate_pdf',
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
                     'year' => $year,
@@ -413,7 +414,7 @@ class ReportService
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
-            $this->producer->sendCommand('generate_pdf',
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
                     'year' => $referenceYear

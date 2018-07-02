@@ -4,6 +4,7 @@ namespace AppBundle\Processor;
 
 use AppBundle\Entity\ReportWorker;
 use AppBundle\Enumerator\ReportType;
+use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Service\Report\AnimalsOverviewReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockReportService;
@@ -232,6 +233,6 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 
     public static function getSubscribedCommand()
     {
-        return 'generate_pdf';
+        return WorkerAction::GENERATE_REPORT;
     }
 }
