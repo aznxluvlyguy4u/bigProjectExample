@@ -15,7 +15,6 @@ use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\OffspringReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
-use AppBundle\Util\ProcessUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Enqueue\Client\CommandSubscriberInterface;
@@ -27,8 +26,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 {
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 20;
-
     /**
      * @var AnnualActiveLivestockReportService
      */
@@ -112,8 +109,6 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 
     public function process(PsrMessage $message, PsrContext $context)
     {
-        ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
-
         $worker = null;
         try {
             $data = JSON::decode($message->getBody());
