@@ -26,7 +26,7 @@ use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Service\ControllerServiceBase;
-use AppBundle\Service\Twinfield\TwinfieldInvoiceService;
+use AppBundle\Service\Twinfield\ExternalProviderInvoiceService;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -43,7 +43,7 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class BatchInvoiceService extends ControllerServiceBase
 {
-    /** @var TwinfieldInvoiceService */
+    /** @var ExternalProviderInvoiceService */
     private $twinfieldInvoiceService;
 
     /** @var FireBaseService */
@@ -51,7 +51,7 @@ class BatchInvoiceService extends ControllerServiceBase
 
     private $invoicesSendCounter = 0;
 
-    public function initializeServices(TwinfieldInvoiceService $invoiceService)
+    public function initializeServices(ExternalProviderInvoiceService $invoiceService)
     {
         $this->twinfieldInvoiceService = $invoiceService;
     }

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Service\Twinfield;
+namespace AppBundle\Service\ExternalProvider;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
@@ -25,7 +25,7 @@ use PhpTwinfield\Secure\WebservicesAuthentication;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Translation\TranslatorInterface;
 
-class TwinfieldInvoiceService extends ControllerServiceBase
+class ExternalProviderInvoiceService extends ControllerServiceBase
 {
     /** @var WebservicesAuthentication */
     private $authenticationConnection;
@@ -39,14 +39,14 @@ class TwinfieldInvoiceService extends ControllerServiceBase
      * @var InvoiceApiConnector
      */
     private $invoiceConnection;
-    /** @var TwinfieldCustomerService */
+    /** @var ExternalProviderCustomerService */
     private $twinfieldCustomerService;
 
     public function instantiateServices(
         $twinfieldUser,
         $twinfieldPassword,
         $twinfieldOrganisation,
-        TwinfieldCustomerService $twinfieldCustomerService
+        ExternalProviderCustomerService $twinfieldCustomerService
     ) {
         $this->authenticationConnection =
             new WebservicesAuthentication(

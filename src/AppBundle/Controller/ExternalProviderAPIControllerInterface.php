@@ -6,7 +6,7 @@ namespace AppBundle\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
 
-interface TwinfieldAPIControllerInterface
+interface ExternalProviderAPIControllerInterface
 {
     function getOffices(Request $request);
 

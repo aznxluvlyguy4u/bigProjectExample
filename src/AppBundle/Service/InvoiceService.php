@@ -25,7 +25,7 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Serializer\PreSerializer\InvoicePreSerializer;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Service\Invoice\InvoicePdfGeneratorService;
-use AppBundle\Service\Twinfield\TwinfieldInvoiceService;
+use AppBundle\Service\Twinfield\ExternalProviderInvoiceService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -46,7 +46,7 @@ class InvoiceService extends ControllerServiceBase
     private $ledgerCategoriesById;
     /** @var array */
     private $invalidLedgerCategoryIds;
-    /** @var TwinfieldInvoiceService */
+    /** @var ExternalProviderInvoiceService */
     private $twinfieldInvoiceService;
 
     /** @var  InvoicePdfGeneratorService */
@@ -66,7 +66,7 @@ class InvoiceService extends ControllerServiceBase
         $this->fireBaseService = $fireBaseService;
     }
 
-    public function instantiateServices(InvoicePdfGeneratorService $invoicePdfGeneratorService, TwinfieldInvoiceService $twinfieldInvoiceService) {
+    public function instantiateServices(InvoicePdfGeneratorService $invoicePdfGeneratorService, ExternalProviderInvoiceService $twinfieldInvoiceService) {
         $this->invoicePdfGeneratorService = $invoicePdfGeneratorService;
         $this->twinfieldInvoiceService = $twinfieldInvoiceService;
     }

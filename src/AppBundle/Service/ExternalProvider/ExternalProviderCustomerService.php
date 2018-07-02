@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Service\Twinfield;
+namespace AppBundle\Service\ExternalProvider;
 
 
 use AppBundle\Util\ResultUtil;
@@ -10,15 +10,15 @@ use PhpTwinfield\Exception;
 use PhpTwinfield\Office;
 use PhpTwinfield\Secure\WebservicesAuthentication;
 
-class TwinfieldCustomerService
+class ExternalProviderCustomerService
 {
     private $authenticationConnection;
     /** @var CustomerApiConnector */
     private $customerConnection;
-    /** @var TwinfieldOfficeService */
+    /** @var ExternalProviderOfficeService */
     private $twinfieldOfficeService;
 
-    public function instantiateServices( $twinfieldUser, $twinfieldPassword, $twinfieldOrganisation, TwinfieldOfficeService $officeService) {
+    public function instantiateServices($twinfieldUser, $twinfieldPassword, $twinfieldOrganisation, ExternalProviderOfficeService $officeService) {
         $this->authenticationConnection = new WebservicesAuthentication($twinfieldUser, $twinfieldPassword, $twinfieldOrganisation);
         $this->customerConnection = new CustomerApiConnector($this->authenticationConnection);
         $this->twinfieldOfficeService = $officeService;
@@ -44,7 +44,7 @@ class TwinfieldCustomerService
         $offices = $this->twinfieldOfficeService->getAllOffices();
         $customerOffice = new Office();
         if (!is_a($offices, 'array') || !is_a($offices[0], Office::class)) {
-            return ResultUtil::errorResult("Twinfield call failed", 404);
+            return ResultUtil::errorResult("ExternalProvider call failed", 404);
         }
         /** @var Office $office */
         foreach ($offices as $office) {

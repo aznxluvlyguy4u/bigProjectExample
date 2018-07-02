@@ -1,14 +1,14 @@
 <?php
 
 
-namespace AppBundle\Service\Twinfield;
+namespace AppBundle\Service\ExternalProvider;
 
 
 use AppBundle\Util\ResultUtil;
 use PhpTwinfield\ApiConnectors\OfficeApiConnector;
 use PhpTwinfield\Secure\WebservicesAuthentication;
 
-class TwinfieldOfficeService
+class ExternalProviderOfficeService
 {
     private $authenticationConnection;
     /** @var OfficeApiConnector $officeConnection */
