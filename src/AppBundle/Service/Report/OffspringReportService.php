@@ -5,13 +5,10 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\QueryParameter;
-use AppBundle\Util\ProcessUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
@@ -26,8 +23,6 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase
     const FILENAME = self::TITLE;
 
     const CONCAT_BREED_VALUE_AND_ACCURACY_BY_DEFAULT = false;
-
-    const ADMIN_PROCESS_TIME_LIMIT_IN_MINUTES = 3;
 
     /**
      * @param Person $person
@@ -46,8 +41,6 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase
             $parentsArray = $this->content->get(JsonInputConstant::PARENTS);
 
             if(AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
-                ProcessUtil::setTimeLimitInMinutes(self::ADMIN_PROCESS_TIME_LIMIT_IN_MINUTES);
-
                 $animalIds = $this->getAnyAnimalIdsFromBody($parentsArray);
                 $location = null;
 

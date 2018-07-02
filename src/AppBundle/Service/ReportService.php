@@ -5,7 +5,6 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ReportWorker;
-use AppBundle\Entity\Worker;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
@@ -92,7 +91,7 @@ class ReportService
         else
             $criteria->where(Criteria::expr()->eq('owner', $accountOwner));
 
-        $workers = $this->em->getRepository(Worker::class)->matching($criteria);
+        $workers = $this->em->getRepository(ReportWorker::class)->matching($criteria);
         return $workers->toArray();
     }
 
@@ -106,7 +105,7 @@ class ReportService
         $content = RequestUtil::getContentAsArray($request);
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::LIVE_STOCK);
+            $workerId = $this->createWorker($request, ReportType::LIVE_STOCK);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -140,7 +139,7 @@ class ReportService
         }
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::PEDIGREE_CERTIFICATE);
+            $workerId = $this->createWorker($request, ReportType::PEDIGREE_CERTIFICATE);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -171,7 +170,7 @@ class ReportService
         $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, !false);
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::PEDIGREE_REGISTER_OVERVIEW);
+            $workerId = $this->createWorker($request, ReportType::PEDIGREE_REGISTER_OVERVIEW);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -208,7 +207,7 @@ class ReportService
         $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::OFF_SPRING);
+            $workerId = $this->createWorker($request, ReportType::OFF_SPRING);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -246,7 +245,7 @@ class ReportService
         }
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES);
+            $workerId = $this->createWorker($request, ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -283,7 +282,7 @@ class ReportService
         }
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::ANIMALS_OVERVIEW);
+            $workerId = $this->createWorker($request, ReportType::ANIMALS_OVERVIEW);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -311,7 +310,7 @@ class ReportService
         $content = RequestUtil::getContentAsArray($request);
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::INBREEDING_COEFFICIENT);
+            $workerId = $this->createWorker($request, ReportType::INBREEDING_COEFFICIENT);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -337,7 +336,7 @@ class ReportService
         $referenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::FERTILIZER_ACCOUNTING);
+            $workerId = $this->createWorker($request, ReportType::FERTILIZER_ACCOUNTING);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -372,7 +371,7 @@ class ReportService
         $pedigreeActiveEndDateLimit = RequestUtil::getDateQuery($request,QueryParameter::END_DATE, new \DateTime());
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::ANNUAL_TE_100);
+            $workerId = $this->createWorker($request, ReportType::ANNUAL_TE_100);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -410,7 +409,7 @@ class ReportService
         }
 
         try {
-            $workerId = $this->createWorker($request, WorkerType::REPORT, ReportType::ANNUAL_ACTIVE_LIVE_STOCK);
+            $workerId = $this->createWorker($request, ReportType::ANNUAL_ACTIVE_LIVE_STOCK);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -427,31 +426,26 @@ class ReportService
         return ResultUtil::successResult('OK');
     }
 
-    private function createWorker(Request $request, int $workerType, int $reportType) : ?int
+    private function createWorker(Request $request, int $reportType) : ?int
     {
         try {
-            $worker = new Worker();
-            $worker->setWorkerType($workerType);
+            $reportWorker = new ReportWorker();
             $accountOwner = $this->userService->getAccountOwner($request);
-            $worker->setOwner($accountOwner);
-            $worker->setActionBy($this->userService->getUser());
-            $worker->setLocation($this->userService->getSelectedLocation($request));
+            $reportWorker->setOwner($accountOwner);
+            $reportWorker->setActionBy($this->userService->getUser());
+            $reportWorker->setLocation($this->userService->getSelectedLocation($request));
 
             $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
-
             $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
 
-            $pdfWorker = new ReportWorker();
-            $pdfWorker->setReportType($reportType);
-            $pdfWorker->setWorker($worker);
-            $pdfWorker->setLocale($language);
-            $pdfWorker->setFileType($fileType);
-            $pdfWorker->setHash(hash('sha256', $workerType.$reportType.$this->userService->getUser()->getId()));
-            $this->em->persist($pdfWorker);
-            $this->em->persist($worker);
+            $reportWorker->setReportType($reportType);
+            $reportWorker->setLocale($language);
+            $reportWorker->setFileType($fileType);
+            $reportWorker->setHash(hash('sha256', $reportWorker->getWorkerType().$reportType.$this->userService->getUser()->getId()));
+            $this->em->persist($reportWorker);
             $this->em->flush();
 
-            return $worker->getId();
+            return $reportWorker->getId();
         }
         catch(\Exception $e) {
 

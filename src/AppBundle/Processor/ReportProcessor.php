@@ -1,16 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: johnnieho
- * Date: 19/06/2018
- * Time: 11:18
- */
 
 namespace AppBundle\Processor;
 
 use AppBundle\Entity\ReportWorker;
-use AppBundle\Entity\Worker;
-use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Service\Report\AnimalsOverviewReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
@@ -22,7 +14,7 @@ use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\OffspringReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
-use AppBundle\Util\RequestUtil;
+use AppBundle\Util\ProcessUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Enqueue\Client\CommandSubscriberInterface;
@@ -34,6 +26,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 {
+    const PROCESS_TIME_LIMIT_IN_MINUTES = 20;
+
     /**
      * @var AnnualActiveLivestockReportService
      */
@@ -117,6 +111,8 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 
     public function process(PsrMessage $message, PsrContext $context)
     {
+        ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
+
         $worker = null;
         try {
             $data = JSON::decode($message->getBody());
@@ -124,19 +120,15 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             $workerId = $data['worker_id'];
 
             /**
-             * @var Worker $worker
+             * @var ReportWorker $worker
              */
-            $worker = $this->em->getRepository(Worker::class)->find($workerId);
+            $worker = $this->em->getRepository(ReportWorker::class)->find($workerId);
             if (!$worker)
                 return self::REJECT;
 
-            /**
-             * @var ReportWorker $pdfWorker
-             */
-            $pdfWorker = $worker->getReportWorker();
-            $reportType = $pdfWorker->getReportType();
-            $fileType = $pdfWorker->getFileType();
-            $locale = $pdfWorker->getLocale();
+            $reportType = $worker->getReportType();
+            $fileType = $worker->getFileType();
+            $locale = $worker->getLocale();
 
             switch($reportType) {
                 case ReportType::PEDIGREE_CERTIFICATE:
@@ -210,13 +202,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             $arrayData = JSON::decode($data->getContent());
 
             if($data->getStatusCode() === Response::HTTP_OK) {
-                $pdfWorker->setDownloadUrl($arrayData['result']);
+                $worker->setDownloadUrl($arrayData['result']);
             }
             else {
                 $worker->setErrorCode($data->getStatusCode());
                 $worker->setErrorMessage($arrayData['result']['message']);
             }
-            $this->em->persist($pdfWorker);
+            $this->em->persist($worker);
         }
         catch(\Exception $e) {
             if($worker) {

@@ -4,26 +4,15 @@
 namespace AppBundle\Service\Report;
 
 
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\QueryParameter;
-use AppBundle\Util\DateUtil;
-use AppBundle\Util\ProcessUtil;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
-use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class AnnualActiveLivestockReportService extends ReportServiceBase
 {
     const TITLE = 'annual_active_livestock_report';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
-
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 2;
 
     /**
      * @inheritDoc

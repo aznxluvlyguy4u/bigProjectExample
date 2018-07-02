@@ -13,8 +13,6 @@ class AnnualActiveLivestockRamMatesReportService extends ReportServiceBase
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
 
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 2;
-
     /**
      * @inheritDoc
      */

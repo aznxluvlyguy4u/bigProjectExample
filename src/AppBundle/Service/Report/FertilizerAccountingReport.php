@@ -9,17 +9,13 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FertilizerCategory;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\FilesystemUtil;
-use AppBundle\Util\ProcessUtil;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class FertilizerAccountingReport extends ReportServiceBase
@@ -27,8 +23,6 @@ class FertilizerAccountingReport extends ReportServiceBase
     const TITLE = 'fertilizer_accounting';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
-
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 20;
 
     const ANIMAL_COUNT_DECIMAL_PRECISION = 2;
     const NITROGEN_DECIMAL_PRECISION = 2;
@@ -54,8 +48,6 @@ class FertilizerAccountingReport extends ReportServiceBase
             //$referenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
 
             $this->extension = $extension;
-
-            ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
 
             // TODO remove later
             $useTestResults = true;
