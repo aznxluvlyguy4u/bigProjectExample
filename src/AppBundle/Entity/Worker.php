@@ -73,6 +73,9 @@ abstract class Worker
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      */
     private $errorCode;
 
@@ -80,6 +83,9 @@ abstract class Worker
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      */
     private $errorMessage;
 
@@ -87,6 +93,9 @@ abstract class Worker
      * @var DateTime
      *
      * @ORM\Column(type="datetime", nullable=false)
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      */
     private $startedAt;
 
@@ -94,6 +103,9 @@ abstract class Worker
      * @var DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({
+     *     "BASIC"
+     * })
      */
     private $finishedAt;
 

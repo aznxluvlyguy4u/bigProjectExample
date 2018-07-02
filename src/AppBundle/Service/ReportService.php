@@ -7,6 +7,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ReportWorker;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
@@ -34,6 +35,11 @@ class ReportService
     private $producer;
 
     /**
+     * @var BaseSerializer
+     */
+    private $serializer;
+
+    /**
      * @var EntityManager
      */
     private $em;
@@ -51,12 +57,14 @@ class ReportService
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
+     * @param BaseSerializer $serializer
      * @param EntityManager $em
      * @param UserService $userService
      * @param TranslatorInterface $translator
      */
     public function __construct(
         ProducerInterface $producer,
+        BaseSerializer $serializer,
         EntityManager $em,
         UserService $userService,
         TranslatorInterface $translator
@@ -64,6 +72,7 @@ class ReportService
     {
         $this->em = $em;
         $this->producer = $producer;
+        $this->serializer = $serializer;
         $this->userService = $userService;
         $this->translator = $translator;
     }
@@ -75,25 +84,11 @@ class ReportService
      */
     public function getReports(Request $request): ?array
     {
-        $date = new \DateTime();//now
-        $interval = new \DateInterval('P1D');// P[eriod] 1 M[onth]
-        $date->sub($interval);
+        $user = $this->userService->getUser();
         $accountOwner = $this->userService->getAccountOwner($request);
-        $isAdminEnvironment = $accountOwner == null;
 
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('actionBy', $this->userService->getUser()))
-            ->where(Criteria::expr()->gte('startedAt', $date))
-            ->orderBy(['startedAt' => Criteria::DESC])
-        ;
-
-        if($isAdminEnvironment)
-            $criteria->where(Criteria::expr()->isNull('owner'));
-        else
-            $criteria->where(Criteria::expr()->eq('owner', $accountOwner));
-
-        $workers = $this->em->getRepository(ReportWorker::class)->matching($criteria);
-        return $workers->toArray();
+        $workers = $this->em->getRepository(ReportWorker::class)->getReports($user, $accountOwner);
+        return $this->serializer->getDecodedJson($workers,[JmsGroup::BASIC],true);
     }
 
     /**

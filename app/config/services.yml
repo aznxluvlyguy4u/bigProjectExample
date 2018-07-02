@@ -571,6 +571,7 @@ services:
     AppBundle\Service\ReportService:
         arguments:
           - '@enqueue.producer'
+          - '@app.serializer.base'
           - '@doctrine.orm.entity_manager'
           - '@app.user'
           - '@translator'
