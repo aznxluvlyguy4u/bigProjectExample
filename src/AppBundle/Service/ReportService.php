@@ -15,6 +15,7 @@ use AppBundle\Enumerator\WorkerType;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
@@ -99,16 +100,25 @@ class ReportService
     {
         $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
         $content = RequestUtil::getContentAsArray($request);
+        $contentAsJson = JSON::encode($content->toArray());
+
+        $inputForHash = $contentAsJson . StringUtil::getBooleanAsString($concatValueAndAccuracy);
 
         try {
-            $workerId = $this->createWorker($request, ReportType::LIVE_STOCK);
+            $reportType = ReportType::LIVE_STOCK;
+
+            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $reportType, $inputForHash);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
-                    'content' => JSON::encode($content->toArray()),
+                    'content' => $contentAsJson,
                     'concat_value_and_accuracy' => $concatValueAndAccuracy,
                 ]
             );
@@ -127,6 +137,8 @@ class ReportService
     public function createPedigreeCertificates(Request $request): JsonResponse
     {
         $content = RequestUtil::getContentAsArray($request);
+        $contentAsJson = JSON::encode($content->toArray());
+        $inputForHash = $contentAsJson;
 
         //Validate if given ULNs are correct AND there should at least be one ULN given
         $ulnValidator = new UlnValidator($this->em, $content, true, null, $this->userService->getSelectedLocation($request));
@@ -135,14 +147,20 @@ class ReportService
         }
 
         try {
-            $workerId = $this->createWorker($request, ReportType::PEDIGREE_CERTIFICATE);
+            $reportType = ReportType::PEDIGREE_CERTIFICATE;
+
+            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $reportType, $inputForHash);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
-                    'content' => JSON::encode($content->toArray()),
+                    'content' => $contentAsJson,
                 ]
             );
         }
@@ -164,9 +182,16 @@ class ReportService
 
         $type = $request->query->get(QueryParameter::TYPE_QUERY);
         $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, !false);
+        $inputForHash = $type . StringUtil::getBooleanAsString($uploadToS3);
 
         try {
-            $workerId = $this->createWorker($request, ReportType::PEDIGREE_REGISTER_OVERVIEW);
+            $reportType = ReportType::PEDIGREE_REGISTER_OVERVIEW;
+
+            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $reportType, $inputForHash);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -201,16 +226,24 @@ class ReportService
         }
 
         $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
+        $contentAsJson = JSON::encode($content->toArray());
+        $inputForHash = $contentAsJson . StringUtil::getBooleanAsString($concatValueAndAccuracy);
 
         try {
-            $workerId = $this->createWorker($request, ReportType::OFF_SPRING);
+            $reportType = ReportType::OFF_SPRING;
+
+            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $reportType, $inputForHash);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
-                    'content' => JSON::encode($content->toArray()),
+                    'content' => $contentAsJson,
                     'concat_value_and_accuracy' => $concatValueAndAccuracy,
                 ]
             );
@@ -240,8 +273,16 @@ class ReportService
             return ResultUtil::errorResult('Invalid reference year', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
+        $inputForHash = $referenceYear;
+
         try {
-            $workerId = $this->createWorker($request, ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES);
+            $reportType = ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES;
+
+            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES, $inputForHash);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -277,8 +318,18 @@ class ReportService
             return ResultUtil::errorResult('Referentie datum kan niet in de toekomst liggen.', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
+        $pedigreeActiveEndDateLimitString = $pedigreeActiveEndDateLimit->format('y-m-d H:i:s');
+        $activeUbnReferenceDateString = $activeUbnReferenceDate->format('y-m-d H:i:s');
+        $inputForHash = StringUtil::getBooleanAsString($concatValueAndAccuracy) . $pedigreeActiveEndDateLimitString . $activeUbnReferenceDateString;
+
         try {
-            $workerId = $this->createWorker($request, ReportType::ANIMALS_OVERVIEW);
+            $reportType = ReportType::ANIMALS_OVERVIEW;
+
+            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $reportType, $inputForHash);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -286,8 +337,8 @@ class ReportService
                 [
                     'worker_id' => $workerId,
                     'concat_value_and_accuracy' => $concatValueAndAccuracy,
-                    'pedigree_active_end_date_limit' => $pedigreeActiveEndDateLimit->format('y-m-d H:i:s'),
-                    'active_ubn_reference_date_string' => $activeUbnReferenceDate->format('y-m-d H:i:s'),
+                    'pedigree_active_end_date_limit' => $pedigreeActiveEndDateLimitString,
+                    'active_ubn_reference_date_string' => $activeUbnReferenceDateString,
                 ]
             );
         }
@@ -304,16 +355,24 @@ class ReportService
     public function createInbreedingCoefficientsReport(Request $request)
     {
         $content = RequestUtil::getContentAsArray($request);
+        $contentAsJson = JSON::encode($content->toArray());
+        $inputForHash = $contentAsJson;
 
         try {
-            $workerId = $this->createWorker($request, ReportType::INBREEDING_COEFFICIENT);
+            $reportType = ReportType::INBREEDING_COEFFICIENT;
+
+            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $reportType, $inputForHash);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
-                    'content' => JSON::encode($content->toArray()),
+                    'content' => $contentAsJson,
                 ]
             );
         }
@@ -330,16 +389,24 @@ class ReportService
     public function createFertilizerAccountingReport(Request $request)
     {
         $referenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
+        $referenceDateString = $referenceDate->format('y-m-d H:i:s');
+        $inputForHash = $referenceDateString;
 
         try {
-            $workerId = $this->createWorker($request, ReportType::FERTILIZER_ACCOUNTING);
+            $reportType = ReportType::FERTILIZER_ACCOUNTING;
+
+            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $reportType, $inputForHash);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
                 [
                     'worker_id' => $workerId,
-                    'reference_date' => $referenceDate->format('y-m-d H:i:s'),
+                    'reference_date' => $referenceDateString,
                 ]
             );
         }
@@ -365,9 +432,18 @@ class ReportService
         }
 
         $pedigreeActiveEndDateLimit = RequestUtil::getDateQuery($request,QueryParameter::END_DATE, new \DateTime());
+        $pedigreeActiveEndDateLimitString = $pedigreeActiveEndDateLimit->format('y-m-d H:i:s');
+
+        $inputForHash = $year . $pedigreeActiveEndDateLimitString;
 
         try {
-            $workerId = $this->createWorker($request, ReportType::ANNUAL_TE_100);
+            $reportType = ReportType::ANNUAL_TE_100;
+
+            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $reportType, $inputForHash);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -375,7 +451,7 @@ class ReportService
                 [
                     'worker_id' => $workerId,
                     'year' => $year,
-                    'pedigree_active_end_date' => $pedigreeActiveEndDateLimit->format('y-m-d H:i:s'),
+                    'pedigree_active_end_date' => $pedigreeActiveEndDateLimitString,
                 ]
             );
         }
@@ -404,8 +480,16 @@ class ReportService
             return ResultUtil::errorResult('Invalid reference year', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
+        $inputForHash = $referenceYear;
+
         try {
-            $workerId = $this->createWorker($request, ReportType::ANNUAL_ACTIVE_LIVE_STOCK);
+            $reportType = ReportType::ANNUAL_ACTIVE_LIVE_STOCK;
+
+            if ($this->isSimilarReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $reportType, $inputForHash);
             if(!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -422,22 +506,40 @@ class ReportService
         return ResultUtil::successResult('OK');
     }
 
-    private function createWorker(Request $request, int $reportType) : ?int
+    /**
+     * @param Request $request
+     * @param int $reportType
+     * @param string $inputForHash
+     * @return bool
+     * @throws \Exception
+     */
+    private function isSimilarReportAlreadyInProgress(Request $request, int $reportType, string $inputForHash): bool
+    {
+        $reportWorkerHash = $this->getReportWorkerHash($request, $reportType, $inputForHash);
+
+        $workerInProgress = $this->em->getRepository(ReportWorker::class)->findOneBy([
+           'hash' => $reportWorkerHash,
+           'finishedAt' => null
+        ]);
+
+        return $workerInProgress !== null;
+    }
+
+    private function createWorker(Request $request, int $reportType, $inputForHash = '') : ?int
     {
         try {
             $reportWorker = new ReportWorker();
-            $accountOwner = $this->userService->getAccountOwner($request);
-            $reportWorker->setOwner($accountOwner);
+            $reportWorker->setOwner($this->userService->getAccountOwner($request));
             $reportWorker->setActionBy($this->userService->getUser());
             $reportWorker->setLocation($this->userService->getSelectedLocation($request));
 
-            $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
+            $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
             $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
 
             $reportWorker->setReportType($reportType);
             $reportWorker->setLocale($language);
             $reportWorker->setFileType($fileType);
-            $reportWorker->setHash(hash('sha256', $reportWorker->getWorkerType().$reportType.$this->userService->getUser()->getId()));
+            $reportWorker->setHash($this->getReportWorkerHash($request, $reportType, $inputForHash));
             $this->em->persist($reportWorker);
             $this->em->flush();
 
@@ -448,5 +550,56 @@ class ReportService
         }
 
         return null;
+    }
+
+
+    /**
+     * @param Request $request
+     * @param int $reportType
+     * @param string $inputForHash
+     * @return string
+     * @throws \Exception
+     */
+    private function getReportWorkerHash(Request $request, int $reportType, string $inputForHash): string
+    {
+        $workerType = WorkerType::REPORT;
+
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+        $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
+
+        $accountOwner = $this->userService->getAccountOwner($request);
+        $user = $this->userService->getUser();
+        $location = $this->userService->getSelectedLocation($request);
+
+        $metaDataForHash =
+            $workerType.'-'.
+            $reportType.'-'.
+            $user->getId().'-'.
+            ($accountOwner ? $accountOwner->getId() : '0').'-'.
+            ($location ? $location->getId() : '0').'-'.
+            $fileType.'-'.
+            $language
+        ;
+
+        return $inputForHash . $metaDataForHash;
+    }
+
+
+    /**
+     * @return string
+     */
+    private static function getDefaultFileType(): string
+    {
+        return FileType::CSV;
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    private function reportWorkerInProgressAlreadyExistErrorResponse(): JsonResponse
+    {
+        $message = $this->translator->trans('A SIMILAR REPORT IS ALREADY BEING GENERATED');
+        return ResultUtil::errorResult($message, Response::HTTP_PRECONDITION_REQUIRED);
     }
 }
