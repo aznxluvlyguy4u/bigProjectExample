@@ -61,8 +61,6 @@ class PedigreeCertificateReportService extends ReportServiceBase
 
         $this->reportResults = new PedigreeCertificates($this->em, $content, $client, $location);
 
-        //$fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
-
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
         }

@@ -33,10 +33,6 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
      */
     public function request($type, $fileType, $uploadToS3)
     {
-        //$type = $request->query->get(QueryParameter::TYPE_QUERY);
-        //$fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
-        //$uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, !$this->outputReportsToCacheFolderForLocalTesting);
-
         $this->excelService
             ->setKeywords(self::KEYWORDS)
             ->setDescription(self::DESCRIPTION)

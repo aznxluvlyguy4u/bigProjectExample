@@ -35,8 +35,6 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase
     function getReport(Person $person, ?Location $location, ArrayCollection $content, $concatValueAndAccuracy, $locale)
     {
         try {
-
-            //$this->validateRequestBody($request);
             $this->content = $content;
             $parentsArray = $this->content->get(JsonInputConstant::PARENTS);
 
@@ -73,24 +71,6 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase
 
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
-        }
-    }
-
-
-    /**
-     * @param Request $request
-     * @throws \Exception
-     */
-    private function validateRequestBody(Request $request)
-    {
-        $this->content = RequestUtil::getContentAsArray($request);
-        $animalsArray = $this->content->get(JsonInputConstant::PARENTS);
-        if (!is_array($animalsArray)) {
-            throw new \Exception("'".JsonInputConstant::PARENTS."' key is missing in body", Response::HTTP_BAD_REQUEST);
-        }
-
-        if (count($animalsArray) === 0) {
-            throw new \Exception("Empty input", Response::HTTP_BAD_REQUEST);
         }
     }
 
