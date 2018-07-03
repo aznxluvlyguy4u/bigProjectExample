@@ -24,6 +24,7 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 use Enqueue\Client\ProducerInterface;
 use Enqueue\Util\JSON;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -56,19 +57,26 @@ class ReportService
     private $translator;
 
     /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * ReportService constructor.
      * @param ProducerInterface $producer
      * @param BaseSerializer $serializer
      * @param EntityManager $em
      * @param UserService $userService
      * @param TranslatorInterface $translator
+     * @param Logger $logger
      */
     public function __construct(
         ProducerInterface $producer,
         BaseSerializer $serializer,
         EntityManager $em,
         UserService $userService,
-        TranslatorInterface $translator
+        TranslatorInterface $translator,
+        Logger $logger
     )
     {
         $this->em = $em;
@@ -76,6 +84,7 @@ class ReportService
         $this->serializer = $serializer;
         $this->userService = $userService;
         $this->translator = $translator;
+        $this->logger = $logger;
     }
 
     /**
@@ -124,7 +133,8 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            dump($e);
+            $this->logExceptionAsError($e);
+            return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
@@ -165,7 +175,8 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            dump($e);
+            $this->logExceptionAsError($e);
+            return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
@@ -204,7 +215,8 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            dump($e);
+            $this->logExceptionAsError($e);
+            return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
@@ -249,7 +261,8 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            dump($e);
+            $this->logExceptionAsError($e);
+            return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
@@ -294,7 +307,8 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            dump($e);
+            $this->logExceptionAsError($e);
+            return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
@@ -343,7 +357,8 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            dump($e);
+            $this->logExceptionAsError($e);
+            return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
@@ -377,7 +392,8 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            dump($e);
+            $this->logExceptionAsError($e);
+            return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
@@ -411,7 +427,8 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            dump($e);
+            $this->logExceptionAsError($e);
+            return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
@@ -456,7 +473,8 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            dump($e);
+            $this->logExceptionAsError($e);
+            return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
@@ -501,7 +519,8 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            dump($e);
+            $this->logExceptionAsError($e);
+            return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
@@ -541,7 +560,7 @@ class ReportService
             return $reportWorker->getId();
         }
         catch(\Exception $e) {
-
+            $this->logExceptionAsError($e);
         }
 
         return null;
@@ -609,5 +628,14 @@ class ReportService
         $interval = new \DateInterval('P1D');// P[eriod] 1 D[ay]
         $date->sub($interval);
         return $date;
+    }
+
+    /**
+     * @param \Exception $exception
+     */
+    public function logExceptionAsError($exception)
+    {
+        $this->logger->error($exception->getMessage());
+        $this->logger->error($exception->getTraceAsString());
     }
 }

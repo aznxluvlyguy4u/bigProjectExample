@@ -575,6 +575,7 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@app.user'
           - '@translator'
+          - '@logger'
 
 
     AppBundle\Processor\ReportProcessor:
