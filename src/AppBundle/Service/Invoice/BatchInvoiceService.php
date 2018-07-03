@@ -26,7 +26,7 @@ use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Service\ControllerServiceBase;
-use AppBundle\Service\Twinfield\ExternalProviderInvoiceService;
+use AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\ArrayCollection;

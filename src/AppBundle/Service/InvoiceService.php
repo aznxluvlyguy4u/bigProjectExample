@@ -25,7 +25,7 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Serializer\PreSerializer\InvoicePreSerializer;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Service\Invoice\InvoicePdfGeneratorService;
-use AppBundle\Service\Twinfield\ExternalProviderInvoiceService;
+use AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
