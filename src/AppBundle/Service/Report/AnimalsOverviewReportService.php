@@ -31,7 +31,7 @@ class AnimalsOverviewReportService extends ReportServiceWithBreedValuesBase
             $this->concatValueAndAccuracy = $concatValueAndAccuracy;
             $activeUbnReferenceDateString = $activeUbnReferenceDate->format('Y-m-d');
 
-            $this->setLocaleFromQueryParameter($locale);
+            $this->setLocale($locale);
 
             $sql = $this->breedValuesReportQueryGenerator->createAnimalsOverviewReportQuery(
                 $this->concatValueAndAccuracy,

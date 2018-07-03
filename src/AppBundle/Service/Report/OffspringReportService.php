@@ -53,7 +53,7 @@ class OffspringReportService extends ReportServiceWithBreedValuesBase
 
             $this->concatValueAndAccuracy = $concatValueAndAccuracy;
 
-            $this->setLocaleFromQueryParameter($locale);
+            $this->setLocale($locale);
 
             $sql = $this->breedValuesReportQueryGenerator->createOffspringReportQuery(
                 $this->concatValueAndAccuracy,

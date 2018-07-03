@@ -107,7 +107,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
             return ResultUtil::errorResult('',Response::HTTP_BAD_REQUEST, $this->inputErrors);
         }
 
-        $this->setLocaleFromQueryParameter($locale);
+        $this->setLocale($locale);
 
         $this->setFileName();
         $this->setFolderName();

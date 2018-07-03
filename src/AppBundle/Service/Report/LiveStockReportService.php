@@ -58,7 +58,7 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
         $validationResult = $this->validateContent();
         if ($validationResult instanceof JsonResponse) { return $validationResult; }
 
-        $this->setLocaleFromQueryParameter($locale);
+        $this->setLocale($locale);
 
         $this->filename = $this->trans(self::FILE_NAME_REPORT_TYPE).'_'.$this->location->getUbn();
         $this->folderName = self::FOLDER_NAME;

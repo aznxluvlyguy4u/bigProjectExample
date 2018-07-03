@@ -32,7 +32,7 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
     {
         try {
 
-            $this->setLocaleFromQueryParameter($locale);
+            $this->setLocale($locale);
 
             $this->filename = $this->translate(self::FILENAME).'_'.$year;
             $this->extension = FileType::CSV;

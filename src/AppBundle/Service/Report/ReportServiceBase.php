@@ -281,7 +281,7 @@ class ReportServiceBase
     /**
      * @param $locale
      */
-    protected function setLocaleFromQueryParameter($locale)
+    protected function setLocale($locale)
     {
         $this->translator->setLocale($locale);
     }
