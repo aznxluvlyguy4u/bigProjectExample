@@ -12,6 +12,7 @@ use AppBundle\Entity\Company;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Litter;
@@ -136,7 +137,7 @@ class ActionLogWriter
      * @param Client $client
      * @param Person $loggedInUser
      * @param Location $location
-     * @param ArrayCollection $content
+     * @param ArrayCollection|DeclareLoss $content
      * @return ActionLog
      */
     public static function declareLossPost(ObjectManager $om, $client, $loggedInUser, $location, $content)
@@ -144,8 +145,14 @@ class ActionLogWriter
         $userActionType = UserActionType::DECLARE_LOSS;
 
         $ubn = NullChecker::getUbnFromLocation($location);
-        $uln = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
-        $ubnProcessor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_PROCESSOR, $content);
+
+        if ($content instanceof DeclareLoss) {
+            $uln = $content->getUlnCountryCode() . $content->getUlnNumber();
+            $ubnProcessor = $content->getUbnDestructor();
+        } else {
+            $uln = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
+            $ubnProcessor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_PROCESSOR, $content);
+        }
 
         $description = 'ubn: '.$ubn.'. ubn processor: '.$ubnProcessor.'. uln: '.$uln;
 

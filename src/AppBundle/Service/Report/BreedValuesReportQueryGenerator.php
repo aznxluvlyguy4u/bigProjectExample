@@ -98,7 +98,7 @@ class BreedValuesReportQueryGenerator
 
         //Create breed value batch query parts
 
-        $sql = "SELECT nl, result_table_value_variable, result_table_accuracy_variable, use_normal_distribution
+        $sql = "SELECT nl, result_table_value_variable, result_table_accuracy_variable, prioritize_normalized_values_in_report
                 FROM breed_value_type bvt
                 WHERE
                   (
@@ -133,9 +133,9 @@ class BreedValuesReportQueryGenerator
                     $breedValueLabel = BreedValuesReportQueryGenerator::translatedBreedValueColumnHeader($columnValueSet['nl']);
                     $resultTableValueVar = $columnValueSet['result_table_value_variable'];
                     $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
-                    $useNormalDistribution = $columnValueSet['use_normal_distribution'];
+                    $prioritizeNormalizedValuesInReport = $columnValueSet['prioritize_normalized_values_in_report'];
 
-                    if ($useNormalDistribution) {
+                    if ($prioritizeNormalizedValuesInReport) {
 
                         $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix . "NULLIF(CONCAT(
                          COALESCE(CAST(ROUND(CAST(nbg.".$resultTableValueVar." AS NUMERIC),".self::NORMALIZED_BREED_VALUE_DECIMAL_SPACES.") AS TEXT),''),'/',
@@ -174,12 +174,12 @@ class BreedValuesReportQueryGenerator
                     $breedValueLabel = BreedValuesReportQueryGenerator::translatedBreedValueColumnHeader($columnValueSet['nl']);
                     $resultTableValueVar = $columnValueSet['result_table_value_variable'];
                     $resultTableAccuracyVar = $columnValueSet['result_table_accuracy_variable'];
-                    $useNormalDistribution = $columnValueSet['use_normal_distribution'];
+                    $prioritizeNormalizedValuesInReport = $columnValueSet['prioritize_normalized_values_in_report'];
 
-                    $breedValueDecimalSpaces = $useNormalDistribution ?
+                    $breedValueDecimalSpaces = $prioritizeNormalizedValuesInReport ?
                         self::NORMALIZED_BREED_VALUE_DECIMAL_SPACES : self::BREED_VALUE_DECIMAL_SPACES;
 
-                    $resultTableAlias = $useNormalDistribution ? 'nbg' : 'bg';
+                    $resultTableAlias = $prioritizeNormalizedValuesInReport ? 'nbg' : 'bg';
 
                     $this->breedValuesSelectQueryPart = $this->breedValuesSelectQueryPart . $valuesPrefix
                         . " ROUND(CAST($resultTableAlias.".$resultTableValueVar." AS NUMERIC), ".$breedValueDecimalSpaces.") as ".$breedValueLabel .",
@@ -644,7 +644,7 @@ class BreedValuesReportQueryGenerator
                 ".$this->activeUbnOnReferenceDateJoin($activeUbnReferenceDateString)."
 
                 LEFT JOIN result_table_breed_grades bg ON a.animal_id = bg.animal_id
-                LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
+                LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.animal_id
                 LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
                 LEFT JOIN (
                             SELECT

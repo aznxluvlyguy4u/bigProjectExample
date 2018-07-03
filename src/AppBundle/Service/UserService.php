@@ -83,7 +83,6 @@ class UserService
         return $user;
     }
 
-
     /**
      * @param Request $request
      * @param string|null $tokenCode

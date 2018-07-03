@@ -90,6 +90,16 @@ class DateUtil
 
     /**
      * @param \DateTime $dateTime
+     * @param bool $includeTime
+     * @return string
+     */
+    public static function getQueryBuilderFormat(\DateTime $dateTime, bool $includeTime = true): string {
+        $format = $includeTime ? 'Y-m-d_H:i:s' : 'Y-m-d';
+        return "'".($dateTime->format($format))."'";
+    }
+
+    /**
+     * @param \DateTime $dateTime
      * @return string
      */
     public static function getTimeStampForFileName($dateTime) {

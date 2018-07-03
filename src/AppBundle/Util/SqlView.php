@@ -13,12 +13,12 @@ class SqlView
 {
     use EnumInfo;
 
+    const VIEW_PERSON_FULL_NAME = 'view_person_full_name';
     const VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS = 'view_animal_livestock_overview_details';
     const VIEW_LITTER_DETAILS = 'view_litter_details';
     const VIEW_LOCATION_DETAILS = 'view_location_details';
     const VIEW_MINIMAL_PARENT_DETAILS = 'view_minimal_parent_details';
     const VIEW_PEDIGREE_REGISTER_ABBREVIATION = 'view_pedigree_register_abbreviation';
-    const VIEW_PERSON_FULL_NAME = 'view_person_full_name';
 
 
     /**
@@ -223,8 +223,13 @@ class SqlView
                 NULLIF(CONCAT(predicate.abbreviation, NULLIF(CONCAT('(',GREATEST(a.predicate_score,13),')'), '(13)')),'') as formatted_predicate,
                 a.breed_code,
                 a.scrapie_genotype,
-                a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter
+                a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter,
+                COALESCE(comp.is_reveal_historic_animals, TRUE) as is_public,
+                residences.historic_ubns,
+                residences.historic_location_ids
               FROM animal a
+                LEFT JOIN location l ON a.location_id = l.id
+                LEFT JOIN company comp ON l.company_id = comp.id
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
                 LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk_dad(bool_val, mark)
                   ON c.gave_birth_as_one_year_old = production_asterisk_dad.bool_val
@@ -233,7 +238,10 @@ class SqlView
                           ) AS a_breed_types(english, dutch_first_letter) ON a.breed_type = a_breed_types.english
                 LEFT JOIN (VALUES
                 ".SqlUtil::createSqlValuesString(Translation::getEnglishPredicateToAbbreviationArray())."
-                ) AS predicate(english, abbreviation) ON predicate.english = a.predicate";
+                ) AS predicate(english, abbreviation) ON predicate.english = a.predicate
+                LEFT JOIN (
+                    ".self::animalResidenceQuery()."
+                )residences ON residences.animal_id = a.id";
     }
 
 
@@ -297,7 +305,9 @@ class SqlView
                 body_fat.fat3 as fat3,
                 to_char(body_fat.measurement_date, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_body_fat_measurement_date,
                  
-                COALESCE(child_status.has_children_as_mom, FALSE) as has_children_as_mom
+                COALESCE(child_status.has_children_as_mom, FALSE) as has_children_as_mom,
+                residences.historic_ubns,
+                residences.historic_location_ids
                 
               FROM animal a
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
@@ -311,7 +321,9 @@ class SqlView
                 LEFT JOIN (VALUES
                 ".SqlUtil::createSqlValuesString(Translation::getEnglishPredicateToAbbreviationArray())."
                 ) AS predicate(english, abbreviation) ON predicate.english = a.predicate
-                
+                LEFT JOIN (
+                    ".self::animalResidenceQuery()."
+                )residences ON residences.animal_id = a.id
                 LEFT JOIN (
                     SELECT
                       m.animal_id,
@@ -381,5 +393,37 @@ class SqlView
                 ";
     }
 
+
+    /**
+     * @return string
+     */
+    private static function animalResidenceQuery(): string
+    {
+        return "SELECT
+                      r.animal_id,
+                      -- If you want to remove the curly brackets use the following code
+                      -- TRIM(BOTH '{,}' FROM CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT)) as historic_ubns,
+                      -- TRIM(BOTH '{,}' FROM CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT)) as historic_location_ids
+                      REPLACE( REPLACE( CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT),'{', '['), '}', ']') as historic_ubns,
+                      REPLACE( REPLACE( CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT) ,'{', '['), '}', ']') as historic_location_ids
+                    FROM (
+                           SELECT
+                             r.animal_id,
+                             r.location_id
+                           FROM animal_residence r
+                             INNER JOIN location l on r.location_id = l.id
+                           GROUP BY r.animal_id, r.location_id
+                           
+                           UNION
+
+                           SELECT
+                           id as animal_id,
+                           location_id
+                           FROM animal
+                           WHERE location_id NOTNULL
+                         ) r
+                      INNER JOIN location l on r.location_id = l.id
+                    GROUP BY r.animal_id";
+    }
 
 }

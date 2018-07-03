@@ -3,50 +3,22 @@
 
 namespace AppBundle\Service\Report;
 
-
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Util\DateUtil;
-use AppBundle\Util\ProcessUtil;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
-class AnnualActiveLivestockRamMatesReportService extends ReportServiceBase implements ReportServiceInterface
+class AnnualActiveLivestockRamMatesReportService extends ReportServiceBase
 {
     const TITLE = 'annual_active_livestock_ram_mates_report';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
 
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 2;
-
     /**
      * @inheritDoc
      */
-    function getReport(Request $request)
+    function getReport($referenceYear)
     {
-        if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
-
         try {
-
-            $referenceYear = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR, null);
-            if (!$referenceYear) {
-                $referenceYear = DateUtil::currentYear() - 1;
-            }
-
-            if (!Validator::isYear($referenceYear)) {
-                return ResultUtil::errorResult('Invalid reference year', Response::HTTP_PRECONDITION_REQUIRED);
-            }
-
-            ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
-
             $this->setFileNameValues($referenceYear);
 
             return $this->generateCsvFileBySqlQuery(

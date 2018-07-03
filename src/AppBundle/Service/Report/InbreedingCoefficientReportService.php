@@ -6,6 +6,8 @@ namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\Locale;
@@ -23,7 +25,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class InbreedingCoefficientReportService extends ReportServiceBase implements ReportServiceInterface
+class InbreedingCoefficientReportService extends ReportServiceBase
 {
     const GENERATION_OF_ASCENDANTS = 7;
     const MAX_GENERATION_OF_ASCENDANTS = 8;
@@ -71,6 +73,11 @@ class InbreedingCoefficientReportService extends ReportServiceBase implements Re
     /** @var InbreedingCoefficientReportData */
     private $reportResults;
 
+    /**
+     * @var Client
+     */
+    private $client;
+
     /** @var array */
     private static $customReportFilenames = [
         Locale::NL => 'inteeltcoeffient rapportage',
@@ -83,28 +90,30 @@ class InbreedingCoefficientReportService extends ReportServiceBase implements Re
 
 
     /**
-     * @param Request $request
+     * @param Person $person
+     * @param $content
+     * @param $fileType
+     * @param $locale
      * @return JsonResponse
+     * @throws \Exception
      */
-    public function getReport(Request $request)
+    public function getReport(Person $person, $content, $fileType, $locale)
     {
-        $client = $this->userService->getAccountOwner($request);
-        $this->content = RequestUtil::getContentAsArray($request);
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
-
+        $this->content = $content;
+        $this->client = $person instanceof Client ? $person : null;
         $this->retrieveAndValidateInput();
 
         if (count($this->inputErrors) > 0) {
             return ResultUtil::errorResult('',Response::HTTP_BAD_REQUEST, $this->inputErrors);
         }
 
-        $this->setLocaleFromQueryParameter($request);
+        $this->setLocale($locale);
 
         $this->setFileName();
         $this->setFolderName();
 
         $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->translator, $this->ramData, $this->ewesData,
-            $this->generationOfAscendants, $client);
+            $this->generationOfAscendants, $this->client);
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
@@ -336,13 +345,15 @@ class InbreedingCoefficientReportService extends ReportServiceBase implements Re
 
         //Check ownership if not admin
 
-        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            $clientId = $this->getUser()->getId();
+        if ($this->client instanceof Client) {
+            $clientId = $this->client->getId();
             foreach ($this->ewesData as $ulnString => $eweData)
             if ($clientId !== $eweData['owner_id']) {
                 $this->inputErrors[] = $this->translateErrorMessages(self::EWE_NOT_OF_CLIENT) . ': ' .$ulnString;
             }
         }
+
+        return true;
     }
 
 
@@ -361,6 +372,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase implements Re
 
     /**
      * @return JsonResponse
+     * @throws \Exception
      */
     private function getCsvReport()
     {
