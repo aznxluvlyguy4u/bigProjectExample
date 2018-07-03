@@ -230,7 +230,7 @@ class ReportService
         $inputForHash = $contentAsJson . StringUtil::getBooleanAsString($concatValueAndAccuracy);
 
         try {
-            $reportType = ReportType::OFF_SPRING;
+            $reportType = ReportType::OFFSPRING;
 
             if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();

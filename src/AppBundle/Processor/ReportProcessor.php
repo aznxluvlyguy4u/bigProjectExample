@@ -142,7 +142,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $data = $this->pedigreeRegisterOverviewReportService->request($type, $fileType, $uploadToS3);
                         break;
                     }
-                case ReportType::OFF_SPRING:
+                case ReportType::OFFSPRING:
                     {
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
