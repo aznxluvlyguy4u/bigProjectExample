@@ -827,7 +827,7 @@ class Invoice
     /**
      * @param string $companyTwinfieldAdministrationCode
      */
-    public function setCompanyTwinfieldAdministrationCode(string $companyTwinfieldAdministrationCode): void
+    public function setCompanyTwinfieldAdministrationCode(?string $companyTwinfieldAdministrationCode): void
     {
         $this->companyTwinfieldAdministrationCode = $companyTwinfieldAdministrationCode;
     }

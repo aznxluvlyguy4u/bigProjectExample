@@ -819,7 +819,7 @@ class Company
     /**
      * @return string
      */
-    public function getTwinfieldOfficeCode(): string
+    public function getTwinfieldOfficeCode(): ?string
     {
         return $this->twinfieldOfficeCode;
     }

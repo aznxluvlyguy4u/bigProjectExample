@@ -48,9 +48,10 @@ parameters:
 
     test_email: ~
 
-    twinfield_user: ~
-    twinfield_password: ~
-    twinfield_organisation: ~
+    external_provider_user: ~
+    external_provider_password: ~
+    external_provider_organisation: ~
+
 
     locale: en
 
