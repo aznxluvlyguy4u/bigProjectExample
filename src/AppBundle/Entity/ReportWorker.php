@@ -104,7 +104,7 @@ class ReportWorker extends Worker
      */
     public function setFileType($fileType)
     {
-        $this->fileType = $fileType;
+        $this->fileType = strtolower($fileType);
         return $this;
     }
 
