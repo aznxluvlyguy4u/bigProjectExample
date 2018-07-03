@@ -239,7 +239,6 @@ class ReportAPIController extends APIController {
     public function getAnimalsOverviewReport(Request $request)
     {
         return $this->get(ReportService::class)->createAnimalsOverviewReport($request);
-        //return $this->get('AppBundle\Service\Report\AnimalsOverviewReportService')->getReport($request);
     }
 
 
