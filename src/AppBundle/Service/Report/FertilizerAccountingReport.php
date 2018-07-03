@@ -45,12 +45,9 @@ class FertilizerAccountingReport extends ReportServiceBase
     {
         try {
             $this->location = $location;
-            //$referenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
-
             $this->extension = $extension;
 
-            // TODO remove later
-            $useTestResults = true;
+            $useTestResults = false;
             if ($useTestResults) {
                 $historicLiveStockCountsByFertilizerCategory = self::testResults();
             } else {
