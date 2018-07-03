@@ -4,6 +4,7 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 
@@ -17,7 +18,7 @@ class LoginOutput
      * @param Person|Employee $loggedInUser
      * @return array
      */
-    public static function create($client, $loggedInUser)
+    public static function create($client, $loggedInUser, $revealHistoricAnimals)
     {
         $result = array(
                     "nsfo" =>
@@ -26,6 +27,7 @@ class LoginOutput
                         "logged_in_user" => [
                             'first_name' => $loggedInUser->getFirstName(),
                             'last_name' => $loggedInUser->getLastName(),
+                            'public_live_stock' => $revealHistoricAnimals,
                             'access_level' => $loggedInUser instanceof Employee ? $loggedInUser->getAccessLevel() : null,
                         ]
                     )

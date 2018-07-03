@@ -48,8 +48,9 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
     {
         $loggedInUser = $this->getUser();
         $client = $this->getAccountOwner($request);
+        $revealHistoricAnimals = $this->getSelectedLocation($request)->getCompany()->getIsRevealHistoricAnimals();
         if ($client === null) { return ResultUtil::errorResult('Client cannot be empty', 428); }
-        $outputArray = LoginOutput::create($client, $loggedInUser);
+        $outputArray = LoginOutput::create($client, $loggedInUser, $revealHistoricAnimals);
         return ResultUtil::successResult($outputArray);
     }
 
