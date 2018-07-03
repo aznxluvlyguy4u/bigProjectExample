@@ -6,6 +6,9 @@ namespace AppBundle\Service\Report;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\ReportAPIController;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
@@ -13,9 +16,10 @@ use AppBundle\Report\PedigreeCertificates;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\UlnValidator;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 
-class PedigreeCertificateReportService extends ReportServiceBase implements ReportServiceInterface
+class PedigreeCertificateReportService extends ReportServiceBase
 {
     const TITLE = 'pedigree certificates report';
     const TWIG_FILE = 'Report/pedigree_certificates.html.twig';
@@ -28,19 +32,21 @@ class PedigreeCertificateReportService extends ReportServiceBase implements Repo
 
 
     /**
-     * @param Request $request
+     * @param Person $person
+     * @param Location|null $selectedLocation
+     * @param $fileType
+     * @param ArrayCollection $content
+     * @param $locale
      * @return JsonResponse
      */
-    public function getReport(Request $request)
+    public function getReport(Person $person, $selectedLocation, $fileType, ArrayCollection $content, $locale)
     {
         $client = null;
         $location = null;
-
-        if(!AdminValidator::isAdmin($this->userService->getEmployee(), AccessLevelType::ADMIN)) {
-            $client = $this->userService->getAccountOwner($request);
-            $location = $this->userService->getSelectedLocation($request);
+        if(!AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
+            $location = $selectedLocation;
+            $client = $person;
         }
-        $content = RequestUtil::getContentAsArray($request);
 
         //Validate if given ULNs are correct AND there should at least be one ULN given
         $ulnValidator = new UlnValidator($this->em, $content, true, null, $location);
@@ -51,11 +57,9 @@ class PedigreeCertificateReportService extends ReportServiceBase implements Repo
         $this->filename = $this->translate(self::FILENAME);
         $this->folderName = self::FOLDER_NAME;
 
-        $this->setLocaleFromQueryParameter($request);
+        $this->setLocale($locale);
 
         $this->reportResults = new PedigreeCertificates($this->em, $content, $client, $location);
-
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY);
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
@@ -63,7 +67,6 @@ class PedigreeCertificateReportService extends ReportServiceBase implements Repo
 
         return $this->getPdfReport();
     }
-
 
     /**
      * @return JsonResponse

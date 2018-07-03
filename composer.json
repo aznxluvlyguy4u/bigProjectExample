@@ -40,7 +40,9 @@
         "ijanki/ftp-bundle": "^1.0",
         "mollie/mollie-api-php": "1.9.*",
         "ocramius/proxy-manager": "^1.0",
-        "kreait/firebase-php": "^4.0"
+        "kreait/firebase-php": "^4.0",
+        "enqueue/enqueue-bundle": "^0.8.31",
+        "enqueue/redis": "^0.8.23"
     },
     "require-dev": {
         "sensio/generator-bundle": "^3.0",

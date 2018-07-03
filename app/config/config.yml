@@ -151,3 +151,8 @@ monolog:
             type: console
             verbosity_levels:
                 VERBOSITY_NORMAL: NOTICE
+
+enqueue:
+    transport:
+        default: "redis:"
+    client: ~

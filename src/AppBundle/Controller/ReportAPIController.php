@@ -2,6 +2,10 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Service\ReportService;
+use AppBundle\Util\ResultUtil;
+use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -18,6 +22,32 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 class ReportAPIController extends APIController {
 
   const IS_USE_PROD_VERSION_OUTPUT = true;
+
+    /**
+     * Get all reports
+     *
+     * @ApiDoc(
+     *   section = "Auth",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Validate whether an accesstoken is valid or not."
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("")
+     * @Method("get")
+     */
+    public function getReports(Request $request)
+    {
+        return ResultUtil::successResult($this->get(ReportService::class)->getReports($request));
+    }
 
   /**
    * Generate pedigree certificates for multiple sheep and return a download link for the pdf.
@@ -58,7 +88,7 @@ class ReportAPIController extends APIController {
    */
   public function getPedigreeCertificates(Request $request)
   {
-    return $this->get('app.report.pedigree_certificates')->getReport($request);
+    return $this->get(ReportService::class)->createPedigreeCertificates($request);
   }
 
 
@@ -101,7 +131,7 @@ class ReportAPIController extends APIController {
    */
   public function getInbreedingCoefficientsReport(Request $request)
   {
-      return $this->get('app.report.inbreeding_coefficient')->getReport($request);
+      return $this->get(ReportService::class)->createInbreedingCoefficientsReport($request);
   }
 
 
@@ -151,7 +181,7 @@ class ReportAPIController extends APIController {
    */
   public function getLiveStockReport(Request $request)
   {
-      return $this->get('app.report.livestock')->getReport($request);
+      return $this->get(ReportService::class)->createLiveStockReport($request);
   }
 
 
@@ -208,7 +238,7 @@ class ReportAPIController extends APIController {
      */
     public function getAnimalsOverviewReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\AnimalsOverviewReportService')->getReport($request);
+        return $this->get(ReportService::class)->createAnimalsOverviewReport($request);
     }
 
 
@@ -252,7 +282,7 @@ class ReportAPIController extends APIController {
      */
     public function getAnnualActiveLivestockReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\AnnualActiveLivestockReportService')->getReport($request);
+        return $this->get(ReportService::class)->createAnnualActiveLivestockReport($request);
     }
 
 
@@ -295,7 +325,7 @@ class ReportAPIController extends APIController {
      */
     public function getAnnualActiveLivestockRamMatesReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService')->getReport($request);
+        return $this->get(ReportService::class)->createAnnualActiveLivestockRamMatesReport($request);
     }
 
 
@@ -345,7 +375,7 @@ class ReportAPIController extends APIController {
      */
     public function getAnnualTe100ProductionReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\AnnualTe100UbnProductionReportService')->getReport($request);
+        return $this->get(ReportService::class)->createAnnualTe100UbnProductionReport($request);
     }
 
 
@@ -388,7 +418,7 @@ class ReportAPIController extends APIController {
      */
     public function getOffspringReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\OffspringReportService')->getReport($request);
+        return $this->get(ReportService::class)->createOffspringReport($request);
     }
 
 
@@ -424,7 +454,7 @@ class ReportAPIController extends APIController {
      */
     public function getPedigreeRegisterOverview(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\PedigreeRegisterOverviewReportService')->request($request);
+        return $this->get(ReportService::class)->createPedigreeRegisterOverview($request);
     }
 
 
@@ -503,7 +533,7 @@ class ReportAPIController extends APIController {
      */
     public function getFertilizerAccountingReport(Request $request)
     {
-        return $this->get('AppBundle\Service\Report\FertilizerAccountingReport')->getReport($request);
+        return $this->get(ReportService::class)->createFertilizerAccountingReport($request);
     }
 
 

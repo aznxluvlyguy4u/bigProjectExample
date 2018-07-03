@@ -4,6 +4,7 @@ parameters:
 #    parameter_name: value
 
 services:
+
     api.entity.validate:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
@@ -425,6 +426,7 @@ services:
 
     app.report.base:
         abstract: true
+        lazy: true
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
@@ -466,8 +468,10 @@ services:
 
     AppBundle\Service\Report\AnimalsOverviewReportService:
         parent: app.report.breedvalues.base
+        lazy: true
 
     AppBundle\Service\Report\AnnualActiveLivestockReportService:
+        lazy: true
         parent: app.report.base
 
     AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService:
@@ -492,6 +496,7 @@ services:
     app.report.inbreeding_coefficient:
         parent: app.report.base
         class: AppBundle\Service\Report\InbreedingCoefficientReportService
+        lazy: true
 
     AppBundle\Service\Report\FertilizerAccountingReport:
         parent: app.report.base
@@ -562,6 +567,32 @@ services:
     AppBundle\Service\Google\FireBaseService:
         arguments:
           - '%environment%'
+
+    AppBundle\Service\ReportService:
+        arguments:
+          - '@enqueue.producer'
+          - '@app.serializer.base'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@translator'
+          - '@logger'
+
+
+    AppBundle\Processor\ReportProcessor:
+        arguments:
+          - '@AppBundle\Service\Report\AnnualActiveLivestockReportService'
+          - '@AppBundle\Service\Report\AnnualTe100UbnProductionReportService'
+          - '@AppBundle\Service\Report\FertilizerAccountingReport'
+          - '@app.report.inbreeding_coefficient'
+          - '@AppBundle\Service\Report\AnimalsOverviewReportService'
+          - '@AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService'
+          - '@AppBundle\Service\Report\OffspringReportService'
+          - '@AppBundle\Service\Report\PedigreeRegisterOverviewReportService'
+          - '@app.report.pedigree_certificates'
+          - '@app.report.livestock'
+          - '@doctrine.orm.entity_manager'
+        tags:
+          - {name: 'enqueue.client.processor'}
 
     app.abstract_base.auth:
         parent: app.abstract_base.controller
