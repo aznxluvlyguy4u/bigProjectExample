@@ -156,5 +156,5 @@ enqueue:
     transport:
         default: "fs"
         fs:
-            dsn: "/tmp/nsfo-symfony-worker-queue"
+            dsn: "%worker_queue_dir%"
     client: ~

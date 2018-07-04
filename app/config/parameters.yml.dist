@@ -48,6 +48,8 @@ parameters:
 
     test_email: ~
 
+    worker_queue_dir: '/tmp/nsfo-symfony-worker-queue'
+
     locale: en
 
     output_reports_to_cache_folder_for_local_testing: false
