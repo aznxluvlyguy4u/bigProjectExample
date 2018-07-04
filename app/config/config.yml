@@ -154,5 +154,7 @@ monolog:
 
 enqueue:
     transport:
-        default: "%redis_host%"
+        default: "fs"
+        fs:
+            dsn: "/tmp/nsfo-symfony-worker-queue"
     client: ~

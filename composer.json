@@ -42,7 +42,7 @@
         "ocramius/proxy-manager": "^1.0",
         "kreait/firebase-php": "^4.0",
         "enqueue/enqueue-bundle": "^0.8.31",
-        "enqueue/redis": "^0.8.23"
+        "enqueue/fs": "^0.8.24"
     },
     "require-dev": {
         "sensio/generator-bundle": "^3.0",
