@@ -154,5 +154,5 @@ monolog:
 
 enqueue:
     transport:
-        default: "redis:"
+        default: "%redis_host%"
     client: ~
