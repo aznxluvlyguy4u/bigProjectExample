@@ -20,6 +20,7 @@ use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
@@ -69,6 +70,73 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return $this->getAllAnimalsByTypeOrState($request);
     }
 
+    /**
+ * @param Request $request
+ * @return JsonResponse
+ */
+    public function createAnimal(Request $request)
+    {
+        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $data = RequestUtil::getContentAsArray($request);
+        if(!Validator::verifyUlnFormat($data['uln'])) {
+            return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
+        }
+
+        $existingAnimal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($data['uln'], true);
+        if(!empty($existingAnimal))
+            return ResultUtil::errorResult('Dit dier bestaat al.', Response::HTTP_BAD_REQUEST);
+
+        $dateOfBirth = new \DateTime($data['date_of_birth']);
+        $breedCode = empty($data['breed_code']) ? null : $data['breed_code'];
+
+        try {
+            $animal = null;
+            if($data['gender'] === GenderType::MALE)
+                $animal = new Ram();
+            else
+                $animal = new Ewe();
+
+            $animal->setUlnNumber($data['uln']);
+            $animal->setDateOfBirth($dateOfBirth);
+            $animal->setBreedCode($breedCode);
+            $animal->setBreedType($data['breed_type']);
+            $animal->setIsAlive($data['is_alive']);
+            $this->getManager()->persist($animal);
+            $this->getManager()->flush();
+        }
+        catch(\Exception $e) {
+            return ResultUtil::errorResult('', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return ResultUtil::successResult('Dier is met success aangemaakt.');
+    }
+
+    public function findAnimal(Request $request)
+    {
+        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $data = RequestUtil::getContentAsArray($request);
+        if(!Validator::verifyUlnFormat($data['uln'])) {
+            return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $animals = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($data['uln'], true);
+            if(!$animals)
+                return ResultUtil::errorResult('Dit dier bestaat niet.', Response::HTTP_BAD_REQUEST);
+
+            $minimizedOutput = AnimalOutput::createAnimalArray($animals, $this->getManager());
+            return ResultUtil::successResult($minimizedOutput);
+        }
+        catch (\Exception $e){
+            return ResultUtil::successResult($e);
+        }
+    }
 
     /**
      * @param Request $request
@@ -535,6 +603,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     /**
      * @param Request $request
      * @return JsonResponse|Animal|null
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function changeGenderOfUln(Request $request)
     {
