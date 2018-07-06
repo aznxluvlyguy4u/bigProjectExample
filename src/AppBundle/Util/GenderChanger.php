@@ -175,6 +175,7 @@ class GenderChanger
     function validateGenderChangeRequest($animal, $targetEntity, $user = null)
     {
         $statusCode = 403;
+
         if($user instanceof Person) {
             if($user !== $animal->getOwner()) {
                 if (!AdminValidator::isAdmin($user, AccessLevelType::ADMIN)) {
@@ -182,7 +183,6 @@ class GenderChanger
                         array(
                             Constant::RESULT_NAMESPACE => array (
                                 'code' => $statusCode,
-//                  "message" =>  $animal->getUln() . " has a known gender, therefore changing gender to a Neuter is not allowed.",
                                 "message" =>  'U heeft geen toegang tot het dier met ULN ' . $animal->getUln() . ".",
                             )
                         ), $statusCode);

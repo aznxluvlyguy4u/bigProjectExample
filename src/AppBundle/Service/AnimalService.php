@@ -227,7 +227,12 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         ]);
     }
 
-
+    /**
+     * @param ControllerServiceBase $controllerServiceBase
+     * @param array $animals
+     * @param bool $includeLitter
+     * @return array
+     */
     public static function getSerializedAnimalsInBatchEditFormat(ControllerServiceBase $controllerServiceBase, array $animals = [], $includeLitter = false)
     {
         $foundUlns = [];
@@ -264,7 +269,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         ];
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse|bool
@@ -296,7 +300,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return true;
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -325,7 +328,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($minimizedOutput);
     }
 
-
     /**
      * @param Request $request
      * @param $uln
@@ -337,7 +339,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
         return new JsonResponse($minimizedOutput, 200);
     }
-
 
     /**
      * @param Request $request
@@ -368,7 +369,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($serializedLivestockAnimals);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -397,7 +397,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($this->getManager()->getRepository(Animal::class)->getAllRams());
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
@@ -413,10 +412,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($retrieveAnimals);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws \Exception
      */
     public function createRetrieveAnimals(Request $request)
     {
@@ -453,10 +452,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($messageArray);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @throws \Exception
      */
     public function createRetrieveAnimalsForAllLocations(Request $request)
     {
@@ -470,11 +469,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($message);
     }
 
-
     /**
      * @param $loggedInUser
      * @param int $hasNotBeenSyncedForAtLeastThisAmountOfDays
      * @return array
+     * @throws \Exception
      */
     public function syncAnimalsForAllLocations($loggedInUser, $hasNotBeenSyncedForAtLeastThisAmountOfDays = 0)
     {
@@ -506,10 +505,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             Constant::COUNT => $count);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws \Exception
      */
     function createAnimalDetails(Request $request)
     {
@@ -531,11 +530,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return new JsonResponse($messageArray, 200);
     }
 
-
     /**
      * @param Request $request
      * @param string $ulnString
      * @return JsonResponse
+     * @throws \Exception
      */
     public function getAnimalDetailsByUln(Request $request, $ulnString)
     {
@@ -584,7 +583,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($this->animalDetailsOutput->getForUserEnvironment($animal, $this->getUser()));
     }
 
-
     /**
      * @param string $ulnString
      * @return JsonResponse
@@ -598,8 +596,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $output = $this->getBaseSerializer()->getDecodedJson($animal, [JmsGroup::BASIC]);
         return ResultUtil::successResult($output);
     }
-
-
+    
     /**
      * @param Request $request
      * @return JsonResponse|Animal|null
