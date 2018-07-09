@@ -41,6 +41,7 @@ class JsonInputConstant
     const IS_HISTORIC_ANIMAL = 'is_historic_animal';
     const IS_PUBLIC = 'is_public';
     const IS_OWN_HISTORIC_ANIMAL = 'is_own_historic_animal';
+    const IS_OWN_ANIMAL = 'is_own_animal';
     const ULN = 'uln';
     const ULN_FATHER = 'uln_mother';
     const ULN_MOTHER = 'uln_father';

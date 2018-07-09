@@ -327,6 +327,17 @@ class AnimalDetailsOutput extends OutputServiceBase
                     $childArray[JsonInputConstant::GENERAL_APPEARANCE] = $viewDetails->getGeneralAppearance();
                     $childArray[JsonInputConstant::IS_PUBLIC] = $viewDetails->isPublic();
                     $childArray[JsonInputConstant::IS_OWN_HISTORIC_ANIMAL] = $this->isHistoricAnimalOfOwner($viewDetails, $user);
+                    $childArray[JsonInputConstant::IS_OWN_ANIMAL] = false;
+                    if($user instanceof Client) {
+                        if($child->getIsAlive()) {
+                            foreach ($user->getCompanies() as $company) {
+                                if ($child->getLocation()->getCompany()->getId() === $company->getId()) {
+                                    $childArray[JsonInputConstant::IS_OWN_ANIMAL] = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
                 switch ($genderPrimaryParent) {
