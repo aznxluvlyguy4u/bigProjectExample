@@ -640,19 +640,23 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $genderChanger = new GenderChanger($this->getManager());
         $oldGender = $animal->getGender();
         $targetGender = null;
+        $targetObjectType = null;
         $result = null;
 
         switch ($gender) {
             case AnimalObjectType::EWE:
                 $targetGender = "FEMALE";
+                $targetObjectType = AnimalObjectType::Ewe;
                 $result = $genderChanger->changeToGender($animal, Ewe::class, $this->getUser());
                 break;
             case AnimalObjectType::RAM:
                 $targetGender = "MALE";
+                $targetObjectType = AnimalObjectType::Ram;
                 $result = $genderChanger->changeToGender($animal, Ram::class, $this->getUser());
                 break;
             case AnimalObjectType::NEUTER:
                 $targetGender = "NEUTER";
+                $targetObjectType = AnimalObjectType::Neuter;
                 $result = $genderChanger->changeToGender($animal, Neuter::class, $this->getUser());
                 break;
         }
@@ -672,6 +676,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $this->clearLivestockCacheForLocation($this->getSelectedLocation($request), $animal);
 
         $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
+
+        //FIXME Temporarily workaround
+        $minimizedOutput['type'] = $targetObjectType;
+
         return new JsonResponse($minimizedOutput, 200);
     }
 }
