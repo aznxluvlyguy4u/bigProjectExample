@@ -29,6 +29,7 @@ use AppBundle\Output\AnimalOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -81,7 +82,12 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         $data = RequestUtil::getContentAsArray($request);
-        if(!Validator::verifyUlnFormat($data['uln'])) {
+
+        $ulnCountryCode = $data['uln_country_code'];
+        $ulnNumber = $data['uln_number'];
+        $uln = $ulnCountryCode.$ulnNumber;
+
+        if(!Validator::verifyUlnFormat($uln)) {
             return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
         }
 
@@ -90,7 +96,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return ResultUtil::errorResult('Dit dier bestaat al.', Response::HTTP_BAD_REQUEST);
 
         $dateOfBirth = new \DateTime($data['date_of_birth']);
+        $dateOfBirth->setTime(0,0,0);
         $breedCode = empty($data['breed_code']) ? null : $data['breed_code'];
+
+        if (!BreedCodeUtil::isValidBreedCodeString($breedCode))
+            return ResultUtil::errorResult('Ongeldige rascode', Response::HTTP_BAD_REQUEST);
 
         try {
             $animal = null;
@@ -99,7 +109,9 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             else
                 $animal = new Ewe();
 
-            $animal->setUlnNumber($data['uln']);
+            $animal->setUlnCountryCode($ulnCountryCode);
+            $animal->setUlnNumber($ulnNumber);
+            $animal->setAnimalOrderNumber(StringUtil::getLast5CharactersFromString($ulnNumber));
             $animal->setDateOfBirth($dateOfBirth);
             $animal->setBreedCode($breedCode);
             $animal->setBreedType($data['breed_type']);
