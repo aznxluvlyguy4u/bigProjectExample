@@ -177,7 +177,7 @@ class GenderChanger
         $statusCode = 403;
 
         if($user instanceof Person) {
-            if($user !== $animal->getOwner()) {
+            if(!$animal->getOwner() || $user->getId() !== $animal->getOwner()->getId()) {
                 if (!AdminValidator::isAdmin($user, AccessLevelType::ADMIN)) {
                     return new JsonResponse(
                         array(
