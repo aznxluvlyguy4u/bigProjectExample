@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 interface ExternalProviderAPIControllerInterface
 {
-    function getOffices(Request $request);
+    function getOffices();
 
-    function getCustomers(Request $request, $office);
+    function getCustomers($office);
 }
