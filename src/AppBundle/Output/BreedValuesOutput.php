@@ -208,6 +208,8 @@ class BreedValuesOutput extends OutputServiceBase
      */
     private function getNormalizedValue(BreedValueType $breedValueType)
     {
+        if($this->normalizedBreedValues == null)
+            return null;
         $value = ArrayUtil::get($breedValueType->getResultTableValueVariable(), $this->normalizedBreedValues, null);
         return $value !== null ? round($value,BreedValuesReportQueryGenerator::NORMALIZED_BREED_VALUE_DECIMAL_SPACES) : null;
     }

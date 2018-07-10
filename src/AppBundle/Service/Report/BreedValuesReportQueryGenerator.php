@@ -644,7 +644,7 @@ class BreedValuesReportQueryGenerator
                 ".$this->activeUbnOnReferenceDateJoin($activeUbnReferenceDateString)."
 
                 LEFT JOIN result_table_breed_grades bg ON a.animal_id = bg.animal_id
-                LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
+                LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.animal_id
                 LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
                 LEFT JOIN (
                             SELECT

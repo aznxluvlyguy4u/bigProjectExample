@@ -64,7 +64,8 @@ class AnimalOutput
             "is_alive" => $animal->getIsAlive(),
             "is_departed_animal" => $animal->getIsDepartedAnimal(),
             'weight' => $weight,
-            'weight_measurement_date' => $weightMeasurementDate
+            'weight_measurement_date' => $weightMeasurementDate,
+            "type" => $animal->getObjectType(),
         );
 
         return $result;

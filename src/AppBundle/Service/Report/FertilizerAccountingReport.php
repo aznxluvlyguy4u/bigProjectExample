@@ -9,26 +9,20 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FertilizerCategory;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\FilesystemUtil;
-use AppBundle\Util\ProcessUtil;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class FertilizerAccountingReport extends ReportServiceBase implements ReportServiceInterface
+class FertilizerAccountingReport extends ReportServiceBase
 {
     const TITLE = 'fertilizer_accounting';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
-
-    const PROCESS_TIME_LIMIT_IN_MINUTES = 20;
 
     const ANIMAL_COUNT_DECIMAL_PRECISION = 2;
     const NITROGEN_DECIMAL_PRECISION = 2;
@@ -47,26 +41,22 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
     /**
      * @inheritDoc
      */
-    function getReport(Request $request)
+    function getReport(Location $location, \DateTime $referenceDate, $extension)
     {
         try {
-            $this->location = $this->getSelectedLocation($request, true);
-            $referenceDate = RequestUtil::getDateQuery($request,QueryParameter::REFERENCE_DATE, new \DateTime());
+            $this->location = $location;
+            $this->extension = $extension;
 
-            $this->extension = FileType::CSV;
-            $this->extension = strtolower($request->query->get(QueryParameter::FILE_TYPE_QUERY));
-
-            ProcessUtil::setTimeLimitInMinutes(self::PROCESS_TIME_LIMIT_IN_MINUTES);
-
-            $historicLiveStockCountsByFertilizerCategory = $this->getHistoricLiveStockCountsByFertilizerCategory($referenceDate);
+            $sql = $this->getHistoricLiveStockCountsByFertilizerCategoryQuery($referenceDate);
+            $historicLiveStockCountsByFertilizerCategory = $this->em->getConnection()->query($sql)->fetchAll();
 
             $totalResults = $this->yearlyAveragesWithFertilizerOutput($historicLiveStockCountsByFertilizerCategory);
             $this->retrieveNewestAndOldestReferenceDate($historicLiveStockCountsByFertilizerCategory);
 
-            if ($this->extension === FileType::CSV) {
-                return $this->createCsvFile($historicLiveStockCountsByFertilizerCategory, $totalResults);
-            } else {
+            if ($this->extension === FileType::PDF) {
                 return $this->getPdfReport($historicLiveStockCountsByFertilizerCategory, $totalResults);
+            } else {
+                return $this->createCsvFile($historicLiveStockCountsByFertilizerCategory, $totalResults);
             }
 
             throw new \Exception('INVALID FILE TYPE', Response::HTTP_PRECONDITION_REQUIRED);
@@ -488,6 +478,5 @@ class FertilizerAccountingReport extends ReportServiceBase implements ReportServ
     {
         return $this->trans('FERTILIZER ACCOUNTING NOTE', ['%year%' => DateUtil::currentYear()]);
     }
-
 
 }

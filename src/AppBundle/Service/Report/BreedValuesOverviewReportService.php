@@ -47,7 +47,7 @@ class BreedValuesOverviewReportService extends ReportServiceWithBreedValuesBase
         $this->filename = $this->translate(self::FILENAME_PART_1).'_'.$this->translate(self::FILENAME_PART_2);
         $this->folderName = self::FOLDER_NAME;
 
-        $this->setLocaleFromQueryParameter($request);
+//        $this->setLocaleFromQueryParameter($locale);
 
         return $this->generate($fileType, $concatBreedValuesAndAccuracies, $includeAllLiveStockAnimals, $uploadToS3);
     }

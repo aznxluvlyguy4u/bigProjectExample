@@ -363,3 +363,4 @@ THE PASSWORD IS INCORRECT: The password is invalid
 DECLARE_ARRIVAL: Automatically issued an arrival notification
 DECLARE_DEPART: Automatically issued a departure notification
 NEW_INVOICE: U just received a new invoice
+A SIMILAR REPORT IS ALREADY BEING GENERATED: A similar report is already being generated

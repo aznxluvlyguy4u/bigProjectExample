@@ -95,6 +95,75 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
         return $this->get('app.animal')->getAnimals($request);
     }
 
+    /**
+     * Create an animal
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="plain_text_input",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="input type (currently the false path is not implemented), true by default",
+     *        "format"="?plain_text_input=true"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve a list of animals by plain text input"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/create")
+     * @Method("POST")
+     */
+    public function createAnimal(Request $request)
+    {
+        return $this->get('app.animal')->createAnimal($request);
+    }
+
+    /**
+     * Find an animal
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="plain_text_input",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="input type (currently the false path is not implemented), true by default",
+     *        "format"="?plain_text_input=true"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve a list of animals by plain text input"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/find")
+     * @Method("POST")
+     */
+    public function findAnimal(Request $request)
+    {
+        return $this->get('app.animal')->findAnimal($request);
+    }
 
   /**
    * Retrieve an animal, found by it's ULN. For example NL100029511721

@@ -31,16 +31,8 @@ class PedigreeRegisterOverviewReportService extends ReportServiceBase
      * @param Request $request
      * @return JsonResponse
      */
-    public function request(Request $request)
+    public function request($type, $fileType, $uploadToS3)
     {
-        if(!AdminValidator::isAdmin($this->userService->getUser(), AccessLevelType::SUPER_ADMIN)) { //validate if user is at least a SUPER_ADMIN
-            return AdminValidator::getStandardErrorResponse();
-        }
-
-        $type = $request->query->get(QueryParameter::TYPE_QUERY);
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
-        $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, !$this->outputReportsToCacheFolderForLocalTesting);
-
         $this->excelService
             ->setKeywords(self::KEYWORDS)
             ->setDescription(self::DESCRIPTION)

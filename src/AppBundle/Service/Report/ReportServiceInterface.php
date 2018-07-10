@@ -9,9 +9,10 @@ use Symfony\Component\HttpFoundation\Request;
 
 interface ReportServiceInterface
 {
+
     /**
      * @param Request $request
-     * @return JsonResponse
+     * @return mixed
      */
     function getReport(Request $request);
 }

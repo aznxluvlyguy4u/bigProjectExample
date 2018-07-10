@@ -20,6 +20,7 @@ use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
@@ -28,6 +29,7 @@ use AppBundle\Output\AnimalOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -69,6 +71,84 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return $this->getAllAnimalsByTypeOrState($request);
     }
 
+    /**
+ * @param Request $request
+ * @return JsonResponse
+ */
+    public function createAnimal(Request $request)
+    {
+        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $data = RequestUtil::getContentAsArray($request);
+
+        $ulnCountryCode = $data['uln_country_code'];
+        $ulnNumber = $data['uln_number'];
+        $uln = $ulnCountryCode.$ulnNumber;
+
+        if(!Validator::verifyUlnFormat($uln)) {
+            return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
+        }
+
+        $existingAnimal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($data['uln'], true);
+        if(!empty($existingAnimal))
+            return ResultUtil::errorResult('Dit dier bestaat al.', Response::HTTP_BAD_REQUEST);
+
+        $dateOfBirth = new \DateTime($data['date_of_birth']);
+        $dateOfBirth->setTime(0,0,0);
+        $breedCode = empty($data['breed_code']) ? null : $data['breed_code'];
+
+        if (!BreedCodeUtil::isValidBreedCodeString($breedCode))
+            return ResultUtil::errorResult('Ongeldige rascode', Response::HTTP_BAD_REQUEST);
+
+        try {
+            $animal = null;
+            if($data['gender'] === GenderType::MALE)
+                $animal = new Ram();
+            else
+                $animal = new Ewe();
+
+            $animal->setUlnCountryCode($ulnCountryCode);
+            $animal->setUlnNumber($ulnNumber);
+            $animal->setAnimalOrderNumber(StringUtil::getLast5CharactersFromString($ulnNumber));
+            $animal->setDateOfBirth($dateOfBirth);
+            $animal->setBreedCode($breedCode);
+            $animal->setBreedType($data['breed_type']);
+            $animal->setIsAlive($data['is_alive']);
+            $this->getManager()->persist($animal);
+            $this->getManager()->flush();
+        }
+        catch(\Exception $e) {
+            return ResultUtil::errorResult('', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return ResultUtil::successResult('Dier is met success aangemaakt.');
+    }
+
+    public function findAnimal(Request $request)
+    {
+        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $data = RequestUtil::getContentAsArray($request);
+        if(!Validator::verifyUlnFormat($data['uln'])) {
+            return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $animals = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($data['uln'], true);
+            if(!$animals)
+                return ResultUtil::errorResult('Dit dier bestaat niet.', Response::HTTP_BAD_REQUEST);
+
+            $minimizedOutput = AnimalOutput::createAnimalArray($animals, $this->getManager());
+            return ResultUtil::successResult($minimizedOutput);
+        }
+        catch (\Exception $e){
+            return ResultUtil::successResult($e);
+        }
+    }
 
     /**
      * @param Request $request
@@ -132,7 +212,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return ResultUtil::errorResult($exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $serializedAnimalsOutput = self::getSerializedAnimalsInBatchEditFormat($this, $animals);
+        $includeLitter = RequestUtil::getBooleanQuery($request, QueryParameter::INCLUDE_LITTER, false);
+        $serializedAnimalsOutput = self::getSerializedAnimalsInBatchEditFormat($this, $animals, $includeLitter);
 
         $ulnsWithMissingAnimals = [];
         $stnsWithMissingAnimals = [];
@@ -158,19 +239,29 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         ]);
     }
 
-
-    public static function getSerializedAnimalsInBatchEditFormat(ControllerServiceBase $controllerServiceBase, array $animals = [])
+    /**
+     * @param ControllerServiceBase $controllerServiceBase
+     * @param array $animals
+     * @param bool $includeLitter
+     * @return array
+     */
+    public static function getSerializedAnimalsInBatchEditFormat(ControllerServiceBase $controllerServiceBase, array $animals = [], $includeLitter = false)
     {
         $foundUlns = [];
         $foundStns = [];
 
         $totalFoundAnimals = [];
 
+        $jmsGroups = [JmsGroup::ANIMALS_BATCH_EDIT];
+        if ($includeLitter) {
+            $jmsGroups[] = JmsGroup::LITTER;
+        }
+
         /** @var Animal $animal */
         foreach ($animals as $animal) {
             $serializedAnimal = $controllerServiceBase->getDecodedJsonOfAnimalWithParents(
                 $animal,
-                [JmsGroup::ANIMALS_BATCH_EDIT],
+                $jmsGroups,
                 true,
                 true
             );
@@ -189,7 +280,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             JsonInputConstant::FOUND_STNS => $foundStns,
         ];
     }
-
 
     /**
      * @param Request $request
@@ -222,7 +312,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return true;
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -251,7 +340,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($minimizedOutput);
     }
 
-
     /**
      * @param Request $request
      * @param $uln
@@ -263,7 +351,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
         return new JsonResponse($minimizedOutput, 200);
     }
-
 
     /**
      * @param Request $request
@@ -294,7 +381,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($serializedLivestockAnimals);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -323,7 +409,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($this->getManager()->getRepository(Animal::class)->getAllRams());
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
@@ -339,10 +424,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($retrieveAnimals);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws \Exception
      */
     public function createRetrieveAnimals(Request $request)
     {
@@ -379,10 +464,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($messageArray);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @throws \Exception
      */
     public function createRetrieveAnimalsForAllLocations(Request $request)
     {
@@ -396,11 +481,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($message);
     }
 
-
     /**
      * @param $loggedInUser
      * @param int $hasNotBeenSyncedForAtLeastThisAmountOfDays
      * @return array
+     * @throws \Exception
      */
     public function syncAnimalsForAllLocations($loggedInUser, $hasNotBeenSyncedForAtLeastThisAmountOfDays = 0)
     {
@@ -432,10 +517,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             Constant::COUNT => $count);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws \Exception
      */
     function createAnimalDetails(Request $request)
     {
@@ -457,11 +542,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return new JsonResponse($messageArray, 200);
     }
 
-
     /**
      * @param Request $request
      * @param string $ulnString
      * @return JsonResponse
+     * @throws \Exception
      */
     public function getAnimalDetailsByUln(Request $request, $ulnString)
     {
@@ -510,7 +595,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($this->animalDetailsOutput->getForUserEnvironment($animal, $this->getUser()));
     }
 
-
     /**
      * @param string $ulnString
      * @return JsonResponse
@@ -524,11 +608,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $output = $this->getBaseSerializer()->getDecodedJson($animal, [JmsGroup::BASIC]);
         return ResultUtil::successResult($output);
     }
-
-
+    
     /**
      * @param Request $request
      * @return JsonResponse|Animal|null
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function changeGenderOfUln(Request $request)
     {
@@ -568,19 +652,23 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $genderChanger = new GenderChanger($this->getManager());
         $oldGender = $animal->getGender();
         $targetGender = null;
+        $targetObjectType = null;
         $result = null;
 
         switch ($gender) {
             case AnimalObjectType::EWE:
                 $targetGender = "FEMALE";
+                $targetObjectType = AnimalObjectType::Ewe;
                 $result = $genderChanger->changeToGender($animal, Ewe::class, $this->getUser());
                 break;
             case AnimalObjectType::RAM:
                 $targetGender = "MALE";
+                $targetObjectType = AnimalObjectType::Ram;
                 $result = $genderChanger->changeToGender($animal, Ram::class, $this->getUser());
                 break;
             case AnimalObjectType::NEUTER:
                 $targetGender = "NEUTER";
+                $targetObjectType = AnimalObjectType::Neuter;
                 $result = $genderChanger->changeToGender($animal, Neuter::class, $this->getUser());
                 break;
         }
@@ -600,6 +688,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $this->clearLivestockCacheForLocation($this->getSelectedLocation($request), $animal);
 
         $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
+
+        //FIXME Temporarily workaround
+        $minimizedOutput['type'] = $targetObjectType;
+
         return new JsonResponse($minimizedOutput, 200);
     }
 }

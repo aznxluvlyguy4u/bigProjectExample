@@ -321,11 +321,20 @@ abstract class Person implements UserInterface
      */
     private $mobileDevices;
 
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Worker", mappedBy="owner", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Worker>")
+     */
+    private $workers;
+
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
   {
     $this->tokens = new ArrayCollection();
     $this->mobileDevices = new ArrayCollection();
+    $this->workers = new ArrayCollection();
     
     $this->setFirstName($firstName);
     $this->setLastName($lastName);

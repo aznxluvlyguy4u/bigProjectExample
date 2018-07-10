@@ -306,6 +306,14 @@ class Location
     private $isActive;
 
     /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Worker", mappedBy="location", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Worker>")
+     */
+    private $workers;
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("owner")
      * @JMS\Groups({
@@ -376,6 +384,7 @@ class Location
     $this->treatmentTemplates = new ArrayCollection();
     $this->treatments = new ArrayCollection();
     $this->pedigreeRegisterRegistrations = new ArrayCollection();
+    $this->workers = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 

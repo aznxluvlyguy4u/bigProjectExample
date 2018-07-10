@@ -260,6 +260,19 @@ class AnimalDetailsOutput extends OutputServiceBase
             ];
         }
 
+        $isOwnAnimal = false;
+        if($user instanceof Client) {
+            if($animal->getIsAlive()) {
+                foreach ($user->getCompanies() as $company) {
+                    if ($animal->getLocation() && $animal->getLocation()->getCompany()->getId() === $company->getId()) {
+                        $isOwnAnimal = true;
+                        break;
+                    }
+                }
+            }
+        }
+        $result[JsonInputConstant::IS_OWN_ANIMAL] = $isOwnAnimal;
+
         $this->ownerUbns = null;
 
         return $result;

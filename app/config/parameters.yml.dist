@@ -52,6 +52,7 @@ parameters:
     external_provider_password: ~
     external_provider_organisation: ~
 
+    worker_queue_dir: '/tmp/nsfo-symfony-worker-queue'
 
     locale: en
 
