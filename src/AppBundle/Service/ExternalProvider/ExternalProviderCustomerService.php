@@ -43,7 +43,7 @@ class ExternalProviderCustomerService
     public function getSingleCustomer($debtorNumber, $administrationCode) {
         $offices = $this->twinfieldOfficeService->getAllOffices();
         $customerOffice = new Office();
-        if (!is_a($offices[0], Office::class)) {
+        if (!is_array($offices) || empty($offices) || !is_a($offices[0], Office::class)) {
             return ResultUtil::errorResult("ExternalProvider office call failed", 404);
         }
         /** @var Office $office */
