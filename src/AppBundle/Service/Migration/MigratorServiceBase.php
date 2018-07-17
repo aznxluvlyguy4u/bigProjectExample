@@ -210,6 +210,34 @@ abstract class MigratorServiceBase
 
 
     /**
+     * @param string $dateString
+     * @return string
+     */
+    protected function parseYearFromDateString($dateString)
+    {
+        $year = null;
+        if (!empty($dateString)) {
+            $date = new \DateTime($dateString);
+            $year = $date->format('Y');
+        }
+        return $this->parseYear($year);
+    }
+
+
+    /**
+     * @param int|string $year
+     * @return string
+     */
+    protected function parseYear($year)
+    {
+        if ((ctype_digit($year) || is_int($year)) && strlen(strval($year)) === 4) {
+            return $year;
+        }
+        return SqlUtil::NULL;
+    }
+
+
+    /**
      * @param string $sqlSelectWithKey
      * @param string $sqlUpdateBase
      * @param string $sqlUpdateEnd

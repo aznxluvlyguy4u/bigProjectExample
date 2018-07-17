@@ -17,6 +17,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigratorService
 {
     const MAX_EPG = 30000;
+    const HAS_AFTER_2017_FORMAT = true;
 
     /** @var array */
     private $animalIdsByUln;
@@ -40,15 +41,24 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
 
         DoctrineUtil::updateTableSequence($this->conn, ['worm_resistance']);
 
-        $this->writeLn('Get animalIds by vsmId search array ...');
-        $this->animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
         $this->writeLn('Get animalIds by uln search array ...');
         $this->animalIdsByUln = $this->animalRepository->getAnimalPrimaryKeysByUlnStringArrayIncludingTagReplaces();
-        $this->writeLn('Get animalIds by unique stn search array ...');
-        $this->animalIdsByUniqueStn = $this->animalRepository->getAnimalPrimaryKeysByUniqueStnArray();
+        if (self::HAS_AFTER_2017_FORMAT) {
+            $this->animalIdsByVsmId = [];
+            $this->animalIdsByUniqueStn = [];
+        } else {
+            $this->writeLn('Get animalIds by vsmId search array ...');
+            $this->animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
+            $this->writeLn('Get animalIds by unique stn search array ...');
+            $this->animalIdsByUniqueStn = $this->animalRepository->getAnimalPrimaryKeysByUniqueStnArray();
+        }
 
         $this->writeLn('Get current WormResistance records search array ...');
-        $sql = "SELECT CONCAT(animal_id,'|',year,sample_period) as key FROM worm_resistance";
+        if (self::HAS_AFTER_2017_FORMAT) {
+            $sql = "SELECT CONCAT(animal_id,'|',year) as key FROM worm_resistance";
+        } else {
+            $sql = "SELECT CONCAT(animal_id,'|',year,sample_period) as key FROM worm_resistance";
+        }
         $currentRecords = SqlUtil::getSingleValueGroupedSqlResults(
             'key', $this->conn->query($sql)->fetchAll(), false, true);
 
@@ -64,7 +74,13 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
         $this->data = $this->parseCSV(self::WORM_RESISTANCE);
         $this->sqlBatchProcessor->start(count($this->data));
 
+        $missingUlns = [];
+
         foreach ($this->data as $record) {
+
+            /*
+             * 2014 - 2017 Format
+             *
             //$ubnDashAnimalOrderNumber = $record[0];
             //$vsmId = $record[1]; //string/int
             //$stnOrUln = $record[2]; //string
@@ -82,10 +98,36 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
             $carlaIgaNz = $this->parseFloat($record[14]); //float
             $classCarlaIgaNz = SqlUtil::getNullCheckedValueForSqlQuery($record[15], true); //string
             $samplePeriod = SqlUtil::getNullCheckedValueForSqlQuery($record[16], false); //int
+             *
+             *
+             */
 
-            $animalId = $this->getAnimalId($record);
 
-            if ($animalId === null || key_exists($animalId.'|'.$year.$record[16], $currentRecords)) {
+            /*
+             * 2018+ format
+             */
+            $treatmentUbn = $this->parseUbn($record[0]); //int
+            $treatedForSamples = $this->getTreatedForSamples($record[1]); // Ontwormd nee/ja/null/''
+            $sampleDateString = $this->parseDateString($record[2]); //Date YYYY-MM-DD
+            $sIgaGlasgow = $this->parseFloat($record[5]); //float
+            $year = $this->parseYearFromDateString($record[2]); //int
+            $samplePeriod = SqlUtil::NULL;
+            $epg = SqlUtil::NULL;
+            $carlaIgaNz = SqlUtil::NULL;
+            $classCarlaIgaNz = SqlUtil::NULL;
+            /*
+             *
+             */
+
+            $animalId = $this->getAnimalId($record, self::HAS_AFTER_2017_FORMAT);
+
+            $uniqueSearchKey = self::HAS_AFTER_2017_FORMAT ? $animalId.'|'.$year : $animalId.'|'.$year.$record[16];
+
+            if (self::HAS_AFTER_2017_FORMAT && $animalId === null) {
+                $missingUlns[] = $record[3].$record[4];
+            }
+
+            if ($animalId === null || key_exists($uniqueSearchKey, $currentRecords)) {
                 $insertBatchSet->incrementSkippedCount();
                 continue;
             }
@@ -105,6 +147,17 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
             ->purgeAllSets();
 
         $this->fillEmptyTreatmentUbnsWithCurrentUbns();
+
+        if (!empty($missingUlns)) {
+            $this->writeLn(count($missingUlns).' Missing ULNs');
+            $prefix = '';
+            $searchString = 'SELECT * FROM animal WHERE CONCAT(uln_country_code, uln_number) IN (';
+            foreach ($missingUlns as $missingUln) {
+                $searchString .= $prefix . "'" . $missingUln . "'";
+                $prefix = ',';
+            }
+            $this->writeLn($searchString.')');
+        }
     }
 
 
@@ -143,9 +196,9 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
      */
     private function getTreatedForSamples($value)
     {
-        if ($value === 'nee') {
+        if ($value === 'nee' || $value === 'FALSE' || $value === false) {
             return 'FALSE';
-        } elseif ($value === 'ja') {
+        } elseif ($value === 'ja' || $value === 'TRUE' || $value === true) {
             return 'TRUE';
         } else {
             return SqlUtil::NULL;
@@ -201,13 +254,21 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
      * 3. $stnOrUln for uln
      * 4. $stnOrUln for stn
      */
-    private function getAnimalId($record)
+    private function getAnimalId($record, $isAfter2017Format = true)
     {
-        $vsmId = $record[1]; //string/int
-        $stnOrUln = $record[2]; //string
-        $uln = $record[3]; //string
-        $ulnCountryCode = $record[4]; //string
-        $ulnNumber = $record[5]; //string
+        if ($isAfter2017Format) {
+            $ulnCountryCode = $record[3]; //string
+            $ulnNumber = $record[4]; //string
+            $vsmId = '';
+            $stnOrUln = '';
+            $uln = '';
+        } else {
+            $vsmId = $record[1]; //string/int
+            $stnOrUln = $record[2]; //string
+            $uln = $record[3]; //string
+            $ulnCountryCode = $record[4]; //string
+            $ulnNumber = $record[5]; //string
+        }
 
         $separateUlnValuesExists = $ulnCountryCode != '' && $ulnNumber != '';
         $unifiedUlnValueExist = $uln != '';
@@ -272,19 +333,6 @@ class WormResistanceMigrator extends Migrator2017JunServiceBase implements IMigr
 
         //Ignore ambiguous results and empty results
         return null;
-    }
-
-
-    /**
-     * @param int|string $year
-     * @return string
-     */
-    private function parseYear($year)
-    {
-        if ((ctype_digit($year) || is_int($year)) && strlen(strval($year)) === 4) {
-            return $year;
-        }
-        return SqlUtil::NULL;
     }
 
 }
