@@ -102,6 +102,9 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         if (!BreedCodeUtil::isValidBreedCodeString($breedCode))
             return ResultUtil::errorResult('Ongeldige rascode', Response::HTTP_BAD_REQUEST);
 
+        if (!Validator::hasValidBreedType($data['breed_type'], false))
+            return ResultUtil::errorResult('Ongeldige rastype', Response::HTTP_BAD_REQUEST);
+
         try {
             $animal = null;
             if($data['gender'] === GenderType::MALE)
