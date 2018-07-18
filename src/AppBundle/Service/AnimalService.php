@@ -95,6 +95,9 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         if(!empty($existingAnimal))
             return ResultUtil::errorResult('Dit dier bestaat al.', Response::HTTP_BAD_REQUEST);
 
+        if (empty($data['date_of_birth']))
+            return ResultUtil::errorResult('Vul een geboortedatum in.', Response::HTTP_BAD_REQUEST);
+
         $dateOfBirth = new \DateTime($data['date_of_birth']);
         $dateOfBirth->setTime(0,0,0);
         $breedCode = empty($data['breed_code']) ? null : $data['breed_code'];
