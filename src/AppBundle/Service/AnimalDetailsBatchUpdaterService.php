@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Cache\GeneDiversityUpdater;
+use AppBundle\Cache\NLingCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -47,6 +48,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     private $parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated;
     /** @var array */
     private $parentValidationErrorSets;
+
+    /** @var array */
+    private $animalIdsWithUpdatedNLingValues;
 
     /* Parent error messages */
     const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
@@ -131,7 +135,6 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         }
 
 
-
         $this->getManager()->getConnection()->beginTransaction();
         $this->getManager()->getConnection()->setAutoCommit(false);
 
@@ -161,12 +164,13 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $this->logExceptionAsError($exception);
 
             $errorMessage =
-                $this->translateUcFirstLower('SOMETHING WENT WRONG WHEN PERSISTING THE CHANGES') .'. '.
-                $this->translateUcFirstLower('THE CHANGES WERE NOT SAVED') .'. '
-            ;
+                $this->translateUcFirstLower('SOMETHING WENT WRONG WHEN PERSISTING THE CHANGES') . '. ' .
+                $this->translateUcFirstLower('THE CHANGES WERE NOT SAVED') . '. ';
             return ResultUtil::errorResult($errorMessage, Response::HTTP_INTERNAL_SERVER_ERROR);
 
         }
+
+        $this->getManager()->getConnection()->setAutoCommit(true);
 
         $successfulUpdateOfSecondaryValues = true;
         $updateIndirectValuesResult = $this->updateIndirectSecondaryValues();
@@ -174,16 +178,39 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $successfulUpdateOfSecondaryValues = false;
         }
 
+        $successFullyUpdatedResultTableValues = true;
+        if ($this->updateResultTableValues() instanceof JsonResponse) {
+            $successFullyUpdatedResultTableValues = false;
+        }
+
         $serializedUpdatedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults[JsonInputConstant::UPDATED])[JsonInputConstant::ANIMALS];
         $serializedNonUpdatedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults[JsonInputConstant::NOT_UPDATED])[JsonInputConstant::ANIMALS];
 
         return ResultUtil::successResult([
             JsonInputConstant::ANIMALS => [
-                    JsonInputConstant::UPDATED => $serializedUpdatedAnimalsOutput,
-                    JsonInputConstant::NOT_UPDATED => $serializedNonUpdatedAnimalsOutput,
-                ],
+                JsonInputConstant::UPDATED => $serializedUpdatedAnimalsOutput,
+                JsonInputConstant::NOT_UPDATED => $serializedNonUpdatedAnimalsOutput,
+            ],
             JsonInputConstant::SUCCESSFUL_UPDATE_SECONDARY_VALUES => $successfulUpdateOfSecondaryValues,
+            JsonInputConstant::SUCCESSFUL_UPDATE_RESULT_TABLE_VALUES => $successFullyUpdatedResultTableValues,
         ]);
+    }
+
+
+    /**
+     * @return JsonResponse|bool
+     */
+    private function updateResultTableValues()
+    {
+        if (!empty($this->animalIdsWithUpdatedNLingValues)) {
+            try {
+                NLingCacher::updateNLingValues($this->getConnection(), $this->animalIdsWithUpdatedNLingValues);
+            } catch (\Exception $exception) {
+                $this->logExceptionAsError($exception);
+                return ResultUtil::errorResult('SOMETHING WENT WRONG WHILE UPDATING THE RESULT TABLE VALUES, BUT THE PRIMARY VALUES WERE CORRECTLY UPDATED', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        }
+        return true;
     }
 
 
@@ -436,6 +463,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
         $updatedAnimals = [];
         $nonUpdatedAnimals = [];
+        $this->animalIdsWithUpdatedNLingValues = [];
 
         foreach ($animalsWithNewValues as $animalsWithNewValue) {
             $animalId = $animalsWithNewValue->getId();
@@ -643,6 +671,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $oldNLing = $retrievedAnimal->getNLing();
             $retrievedAnimal->setNLing($newNLing);
             $this->updateCurrentActionLogMessage('N-Ling backup value', $oldNLing, $newNLing);
+            $this->animalIdsWithUpdatedNLingValues[] = $retrievedAnimal->getId();
         }
 
         $newBlindnessFactor = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getBlindnessFactor());
