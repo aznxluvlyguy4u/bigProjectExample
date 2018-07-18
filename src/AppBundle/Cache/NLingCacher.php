@@ -58,23 +58,31 @@ class NLingCacher
                              ".$animalIdFilterString."
                        UNION
                        -- nLing, litter still linked but revoked or mother not set
-                       SELECT c.id as cache_id, c.n_ling as current_n_ling, '0-ling' as new_n_ling,
-                         (c.n_ling <> '0-ling' OR c.n_ling ISNULL ) as update_n_ling
+                       SELECT c.id as cache_id, c.n_ling as current_n_ling,
+                       CONCAT(COALESCE(a.n_ling, 0),'-ling') as new_n_ling,
+                         (c.n_ling <> CONCAT(COALESCE(a.n_ling, 0),'-ling') OR c.n_ling ISNULL ) as update_n_ling
                        FROM animal a
                          INNER JOIN litter l ON a.litter_id = l.id
                          INNER JOIN animal_cache c ON c.animal_id = a.id
                        WHERE (l.status = 'REVOKED' OR l.animal_mother_id ISNULL) --If mother ISNULL the offspringCounts <> nLing
-                             AND (c.n_ling <> '0-ling'  OR c.n_ling ISNULL ) --the default value for unknown nLings should be '0-ling'
+                             AND (
+                                    c.n_ling <> CONCAT(COALESCE(a.n_ling, 0),'-ling')
+                                    OR c.n_ling ISNULL
+                                 ) --the default value for unknown nLings should be the n_ling value in animal or '0-ling' if that is null
                              ".$animalIdFilterString."
                        UNION
                        -- nLing, litter not linked anymore
-                       SELECT c.id as cache_id, c.n_ling as current_n_ling, '0-ling' as new_n_ling,
-                         (c.n_ling <> '0-ling' OR c.n_ling ISNULL ) as update_n_ling
+                       SELECT c.id as cache_id, c.n_ling as current_n_ling,
+                       CONCAT(COALESCE(a.n_ling, 0),'-ling') as new_n_ling,
+                         (c.n_ling <> CONCAT(COALESCE(a.n_ling, 0),'-ling') OR c.n_ling ISNULL ) as update_n_ling
                        FROM animal a
                          LEFT JOIN litter l ON a.litter_id = l.id
                          INNER JOIN animal_cache c ON c.animal_id = a.id
                        WHERE l.id ISNULL
-                             AND (c.n_ling <> '0-ling'  OR c.n_ling ISNULL ) --the default value for unknown nLings should be '0-ling'
+                             AND (
+                                    c.n_ling <> CONCAT(COALESCE(a.n_ling, 0),'-ling')  
+                                    OR c.n_ling ISNULL
+                             ) --the default value for unknown nLings should be the n_ling value in animal or '0-ling' if that is null
                              ".$animalIdFilterString."
                      ) AS v(cache_id, current_n_ling, new_n_ling, update_n_ling) WHERE animal_cache.id = v.cache_id AND v.update_n_ling = TRUE
                   RETURNING 1

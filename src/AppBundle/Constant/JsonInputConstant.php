@@ -11,6 +11,7 @@ class JsonInputConstant
     const UPDATED = 'updated';
     const NOT_UPDATED = 'not_updated';
     const SUCCESSFUL_UPDATE_SECONDARY_VALUES = 'successful_update_secondary_values';
+    const SUCCESSFUL_UPDATE_RESULT_TABLE_VALUES = 'successful_update_result_table_values';
 
     //Admins
     const ADMINS = 'admins';

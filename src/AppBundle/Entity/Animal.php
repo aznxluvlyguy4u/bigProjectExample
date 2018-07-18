@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\BreedCodeUtil;
@@ -895,7 +896,10 @@ abstract class Animal
      */
     public function mergedNLing()
     {
-        if ($this->getLitter()) {
+        if ($this->getLitter()
+            && $this->getLitter()->getAnimalMother()
+            && $this->getLitter()->getStatus() !== RequestStateType::REVOKED
+        ) {
             return intval($this->getLitter()->getSize());
         }
 
