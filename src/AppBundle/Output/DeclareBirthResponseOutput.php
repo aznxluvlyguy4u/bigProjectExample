@@ -175,12 +175,6 @@ class DeclareBirthResponseOutput extends Output
 
         foreach ($declarations as $declaration) {
 
-            if($declaration['is_abortion'] == true ||  $declaration['is_pseudo_pregnancy'] == true) {
-                $requestState = RequestStateType::FINISHED;
-            } else {
-                $requestState = Utils::fillNull($declaration['request_state']);
-            }
-
             $res[] = array(
               "litter_id" => $declaration['id'],
               "log_date" => Utils::fillNull($declaration['log_date']),
@@ -194,7 +188,7 @@ class DeclareBirthResponseOutput extends Output
               "is_abortion" => Utils::fillNull($declaration['is_abortion']),
               "is_pseudo_pregnancy" => Utils::fillNull($declaration['is_pseudo_pregnancy']),
               "status" => Utils::fillNull($declaration['status']),
-              "request_state" => $requestState,
+              "request_state" => Utils::fillNull($declaration['request_state']),
             );
         }
 
