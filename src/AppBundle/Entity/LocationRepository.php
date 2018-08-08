@@ -8,6 +8,7 @@ use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Enumerator\Country;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Types\Type;
@@ -230,5 +231,34 @@ class LocationRepository extends BaseRepository
       ;
 
       return $qb->getQuery()->getResult();
+  }
+
+
+    /**
+     * @param $location
+     * @param string $defaultCountryCode
+     * @return null|string
+     * @throws \Doctrine\DBAL\DBALException
+     */
+  public function getCountryCode($location, $defaultCountryCode = Country::NL)
+  {
+      $locationPrimaryKey = null;
+      if ($location instanceof Location && $location->getId()) {
+          $locationPrimaryKey = $location->getId();
+      } elseif (ctype_digit($location) || is_int($location)) {
+          $locationPrimaryKey = intval($location);
+      } else {
+          return null;
+      }
+
+      $sql = "SELECT
+          c.code as country_code
+        FROM country c
+          INNER JOIN address a ON a.country = c.name
+          INNER JOIN location l ON l.address_id = a.id
+        WHERE l.id = ".$locationPrimaryKey;
+      $result = $this->getConnection()->query($sql)->fetch();
+
+      return $result ? $result['country_code'] : $defaultCountryCode;
   }
 }
