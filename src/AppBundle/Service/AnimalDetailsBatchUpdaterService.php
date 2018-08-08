@@ -241,84 +241,97 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     private function cleanUpInputValues(array $animalsWithNewValues = [])
     {
         foreach ($animalsWithNewValues as $key => $animalsWithNewValue) {
-            if ($animalsWithNewValue->getBirthProgress() === '') {
-                $animalsWithNewValue->setBirthProgress(null);
-            }
-
-            if ($animalsWithNewValue->getBreedType() === '') {
-                $animalsWithNewValue->setBreedType(null);
-            }
-
-            if ($animalsWithNewValue->getBlindnessFactor() === '') {
-                $animalsWithNewValue->setBlindnessFactor(null);
-            }
-
-            if ($animalsWithNewValue->getCollarColor() === '') {
-                $animalsWithNewValue->setCollarColor(null);
-            }
-
-            if ($animalsWithNewValue->getCollarNumber() === '') {
-                $animalsWithNewValue->setCollarNumber(null);
-            }
-
-            if ($animalsWithNewValue->getParentMotherId() === null) {
-                $animalsWithNewValue->setParentMother(null);
-            }
-
-            if ($animalsWithNewValue->getParentFatherId() === null) {
-                $animalsWithNewValue->setParentFather(null);
-            }
-
-            if ($animalsWithNewValue->getSurrogate() && $animalsWithNewValue->getSurrogate()->getId() === null) {
-                $animalsWithNewValue->setSurrogate(null);
-            }
-
-            if ($animalsWithNewValue->getLocation() && $animalsWithNewValue->getLocation()->getLocationId() === null) {
-                $animalsWithNewValue->setLocation(null);
-            }
-
-            if ($animalsWithNewValue->getLocationOfBirth() && $animalsWithNewValue->getLocationOfBirth()->getLocationId() === null) {
-                $animalsWithNewValue->setLocationOfBirth(null);
-            }
-
-            if ($animalsWithNewValue->getPedigreeRegister() && $animalsWithNewValue->getPedigreeRegister()->getId() === null) {
-                $animalsWithNewValue->setPedigreeRegister(null);
-            }
-
-            if ($animalsWithNewValue->getLitter()) {
-                if ($animalsWithNewValue->getLitter()->getId() === null) {
-                    $animalsWithNewValue->setLitter(null);
-                } else {
-                    if ($animalsWithNewValue->getLitter()->getAnimalMother()
-                        && $animalsWithNewValue->getLitter()->getAnimalMother()->getId() === null) {
-                        $animalsWithNewValue->getLitter()->setAnimalMother(null);
-                    }
-
-                    if ($animalsWithNewValue->getLitter()->getAnimalFather()
-                        && $animalsWithNewValue->getLitter()->getAnimalFather()->getId() === null) {
-                        $animalsWithNewValue->getLitter()->setAnimalFather(null);
-                    }
-                }
-            }
-
-            if ($animalsWithNewValue->getPredicate() === '') {
-                $animalsWithNewValue->setPredicate(null);
-            }
-
-            if ($animalsWithNewValue->getPredicateScore() === '' || $animalsWithNewValue->getPredicateScore() === 0) {
-                $animalsWithNewValue->setPredicateScore(null);
-            }
-
-            if ($animalsWithNewValue->getNLing() === '') {
-                $animalsWithNewValue->setNLing(null);
-            }
-
-            $animalsWithNewValues[$key] = $animalsWithNewValue;
+            $animalsWithNewValues[$key] = self::cleanUpAnimalInputValues($animalsWithNewValue);
         }
 
         return $animalsWithNewValues;
     }
 
+
+    /**
+     * @param Animal $animalsWithNewValue
+     * @return Animal
+     */
+    public static function cleanUpAnimalInputValues(Animal $animalsWithNewValue): Animal
+    {
+        if ($animalsWithNewValue->getBirthProgress() === '') {
+            $animalsWithNewValue->setBirthProgress(null);
+        }
+
+        if ($animalsWithNewValue->getBreedType() === '') {
+            $animalsWithNewValue->setBreedType(null);
+        }
+
+        if ($animalsWithNewValue->getBreedCode() === '') {
+            $animalsWithNewValue->setBreedCode(null);
+        }
+
+        if ($animalsWithNewValue->getBlindnessFactor() === '') {
+            $animalsWithNewValue->setBlindnessFactor(null);
+        }
+
+        if ($animalsWithNewValue->getCollarColor() === '') {
+            $animalsWithNewValue->setCollarColor(null);
+        }
+
+        if ($animalsWithNewValue->getCollarNumber() === '') {
+            $animalsWithNewValue->setCollarNumber(null);
+        }
+
+        if ($animalsWithNewValue->getParentMotherId() === null) {
+            $animalsWithNewValue->setParentMother(null);
+        }
+
+        if ($animalsWithNewValue->getParentFatherId() === null) {
+            $animalsWithNewValue->setParentFather(null);
+        }
+
+        if ($animalsWithNewValue->getSurrogate() && $animalsWithNewValue->getSurrogate()->getId() === null) {
+            $animalsWithNewValue->setSurrogate(null);
+        }
+
+        if ($animalsWithNewValue->getLocation() && $animalsWithNewValue->getLocation()->getLocationId() === null) {
+            $animalsWithNewValue->setLocation(null);
+        }
+
+        if ($animalsWithNewValue->getLocationOfBirth() && $animalsWithNewValue->getLocationOfBirth()->getLocationId() === null) {
+            $animalsWithNewValue->setLocationOfBirth(null);
+        }
+
+        if ($animalsWithNewValue->getPedigreeRegister() && $animalsWithNewValue->getPedigreeRegister()->getId() === null) {
+            $animalsWithNewValue->setPedigreeRegister(null);
+        }
+
+        if ($animalsWithNewValue->getLitter()) {
+            if ($animalsWithNewValue->getLitter()->getId() === null) {
+                $animalsWithNewValue->setLitter(null);
+            } else {
+                if ($animalsWithNewValue->getLitter()->getAnimalMother()
+                    && $animalsWithNewValue->getLitter()->getAnimalMother()->getId() === null) {
+                    $animalsWithNewValue->getLitter()->setAnimalMother(null);
+                }
+
+                if ($animalsWithNewValue->getLitter()->getAnimalFather()
+                    && $animalsWithNewValue->getLitter()->getAnimalFather()->getId() === null) {
+                    $animalsWithNewValue->getLitter()->setAnimalFather(null);
+                }
+            }
+        }
+
+        if ($animalsWithNewValue->getPredicate() === '') {
+            $animalsWithNewValue->setPredicate(null);
+        }
+
+        if ($animalsWithNewValue->getPredicateScore() === '' || $animalsWithNewValue->getPredicateScore() === 0) {
+            $animalsWithNewValue->setPredicateScore(null);
+        }
+
+        if ($animalsWithNewValue->getNLing() === '') {
+            $animalsWithNewValue->setNLing(null);
+        }
+
+        return $animalsWithNewValue;
+    }
 
 
     /**
@@ -352,10 +365,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 $currentParent = $retrievedAnimal->getParent($parentType);
                 $newParent = $animalsWithNewValue->getParent($parentType);
 
-                $this->validateSingeParent($retrievedAnimal, $newParent, $currentParent, $parentType);
+                $this->validateSingleParent($retrievedAnimal, $newParent, $currentParent, $parentType);
             }
 
-            $this->validateSingeParent($retrievedAnimal, $animalsWithNewValue->getSurrogate(), $retrievedAnimal->getSurrogate(), Constant::SURROGATE_NAMESPACE);
+            $this->validateSingleParent($retrievedAnimal, $animalsWithNewValue->getSurrogate(), $retrievedAnimal->getSurrogate(), Constant::SURROGATE_NAMESPACE);
         }
 
         $totalErrorMessage = '';
@@ -403,7 +416,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      * @param Animal $retrievedCurrentParent
      * @param string $parentType
      */
-    private function validateSingeParent($retrievedAnimal, $serializedNewParent, $retrievedCurrentParent, $parentType)
+    private function validateSingleParent($retrievedAnimal, $serializedNewParent, $retrievedCurrentParent, $parentType)
     {
         if ($this->hasParentChanged($retrievedCurrentParent, $serializedNewParent)) {
             if ($serializedNewParent) {
