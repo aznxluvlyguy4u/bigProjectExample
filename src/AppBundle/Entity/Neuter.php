@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
@@ -45,7 +46,7 @@ class Neuter extends Animal
 
         $this->objectType = "Neuter";
         $this->setAnimalType(AnimalType::sheep);
-        $this->setAnimalCategory(3);
+        $this->setAnimalCategory(Constant::DEFAULT_ANIMAL_CATEGORY);
         $this->setGender(GenderType::NEUTER);
     }
 

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
 use AppBundle\Criteria\MateCriteria;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
@@ -97,7 +98,7 @@ class Ewe extends Animal implements ParentInterface
          $this->objectType = "Ewe";
          $this->setAnimalType(AnimalType::sheep);
          $this->setGender(GenderType::FEMALE);
-         $this->setAnimalCategory(3);
+         $this->setAnimalCategory(Constant::DEFAULT_ANIMAL_CATEGORY);
        
          $this->litters = new ArrayCollection();
          $this->children = new ArrayCollection();

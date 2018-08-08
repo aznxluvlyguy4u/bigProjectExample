@@ -69,7 +69,7 @@ class Ram extends Animal implements ParentInterface
 
          $this->objectType = "Ram";
          $this->setAnimalType(AnimalType::sheep);
-         $this->setAnimalCategory(3);
+         $this->setAnimalCategory(Constant::DEFAULT_ANIMAL_CATEGORY);
          $this->setGender(GenderType::MALE);
 
          $this->litters = new ArrayCollection();
