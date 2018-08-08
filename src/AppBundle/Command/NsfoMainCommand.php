@@ -13,6 +13,7 @@ use AppBundle\Cache\WeightCacher;
 use AppBundle\Component\MixBlup\MixBlupInputFileValidator;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\EditType;
 use AppBundle\Entity\ScrapieGenotypeSource;
 use AppBundle\Entity\TagSyncErrorLog;
 use AppBundle\Entity\TagSyncErrorLogRepository;
@@ -638,6 +639,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             '5: ScrapieGenotypeSource', "\n",
             '6: PedigreeCodes & PedigreeRegister-PedigreeCode relationships', "\n",
             '7: Initialize batch invoice invoice rules', "\n",
+            '8: EditType', "\n",
             '=====================================', "\n",
             '10: StoredProcedures: initialize if not exist', "\n",
             '11: StoredProcedures: overwrite all', "\n",
@@ -661,6 +663,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 break;
             case 6: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeCodeInitializer')->run($this->cmdUtil); break;
             case 7: $this->getContainer()->get('AppBundle\Service\Invoice\BatchInvoiceRuleInitializer')->load(); break;
+            case 8: $this->em->getRepository(EditType::class)->initializeRecords(); break;
 
             case 10: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->initialize(); break;
             case 11: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->update(); break;
