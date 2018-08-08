@@ -38,4 +38,15 @@ class EditTypeRepository extends BaseRepository {
 
         return $insertCount;
     }
+
+
+    /**
+     * @param int $editTypeEnumValue
+     * @return null|EditType
+     */
+    public function getEditType($editTypeEnumValue)
+    {
+        return $this->findOneBy(['id' => $editTypeEnumValue]);
+    }
+
 }
