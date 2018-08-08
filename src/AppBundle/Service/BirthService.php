@@ -383,7 +383,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                              $child->getDepartures(),
                              $child->getExports(),
                              $child->getArrivals(),
-                             $child->getDeclareWeights()
+                             $child->getDeclareWeights(),
+                             $child->getTagReplacements(),
                          ] as $declaresToRemove) {
                     /** @var DeclareLoss|DeclareDepart|DeclareExport $declareToRemove */
                     foreach($declaresToRemove as $declareToRemove) {

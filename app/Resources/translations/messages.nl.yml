@@ -366,6 +366,8 @@ FERTILIZER ACCOUNTING NOTE: De forfaitaire excretienormen waar in deze rapportag
 THIS IS NOT A VALID EMAIL ADDRESS: Dit is geen valide e-mailadres
 A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS: Er bestaat al een gebruiker met dit e-mailadres
 THE PASSWORD IS INCORRECT: Het wachtwoord is onjuist
+MOTHER CANNOT BE YOUNGER THAN CHILD: Moeder kan niet jonger zijn dan kind
+FATHER CANNOT BE YOUNGER THAN CHILD: Vader kan niet jonger zijn dan kind
 
 #Messages
 DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd
