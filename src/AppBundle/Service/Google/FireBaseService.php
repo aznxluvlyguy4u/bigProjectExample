@@ -15,14 +15,17 @@ class FireBaseService
     private $fireBase;
     private $messaging;
 
-    public function __construct($environment)
+    public function __construct($projectId, $clientId, $clientEmail, $privateKey)
     {
-        switch ($environment) {
-            case Environment::PROD: $filePath = '../firebase-credentials-production.json'; break;
-            default: $filePath = '../firebase-credentials-staging.json'; break;
-        }
+        $firebaseCredentials = [
+            'project_id' => $projectId,
+            'client_id' => $clientId,
+            'client_email' => $clientEmail,
+            'private_key' => $privateKey,
+        ];
 
-        $serviceAccount = ServiceAccount::fromJsonFile($filePath);
+        $serviceAccount = ServiceAccount::fromArray($firebaseCredentials);
+
         $this->fireBase = (new Factory)
             ->withServiceAccount($serviceAccount)
             ->create();
