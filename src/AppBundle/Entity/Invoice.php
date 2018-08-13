@@ -316,7 +316,8 @@ class Invoice
      * @JMS\SerializedName("vat_breakdown")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      * @return VatBreakdown
      */
@@ -426,7 +427,7 @@ class Invoice
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|InvoiceRuleSelection[]
      */
     public function getInvoiceRuleSelections()
     {

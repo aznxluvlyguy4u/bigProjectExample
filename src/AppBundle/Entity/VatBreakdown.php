@@ -14,7 +14,8 @@ class VatBreakdown
      * @JMS\Type("float")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $totalExclVat;
@@ -34,7 +35,8 @@ class VatBreakdown
      * @JMS\Type("float")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $totalInclVat;
