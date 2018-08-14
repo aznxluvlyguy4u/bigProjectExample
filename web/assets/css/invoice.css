@@ -104,3 +104,15 @@ thead {
 .no-padding {
     padding: 0;
 }
+
+.top-table-gutter {
+    width: 10%;
+}
+
+.top-table-info-label-column {
+    width: 10rem;
+}
+
+.top-table-info-data-column {
+    width: 10rem;
+}

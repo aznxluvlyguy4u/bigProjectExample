@@ -25,59 +25,112 @@
             </span>
         </div>
     </div>
-    <div class="row sender-recipient-details">
-        <div class="sender-wrapper table-responsive d-inline-block col-4">
-            <table class="table borderless ">
-                <tbody>
-                <tr>
-                    <td class="height-auto">
-                        Factuurnummer:
-                    </td>
-                    <td class="height-auto">
-                        {{ invoice.invoiceNumber }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="height-auto">
-                        Factuurdatum:
-                    </td>
-                    <td class="height-auto">
-                        {{ invoice.invoiceDate | date("d-m-Y") }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="height-auto">
-                        Debiteurnummer:
-                    </td>
-                    <td class="height-auto">
-                        {{ invoice.companyDebtorNumber }}
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="recipient-wrapper table-responsive d-inline-block col-4 offset-3">
-            <table class="table borderless">
-                <tr>
-                    <td class="height-auto">
-                        {{ invoice.companyName }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="height-auto">
-                        {{ invoice.companyAddressStreetName ? invoice.companyAddressStreetName : "" }}
-                        {{ invoice.companyAddressStreetNumber ? invoice.companyAddressStreetNumber : "" }}
-                        {{ invoice.companyAddressStreetNumberSuffix ? invoice.companyAddressStreetNumberSuffix : "" }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="height-auto">
-                        {{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressState ? invoice.companyAddressState | upper : ""}} {{ invoice.companyAddressCountry ? invoice.companyAddressCountry | upper : "" }}
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </div>
+
+    <table class="table borderless">
+        <tbody>
+        <tr>
+            <td class="height-auto top-table-info-label-column">
+                Factuurnummer:
+            </td>
+            <td class="height-auto top-table-info-data-column">
+                {{ invoice.invoiceNumber }}
+            </td>
+            <td class="height-auto top-table-gutter">
+               <span></span>
+            </td>
+            <td class="height-auto">
+                {{ invoice.companyName }}
+            </td>
+        </tr>
+        <tr>
+            <td class="height-auto top-table-info-label-column">
+                Factuurdatum:
+            </td>
+            <td class="height-auto top-table-info-data-column">
+                {{ invoice.invoiceDate | date("d-m-Y") }}
+            </td>
+            <td class="height-auto top-table-gutter">
+                <span></span>
+            </td>
+            <td class="height-auto">
+                {{ invoice.companyAddressStreetName ? invoice.companyAddressStreetName : "" }}
+                {{ invoice.companyAddressStreetNumber ? invoice.companyAddressStreetNumber : "" }}
+                {{ invoice.companyAddressStreetNumberSuffix ? invoice.companyAddressStreetNumberSuffix : "" }}
+            </td>
+        </tr>
+        <tr>
+            <td class="height-auto top-table-info-label-column">
+                Debiteurnummer:
+            </td>
+            <td class="height-auto top-table-info-data-column">
+                {{ invoice.companyDebtorNumber }}
+            </td>
+            <td class="height-auto top-table-gutter">
+                <span></span>
+            </td>
+            <td class="height-auto">
+                {{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressState ? invoice.companyAddressState | upper : ""}} {{ invoice.companyAddressCountry ? invoice.companyAddressCountry | upper : "" }}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    {# TOP TABLE VERSION USING BOOTSTRAP #}
+    {#<div class="row sender-recipient-details">#}
+        {#<div class="sender-wrapper table-responsive d-inline-block col-4" style="width: 80%; background: yellow">#}
+            {#<table class="table borderless">#}
+                {#<tbody>#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#Factuurnummer:#}
+                    {#</td>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.invoiceNumber }}#}
+                    {#</td>#}
+                {#</tr>#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#Factuurdatum:#}
+                    {#</td>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.invoiceDate | date("d-m-Y") }}#}
+                    {#</td>#}
+                {#</tr>#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#Debiteurnummer:#}
+                    {#</td>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.companyDebtorNumber }}#}
+                    {#</td>#}
+                {#</tr>#}
+                {#</tbody>#}
+            {#</table>#}
+        {#</div>#}
+        {#<div class="recipient-wrapper table-responsive d-inline-block col-4 offset-3">#}
+            {#<table class="table borderless">#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.companyName }}#}
+                    {#</td>#}
+                {#</tr>#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.companyAddressStreetName ? invoice.companyAddressStreetName : "" }}#}
+                        {#{{ invoice.companyAddressStreetNumber ? invoice.companyAddressStreetNumber : "" }}#}
+                        {#{{ invoice.companyAddressStreetNumberSuffix ? invoice.companyAddressStreetNumberSuffix : "" }}#}
+                    {#</td>#}
+                {#</tr>#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressState ? invoice.companyAddressState | upper : ""}} {{ invoice.companyAddressCountry ? invoice.companyAddressCountry | upper : "" }}#}
+                    {#</td>#}
+                {#</tr>#}
+            {#</table>#}
+        {#</div>#}
+    {#</div>#}
+    {# TOP TABLE VERSION USING BOOTSTRAP END #}
+
     <div class="row">
         <div class="col-12">
             <table class="table borderless invoice-rule-table invoice-rule-table-spacing">

@@ -566,7 +566,10 @@ services:
 
     AppBundle\Service\Google\FireBaseService:
         arguments:
-          - '%environment%'
+          - '%firebase_notifications_project_id%'
+          - '%firebase_notifications_client_id%'
+          - '%firebase_notifications_client_email%'
+          - '%firebase_notifications_private_key%'
 
     AppBundle\Service\ReportService:
         arguments:

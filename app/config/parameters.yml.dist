@@ -58,3 +58,8 @@ parameters:
 
     output_reports_to_cache_folder_for_local_testing: false
     display_report_pdf_output_as_html: false
+
+    firebase_notifications_project_id: ~
+    firebase_notifications_client_id: ~
+    firebase_notifications_client_email: ~
+    firebase_notifications_private_key: ~

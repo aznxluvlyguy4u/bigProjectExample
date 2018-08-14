@@ -742,6 +742,26 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         foreach ($surrogateMotherCandidates as $animal) {
 
             //Check if surrogate mother candidate has given birth to children within the last 6 months
+
+            /** @var Litter $litter */
+            $isSurrogateByLitterData = false;
+            foreach ($animal->getLitters() as $litter) {
+                if($litter->getStatus() !== RequestStateType::COMPLETED && $litter->getStatus() !== RequestStateType::IMPORTED) {
+                    continue;
+                }
+
+                //Add as a true candidate surrogate to list
+                if(abs(TimeUtil::getDaysBetween($litter->getLitterDate(), $offsetDateFromNow)) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {
+                    $suggestedCandidatesResult[] = $this->getAnimalResult($animal, $location);
+                    $isSurrogateByLitterData = true;
+                    break;
+                }
+            }
+
+            if ($isSurrogateByLitterData) {
+                continue;
+            }
+
             if($animal->getChildren()->count() == 0) {
                 if(self::SHOW_OTHER_SURROGATE_MOTHERS) {
                     $otherCandidatesResult[] = $this->getAnimalResult($animal, $location);
