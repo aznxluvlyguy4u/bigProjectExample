@@ -74,6 +74,7 @@ class InspectorMigrator extends MigratorServiceBase implements IMigratorService
             '5: Set and Remove isAuthorizedNsfoInspector status by NTS authorization', "\n",
             '   (inspectors with updated isAuthorizedNsfoInspector will have inspectorCode set to NULL)', "\n",
             '6: Generate inspectorCodes, if null', "\n",
+            '7: Authorize all current NSFO inspectors for all pedigreeRegisters and measurementTypes', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -84,6 +85,7 @@ class InspectorMigrator extends MigratorServiceBase implements IMigratorService
             case 4: $this->authorizeTexelaarInspectors(); $this->authorizeBdmInspectors(); break;
             case 5: $this->setIsAuthorizedNsfoInspectorByNTSAuthorization(); break;
             case 6: $this->generateInspectorCodes(); break;
+            case 7: $this->authorizeAllCurrentNsfoInspectorsForAllPedigreeRegisters(); break;
             default: $this->writeln('EXIT'); return;
         }
         $this->run($cmdUtil);
@@ -665,4 +667,51 @@ class InspectorMigrator extends MigratorServiceBase implements IMigratorService
 
         return $removedAuthorizationCount + $newAuthorizationCount;
     }
+
+
+    /**
+     * @throws \Exception
+     */
+    private function authorizeAllCurrentNsfoInspectorsForAllPedigreeRegisters()
+    {
+        $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
+
+        /** @var PedigreeRegister[] $pedigreeRegisters */
+        $pedigreeRegisters = $this->em->getRepository(PedigreeRegister::class)->findAll();
+        /** @var Inspector[] $nsfoInspectors */
+        $nsfoInspectors = $this->em->getRepository(Inspector::class)->findBy(['isAuthorizedNsfoInspector' => true]);
+
+        $inspectorAuthorizationsByInspectorId = $this->em->getRepository(InspectorAuthorization::class)->getInspectorAuthorizationsOfNsfoInspectorsByInspectorId();
+
+        $skippedCount = 0;
+        $newCount = 0;
+
+        foreach ($nsfoInspectors as $nsfoInspector) {
+            $inspectorAuthorizations = array_values(ArrayUtil::get($nsfoInspector->getId(), $inspectorAuthorizationsByInspectorId, []));
+
+            foreach (InspectorMeasurementType::getTypes() as $inspectorMeasurementType) {
+
+                foreach ($pedigreeRegisters as $pedigreeRegister) {
+                    if (InspectorAuthorizationRepository::hasInspectorAuthorization($inspectorAuthorizations, $inspectorMeasurementType, $pedigreeRegister->getId())) {
+                        $skippedCount++;
+                        continue;
+                    }
+
+                    $inspectorAuthorization = new InspectorAuthorization($nsfoInspector, $admin, $inspectorMeasurementType, $pedigreeRegister);
+                    $this->em->persist($inspectorAuthorization);
+                    $newCount++;
+
+                    $inspectorAuthorizations[] = $inspectorAuthorization;
+                }
+
+            }
+        }
+
+        if ($newCount > 0) {
+            $this->em->flush();
+        }
+
+        $this->writeLn('NSFO Inspector Authorizations new|skipped: '.$newCount.'|'.$skippedCount);
+    }
+
 }
