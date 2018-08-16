@@ -7,6 +7,8 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Util\ArrayUtil;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Query\Expr\Join;
 
 /**
  * Class InspectorAuthorizationRepository
@@ -57,7 +59,7 @@ class InspectorAuthorizationRepository extends PersonRepository {
 
         return $this->getAuthorizedInspectors(InspectorMeasurementType::EXTERIOR, [$pedigreeRegisterId]);
     }
-    
+
     /**
      * @param $measurementType
      * @param array $pedigreeRegistersIds
@@ -110,13 +112,76 @@ class InspectorAuthorizationRepository extends PersonRepository {
         $result = [];
         foreach ($inspectors as $inspector) {
             $result[] = [
-                JsonInputConstant::PERSON_ID => $inspector['person_id'],  
-                JsonInputConstant::FIRST_NAME => $inspector['first_name'],  
-                JsonInputConstant::LAST_NAME => $inspector['last_name'],  
+                JsonInputConstant::PERSON_ID => $inspector['person_id'],
+                JsonInputConstant::FIRST_NAME => $inspector['first_name'],
+                JsonInputConstant::LAST_NAME => $inspector['last_name'],
             ];
         }
 
         return $result;
     }
 
+
+    /**
+     * @return array
+     * @throws \Exception
+     */
+    public function getInspectorAuthorizationsOfNsfoInspectorsByInspectorId(): array
+    {
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $queryBuilder =
+            $qb
+                ->select('a')
+                ->from(InspectorAuthorization::class, 'a')
+                ->innerJoin('a.inspector', 'i', Join::WITH, $qb->expr()->eq('a.inspector', 'i.id'))
+                ->innerJoin('a.pedigreeRegister', 'r', Join::WITH, $qb->expr()->eq('a.pedigreeRegister', 'r.id'))
+                ->where($qb->expr()->eq('i.isAuthorizedNsfoInspector', 'true'));
+
+        $query = $queryBuilder->getQuery();
+        $query->setFetchMode(Inspector::class, 'i', ClassMetadata::FETCH_EAGER);
+        $query->setFetchMode(PedigreeRegister::class, 'r', ClassMetadata::FETCH_EAGER);
+        $result = $query->getResult();
+
+        if (empty($result)) {
+            return [];
+        }
+
+        $mappedResult = [];
+
+        /** @var InspectorAuthorization $inspectorAuthorization */
+        foreach ($result as $inspectorAuthorization) {
+            if (!$inspectorAuthorization->getInspector() || !$inspectorAuthorization->getPedigreeRegister()) {
+                throw new \Exception('InspectorAuthorization is missing inspector or pedigreeRegister');
+            }
+
+            $inspectorId = $inspectorAuthorization->getInspector()->getId();
+            $mappedResult[$inspectorId][$inspectorAuthorization->getId()] = $inspectorAuthorization;
+        }
+
+        return $mappedResult;
+    }
+
+
+    /**
+     * @param InspectorAuthorization[] $inspectorAuthorizations
+     * @param string $inspectorMeasurementType
+     * @param int $pedigreeRegisterId
+     * @return bool
+     */
+    public static function hasInspectorAuthorization(array $inspectorAuthorizations, $inspectorMeasurementType, $pedigreeRegisterId)
+    {
+        if (empty($inspectorMeasurementType) || empty($pedigreeRegisterId)) {
+            return false;
+        }
+
+        foreach ($inspectorAuthorizations as $inspectorAuthorization) {
+            if ($inspectorAuthorization->getMeasurementType() === $inspectorMeasurementType
+             && $inspectorAuthorization->getPedigreeRegister()
+             && $inspectorAuthorization->getPedigreeRegister()->getId() === $pedigreeRegisterId) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
