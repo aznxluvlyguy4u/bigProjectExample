@@ -63,10 +63,12 @@ class InspectorAuthorizationRepository extends PersonRepository {
     /**
      * @param $measurementType
      * @param array $pedigreeRegistersIds
+     * @param bool $alwaysIncludeNsfoInspectors
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function getAuthorizedInspectors($measurementType, array $pedigreeRegistersIds = [])
+    public function getAuthorizedInspectors($measurementType, array $pedigreeRegistersIds = [],
+                                            $alwaysIncludeNsfoInspectors = true)
     {
         $filterStart = '';
         $filterEnd = '';
@@ -75,6 +77,8 @@ class InspectorAuthorizationRepository extends PersonRepository {
             $filterStart = ' AND (';
             $filterEnd = ')';
         }
+
+        $filterNsfoInspectors = $alwaysIncludeNsfoInspectors ? ' OR i.is_authorized_nsfo_inspector ' : '';
 
         foreach ($pedigreeRegistersIds as $pedigreeRegistersId) {
             if(ctype_digit($pedigreeRegistersId) || is_int($pedigreeRegistersId)) {
@@ -90,7 +94,8 @@ class InspectorAuthorizationRepository extends PersonRepository {
             $sql = "SELECT p.person_id, p.first_name, p.last_name
                 FROM inspector_authorization a
                   INNER JOIN person p ON p.id = a.inspector_id
-                WHERE measurement_type = '".$measurementType."' ".$filter."
+                  INNER JOIN inspector i ON i.id = p.id
+                WHERE (measurement_type = '".$measurementType."' ".$filter.") $filterNsfoInspectors
                 GROUP BY first_name, last_name, person_id
                 UNION
                 SELECT p.person_id, p.first_name, p.last_name
@@ -104,7 +109,7 @@ class InspectorAuthorizationRepository extends PersonRepository {
             $sql = "SELECT p.person_id, p.first_name, p.last_name
                 FROM inspector i
                   INNER JOIN person p ON p.id = i.id
-                WHERE p.last_name = '".self::NON_NSFO_INSPECTOR_NAME."'
+                WHERE (p.last_name = '".self::NON_NSFO_INSPECTOR_NAME."') $filterNsfoInspectors
                 ORDER BY first_name, last_name";
             $inspectors = $this->getConnection()->query($sql)->fetchAll();
         }
