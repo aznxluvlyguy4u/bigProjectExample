@@ -56,6 +56,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     const MATING_DAYS_OFFSET = 12;
     const SURROGATE_MOTHER_OFFSET_DAYS = 7;
     const REVOKE_MAX_MONTH_INTERVAL = 6;
+    const SURROGATE_MOTHER_MAX_BIRTH_OFFSET_FROM_NEW_BIRTH = 21;
 
     /** @var EntityGetter */
     private $entityGetter;
@@ -691,6 +692,24 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
 
     /**
+     * @param \DateTime $newLitterDate
+     * @param \DateTime $surrogateMotherOffsetDate
+     * @param \DateTime $surrogateMotherLitterDate
+     * @return bool
+     */
+    private function isSurrogateMotherDateValid(\DateTime $newLitterDate, \DateTime $surrogateMotherOffsetDate, \DateTime $surrogateMotherLitterDate)
+    {
+        $diffNewLitterDateAndSurrogateMotherLitterDate = TimeUtil::getDaysBetween($surrogateMotherLitterDate, $newLitterDate);
+        $isValidSurrogateByLitterBornRightBefore = (0 <= $diffNewLitterDateAndSurrogateMotherLitterDate && $diffNewLitterDateAndSurrogateMotherLitterDate <= self::SURROGATE_MOTHER_MAX_BIRTH_OFFSET_FROM_NEW_BIRTH);
+
+        return
+            abs(TimeUtil::getDaysBetween($newLitterDate, $surrogateMotherOffsetDate)) > self::MINIMUM_DAYS_BETWEEN_BIRTHS ||
+            $isValidSurrogateByLitterBornRightBefore
+        ;
+    }
+
+
+    /**
      * @param Request $request
      * @param string $uln
      * @return JsonResponse
@@ -751,7 +770,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 }
 
                 //Add as a true candidate surrogate to list
-                if(abs(TimeUtil::getDaysBetween($litter->getLitterDate(), $offsetDateFromNow)) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {
+                if($this->isSurrogateMotherDateValid($dateOfBirth, $offsetDateFromNow, $litter->getLitterDate())) {
                     $suggestedCandidatesResult[] = $this->getAnimalResult($animal, $location);
                     $isSurrogateByLitterData = true;
                     break;
@@ -776,7 +795,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             foreach ($children as $child) {
                 if($child->getDateOfBirth()) {
                     //Add as a true candidate surrogate to list
-                    if(abs(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow)) > self::MINIMUM_DAYS_BETWEEN_BIRTHS) {
+                    if ($this->isSurrogateMotherDateValid($dateOfBirth, $offsetDateFromNow, $child->getDateOfBirth())) {
                         $suggestedCandidatesResult[] = $this->getAnimalResult($animal, $location);
                         $addToOtherCandidates = false;
                         break;
@@ -797,7 +816,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $result['suggested_candidate_surrogates'] = $suggestedCandidatesResult;
         $result['other_candidate_surrogates'] = $otherCandidatesResult;
-
+die;
         return ResultUtil::successResult($result);
     }
 
