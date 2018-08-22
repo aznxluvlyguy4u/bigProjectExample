@@ -32,6 +32,7 @@ use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * This service contains all functionality regarding the sending of a batch of invoices.
@@ -416,6 +417,9 @@ class BatchInvoiceService extends ControllerServiceBase
      * @return mixed
      */
     private function getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate(\DateTime $controlDate) {
+        if(!$controlDate) {
+            return ResultUtil::errorResult('Date cannot be empty', Response::HTTP_PRECONDITION_REQUIRED);
+        }
         $dateString = $controlDate->format(SqlUtil::DATE_FORMAT);
 
         /** @var AnimalRepository $animalRepository */
