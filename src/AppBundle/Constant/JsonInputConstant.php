@@ -260,6 +260,7 @@ class JsonInputConstant
     const GESTATION_PERIOD = 'gestation_period';
     const SIZE = 'size';
     const N_LING = 'n_ling';
+    const N_LING_VALUE = 'n_ling_max_value';
     const SUCKLE_COUNT = 'suckle_count';
     const LITTER_GROUP = 'litter_group';
     const LITTER_COUNT = 'litter_count';

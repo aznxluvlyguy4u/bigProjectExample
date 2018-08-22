@@ -1219,6 +1219,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             JsonInputConstant::BLINDNESS_FACTOR => [],
             JsonInputConstant::BIRTH_PROGRESS => [],
             JsonInputConstant::N_LING => [],
+            JsonInputConstant::N_LING_VALUE => [],
         ];
 
         foreach ($animalsWithNewValues as $animalsWithNewValue) {
@@ -1241,8 +1242,11 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 $incorrectFormatSets[JsonInputConstant::BIRTH_PROGRESS][$animalId] = $animalsWithNewValue->getBirthProgress();
             }
 
-            if (!is_int($animalsWithNewValue->getNLing()) && !ctype_digit($animalsWithNewValue->getNLing())) {
+            if ($animalsWithNewValue->getNLing() !== null && !is_int($animalsWithNewValue->getNLing()) && !ctype_digit($animalsWithNewValue->getNLing())) {
                 $incorrectFormatSets[JsonInputConstant::N_LING][$animalId] = $animalsWithNewValue->getNLing();
+            } elseif ($animalsWithNewValue->getNLing() < Animal::MIN_N_LING_VALUE
+                || Animal::MAX_N_LING_VALUE < $animalsWithNewValue->getNLing()) {
+                $incorrectFormatSets[JsonInputConstant::N_LING_VALUE][$animalId] = $animalsWithNewValue->getNLing();
             }
         }
 
@@ -1255,6 +1259,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                     case JsonInputConstant::BREED_TYPE: $errorMessageKey = 'THE FOLLOWING BREED TYPES HAVE AN INCORRECT FORMAT'; break;
                     case JsonInputConstant::BLINDNESS_FACTOR: $errorMessageKey = 'THE FOLLOWING BLINDNESS FACTORS HAVE AN INCORRECT FORMAT'; break;
                     case JsonInputConstant::BIRTH_PROGRESS: $errorMessageKey = 'THE FOLLOWING BIRTH PROGESSES HAVE AN INCORRECT FORMAT'; break;
+                    case JsonInputConstant::N_LING: $errorMessageKey = 'THE FOLLOWING N LINGS HAVE AN INCORRECT FORMAT'; break;
+                    case JsonInputConstant::N_LING_VALUE: $errorMessageKey = 'THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN '.Animal::MIN_N_LING_VALUE.' AND '.Animal::MAX_N_LING_VALUE; break;
                     default: $errorMessageKey = null; break;
                 }
                 if ($errorMessageKey === null) {
