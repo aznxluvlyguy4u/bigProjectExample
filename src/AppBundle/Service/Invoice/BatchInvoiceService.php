@@ -28,6 +28,7 @@ use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Service\ControllerServiceBase;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Symfony\Component\HttpFoundation\Request;
@@ -415,7 +416,7 @@ class BatchInvoiceService extends ControllerServiceBase
      * @return mixed
      */
     private function getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate(\DateTime $controlDate) {
-        $dateString = $controlDate->format(DateTimeFormats::DAY_MONTH_YEAR_HOUR_MINUTE_SECOND);
+        $dateString = $controlDate->format(SqlUtil::DATE_FORMAT);
 
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getManager()->getRepository(Animal::class);
