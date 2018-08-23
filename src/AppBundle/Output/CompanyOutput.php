@@ -197,7 +197,7 @@ class CompanyOutput
      *
      * @return array
      */
-    public static function createCompanyDetails($company)
+    public static function createCompanyDetails($company, array $breederNumbers = [])
     {
         $res = array();
         $res['company_id'] = Utils::fillNull($company->getCompanyId());
@@ -243,7 +243,7 @@ class CompanyOutput
             ),
         );
 
-        $res['breeder_numbers'] = array();
+        $res['breeder_numbers'] = $breederNumbers;
         $res['invoices'] = $company->getInvoices();
 
         /*

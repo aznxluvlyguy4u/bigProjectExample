@@ -14,6 +14,7 @@ use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\CompanyNote;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
+use AppBundle\Entity\PedigreeRegisterRegistration;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Filter\ActiveCompanyFilter;
@@ -616,9 +617,11 @@ class CompanyService extends AuthServiceBase
 
         // Get Company
         $company = $this->getManager()->getRepository(Company::class)->findOneByCompanyId($companyId);
+        $breederNumbers = $this->getManager()->getRepository(PedigreeRegisterRegistration::class)
+            ->getCompanyBreederNumbersWithPedigreeRegisterAbbreviations($company, $this->getLogger());
 
         // Generate Company Details
-        $result = CompanyOutput::createCompanyDetails($company);
+        $result = CompanyOutput::createCompanyDetails($company, $breederNumbers);
 
         return ResultUtil::successResult($result);
     }
