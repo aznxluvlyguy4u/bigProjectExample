@@ -219,6 +219,7 @@ class CompanyOutput
             'postal_code' => Utils::fillNull($company->getAddress()->getPostalCode()),
             'city' => Utils::fillNull($company->getAddress()->getCity()),
             'state' => Utils::fillNull($company->getAddress()->getState()),
+            'country' => Utils::fillNull($company->getAddress()->getCountry()),
         );
 
         $liveStockCount = Count::getCompanyLiveStockCount($company);
