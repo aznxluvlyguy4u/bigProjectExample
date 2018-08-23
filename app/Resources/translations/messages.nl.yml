@@ -396,6 +396,9 @@ A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS: Er bestaat al een gebruiker met di
 THE PASSWORD IS INCORRECT: Het wachtwoord is onjuist
 MOTHER CANNOT BE YOUNGER THAN CHILD: Moeder kan niet jonger zijn dan kind
 FATHER CANNOT BE YOUNGER THAN CHILD: Vader kan niet jonger zijn dan kind
+ADDRESS COUNTRY CANNOT BE EMPTY: Land van adres mag niet leeg zijn
+BILLING ADDRESS COUNTRY CANNOT BE EMPTY: Land van factuuradres mag niet leeg zijn
+LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Land van locatieadres mag niet leeg zijn
 
 #Messages
 DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd

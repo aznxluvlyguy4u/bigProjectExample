@@ -388,6 +388,9 @@ A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS: A user already exists for this ema
 THE PASSWORD IS INCORRECT: The password is invalid
 MOTHER CANNOT BE YOUNGER THAN CHILD: Mother cannot be younger than child
 FATHER CANNOT BE YOUNGER THAN CHILD: Father cannot be younger than child
+ADDRESS COUNTRY CANNOT BE EMPTY: Country of address cannot be empty
+BILLING ADDRESS COUNTRY CANNOT BE EMPTY: Country of billing address cannot be empty
+LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Country of location address cannot be empty
 
 #Messages
 DECLARE_ARRIVAL: Automatically issued an arrival notification

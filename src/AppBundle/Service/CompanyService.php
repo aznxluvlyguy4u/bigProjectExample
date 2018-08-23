@@ -31,15 +31,14 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 
 class CompanyService extends AuthServiceBase
 {
-    const DEFAULT_COUNTRY = '';
 
     /**
      * @param Request $request
@@ -112,6 +111,12 @@ class CompanyService extends AuthServiceBase
 
         // Create Address
         $contentAddress = $content->get('address');
+
+        $addressCountry = ArrayUtil::get('country', $contentAddress);
+        if (empty($addressCountry)) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
         $address = new CompanyAddress();
         $address->setStreetName($contentAddress['street_name']);
         $address->setAddressNumber($contentAddress['address_number']);
@@ -123,13 +128,18 @@ class CompanyService extends AuthServiceBase
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState($contentAddress['state']);
-        $address->setCountry(ArrayUtil::get('country', $contentAddress, self::DEFAULT_COUNTRY));
+        $address->setCountry($addressCountry);
 
         // Create Billing Address
         $contentBillingAddress = $content->get('billing_address');
         $billingAddress = new BillingAddress();
         $billingAddress->setStreetName($contentBillingAddress['street_name']);
         $billingAddress->setAddressNumber($contentBillingAddress['address_number']);
+
+
+        $billingAddressCountry = ArrayUtil::get('country', $contentBillingAddress);        if (empty($billingAddressCountry)) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('BILLING ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
 
         if(isset($contentBillingAddress['suffix'])) {
             $billingAddress->setAddressNumberSuffix($contentBillingAddress['suffix']);
@@ -138,7 +148,7 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState($contentBillingAddress['state']);
-        $billingAddress->setCountry(ArrayUtil::get('country', $contentBillingAddress, self::DEFAULT_COUNTRY));
+        $billingAddress->setCountry($billingAddressCountry);
 
         // Create Company
         $company = new Company();
@@ -179,6 +189,11 @@ class CompanyService extends AuthServiceBase
 
             // Create Location Address
             $contentLocationAddress = $contentLocation['address'];
+
+            $locationAddressCountry = ArrayUtil::get('country', $contentLocationAddress);        if (empty($locationAddressCountry)) {
+                return ResultUtil::errorResult($this->translateUcFirstLower('LOCATION ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+            }
+
             $locationAddress = new LocationAddress();
             $locationAddress->setStreetName($contentLocationAddress['street_name']);
             $locationAddress->setAddressNumber($contentLocationAddress['address_number']);
@@ -190,7 +205,7 @@ class CompanyService extends AuthServiceBase
             $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
             $locationAddress->setCity($contentLocationAddress['city']);
             $locationAddress->setState($contentLocationAddress['state']);
-            $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
+            $locationAddress->setCountry($locationAddressCountry);
 
             $location = new Location();
             $location->setUbn($contentLocation['ubn']);
@@ -340,6 +355,11 @@ class CompanyService extends AuthServiceBase
         $address = $company->getAddress();
         $contentAddress = $content->get('address');
 
+        $addressCountry = ArrayUtil::get('country', $contentAddress);
+        if (empty($addressCountry)) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
         $address->setStreetName($contentAddress['street_name']);
         $address->setAddressNumber($contentAddress['address_number']);
 
@@ -352,11 +372,15 @@ class CompanyService extends AuthServiceBase
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState($contentAddress['state']);
-        $address->setCountry(ArrayUtil::get('country', $contentAddress, self::DEFAULT_COUNTRY));
+        $address->setCountry(ArrayUtil::get('country', $contentAddress, $addressCountry));
 
         // Update Billing Address
         $billingAddress = $company->getBillingAddress();
         $contentBillingAddress = $content->get('billing_address');
+
+        $billingAddressCountry = ArrayUtil::get('country', $contentBillingAddress);        if (empty($billingAddressCountry)) {
+        return ResultUtil::errorResult($this->translateUcFirstLower('BILLING ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
 
         $billingAddress->setStreetName($contentBillingAddress['street_name']);
         $billingAddress->setAddressNumber($contentBillingAddress['address_number']);
@@ -370,7 +394,7 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState($contentBillingAddress['state']);
-        $billingAddress->setCountry(ArrayUtil::get('country', $contentBillingAddress, self::DEFAULT_COUNTRY));
+        $billingAddress->setCountry($billingAddressCountry);
 
         // Update Company
         $company->setCompanyName($content->get('company_name'));
@@ -435,6 +459,11 @@ class CompanyService extends AuthServiceBase
                 $location->setUbn($contentLocation['ubn']);
                 $locationAddress = $location->getAddress();
                 $contentLocationAddress = $contentLocation['address'];
+
+                $locationAddressCountry = ArrayUtil::get('country', $contentLocationAddress);        if (empty($locationAddressCountry)) {
+                    return ResultUtil::errorResult($this->translateUcFirstLower('LOCATION ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+                }
+
                 $locationAddress->setStreetName($contentLocationAddress['street_name']);
                 $locationAddress->setAddressNumber($contentLocationAddress['address_number']);
 
@@ -447,7 +476,7 @@ class CompanyService extends AuthServiceBase
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState($contentLocationAddress['state']);
-                $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
+                $locationAddress->setCountry($locationAddressCountry);
 
                 $this->getManager()->persist($location);
                 $this->getManager()->flush();
@@ -464,6 +493,11 @@ class CompanyService extends AuthServiceBase
                 }
 
                 $contentLocationAddress = $contentLocation['address'];
+
+                $locationAddressCountry = ArrayUtil::get('country', $contentLocationAddress);        if (empty($locationAddressCountry)) {
+                    return ResultUtil::errorResult($this->translateUcFirstLower('LOCATION ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+                }
+
                 $locationAddress = new LocationAddress();
                 $locationAddress->setStreetName($contentLocationAddress['street_name']);
                 $locationAddress->setAddressNumber($contentLocationAddress['address_number']);
@@ -475,7 +509,7 @@ class CompanyService extends AuthServiceBase
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState($contentLocationAddress['state']);
-                $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
+                $locationAddress->setCountry($locationAddressCountry);
 
                 $location = new Location();
                 $location->setUbn($contentLocation['ubn']);
