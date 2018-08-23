@@ -61,7 +61,8 @@ class CompanyOutput
                 'address_number_suffix' => Utils::fillNull($company['billingAddress']['addressNumberSuffix']),
                 'postal_code' => Utils::fillNull($company['billingAddress']['postalCode']),
                 'city' => Utils::fillNull($company['billingAddress']['city']),
-                'state' => Utils::fillNull($company['billingAddress']['state'])
+                'state' => Utils::fillNull($company['billingAddress']['state']),
+                'country' => Utils::fillNull($company['billingAddress']['country']),
             ] : [];
 
             $res[] = array(
@@ -80,7 +81,8 @@ class CompanyOutput
                     'address_number_suffix' => Utils::fillNull($company['address']['addressNumberSuffix']),
                     'postal_code' => Utils::fillNull($company['address']['postalCode']),
                     'city' => Utils::fillNull($company['address']['city']),
-                    'state' => Utils::fillNull($company['address']['state'])
+                    'state' => Utils::fillNull($company['address']['state']),
+                    'country' => Utils::fillNull($company['address']['country']),
                 ),
                 'owner' => array(
                     'person_id' => Utils::fillNull($company['owner']['personId']),
