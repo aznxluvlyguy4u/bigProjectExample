@@ -67,6 +67,34 @@ REGISTER: REGISTER
 SECONDARY_REGISTER: SECONDARY_REGISTER
 UNDETERMINED: UNDETERMINED
 
+#Countries
+Austria: Austria
+Belgium: Belgium
+Bulgaria: Bulgaria
+Cyprus: Cyprus
+Czech Republic: Czech Republic
+Denmark: Denmark
+Estland: Estland
+Finland: Finland
+France: France
+Germany: Germany
+Greece: Greece
+Hungary: Hungary
+Ireland: Ireland
+Italy: Italy
+Latvia: Latvia
+Lithuania: Lithuania
+Luxembourg: Luxembourg
+Netherlands: Netherlands
+Poland: Poland
+Portugal: Portugal
+Romania: Romania
+Slovakia: Slovakia
+Slovenia: Slovenia
+Spain: Spain
+Sweden: Sweden
+United Kingdom: United Kingdom
+
 #Declares
 DECLARE DEPART: DECLARE DEPART
 DECLARE EXPORT: DECLARE EXPORT

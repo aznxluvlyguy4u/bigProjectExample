@@ -67,6 +67,34 @@ REGISTER: REGISTER
 SECONDARY_REGISTER: HULPBOEK
 UNDETERMINED: ONBEPAALD
 
+#Countries
+Austria: Oostenrijk
+Belgium: België
+Bulgaria: Bulgarije
+Cyprus: Cyprus
+Czech Republic: Tsjechische Republiek
+Denmark: Denemarken
+Estland: Estland
+Finland: Finland
+France: Frankrijk
+Germany: Duitsland
+Greece: Griekenland
+Hungary: Hongarije
+Ireland: Ierland
+Italy: Italië
+Latvia: Letland
+Lithuania: Litouwen
+Luxembourg: Luxemburg
+Netherlands: Nederland
+Poland: Polen
+Portugal: Portugal
+Romania: Roemenië
+Slovakia: Slowakije
+Slovenia: Slovenië
+Spain: Spanje
+Sweden: Zweden
+United Kingdom: Verenigd Koningkrijk
+
 #Declares
 DECLARE DEPART: AFVOERMELDING
 DECLARE EXPORT: EXPORTMELDING
