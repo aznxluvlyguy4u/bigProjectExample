@@ -436,7 +436,20 @@ class CompanyService extends AuthServiceBase
         $contentLocations = $content->get('locations');
         $repository = $this->getManager()->getRepository(Location::class);
         foreach($contentLocations as $contentLocation) {
-            $location = $repository->findOneBy(array('ubn' => $contentLocation['ubn'], 'isActive' => true));
+            $ubn = trim($contentLocation['ubn']);
+
+            if (!ctype_digit($ubn) && !is_int($ubn)) {
+                return new JsonResponse(
+                    array(
+                        Constant::CODE_NAMESPACE => 400,
+                        Constant::MESSAGE_NAMESPACE => $this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn,
+                        'data' => $ubn
+                    ),
+                    400
+                );
+            }
+
+            $location = $repository->findOneBy(array('ubn' => $ubn, 'isActive' => true));
 
             /**
              * @var Location $location
@@ -449,14 +462,14 @@ class CompanyService extends AuthServiceBase
                         array(
                             Constant::CODE_NAMESPACE => 400,
                             Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
-                            'data' => $contentLocation['ubn']
+                            'data' => $ubn
                         ),
                         400
                     );
                 }
 
                 $location = $repository->findOneByLocationId($contentLocationId);
-                $location->setUbn($contentLocation['ubn']);
+                $location->setUbn($ubn);
                 $locationAddress = $location->getAddress();
                 $contentLocationAddress = $contentLocation['address'];
 
@@ -486,7 +499,7 @@ class CompanyService extends AuthServiceBase
                         array(
                             Constant::CODE_NAMESPACE => 400,
                             Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
-                            'data' => $contentLocation['ubn']
+                            'data' => $ubn
                         ),
                         400
                     );
@@ -512,7 +525,7 @@ class CompanyService extends AuthServiceBase
                 $locationAddress->setCountry($locationAddressCountry);
 
                 $location = new Location();
-                $location->setUbn($contentLocation['ubn']);
+                $location->setUbn($ubn);
                 $location->setAddress($locationAddress);
                 $location->setCompany($company);
                 $location->setIsActive(true);

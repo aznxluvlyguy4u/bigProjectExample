@@ -399,6 +399,7 @@ FATHER CANNOT BE YOUNGER THAN CHILD: Vader kan niet jonger zijn dan kind
 ADDRESS COUNTRY CANNOT BE EMPTY: Land van adres mag niet leeg zijn
 BILLING ADDRESS COUNTRY CANNOT BE EMPTY: Land van factuuradres mag niet leeg zijn
 LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Land van locatieadres mag niet leeg zijn
+UBN IS NOT A VALID NUMBER: Het UBN is geen geldig nummer
 
 #Messages
 DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd

@@ -391,6 +391,7 @@ FATHER CANNOT BE YOUNGER THAN CHILD: Father cannot be younger than child
 ADDRESS COUNTRY CANNOT BE EMPTY: Country of address cannot be empty
 BILLING ADDRESS COUNTRY CANNOT BE EMPTY: Country of billing address cannot be empty
 LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Country of location address cannot be empty
+UBN IS NOT A VALID NUMBER: The UBN is not a valid number
 
 #Messages
 DECLARE_ARRIVAL: Automatically issued an arrival notification
