@@ -734,7 +734,7 @@ class Invoice
     /**
      * @return string
      */
-    public function getCompanyAddressCity(): string
+    public function getCompanyAddressCity()
     {
         return $this->companyAddressCity;
     }
@@ -742,7 +742,7 @@ class Invoice
     /**
      * @param string $companyAddressCity
      */
-    public function setCompanyAddressCity($companyAddressCity): void
+    public function setCompanyAddressCity($companyAddressCity)
     {
         $this->companyAddressCity = empty($companyAddressCity) ? null : $companyAddressCity;
     }
