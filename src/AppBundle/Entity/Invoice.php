@@ -228,6 +228,18 @@ class Invoice
 
     /**
      * @var string
+     * @ORM\Column(name="company_address_city", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     * @JMS\Type("string")
+     */
+    private $companyAddressCity;
+
+    /**
+     * @var string
      * @ORM\Column(type="string", name="company_debtor_number", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
@@ -717,6 +729,22 @@ class Invoice
     public function setCompanyAddressStreetNumberSuffix($companyAddressStreetNumberSuffix)
     {
         $this->companyAddressStreetNumberSuffix = $companyAddressStreetNumberSuffix;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressCity(): string
+    {
+        return $this->companyAddressCity;
+    }
+
+    /**
+     * @param string $companyAddressCity
+     */
+    public function setCompanyAddressCity($companyAddressCity): void
+    {
+        $this->companyAddressCity = empty($companyAddressCity) ? null : $companyAddressCity;
     }
 
     /**
