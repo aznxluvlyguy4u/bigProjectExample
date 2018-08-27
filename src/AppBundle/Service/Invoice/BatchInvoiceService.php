@@ -265,6 +265,7 @@ class BatchInvoiceService extends ControllerServiceBase
         $invoice->setCompanyAddressStreetNumber($address->getAddressNumber());
         $invoice->setCompanyAddressStreetName($address->getStreetName());
         $invoice->setCompanyAddressPostalCode($address->getPostalCode());
+        $invoice->setCompanyAddressCity($address->getCity());
     }
 
     /**
