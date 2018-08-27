@@ -19,6 +19,8 @@ class InvoiceRuleSelection
 {
     use EntityClassInfo;
 
+    const AMOUNT_MAX_DECIMALS = 2;
+
     /**
      * @var int
      * @ORM\Column(type="integer")

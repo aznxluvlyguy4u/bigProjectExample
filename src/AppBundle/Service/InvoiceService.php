@@ -207,6 +207,8 @@ class InvoiceService extends ControllerServiceBase
             return $details;
         }
 
+        $invoice = $this->roundInvoiceRuleSelectionAmountsInInvoice($invoice);
+
         $invoice->setSenderDetails($details);
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::NEW_INVOICE);
         /**
@@ -319,6 +321,8 @@ class InvoiceService extends ControllerServiceBase
             ),
             Invoice::class
         );
+
+        $temporaryInvoice = $this->roundInvoiceRuleSelectionAmountsInInvoice($temporaryInvoice);
 
         if ($temporaryInvoice->getStatus() === InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
@@ -521,6 +525,7 @@ class InvoiceService extends ControllerServiceBase
 
         /** @var InvoiceRuleSelection $invoiceRuleSelection */
         $invoiceRuleSelection = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRuleSelection::class);
+        $invoiceRuleSelection = $this->roundInvoiceRuleSelectionAmount($invoiceRuleSelection);
 
         /** @var InvoiceRule $invoiceRule */
         $invoiceRule = $invoiceRuleSelection->getInvoiceRule();
@@ -639,5 +644,32 @@ class InvoiceService extends ControllerServiceBase
         $this->getManager()->flush();
 
         return ResultUtil::successResult($this->getInvoiceOutput($invoice));
+    }
+
+
+    /**
+     * @param Invoice $invoice
+     * @return Invoice
+     */
+    private function roundInvoiceRuleSelectionAmountsInInvoice(Invoice $invoice)
+    {
+        if ($invoice) {
+            foreach ($invoice->getInvoiceRuleSelections() as $invoiceRuleSelection) {
+                $invoiceRuleSelection->setAmount(round($invoiceRuleSelection->getAmount(), InvoiceRuleSelection::AMOUNT_MAX_DECIMALS));
+            }
+        }
+
+        return $invoice;
+    }
+
+
+    /**
+     * @param InvoiceRuleSelection $invoiceRuleSelection
+     * @return InvoiceRuleSelection
+     */
+    private function roundInvoiceRuleSelectionAmount(InvoiceRuleSelection $invoiceRuleSelection)
+    {
+        $invoiceRuleSelection->setAmount(round($invoiceRuleSelection->getAmount(), InvoiceRuleSelection::AMOUNT_MAX_DECIMALS));
+        return $invoiceRuleSelection;
     }
 }
