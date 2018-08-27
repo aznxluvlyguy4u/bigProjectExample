@@ -356,19 +356,45 @@ class InvoiceService extends ControllerServiceBase
                     $oldCompany->removeInvoice($invoice);
                     $newCompany->addInvoice($invoice);
                     $invoice->setCompany($newCompany);
-                    $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
-                    $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
-                    $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
-                    $invoice->setCompanyAddressCity($newCompany->getBillingAddress()->getCity());
-                    $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
-                    if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
-                        $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
-                    }
-                    if ($newCompany->getBillingAddress()->getState() != null && $newCompany->getBillingAddress()->getState() != "") {
-                        $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
-                    }
                     $this->getManager()->persist($oldCompany);
                     $this->getManager()->persist($newCompany);
+                }
+
+                $hasBillingDataChanged = false;
+
+                if ($invoice->getCompanyAddressStreetName() !== $newCompany->getBillingAddress()->getStreetName()) {
+                    $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressStreetNumber() !== $newCompany->getBillingAddress()->getAddressNumber()) {
+                    $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressPostalCode() !== $newCompany->getBillingAddress()->getPostalCode()) {
+                    $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressCity() !== $newCompany->getBillingAddress()->getCity()) {
+                    $invoice->setCompanyAddressCity($newCompany->getBillingAddress()->getCity());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressCountry() !== $newCompany->getBillingAddress()->getCountry()) {
+                    $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressStreetNumberSuffix() !== $newCompany->getBillingAddress()->getAddressNumberSuffix()) {
+                    $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressState() !== $newCompany->getBillingAddress()->getState()) {
+                    $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
+                    $hasBillingDataChanged = true;
                 }
 
             } else {

@@ -728,7 +728,7 @@ class Invoice
      */
     public function setCompanyAddressStreetNumberSuffix($companyAddressStreetNumberSuffix)
     {
-        $this->companyAddressStreetNumberSuffix = $companyAddressStreetNumberSuffix;
+        $this->companyAddressStreetNumberSuffix = empty($companyAddressStreetNumberSuffix) ? null : $companyAddressStreetNumberSuffix;
     }
 
     /**
