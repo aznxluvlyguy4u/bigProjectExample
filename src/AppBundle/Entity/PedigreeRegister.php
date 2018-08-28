@@ -78,6 +78,17 @@ class PedigreeRegister
     private $fullName;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     */
+    private $url;
+
+    /**
      * @var \DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
@@ -203,6 +214,24 @@ class PedigreeRegister
     public function setFullName($fullName)
     {
         $this->fullName = $fullName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUrl()
+    {
+        return $this->url;
+    }
+
+    /**
+     * @param string $url
+     * @return PedigreeRegister
+     */
+    public function setUrl(string $url): PedigreeRegister
+    {
+        $this->url = $url;
+        return $this;
     }
 
     /**
