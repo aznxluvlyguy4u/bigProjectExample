@@ -308,6 +308,15 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
             if($father->getGender() != GenderType::MALE) {
                 return Validator::createJsonResponse("Opgegeven vader met ULN: " . $father->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: RAM.", $statusCode);
             }
+
+            //Check date of birth of father
+            if ($father->getDateOfBirth() === null) {
+                return Validator::createJsonResponse("De geboortedatum ontbreekt van vader: " . $father->getUlnNumber() .".", $statusCode);
+            }
+
+            if (!BirthService::isFatherDateOfBirthValid($father, $dateOfBirth)) {
+                return Validator::createJsonResponse("De vader moet minstens ".BirthService::MIN_FATHER_AGE_AT_BIRTH_IN_MONTHS." maanden oud zijn op het moment van de geboorte.", $statusCode);
+            }
         }
 
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
