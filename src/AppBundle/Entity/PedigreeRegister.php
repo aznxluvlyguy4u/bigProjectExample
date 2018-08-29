@@ -149,6 +149,7 @@ class PedigreeRegister
     private $specie;
 
     /**
+     * @var bool
      * @ORM\Column(type="boolean", nullable=false, options={"default":true})
      * @Assert\NotBlank
      * @JMS\Type("boolean")
@@ -158,6 +159,17 @@ class PedigreeRegister
      * })
      */
     private $isRegisteredWithNsfo;
+
+    /**
+     * @var bool
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @Assert\NotBlank
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     */
+    private $isOfficiallyRecognized;
 
     /**
      * PedigreeRegister constructor.
@@ -172,6 +184,7 @@ class PedigreeRegister
         $this->abbreviation = $abbreviation;
         $this->fullName = $fullName;
         $this->isRegisteredWithNsfo = $isRegisteredWithNsfo;
+        $this->isOfficiallyRecognized = false;
         $this->initializePedigreeCodes();
     }
 
@@ -423,6 +436,26 @@ class PedigreeRegister
     {
         $this->isRegisteredWithNsfo = $isRegisteredWithNsfo;
     }
+
+    /**
+     * @return bool
+     */
+    public function isOfficiallyRecognized(): bool
+    {
+        return $this->isOfficiallyRecognized;
+    }
+
+    /**
+     * @param bool $isOfficiallyRecognized
+     * @return PedigreeRegister
+     */
+    public function setIsOfficiallyRecognized(bool $isOfficiallyRecognized): PedigreeRegister
+    {
+        $this->isOfficiallyRecognized = $isOfficiallyRecognized;
+        return $this;
+    }
+
+
 
 
 
