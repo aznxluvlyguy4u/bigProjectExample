@@ -159,6 +159,7 @@ class BreedValueType
         $this->resultTableAccuracyVariable = ResultTableBreedGrades::getAccuracyVariableByBreedValueType($en);
         $this->showResult = true;
         $this->useNormalDistribution = false;
+        $this->invertNormalDistribution = false;
     }
 
     /**
