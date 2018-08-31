@@ -101,6 +101,15 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         if (empty($newAnimal->getDateOfBirth()))
             return ResultUtil::errorResult('Vul een geboortedatum in.', Response::HTTP_BAD_REQUEST);
 
+        if ($newAnimal->getNLing() === '' || $newAnimal->getNLing() === null) {
+            $newAnimal->setNLing(null);
+        } elseif (!is_int($newAnimal->getNLing()) && !ctype_digit($newAnimal->getNLing())) {
+            return ResultUtil::errorResult('n-Ling moet een integer zijn', Response::HTTP_BAD_REQUEST);
+        } elseif ($newAnimal->getNLing() < Animal::MIN_N_LING_VALUE || Animal::MAX_N_LING_VALUE < $newAnimal->getNLing()) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7').': '.$newAnimal->getNLing(), Response::HTTP_BAD_REQUEST);
+        }
+
+
         $newAnimal->getDateOfBirth()->setTime(0,0,0);
 
         // Set non nullable values

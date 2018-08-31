@@ -67,6 +67,34 @@ REGISTER: REGISTER
 SECONDARY_REGISTER: SECONDARY_REGISTER
 UNDETERMINED: UNDETERMINED
 
+#Countries
+Austria: Austria
+Belgium: Belgium
+Bulgaria: Bulgaria
+Cyprus: Cyprus
+Czech Republic: Czech Republic
+Denmark: Denmark
+Estland: Estland
+Finland: Finland
+France: France
+Germany: Germany
+Greece: Greece
+Hungary: Hungary
+Ireland: Ireland
+Italy: Italy
+Latvia: Latvia
+Lithuania: Lithuania
+Luxembourg: Luxembourg
+Netherlands: Netherlands
+Poland: Poland
+Portugal: Portugal
+Romania: Romania
+Slovakia: Slovakia
+Slovenia: Slovenia
+Spain: Spain
+Sweden: Sweden
+United Kingdom: United Kingdom
+
 #Declares
 DECLARE DEPART: DECLARE DEPART
 DECLARE EXPORT: DECLARE EXPORT
@@ -360,9 +388,14 @@ A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS: A user already exists for this ema
 THE PASSWORD IS INCORRECT: The password is invalid
 MOTHER CANNOT BE YOUNGER THAN CHILD: Mother cannot be younger than child
 FATHER CANNOT BE YOUNGER THAN CHILD: Father cannot be younger than child
+ADDRESS COUNTRY CANNOT BE EMPTY: Country of address cannot be empty
+BILLING ADDRESS COUNTRY CANNOT BE EMPTY: Country of billing address cannot be empty
+LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Country of location address cannot be empty
+UBN IS NOT A VALID NUMBER: The UBN is not a valid number
 
 #Messages
 DECLARE_ARRIVAL: Automatically issued an arrival notification
 DECLARE_DEPART: Automatically issued a departure notification
 NEW_INVOICE: U just received a new invoice
 A SIMILAR REPORT IS ALREADY BEING GENERATED: A similar report is already being generated
+THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7: The following n-lings should have a value between 0 and 7

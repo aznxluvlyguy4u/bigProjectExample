@@ -58,6 +58,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     const REVOKE_MAX_MONTH_INTERVAL = 6;
     const SURROGATE_MOTHER_MAX_BIRTH_OFFSET_FROM_NEW_BIRTH = 21;
 
+    const MIN_FATHER_AGE_AT_BIRTH_IN_MONTHS = 8;
+
     /** @var EntityGetter */
     private $entityGetter;
     /** @var AwsInternalQueueService */
@@ -675,9 +677,10 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             $suggestedCandidateFathers[] = $this->getAnimalResult($animal, $location);
         }
 
-        /** @var Animal $animal */
+        /** @var Ram $animal */
         foreach ($otherCandidateFathers as $animal) {
-            if(!array_key_exists($animal->getId(), $suggestedCandidateFatherIds)) {
+            if(!array_key_exists($animal->getId(), $suggestedCandidateFatherIds)
+            && BirthService::isFatherDateOfBirthValid($animal, $dateOfBirth)) {
                 $filteredOtherCandidateFathers[] = $this->getAnimalResult($animal, $location);
             }
         }
@@ -688,6 +691,24 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $result['other_candidate_fathers'] = $filteredOtherCandidateFathers;
 
         return ResultUtil::successResult($result);
+    }
+
+
+    /**
+     * @param Ram $father
+     * @param \DateTime $dateOfBirthOfChild
+     * @return bool
+     */
+    public static function isFatherDateOfBirthValid($father, $dateOfBirthOfChild): bool
+    {
+        if (!($father instanceof Ram)
+            || $father->getDateOfBirth() === null
+            || $father->getDateOfBirth() >= $dateOfBirthOfChild
+        ) {
+            return false;
+        }
+
+        return TimeUtil::getAgeMonths($dateOfBirthOfChild, $father->getDateOfBirth()) >= BirthService::MIN_FATHER_AGE_AT_BIRTH_IN_MONTHS;
     }
 
 

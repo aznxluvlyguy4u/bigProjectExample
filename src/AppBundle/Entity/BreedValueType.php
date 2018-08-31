@@ -131,6 +131,14 @@ class BreedValueType
     private $prioritizeNormalizedValuesInReport;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", options={"default":false})
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     */
+    private $invertNormalDistribution;
+
+    /**
      * @var float
      * @ORM\Column(type="float", nullable=true)
      * @JMS\Type("float")
@@ -151,6 +159,7 @@ class BreedValueType
         $this->resultTableAccuracyVariable = ResultTableBreedGrades::getAccuracyVariableByBreedValueType($en);
         $this->showResult = true;
         $this->useNormalDistribution = false;
+        $this->invertNormalDistribution = false;
     }
 
     /**
@@ -330,6 +339,24 @@ class BreedValueType
     public function setUseNormalDistribution($useNormalDistribution)
     {
         $this->useNormalDistribution = $useNormalDistribution;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInvertNormalDistribution(): bool
+    {
+        return $this->invertNormalDistribution;
+    }
+
+    /**
+     * @param bool $invertNormalDistribution
+     * @return BreedValueType
+     */
+    public function setInvertNormalDistribution(bool $invertNormalDistribution): BreedValueType
+    {
+        $this->invertNormalDistribution = $invertNormalDistribution;
         return $this;
     }
 

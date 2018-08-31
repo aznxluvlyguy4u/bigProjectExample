@@ -24,7 +24,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 class ScanMeasurementsMigrator extends Migrator2017JunServiceBase implements IMigratorService
 {
     const IMPORT_SUB_FOLDER = 'measurements';
-    const FILENAME = 'scan_measurements_2017.csv';
+    const FILENAME = 'scan_measurements.csv';
 
     const DATE_TIME_FORMAT = 'Y-m-d';
 

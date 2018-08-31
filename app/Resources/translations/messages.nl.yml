@@ -67,6 +67,34 @@ REGISTER: REGISTER
 SECONDARY_REGISTER: HULPBOEK
 UNDETERMINED: ONBEPAALD
 
+#Countries
+Austria: Oostenrijk
+Belgium: België
+Bulgaria: Bulgarije
+Cyprus: Cyprus
+Czech Republic: Tsjechische Republiek
+Denmark: Denemarken
+Estland: Estland
+Finland: Finland
+France: Frankrijk
+Germany: Duitsland
+Greece: Griekenland
+Hungary: Hongarije
+Ireland: Ierland
+Italy: Italië
+Latvia: Letland
+Lithuania: Litouwen
+Luxembourg: Luxemburg
+Netherlands: Nederland
+Poland: Polen
+Portugal: Portugal
+Romania: Roemenië
+Slovakia: Slowakije
+Slovenia: Slovenië
+Spain: Spanje
+Sweden: Zweden
+United Kingdom: Verenigd Koningkrijk
+
 #Declares
 DECLARE DEPART: AFVOERMELDING
 DECLARE EXPORT: EXPORTMELDING
@@ -368,9 +396,14 @@ A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS: Er bestaat al een gebruiker met di
 THE PASSWORD IS INCORRECT: Het wachtwoord is onjuist
 MOTHER CANNOT BE YOUNGER THAN CHILD: Moeder kan niet jonger zijn dan kind
 FATHER CANNOT BE YOUNGER THAN CHILD: Vader kan niet jonger zijn dan kind
+ADDRESS COUNTRY CANNOT BE EMPTY: Land van adres mag niet leeg zijn
+BILLING ADDRESS COUNTRY CANNOT BE EMPTY: Land van factuuradres mag niet leeg zijn
+LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Land van locatieadres mag niet leeg zijn
+UBN IS NOT A VALID NUMBER: Het UBN is geen geldig nummer
 
 #Messages
 DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd
 DECLARE_DEPART: Automatisch een afvoer melding uitgevoerd
 NEW_INVOICE: U heeft een nieuwe factuur ontvangen
 A SIMILAR REPORT IS ALREADY BEING GENERATED: Een identieke rapportage wordt al gegenereerd
+THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7: De volgende n-ling waarden moeten zitten tussen 0 en 7

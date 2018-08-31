@@ -376,8 +376,12 @@ class AnimalRepository extends BaseRepository
               /** @var Ewe[] $ewes */
               $ewes = $this->getEwesLivestockWithLastMateQuery($location, $onlyIncludeAliveEwes)->getResult();
 
-              foreach ($ewes as $ewe) {
-                  $ewe->onlyKeepLastActiveMateInMatings();
+              foreach ($ewes as $key => $ewe) {
+                  if ($ewe instanceof Ewe) {
+                      $ewe->onlyKeepLastActiveMateInMatings();
+                  } else {
+                      unset($ewes[$key]);
+                  }
               }
 
               $jmsGroups = self::getEwesLivestockWithLastMateJmsGroups();

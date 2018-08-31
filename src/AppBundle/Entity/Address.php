@@ -313,7 +313,11 @@ abstract class Address
      */
     public function setState($state)
     {
-        $this->state = StringUtil::trimIfNotNull($state);
+        if (empty($state)) {
+            $this->state = null;
+        } else {
+            $this->state = StringUtil::trimIfNotNull($state);
+        }
 
         return $this;
     }

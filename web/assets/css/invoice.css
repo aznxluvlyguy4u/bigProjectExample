@@ -101,6 +101,10 @@ thead {
     margin: 25px 0 0 0;
 }
 
+.img-fluid {
+    height: 50px;
+}
+
 .no-padding {
     padding: 0;
 }

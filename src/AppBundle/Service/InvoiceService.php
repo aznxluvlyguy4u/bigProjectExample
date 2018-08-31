@@ -213,6 +213,8 @@ class InvoiceService extends ControllerServiceBase
             return $details;
         }
 
+        $invoice = $this->roundInvoiceRuleSelectionAmountsInInvoice($invoice);
+
         $invoice->setSenderDetails($details);
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::NEW_INVOICE);
         /**
@@ -240,6 +242,7 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setCompanyAddressStreetName($company->getBillingAddress()->getStreetName());
             $invoice->setCompanyAddressStreetNumber($company->getBillingAddress()->getAddressNumber());
             $invoice->setCompanyAddressPostalCode($company->getBillingAddress()->getPostalCode());
+            $invoice->setCompanyAddressCity($company->getBillingAddress()->getCity());
             $invoice->setCompanyAddressCountry($company->getBillingAddress()->getCountry());
             if ($company->getBillingAddress()->getAddressNumberSuffix() != null && $company->getBillingAddress()->getAddressNumberSuffix() != "") {
                 $invoice->setCompanyAddressStreetNumberSuffix($company->getBillingAddress()->getAddressNumberSuffix());
@@ -333,6 +336,8 @@ class InvoiceService extends ControllerServiceBase
             Invoice::class
         );
 
+        $temporaryInvoice = $this->roundInvoiceRuleSelectionAmountsInInvoice($temporaryInvoice);
+
         if ($temporaryInvoice->getStatus() === InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
         }
@@ -365,19 +370,64 @@ class InvoiceService extends ControllerServiceBase
                 if ($oldCompany->getCompanyId() !== $newCompany->getCompanyId()) {
                     $oldCompany->removeInvoice($invoice);
                     $newCompany->addInvoice($invoice);
-                    $newCompany->getDebtorNumber() != null ? $invoice->setCompanyDebtorNumber($newCompany->getDebtorNumber()) : null;
-                    if ($newCompany->getTwinfieldOfficeCode()) {
-                        $invoice->setCompanyTwinfieldAdministrationCode($newCompany->getTwinfieldOfficeCode());
-                    } else {
-                        $invoice->setCompanyTwinfieldAdministrationCode(null);
-                    }
+
+                    $invoice->setCompany($newCompany);
                     $this->getManager()->persist($oldCompany);
-                } else {
-                    if ($oldCompany->getDebtorNumber() != null) {
-                        $invoice->setCompanyDebtorNumber($oldCompany->getDebtorNumber());
-                        $invoice->setCompanyTwinfieldAdministrationCode($oldCompany->getTwinfieldOfficeCode());
-                    }
+                    $this->getManager()->persist($newCompany);
                 }
+
+                $hasBillingDataChanged = false;
+
+                if ($invoice->getCompanyAddressStreetName() !== $newCompany->getBillingAddress()->getStreetName()) {
+                    $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressStreetNumber() !== $newCompany->getBillingAddress()->getAddressNumber()) {
+                    $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressPostalCode() !== $newCompany->getBillingAddress()->getPostalCode()) {
+                    $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressCity() !== $newCompany->getBillingAddress()->getCity()) {
+                    $invoice->setCompanyAddressCity($newCompany->getBillingAddress()->getCity());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressCountry() !== $newCompany->getBillingAddress()->getCountry()) {
+                    $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressStreetNumberSuffix() !== $newCompany->getBillingAddress()->getAddressNumberSuffix()) {
+                    $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyAddressState() !== $newCompany->getBillingAddress()->getState()) {
+                    $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
+                    $hasBillingDataChanged = true;
+                }
+
+            } else {
+                $invoice->setCompany($newCompany);
+                $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
+                $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
+                $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
+                $invoice->setCompanyAddressCity($newCompany->getBillingAddress()->getCity());
+                $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
+                if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
+                    $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
+                }
+                if ($newCompany->getBillingAddress()->getState() != null && $newCompany->getBillingAddress()->getState() != "") {
+                    $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
+                }
+                $newCompany->addInvoice($invoice);
+                $this->getManager()->persist($newCompany);
 
             }
             $invoice->setCompany($newCompany);
@@ -542,6 +592,7 @@ class InvoiceService extends ControllerServiceBase
 
         /** @var InvoiceRuleSelection $invoiceRuleSelection */
         $invoiceRuleSelection = $this->getBaseSerializer()->deserializeToObject($request->getContent(), InvoiceRuleSelection::class);
+        $invoiceRuleSelection = $this->roundInvoiceRuleSelectionAmount($invoiceRuleSelection);
 
         /** @var InvoiceRule $invoiceRule */
         $invoiceRule = $invoiceRuleSelection->getInvoiceRule();
@@ -660,5 +711,32 @@ class InvoiceService extends ControllerServiceBase
         $this->getManager()->flush();
 
         return ResultUtil::successResult($this->getInvoiceOutput($invoice));
+    }
+
+
+    /**
+     * @param Invoice $invoice
+     * @return Invoice
+     */
+    private function roundInvoiceRuleSelectionAmountsInInvoice(Invoice $invoice)
+    {
+        if ($invoice) {
+            foreach ($invoice->getInvoiceRuleSelections() as $invoiceRuleSelection) {
+                $invoiceRuleSelection->setAmount(round($invoiceRuleSelection->getAmount(), InvoiceRuleSelection::AMOUNT_MAX_DECIMALS));
+            }
+        }
+
+        return $invoice;
+    }
+
+
+    /**
+     * @param InvoiceRuleSelection $invoiceRuleSelection
+     * @return InvoiceRuleSelection
+     */
+    private function roundInvoiceRuleSelectionAmount(InvoiceRuleSelection $invoiceRuleSelection)
+    {
+        $invoiceRuleSelection->setAmount(round($invoiceRuleSelection->getAmount(), InvoiceRuleSelection::AMOUNT_MAX_DECIMALS));
+        return $invoiceRuleSelection;
     }
 }

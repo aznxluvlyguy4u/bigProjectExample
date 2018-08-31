@@ -52,6 +52,9 @@ abstract class Animal
 {
     use EntityClassInfo;
 
+    const MIN_N_LING_VALUE = 0;
+    const MAX_N_LING_VALUE = 7;
+
     /**
      * @var integer
      *

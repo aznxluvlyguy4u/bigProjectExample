@@ -16,7 +16,7 @@
     {# HEADER #}
 
     <div class="nsfo-logo">
-        <img src="{{ imagesDirectory }}" width="556" height="70" />
+        <img src="{{ imagesDirectory }}"/>
     </div>
 
     {#<h3>{{ imagesDirectory }}</h3>#}
@@ -90,7 +90,7 @@
         <footer></footer>
 
             <div class="nsfo-logo">
-                <img src="{{ imagesDirectory }}" width="556" height="70" />
+                <img src="{{ imagesDirectory }}"/>
             </div>
 
             <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
@@ -109,7 +109,16 @@
         h2 { text-align: center; font-family:SansSerif, sans-serif;font-size:22px }
         p { text-align: center; font-family:SansSerif, sans-serif;font-size:14px; margin-bottom: 18px}
 
-        .nsfo-logo { margin-top: 0.8cm; margin-bottom: 0.7cm; }
+        .nsfo-logo {
+            margin-top: 1.0cm;
+            margin-bottom: 0.5cm;
+            text-align: center;
+            align-content: center;
+        }
+
+        .nsfo-logo img {
+            height: 50px;
+        }
 
         table, td {
             border-collapse:collapse;
