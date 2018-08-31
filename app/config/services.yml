@@ -919,7 +919,6 @@ services:
                 - '%external_provider_password%'
                 - '%external_provider_organisation%'
 
-
     AppBundle\SqlView\SqlViewManager:
         arguments:
           - '@AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository'

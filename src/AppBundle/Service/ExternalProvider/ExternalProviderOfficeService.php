@@ -4,8 +4,8 @@
 namespace AppBundle\Service\ExternalProvider;
 
 
+use AppBundle\Component\ExternalProvider\ApiConnectors\OfficeApiConnector;
 use AppBundle\Util\ResultUtil;
-use PhpTwinfield\ApiConnectors\OfficeApiConnector;
 use PhpTwinfield\Secure\WebservicesAuthentication;
 
 class ExternalProviderOfficeService
