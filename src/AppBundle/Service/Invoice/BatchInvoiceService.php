@@ -212,7 +212,7 @@ class BatchInvoiceService extends ControllerServiceBase
             $invoice->setIsBatch(true);
             $this->setAddressProperties($invoice, $company->getBillingAddress());
             if ($company->getDebtorNumber()) {
-                $invoice->setCompanyTwinfieldAdministrationCode($company->getTwinfieldOfficeCode());
+                $invoice->setCompanyTwinfieldOfficeCode($company->getTwinfieldOfficeCode());
                 $invoice->setStatus(InvoiceStatus::UNPAID);
                 $invoice->setCompanyDebtorNumber($company->getDebtorNumber());
                 $invoice->setInvoiceDate(new \DateTime());
@@ -271,7 +271,7 @@ class BatchInvoiceService extends ControllerServiceBase
     private function validateAndSendToTwinfield(Invoice $invoice) {
         $message = "Company debtor number and/or twinfield administration code are not filled out";
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
-        if ($invoice->getCompanyTwinfieldAdministrationCode() && $invoice->getCompanyDebtorNumber()) {
+        if ($invoice->getCompanyTwinfieldOfficeCode() && $invoice->getCompanyDebtorNumber()) {
             if ($this->invoicesSendCounter >= 100) {
                 $this->twinfieldInvoiceService->reAuthenticate();
                 $this->invoicesSendCounter = 0;

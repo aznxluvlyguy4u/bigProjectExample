@@ -252,18 +252,6 @@ class Invoice
 
     /**
      * @var string
-     * @ORM\Column(type="string", name="company_twinfield_administration_code", nullable=true)
-     * @JMS\Type("string")
-     * @JMS\Groups({
-     *     "INVOICE",
-     *     "INVOICE_NO_COMPANY",
-     *     "INVOICE_OVERVIEW"
-     * })
-     */
-    private $companyTwinfieldAdministrationCode;
-
-    /**
-     * @var string
      * @ORM\Column(type="string", name="mollie_id", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
@@ -840,25 +828,9 @@ class Invoice
     /**
      * @param string $companyTwinfieldOfficeCode
      */
-    public function setCompanyTwinfieldOfficeCode(string $companyTwinfieldOfficeCode)
+    public function setCompanyTwinfieldOfficeCode(?string $companyTwinfieldOfficeCode): void
     {
-        $this->companyTwinfieldOfficeCode = $companyTwinfieldOfficeCode;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCompanyTwinfieldAdministrationCode(): ?string
-    {
-        return $this->companyTwinfieldAdministrationCode;
-    }
-
-    /**
-     * @param string $companyTwinfieldAdministrationCode
-     */
-    public function setCompanyTwinfieldAdministrationCode(?string $companyTwinfieldAdministrationCode): void
-    {
-        $this->companyTwinfieldAdministrationCode = $companyTwinfieldAdministrationCode;
+        $this->companyTwinfieldOfficeCode = empty($companyTwinfieldOfficeCode) ? null : $companyTwinfieldOfficeCode;;
     }
 
     public function copyValues(Invoice $invoice){
@@ -872,6 +844,8 @@ class Invoice
         $this->setDocumentUrl($invoice->getDocumentUrl());
         $this->setInvoiceDate($invoice->getInvoiceDate());
         $this->setInvoiceNumber($invoice->getInvoiceNumber());
+        $this->setCompanyTwinfieldCode($invoice->getCompanyTwinfieldCode());
+        $this->setCompanyTwinfieldOfficeCode($invoice->getCompanyTwinfieldOfficeCode());
         $this->setStatus($invoice->getStatus());
     }
 }

@@ -252,7 +252,7 @@ class InvoiceService extends ControllerServiceBase
             }
             $company->addInvoice($invoice);
             if ($company->getTwinfieldOfficeCode()) {
-                $invoice->setCompanyTwinfieldAdministrationCode($company->getTwinfieldOfficeCode());
+                $invoice->setCompanyTwinfieldOfficeCode($company->getTwinfieldOfficeCode());
             }
             $this->getManager()->persist($company);
         }
@@ -413,6 +413,16 @@ class InvoiceService extends ControllerServiceBase
                     $hasBillingDataChanged = true;
                 }
 
+                if ($invoice->getCompanyTwinfieldOfficeCode() !== $newCompany->getTwinfieldOfficeCode()) {
+                    $invoice->setCompanyTwinfieldOfficeCode($newCompany->getTwinfieldOfficeCode());
+                    $hasBillingDataChanged = true;
+                }
+
+                if ($invoice->getCompanyTwinfieldCode() !== $newCompany->getDebtorNumber()) {
+                    $invoice->setCompanyTwinfieldCode($newCompany->getDebtorNumber());
+                    $hasBillingDataChanged = true;
+                }
+
             } else {
                 $invoice->setCompany($newCompany);
                 $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
@@ -492,7 +502,7 @@ class InvoiceService extends ControllerServiceBase
     private function validateAndSendToTwinfield(Invoice $invoice) {
         $message = "Company debtor number and/or twinfield administration code are not filled out";
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
-        if ($invoice->getCompanyTwinfieldAdministrationCode() && $invoice->getCompanyDebtorNumber()) {
+        if ($invoice->getCompanyTwinfieldOfficeCode() && $invoice->getCompanyDebtorNumber()) {
             $result = $this->twinfieldInvoiceService->sendInvoiceToTwinfield($invoice);
             if (is_a($result, \PhpTwinfield\Invoice::class)) {
                 $invoice->setInvoiceNumber($result->getInvoiceNumber());

@@ -67,14 +67,14 @@ class ExternalProviderInvoiceService extends ControllerServiceBase
         $customer = $this->twinfieldCustomerService
             ->getSingleCustomer(
                 $invoice->getCompanyDebtorNumber(),
-                $invoice->getCompanyTwinfieldAdministrationCode()
+                $invoice->getCompanyTwinfieldOfficeCode()
             );
         if (is_a($customer, JsonResponse::class)) {
             return $customer;
         }
         $customer->setCode($invoice->getCompanyDebtorNumber());
         $office = new Office();
-        $office->setCode($invoice->getCompanyTwinfieldAdministrationCode());
+        $office->setCode($invoice->getCompanyTwinfieldOfficeCode());
         $twinfieldInvoice = new \PhpTwinfield\Invoice();
         $twinfieldInvoice->setInvoiceDate($invoice->getInvoiceDate());
         $twinfieldInvoice->setCurrency(TwinfieldEnums::CURRENCY_TYPE);
