@@ -50,7 +50,8 @@ class Location
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
      *     "MINIMAL",
-     *     "RVO"
+     *     "RVO",
+     *     "DOSSIER"
      * })
      * @Expose
      */
@@ -74,7 +75,8 @@ class Location
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "TREATMENT_TEMPLATE_MIN",
-   *     "UBN"
+   *     "UBN",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -87,7 +89,8 @@ class Location
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ANIMAL_DETAILS",
-   *     "BASIC"
+   *     "BASIC",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -202,10 +205,12 @@ class Location
    * @var LocationAddress
    *
    * @ORM\OneToOne(targetEntity="LocationAddress", cascade={"persist"})
+   * @Expose
    * @JMS\Type("AppBundle\Entity\LocationAddress")
    * @JMS\Groups({
    *     "INVOICE",
-   *     "INVOICE_NO_COMPANY"
+   *     "INVOICE_NO_COMPANY",
+   *     "DOSSIER"
    * })
    */
   private $address;
@@ -293,7 +298,8 @@ class Location
      *     "BASIC",
      *     "INVOICE",
      *     "MINIMAL",
-     *     "TREATMENT_TEMPLATE"
+     *     "TREATMENT_TEMPLATE",
+     *     "DOSSIER"
      * })
      * @Expose
      */

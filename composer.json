@@ -39,6 +39,7 @@
         "liuggio/excelbundle": "^2.1",
         "ijanki/ftp-bundle": "^1.0",
         "mollie/mollie-api-php": "1.9.*",
+        "php-twinfield/twinfield": "^2.0",
         "ocramius/proxy-manager": "^1.0",
         "kreait/firebase-php": "^4.0",
         "enqueue/enqueue-bundle": "^0.8.31",
@@ -71,6 +72,7 @@
     },
     "config": {
         "platform": {
+            "php": "7.1"
         },
         "bin-dir": "bin"
     },

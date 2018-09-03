@@ -31,6 +31,7 @@ class Client extends Person implements PersonImplementationInterface
      *     "BASIC",
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER",
      *     "RVO"
      * })
     * @Expose

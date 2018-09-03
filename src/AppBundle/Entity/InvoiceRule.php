@@ -112,6 +112,30 @@ class InvoiceRule
     private $ledgerCategory;
 
     /**
+     * @var string
+     * @ORM\Column(name="article_code", type="string")
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $articleCode;
+
+    /**
+     * @var string
+     * @ORM\Column(name="sub_article_code", type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $subArticleCode;
+
+    /**
      * @var boolean
      * @ORM\Column(type="boolean", name="is_deleted", options={"default":false})
      * @JMS\Type("boolean")
@@ -161,8 +185,8 @@ class InvoiceRule
      */
     function __clone()
     {
-     $this->id = null;
-     $this->isBatch = false;
+        $this->id = null;
+        $this->isBatch = false;
     }
 
     /**
@@ -349,4 +373,37 @@ class InvoiceRule
     {
         $this->isBatch = $isBatch;
     }
+
+    /**
+     * @return string
+     */
+    public function getArticleCode(): string
+    {
+        return $this->articleCode;
+    }
+
+    /**
+     * @param string $articleCode
+     */
+    public function setArticleCode(string $articleCode): void
+    {
+        $this->articleCode = $articleCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubArticleCode(): ?string
+    {
+        return $this->subArticleCode;
+    }
+
+    /**
+     * @param string $subArticleCode
+     */
+    public function setSubArticleCode(?string $subArticleCode): void
+    {
+        $this->subArticleCode = $subArticleCode;
+    }
+
 }

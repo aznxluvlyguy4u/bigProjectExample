@@ -40,7 +40,8 @@ use JMS\Serializer\Annotation\Expose;
  *     "TREATMENT_TEMPLATE",
  *     "UBN",
  *     "USER_MEASUREMENT",
- *     "VWA"
+ *     "VWA",
+ *     "DOSSIER"
  *  })
  *
  * @package AppBundle\Entity
@@ -72,7 +73,8 @@ abstract class Person implements UserInterface
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
-   *     "VWA"
+   *     "VWA",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -98,7 +100,8 @@ abstract class Person implements UserInterface
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
-   *     "VWA"
+   *     "VWA",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -124,7 +127,8 @@ abstract class Person implements UserInterface
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
-   *     "VWA"
+   *     "VWA",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -139,7 +143,8 @@ abstract class Person implements UserInterface
    * @JMS\Groups({
    *     "BASIC",
    *     "GHOST_LOGIN",
-   *     "VWA"
+   *     "VWA",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -164,7 +169,8 @@ abstract class Person implements UserInterface
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
      *     "USER_MEASUREMENT",
-     *     "VWA"
+     *     "VWA",
+     *     "DOSSIER"
      * })
      * @Expose
      */

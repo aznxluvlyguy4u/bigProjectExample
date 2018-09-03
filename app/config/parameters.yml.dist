@@ -48,6 +48,10 @@ parameters:
 
     test_email: ~
 
+    external_provider_user: ~
+    external_provider_password: ~
+    external_provider_organisation: ~
+
     worker_queue_dir: '/tmp/nsfo-symfony-worker-queue'
 
     locale: en

@@ -6,6 +6,7 @@ namespace AppBundle\Service\Invoice;
 
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\LedgerCategory;
+use AppBundle\Enumerator\TwinfieldEnums;
 use AppBundle\Service\Migration\MigratorServiceBase;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -128,6 +129,15 @@ class BatchInvoiceRuleInitializer extends MigratorServiceBase
         self::$animalAdministrationOfflineEwe->setSortOrder(1);
         self::$subscriptionNSFOOnline->setSortOrder(1);
         self::$subscriptionNSFOAnimalHealth->setSortOrder(1);
+
+        /**
+         * Set the article code
+         */
+        self::$baseCostAnimalAdministration->setArticleCode(TwinfieldEnums::PLACEHOLDER_ARTICLE_CODE);
+        self::$animalAdministrationOnlineEwe->setArticleCode(TwinfieldEnums::PLACEHOLDER_ARTICLE_CODE);
+        self::$animalAdministrationOfflineEwe->setArticleCode(TwinfieldEnums::PLACEHOLDER_ARTICLE_CODE);
+        self::$subscriptionNSFOOnline->setArticleCode(TwinfieldEnums::PLACEHOLDER_ARTICLE_CODE);
+        self::$subscriptionNSFOAnimalHealth->setArticleCode(TwinfieldEnums::PLACEHOLDER_ARTICLE_CODE);
         
         $this->em->persist(self::$baseCostAnimalAdministration);
         $this->em->persist(self::$animalAdministrationOnlineEwe);

@@ -25,6 +25,7 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Serializer\PreSerializer\InvoicePreSerializer;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Service\Invoice\InvoicePdfGeneratorService;
+use AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -45,12 +46,16 @@ class InvoiceService extends ControllerServiceBase
     private $ledgerCategoriesById;
     /** @var array */
     private $invalidLedgerCategoryIds;
+    /** @var ExternalProviderInvoiceService */
+    private $twinfieldInvoiceService;
 
     /** @var  InvoicePdfGeneratorService */
     private $invoicePdfGeneratorService;
 
     /** @var FireBaseService */
     private $fireBaseService;
+
+
 
     /**
      * @required
@@ -61,8 +66,9 @@ class InvoiceService extends ControllerServiceBase
         $this->fireBaseService = $fireBaseService;
     }
 
-    public function instantiateServices(InvoicePdfGeneratorService $invoicePdfGeneratorService) {
+    public function instantiateServices(InvoicePdfGeneratorService $invoicePdfGeneratorService, ExternalProviderInvoiceService $twinfieldInvoiceService) {
         $this->invoicePdfGeneratorService = $invoicePdfGeneratorService;
+        $this->twinfieldInvoiceService = $twinfieldInvoiceService;
     }
 
     /**
@@ -219,20 +225,9 @@ class InvoiceService extends ControllerServiceBase
 
         if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
-
-            $client = $this->getAccountOwner($request);
-            $message = new Message();
-            $message->setSender($client);
-            $message->setType(InvoiceMessages::NEW_INVOICE_TYPE);
-            $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
-            $message->setMessage(InvoiceMessages::NEW_INVOICE_MESSAGE);
-            $message->setReceiver($invoice->getCompany()->getOwner());
-            /** @var LocationRepository $repository */
             $repository = $this->getManager()->getRepository(Location::class);
             $location = $repository->findOneByActiveUbn($invoice->getUbn());
-            $message->setReceiverLocation($location);
-            $this->persistAndFlush($message);
-
+            $message = $this->createInvoiceCreatedMessage($request, $invoice);
             foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
                 $title = $this->translator->trans($message->getType());
                 $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
@@ -256,24 +251,43 @@ class InvoiceService extends ControllerServiceBase
                 $invoice->setCompanyAddressState($company->getBillingAddress()->getState());
             }
             $company->addInvoice($invoice);
+            $invoice->setCompanyTwinfieldOfficeCode($company->getTwinfieldOfficeCode());
+            $invoice->setCompanyTwinfieldCode($company->getDebtorNumber());
+
             $this->getManager()->persist($company);
         }
 
-        $year = new \DateTime();
-        $year = $year->format('Y');
-        /** @var Invoice $previousInvoice */
-        $previousInvoice = $this->getManager()->getRepository(Invoice::class)->getInvoiceOfCurrentYearWithLastInvoiceNumber($year);
-        $number = $previousInvoice === null ?
-            (int)$year * 10000 :
-            $previousInvoice->getInvoiceNumber() + 1
-        ;
-        $invoice->setInvoiceNumber($number);
-
+        if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
+            return $this->validateAndSendToTwinfield($invoice);
+        }
         $this->persistAndFlush($invoice);
         $this->persistAndFlush($log);
+
         return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }
 
+    /**
+     * @param Request $request
+     * @param Invoice $invoice
+     * @return Message
+     */
+    private function createInvoiceCreatedMessage(Request $request, Invoice $invoice) {
+
+        $client = $this->getAccountOwner($request);
+        $message = new Message();
+        $message->setSender($client);
+        $message->setType(InvoiceMessages::NEW_INVOICE_TYPE);
+        $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
+        $message->setMessage(InvoiceMessages::NEW_INVOICE_MESSAGE);
+        $message->setReceiver($invoice->getCompany()->getOwner());
+        /** @var LocationRepository $repository */
+        $repository = $this->getManager()->getRepository(Location::class);
+        $location = $repository->findOneByActiveUbn($invoice->getUbn());
+        $message->setReceiverLocation($location);
+        $this->persistAndFlush($message);
+
+        return $message;
+    }
 
     /**
      * @param Invoice $invoice
@@ -324,17 +338,41 @@ class InvoiceService extends ControllerServiceBase
 
         $temporaryInvoice = $this->roundInvoiceRuleSelectionAmountsInInvoice($temporaryInvoice);
 
+        $onlySetPaidStatusOnUnpaidInvoice = $temporaryInvoice->getStatus() === InvoiceStatus::PAID && $invoice->getStatus() === InvoiceStatus::UNPAID;
+
+        if ($invoice->getStatus() === InvoiceStatus::CANCELLED
+            || $invoice->getStatus() === InvoiceStatus::PAID
+            || ($invoice->getStatus() === InvoiceStatus::UNPAID && !$onlySetPaidStatusOnUnpaidInvoice)
+        ) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('INVOICES THAT ARE ALREADY CANCELLED, SENT BUT UNPAID OR PAID CANNOT BE EDITED ANYMORE'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        /*
+         * First check if only the status has to be set to PAID.
+         * Do not allow any other simultaneous edits besides that!
+         */
+        if ($onlySetPaidStatusOnUnpaidInvoice) {
+            $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_PAID_ADMIN);
+            $invoice->setStatus(InvoiceStatus::PAID);
+            $invoice->setPaidDate(new \DateTime());
+
+            $invoice->updateTotal();
+            $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
+
+            $this->persistAndFlush($invoice);
+            return ResultUtil::successResult($this->getInvoiceOutput($invoice));
+        }
+
+
         if ($temporaryInvoice->getStatus() === InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
         }
-        else {
-            $details = $this->retrieveValidatedSenderDetails($temporaryInvoice);
-            if ($details instanceof JsonResponse) {
-                return $details;
-            }
 
-            $invoice->setSenderDetails($details);
+        $details = $this->retrieveValidatedSenderDetails($temporaryInvoice);
+        if ($details instanceof JsonResponse) {
+            return $details;
         }
+        $invoice->setSenderDetails($details);
 
 
         /**
@@ -349,125 +387,86 @@ class InvoiceService extends ControllerServiceBase
             ? $this->getManager()->getRepository(Company::class)->findOneByCompanyId($temporaryInvoice->getCompany()->getCompanyId()) : null;
         $oldCompany = $invoice->getCompany();
 
+        $temporaryInvoice->setCompany($newCompany);
+        $temporaryInvoice->setCompanyTwinfieldCode($temporaryInvoice->getCompanyDebtorNumber());
+        $invoice->copyValues($temporaryInvoice);
+
+
+
+        $removeOldCompany = false;
+        $setNewCompany = false;
+
         if ($newCompany) {
 
-            if ($oldCompany !== null){
-                if ($oldCompany->getCompanyId() !== $newCompany->getCompanyId()) {
-                    $oldCompany->removeInvoice($invoice);
-                    $newCompany->addInvoice($invoice);
-                    $invoice->setCompany($newCompany);
-                    $this->getManager()->persist($oldCompany);
-                    $this->getManager()->persist($newCompany);
-                }
-
-                $hasBillingDataChanged = false;
-
-                if ($invoice->getCompanyAddressStreetName() !== $newCompany->getBillingAddress()->getStreetName()) {
-                    $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressStreetNumber() !== $newCompany->getBillingAddress()->getAddressNumber()) {
-                    $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressPostalCode() !== $newCompany->getBillingAddress()->getPostalCode()) {
-                    $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressCity() !== $newCompany->getBillingAddress()->getCity()) {
-                    $invoice->setCompanyAddressCity($newCompany->getBillingAddress()->getCity());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressCountry() !== $newCompany->getBillingAddress()->getCountry()) {
-                    $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressStreetNumberSuffix() !== $newCompany->getBillingAddress()->getAddressNumberSuffix()) {
-                    $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressState() !== $newCompany->getBillingAddress()->getState()) {
-                    $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
-                    $hasBillingDataChanged = true;
-                }
-
-            } else {
-                $invoice->setCompany($newCompany);
-                $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
-                $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
-                $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
-                $invoice->setCompanyAddressCity($newCompany->getBillingAddress()->getCity());
-                $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
-                if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
-                    $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
-                }
-                if ($newCompany->getBillingAddress()->getState() != null && $newCompany->getBillingAddress()->getState() != "") {
-                    $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
-                }
-                $newCompany->addInvoice($invoice);
-                $this->getManager()->persist($newCompany);
+            if ($oldCompany !== null && $oldCompany->getCompanyId() !== $newCompany->getCompanyId()){
+                $removeOldCompany = true;
             }
+            $setNewCompany = true;
 
-        } else {
-            if ($oldCompany !== null) {
-                $invoice->setCompany(null);
-                $oldCompany->removeInvoice($invoice);
-                $this->getManager()->persist($oldCompany);
-            }
+        } elseif ($oldCompany !== null) {
+            $removeOldCompany = true;
         }
 
-        $temporaryInvoice->setCompany($newCompany);
-        $invoice->copyValues($temporaryInvoice);
+        if ($removeOldCompany) {
+            $invoice->setCompany(null);
+            $oldCompany->removeInvoice($invoice);
+            $this->getManager()->persist($oldCompany);
+        }
+
+        // Note, always first remove old company before setting a new company
+        if ($setNewCompany) {
+            $invoice->setCompany($newCompany);
+            $newCompany->addInvoice($invoice);
+            $this->getManager()->persist($newCompany);
+        }
+
+
+
         if ($invoice->getStatus() === InvoiceStatus::UNPAID) {
             $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_SEND);
             $invoice->setInvoiceDate(new \DateTime());
-
-            $client = $this->getAccountOwner($request);
-            $message = new Message();
-            $message->setSender($client);
-            $message->setType(InvoiceMessages::NEW_INVOICE_TYPE);
-            $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
-            $message->setMessage(InvoiceMessages::NEW_INVOICE_MESSAGE);
-            $message->setReceiver($invoice->getCompany()->getOwner());
-            $message->setHidden(false);
+            $message = $this->createInvoiceCreatedMessage($request, $invoice);
             /** @var LocationRepository $repository */
             $repository = $this->getManager()->getRepository(Location::class);
-            $senderLocation = $repository->findOneByActiveUbn(2198556);
             $location = $repository->findOneByActiveUbn($invoice->getUbn());
-            $message->setReceiverLocation($location);
-            $this->persistAndFlush($message);
             $this->persistAndFlush($log);
 
-            foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                $title = $this->translator->trans($message->getType());
-                $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
-            }
-        }
-        if ($invoice->getStatus() == InvoiceStatus::PAID) {
-            $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_PAID_ADMIN);
-            $invoice->setPaidDate(new \DateTime());
-            $this->persistAndFlush($log);
-        }
-        else {
-            $details = $this->retrieveValidatedSenderDetails($temporaryInvoice);
-            if ($details instanceof JsonResponse) {
-                return $details;
+            if ($location) {
+                foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
+                    $title = $this->translator->trans($message->getType());
+                    $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
+                }
             }
 
-            $invoice->setSenderDetails($details);
+            return $this->validateAndSendToTwinfield($invoice);
         }
+
         $invoice->updateTotal();
         $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
         $this->persistAndFlush($invoice);
         return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }
 
+    private function validateAndSendToTwinfield(Invoice $invoice) {
+        $message = "Company debtor number and/or twinfield administration code are not filled out";
+        $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
+        if ($invoice->getCompanyTwinfieldOfficeCode() && $invoice->getCompanyDebtorNumber()) {
+            $result = $this->twinfieldInvoiceService->sendInvoiceToTwinfield($invoice);
+            if (is_a($result, \PhpTwinfield\Invoice::class)) {
+                $invoice->setInvoiceNumber($result->getInvoiceNumber());
+                $invoice->setInvoiceDate(new \DateTime());
+                $this->persistAndFlush($invoice);
+                return ResultUtil::successResult($invoice);
+            }
+            $message = $result->getMessage();
+            $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
+        }
+        $invoice->setStatus(InvoiceStatus::NOT_SEND);
+        $invoice->setInvoiceDate(null);
+        $this->persistAndFlush($log);
+        $this->persistAndFlush($invoice);
+        return ResultUtil::errorResult($message, JsonResponse::HTTP_PRECONDITION_REQUIRED);
+    }
 
     /**
      * @param Request $request

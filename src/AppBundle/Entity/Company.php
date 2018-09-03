@@ -29,7 +29,7 @@ class Company
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Type("integer")
      * @JMS\Groups({
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
      * })
      */
     protected $id;
@@ -42,7 +42,8 @@ class Company
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
-     *     "INVOICE"
+     *     "INVOICE",
+     *     "DOSSIER"
      * })
      */
     private $companyId;
@@ -56,7 +57,8 @@ class Company
      *     "ANIMAL_DETAILS",
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
-     *     "UBN"
+     *     "UBN",
+     *     "DOSSIER"
      * })
     */
     private $debtorNumber;
@@ -71,7 +73,8 @@ class Company
      *     "ANIMALS_BATCH_EDIT",
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
-     *     "UBN"
+     *     "UBN",
+     *     "DOSSIER"
      * })
     */
     private $companyName;
@@ -83,7 +86,8 @@ class Company
     * @JMS\Type("string")
     * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER"
      * })
     */
     private $vatNumber;
@@ -95,7 +99,8 @@ class Company
     * @JMS\Type("string")
     * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER"
      * })
     */
     private $chamberOfCommerceNumber;
@@ -107,7 +112,8 @@ class Company
     * @JMS\Type("string")
     * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER"
      * })
     */
     private $companyRelationNumber;
@@ -120,7 +126,8 @@ class Company
     * @JMS\Groups({
     *     "INVOICE",
     *     "INVOICE_NO_COMPANY",
-    *     "UBN"
+    *     "UBN",
+    *     "DOSSIER"
     * })
     */
     private $locations;
@@ -135,7 +142,8 @@ class Company
      *     "ANIMAL_DETAILS",
      *     "GHOST_LOGIN",
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER"
      * })
     */
     protected $owner;
@@ -149,7 +157,8 @@ class Company
     * @JMS\Groups({
     *     "UBN",
     *     "INVOICE",
-    *     "INVOICE_NO_COMPANY"
+    *     "INVOICE_NO_COMPANY",
+    *     "DOSSIER"
     * })
     */
     private $address;
@@ -159,7 +168,8 @@ class Company
     * @ORM\OneToOne(targetEntity="BillingAddress", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\BillingAddress")
     * @JMS\Groups({
-    *     "INVOICE"
+    *     "INVOICE",
+    *     "DOSSIER"
     * })
     */
     private $billingAddress;
@@ -169,6 +179,9 @@ class Company
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "DOSSIER"
+     *     })
      */
     private $telephoneNumber;
 
@@ -178,6 +191,9 @@ class Company
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "DOSSIER"
+     *     })
      */
     private $subscriptionDate;
 
@@ -186,6 +202,9 @@ class Company
      *
      * @ORM\Column(type="boolean", options={"default":false})
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "DOSSIER"
+     *     })
      */
     private $animalHealthSubscription;
 
@@ -195,7 +214,8 @@ class Company
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "DOSSIER"
      * })
      */
     private $isActive;
@@ -205,6 +225,7 @@ class Company
      *
      * @ORM\OneToMany(targetEntity="Invoice", mappedBy="company")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Invoice>")
+     *
      */
     private $invoices;
 
@@ -214,7 +235,8 @@ class Company
      * @ORM\OneToMany(targetEntity="Client", mappedBy="employer", cascade={"persist"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Person>")
      * @JMS\Groups({
-     *     "GHOST_LOGIN"
+     *     "GHOST_LOGIN",
+     *     "DOSSIER"
      * })
      */
     private $companyUsers;
@@ -224,6 +246,10 @@ class Company
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "DOSSIER"
+     *     })
+     *
      */
     private $veterinarianDapNumber;
 
@@ -232,6 +258,9 @@ class Company
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "DOSSIER"
+     *     })
      */
     private $veterinarianCompanyName;
 
@@ -240,6 +269,9 @@ class Company
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "DOSSIER"
+     *     })
      */
     private $veterinarianTelephoneNumber;
 
@@ -248,6 +280,9 @@ class Company
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "DOSSIER"
+     *     })
      */
     private $veterinarianEmailAddress;
 
@@ -256,6 +291,9 @@ class Company
      *
      * @ORM\OneToMany(targetEntity="CompanyNote", mappedBy="company")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\CompanyNote>")
+     * @JMS\Groups({
+     *     "DOSSIER"
+     *     })
      */
     private $notes;
 
@@ -271,6 +309,19 @@ class Company
      * })
      */
     private $isRevealHistoricAnimals;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\SerializedName("twinfield_administration_code")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER"
+     * })
+     */
+    private $twinfieldOfficeCode;
 
   /**
    * Company constructor.
@@ -763,6 +814,22 @@ class Company
 
     public function removeInvoice(Invoice $invoice){
         $this->invoices->removeElement($invoice);
+    }
+
+    /**
+     * @return string
+     */
+    public function getTwinfieldOfficeCode(): ?string
+    {
+        return $this->twinfieldOfficeCode;
+    }
+
+    /**
+     * @param string $twinfieldOfficeCode
+     */
+    public function setTwinfieldOfficeCode(string $twinfieldOfficeCode)
+    {
+        $this->twinfieldOfficeCode = $twinfieldOfficeCode;
     }
 
     /**

@@ -400,6 +400,7 @@ ADDRESS COUNTRY CANNOT BE EMPTY: Land van adres mag niet leeg zijn
 BILLING ADDRESS COUNTRY CANNOT BE EMPTY: Land van factuuradres mag niet leeg zijn
 LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Land van locatieadres mag niet leeg zijn
 UBN IS NOT A VALID NUMBER: Het UBN is geen geldig nummer
+INVOICES THAT ARE ALREADY CANCELLED, SENT BUT UNPAID OR PAID CANNOT BE EDITED ANYMORE: Factures die al zijn geannuleerd of verzonden kunnen niet meer worden aangepast
 
 #Messages
 DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd

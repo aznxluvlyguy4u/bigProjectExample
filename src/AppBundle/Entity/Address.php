@@ -22,7 +22,8 @@ use JMS\Serializer\Annotation as JMS;
  *                       "LocationAddress" : "AppBundle\Entity\LocationAddress"},
  *     groups = {
  *     "BASIC",
- *     "CONTACT_INFO"
+ *     "CONTACT_INFO",
+ *     "DOSSIER"
  *
  * })
  *
@@ -53,7 +54,8 @@ abstract class Address
    * @JMS\Groups({
    *     "ADDRESS",
    *     "INVOICE",
-   *     "INVOICE_NO_COMPANY"
+   *     "INVOICE_NO_COMPANY",
+   *     "DOSSIER"
    * })
    */
   private $streetName;
@@ -67,7 +69,8 @@ abstract class Address
    * @JMS\Groups({
    *     "ADDRESS",
    *     "INVOICE",
-   *     "INVOICE_NO_COMPANY"
+   *     "INVOICE_NO_COMPANY",
+   *     "DOSSIER"
    * })
    */
   private $addressNumber;
@@ -80,7 +83,8 @@ abstract class Address
    * @JMS\Groups({
    *     "ADDRESS",
    *     "INVOICE",
-   *     "INVOICE_NO_COMPANY"
+   *     "INVOICE_NO_COMPANY",
+   *     "DOSSIER"
    * })
    */
   private $addressNumberSuffix;
@@ -96,7 +100,8 @@ abstract class Address
    * @JMS\Groups({
    *     "ADDRESS",
    *     "INVOICE",
-   *     "INVOICE_NO_COMPANY"
+   *     "INVOICE_NO_COMPANY",
+   *     "DOSSIER"
    * })
    */
   private $postalCode;
@@ -110,7 +115,8 @@ abstract class Address
    * @JMS\Groups({
    *     "ADDRESS",
    *     "INVOICE",
-   *     "INVOICE_NO_COMPANY"
+   *     "INVOICE_NO_COMPANY",
+   *     "DOSSIER"
    * })
    */
   private $city;
@@ -124,7 +130,8 @@ abstract class Address
    * @JMS\Groups({
    *     "ADDRESS",
    *     "INVOICE",
-   *     "INVOICE_NO_COMPANY"
+   *     "INVOICE_NO_COMPANY",
+   *     "DOSSIER"
    * })
    */
   private $country;
@@ -137,7 +144,8 @@ abstract class Address
    * @JMS\Groups({
    *     "ADDRESS",
    *     "INVOICE",
-   *     "INVOICE_NO_COMPANY"
+   *     "INVOICE_NO_COMPANY",
+   *     "DOSSIER"
    * })
    */
   private $state;

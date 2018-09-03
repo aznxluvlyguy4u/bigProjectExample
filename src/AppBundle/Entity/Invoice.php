@@ -324,6 +324,30 @@ class Invoice
     private $isBatch = false;
 
     /**
+     * @var string
+     * @ORM\Column(name="company_twinfield_code", type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     */
+    private $companyTwinfieldCode;
+
+    /**
+     * @var string
+     * @ORM\Column(name="company_twinfield_office_code", type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     */
+    private $companyTwinfieldOfficeCode;
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("vat_breakdown")
      * @JMS\Groups({
@@ -779,17 +803,58 @@ class Invoice
         $this->companyAddressCountry = $companyAddressCountry;
     }
 
+    /**
+     * @return string
+     */
+    public function getCompanyTwinfieldCode(): ?string
+    {
+        return $this->companyTwinfieldCode;
+    }
+
+    /**
+     * @param string $companyTwinfieldCode
+     */
+    public function setCompanyTwinfieldCode(?string $companyTwinfieldCode)
+    {
+        $this->companyTwinfieldCode = $companyTwinfieldCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyTwinfieldOfficeCode(): ?string
+    {
+        return $this->companyTwinfieldOfficeCode;
+    }
+
+    /**
+     * @param string $companyTwinfieldOfficeCode
+     */
+    public function setCompanyTwinfieldOfficeCode(?string $companyTwinfieldOfficeCode): void
+    {
+        $this->companyTwinfieldOfficeCode = empty($companyTwinfieldOfficeCode) ? null : $companyTwinfieldOfficeCode;;
+    }
+
     public function copyValues(Invoice $invoice){
         $this->setCompany($invoice->getCompany());
         $this->setCompanyLocalId($invoice->getCompanyLocalId());
         $this->setCompanyName($invoice->getCompanyName());
         $this->setCompanyVatNumber($invoice->getCompanyVatNumber());
+        $this->setCompanyAddressStreetName($invoice->getCompanyAddressStreetName());
+        $this->setCompanyAddressStreetNumber($invoice->getCompanyAddressStreetNumber());
+        $this->setCompanyAddressStreetNumberSuffix($invoice->getCompanyAddressStreetNumberSuffix());
+        $this->setCompanyAddressPostalCode($invoice->getCompanyAddressPostalCode());
+        $this->setCompanyAddressCountry($invoice->getCompanyAddressCountry());
+        $this->setCompanyAddressState($invoice->getCompanyAddressState());
+        $this->setCompanyAddressCity($invoice->getCompanyAddressCity());
         $this->setCompanyDebtorNumber($invoice->getCompanyDebtorNumber());
         $this->setUbn($invoice->getUbn());
         $this->setTotal($invoice->getTotal());
         $this->setDocumentUrl($invoice->getDocumentUrl());
         $this->setInvoiceDate($invoice->getInvoiceDate());
         $this->setInvoiceNumber($invoice->getInvoiceNumber());
+        $this->setCompanyTwinfieldCode($invoice->getCompanyTwinfieldCode());
+        $this->setCompanyTwinfieldOfficeCode($invoice->getCompanyTwinfieldOfficeCode());
         $this->setStatus($invoice->getStatus());
     }
 }

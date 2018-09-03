@@ -26,6 +26,7 @@ use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Service\ControllerServiceBase;
+use AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
@@ -44,10 +45,18 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class BatchInvoiceService extends ControllerServiceBase
 {
-    private $invoiceNumber;
+    /** @var ExternalProviderInvoiceService */
+    private $twinfieldInvoiceService;
 
     /** @var FireBaseService */
     private $fireBaseService;
+
+    private $invoicesSendCounter = 0;
+
+    public function initializeServices(ExternalProviderInvoiceService $invoiceService)
+    {
+        $this->twinfieldInvoiceService = $invoiceService;
+    }
 
     /**
      * @required
@@ -108,6 +117,7 @@ class BatchInvoiceService extends ControllerServiceBase
                     $registerRule = clone $newRule;
                     $registerDescription = $registerRule->getDescription()." - ".$register->getAbbreviation()." - ".$controlDate->format(DateTimeFormats::DAY_MONTH_YEAR);
                     $registerRule->setDescription($registerDescription);
+                    $registerRule->setSubArticleCode($register->getAbbreviation());
                     $this->getManager()->persist($registerRule);
                     $newRules->add($registerRule);
                 }
@@ -133,7 +143,6 @@ class BatchInvoiceService extends ControllerServiceBase
      * @return array
      */
     private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date, Request $request){
-        $this->createInvoiceNumber();
         $invoices = array();
         /** @var Company $company */
         foreach ($companies as $company) {
@@ -202,15 +211,27 @@ class BatchInvoiceService extends ControllerServiceBase
             $invoice->setSenderDetails($details);
             $invoice->setIsBatch(true);
             $this->setAddressProperties($invoice, $company->getBillingAddress());
-            $invoice->setCompanyDebtorNumber($company->getDebtorNumber());
+            if ($company->getDebtorNumber()) {
+                $invoice->setCompanyTwinfieldOfficeCode($company->getTwinfieldOfficeCode());
+                $invoice->setStatus(InvoiceStatus::UNPAID);
+                $invoice->setCompanyDebtorNumber($company->getDebtorNumber());
+                $invoice->setCompanyTwinfieldCode($company->getDebtorNumber());
+                $invoice->setInvoiceDate(new \DateTime());
+            } else {
+                $invoice->setStatus(InvoiceStatus::NOT_SEND);
+            }
             $invoice->setCompanyLocalId($company->getCompanyId());
             $invoice->setCompanyName($company->getCompanyName());
             $invoice->setUbn($location->getUbn());
             $invoice->setCompany($company);
             $invoice->setCompanyVatNumber($company->getVatNumber());
-            $invoice->setInvoiceNumber($this->invoiceNumber);
             $message = new Message();
-            if (!$company->getDebtorNumber() || $company->getDebtorNumber() == "") {
+            if (
+                !$company->getDebtorNumber()
+                || $company->getDebtorNumber() == ""
+                || !$company->getTwinfieldOfficeCode()
+                || $company->getTwinfieldOfficeCode() == "")
+            {
                 $invoice->setStatus(InvoiceStatus::NOT_SEND);
             } else {
                 $invoice->setStatus(InvoiceStatus::UNPAID);
@@ -234,8 +255,7 @@ class BatchInvoiceService extends ControllerServiceBase
             if ($breakdown->getTotalExclVat() == 0) {
                 continue;
             }
-            $invoiceSet[] = $invoice;
-            $this->invoiceNumber++;
+            $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
             if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
                 $this->persist($message);
                 foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
@@ -243,10 +263,34 @@ class BatchInvoiceService extends ControllerServiceBase
                     $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
                 }
             }
-            $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
+            $invoiceSet[] = $invoice;
             $this->getManager()->persist($invoice);
         }
         return $invoiceSet;
+    }
+
+    private function validateAndSendToTwinfield(Invoice $invoice) {
+        $message = "Company debtor number and/or twinfield administration code are not filled out";
+        $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
+        if ($invoice->getCompanyTwinfieldOfficeCode() && $invoice->getCompanyDebtorNumber()) {
+            if ($this->invoicesSendCounter >= 100) {
+                $this->twinfieldInvoiceService->reAuthenticate();
+                $this->invoicesSendCounter = 0;
+            }
+            $result = $this->twinfieldInvoiceService->sendInvoiceToTwinfield($invoice);
+            $this->invoicesSendCounter++;
+            if (is_a($result, \PhpTwinfield\Invoice::class)) {
+                $invoice->setInvoiceNumber($result->getInvoiceNumber());
+                $invoice->setInvoiceDate(new \DateTime());
+                $this->persist($invoice);
+                return;
+            }
+       } else {
+            $invoice->setStatus(InvoiceStatus::NOT_SEND);
+            $invoice->setInvoiceDate(null);
+            $this->persist($log);
+            $this->persist($invoice);
+        }
     }
 
     /**
@@ -302,21 +346,6 @@ class BatchInvoiceService extends ControllerServiceBase
         $selection->setDate($date);
         $selection->setAmount(1);
         $invoice->addInvoiceRuleSelection($selection);
-    }
-
-    /**
-     * This function checks for existing invoices on the current year and sets the starting invoice number accordingly
-     */
-    private function createInvoiceNumber() {
-        $year = new \DateTime();
-        $year = $year->format('Y');
-        /** @var Invoice $previousInvoice */
-        $previousInvoice = $this->getManager()->getRepository(Invoice::class)->getInvoiceOfCurrentYearWithLastInvoiceNumber($year);
-        $number = $previousInvoice === null ?
-            (int)$year * 10000 :
-            (int)$previousInvoice->getInvoiceNumber() + 1
-        ;
-       $this->invoiceNumber = $number;
     }
 
     /**

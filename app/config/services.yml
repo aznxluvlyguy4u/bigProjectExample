@@ -742,6 +742,7 @@ services:
           - method: instantiateServices
             arguments:
               - '@app.invoice.pdf.generator.service'
+              - '@AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService'
           - method: setFireBaseService
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
@@ -775,6 +776,9 @@ services:
     AppBundle\Service\Invoice\BatchInvoiceService:
         parent: app.abstract_base.controller
         calls:
+          - method: initializeServices
+            arguments:
+              - '@AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService'
           - method: setFireBaseService
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
@@ -888,6 +892,32 @@ services:
     AppBundle\Service\Migration\ScrapieGenotypeReprocessor:
         parent: app.pedigree_data_reprocessor.base
 
+    AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService:
+        parent: app.abstract_base.controller
+        calls:
+            - method: instantiateServices
+              arguments:
+                - '%external_provider_user%'
+                - '%external_provider_password%'
+                - '%external_provider_organisation%'
+                - '@AppBundle\Service\ExternalProvider\ExternalProviderCustomerService'
+
+    AppBundle\Service\ExternalProvider\ExternalProviderCustomerService:
+        calls:
+            - method: instantiateServices
+              arguments:
+                - '%external_provider_user%'
+                - '%external_provider_password%'
+                - '%external_provider_organisation%'
+                - '@AppBundle\Service\ExternalProvider\ExternalProviderOfficeService'
+
+    AppBundle\Service\ExternalProvider\ExternalProviderOfficeService:
+        calls:
+            - method: instantiateServices
+              arguments:
+                - '%external_provider_user%'
+                - '%external_provider_password%'
+                - '%external_provider_organisation%'
 
     AppBundle\SqlView\SqlViewManager:
         arguments:

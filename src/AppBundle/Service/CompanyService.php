@@ -127,7 +127,7 @@ class CompanyService extends AuthServiceBase
 
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
-        $address->setState($contentAddress['state']);
+        $address->setState(ArrayUtil::get('state', $contentAddress));
         $address->setCountry($addressCountry);
 
         // Create Billing Address
@@ -147,7 +147,7 @@ class CompanyService extends AuthServiceBase
 
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
-        $billingAddress->setState($contentBillingAddress['state']);
+        $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
         $billingAddress->setCountry($billingAddressCountry);
 
         // Create Company
@@ -159,6 +159,7 @@ class CompanyService extends AuthServiceBase
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
+        $company->setTwinfieldOfficeCode($content->get("twinfield_administration_code"));
         if($content->get('subscription_date')) {
             $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
         }
@@ -204,7 +205,7 @@ class CompanyService extends AuthServiceBase
 
             $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
             $locationAddress->setCity($contentLocationAddress['city']);
-            $locationAddress->setState($contentLocationAddress['state']);
+            $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
             $locationAddress->setCountry($locationAddressCountry);
 
             $location = new Location();
@@ -280,10 +281,7 @@ class CompanyService extends AuthServiceBase
         $company = $this->getManager()->getRepository(Company::class)->findOneByCompanyId($companyId);
         $this->deactivateFilter(ActiveInvoiceFilter::NAME);
 
-        // Generate Company Details
-        $result = CompanyOutput::createCompany($company, $this->getBaseSerializer());
-
-        return ResultUtil::successResult($result);
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($company, [JmsGroup::DOSSIER]));
     }
 
 
@@ -371,7 +369,7 @@ class CompanyService extends AuthServiceBase
 
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
-        $address->setState($contentAddress['state']);
+        $address->setState(ArrayUtil::get('state', $contentAddress));
         $address->setCountry(ArrayUtil::get('country', $contentAddress, $addressCountry));
 
         // Update Billing Address
@@ -393,7 +391,7 @@ class CompanyService extends AuthServiceBase
 
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
-        $billingAddress->setState($contentBillingAddress['state']);
+        $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
         $billingAddress->setCountry($billingAddressCountry);
 
         // Update Company
@@ -403,7 +401,7 @@ class CompanyService extends AuthServiceBase
         $company->setDebtorNumber($content->get('debtor_number'));
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
-
+        $company->setTwinfieldOfficeCode($content->get("twinfield_administration_code"));
         if ($company->getAnimalHealthSubscription() != $content->get('animal_health_subscription')) {
             $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
             AdminActionLogWriter::updateAnimalHealthSubscription($this->getManager(), $admin, $company);
@@ -488,7 +486,7 @@ class CompanyService extends AuthServiceBase
 
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
-                $locationAddress->setState($contentLocationAddress['state']);
+                $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
                 $locationAddress->setCountry($locationAddressCountry);
 
                 $this->getManager()->persist($location);
@@ -521,7 +519,7 @@ class CompanyService extends AuthServiceBase
 
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
-                $locationAddress->setState($contentLocationAddress['state']);
+                $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
                 $locationAddress->setCountry($locationAddressCountry);
 
                 $location = new Location();
