@@ -68,6 +68,8 @@ class CompanyOutput
             $res[] = array(
                 'company_id' => Utils::fillNull($company['companyId']),
                 'debtor_number' => Utils::fillNull($company['debtorNumber']),
+                'twinfield_office_code' => Utils::fillNull($company['twinfieldOfficeCode']),
+                'twinfield_administration_code' => Utils::fillNull($company['twinfieldOfficeCode']),
                 'company_name' => Utils::fillNull($company['companyName']),
                 'subscription_date' => Utils::fillNull($company['subscriptionDate']),
                 'animal_health_subscription' => Utils::fillNull($company['animalHealthSubscription']),

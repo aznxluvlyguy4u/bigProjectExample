@@ -329,7 +329,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $companyTwinfieldCode;
@@ -340,7 +341,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $companyTwinfieldOfficeCode;
