@@ -251,9 +251,9 @@ class InvoiceService extends ControllerServiceBase
                 $invoice->setCompanyAddressState($company->getBillingAddress()->getState());
             }
             $company->addInvoice($invoice);
-            if ($company->getTwinfieldOfficeCode()) {
-                $invoice->setCompanyTwinfieldOfficeCode($company->getTwinfieldOfficeCode());
-            }
+            $invoice->setCompanyTwinfieldOfficeCode($company->getTwinfieldOfficeCode());
+            $invoice->setCompanyTwinfieldCode($company->getDebtorNumber());
+
             $this->getManager()->persist($company);
         }
 
@@ -338,17 +338,41 @@ class InvoiceService extends ControllerServiceBase
 
         $temporaryInvoice = $this->roundInvoiceRuleSelectionAmountsInInvoice($temporaryInvoice);
 
+        $onlySetPaidStatusOnUnpaidInvoice = $temporaryInvoice->getStatus() === InvoiceStatus::PAID && $invoice->getStatus() === InvoiceStatus::UNPAID;
+
+        if ($invoice->getStatus() === InvoiceStatus::CANCELLED
+            || $invoice->getStatus() === InvoiceStatus::PAID
+            || ($invoice->getStatus() === InvoiceStatus::UNPAID && !$onlySetPaidStatusOnUnpaidInvoice)
+        ) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('INVOICES THAT ARE ALREADY CANCELLED, SENT BUT UNPAID OR PAID CANNOT BE EDITED ANYMORE'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        /*
+         * First check if only the status has to be set to PAID.
+         * Do not allow any other simultaneous edits besides that!
+         */
+        if ($onlySetPaidStatusOnUnpaidInvoice) {
+            $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_PAID_ADMIN);
+            $invoice->setStatus(InvoiceStatus::PAID);
+            $invoice->setPaidDate(new \DateTime());
+
+            $invoice->updateTotal();
+            $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
+
+            $this->persistAndFlush($invoice);
+            return ResultUtil::successResult($this->getInvoiceOutput($invoice));
+        }
+
+
         if ($temporaryInvoice->getStatus() === InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
         }
-        else {
-            $details = $this->retrieveValidatedSenderDetails($temporaryInvoice);
-            if ($details instanceof JsonResponse) {
-                return $details;
-            }
 
-            $invoice->setSenderDetails($details);
+        $details = $this->retrieveValidatedSenderDetails($temporaryInvoice);
+        if ($details instanceof JsonResponse) {
+            return $details;
         }
+        $invoice->setSenderDetails($details);
 
 
         /**
@@ -363,105 +387,41 @@ class InvoiceService extends ControllerServiceBase
             ? $this->getManager()->getRepository(Company::class)->findOneByCompanyId($temporaryInvoice->getCompany()->getCompanyId()) : null;
         $oldCompany = $invoice->getCompany();
 
+        $temporaryInvoice->setCompany($newCompany);
+        $temporaryInvoice->setCompanyTwinfieldCode($temporaryInvoice->getCompanyDebtorNumber());
+        $invoice->copyValues($temporaryInvoice);
+
+
+
+        $removeOldCompany = false;
+        $setNewCompany = false;
+
         if ($newCompany) {
 
-            if ($oldCompany !== null){
-
-                if ($oldCompany->getCompanyId() !== $newCompany->getCompanyId()) {
-                    $oldCompany->removeInvoice($invoice);
-                    $newCompany->addInvoice($invoice);
-
-                    $invoice->setCompany($newCompany);
-                    $this->getManager()->persist($oldCompany);
-                    $this->getManager()->persist($newCompany);
-                }
-
-                $hasBillingDataChanged = false;
-
-                if ($invoice->getCompanyAddressStreetName() !== $newCompany->getBillingAddress()->getStreetName()) {
-                    $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressStreetNumber() !== $newCompany->getBillingAddress()->getAddressNumber()) {
-                    $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressPostalCode() !== $newCompany->getBillingAddress()->getPostalCode()) {
-                    $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressCity() !== $newCompany->getBillingAddress()->getCity()) {
-                    $invoice->setCompanyAddressCity($newCompany->getBillingAddress()->getCity());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressCountry() !== $newCompany->getBillingAddress()->getCountry()) {
-                    $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressStreetNumberSuffix() !== $newCompany->getBillingAddress()->getAddressNumberSuffix()) {
-                    $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyAddressState() !== $newCompany->getBillingAddress()->getState()) {
-                    $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyTwinfieldOfficeCode() !== $newCompany->getTwinfieldOfficeCode()) {
-                    $invoice->setCompanyTwinfieldOfficeCode($newCompany->getTwinfieldOfficeCode());
-                    $hasBillingDataChanged = true;
-                }
-
-                if ($invoice->getCompanyTwinfieldCode() !== $newCompany->getDebtorNumber()) {
-                    $invoice->setCompanyTwinfieldCode($newCompany->getDebtorNumber());
-                    $hasBillingDataChanged = true;
-                }
-
-            } else {
-                $invoice->setCompany($newCompany);
-                $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
-                $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
-                $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
-                $invoice->setCompanyAddressCity($newCompany->getBillingAddress()->getCity());
-                $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
-                if ($newCompany->getBillingAddress()->getAddressNumberSuffix() != null && $newCompany->getBillingAddress()->getAddressNumberSuffix() != "") {
-                    $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
-                }
-                if ($newCompany->getBillingAddress()->getState() != null && $newCompany->getBillingAddress()->getState() != "") {
-                    $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
-                }
-                $newCompany->addInvoice($invoice);
-                $this->getManager()->persist($newCompany);
-
+            if ($oldCompany !== null && $oldCompany->getCompanyId() !== $newCompany->getCompanyId()){
+                $removeOldCompany = true;
             }
-            $invoice->setCompany($newCompany);
-            $invoice->setCompanyAddressStreetName($newCompany->getBillingAddress()->getStreetName());
-            $invoice->setCompanyAddressStreetNumber($newCompany->getBillingAddress()->getAddressNumber());
-            $invoice->setCompanyAddressPostalCode($newCompany->getBillingAddress()->getPostalCode());
-            $invoice->setCompanyAddressCountry($newCompany->getBillingAddress()->getCountry());
-            if (!empty($newCompany->getBillingAddress()->getAddressNumberSuffix())) {
-                $invoice->setCompanyAddressStreetNumberSuffix($newCompany->getBillingAddress()->getAddressNumberSuffix());
-            }
-            if (!empty($newCompany->getBillingAddress()->getState())) {
-                $invoice->setCompanyAddressState($newCompany->getBillingAddress()->getState());
-            }
-            $this->getManager()->persist($newCompany);
-        } else {
-            if ($oldCompany !== null) {
-                $invoice->setCompany(null);
-                $oldCompany->removeInvoice($invoice);
-                $this->getManager()->persist($oldCompany);
-            }
+            $setNewCompany = true;
+
+        } elseif ($oldCompany !== null) {
+            $removeOldCompany = true;
         }
 
-        $temporaryInvoice->setCompany($newCompany);
-        $invoice->copyValues($temporaryInvoice);
+        if ($removeOldCompany) {
+            $invoice->setCompany(null);
+            $oldCompany->removeInvoice($invoice);
+            $this->getManager()->persist($oldCompany);
+        }
+
+        // Note, always first remove old company before setting a new company
+        if ($setNewCompany) {
+            $invoice->setCompany($newCompany);
+            $newCompany->addInvoice($invoice);
+            $this->getManager()->persist($newCompany);
+        }
+
+
+
         if ($invoice->getStatus() === InvoiceStatus::UNPAID) {
             $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_SEND);
             $invoice->setInvoiceDate(new \DateTime());
@@ -470,29 +430,17 @@ class InvoiceService extends ControllerServiceBase
             $repository = $this->getManager()->getRepository(Location::class);
             $location = $repository->findOneByActiveUbn($invoice->getUbn());
             $this->persistAndFlush($log);
+
             if ($location) {
                 foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
                     $title = $this->translator->trans($message->getType());
                     $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
                 }
             }
-        }
-        if ($invoice->getStatus() == InvoiceStatus::PAID) {
-            $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_PAID_ADMIN);
-            $invoice->setPaidDate(new \DateTime());
-            $this->persistAndFlush($log);
-        }
-        else {
-            $details = $this->retrieveValidatedSenderDetails($temporaryInvoice);
-            if ($details instanceof JsonResponse) {
-                return $details;
-            }
 
-            $invoice->setSenderDetails($details);
-        }
-        if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
             return $this->validateAndSendToTwinfield($invoice);
         }
+
         $invoice->updateTotal();
         $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
         $this->persistAndFlush($invoice);

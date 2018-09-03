@@ -215,6 +215,7 @@ class BatchInvoiceService extends ControllerServiceBase
                 $invoice->setCompanyTwinfieldOfficeCode($company->getTwinfieldOfficeCode());
                 $invoice->setStatus(InvoiceStatus::UNPAID);
                 $invoice->setCompanyDebtorNumber($company->getDebtorNumber());
+                $invoice->setCompanyTwinfieldCode($company->getDebtorNumber());
                 $invoice->setInvoiceDate(new \DateTime());
             } else {
                 $invoice->setStatus(InvoiceStatus::NOT_SEND);
