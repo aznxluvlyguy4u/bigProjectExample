@@ -324,9 +324,9 @@ class Invoice
     private $isBatch = false;
 
     /**
-     * @var integer
-     * @ORM\Column(name="company_twinfield_code", type="integer", nullable=true)
-     * @JMS\Type("integer")
+     * @var string
+     * @ORM\Column(name="company_twinfield_code", type="string", nullable=true)
+     * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY"
@@ -802,17 +802,17 @@ class Invoice
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getCompanyTwinfieldCode(): int
+    public function getCompanyTwinfieldCode(): ?string
     {
         return $this->companyTwinfieldCode;
     }
 
     /**
-     * @param int $companyTwinfieldCode
+     * @param string $companyTwinfieldCode
      */
-    public function setCompanyTwinfieldCode(int $companyTwinfieldCode)
+    public function setCompanyTwinfieldCode(?string $companyTwinfieldCode)
     {
         $this->companyTwinfieldCode = $companyTwinfieldCode;
     }
@@ -820,7 +820,7 @@ class Invoice
     /**
      * @return string
      */
-    public function getCompanyTwinfieldOfficeCode(): string
+    public function getCompanyTwinfieldOfficeCode(): ?string
     {
         return $this->companyTwinfieldOfficeCode;
     }
@@ -838,6 +838,13 @@ class Invoice
         $this->setCompanyLocalId($invoice->getCompanyLocalId());
         $this->setCompanyName($invoice->getCompanyName());
         $this->setCompanyVatNumber($invoice->getCompanyVatNumber());
+        $this->setCompanyAddressStreetName($invoice->getCompanyAddressStreetName());
+        $this->setCompanyAddressStreetNumber($invoice->getCompanyAddressStreetNumber());
+        $this->setCompanyAddressStreetNumberSuffix($invoice->getCompanyAddressStreetNumberSuffix());
+        $this->setCompanyAddressPostalCode($invoice->getCompanyAddressPostalCode());
+        $this->setCompanyAddressCountry($invoice->getCompanyAddressCountry());
+        $this->setCompanyAddressState($invoice->getCompanyAddressState());
+        $this->setCompanyAddressCity($invoice->getCompanyAddressCity());
         $this->setCompanyDebtorNumber($invoice->getCompanyDebtorNumber());
         $this->setUbn($invoice->getUbn());
         $this->setTotal($invoice->getTotal());
