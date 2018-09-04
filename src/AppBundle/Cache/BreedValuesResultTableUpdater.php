@@ -433,7 +433,11 @@ class BreedValuesResultTableUpdater
 
         $sqlResultTableValues = "SELECT
                           b.animal_id,
-                          ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation)) as corrected_value
+                          ROUND(100 + 
+                                        (b.value - n.mean) 
+                                      * (t.standard_deviation_step_size / n.standard_deviation) 
+                                      * (CASE WHEN t.invert_normal_distribution THEN -1 ELSE 1 END)
+                               ) as corrected_value
                         FROM breed_value b
                           INNER JOIN breed_value_type t ON t.id = b.type_id
                           INNER JOIN (
