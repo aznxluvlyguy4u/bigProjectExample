@@ -4,6 +4,7 @@
 namespace AppBundle\Cache;
 
 
+use AppBundle\Constant\BreedIndexDiscriminatorTypeConstant;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\BreedValueType;
@@ -131,7 +132,7 @@ class BreedValuesResultTableUpdater
         }
 
         if ($updateNormalDistributions) {
-            $this->updateNormalDistributions($generationDateString, $analysisTypes);
+            $this->updateNormalDistributions($analysisTypes);
         }
 
 
@@ -612,51 +613,169 @@ class BreedValuesResultTableUpdater
 
 
     /**
-     * @param string $generationDateString
      * @param array $analysisTypes
      * @throws \Exception
      */
-    private function updateNormalDistributions($generationDateString, $analysisTypes)
+    private function updateNormalDistributions($analysisTypes)
     {
-        if ($generationDateString) {
+        $processLambMeatIndexAnalysis = $this->processLambMeatIndexAnalysis($analysisTypes);
+        $processFertilityAnalysis = $this->processFertilityAnalysis($analysisTypes);
+        $processExteriorAnalysis = $this->processExteriorAnalysis($analysisTypes);
+        $processWormAnalysis = $this->processWormAnalysis($analysisTypes);
 
-            $processLambMeatIndexAnalysis = $this->processLambMeatIndexAnalysis($analysisTypes);
-            $processFertilityAnalysis = $this->processFertilityAnalysis($analysisTypes);
-            $processExteriorAnalysis = $this->processExteriorAnalysis($analysisTypes);
-            $processWormAnalysis = $this->processWormAnalysis($analysisTypes);
+        // Indexes
 
-            // Indexes
+        if ($processLambMeatIndexAnalysis) {
+            $this->logger->notice('Processing LambMeatIndex NormalDistribution...');
+            $generationDateString = $this->getLatestBreedIndexGenerationDateString(BreedIndexDiscriminatorTypeConstant::LAMB_MEAT);
+            if ($generationDateString) {
+                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString, false);
+            }
+        }
 
-            if ($processLambMeatIndexAnalysis) {
-                $this->logger->notice('Processing new LambMeatIndex NormalDistribution...');
-                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString);
+
+        // Breed Values
+
+        foreach ($this->getBreedValueTypesWithNormalDistribution() as $breedValueType)
+        {
+            $analysisTypeNl = $breedValueType->getMixBlupAnalysisType()
+                ? $breedValueType->getMixBlupAnalysisType()->getNl() : null;
+
+            switch ($analysisTypeNl) {
+                case MixBlupType::LAMB_MEAT_INDEX: $generate = $processLambMeatIndexAnalysis; break;
+                case MixBlupType::FERTILITY: $generate = $processFertilityAnalysis; break;
+                case MixBlupType::EXTERIOR: $generate = $processExteriorAnalysis; break;
+                case MixBlupType::WORM: $generate = $processWormAnalysis; break;
+                default: $generate = false; break;
             }
 
+            if ($generate) {
+                $normalDistributionLabel = $breedValueType->getNl();
+                $this->logger->notice('Processing '.$normalDistributionLabel.' NormalDistribution...');
 
-            // Breed Values
-
-            foreach ($this->getBreedValueTypesWithNormalDistribution() as $breedValueType)
-            {
-                $analysisTypeNl = $breedValueType->getMixBlupAnalysisType()
-                    ? $breedValueType->getMixBlupAnalysisType()->getNl() : null;
-
-                switch ($analysisTypeNl) {
-                    case MixBlupType::LAMB_MEAT_INDEX: $generate = $processLambMeatIndexAnalysis; break;
-                    case MixBlupType::FERTILITY: $generate = $processFertilityAnalysis; break;
-                    case MixBlupType::EXTERIOR: $generate = $processExteriorAnalysis; break;
-                    case MixBlupType::WORM: $generate = $processWormAnalysis; break;
-                    default: $generate = false; break;
+                $generationDateString = $this->getLatestBreedValueGenerationDateString($breedValueType->getId());
+                if (!$generationDateString) {
+                    continue;
                 }
 
-                if ($generate) {
-                    $normalDistributionLabel = $breedValueType->getNl();
-                    $this->logger->notice('Processing new '.$normalDistributionLabel.' NormalDistribution...');
-                    $this->normalDistributionService
-                        ->persistBreedValueTypeMeanAndStandardDeviation($normalDistributionLabel, $generationDateString);
-                }
+                $this->normalDistributionService
+                    ->persistBreedValueTypeMeanAndStandardDeviation($normalDistributionLabel, $generationDateString, false);
             }
         }
     }
+
+
+    /**
+     * @param bool $overwriteExisting
+     * @throws \Exception
+     */
+    public function updateAllNormalDistributions(bool $overwriteExisting = false): void
+    {
+        $this->updateAllBreedIndexNormalDistributions($overwriteExisting);
+        $this->updateAllBreedValueNormalDistributions($overwriteExisting);
+    }
+
+
+    /**
+     * @param bool $overwriteExisting
+     * @throws \Exception
+     */
+    public function updateAllBreedValueNormalDistributions(bool $overwriteExisting = false): void
+    {
+        foreach ($this->getBreedValueTypesWithNormalDistribution() as $breedValueType)
+        {
+            $generationDateString = $this->getLatestBreedValueGenerationDateString($breedValueType->getId());
+            if (!$generationDateString) {
+                $this->logger->warn('No generationDateString found for '.$breedValueType->getId());
+                continue;
+            }
+
+            $normalDistributionLabel = $breedValueType->getNl();
+            $this->logger->notice('Processing '.$normalDistributionLabel.' NormalDistribution...');
+            $this->normalDistributionService
+                ->persistBreedValueTypeMeanAndStandardDeviation($normalDistributionLabel, $generationDateString, $overwriteExisting);
+        }
+    }
+
+
+    /**
+     * @param int $breedValueId
+     * @return string
+     */
+    public function getLatestBreedValueGenerationDateString($breedValueId): ?string
+    {
+        if (!is_int($breedValueId)) {
+            $this->logger->error('Given BreedValueId is not an integer: '.$breedValueId);
+            return null;
+        }
+
+        try {
+            $sql = 'SELECT
+                    generation_date
+                FROM breed_value
+                WHERE type_id = '.$breedValueId.'
+                ORDER BY id DESC
+                LIMIT 1';
+            $result = $this->em->getConnection()->query($sql)->fetch();
+            if (!$result) {
+                $this->logger->warn('No breedValue records exist for breedValueType: '.$breedValueId);
+                return null;
+            }
+            return $result['generation_date'];
+
+        } catch (\Exception $exception) {
+            $this->logger->error($exception->getTraceAsString());
+            return null;
+        }
+    }
+
+
+    /**
+     * @param bool $overwriteOldValues
+     * @throws \Exception
+     */
+    public function updateAllBreedIndexNormalDistributions(bool $overwriteOldValues = false): void
+    {
+        $this->logger->notice('Processing LambMeatIndex NormalDistribution...');
+        $generationDateString = $this->getLatestBreedIndexGenerationDateString(BreedIndexDiscriminatorTypeConstant::LAMB_MEAT);
+        if ($generationDateString) {
+            $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString, $overwriteOldValues);
+        }
+    }
+
+
+    /**
+     * @param int $breedIndexType
+     * @return string
+     */
+    private function getLatestBreedIndexGenerationDateString($breedIndexType): ?string
+    {
+        if (!is_string($breedIndexType)) {
+            $this->logger->error('Given BreedIndexType is not a string: '.$breedIndexType);
+            return null;
+        }
+
+        try {
+            $sql = "SELECT
+                    generation_date
+                FROM breed_index
+                WHERE type = '".$breedIndexType."'
+                ORDER BY id DESC
+                LIMIT 1";
+
+            $result = $this->em->getConnection()->query($sql)->fetch();
+            if (!$result) {
+                $this->logger->warn('No breedIndex records exist for BreedIndexType: '.$breedIndexType);
+                return null;
+            }
+            return $result['generation_date'];
+
+        } catch (\Exception $exception) {
+            $this->logger->error($exception->getTraceAsString());
+            return null;
+        }
+    }
+
 
     /**
      * @return array|BreedValueType[]
