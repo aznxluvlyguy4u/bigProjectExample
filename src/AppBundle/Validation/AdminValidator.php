@@ -15,6 +15,7 @@ use Doctrine\Common\Collections\Collection;
 use AppBundle\Constant\Constant;
 use \Symfony\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\HttpFoundation\JsonResponse as AppBundleJsonResponse;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 /**
  * Class AdminValidator
@@ -97,5 +98,14 @@ class AdminValidator
     public static function getStandardErrorResponse()
     {
         return ResultUtil::errorResult(self::ERROR_MESSAGE, self::ERROR_CODE);
+    }
+
+
+    /**
+     * @return UnauthorizedHttpException
+     */
+    public static function standardException(): UnauthorizedHttpException
+    {
+        return new UnauthorizedHttpException(null, self::ERROR_MESSAGE,null);
     }
 }
