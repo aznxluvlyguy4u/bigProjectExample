@@ -13,6 +13,7 @@ class JmsGroup
     const ANIMALS_BATCH_EDIT = 'ANIMALS_BATCH_EDIT';
 
     const BASIC = 'BASIC';
+    const BASIC_SUB_ANIMAL_DETAILS = 'BASIC_SUB_ANIMAL_DETAILS';
 
     const CHILD = 'CHILD';
     const CONTACT_INFO = 'CONTACT_INFO';
