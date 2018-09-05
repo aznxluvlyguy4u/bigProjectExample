@@ -31,7 +31,8 @@ class AnimalResidence
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -45,7 +46,8 @@ class AnimalResidence
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -58,7 +60,8 @@ class AnimalResidence
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -71,7 +74,8 @@ class AnimalResidence
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -89,7 +93,8 @@ class AnimalResidence
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animalResidenceHistory")
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -101,7 +106,8 @@ class AnimalResidence
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -112,7 +118,8 @@ class AnimalResidence
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -123,6 +130,9 @@ class AnimalResidence
      * @ORM\ManyToOne(targetEntity="EditType")
      * @ORM\JoinColumn(name="start_date_edit_type", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\EditType")
+     * @JMS\Groups({
+     *     "EDIT_OVERVIEW"
+     * })
      * @Expose
      */
     private $startDateEditType;
@@ -132,6 +142,9 @@ class AnimalResidence
      * @ORM\ManyToOne(targetEntity="EditType")
      * @ORM\JoinColumn(name="end_date_edit_type", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\EditType")
+     * @JMS\Groups({
+     *     "EDIT_OVERVIEW"
+     * })
      * @Expose
      */
     private $endDateEditType;
@@ -140,6 +153,9 @@ class AnimalResidence
      * @var Person
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="start_date_edited_by", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "EDIT_OVERVIEW"
+     * })
      */
     private $startDateEditedBy;
 
@@ -147,6 +163,9 @@ class AnimalResidence
      * @var Person
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="end_date_edited_by", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "EDIT_OVERVIEW"
+     * })
      */
     private $endDateEditedBy;
 

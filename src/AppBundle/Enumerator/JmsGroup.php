@@ -21,6 +21,7 @@ class JmsGroup
     const DECLARE_ = 'DECLARE';
     const DETAILS = 'DETAILS';
 
+    const EDIT_OVERVIEW = 'EDIT_OVERVIEW';
     const ERROR_DETAILS = 'ERROR_DETAILS';
 
     const GHOST_LOGIN = 'GHOST_LOGIN';
