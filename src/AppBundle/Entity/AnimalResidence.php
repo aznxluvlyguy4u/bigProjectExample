@@ -82,6 +82,7 @@ class AnimalResidence
     private $endDate;
 
     /**
+     * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="animalResidenceHistory")
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
@@ -93,6 +94,7 @@ class AnimalResidence
     private $animal;
 
     /**
+     * @var Location
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animalResidenceHistory")
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({
@@ -387,5 +389,20 @@ class AnimalResidence
     }
 
 
+    /**
+     * @return int|null
+     */
+    public function getAnimalId(): ?int
+    {
+        return $this->animal ? $this->animal->getId() : null;
+    }
 
+
+    /**
+     * @return string|null
+     */
+    public function getLocationApiKeyId(): ?string
+    {
+        return $this->location ? $this->location->getLocationId() : null;
+    }
 }
