@@ -536,6 +536,7 @@ abstract class DeclareBase implements DeclareLogInterface
     public function setNewestVersion($newestVersion)
     {
         $this->newestVersion = $newestVersion;
+        return $this;
     }
 
 
