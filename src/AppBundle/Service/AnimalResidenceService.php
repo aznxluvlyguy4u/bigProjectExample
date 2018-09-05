@@ -12,6 +12,7 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalResidenceValidator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class AnimalResidenceService extends ControllerServiceBase implements AnimalResidenceServiceInterface
@@ -149,16 +150,24 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
             throw AdminValidator::standardException();
         }
 
-        // TODO: Implement editResidence() method.
+        // TODO not implemented
+        throw new NotFoundHttpException();
     }
 
+    /**
+     * @param Request $request
+     * @param AnimalResidence $animalResidence
+     * @return bool
+     */
     function deleteResidence(Request $request, AnimalResidence $animalResidence)
     {
         if(!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
             throw AdminValidator::standardException();
         }
 
-        // TODO: Implement deleteResidence() method.
+        $this->getManager()->remove($animalResidence);
+        $this->getManager()->flush();
+        return true;
     }
 
 }

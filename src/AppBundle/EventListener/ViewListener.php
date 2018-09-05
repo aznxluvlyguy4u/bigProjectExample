@@ -11,6 +11,11 @@ class ViewListener
     public function onKernelView(GetResponseForControllerResultEvent $event)
     {
         $result = $event->getControllerResult();
+
+        if ($result === true) {
+            $result = 'OK';
+        }
+
         $response = ResultUtil::successResult($result);
 
         $event->setResponse($response);

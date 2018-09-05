@@ -45,7 +45,7 @@ class AnimalResidenceAPIController extends APIController
 
     /**
      * @Method("PUT")
-     * @Route("/animal/{animalResidence}")
+     * @Route("/{animalResidence}")
      * @param Request $request
      * @param AnimalResidence $animalResidence
      * @return array
@@ -57,7 +57,7 @@ class AnimalResidenceAPIController extends APIController
 
     /**
      * @Method("DELETE")
-     * @Route("/animal/{animalResidence}")
+     * @Route("/{animalResidence}")
      * @param Request $request
      * @param AnimalResidence $animalResidence
      * @return array
