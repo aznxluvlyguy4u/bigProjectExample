@@ -8,6 +8,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\EditTypeEnum;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalResidenceValidator;
@@ -119,6 +120,13 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
 
         $animalResidence->setLogDate(new \DateTime());
         $animalResidence->setIsPending(false);
+
+        $editType = $this->getEditTypeByEnum(EditTypeEnum::ADMIN_CREATE);
+
+        $animalResidence->setStartDateEditedBy($this->getUser());
+        $animalResidence->setStartDateEditType($editType);
+        $animalResidence->setEndDateEditedBy($this->getUser());
+        $animalResidence->setEndDateEditType($editType);
 
         return $animalResidence;
     }
