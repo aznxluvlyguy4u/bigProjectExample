@@ -35,6 +35,7 @@ class AppKernel extends Kernel
             new Liuggio\ExcelBundle\LiuggioExcelBundle(),
             new Ijanki\Bundle\FtpBundle\IjankiFtpBundle(),
             new Enqueue\Bundle\EnqueueBundle(),
+            new Sentry\SentryBundle\SentryBundle(),
         ];
 
         if (in_array($this->getEnvironment(), ['dev', 'test'], true)) {
