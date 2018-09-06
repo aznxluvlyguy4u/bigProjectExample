@@ -113,6 +113,10 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
             $validationErrors[] = 'countryCode is missing';
         }
 
+        if (!$animalResidence->getStartDate()) {
+            $validationErrors[] = 'startDate is missing';
+        }
+
         if (!empty($validationErrors)) {
             throw new PreconditionFailedHttpException(implode('. ', $validationErrors));
         }
