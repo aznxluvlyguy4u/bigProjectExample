@@ -452,4 +452,13 @@ class AnimalResidence
     {
         return $this->location ? $this->location->getLocationId() : null;
     }
+
+
+    /**
+     * @return null|string
+     */
+    public function getUbn(): ?string
+    {
+        return $this->location ? $this->location->getUbn() : null;
+    }
 }

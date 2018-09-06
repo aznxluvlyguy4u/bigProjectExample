@@ -5,7 +5,9 @@ namespace AppBundle\Util;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\ActionLog;
+use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Employee;
@@ -25,7 +27,7 @@ use Symfony\Component\HttpFoundation\Request;
 class AdminActionLogWriter
 {
     const IS_USER_ENVIRONMENT = false;
-
+    const NULL_REPLACEMENT_TEXT = 'LEEG';
 
     /**
      * @param EntityManagerInterface $em
@@ -674,5 +676,135 @@ class AdminActionLogWriter
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
+    }
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param $actionBy
+     * @param array $changes
+     */
+    public static function createAnimalResidence(EntityManagerInterface $em, $actionBy, array $changes = []): void
+    {
+        if (empty($changes)) {
+            return;
+        }
+        $description = AdminActionLogWriter::parseBatchCreateChangesAsDescription($changes);
+        $log = new ActionLog(null, $actionBy, UserActionType::ANIMAL_RESIDENCE_CREATE, true, $description, self::IS_USER_ENVIRONMENT);
+        $em->persist($log);
+    }
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param $actionBy
+     * @param array $changes
+     */
+    public static function editAnimalResidence(EntityManagerInterface $em, $actionBy, array $changes = []): void
+    {
+        if (empty($changes)) {
+            return;
+        }
+        $description = AdminActionLogWriter::parseEditChangesAsDescription($changes);
+        $log = new ActionLog(null, $actionBy, UserActionType::ANIMAL_RESIDENCE_EDIT, true, $description, self::IS_USER_ENVIRONMENT);
+        $em->persist($log);
+    }
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param $actionBy
+     * @param AnimalResidence $animalResidence
+     */
+    public static function deleteAnimalResidence(EntityManagerInterface $em, $actionBy, AnimalResidence $animalResidence): void
+    {
+        $description =
+            ($animalResidence->getAnimal() ? ReportLabel::ULN.': ' . $animalResidence->getAnimal()->getUln() : 'Empty Animal') .
+            ($animalResidence->getLocation() ? ', '.ReportLabel::UBN.': ' . $animalResidence->getLocation()->getUbn() : '').
+            ($animalResidence->getCountry() ? ', '.ReportLabel::COUNTRY.': ' . $animalResidence->getCountry() . ' ' : '') .
+            ($animalResidence->getLocation() ? ', '.ReportLabel::START.': '. $animalResidence->getStartDate()->format(DateUtil::DATE_STRING_FORMAT_FILENAME) : '') .
+            ($animalResidence->getLocation() ?  ', '.ReportLabel::END.': '.$animalResidence->getEndDate()->format(DateUtil::DATE_STRING_FORMAT_FILENAME) : '')
+        ;
+        $log = new ActionLog(null, $actionBy, UserActionType::ANIMAL_RESIDENCE_DELETE, true, $description, self::IS_USER_ENVIRONMENT);
+        $em->persist($log);
+    }
+
+
+    /**
+     * @param array $batchChanges
+     * @return string
+     */
+    public static function parseBatchCreateChangesAsDescription(array $batchChanges = []): string
+    {
+        $logDescription = '';
+        if (empty($batchChanges) || !is_array($batchChanges)) {
+            return $logDescription;
+        }
+
+        $setSeparator = '';
+        foreach ($batchChanges as $changeSet) {
+            $logDescription .= $setSeparator . self::parseCreateChangesAsDescription($changeSet);
+            $setSeparator = '; ';
+        }
+
+        return $logDescription;
+    }
+
+
+    /**
+     * @param array $changes
+     * @return string
+     */
+    public static function parseCreateChangesAsDescription(array $changes = []): string
+    {
+        $logDescription = '';
+        if (empty($changes) || !is_array($changes)) {
+            return $logDescription;
+        }
+
+        $changeSeparator = '';
+        foreach ($changes as $key => $value) {
+            $logDescription .= $changeSeparator . $key . ':'.self::formatLogChangeValue($value);
+            $changeSeparator = ', ';
+        }
+
+        return $logDescription;
+    }
+
+
+    /**
+     * @param array $changes
+     * @return string
+     */
+    public static function parseEditChangesAsDescription(array $changes = []): string
+    {
+        $logDescription = '';
+        if (empty($changes) || !is_array($changes)) {
+            return $logDescription;
+        }
+
+        $changeSeparator = '';
+        foreach ($changes as $key => $change) {
+            $oldValue = self::formatLogChangeValue($change[0]);
+            $newValue = self::formatLogChangeValue($change[1]);
+            $logDescription .= $changeSeparator . $key. ': '. $oldValue . ' => '.$newValue;
+            $changeSeparator = ', ';
+        }
+
+        return $logDescription;
+    }
+
+
+    /**
+     * @param string|\DateTime|null $value
+     * @return string
+     */
+    private static function formatLogChangeValue($value): string
+    {
+        if ($value === null) {
+            return self::NULL_REPLACEMENT_TEXT;
+        } elseif ($value instanceof \DateTime) {
+            return $value->format(DateUtil::DATE_STRING_FORMAT_FILENAME);
+        } elseif (is_bool($value)) {
+            return StringUtil::getBooleanAsString($value);
+        }
+        return $value;
     }
 }

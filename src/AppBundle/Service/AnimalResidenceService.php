@@ -4,12 +4,14 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\EditTypeEnum;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\DateUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalResidenceValidator;
@@ -18,8 +20,8 @@ use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class AnimalResidenceService extends ControllerServiceBase implements AnimalResidenceServiceInterface
 {
-    /** @var boolean */
-    private $hasChanged;
+    /** @var array */
+    private $changes;
 
     /**
      * @param Request $request
@@ -52,17 +54,20 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
         }
 
         $animalIds = [];
-        foreach ($newResidences as $newResidence) {
-            $newResidence = $this->buildValidateCreateSingleResidence($newResidence);
+        $this->changes = [];
+        foreach ($newResidences as $changeKey => $newResidence) {
+            $newResidence = $this->buildValidateCreateSingleResidence($newResidence, $changeKey);
             $newResidence = $this->setCreateMetaData($newResidence);
             $this->getManager()->persist($newResidence);
             $animalIds[] = $newResidence->getAnimalId();
         }
 
         if (!empty($animalIds)) {
+            AdminActionLogWriter::createAnimalResidence($this->getManager(), $this->getUser(), $this->changes);
             $this->getManager()->flush();
         }
 
+        $this->clearPrivateVariables();
         return $this->getDecodedJsonResidencesByAnimalArray($animalIds);
     }
 
@@ -71,9 +76,10 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
      * NOTE no validation is done for duplicate or overlapping animal residences
      *
      * @param AnimalResidence $animalResidence
+     * @param int $changeKey
      * @return AnimalResidence
      */
-    private function buildValidateCreateSingleResidence(AnimalResidence $animalResidence)
+    private function buildValidateCreateSingleResidence(AnimalResidence $animalResidence, $changeKey = 0)
     {
         $validationErrors = [];
         $animalId = $animalResidence->getAnimalId();
@@ -83,6 +89,7 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
                 $validationErrors[] = 'No animal found for animalId '.$animalId;
             } else {
                 $animalResidence->setAnimal($animal);
+                $this->changes[$changeKey][ReportLabel::ULN] = $animal->getUln();
             }
 
         } else {
@@ -98,6 +105,7 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
                 $validationErrors[] = 'No location found for animalId '.$locationId;
             } else {
                 $animalResidence->setLocation($location);
+                $this->changes[$changeKey][ReportLabel::UBN] = $location->getUbn();
             }
 
         } else {
@@ -107,6 +115,8 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
         if ($animalResidence->getCountry()) {
             if (!AnimalResidenceValidator::isValidCountryCode($this->getConnection(), $animalResidence->getCountry())) {
                 $validationErrors[] = 'countryCode is invalid: '.$animalResidence->getCountry();
+            } else {
+                $this->changes[$changeKey][ReportLabel::COUNTRY] = $animalResidence->getCountry();
             }
         } else {
             $validationErrors[] = 'countryCode is missing';
@@ -114,6 +124,12 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
 
         if (!$animalResidence->getStartDate()) {
             $validationErrors[] = 'startDate is missing';
+        } else {
+            $this->changes[$changeKey][ReportLabel::START] = $animalResidence->getStartDate();
+        }
+
+        if ($animalResidence->getEndDate()) {
+            $this->changes[$changeKey][ReportLabel::END] = $animalResidence->getEndDate();
         }
 
         if (!empty($validationErrors)) {
@@ -170,11 +186,13 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
 
         $animalResidence = $this->buildValidateEditSingleResidenceInclMetaData($animalResidence, $temporaryResidenceWithEditData);
 
-        if ($this->hasChanged) {
+        if (!empty($this->changes)) {
+            AdminActionLogWriter::editAnimalResidence($this->getManager(), $this->getUser(), $this->changes);
             $this->getManager()->persist($animalResidence);
             $this->getManager()->flush();
         }
 
+        $this->clearPrivateVariables();
         return $this->getAnimalResidenceOutput($animalResidence);
     }
 
@@ -191,8 +209,9 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
         AnimalResidence $temporaryResidenceWithEditData): AnimalResidence
     {
         $validationErrors = [];
-        $this->hasChanged = false;
+        $this->changes = [];
         $editType = $this->getEditTypeByEnum(EditTypeEnum::ADMIN_EDIT);
+
         $newAnimalId = $temporaryResidenceWithEditData->getAnimalId();
         if ($newAnimalId) {
             $animal = $this->getManager()->getRepository(Animal::class)->find($newAnimalId);
@@ -202,7 +221,7 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
 
                 if ($originalAnimalResidence->getAnimal() === null) {
                     $temporaryResidenceWithEditData->setAnimal($animal);
-                    $this->hasChanged = true;
+                    $this->changes[ReportLabel::ULN] = ['Set Animal with ULN', $animal->getUln()];
 
                 } elseif ($originalAnimalResidence->getAnimalId() !== $temporaryResidenceWithEditData->getAnimalId()) {
                     $validationErrors[] = 'Animal is not allowed to be changed, animalId '.$newAnimalId;
@@ -222,7 +241,7 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
                 $validationErrors[] = 'No location found for animalId '.$newLocationId;
             } else if ($newLocationId !== $originalAnimalResidence->getLocationApiKeyId()) {
                 $originalAnimalResidence->setLocation($newLocation);
-                $this->hasChanged = true;
+                $this->changes[ReportLabel::UBN] = [$originalAnimalResidence->getUbn(), $temporaryResidenceWithEditData->getUbn()];
             }
 
         } else {
@@ -234,8 +253,8 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
             if (!AnimalResidenceValidator::isValidCountryCode($this->getConnection(), $newCountry)) {
                 $validationErrors[] = 'countryCode is invalid: '.$newCountry;
             } elseif ($originalAnimalResidence->getCountry() !== $newCountry) {
+                $this->changes[ReportLabel::COUNTRY] = [$originalAnimalResidence->getCountry(), $newCountry];
                 $originalAnimalResidence->setCountry($newCountry);
-                $this->hasChanged = true;
             }
         } else {
             $validationErrors[] = 'countryCode is missing';
@@ -245,33 +264,33 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
         if (!$newStartDate) {
             $validationErrors[] = 'startDate is missing';
         } elseif (!$this->areDatesEqual($originalAnimalResidence->getStartDate(), $newStartDate)) {
+            $this->changes[ReportLabel::START] = [$originalAnimalResidence->getStartDate(), $newStartDate];
             $originalAnimalResidence->setStartDate($newStartDate);
             $originalAnimalResidence->setStartDateEditedBy($this->getUser());
             $originalAnimalResidence->setStartDateEditType($editType);
-            $this->hasChanged = true;
         }
 
         $newEndDate = $temporaryResidenceWithEditData->getEndDate();
         if (!$this->areDatesEqual($originalAnimalResidence->getEndDate(), $newEndDate)) {
+            $this->changes[ReportLabel::END] = [$originalAnimalResidence->getEndDate(), $newEndDate];
             $originalAnimalResidence->setEndDate($newEndDate);
             $originalAnimalResidence->setEndDateEditedBy($this->getUser());
             $originalAnimalResidence->setEndDateEditType($editType);
-            $this->hasChanged = true;
         }
 
         $newIsPending = $temporaryResidenceWithEditData->isPending();
         if (!is_bool($newIsPending)) {
             $validationErrors[] = 'isPending must be a boolean';
         } elseif ($originalAnimalResidence->isPending() !== $newIsPending) {
+            $this->changes[ReportLabel::IS_PENDING] = [$originalAnimalResidence->isPending(), $newIsPending];
             $originalAnimalResidence->setIsPending($newIsPending);
-            $this->hasChanged = true;
         }
 
         if (!empty($validationErrors)) {
             throw new PreconditionFailedHttpException(implode('. ', $validationErrors));
         }
 
-        if ($this->hasChanged) {
+        if (!empty($this->changes)) {
             $originalAnimalResidence->setLogDate(new \DateTime());
         }
 
@@ -290,6 +309,7 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
             throw AdminValidator::standardException();
         }
 
+        AdminActionLogWriter::deleteAnimalResidence($this->getManager(), $this->getUser(), $animalResidence);
         $this->getManager()->remove($animalResidence);
         $this->getManager()->flush();
         return true;
@@ -307,6 +327,12 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
             [JmsGroup::EDIT_OVERVIEW, JmsGroup::BASIC_SUB_ANIMAL_DETAILS],
             true
         );
+    }
+
+
+    private function clearPrivateVariables(): void
+    {
+        $this->changes = null;
     }
 
 
