@@ -158,3 +158,6 @@ enqueue:
         fs:
             dsn: "%worker_queue_dir%"
     client: ~
+
+sentry:
+    dsn: "%sentry_dns%"
