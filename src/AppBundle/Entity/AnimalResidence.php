@@ -267,7 +267,7 @@ class AnimalResidence
     /**
      * @return boolean
      */
-    public function isIsPending()
+    public function isPending()
     {
         return $this->isPending;
     }
