@@ -43,12 +43,15 @@ use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
 {
     /** @var AnimalDetailsOutput */
     private $animalDetailsOutput;
 
+    /** @var ValidatorInterface */
+    private $validator;
 
     /**
      * @required
@@ -60,6 +63,15 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $this->animalDetailsOutput = $animalDetailsOutput;
     }
 
+		/**
+		 * @required
+		 *
+		 * @param ValidatorInterface $validator
+		 */
+		public function setValidator(ValidatorInterface $validator)
+		{
+			$this->validator = $validator;
+		}
 
     /**
      * @param Request $request
@@ -75,9 +87,9 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     }
 
     /**
- * @param Request $request
- * @return JsonResponse
- */
+		 * @param Request $request
+		 * @return JsonResponse
+		 */
     public function createAnimal(Request $request)
     {
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
@@ -878,4 +890,56 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         return new JsonResponse($minimizedOutput, 200);
     }
+
+	/**
+	 * @param Request $request
+	 * @param Ram|Ewe|Neuter|Animal $animal
+	 * @return JsonResponse|Animal|null
+	 */
+		public function changeNicknameOfAnimal(Request $request, Animal $animal)
+		{
+				$content = RequestUtil::getContentAsArray($request);
+
+				//Check if mandatory field values are given
+				if(!$content->containsKey('nickname') || !$content['id']) {
+						$statusCode = 400;
+						return new JsonResponse(
+								array(
+										Constant::RESULT_NAMESPACE => array(
+											'code'=> $statusCode,
+											'message'=> "nickname or id is missing."
+										)
+								), $statusCode
+						);
+				}
+
+				//Try to change animal gender
+				$nickname = $content->get('nickname');
+				$animal->setNickname($nickname);
+
+				$errors = $this->validator->validate($animal);
+				if (count($errors) > 0) {
+						$statusCode = 400;
+						$errorsString = (string) $errors;
+						return new JsonResponse(
+								array(
+										Constant::RESULT_NAMESPACE => array(
+											'code'=> $statusCode,
+											'message'=> $errorsString
+										)
+								), $statusCode
+						);
+				}
+
+				$manager = $this->getManager();
+				$manager->persist($animal);
+				$manager->flush();
+
+				$minimizedOutput = AnimalOutput::createAnimalArray($animal, $manager);
+
+				//FIXME Temporarily workaround
+				$minimizedOutput['type'] = $animal->getObjectType();
+
+				return new JsonResponse($minimizedOutput, 200);
+		}
 }

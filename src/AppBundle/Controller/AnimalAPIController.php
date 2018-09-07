@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Animal;
 use AppBundle\Service\AnimalDetailsBatchUpdaterService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -470,32 +471,61 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
 
-  /**
-   *
-   * Change the gender of an Animal for a given ULN. For example NL100029511721
-   *
-   * @ApiDoc(
-   *   section = "Animals",
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Change the gender of an Animal for a given ULN"
-   * )
-   *
-   * @param Request $request the request object
-   * @return jsonResponse
-   * @Route("-gender")
-   * @Method("POST")
-   */
+	/**
+	 *
+	 * Change the gender of an Animal for a given ULN. For example NL100029511721
+	 *
+	 * @ApiDoc(
+	 *   section = "Animals",
+	 *   requirements={
+	 *     {
+	 *       "name"="AccessToken",
+	 *       "dataType"="string",
+	 *       "requirement"="",
+	 *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+	 *     }
+	 *   },
+	 *   resource = true,
+	 *   description = "Change the gender of an Animal for a given ULN"
+	 * )
+	 *
+	 * @param Request $request the request object
+	 * @return jsonResponse
+	 * @Route("-gender")
+	 * @Method("POST")
+	 */
   public function changeGenderOfUln(Request $request)
   {
       return $this->get('app.animal')->changeGenderOfUln($request);
   }
+
+	/**
+	 *
+	 * Change the nickname of an Animal for a given id.
+	 *
+	 * @ApiDoc(
+	 *   section = "Animals",
+	 *   requirements={
+	 *     {
+	 *       "name"="AccessToken",
+	 *       "dataType"="string",
+	 *       "requirement"="",
+	 *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+	 *     }
+	 *   },
+	 *   resource = true,
+	 *   description = "Change the nickname of an Animal for a given id"
+	 * )
+	 *
+	 * @param Request $request the request object
+	 * @param Animal $animal
+	 * @return jsonResponse
+	 * @Route("-nickname/{animal}")
+	 * @Method("POST")
+	 */
+	public function changeNicknameOfAnimalById(Request $request, Animal $animal)
+	{
+			return $this->get('app.animal')->changeNicknameOfAnimal($request, $animal);
+	}
 
 }

@@ -648,6 +648,9 @@ services:
           - method: setAnimalDetailsOutput
             arguments:
               - '@AppBundle\Output\AnimalDetailsOutput'
+          - method: setValidator
+            arguments:
+              - '@validator'
 
     app.arrival:
         parent: app.abstract_base.declare
