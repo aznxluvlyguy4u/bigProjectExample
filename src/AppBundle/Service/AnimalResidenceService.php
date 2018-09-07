@@ -11,8 +11,10 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\EditTypeEnum;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\DateUtil;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalResidenceValidator;
 use Symfony\Component\HttpFoundation\Request;
@@ -193,6 +195,13 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
         }
 
         $this->clearPrivateVariables();
+
+        $returnCompleteResidenceHistory = RequestUtil::getBooleanQuery($request,QueryParameter::FULL_OUTPUT,true);
+
+        if ($returnCompleteResidenceHistory && $animalResidence->getAnimal()) {
+            return $this->getAnimalResidenceOutput($animalResidence->getAnimal()->getAnimalResidenceHistory());
+        }
+
         return $this->getAnimalResidenceOutput($animalResidence);
     }
 
@@ -309,10 +318,15 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
             throw AdminValidator::standardException();
         }
 
+        $animal = $animalResidence->getAnimal();
         AdminActionLogWriter::deleteAnimalResidence($this->getManager(), $this->getUser(), $animalResidence);
         $this->getManager()->remove($animalResidence);
         $this->getManager()->flush();
-        return true;
+
+        if ($animal) {
+            return $this->getAnimalResidenceOutput($animal->getAnimalResidenceHistory());
+        }
+        return $this->getAnimalResidenceOutput([]);
     }
 
 
