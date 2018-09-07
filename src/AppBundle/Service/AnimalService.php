@@ -43,6 +43,7 @@ use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
@@ -919,16 +920,14 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
 				$errors = $this->validator->validate($animal);
 				if (count($errors) > 0) {
-						$statusCode = 400;
-						$errorsString = (string) $errors;
-						return new JsonResponse(
-								array(
-										Constant::RESULT_NAMESPACE => array(
-											'code'=> $statusCode,
-											'message'=> $errorsString
-										)
-								), $statusCode
-						);
+						// Prepare error message string
+						$errorMessage = null;
+						foreach ($errors as $index => $error) {
+								/* @var ConstraintViolation $error */
+								$errorMessage .= $error->getPropertyPath().': '.$error->getMessage();
+							}
+
+						return ResultUtil::errorResult($errorMessage, Response::HTTP_BAD_REQUEST);
 				}
 
 				$manager = $this->getManager();
