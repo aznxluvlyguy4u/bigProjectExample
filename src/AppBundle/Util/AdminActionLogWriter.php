@@ -719,8 +719,8 @@ class AdminActionLogWriter
             ($animalResidence->getAnimal() ? ReportLabel::ULN.': ' . $animalResidence->getAnimal()->getUln() : 'Empty Animal') .
             ($animalResidence->getLocation() ? ', '.ReportLabel::UBN.': ' . $animalResidence->getLocation()->getUbn() : '').
             ($animalResidence->getCountry() ? ', '.ReportLabel::COUNTRY.': ' . $animalResidence->getCountry() . ' ' : '') .
-            ($animalResidence->getLocation() ? ', '.ReportLabel::START.': '. $animalResidence->getStartDate()->format(DateUtil::DATE_STRING_FORMAT_FILENAME) : '') .
-            ($animalResidence->getLocation() ?  ', '.ReportLabel::END.': '.$animalResidence->getEndDate()->format(DateUtil::DATE_STRING_FORMAT_FILENAME) : '')
+            ($animalResidence->getStartDate() ? ', '.ReportLabel::START.': '. $animalResidence->getStartDate()->format(DateUtil::DATE_STRING_FORMAT_FILENAME) : '') .
+            ($animalResidence->getEndDate() ?  ', '.ReportLabel::END.': '.$animalResidence->getEndDate()->format(DateUtil::DATE_STRING_FORMAT_FILENAME) : '')
         ;
         $log = new ActionLog(null, $actionBy, UserActionType::ANIMAL_RESIDENCE_DELETE, true, $description, self::IS_USER_ENVIRONMENT);
         $em->persist($log);
