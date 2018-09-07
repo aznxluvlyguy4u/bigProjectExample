@@ -18,6 +18,25 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 class AnimalResidenceAPIController extends APIController
 {
     /**
+     * @ApiDoc(
+     *   section = "AnimalResidences",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the ADMIN that is registered with the API"
+     *     },
+     *     {
+     *       "name"="animal",
+     *       "dataType"="integer",
+     *       "requirement"="\d+",
+     *       "description"="The id of the animal for which the animalResidences will be retrieved"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve a list of animalResidences for the selected animal"
+     * )
      * @Method("GET")
      * @Route("/animal/{animal}")
      * @param Request $request
@@ -30,6 +49,19 @@ class AnimalResidenceAPIController extends APIController
     }
 
     /**
+     * @ApiDoc(
+     *   section = "AnimalResidences",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the ADMIN that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Create multiple animalResidences and get all animalResidences of all included animals"
+     * )
      * @Method("POST")
      * @Route("")
      * @param Request $request
@@ -41,6 +73,25 @@ class AnimalResidenceAPIController extends APIController
     }
 
     /**
+     * @ApiDoc(
+     *   section = "AnimalResidences",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the ADMIN that is registered with the API"
+     *     },
+     *     {
+     *       "name"="animalResidence",
+     *       "dataType"="integer",
+     *       "requirement"="\d+",
+     *       "description"="The id of the animalResidence to be edited"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Remove an animalResidence by id"
+     * )
      * @Method("PUT")
      * @Route("/{animalResidence}")
      * @param Request $request
@@ -53,6 +104,25 @@ class AnimalResidenceAPIController extends APIController
     }
 
     /**
+     * @ApiDoc(
+     *   section = "AnimalResidences",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the ADMIN that is registered with the API"
+     *     },
+     *     {
+     *       "name"="animalResidence",
+     *       "dataType"="integer",
+     *       "requirement"="\d+",
+     *       "description"="The id of the animalResidence to be deleted"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Delete an animalResidence by id"
+     * )
      * @Method("DELETE")
      * @Route("/{animalResidence}")
      * @param Request $request
