@@ -178,6 +178,7 @@ class AnimalDetailsOutput extends OutputServiceBase
         }
 
         $result = [
+        	  "id" => $animal->getId(),
             JsonInputConstant::UBN => $animal->getUbn(),
             Constant::ULN_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
             Constant::ULN_NUMBER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnNumber(), $replacementString),
@@ -187,6 +188,7 @@ class AnimalDetailsOutput extends OutputServiceBase
             "collar" => array ("color" => Utils::fillNullOrEmptyString($animal->getCollarColor(), $replacementString),
                 "number" => Utils::fillNullOrEmptyString($animal->getCollarNumber(), $replacementString)),
             "name" => Utils::fillNullOrEmptyString($animal->getName(), $replacementString),
+	          "nickname" => Utils::fillNullOrEmptyString($animal->getNickname(), $replacementString),
             Constant::DATE_OF_BIRTH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $replacementString),
             "inbred_coefficient" => Utils::fillNullOrEmptyString("", $replacementString),
             Constant::GENDER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getGender(), $replacementString),

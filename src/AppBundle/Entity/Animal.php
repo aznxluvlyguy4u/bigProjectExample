@@ -842,6 +842,7 @@ abstract class Animal
 
     /**
      * @var string
+     * @Assert\Length(max = 20)
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -2879,6 +2880,7 @@ abstract class Animal
      */
     public function setNickname($nickname)
     {
+    	  $nickname = $nickname === '' ? null : $nickname;
         $this->nickname = $nickname;
     }
 
