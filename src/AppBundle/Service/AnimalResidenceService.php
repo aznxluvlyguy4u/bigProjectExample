@@ -124,14 +124,20 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
             $validationErrors[] = 'countryCode is missing';
         }
 
-        if (!$animalResidence->getStartDate()) {
+        $newStartDate = $animalResidence->getStartDate();
+        if (!$newStartDate) {
             $validationErrors[] = 'startDate is missing';
         } else {
-            $this->changes[$changeKey][ReportLabel::START] = $animalResidence->getStartDate();
+            $this->changes[$changeKey][ReportLabel::START] = $newStartDate;
         }
 
-        if ($animalResidence->getEndDate()) {
-            $this->changes[$changeKey][ReportLabel::END] = $animalResidence->getEndDate();
+        $newEndDate = $animalResidence->getEndDate();
+        if ($newEndDate) {
+            $this->changes[$changeKey][ReportLabel::END] = $newEndDate;
+        }
+
+        if ($newEndDate && $newStartDate && $newEndDate < $newStartDate) {
+            $validationErrors[] = 'EndDate cannot be before startDate';
         }
 
         if (!empty($validationErrors)) {
@@ -285,6 +291,10 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
             $originalAnimalResidence->setEndDate($newEndDate);
             $originalAnimalResidence->setEndDateEditedBy($this->getUser());
             $originalAnimalResidence->setEndDateEditType($editType);
+        }
+
+        if ($newEndDate && $newStartDate && $newEndDate < $newStartDate) {
+            $validationErrors[] = 'EndDate cannot be before startDate';
         }
 
         $newIsPending = $temporaryResidenceWithEditData->isPending();
