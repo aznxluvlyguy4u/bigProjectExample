@@ -317,12 +317,13 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         $data = RequestUtil::getContentAsArray($request);
-        if(!Validator::verifyUlnFormat($data['uln'])) {
+        $uln = strtr($data->get('uln'), [' ' => '']);
+        if(!Validator::verifyUlnFormat($uln)) {
             return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
         }
 
         try {
-            $animal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($data['uln'], true);
+            $animal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
             if(!$animal)
                 return ResultUtil::errorResult('Dit dier bestaat niet.', Response::HTTP_BAD_REQUEST);
 
