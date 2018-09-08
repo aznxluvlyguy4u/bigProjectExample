@@ -88,14 +88,14 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
         if ($animalId) {
             $animal = $this->getManager()->getRepository(Animal::class)->find($animalId);
             if (!$animal) {
-                $validationErrors[] = 'No animal found for animalId '.$animalId;
+                $validationErrors[] = $this->translateUcFirstLower('NO ANIMAL WAS NOT FOUND FOR ID') . ': '.$animalId;
             } else {
                 $animalResidence->setAnimal($animal);
                 $this->changes[$changeKey][ReportLabel::ULN] = $animal->getUln();
             }
 
         } else {
-            $validationErrors[] = 'AnimalId is missing';
+            $validationErrors[] = $this->translateUcFirstLower('ANIMAL WAS NOT FOUND');
         }
 
         $locationId = $animalResidence->getLocationApiKeyId();
@@ -104,29 +104,29 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
                 ['locationId' => $locationId]
             );
             if (!$location) {
-                $validationErrors[] = 'No location found for animalId '.$locationId;
+                $validationErrors[] = $this->translateUcFirstLower('NO LOCATION FOUND FOR LOCATION ID').': '.$locationId;
             } else {
                 $animalResidence->setLocation($location);
                 $this->changes[$changeKey][ReportLabel::UBN] = $location->getUbn();
             }
 
         } else {
-            $validationErrors[] = 'Location.locationId is missing';
+            $validationErrors[] = $this->translateUcFirstLower('LOCATION CANNOT BE EMPTY');
         }
 
         if ($animalResidence->getCountry()) {
             if (!AnimalResidenceValidator::isValidCountryCode($this->getConnection(), $animalResidence->getCountry())) {
-                $validationErrors[] = 'countryCode is invalid: '.$animalResidence->getCountry();
+                $validationErrors[] = $this->translateUcFirstLower('COUNTRY CODE IS INVALID').': '.$animalResidence->getCountry();
             } else {
                 $this->changes[$changeKey][ReportLabel::COUNTRY] = $animalResidence->getCountry();
             }
         } else {
-            $validationErrors[] = 'countryCode is missing';
+            $validationErrors[] = $this->translateUcFirstLower('COUNTRY CODE IS MISSING');
         }
 
         $newStartDate = $animalResidence->getStartDate();
         if (!$newStartDate) {
-            $validationErrors[] = 'startDate is missing';
+            $validationErrors[] = $this->translateUcFirstLower('START DATE IS MISSING');
         } else {
             $this->changes[$changeKey][ReportLabel::START] = $newStartDate;
         }
@@ -137,7 +137,7 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
         }
 
         if ($newEndDate && $newStartDate && $newEndDate < $newStartDate) {
-            $validationErrors[] = 'EndDate cannot be before startDate';
+            $validationErrors[] = $this->translateUcFirstLower('END DATE CANNOT BE BEFORE START DATE');
         }
 
         if (!empty($validationErrors)) {
@@ -231,7 +231,7 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
         if ($newAnimalId) {
             $animal = $this->getManager()->getRepository(Animal::class)->find($newAnimalId);
             if (!$animal) {
-                $validationErrors[] = 'No animal found for animalId '.$newAnimalId;
+                $validationErrors[] = $this->translateUcFirstLower('NO ANIMAL WAS NOT FOUND FOR ID') . ': '.$newAnimalId;
             } else {
 
                 if ($originalAnimalResidence->getAnimal() === null) {
@@ -239,12 +239,13 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
                     $this->changes[ReportLabel::ULN] = ['Set Animal with ULN', $animal->getUln()];
 
                 } elseif ($originalAnimalResidence->getAnimalId() !== $temporaryResidenceWithEditData->getAnimalId()) {
-                    $validationErrors[] = 'Animal is not allowed to be changed, animalId '.$newAnimalId;
+                    $validationErrors[] = $this->translateUcFirstLower('ANIMAL IS NOT ALLOWED TO BE CHANGED')
+                        .': '. $originalAnimalResidence->getAnimalId() . ' => ' . $newAnimalId;
                 }
             }
 
         } else {
-            $validationErrors[] = 'AnimalId is missing';
+            $validationErrors[] = $this->translateUcFirstLower('ANIMAL WAS NOT FOUND');
         }
 
         $newLocationId = $temporaryResidenceWithEditData->getLocationApiKeyId();
@@ -253,31 +254,31 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
                 ['locationId' => $newLocationId]
             );
             if (!$newLocation) {
-                $validationErrors[] = 'No location found for animalId '.$newLocationId;
+                $validationErrors[] = $this->translateUcFirstLower('NO LOCATION FOUND FOR LOCATION ID').': '.$newLocationId;
             } else if ($newLocationId !== $originalAnimalResidence->getLocationApiKeyId()) {
                 $originalAnimalResidence->setLocation($newLocation);
                 $this->changes[ReportLabel::UBN] = [$originalAnimalResidence->getUbn(), $temporaryResidenceWithEditData->getUbn()];
             }
 
         } else {
-            $validationErrors[] = 'Location.locationId is missing';
+            $validationErrors[] = $this->translateUcFirstLower('LOCATION CANNOT BE EMPTY');
         }
 
         $newCountry = $temporaryResidenceWithEditData->getCountry();
         if ($newCountry) {
             if (!AnimalResidenceValidator::isValidCountryCode($this->getConnection(), $newCountry)) {
-                $validationErrors[] = 'countryCode is invalid: '.$newCountry;
+                $validationErrors[] = $this->translateUcFirstLower('COUNTRY CODE IS INVALID').': '.$newCountry;
             } elseif ($originalAnimalResidence->getCountry() !== $newCountry) {
                 $this->changes[ReportLabel::COUNTRY] = [$originalAnimalResidence->getCountry(), $newCountry];
                 $originalAnimalResidence->setCountry($newCountry);
             }
         } else {
-            $validationErrors[] = 'countryCode is missing';
+            $validationErrors[] = $this->translateUcFirstLower('COUNTRY CODE IS MISSING');
         }
 
         $newStartDate = $temporaryResidenceWithEditData->getStartDate();
         if (!$newStartDate) {
-            $validationErrors[] = 'startDate is missing';
+            $validationErrors[] = $this->translateUcFirstLower('START DATE IS MISSING');
         } elseif (!$this->areDatesEqual($originalAnimalResidence->getStartDate(), $newStartDate)) {
             $this->changes[ReportLabel::START] = [$originalAnimalResidence->getStartDate(), $newStartDate];
             $originalAnimalResidence->setStartDate($newStartDate);
@@ -294,12 +295,12 @@ class AnimalResidenceService extends ControllerServiceBase implements AnimalResi
         }
 
         if ($newEndDate && $newStartDate && $newEndDate < $newStartDate) {
-            $validationErrors[] = 'EndDate cannot be before startDate';
+            $validationErrors[] = $this->translateUcFirstLower('END DATE CANNOT BE BEFORE START DATE');
         }
 
         $newIsPending = $temporaryResidenceWithEditData->isPending();
         if (!is_bool($newIsPending)) {
-            $validationErrors[] = 'isPending must be a boolean';
+            $validationErrors[] = $this->translateUcFirstLower('IS PENDING MUST BE A BOOLEAN');
         } elseif ($originalAnimalResidence->isPending() !== $newIsPending) {
             $this->changes[ReportLabel::IS_PENDING] = [$originalAnimalResidence->isPending(), $newIsPending];
             $originalAnimalResidence->setIsPending($newIsPending);
