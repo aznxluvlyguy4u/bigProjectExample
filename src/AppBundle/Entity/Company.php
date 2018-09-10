@@ -311,6 +311,15 @@ class Company
     private $isRevealHistoricAnimals;
 
     /**
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $lastMakeLivestockPublicDate;
+
+    /**
      * @var string
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
@@ -334,6 +343,7 @@ class Company
     $this->setCompanyId(Utils::generateTokenCode());
     $this->notes = new ArrayCollection();
     $this->invoices = new ArrayCollection();
+    $this->lastMakeLivestockPublicDate = new \DateTime();
   }
 
     /**
@@ -806,6 +816,7 @@ class Company
     public function setIsRevealHistoricAnimals($isRevealHistoricAnimals)
     {
         $this->isRevealHistoricAnimals = $isRevealHistoricAnimals;
+        $this->resetLastMakeLivestockPublicDate();
     }
 
     public function addInvoice(Invoice $invoice){
@@ -814,6 +825,33 @@ class Company
 
     public function removeInvoice(Invoice $invoice){
         $this->invoices->removeElement($invoice);
+    }
+
+    /**
+     * @return DateTime|null
+     */
+    public function getLastMakeLivestockPublicDate(): ?DateTime
+    {
+        return $this->lastMakeLivestockPublicDate;
+    }
+
+    /**
+     * @return Company
+     */
+    public function resetLastMakeLivestockPublicDate(): Company
+    {
+        $this->lastMakeLivestockPublicDate = new \DateTime();
+        return $this;
+    }
+
+    /**
+     * @param DateTime $lastMakeLivestockPublicDate
+     * @return Company
+     */
+    public function setLastMakeLivestockPublicDate(DateTime $lastMakeLivestockPublicDate): Company
+    {
+        $this->lastMakeLivestockPublicDate = $lastMakeLivestockPublicDate;
+        return $this;
     }
 
     /**
