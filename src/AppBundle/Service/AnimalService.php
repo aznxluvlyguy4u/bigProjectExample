@@ -43,6 +43,7 @@ use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -899,27 +900,19 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 	/**
 	 * @param Request $request
 	 * @param Ram|Ewe|Neuter|Animal $animal
-	 * @return JsonResponse|Animal|null
+	 * @return array|null
 	 */
 		public function changeNicknameOfAnimal(Request $request, Animal $animal)
 		{
 				$content = RequestUtil::getContentAsArray($request);
 
 				//Check if mandatory field values are given
-				if(!$content->containsKey('nickname') || !$content['id']) {
-						$statusCode = 400;
-						return new JsonResponse(
-								array(
-										Constant::RESULT_NAMESPACE => array(
-											'code'=> $statusCode,
-											'message'=> "nickname or id is missing."
-										)
-								), $statusCode
-						);
+				if(!$content->containsKey(ReportLabel::NICKNAME)) {
+				    throw new BadRequestHttpException(ReportLabel::NICKNAME.' is missing.');
 				}
 
 				//Try to change animal gender
-				$nickname = $content->get('nickname');
+				$nickname = $content->get(ReportLabel::NICKNAME);
 				$animal->setNickname($nickname);
 
 				$errors = $this->validator->validate($animal);
@@ -930,8 +923,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 								/* @var ConstraintViolation $error */
 								$errorMessage .= $error->getPropertyPath().': '.$error->getMessage();
 							}
-
-						return ResultUtil::errorResult($errorMessage, Response::HTTP_BAD_REQUEST);
+						throw new BadRequestHttpException($errorMessage);
 				}
 
 				$manager = $this->getManager();
@@ -942,7 +934,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
 				//FIXME Temporarily workaround
 				$minimizedOutput['type'] = $animal->getObjectType();
-
-				return new JsonResponse($minimizedOutput, 200);
+				return $minimizedOutput;
 		}
 }

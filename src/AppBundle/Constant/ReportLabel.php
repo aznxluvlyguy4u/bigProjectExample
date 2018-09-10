@@ -75,6 +75,7 @@ class ReportLabel
     const LITTER_COUNT = 'litterCount'; //number of offspring litters
     const OFFSPRING_COUNT = 'offspringCount'; //number of offspring
     const N_LING = 'nLing';
+    const NICKNAME = 'nickname';
     const SCRAPIE = 'scrapie';
     const PRODUCTION = 'production';
     const BREED = 'breed';
