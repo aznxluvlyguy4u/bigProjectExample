@@ -86,6 +86,12 @@ class ViewMinimalParentDetails implements SqlViewInterface
     private $isPublic;
 
     /**
+     * @var integer
+     * @JMS\Type("integer")
+     */
+    private $locationOfBirthId;
+
+    /**
      * Array as json string
      * @var string
      * @JMS\Type("string")
@@ -352,6 +358,24 @@ class ViewMinimalParentDetails implements SqlViewInterface
     public function setIsPublic(bool $isPublic): ViewMinimalParentDetails
     {
         $this->isPublic = $isPublic;
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getLocationOfBirthId(): ?int
+    {
+        return $this->locationOfBirthId;
+    }
+
+    /**
+     * @param int|null $locationOfBirthId
+     * @return ViewMinimalParentDetails
+     */
+    public function setLocationOfBirthId(?int $locationOfBirthId): ViewMinimalParentDetails
+    {
+        $this->locationOfBirthId = $locationOfBirthId;
         return $this;
     }
 

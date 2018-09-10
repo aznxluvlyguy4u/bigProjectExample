@@ -225,11 +225,14 @@ class SqlView
                 a.scrapie_genotype,
                 a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter,
                 COALESCE(comp.is_reveal_historic_animals, TRUE) as is_public,
+                a.location_of_birth_id,
                 residences.historic_ubns,
                 residences.historic_location_ids
               FROM animal a
                 LEFT JOIN location l ON a.location_id = l.id
-                LEFT JOIN company comp ON l.company_id = comp.id
+                LEFT JOIN (
+                  SELECT id, is_reveal_historic_animals FROM company WHERE is_active
+                )comp ON l.company_id = comp.id
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
                 LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk_dad(bool_val, mark)
                   ON c.gave_birth_as_one_year_old = production_asterisk_dad.bool_val
