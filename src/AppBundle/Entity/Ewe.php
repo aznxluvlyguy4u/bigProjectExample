@@ -80,9 +80,10 @@ class Ewe extends Animal implements ParentInterface
     {
         if ($this->getMatings()->count() > 0) {
             return $this->getMatings()
-                ->matching(MateCriteria::orderByEndDateDesc())
                 ->matching(MateCriteria::requestStateIsFinished())
                 ->matching(MateCriteria::hasNoLitter())
+                ->matching(MateCriteria::isOverwrittenVersion(false))
+                ->matching(MateCriteria::orderByEndDateDesc())
                 ->first();
         }
         return null;
