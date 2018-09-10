@@ -173,11 +173,26 @@ class InvoiceRule
     private $invoiceRuleSelections;
 
     /**
+     * For batch edit rules, the admin may wish to temporarily activate or deactivate certain invoiceRules
+     *
+     * @var boolean
+     * @ORM\Column(type="boolean", name="is_active", options={"default":true})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $isActive;
+
+    /**
      * InvoiceRule constructor.
      */
     public function __construct()
     {
         $this->invoiceRuleSelections = new ArrayCollection();
+        $this->isActive = true;
     }
 
     /**
@@ -405,5 +420,24 @@ class InvoiceRule
     {
         $this->subArticleCode = $subArticleCode;
     }
+
+    /**
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param bool $isActive
+     * @return InvoiceRule
+     */
+    public function setIsActive(bool $isActive): InvoiceRule
+    {
+        $this->isActive = $isActive;
+        return $this;
+    }
+
 
 }
