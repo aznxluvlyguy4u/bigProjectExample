@@ -12,6 +12,7 @@ class QueryParameter
     const END_DATE = 'end_date';
     const FILE_TYPE_QUERY = 'file_type';
     const FORMAL = 'formal';
+    const FULL_OUTPUT = 'full_output';
     const INCLUDE_ALL_LIVESTOCK_ANIMALS = 'include_all_livestock_animals';
     const INCLUDE_GHOST_LOGIN_DATA = 'include_ghost_login_data';
     const INCLUDE_LITTER = 'include_litter';

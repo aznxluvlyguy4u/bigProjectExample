@@ -70,9 +70,10 @@ class NormalDistributionService
      * Note the standard deviation will be based on the generation date of the breed values!
      *
      * @param $generationDate
+     * @param boolean $overwriteOldValues
      * @throws \Exception
      */
-    public function persistLambMeatIndexMeanAndStandardDeviation($generationDate)
+    public function persistLambMeatIndexMeanAndStandardDeviation($generationDate, $overwriteOldValues = true)
     {
         $type = BreedValueCoefficientType::LAMB_MEAT_INDEX;
         $year = TimeUtil::getYearFromDateTimeString($generationDate);
@@ -81,7 +82,7 @@ class NormalDistributionService
             $lambMeatIndexValues = $this->getManager()->getRepository(LambMeatBreedIndex::class)
                 ->getValues($generationDate, $isIncludingOnlyAliveAnimals);
 
-            self::upsertMeanAndStandardDeviation($type, $year, $isIncludingOnlyAliveAnimals, $lambMeatIndexValues);
+            self::upsertMeanAndStandardDeviation($type, $year, $isIncludingOnlyAliveAnimals, $lambMeatIndexValues, $overwriteOldValues);
         }
     }
 
@@ -101,6 +102,7 @@ class NormalDistributionService
         $normalDistribution = $this->normalDistributionRepository
             ->getByBreedValueTypeAndYear($breedValueTypeConstant, $generationYear);
         if ($normalDistribution && !$overwriteExisting) {
+            $this->logger->notice($breedValueTypeConstant.' - '.$generationDate.' already exists. Skip overwriting');
             return;
         }
 
@@ -109,7 +111,7 @@ class NormalDistributionService
                 ->getReliableBreedValues($breedValueTypeConstant, $generationDate, $isIncludingOnlyAliveAnimals);
 
             self::upsertMeanAndStandardDeviation($breedValueTypeConstant,
-                $generationYear, $isIncludingOnlyAliveAnimals, $valuesArray);
+                $generationYear, $isIncludingOnlyAliveAnimals, $valuesArray, $overwriteExisting);
         }
     }
 
@@ -119,11 +121,17 @@ class NormalDistributionService
      * @param string $type
      * @param boolean $isIncludingOnlyAliveAnimals
      * @param array $valuesArray
+     * @param boolean $overwriteOldValues
      */
     private function upsertMeanAndStandardDeviation($type, $year,
-                                                    $isIncludingOnlyAliveAnimals, array $valuesArray = [])
+                                                    $isIncludingOnlyAliveAnimals, array $valuesArray = [],
+                                                    $overwriteOldValues = true)
     {
+        $isIncludingOnlyAliveAnimalsAsString = $isIncludingOnlyAliveAnimals ? 'isIncludingOnlyAliveAnimals' : 'includeAllAnimals';
         if (count($valuesArray) === 0) {
+            if (!$isIncludingOnlyAliveAnimals) {
+                $this->logger->warn('Values for '.$type.' '.$year.' '.$isIncludingOnlyAliveAnimalsAsString.'are empty!');
+            }
             return;
         }
 
@@ -136,6 +144,11 @@ class NormalDistributionService
         if($normalDistribution instanceof NormalDistribution) {
             /** @var NormalDistribution $normalDistribution */
 
+            if (!$overwriteOldValues) {
+                $this->logger->notice('Already exists, skip overwriting '.$isIncludingOnlyAliveAnimalsAsString);
+                return;
+            }
+
             //Update values if necessary
             if(!NumberUtil::areFloatsEqual($normalDistribution->getMean(), $mean) || !NumberUtil::areFloatsEqual($normalDistribution->getStandardDeviation(), $standardDeviation)) {
                 $normalDistribution->setMean($mean);
@@ -144,11 +157,15 @@ class NormalDistributionService
 
                 $this->getManager()->persist($normalDistribution);
                 $this->getManager()->flush();
+                $this->logger->notice($isIncludingOnlyAliveAnimalsAsString.' values overwritten');
+            } else {
+                $this->logger->notice($isIncludingOnlyAliveAnimalsAsString.' values still the same');
             }
         } else {
             //Create a new entry
             $this->getNormalDistributionRepository()
                 ->persistFromValues($type, $year, $mean, $standardDeviation, $isIncludingOnlyAliveAnimals);
+            $this->logger->notice($isIncludingOnlyAliveAnimalsAsString . ' new record persisted');
         }
     }
 

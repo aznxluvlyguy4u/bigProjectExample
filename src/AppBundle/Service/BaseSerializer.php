@@ -9,6 +9,7 @@ use Doctrine\ORM\LazyCriteriaCollection;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class BaseSerializer
 {
@@ -167,6 +168,23 @@ class BaseSerializer
         }
 
         return $result;
+    }
+
+
+    /**
+     * @param string $content
+     * @param $clazz
+     * @param boolean $isArrayOfObjects
+     * @param DeserializationContext $context
+     * @return mixed
+     */
+    public function getObjectsFromRequestContent($content, $clazz, $isArrayOfObjects = false, DeserializationContext $context = null)
+    {
+        $objects = json_decode($content, true);
+        if ($objects === null) {
+            throw new BadRequestHttpException();
+        }
+        return $this->denormalizeToObject($objects,$clazz, $isArrayOfObjects, $context);
     }
 
 }

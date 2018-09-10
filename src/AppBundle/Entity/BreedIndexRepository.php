@@ -57,11 +57,15 @@ class BreedIndexRepository extends BaseRepository {
         $animalJoin = $isIncludingOnlyAliveAnimals ? 'INNER JOIN animal a ON b.animal_id = a.id': '';
         $animalIsAliveFilter = $isIncludingOnlyAliveAnimals ? 'AND a.is_alive = TRUE' : '';
 
+        $mappingFunction = function($value) {
+            return $value['index'];
+        };
+
         $sql = "SELECT
                   b.index
                 FROM breed_index b
                 ".$animalJoin."
                 WHERE b.generation_date = '".$generationDateString."' AND b.type = '".$breedIndexType."' ".$animalIsAliveFilter;
-        return $this->getConnection()->query($sql)->fetchAll();
+        return array_map($mappingFunction, $this->getConnection()->query($sql)->fetchAll());
     }
 }

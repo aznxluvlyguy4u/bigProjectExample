@@ -51,6 +51,7 @@ class ReportLabel
     const POSTAL_CODE_BREEDER = 'postalCodeBreeder';
     const ADDRESS_BREEDER = 'addressBreeder';
     const UBN = 'ubn';
+    const COUNTRY = 'country';
 
     //Animal
     const ANIMALS = 'animals';
@@ -91,6 +92,7 @@ class ReportLabel
     const MAEDI_VISNA_STATUS = 'maediVisnaStatus';
     const SCRAPIE_STATUS = 'scrapieStatus';
     const CAE_STATUS = 'caeStatus';
+    const IS_PENDING = 'is_pending';
 
     //Measurements
     const EXTERIOR = 'exterior';

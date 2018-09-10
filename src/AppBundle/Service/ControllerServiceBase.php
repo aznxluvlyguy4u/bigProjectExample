@@ -19,6 +19,7 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\EditType;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
@@ -462,5 +463,15 @@ abstract class ControllerServiceBase
         if ($this->getManager()->getFilters()->isEnabled($filterName)) {
             $this->getManager()->getFilters()->disable($filterName);
         }
+    }
+
+
+    /**
+     * @param int $editTypeEnum
+     * @return EditType|null
+     */
+    protected function getEditTypeByEnum(int $editTypeEnum): ?EditType
+    {
+        return $this->getManager()->getRepository(EditType::class)->getEditType($editTypeEnum);
     }
 }

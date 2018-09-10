@@ -752,6 +752,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             '4: Initialize blank genetic bases', "\n",
             '5: Set minimum reliability for all breedValueTypes by accuracy option', "\n",
             '6: Update/Insert LambMeatIndex values by generationDate (excl. resultTable update)', "\n",
+            '7: Update breedIndex & breedValue normal distribution values', "\n",
             '========================================================================', "\n",
             '10: Initialize BreedIndexType and BreedValueType', "\n",
             '11: Initialize MixBlupAnalysisTypes', "\n",
@@ -793,6 +794,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 4: $this->getBreedValueService()->initializeBlankGeneticBases(); break;
             case 5: $this->getBreedValueService()->setMinReliabilityForAllBreedValueTypesByAccuracyOption($this->cmdUtil); break;
             case 6: $this->updateLambMeatIndexesByGenerationDate(); break;
+            case 7: $this->updateBreedIndexAndBreedValueNormalDistributions(); break;
 
 
             case 10:
@@ -910,6 +912,28 @@ class NsfoMainCommand extends ContainerAwareCommand
     }
 
 
+    private function updateBreedIndexAndBreedValueNormalDistributions()
+    {
+        /*
+         * Options
+         */
+        $updateBreedIndexNormalDistributions = $this->cmdUtil->generateConfirmationQuestion('Update BreedIndex normal distributions?', true, true);
+
+        $updateBreedValueNormalDistributions = $this->cmdUtil->generateConfirmationQuestion('Update BreedValue normal distributions?', true, true);
+
+        $overwriteExistingValues = $this->cmdUtil->generateConfirmationQuestion('OVERWRITE EXISTING VALUES?', true, true);
+
+        // End of options
+
+        if ($updateBreedIndexNormalDistributions) {
+            $this->getContainer()->get(BreedValuesResultTableUpdater::class)->updateAllBreedIndexNormalDistributions($overwriteExistingValues);
+        }
+
+        if ($updateBreedValueNormalDistributions) {
+            $this->getContainer()->get(BreedValuesResultTableUpdater::class)->updateAllBreedValueNormalDistributions($overwriteExistingValues);
+        }
+
+    }
 
 
     private function writeLn($line)

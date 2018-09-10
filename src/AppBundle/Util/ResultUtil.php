@@ -95,32 +95,33 @@ class ResultUtil
     /**
      * @param string $message
      * @param int $code The HTTP code
-     * @param array $errors
+     * @param array|string|int $errorsOrErrorData
+     * @param boolean $extraInputIsData
      * @return JsonResponse
      */
-    public static function errorResult($message, $code, $errors = array())
+    public static function errorResult($message, $code, $errorsOrErrorData = array(), $extraInputIsData = false)
     {
         //Success message
-        if($errors == null || sizeof($errors) == 0) {
+        if(empty($errorsOrErrorData)) {
             $result = array(
                 Constant::MESSAGE_NAMESPACE => $message,
                 Constant::CODE_NAMESPACE => $code);
 
             //Error message
 
-        } elseif (!is_array($errors)) {
+        } elseif (!is_array($errorsOrErrorData) || $extraInputIsData) {
 
             return new JsonResponse([
                 JsonInputConstant::RESULT => [
                     Constant::CODE_NAMESPACE => $code,
                     Constant::MESSAGE_NAMESPACE => $message,
-                    Constant::DATA => $errors,
+                    Constant::DATA => $errorsOrErrorData,
                 ]
             ], $code);
 
         } else {
             $result = array();
-            foreach ($errors as $errorMessage) {
+            foreach ($errorsOrErrorData as $errorMessage) {
                 $errorArray = [
                     Constant::CODE_NAMESPACE => $code,
                     Constant::MESSAGE_NAMESPACE => $errorMessage

@@ -977,6 +977,22 @@ services:
     AppBundle\Output\BreedValuesOutput:
         parent: app.output.base
 
+    AppBundle\Service\AnimalResidenceServiceInterface:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\AnimalResidenceService
+
+
+    # Listeners
+    AppBundle\EventListener\ViewListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.view }
+
+    AppBundle\EventListener\ExceptionListener:
+        arguments:
+            - '%environment%'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
+
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:
         class: AppBundle\Serializer\CustomDateTimeHandler

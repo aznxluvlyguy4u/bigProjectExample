@@ -31,7 +31,8 @@ class AnimalResidence
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -45,7 +46,8 @@ class AnimalResidence
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -58,7 +60,8 @@ class AnimalResidence
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -71,25 +74,32 @@ class AnimalResidence
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
     private $endDate;
 
     /**
+     * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="animalResidenceHistory")
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Groups({
+     *     "EDIT_OVERVIEW"
+     * })
      * @Expose
      */
     private $animal;
 
     /**
+     * @var Location
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animalResidenceHistory")
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -101,7 +111,8 @@ class AnimalResidence
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -112,7 +123,8 @@ class AnimalResidence
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "BASIC"
+     *     "BASIC",
+     *     "EDIT_OVERVIEW"
      * })
      * @Expose
      */
@@ -123,6 +135,7 @@ class AnimalResidence
      * @ORM\ManyToOne(targetEntity="EditType")
      * @ORM\JoinColumn(name="start_date_edit_type", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\EditType")
+     * @JMS\SerializedName("start_date_edit_type_object")
      * @Expose
      */
     private $startDateEditType;
@@ -132,6 +145,7 @@ class AnimalResidence
      * @ORM\ManyToOne(targetEntity="EditType")
      * @ORM\JoinColumn(name="end_date_edit_type", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\EditType")
+     * @JMS\SerializedName("end_date_edit_type_object")
      * @Expose
      */
     private $endDateEditType;
@@ -149,6 +163,63 @@ class AnimalResidence
      * @ORM\JoinColumn(name="end_date_edited_by", referencedColumnName="id")
      */
     private $endDateEditedBy;
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("start_date_edit_type")
+     * @JMS\Groups({
+     *     "EDIT_OVERVIEW"
+     * })
+     * @return null|string
+     */
+    public function getStartDateEditTypeName(): ?string
+    {
+        return $this->startDateEditType ? $this->startDateEditType->getName() : null;
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("end_date_edit_type")
+     * @JMS\Groups({
+     *     "EDIT_OVERVIEW"
+     * })
+     * @return null|string
+     */
+    public function getEndDateEditTypeName(): ?string
+    {
+        return $this->endDateEditType ? $this->endDateEditType->getName() : null;
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("start_date_edited_by_full_name")
+     * @JMS\Groups({
+     *     "EDIT_OVERVIEW"
+     * })
+     * @return null|string
+     */
+    public function getStartDateEditedByFullName(): ?string
+    {
+        return $this->startDateEditedBy ? $this->startDateEditedBy->getFullName() : null;
+    }
+
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("end_date_edited_by_full_name")
+     * @JMS\Groups({
+     *     "EDIT_OVERVIEW"
+     * })
+     * @return null|string
+     */
+    public function getEndDateEditedByFullName(): ?string
+    {
+        return $this->endDateEditedBy ? $this->endDateEditedBy->getFullName() : null;
+    }
+
 
     /**
      * AnimalResidence constructor.
@@ -243,7 +314,7 @@ class AnimalResidence
     /**
      * @return boolean
      */
-    public function isIsPending()
+    public function isPending()
     {
         return $this->isPending;
     }
@@ -365,5 +436,29 @@ class AnimalResidence
     }
 
 
+    /**
+     * @return int|null
+     */
+    public function getAnimalId(): ?int
+    {
+        return $this->animal ? $this->animal->getId() : null;
+    }
 
+
+    /**
+     * @return string|null
+     */
+    public function getLocationApiKeyId(): ?string
+    {
+        return $this->location ? $this->location->getLocationId() : null;
+    }
+
+
+    /**
+     * @return null|string
+     */
+    public function getUbn(): ?string
+    {
+        return $this->location ? $this->location->getUbn() : null;
+    }
 }

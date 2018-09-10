@@ -63,3 +63,5 @@ parameters:
     firebase_notifications_client_id: ~
     firebase_notifications_client_email: ~
     firebase_notifications_private_key: ~
+
+    sentry_dns: ~

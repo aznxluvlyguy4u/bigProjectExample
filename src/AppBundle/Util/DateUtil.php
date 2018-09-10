@@ -6,6 +6,7 @@ namespace AppBundle\Util;
 
 class DateUtil
 {
+    const FULL_DATE_FORMAT_WITHOUT_TIMEZONE = 'Y-m-d_H\hi\ms\su';
     const DATE_STRING_FORMAT_FILENAME = 'Y-m-d_H\hi\ms\s';
     const DEFAULT_SQL_DATE_STRING_FORMAT = 'DD-MM-YYYY';
 
@@ -179,6 +180,24 @@ class DateUtil
         $dateInterval = self::monthsDateInterval($newDateTime, abs($months));
 
         return $months > 0 ? $newDateTime->add($dateInterval) : $newDateTime->sub($dateInterval);
+    }
+
+
+    /**
+     * @param \DateTime|null $date1
+     * @param \DateTime|null $date2
+     * @return bool
+     */
+    public static function hasSameDateIgnoringTimezoneAndTimeZoneType($date1, $date2): bool
+    {
+        switch (true) {
+            case !$date1 && !$date2: return true;
+            case $date1 && !$date2: return false;
+            case !$date1 && $date2: return false;
+            default: return
+                $date1->format(self::FULL_DATE_FORMAT_WITHOUT_TIMEZONE) ===
+                $date2->format(self::FULL_DATE_FORMAT_WITHOUT_TIMEZONE);
+        }
     }
 
 
