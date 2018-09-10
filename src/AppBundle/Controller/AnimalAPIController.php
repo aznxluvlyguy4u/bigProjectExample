@@ -521,7 +521,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 	 * @param Animal $animal
 	 * @return jsonResponse
 	 * @Route("-nickname/{animal}")
-	 * @Method("POST")
+	 * @Method("PUT")
 	 */
 	public function changeNicknameOfAnimalById(Request $request, Animal $animal)
 	{
