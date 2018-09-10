@@ -63,6 +63,22 @@ class ArrayUtil
 
 
     /**
+     * @param array $values
+     * @param array $array
+     * @return bool
+     */
+    public static function hasAtLeastOneValueInArray(array $values, array $array): bool
+    {
+        foreach ($values as $value) {
+            if (in_array($value, $array)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /**
      * @param $key
      * @param array $array
      * @return int
