@@ -34,6 +34,9 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 class Validator
 {
@@ -857,5 +860,26 @@ class Validator
 
         $year = intval($year);
         return 1900 < $year && $year < 3000;
+    }
+
+
+    /**
+     * @param ConstraintViolationListInterface $errors
+     */
+    public static function throwExceptionWithFormattedErrorMessageIfHasErrors($errors)
+    {
+        if (empty($errors->count())) {
+            return;
+        }
+
+        // Prepare error message string
+        $errorMessage = '';
+        $prefix = '';
+        foreach ($errors as $index => $error) {
+            /* @var ConstraintViolation $error */
+            $errorMessage .= $prefix . $error->getPropertyPath().': '.$error->getMessage();
+            $prefix = ' | ';
+        }
+        throw new PreconditionFailedHttpException($errorMessage);
     }
 }

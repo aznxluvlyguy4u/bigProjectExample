@@ -44,7 +44,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
@@ -916,15 +915,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 				$animal->setNickname($nickname);
 
 				$errors = $this->validator->validate($animal);
-				if (count($errors) > 0) {
-						// Prepare error message string
-						$errorMessage = null;
-						foreach ($errors as $index => $error) {
-								/* @var ConstraintViolation $error */
-								$errorMessage .= $error->getPropertyPath().': '.$error->getMessage();
-							}
-						throw new BadRequestHttpException($errorMessage);
-				}
+				Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
 
 				$manager = $this->getManager();
 				$manager->persist($animal);
