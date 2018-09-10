@@ -317,7 +317,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         $data = RequestUtil::getContentAsArray($request);
-        $uln = strtr($data->get('uln'), [' ' => '']);
+        $uln = $data->get('uln');
+        if (is_string($uln)) {
+            $uln = strtoupper(strtr($uln, [' ' => '']));
+        }
         if(!Validator::verifyUlnFormat($uln)) {
             return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
         }
