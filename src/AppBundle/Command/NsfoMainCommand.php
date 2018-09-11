@@ -513,8 +513,9 @@ class NsfoMainCommand extends ContainerAwareCommand
             '3: Merge two animals by primaryKeys', "\n",
             '4: Merge two animals where one is missing leading zeroes', "\n",
             '5: Fix duplicate animals due to tagReplace error', "\n",
-            '6: Merge two animals by uln (primary) and pedigreeNumber (secondary) csv correction file', "\n",
-            '7: Merge two animals by ulns in correction file and create tag replace', "\n\n",
+            '6: Fix duplicate animals due to tagReplace and animalSync race condition', "\n",
+            '7: Merge two animals by uln (primary) and pedigreeNumber (secondary) csv correction file', "\n",
+            '8: Merge two animals by ulns in correction file and create tag replace', "\n\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -526,8 +527,9 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 3: $duplicateAnimalsFixer->mergeAnimalPairs($this->cmdUtil); break;
             case 4: $duplicateAnimalsFixer->mergeImportedAnimalsMissingLeadingZeroes($this->cmdUtil); break;
             case 5: $duplicateAnimalsFixer->fixDuplicateDueToTagReplaceError($this->cmdUtil); break;
-            case 6: $duplicateAnimalsFixer->mergePrimaryUlnWithSecondaryPedigreeNumberFromCsvFile($this->cmdUtil); break;
-            case 7: $duplicateAnimalsFixer->mergeByUlnStringsAndCreateDeclareTagReplace($this->cmdUtil); break;
+            case 6: $duplicateAnimalsFixer->fixDuplicateDueToTagReplaceAndAnimalSyncRaceCondition($this->cmdUtil); break;
+            case 7: $duplicateAnimalsFixer->mergePrimaryUlnWithSecondaryPedigreeNumberFromCsvFile($this->cmdUtil); break;
+            case 8: $duplicateAnimalsFixer->mergeByUlnStringsAndCreateDeclareTagReplace($this->cmdUtil); break;
             default: $this->writeLn('Exit menu'); return;
         }
         $this->fixDuplicateAnimalsOptions();
