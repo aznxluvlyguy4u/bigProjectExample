@@ -6,12 +6,14 @@ namespace AppBundle\Output;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Location;
@@ -29,6 +31,7 @@ use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\PedigreeUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -58,23 +61,25 @@ class AnimalDetailsOutput extends OutputServiceBase
     /**
      * @param Animal $animal
      * @param Person $user
+     * @param Location $location
      * @param bool $includeAscendants
      * @return array
      * @throws \Exception
      */
-    public function getForUserEnvironment(Animal $animal, Person $user, $includeAscendants = false)
+    public function getForUserEnvironment(Animal $animal, Person $user, Location $location, $includeAscendants = false)
     {
-        return $this->get($animal, $user, $includeAscendants);
+        return $this->get($animal, $user, $location, $includeAscendants);
     }
 
     /**
      * @param Animal $animal
      * @param Person $user
+     * @param Location $location
      * @param boolean $includeAscendants
      * @return array
      * @throws \Exception
      */
-    public function get(Animal $animal, Person $user, $includeAscendants = false)
+    public function get(Animal $animal, Person $user, Location $location, $includeAscendants = false)
     {
         $replacementString = "";
 
@@ -231,22 +236,26 @@ class AnimalDetailsOutput extends OutputServiceBase
             "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
             "declare_log" => $this->getLog($animal, $animal->getLocation(), $replacementString),
-            "children" => $this->getChildren($animal, $user),
+            "children" => $this->getChildren($animal, $user, $location),
             "production" => $production,
         ];
 
         if ($fatherId) {
             /** @var ViewMinimalParentDetails $viewParentFather */
             $viewParentFather = $viewMinimalParentDetails->get($fatherId);
-            $result["parent_father"] = $viewParentFather;
-            $result["parent_father"]->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentFather, $user));
+            $viewParentFather->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentFather, $user));
+            $result["parent_father"] = $this->getSerializer()->getDecodedJson($viewParentFather);
+            $result["parent_father"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
+                $this->isUserAllowedToAccessAnimalDetails($viewParentFather, $user, $location);
         }
 
         if ($motherId) {
             /** @var ViewMinimalParentDetails $viewParentMother */
             $viewParentMother = $viewMinimalParentDetails->get($motherId);
-            $result["parent_mother"] = $viewParentMother;
-            $result["parent_mother"]->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentMother, $user));
+            $viewParentMother->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentMother, $user));
+            $result["parent_mother"] = $this->getSerializer()->getDecodedJson($viewParentMother);
+            $result["parent_mother"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
+                $this->isUserAllowedToAccessAnimalDetails($viewParentMother, $user, $location);
         }
 
         if ($includeAscendants) {
@@ -319,7 +328,33 @@ class AnimalDetailsOutput extends OutputServiceBase
     }
 
 
-    private function getChildren(Animal $animal, Person $user)
+    /**
+     * @param ViewMinimalParentDetails $animal
+     * @param Person $person
+     * @param Location $location
+     * @return bool
+     */
+    private function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, Location $location)
+    {
+        if ($person instanceof Employee) {
+            return true;
+        }
+
+        if (!($person instanceof Client) || !$location || !$location->getCompany() || !$location->getId()) {
+            return false;
+        }
+
+        $company = $location->getCompany();
+        $currentUbnsOfUser = $company->getUbns(true);
+        if (empty($currentUbnsOfUser)) {
+            return false;
+        }
+
+        return Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser, $location->getId());
+    }
+
+
+    private function getChildren(Animal $animal, Person $user, Location $location)
     {
         /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
         $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
@@ -342,6 +377,8 @@ class AnimalDetailsOutput extends OutputServiceBase
                     $childArray[JsonInputConstant::GENERAL_APPEARANCE] = $viewDetails->getGeneralAppearance();
                     $childArray[JsonInputConstant::IS_PUBLIC] = $viewDetails->isPublic();
                     $childArray[JsonInputConstant::IS_OWN_HISTORIC_ANIMAL] = $this->isHistoricAnimalOfOwner($viewDetails, $user);
+                    $childArray[ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
+                        $this->isUserAllowedToAccessAnimalDetails($viewDetails, $user, $location);
                 }
 
                 switch ($genderPrimaryParent) {

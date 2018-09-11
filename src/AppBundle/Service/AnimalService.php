@@ -793,7 +793,13 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return $this->getBasicAnimalDetailsByUln($ulnString);
         }
 
-        return ResultUtil::successResult($this->animalDetailsOutput->getForUserEnvironment($animal, $this->getUser()));
+        return ResultUtil::successResult(
+            $this->animalDetailsOutput->getForUserEnvironment(
+                $animal,
+                $this->getUser(),
+                $location
+            )
+        );
     }
 
     /**

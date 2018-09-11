@@ -86,6 +86,7 @@ class ReportLabel
     const BLINDNESS_FACTOR = 'blindnessFactor';
     const PEDIGREE_REGISTER_NAME = 'pedigreeRegisterName';
     const LIVESTOCK = 'livestock';
+    const IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS = 'is_user_allowed_to_access_animal_details';
 
     //Location
     const LOCATIONS = 'locations';
