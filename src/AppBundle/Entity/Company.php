@@ -119,7 +119,7 @@ class Company
     private $companyRelationNumber;
 
     /**
-    * @var ArrayCollection
+    * @var ArrayCollection|Location[]
     *
     * @ORM\OneToMany(targetEntity="Location", mappedBy="company", cascade={"persist"}, fetch="EAGER")
     * @JMS\Type("AppBundle\Entity\Location")
@@ -868,6 +868,22 @@ class Company
     public function setTwinfieldOfficeCode(string $twinfieldOfficeCode)
     {
         $this->twinfieldOfficeCode = $twinfieldOfficeCode;
+    }
+
+
+    /**
+     * @param bool $onlyReturnActiveUbns
+     * @return array|string[]
+     */
+    public function getUbns(bool $onlyReturnActiveUbns = true): array
+    {
+        $ubns = [];
+        foreach ($this->locations as $location) {
+            if (!$onlyReturnActiveUbns || $location->getIsActive()) {
+                $ubns[] = $location->getUbn();
+            }
+        }
+        return $ubns;
     }
 
     /**
