@@ -16,6 +16,7 @@ use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\ActionType;
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\ColumnType;
@@ -606,7 +607,6 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             'pedigree_number' => ColumnType::STRING,
             'name' => ColumnType::STRING,
             'date_of_birth' => ColumnType::DATETIME,
-            'transfer_state' => ColumnType::STRING,
             'uln_country_code' => ColumnType::STRING,
             'uln_number' => ColumnType::STRING,
             'animal_order_number' => ColumnType::STRING,
@@ -694,6 +694,16 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         if($breedCodeString1 == null && $breedCodeString2 != null) {
             $animalSqlMiddle = $animalSqlMiddle." breed_code = '".$breedCodeString2."',";
         }
+
+        //transferState
+        $transferState1 = $primaryAnimalResultArray['transfer_state'];
+        $transferState2 = $secondaryAnimalResultArray['transfer_state'];
+
+        if (  ($transferState1 == AnimalTransferStatus::TRANSFERRING && $transferState2 !== AnimalTransferStatus::TRANSFERRING) ||
+            ($transferState1 !== AnimalTransferStatus::TRANSFERRED && $transferState2 === AnimalTransferStatus::TRANSFERRED)  ){
+            $animalSqlMiddle = $animalSqlMiddle." transfer_state = ".StringUtil::getNullAsStringOrWrapInQuotes($transferState2).",";
+        }
+
         
         if($animalSqlMiddle != '') {
             $this->conn->exec($animalSqlBeginning.rtrim($animalSqlMiddle,',').$animalSqlEnd);
@@ -791,6 +801,94 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             $newUlnNumber = $result['uln_number_replacement'];
             $sql = "UPDATE animal SET uln_country_code = '".$newUlnCountryCode."', uln_number = '".$newUlnNumber."' WHERE id = ".$primaryAnimalId;
             $this->conn->exec($sql);
+
+            $isSuccessFul = $this->mergeAnimalPairByIds($primaryAnimalId, $secondaryAnimalId);
+            if(!$isSuccessFul) { $unSuccessFulMergeCount++; }
+            $this->cmdUtil->advanceProgressBar(1, 'Failed merges: '.$unSuccessFulMergeCount);
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        return $unSuccessFulMergeCount == 0 ? true : false;
+    }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function fixDuplicateDueToTagReplaceAndAnimalSyncRaceCondition(CommandUtil $cmdUtil): bool
+    {
+        $this->setCmdUtil($cmdUtil);
+
+        $ignoreDuplicatesWithRvoDeclares = $cmdUtil->generateConfirmationQuestion(
+            'Ignore duplicates for new animals with rvoDeclares?',
+            true,
+            true
+        );
+
+        $rvoDeclareFilterPrefix = $ignoreDuplicatesWithRvoDeclares ? '--' : '';
+
+        $sql = "SELECT
+                  original.id as original_animal_id,
+                  new_animal.id as new_animal_id_to_be_deleted
+                FROM animal original
+                  INNER JOIN (
+                               SELECT
+                                 a.uln_country_code as duplicate_uln_country_code,
+                                 a.uln_number as duplicate_uln_number,
+                                 MAX(a.id) as newest_animal_id,
+                                 MIN(a.id) as oldest_animal_id
+                               FROM animal a
+                                 INNER JOIN (
+                                              SELECT
+                                                uln_country_code_replacement,
+                                                uln_number_replacement
+                                              FROM declare_tag_replace t
+                                                INNER JOIN declare_base b ON b.id = t.id
+                                              WHERE (
+                                                b.request_state = '".RequestStateType::FINISHED."' OR 
+                                                b.request_state = '".RequestStateType::FINISHED_WITH_WARNING."'
+                                              )
+                                              GROUP BY uln_country_code_replacement, uln_number_replacement
+                                            )g ON g.uln_country_code_replacement = a.uln_country_code AND g.uln_number_replacement = a.uln_number
+                               GROUP BY a.uln_country_code, a.uln_number HAVING COUNT(*) = 2
+                             )x ON x.oldest_animal_id = original.id
+                  INNER JOIN animal new_animal ON new_animal.id = x.newest_animal_id
+                  LEFT JOIN declare_birth birth on new_animal.id = birth.animal_id
+                  LEFT JOIN declare_arrival arrival on new_animal.id = arrival.animal_id
+                  LEFT JOIN declare_export export on new_animal.id = export.animal_id
+                  LEFT JOIN declare_depart depart on new_animal.id = depart.animal_id
+                  LEFT JOIN declare_import import on new_animal.id = import.animal_id
+                  LEFT JOIN declare_loss loss on new_animal.id = loss.animal_id
+                  LEFT JOIN declare_tag_replace tag_replace on new_animal.id = tag_replace.animal_id
+                WHERE
+                  ABS(DATE_PART('days', original.date_of_birth - new_animal.date_of_birth)) <= 1 -- has_similar_date_of_birth, might only deviate 1 day
+                  AND new_animal.gender = '".GenderType::NEUTER."'
+                  AND new_animal.parent_father_id ISNULL
+                  AND new_animal.parent_mother_id ISNULL
+                  AND new_animal.pedigree_country_code ISNULL
+                  AND new_animal.pedigree_number ISNULL
+                  AND new_animal.breed_code ISNULL
+                  AND new_animal.breed_type ISNULL
+                  AND new_animal.scrapie_genotype ISNULL
+                  AND new_animal.litter_id ISNULL
+                  ".$rvoDeclareFilterPrefix." AND arrival.id ISNULL AND birth.id ISNULL AND depart.id ISNULL AND export.id ISNULL
+                  ".$rvoDeclareFilterPrefix." AND import.id ISNULL AND loss.id ISNULL AND tag_replace.id ISNULL";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $totalCount = count($results);
+        if($totalCount == 0) {
+            $this->cmdUtil->writeln('There are no duplicate animals due to tagReplace errors!');
+            return true;
+        }
+
+        $unSuccessFulMergeCount = 0;
+        $this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
+        foreach ($results as $result) {
+            //Use the old animal with the correct gender as the primaryId so no gender change is necessary
+            $primaryAnimalId = $result['original_animal_id'];
+            $secondaryAnimalId = $result['new_animal_id_to_be_deleted'];
 
             $isSuccessFul = $this->mergeAnimalPairByIds($primaryAnimalId, $secondaryAnimalId);
             if(!$isSuccessFul) { $unSuccessFulMergeCount++; }
