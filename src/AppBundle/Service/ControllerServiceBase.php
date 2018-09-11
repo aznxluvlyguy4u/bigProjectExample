@@ -94,6 +94,13 @@ abstract class ControllerServiceBase
         return $this->manager;
     }
 
+    /**
+     * @return SqlViewManagerInterface
+     */
+    public function getSqlViewManager(): SqlViewManagerInterface
+    {
+        return $this->sqlViewManager;
+    }
 
     /**
      * @return Connection
