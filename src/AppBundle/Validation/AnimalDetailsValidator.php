@@ -61,7 +61,7 @@ class AnimalDetailsValidator extends BaseValidator
 
                     $company = $location->getCompany();
                     if ($company && !empty($company->getUbns())) {
-                        $this->isInputValid = Validator::isAnimalPublicForLocation(
+                        $this->isInputValid = Validator::isUserAllowedToAccessAnimalDetails(
                             $viewMinimalParentDetails,
                             $company,
                             $company->getUbns(),

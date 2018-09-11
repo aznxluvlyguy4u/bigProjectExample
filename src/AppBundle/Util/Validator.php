@@ -641,8 +641,8 @@ class Validator
      * @param int|null $locationIdOfUser
      * @return bool
      */
-    public static function isAnimalPublicForLocation(ViewMinimalParentDetails $animal, Company $companyOfUser,
-                                                     $currentUbnsOfUser = [], ?int $locationIdOfUser): bool
+    public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Company $companyOfUser,
+                                                              $currentUbnsOfUser = [], ?int $locationIdOfUser): bool
     {
         /*
          * 1. Always show animals on own location/ubn
