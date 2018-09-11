@@ -26,9 +26,7 @@ use AppBundle\Enumerator\BlindnessFactorType;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Util\NullChecker;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
+use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
@@ -637,73 +635,53 @@ class Validator
 
 
     /**
-     * Returns true is the animals should be included in the historicLivestock for the given location.
-     *
-     * @param ObjectManager $em
-     * @param Animal $animal
-     * @param Location $locationOfUser
+     * @param ViewMinimalParentDetails $animal
+     * @param Company $companyOfUser
+     * @param array $currentUbnsOfUser
+     * @param int|null $locationIdOfUser
      * @return bool
      */
-    public static function isAnimalPublicForLocation(ObjectManager $em, Animal $animal, Location $locationOfUser)
+    public static function isAnimalPublicForLocation(ViewMinimalParentDetails $animal, Company $companyOfUser,
+                                                     $currentUbnsOfUser = [], ?int $locationIdOfUser): bool
     {
-        if(!($animal instanceof Animal) || !($locationOfUser instanceof Location)) { return false; }
+        /*
+         * 1. Always show animals on own location/ubn
+         * &
+         * 2. Always allow user to see his own historic animals
+         *
+         * Note, the current ubn is included in the historic ubns list of the sqlViews
+         */
 
-        //1. Always show animals on own location/ubn
-
-        if($animal->getLocation()) {
-            if($animal->getLocation()->getId() == $locationOfUser->getId()) { return true; }
+        if (!empty($animal->getHistoricUbns()) && !empty($currentUbnsOfUser)) {
+            return ArrayUtil::hasAtLeastOneValueInArray($animal->getHistoricUbnsAsArray(), $currentUbnsOfUser);
         }
 
-        //2. Always allow user to see his own historic animals
-        foreach ($animal->getAnimalResidenceHistory() as $animalResidence)
-        {
-            if ($animalResidence->getLocation() && $locationOfUser) {
-                if ($animalResidence->getLocation()->getId() == $locationOfUser->getId()) {
-                    return true;
-                }
-            }
+        //3. Always allow breeder to see his own animals!
+        if ($locationIdOfUser && $locationIdOfUser === $animal->getLocationOfBirthId()) {
+            return true;
         }
 
-        $locationOfBirth = $animal->getLocationOfBirth();
-        if($locationOfBirth) {
+        /*
+         * 4. For the public, allow access to all public animals
+         */
+        if (!$companyOfUser) {
+            return $animal->isPublic();
 
-            //3. Always allow breeder to see his own animals!
-            if($locationOfUser->getId() == $locationOfBirth->getId()) {
-                return true;
-            }
+        } elseif ($companyOfUser->getIsRevealHistoricAnimals()) {
 
-            $company = $locationOfBirth->getCompany();
-            if($company) {
+            /*
+             * 5. If user set own livestock to public, allow access to all public animals
+             */
 
-                //4. Always allow, if location was deactivated
-                if(!$company->isActive()){
-                    return true;
+            // TODO 7. Set a delay before giving access to animal using $company->getLastMakeLivestockPublicDate()
 
-                    //5. Else only show Animal if it is an historic animals and if owner ubnOfBirth allows it
-                } else {
-                    return $company->getIsRevealHistoricAnimals();
-                }
-            }
+            return $animal->isPublic();
         }
 
-        //6. If no locationOfBirth is registered, show if animal has animal has ever been on the location of the user.
-
-        /** @var \Doctrine\ORM\EntityManager $em */
-        $queryBuilder = $em->createQueryBuilder();
-        $queryBuilder
-            ->select('COUNT(animalResidence.id)')
-            ->from ('AppBundle:AnimalResidence', 'animalResidence')
-            ->where('animalResidence.location = :locationId')
-            ->andWhere('animalResidence.animal = :animalId')
-            ->setParameter('locationId', $locationOfUser->getId())
-            ->setParameter('animalId', $animal->getId());
-
-        $query = $queryBuilder->getQuery();
-        //TODO use redis, for example: $query->useResultCache(true, 3600, 'animalPublicForLocation');
-        $count = $query->getResult()[0][1];
-
-        if($count > 0) { return true; }
-
+        /*
+         * 6. ... else block animals not belonging to user in points 1-3,
+         * to encourage the user to reveal his own livestock
+         */
         return false;
     }
 

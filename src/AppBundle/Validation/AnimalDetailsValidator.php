@@ -10,6 +10,9 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
+use AppBundle\SqlView\SqlViewManagerInterface;
+use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -29,11 +32,13 @@ class AnimalDetailsValidator extends BaseValidator
     /**
      * AnimalDetailsValidator constructor.
      * @param ObjectManager $em
+     * @param SqlViewManagerInterface $sqlViewManager
      * @param boolean $isAdmin
      * @param Location $location
      * @param string $ulnString
      */
-    public function __construct(ObjectManager $em, $isAdmin, $location, $ulnString)
+    public function __construct(ObjectManager $em, SqlViewManagerInterface $sqlViewManager,
+                                $isAdmin, $location, $ulnString)
     {
         parent::__construct($em, new ArrayCollection());
         $this->em = $em;
@@ -50,7 +55,19 @@ class AnimalDetailsValidator extends BaseValidator
                 if($isAdmin) {
                     $this->isInputValid = true;
                 } else {
-                    $this->isInputValid = Validator::isAnimalPublicForLocation($this->em, $this->animal, $location);
+                    /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsManager */
+                    $viewMinimalParentDetailsManager = $sqlViewManager->get(ViewMinimalParentDetails::class);
+                    $viewMinimalParentDetails = $viewMinimalParentDetailsManager->findOneByAnimalId($this->animal->getId());
+
+                    $company = $location->getCompany();
+                    if ($company && !empty($company->getUbns())) {
+                        $this->isInputValid = Validator::isAnimalPublicForLocation(
+                            $viewMinimalParentDetails,
+                            $company,
+                            $company->getUbns(),
+                            $location->getId()
+                        );
+                    }
 
                     if($this->isInputValid == false) {
                         $this->errors[] = self::ERROR_UNAUTHORIZED_FOR_ANIMAL;

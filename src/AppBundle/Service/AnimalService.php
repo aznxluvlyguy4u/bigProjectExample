@@ -782,7 +782,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = null;
         if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
 
-        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $isAdmin, $location, $ulnString);
+        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $this->getSqlViewManager(), $isAdmin, $location, $ulnString);
         if(!$animalDetailsValidator->getIsInputValid()) {
             return $animalDetailsValidator->createJsonResponse();
         }
