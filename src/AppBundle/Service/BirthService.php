@@ -837,7 +837,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $result['suggested_candidate_surrogates'] = $suggestedCandidatesResult;
         $result['other_candidate_surrogates'] = $otherCandidatesResult;
-die;
+
         return ResultUtil::successResult($result);
     }
 

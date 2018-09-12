@@ -207,7 +207,7 @@ class Ram extends Animal implements ParentInterface
         $declareBirths = [];
 
         /** @var Litter $litter */
-        foreach ($this->litters as $litter) {//dump($litter->getChildren());die;
+        foreach ($this->litters as $litter) {
             foreach ($litter->getDeclareBirths() as $birth) {
                 $declareBirths[] = $birth;
             }
