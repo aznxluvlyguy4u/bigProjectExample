@@ -22,6 +22,16 @@ class AnimalCriteria
 
 
     /**
+     * @param bool $sortAscending
+     * @return Criteria
+     */
+    public static function sortByDateOfBirth(bool $sortAscending = true): Criteria
+    {
+        return Criteria::create()->orderBy(['dateOfBirth' => ($sortAscending ? Criteria::ASC : Criteria::DESC)]);
+    }
+
+
+    /**
      * @param array $ulnPartsArray
      * @param array $stnPartsArray
      * @param string $animalKey

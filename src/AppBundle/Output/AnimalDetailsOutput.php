@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Criteria\AnimalCriteria;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
@@ -366,11 +367,13 @@ class AnimalDetailsOutput extends OutputServiceBase
 
         $genderPrimaryParent = $animal->getGender();
 
-        $children = [];
+        $childrenArray = [];
 
         if ($animal instanceof ParentInterface) {
 
-            foreach ($animal->getChildren() as $child) {
+            $sortedChildren = $animal->getChildren()->matching(AnimalCriteria::sortByDateOfBirth(true));
+
+            foreach ($sortedChildren as $child) {
 
                 $childArray = $this->getSerializer()->getDecodedJson($child, [JmsGroup::CHILD],true);
 
@@ -407,12 +410,12 @@ class AnimalDetailsOutput extends OutputServiceBase
                     $childArray[$secondaryParentKey] = $this->getSerializer()->getDecodedJson($secondaryParent, [JmsGroup::PARENT_OF_CHILD],true);;
                 }
 
-                $children[] = $childArray;
+                $childrenArray[] = $childArray;
             }
 
         }
 
-        return $children;
+        return $childrenArray;
     }
 
 
