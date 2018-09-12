@@ -403,7 +403,7 @@ class AnimalDetailsOutput extends OutputServiceBase
 
         if ($animal instanceof ParentInterface) {
 
-            $sortedChildren = $animal->getChildren()->matching(AnimalCriteria::sortByDateOfBirth(true));
+            $sortedChildren = $animal->getChildren()->matching(AnimalCriteria::sortByDateOfBirthAndAnimalOrderNumber(true));
 
             foreach ($sortedChildren as $child) {
 
