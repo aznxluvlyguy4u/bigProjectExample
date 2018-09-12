@@ -33,6 +33,7 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\PedigreeUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 /**
  * Class DeclareAnimalDetailsOutput
@@ -61,12 +62,12 @@ class AnimalDetailsOutput extends OutputServiceBase
     /**
      * @param Animal $animal
      * @param Person $user
-     * @param Location $location
+     * @param Location|null $location
      * @param bool $includeAscendants
      * @return array
      * @throws \Exception
      */
-    public function getForUserEnvironment(Animal $animal, Person $user, Location $location, $includeAscendants = false)
+    public function getForUserEnvironment(Animal $animal, Person $user, ?Location $location, $includeAscendants = false)
     {
         return $this->get($animal, $user, $location, $includeAscendants);
     }
@@ -74,13 +75,17 @@ class AnimalDetailsOutput extends OutputServiceBase
     /**
      * @param Animal $animal
      * @param Person $user
-     * @param Location $location
-     * @param boolean $includeAscendants
+     * @param Location|null $location
+     * @param bool $includeAscendants
      * @return array
      * @throws \Exception
      */
-    public function get(Animal $animal, Person $user, Location $location, $includeAscendants = false)
+    public function get(Animal $animal, Person $user, ?Location $location, $includeAscendants = false)
     {
+        if (!($user instanceof Employee) && !$location) {
+            throw new PreconditionFailedHttpException('If user is not an admin, location cannot be null');
+        }
+
         $replacementString = "";
 
         $mother = $animal->getParentMother();
@@ -331,10 +336,10 @@ class AnimalDetailsOutput extends OutputServiceBase
     /**
      * @param ViewMinimalParentDetails $animal
      * @param Person $person
-     * @param Location $location
+     * @param Location|null $location
      * @return bool
      */
-    private function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, Location $location)
+    private function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Location $location)
     {
         if ($person instanceof Employee) {
             return true;
@@ -354,7 +359,7 @@ class AnimalDetailsOutput extends OutputServiceBase
     }
 
 
-    private function getChildren(Animal $animal, Person $user, Location $location)
+    private function getChildren(Animal $animal, Person $user, ?Location $location)
     {
         /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
         $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
