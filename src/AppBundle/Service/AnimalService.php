@@ -803,6 +803,55 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     }
 
     /**
+     * @param Request $request
+     * @param string $ulnString
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function getChildrenByUln(Request $request, $ulnString)
+    {
+        //VWA environment
+        if ($this->getUser() instanceof VwaEmployee) {
+            throw AdminValidator::standardException();
+        }
+
+        //Admin environment
+        $location = null;
+        $isAdminEnvironment = RequestUtil::getBooleanQuery($request, JsonInputConstant::IS_ADMIN_ENV);
+        if($isAdminEnvironment) {
+            if(!AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::ADMIN))
+            { throw AdminValidator::standardException(); }
+
+            $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
+            if($animal === null) {
+                return ResultUtil::errorResult("No animal was found with uln: ".$ulnString, Response::HTTP_NOT_FOUND);
+            }
+
+        } else {
+            //User environment
+            $isAdmin = AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::ADMIN);
+
+            $location = null;
+            if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
+
+            $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $this->getSqlViewManager(), $isAdmin, $location, $ulnString);
+            if(!$animalDetailsValidator->getIsInputValid()) {
+                return $animalDetailsValidator->createJsonResponse();
+            }
+
+            $animal = $animalDetailsValidator->getAnimal();
+        }
+
+        return ResultUtil::successResult(
+            $this->animalDetailsOutput->getChildrenOutput(
+                $animal,
+                $this->getUser(),
+                $location
+            )
+        );
+    }
+
+    /**
      * @param string $ulnString
      * @return JsonResponse
      */

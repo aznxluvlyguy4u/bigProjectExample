@@ -73,6 +73,19 @@ class AnimalDetailsOutput extends OutputServiceBase
         return $this->get($animal, $user, $location, $includeAscendants);
     }
 
+
+    /**
+     * @param Person $user
+     * @param Location|null $location
+     */
+    private function validateLocation(Person $user, ?Location $location)
+    {
+        if (!($user instanceof Employee) && !$location) {
+            throw new PreconditionFailedHttpException('If user is not an admin, location cannot be null');
+        }
+    }
+
+
     /**
      * @param Animal $animal
      * @param Person $user
@@ -83,9 +96,7 @@ class AnimalDetailsOutput extends OutputServiceBase
      */
     public function get(Animal $animal, Person $user, ?Location $location, $includeAscendants = false)
     {
-        if (!($user instanceof Employee) && !$location) {
-            throw new PreconditionFailedHttpException('If user is not an admin, location cannot be null');
-        }
+        $this->validateLocation($user, $location);
 
         $replacementString = "";
 
@@ -242,7 +253,7 @@ class AnimalDetailsOutput extends OutputServiceBase
             "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
             "declare_log" => $this->getLog($animal, $animal->getLocation(), $replacementString),
-            "children" => $this->getChildren($animal, $user, $location),
+            "child_count" => $animalRepository->offspringCount($animal),
             "production" => $production,
         ];
 
@@ -360,7 +371,28 @@ class AnimalDetailsOutput extends OutputServiceBase
     }
 
 
-    private function getChildren(Animal $animal, Person $user, ?Location $location)
+    /**
+     * @param Animal $animal
+     * @param Person $user
+     * @param Location|null $location
+     * @return array
+     * @throws \Exception
+     */
+    public function getChildrenOutput(Animal $animal, Person $user, ?Location $location): array
+    {
+        $this->validateLocation($user, $location);
+        return $this->getChildren($animal, $user, $location);
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param Person $user
+     * @param Location|null $location
+     * @return array
+     * @throws \Exception
+     */
+    private function getChildren(Animal $animal, Person $user, ?Location $location): array
     {
         /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
         $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);

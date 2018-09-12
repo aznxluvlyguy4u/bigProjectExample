@@ -40,6 +40,7 @@ use Doctrine\ORM\Query\Parameter;
 use Symfony\Component\Console\Output\OutputInterface;
 use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Class AnimalRepository
@@ -1438,10 +1439,32 @@ class AnimalRepository extends BaseRepository
     }
 
 
-  /**
-   * @param $animalId
-   * @return int
-   */
+    /**
+     * @param Animal $animal
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function offspringCount(Animal $animal): int
+    {
+        if (!($animal instanceof ParentInterface)) {
+            return 0;
+        }
+
+        $animalId = $animal->getId();
+        if (empty($animalId) || !is_int($animalId)) {
+            throw new BadRequestHttpException('Animal.id is missing');
+        }
+        $animalId = intval($animalId);
+
+        return $this->getOffspringCount($animalId);
+    }
+
+
+    /**
+     * @param $animalId
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
   public function getOffspringCount($animalId)
   {
     if(!is_int($animalId)) { return 0; }

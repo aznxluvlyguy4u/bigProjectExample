@@ -464,11 +464,41 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @return JsonResponse
    * @Route("-details/{ulnString}")
    * @Method("GET")
+   * @throws \Exception
    */
   public function getAnimalDetailsByUln(Request $request, $ulnString)
   {
       return $this->get('app.animal')->getAnimalDetailsByUln($request, $ulnString);
   }
+
+
+    /**
+     * Get children of animal by ULN. For example NL100029511721
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get children of animal by ULN. For example NL100029511721"
+     * )
+     * @param Request $request the request object
+     * @param string $ulnString
+     * @return JsonResponse
+     * @Route("-details/{ulnString}/children")
+     * @Method("GET")
+     * @throws \Exception
+     */
+    public function getChildrenByUln(Request $request, $ulnString)
+    {
+        return $this->get('app.animal')->getChildrenByUln($request, $ulnString);
+    }
 
 
 	/**
