@@ -13,6 +13,7 @@ use PhpTwinfield\Customer;
 use PhpTwinfield\Exception;
 use PhpTwinfield\InvoiceLine;
 use PhpTwinfield\Office;
+use Symfony\Component\HttpFoundation\Response;
 
 class ExternalProviderInvoiceService extends ExternalProviderBase implements ExternalProviderInterface
 {
@@ -41,6 +42,12 @@ class ExternalProviderInvoiceService extends ExternalProviderBase implements Ext
         $this->invoiceConnection = new InvoiceApiConnector($this->getAuthenticator()->getConnection());
     }
 
+
+    /**
+     * @param Invoice $invoice
+     * @return \Exception|Customer|Exception|\PhpTwinfield\Invoice
+     * @throws \Exception
+     */
     public function sendInvoiceToTwinfield(Invoice $invoice) {
         /** @var Customer $customer */
         $customer = $this->twinfieldCustomerService
@@ -67,10 +74,28 @@ class ExternalProviderInvoiceService extends ExternalProviderBase implements Ext
             $this->setupInvoiceLine($selection, $twinfieldInvoice);
         }
 
+        $this->resetRetryCount();
+        return $this->sendTwinfieldInvoice($twinfieldInvoice);
+    }
+
+    /**
+     * @param \PhpTwinfield\Invoice $twinfieldInvoice
+     * @return \PhpTwinfield\Invoice
+     * @throws \Exception
+     */
+    private function sendTwinfieldInvoice(\PhpTwinfield\Invoice $twinfieldInvoice): \PhpTwinfield\Invoice
+    {
         try {
             return $this->invoiceConnection->send($twinfieldInvoice);
-        } catch (Exception $e) {
-            return $e;
+        } catch (\Exception $exception) {
+            if (!$this->allowRetryTwinfieldApiCall($exception)) {
+                $this->resetRetryCount();
+                throw new \Exception($exception->getMessage(),Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $this->incrementRetryCount();
+            $this->reAuthenticate();
+            return $this->sendTwinfieldInvoice($twinfieldInvoice);
         }
     }
 

@@ -38,6 +38,7 @@ class ExternalProviderAPIController extends APIController implements ExternalPro
      * @Method("GET")
      * @Route("/offices/{office}/customers")
      * @return JsonResponse
+     * @throws \Exception
      */
     public function getCustomers($office)
     {
@@ -62,8 +63,9 @@ class ExternalProviderAPIController extends APIController implements ExternalPro
      * @Method("GET")
      * @Route("/offices")
      * @return JsonResponse
+     * @throws \Exception
      */
     public function getOffices() {
-        return $this->get(ExternalProviderOfficeService::class)->getAllOfficesResponse();
+        return $this->get(ExternalProviderOfficeService::class)->getAllOffices();
     }
 }
