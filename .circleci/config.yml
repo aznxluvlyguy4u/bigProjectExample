@@ -34,6 +34,7 @@ jobs:
       - run: sudo docker-php-ext-configure intl
       - run: sudo docker-php-ext-install intl
       - run: sudo docker-php-ext-install pdo_mysql
+      - run: sudo docker-php-ext-install soap
       - run: sudo apt-get install unzip
       - run: cp app/config/parameters_test.circle.yml app/config/parameters.yml
 
