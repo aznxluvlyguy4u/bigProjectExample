@@ -4,7 +4,8 @@
     "type": "project",
     "autoload": {
         "psr-4": {
-            "": "src/"
+            "AppBundle\\": "src/AppBundle",
+            "SymfonyStandard\\": "app/SymfonyStandard/"
         },
         "classmap": [
             "app/AppKernel.php",
@@ -13,7 +14,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "src/AppBundle/Tests/Controller/"
+            "Tests\\": "tests/"
         }
     },
     "require": {
@@ -51,7 +52,8 @@
         "symfony/phpunit-bridge": "^3.0",
         "doctrine/doctrine-fixtures-bundle": "^2.3",
         "liip/functional-test-bundle": "^1.6",
-        "fzaninotto/faker": "^1.7"
+        "fzaninotto/faker": "^1.7",
+        "phpunit/phpunit": "~5.7"
     },
     "scripts": {
         "post-install-cmd": [
@@ -82,7 +84,7 @@
         "symfony-bin-dir": "bin",
         "symfony-var-dir": "var",
         "symfony-web-dir": "web",
-        "symfony-tests-dir": "src/AppBundle/Tests/Controller",
+        "symfony-tests-dir": "tests",
         "symfony-assets-install": "relative",
         "incenteev-parameters": {
             "file": "app/config/parameters.yml"
