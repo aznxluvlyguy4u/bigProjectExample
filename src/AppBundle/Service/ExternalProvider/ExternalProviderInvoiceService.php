@@ -8,33 +8,14 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRuleSelection;
 use AppBundle\Enumerator\TwinfieldEnums;
-use AppBundle\Service\BaseSerializer;
-use AppBundle\Service\CacheService;
-use AppBundle\Service\ControllerServiceBase;
-use AppBundle\Service\UserService;
-use Doctrine\ORM\EntityManagerInterface;
-use PhpTwinfield\ApiConnectors\CustomerApiConnector;
 use PhpTwinfield\ApiConnectors\InvoiceApiConnector;
-use PhpTwinfield\Article;
 use PhpTwinfield\Customer;
 use PhpTwinfield\Exception;
 use PhpTwinfield\InvoiceLine;
 use PhpTwinfield\Office;
-use PhpTwinfield\Request\Read\Transaction;
-use PhpTwinfield\Secure\WebservicesAuthentication;
-use Symfony\Bridge\Monolog\Logger;
-use Symfony\Component\Translation\TranslatorInterface;
 
-class ExternalProviderInvoiceService extends ControllerServiceBase
+class ExternalProviderInvoiceService extends ExternalProviderBase implements ExternalProviderInterface
 {
-    /** @var WebservicesAuthentication */
-    private $authenticationConnection;
-
-    private $user;
-
-    private $password;
-
-    private $organisation;
     /**
      * @var InvoiceApiConnector
      */
@@ -42,24 +23,22 @@ class ExternalProviderInvoiceService extends ControllerServiceBase
     /** @var ExternalProviderCustomerService */
     private $twinfieldCustomerService;
 
-    public function instantiateServices(
-        $twinfieldUser,
-        $twinfieldPassword,
-        $twinfieldOrganisation,
-        ExternalProviderCustomerService $twinfieldCustomerService
-    ) {
-        $this->authenticationConnection =
-            new WebservicesAuthentication(
-            $twinfieldUser,
-            $twinfieldPassword,
-            $twinfieldOrganisation
-            );
-
-        $this->invoiceConnection = new InvoiceApiConnector($this->authenticationConnection);
+    /**
+     * @required
+     *
+     * @param ExternalProviderCustomerService $twinfieldCustomerService
+     */
+    public function setExternalProviderCustomerService(ExternalProviderCustomerService $twinfieldCustomerService) {
         $this->twinfieldCustomerService = $twinfieldCustomerService;
-        $this->user = $twinfieldUser;
-        $this->password = $twinfieldPassword;
-        $this->organisation = $twinfieldOrganisation;
+    }
+
+
+    /**
+     * @required
+     */
+    public function reAuthenticate() {
+        $this->getAuthenticator()->refreshConnection();
+        $this->invoiceConnection = new InvoiceApiConnector($this->getAuthenticator()->getConnection());
     }
 
     public function sendInvoiceToTwinfield(Invoice $invoice) {
@@ -108,22 +87,9 @@ class ExternalProviderInvoiceService extends ControllerServiceBase
 
     private function setVatCode(InvoiceRuleSelection $selection, InvoiceLine $line) {
         switch ($selection->getInvoiceRule()->getVatPercentageRate()) {
-            case 0:
-                $line->setVatCode(TwinfieldEnums::NO_VAT);
-                break;
-
-            case 6:
-                $line->setVatCode(TwinfieldEnums::LOW_VAT);
-                break;
-
-            case 21:
-                $line->setVatCode(TwinfieldEnums::HIGH_VAT);
-                break;
+            case 0: $line->setVatCode(TwinfieldEnums::NO_VAT); break;
+            case 6: $line->setVatCode(TwinfieldEnums::LOW_VAT); break;
+            case 21: $line->setVatCode(TwinfieldEnums::HIGH_VAT); break;
         }
-    }
-
-    public function reAuthenticate() {
-        $this->authenticationConnection = new WebservicesAuthentication($this->user, $this->password, $this->organisation);
-        $this->invoiceConnection = new InvoiceApiConnector($this->authenticationConnection);
     }
 }

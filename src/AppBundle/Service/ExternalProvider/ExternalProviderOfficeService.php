@@ -6,17 +6,18 @@ namespace AppBundle\Service\ExternalProvider;
 
 use AppBundle\Component\ExternalProvider\ApiConnectors\OfficeApiConnector;
 use AppBundle\Util\ResultUtil;
-use PhpTwinfield\Secure\WebservicesAuthentication;
 
-class ExternalProviderOfficeService
+class ExternalProviderOfficeService extends ExternalProviderBase implements ExternalProviderInterface
 {
-    private $authenticationConnection;
     /** @var OfficeApiConnector $officeConnection */
     private $officeConnection;
 
-    public function instantiateServices( $twinfieldUser, $twinfieldPassword, $twinfieldOrganisation) {
-        $this->authenticationConnection = new WebservicesAuthentication($twinfieldUser, $twinfieldPassword, $twinfieldOrganisation);
-        $this->officeConnection = new OfficeApiConnector($this->authenticationConnection);
+    /**
+     * @required
+     */
+    public function reAuthenticate() {
+        $this->getAuthenticator()->refreshConnection();
+        $this->officeConnection = new OfficeApiConnector($this->getAuthenticator()->getConnection());
     }
 
     public function getAllOfficesResponse() {

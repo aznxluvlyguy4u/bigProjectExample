@@ -8,21 +8,32 @@ use AppBundle\Util\ResultUtil;
 use PhpTwinfield\ApiConnectors\CustomerApiConnector;
 use PhpTwinfield\Exception;
 use PhpTwinfield\Office;
-use PhpTwinfield\Secure\WebservicesAuthentication;
 
-class ExternalProviderCustomerService
+class ExternalProviderCustomerService extends ExternalProviderBase implements ExternalProviderInterface
 {
-    private $authenticationConnection;
     /** @var CustomerApiConnector */
     private $customerConnection;
     /** @var ExternalProviderOfficeService */
     private $twinfieldOfficeService;
 
-    public function instantiateServices($twinfieldUser, $twinfieldPassword, $twinfieldOrganisation, ExternalProviderOfficeService $officeService) {
-        $this->authenticationConnection = new WebservicesAuthentication($twinfieldUser, $twinfieldPassword, $twinfieldOrganisation);
-        $this->customerConnection = new CustomerApiConnector($this->authenticationConnection);
+
+    /**
+     * @required
+     *
+     * @param ExternalProviderOfficeService $officeService
+     */
+    public function setExternalProviderOfficeService(ExternalProviderOfficeService $officeService) {
         $this->twinfieldOfficeService = $officeService;
     }
+
+    /**
+     * @required
+     */
+    public function reAuthenticate() {
+        $this->getAuthenticator()->refreshConnection();
+        $this->customerConnection = new CustomerApiConnector($this->getAuthenticator()->getConnection());
+    }
+
 
     public function getAllCustomers($officeCode) {
         $office = new Office();

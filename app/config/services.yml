@@ -895,32 +895,36 @@ services:
     AppBundle\Service\Migration\ScrapieGenotypeReprocessor:
         parent: app.pedigree_data_reprocessor.base
 
-    AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService:
-        parent: app.abstract_base.controller
+
+    app.abstract_base.external_provider:
+        abstract: true
+        arguments:
+            - '@AppBundle\Service\ExternalProvider\ExternalProviderAuthenticator'
         calls:
-            - method: instantiateServices
+            - method: reAuthenticate
+
+    AppBundle\Service\ExternalProvider\ExternalProviderAuthenticator:
+        arguments:
+            - '%external_provider_user%'
+            - '%external_provider_password%'
+            - '%external_provider_organisation%'
+
+    AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService:
+        parent: app.abstract_base.external_provider
+        calls:
+            - method: setExternalProviderCustomerService
               arguments:
-                - '%external_provider_user%'
-                - '%external_provider_password%'
-                - '%external_provider_organisation%'
                 - '@AppBundle\Service\ExternalProvider\ExternalProviderCustomerService'
 
     AppBundle\Service\ExternalProvider\ExternalProviderCustomerService:
+        parent: app.abstract_base.external_provider
         calls:
-            - method: instantiateServices
+            - method: setExternalProviderOfficeService
               arguments:
-                - '%external_provider_user%'
-                - '%external_provider_password%'
-                - '%external_provider_organisation%'
                 - '@AppBundle\Service\ExternalProvider\ExternalProviderOfficeService'
 
     AppBundle\Service\ExternalProvider\ExternalProviderOfficeService:
-        calls:
-            - method: instantiateServices
-              arguments:
-                - '%external_provider_user%'
-                - '%external_provider_password%'
-                - '%external_provider_organisation%'
+        parent: app.abstract_base.external_provider
 
     AppBundle\SqlView\SqlViewManager:
         arguments:
