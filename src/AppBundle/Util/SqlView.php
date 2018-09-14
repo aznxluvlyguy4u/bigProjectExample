@@ -224,15 +224,12 @@ class SqlView
                 a.breed_code,
                 a.scrapie_genotype,
                 a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter,
-                COALESCE(comp.is_reveal_historic_animals, TRUE) as is_public,
+                COALESCE(residences.is_public, TRUE) as is_public,
                 a.location_of_birth_id,
                 residences.historic_ubns,
                 residences.historic_location_ids
               FROM animal a
                 LEFT JOIN location l ON a.location_id = l.id
-                LEFT JOIN (
-                  SELECT id, is_reveal_historic_animals FROM company WHERE is_active
-                )comp ON l.company_id = comp.id
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
                 LEFT JOIN (VALUES (true, '*'),(false, '')) AS production_asterisk_dad(bool_val, mark)
                   ON c.gave_birth_as_one_year_old = production_asterisk_dad.bool_val
@@ -408,22 +405,33 @@ class SqlView
                       -- TRIM(BOTH '{,}' FROM CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT)) as historic_ubns,
                       -- TRIM(BOTH '{,}' FROM CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT)) as historic_location_ids
                       REPLACE( REPLACE( CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT),'{', '['), '}', ']') as historic_ubns,
-                      REPLACE( REPLACE( CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT) ,'{', '['), '}', ']') as historic_location_ids
+                      REPLACE( REPLACE( CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT) ,'{', '['), '}', ']') as historic_location_ids,
+                      (TRUE = ALL(array_agg(is_blocked_by_at_least_one_historic_active_owner)::boolean[])) = FALSE as is_public
                     FROM (
                            SELECT
                              r.animal_id,
-                             r.location_id
+                             r.location_id,
+                             FALSE = ANY(array_agg(COALESCE(comp.is_reveal_historic_animals, TRUE))::boolean[]) as is_blocked_by_at_least_one_historic_active_owner
                            FROM animal_residence r
                              INNER JOIN location l on r.location_id = l.id
+                             LEFT JOIN (
+                                         SELECT id, is_reveal_historic_animals FROM company WHERE is_active
+                                       )comp ON l.company_id = comp.id
                            GROUP BY r.animal_id, r.location_id
-                           
+                    
                            UNION
-
+                    
                            SELECT
-                           id as animal_id,
-                           location_id
-                           FROM animal
-                           WHERE location_id NOTNULL
+                             a.id as animal_id,
+                             a.location_id,
+                             FALSE = ANY(array_agg(COALESCE(comp.is_reveal_historic_animals, TRUE))::boolean[]) as is_blocked_by_at_least_one_historic_active_owner
+                           FROM animal a
+                             INNER JOIN location l on a.location_id = l.id
+                             LEFT JOIN (
+                                         SELECT id, is_reveal_historic_animals FROM company WHERE is_active
+                                       )comp ON l.company_id = comp.id
+                           WHERE a.location_id NOTNULL
+                           GROUP BY a.id, a.location_id
                          ) r
                       INNER JOIN location l on r.location_id = l.id
                     GROUP BY r.animal_id";
