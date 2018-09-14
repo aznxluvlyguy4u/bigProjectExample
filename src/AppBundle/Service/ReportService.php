@@ -156,7 +156,8 @@ class ReportService
         $content = RequestUtil::getContentAsArray($request);
 
         //Validate if given ULNs are correct AND there should at least be one ULN given
-        $ulnValidator = new UlnValidator($this->em, $content, true, null, $this->userService->getSelectedLocation($request));
+        // Set location = null, to allow anyone to access all pedigreeCertificates
+        $ulnValidator = new UlnValidator($this->em, $content, true, null, null);
         if(!$ulnValidator->getIsUlnSetValid()) {
             return $ulnValidator->createArrivalJsonErrorResponse();
         }
