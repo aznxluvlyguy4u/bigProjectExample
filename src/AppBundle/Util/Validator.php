@@ -652,8 +652,9 @@ class Validator
          * Note, the current ubn is included in the historic ubns list of the sqlViews
          */
 
-        if (!empty($animal->getHistoricUbns()) && !empty($currentUbnsOfUser)) {
-            return ArrayUtil::hasAtLeastOneValueInArray($animal->getHistoricUbnsAsArray(), $currentUbnsOfUser);
+        if (!empty($animal->getHistoricUbns()) && !empty($currentUbnsOfUser)
+        && ArrayUtil::hasAtLeastOneValueInArray($animal->getHistoricUbnsAsArray(), $currentUbnsOfUser)) {
+            return true;
         }
 
         //3. Always allow breeder to see his own animals!
