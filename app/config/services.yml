@@ -486,6 +486,7 @@ services:
     app.report.pedigree_certificates:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeCertificateReportService
+        lazy: true
 
     AppBundle\Service\Report\PedigreeRegisterOverviewReportService:
         parent: app.report.base
@@ -579,6 +580,7 @@ services:
           - '@app.user'
           - '@translator'
           - '@logger'
+          - '@app.report.pedigree_certificates'
 
 
     AppBundle\Processor\ReportProcessor:

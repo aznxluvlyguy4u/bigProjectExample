@@ -12,6 +12,7 @@ use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
+use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -61,6 +62,9 @@ class ReportService
      */
     private $logger;
 
+    /** @var PedigreeCertificateReportService */
+    private $pedigreeCertificateReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -69,6 +73,7 @@ class ReportService
      * @param UserService $userService
      * @param TranslatorInterface $translator
      * @param Logger $logger
+     * @param PedigreeCertificateReportService $pedigreeCertificateReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -76,7 +81,8 @@ class ReportService
         EntityManager $em,
         UserService $userService,
         TranslatorInterface $translator,
-        Logger $logger
+        Logger $logger,
+        PedigreeCertificateReportService $pedigreeCertificateReportService
     )
     {
         $this->em = $em;
@@ -85,6 +91,7 @@ class ReportService
         $this->userService = $userService;
         $this->translator = $translator;
         $this->logger = $logger;
+        $this->pedigreeCertificateReportService = $pedigreeCertificateReportService;
     }
 
     /**
@@ -141,20 +148,38 @@ class ReportService
 
     /**
      * @param Request $request
-     * @return \AppBundle\Component\HttpFoundation\JsonResponse
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      * @throws \Exception
      */
-    public function createPedigreeCertificates(Request $request): JsonResponse
+    public function createPedigreeCertificates(Request $request)
     {
         $content = RequestUtil::getContentAsArray($request);
-        $contentAsJson = JSON::encode($content->toArray());
-        $inputForHash = $contentAsJson;
 
         //Validate if given ULNs are correct AND there should at least be one ULN given
         $ulnValidator = new UlnValidator($this->em, $content, true, null, $this->userService->getSelectedLocation($request));
         if(!$ulnValidator->getIsUlnSetValid()) {
             return $ulnValidator->createArrivalJsonErrorResponse();
         }
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->createPedigreeCertificatesAsWorkerTask($request);
+        }
+
+        return $this->createPedigreeCertificatesWithoutWorker($request);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    private function createPedigreeCertificatesAsWorkerTask(Request $request)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+        $contentAsJson = JSON::encode($content->toArray());
+        $inputForHash = $contentAsJson;
 
         try {
             $reportType = ReportType::PEDIGREE_CERTIFICATE;
@@ -164,7 +189,7 @@ class ReportService
             }
 
             $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if(!$workerId)
+            if (!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
@@ -180,6 +205,28 @@ class ReportService
         }
         return ResultUtil::successResult('OK');
     }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    private function createPedigreeCertificatesWithoutWorker(Request $request)
+    {
+        $person = $this->userService->getAccountOwner($request);
+        $location = $this->userService->getSelectedLocation($request);
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+        $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
+        $content = RequestUtil::getContentAsArray($request);
+
+        $report = $this->pedigreeCertificateReportService->getReport($person, $location, $fileType, $content, $language);
+        if ($report instanceof Response) {
+            return $report;
+        }
+        return ResultUtil::successResult($report);
+    }
+
 
     /**
      * @param Request $request
