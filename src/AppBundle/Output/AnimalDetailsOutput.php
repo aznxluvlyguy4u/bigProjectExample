@@ -263,7 +263,7 @@ class AnimalDetailsOutput extends OutputServiceBase
             $viewParentFather->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentFather, $user));
             $result["parent_father"] = $this->getSerializer()->getDecodedJson($viewParentFather);
             $result["parent_father"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                $this->isUserAllowedToAccessAnimalDetails($viewParentFather, $user, $location);
+                self::isUserAllowedToAccessAnimalDetails($viewParentFather, $user, $location);
         }
 
         if ($motherId) {
@@ -272,7 +272,7 @@ class AnimalDetailsOutput extends OutputServiceBase
             $viewParentMother->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentMother, $user));
             $result["parent_mother"] = $this->getSerializer()->getDecodedJson($viewParentMother);
             $result["parent_mother"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                $this->isUserAllowedToAccessAnimalDetails($viewParentMother, $user, $location);
+                self::isUserAllowedToAccessAnimalDetails($viewParentMother, $user, $location);
         }
 
         if ($includeAscendants) {
@@ -351,7 +351,7 @@ class AnimalDetailsOutput extends OutputServiceBase
      * @param Location|null $location
      * @return bool
      */
-    private function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Location $location)
+    public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Location $location)
     {
         if ($person instanceof Employee) {
             return true;
