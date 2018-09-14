@@ -657,13 +657,8 @@ class Validator
             return true;
         }
 
-        //3. Always allow breeder to see his own animals!
-        if ($locationIdOfUser && $locationIdOfUser === $animal->getLocationOfBirthId()) {
-            return true;
-        }
-
         /*
-         * 4. For the public, allow access to all public animals
+         * 3. For the public, allow access to all public animals
          */
         if (!$companyOfUser) {
             return $animal->isPublic();
@@ -671,16 +666,16 @@ class Validator
         } elseif ($companyOfUser->getIsRevealHistoricAnimals()) {
 
             /*
-             * 5. If user set own livestock to public, allow access to all public animals
+             * 4. If user set own livestock to public, allow access to all public animals
              */
 
-            // TODO 7. Set a delay before giving access to animal using $company->getLastMakeLivestockPublicDate()
+            // TODO 6. Set a delay before giving access to animal using $company->getLastMakeLivestockPublicDate()
 
             return $animal->isPublic();
         }
 
         /*
-         * 6. ... else block animals not belonging to user in points 1-3,
+         * 5. ... else block animals not belonging to user in points 1-3,
          * to encourage the user to reveal his own livestock
          */
         return false;
