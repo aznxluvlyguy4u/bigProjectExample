@@ -64,8 +64,7 @@ class AnimalDetailsValidator extends BaseValidator
                         $this->isInputValid = Validator::isUserAllowedToAccessAnimalDetails(
                             $viewMinimalParentDetails,
                             $company,
-                            $company->getUbns(),
-                            $location->getId()
+                            $company->getUbns()
                         );
                     }
 

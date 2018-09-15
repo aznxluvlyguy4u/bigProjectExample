@@ -638,11 +638,10 @@ class Validator
      * @param ViewMinimalParentDetails $animal
      * @param Company $companyOfUser
      * @param array $currentUbnsOfUser
-     * @param int|null $locationIdOfUser
      * @return bool
      */
     public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Company $companyOfUser,
-                                                              $currentUbnsOfUser = [], ?int $locationIdOfUser): bool
+                                                              $currentUbnsOfUser = []): bool
     {
         /*
          * 1. Always show animals on own location/ubn

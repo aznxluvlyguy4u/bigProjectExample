@@ -13,6 +13,7 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Exterior;
@@ -199,6 +200,8 @@ class AnimalDetailsOutput extends OutputServiceBase
             }
         }
 
+        $company = $location ? $location->getCompany() : null;
+
         $result = [
         	  "id" => $animal->getId(),
             JsonInputConstant::UBN => $animal->getUbn(),
@@ -263,7 +266,7 @@ class AnimalDetailsOutput extends OutputServiceBase
             $viewParentFather->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentFather, $user));
             $result["parent_father"] = $this->getSerializer()->getDecodedJson($viewParentFather);
             $result["parent_father"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                $this->isUserAllowedToAccessAnimalDetails($viewParentFather, $user, $location);
+                $this->isUserAllowedToAccessAnimalDetails($viewParentFather, $user, $company);
         }
 
         if ($motherId) {
@@ -272,7 +275,7 @@ class AnimalDetailsOutput extends OutputServiceBase
             $viewParentMother->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentMother, $user));
             $result["parent_mother"] = $this->getSerializer()->getDecodedJson($viewParentMother);
             $result["parent_mother"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                $this->isUserAllowedToAccessAnimalDetails($viewParentMother, $user, $location);
+                $this->isUserAllowedToAccessAnimalDetails($viewParentMother, $user, $company);
         }
 
         if ($includeAscendants) {
@@ -348,26 +351,25 @@ class AnimalDetailsOutput extends OutputServiceBase
     /**
      * @param ViewMinimalParentDetails $animal
      * @param Person $person
-     * @param Location|null $location
+     * @param Company|null $company
      * @return bool
      */
-    private function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Location $location)
+    private function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Company $company)
     {
         if ($person instanceof Employee) {
             return true;
         }
 
-        if (!($person instanceof Client) || !$location || !$location->getCompany() || !$location->getId()) {
+        if (!($person instanceof Client) || !$company) {
             return false;
         }
 
-        $company = $location->getCompany();
         $currentUbnsOfUser = $company->getUbns(true);
         if (empty($currentUbnsOfUser)) {
             return false;
         }
 
-        return Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser, $location->getId());
+        return Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser);
     }
 
 
@@ -399,6 +401,7 @@ class AnimalDetailsOutput extends OutputServiceBase
 
         $genderPrimaryParent = $animal->getGender();
 
+        $company = $location ? $location->getCompany() : null;
         $childrenArray = [];
 
         if ($animal instanceof ParentInterface) {
@@ -418,7 +421,7 @@ class AnimalDetailsOutput extends OutputServiceBase
                     $childArray[JsonInputConstant::IS_PUBLIC] = $viewDetails->isPublic();
                     $childArray[JsonInputConstant::IS_OWN_HISTORIC_ANIMAL] = $this->isHistoricAnimalOfOwner($viewDetails, $user);
                     $childArray[ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                        $this->isUserAllowedToAccessAnimalDetails($viewDetails, $user, $location);
+                        $this->isUserAllowedToAccessAnimalDetails($viewDetails, $user, $company);
                 }
 
                 switch ($genderPrimaryParent) {
