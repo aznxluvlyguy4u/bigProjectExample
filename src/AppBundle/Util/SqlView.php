@@ -224,7 +224,7 @@ class SqlView
                 a.breed_code,
                 a.scrapie_genotype,
                 a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter,
-                COALESCE(residences.is_public, TRUE) as is_public,
+                COALESCE(is_public_status.is_public, TRUE) as is_public,
                 a.location_of_birth_id,
                 residences.historic_ubns,
                 residences.historic_location_ids
@@ -239,6 +239,9 @@ class SqlView
                 LEFT JOIN (VALUES
                 ".SqlUtil::createSqlValuesString(Translation::getEnglishPredicateToAbbreviationArray())."
                 ) AS predicate(english, abbreviation) ON predicate.english = a.predicate
+                LEFT JOIN (
+                    ".self::isPublicAnimalQuery()."
+                )is_public_status ON is_public_status.animal_id = a.id
                 LEFT JOIN (
                     ".self::animalResidenceQuery()."
                 )residences ON residences.animal_id = a.id";
@@ -405,36 +408,64 @@ class SqlView
                       -- TRIM(BOTH '{,}' FROM CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT)) as historic_ubns,
                       -- TRIM(BOTH '{,}' FROM CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT)) as historic_location_ids
                       REPLACE( REPLACE( CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT),'{', '['), '}', ']') as historic_ubns,
-                      REPLACE( REPLACE( CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT) ,'{', '['), '}', ']') as historic_location_ids,
-                      (TRUE = ALL(array_agg(is_blocked_by_at_least_one_historic_active_owner)::boolean[])) = FALSE as is_public
+                      REPLACE( REPLACE( CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT) ,'{', '['), '}', ']') as historic_location_ids
                     FROM (
                            SELECT
                              r.animal_id,
-                             r.location_id,
-                             FALSE = ANY(array_agg(COALESCE(comp.is_reveal_historic_animals, TRUE))::boolean[]) as is_blocked_by_at_least_one_historic_active_owner
+                             r.location_id
                            FROM animal_residence r
-                             INNER JOIN location l on r.location_id = l.id
-                             LEFT JOIN (
-                                         SELECT id, is_reveal_historic_animals FROM company WHERE is_active
-                                       )comp ON l.company_id = comp.id
                            GROUP BY r.animal_id, r.location_id
                     
                            UNION
                     
                            SELECT
                              a.id as animal_id,
-                             a.location_id,
-                             FALSE = ANY(array_agg(COALESCE(comp.is_reveal_historic_animals, TRUE))::boolean[]) as is_blocked_by_at_least_one_historic_active_owner
+                             a.location_id
                            FROM animal a
-                             INNER JOIN location l on a.location_id = l.id
-                             LEFT JOIN (
-                                         SELECT id, is_reveal_historic_animals FROM company WHERE is_active
-                                       )comp ON l.company_id = comp.id
                            WHERE a.location_id NOTNULL
-                           GROUP BY a.id, a.location_id
                          ) r
                       INNER JOIN location l on r.location_id = l.id
                     GROUP BY r.animal_id";
+    }
+
+
+    /**
+     * @return string
+     */
+    private static function isPublicAnimalQuery(): string
+    {
+        return "SELECT
+                  r.animal_id,
+                  TRUE = ANY(array_agg(is_reveal_historic_animals)::boolean[]) as is_public
+                FROM (
+                       SELECT
+                         r.animal_id,
+                         r.location_id,
+                         c.is_reveal_historic_animals
+                       FROM animal_residence r
+                         INNER JOIN location l on r.location_id = l.id
+                         INNER JOIN (
+                                      SELECT id, is_reveal_historic_animals
+                                      FROM company WHERE is_active
+                                   )c ON l.company_id = c.id
+                       GROUP BY r.animal_id, r.location_id, c.is_reveal_historic_animals
+                
+                       UNION
+                
+                       SELECT
+                         a.id as animal_id,
+                         a.location_id,
+                         c.is_reveal_historic_animals
+                       FROM animal a
+                         INNER JOIN location l on a.location_id = l.id
+                         INNER JOIN (
+                                     SELECT id, is_reveal_historic_animals
+                                     FROM company WHERE is_active
+                                   )c ON l.company_id = c.id
+                       GROUP BY a.id, a.location_id, c.is_reveal_historic_animals
+                     ) r
+                  INNER JOIN location l on r.location_id = l.id
+                GROUP BY r.animal_id";
     }
 
 }
