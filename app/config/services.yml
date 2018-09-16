@@ -457,6 +457,7 @@ services:
           - '@templating'
           - '@translator'
           - '@knp_snappy.pdf'
+          - '@AppBundle\Validation\UlnValidatorInterface'
           - '@app.report.generator.query.breed_values'
           - '%kernel.cache_dir%'
           - '%kernel.root_dir%'

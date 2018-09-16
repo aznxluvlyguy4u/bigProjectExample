@@ -12,6 +12,7 @@ use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Validation\UlnValidatorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
@@ -52,13 +53,14 @@ class ReportServiceWithBreedValuesBase extends ReportServiceBase
                                 TwigEngine $templating,
                                 TranslatorInterface $translator,
                                 GeneratorInterface $knpGenerator,
+                                UlnValidatorInterface $ulnValidator,
                                 BreedValuesReportQueryGenerator $breedValuesReportQueryGenerator,
                                 $cacheDir, $rootDir, $outputReportsToCacheFolderForLocalTesting,
                                 $displayReportPdfOutputAsHtml
     )
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator,$cacheDir, $rootDir, $outputReportsToCacheFolderForLocalTesting, $displayReportPdfOutputAsHtml);
+            $knpGenerator, $ulnValidator, $cacheDir, $rootDir, $outputReportsToCacheFolderForLocalTesting, $displayReportPdfOutputAsHtml);
 
         $this->breedValuesReportQueryGenerator = $breedValuesReportQueryGenerator;
     }
