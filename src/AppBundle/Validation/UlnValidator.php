@@ -142,7 +142,7 @@ class UlnValidator implements UlnValidatorInterface
             throw new PreconditionFailedHttpException(Constant::ANIMALS_NAMESPACE.'must contain ulnSets array');
         }
 
-        $includeAccessPermission = false;
+        $includeAccessPermission = false; // If true will add significantly (3x) more process time at the moment.
         if ($includeAccessPermission) {
             $this->validateUlnsWithUserAccessPermission($ulnSets, $person, $company);
         } else {
@@ -219,19 +219,15 @@ class UlnValidator implements UlnValidatorInterface
 
         $sql = "SELECT
                   uln_sets.uln,
-                  v.uln NOTNULL as uln_exists,
-                  v.is_public,
-                  v.historic_ubns,
-                  v.historic_location_ids
+                  w.id NOTNULL as uln_exists
                 FROM (VALUES $ulnSearchString) AS uln_sets(uln)
-                LEFT JOIN (
-                    SELECT
-                      uln,
-                      is_public,
-                      historic_ubns,
-                      historic_location_ids
-                    FROM view_minimal_parent_details
-                    )v ON v.uln = uln_sets.uln";
+                  LEFT JOIN (
+                              SELECT
+                                id,
+                                uln_country_code,
+                                uln_number
+                              FROM animal
+            )w ON CONCAT(w.uln_country_code, w.uln_number) = uln_sets.uln";
 
         $this->ulnsData = $this->em->getConnection()->query($sql)->fetchAll();
     }
