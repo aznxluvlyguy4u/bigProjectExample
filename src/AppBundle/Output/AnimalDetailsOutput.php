@@ -350,6 +350,32 @@ class AnimalDetailsOutput extends OutputServiceBase
 
 
     /**
+     * @param ViewMinimalParentDetails $animal
+     * @param Person $person
+     * @param Location|null $location
+     * @return bool
+     */
+    public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Location $location)
+    {
+        if ($person instanceof Employee) {
+            return true;
+        }
+
+        if (!($person instanceof Client) || !$location || !$location->getCompany() || !$location->getId()) {
+            return false;
+        }
+
+        $company = $location->getCompany();
+        $currentUbnsOfUser = $company->getUbns(true);
+        if (empty($currentUbnsOfUser)) {
+            return false;
+        }
+
+        return Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser, $location->getId());
+    }
+
+
+    /**
      * @param Animal $animal
      * @param Person $user
      * @param Location|null $location

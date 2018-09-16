@@ -26,6 +26,7 @@ class QueryParameter
     const LANGUAGE = 'language';
     const PEDIGREE_ACTIVE_END_DATE = 'pedigree_active_end_date';
     const PLAIN_TEXT_INPUT = 'plain_text_input';
+    const PROCESS_AS_WORKER_TASK = 'process_as_worker_task';
     const REFERENCE_DATE = 'reference_date';
     const ASSOCIATIVE_ARRAY_OUTPUT = 'associative_array_output';
     const IS_EWES_WITH_LAST_MATE = 'is_ewes_with_last_mate';
