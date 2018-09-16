@@ -19,8 +19,7 @@ use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
-use AppBundle\Validation\UlnValidator;
-use Doctrine\Common\Collections\Criteria;
+use AppBundle\Validation\UlnValidatorInterface;
 use Doctrine\ORM\EntityManager;
 use Enqueue\Client\ProducerInterface;
 use Enqueue\Util\JSON;
@@ -61,6 +60,9 @@ class ReportService
      */
     private $logger;
 
+    /** @var UlnValidatorInterface */
+    private $ulnValidator;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -69,6 +71,7 @@ class ReportService
      * @param UserService $userService
      * @param TranslatorInterface $translator
      * @param Logger $logger
+     * @param UlnValidatorInterface $ulnValidator
      */
     public function __construct(
         ProducerInterface $producer,
@@ -76,7 +79,8 @@ class ReportService
         EntityManager $em,
         UserService $userService,
         TranslatorInterface $translator,
-        Logger $logger
+        Logger $logger,
+        UlnValidatorInterface $ulnValidator
     )
     {
         $this->em = $em;
@@ -85,6 +89,7 @@ class ReportService
         $this->userService = $userService;
         $this->translator = $translator;
         $this->logger = $logger;
+        $this->ulnValidator = $ulnValidator;
     }
 
     /**
@@ -150,12 +155,9 @@ class ReportService
         $contentAsJson = JSON::encode($content->toArray());
         $inputForHash = $contentAsJson;
 
-        //Validate if given ULNs are correct AND there should at least be one ULN given
-        // Set location = null, to allow anyone to access all pedigreeCertificates
-        $ulnValidator = new UlnValidator($this->em, $content, true, null, null);
-        if(!$ulnValidator->getIsUlnSetValid()) {
-            return $ulnValidator->createArrivalJsonErrorResponse();
-        }
+        $location = $this->userService->getSelectedLocation($request);
+        $company = $location ? $location->getCompany() : null;
+        $this->ulnValidator->pedigreeCertificateUlnsInputValidation($content, $this->userService->getUser(), $company);
 
         try {
             $reportType = ReportType::PEDIGREE_CERTIFICATE;

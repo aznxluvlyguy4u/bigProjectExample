@@ -34,6 +34,7 @@ use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\PedigreeUtil;
 use AppBundle\Util\Validator;
+use AppBundle\Validation\UlnValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
@@ -266,7 +267,7 @@ class AnimalDetailsOutput extends OutputServiceBase
             $viewParentFather->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentFather, $user));
             $result["parent_father"] = $this->getSerializer()->getDecodedJson($viewParentFather);
             $result["parent_father"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                $this->isUserAllowedToAccessAnimalDetails($viewParentFather, $user, $company);
+                UlnValidator::isUserAllowedToAccessAnimalDetails($viewParentFather, $user, $company);
         }
 
         if ($motherId) {
@@ -275,7 +276,7 @@ class AnimalDetailsOutput extends OutputServiceBase
             $viewParentMother->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentMother, $user));
             $result["parent_mother"] = $this->getSerializer()->getDecodedJson($viewParentMother);
             $result["parent_mother"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                $this->isUserAllowedToAccessAnimalDetails($viewParentMother, $user, $company);
+                UlnValidator::isUserAllowedToAccessAnimalDetails($viewParentMother, $user, $company);
         }
 
         if ($includeAscendants) {
@@ -349,31 +350,6 @@ class AnimalDetailsOutput extends OutputServiceBase
 
 
     /**
-     * @param ViewMinimalParentDetails $animal
-     * @param Person $person
-     * @param Company|null $company
-     * @return bool
-     */
-    private function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Company $company)
-    {
-        if ($person instanceof Employee) {
-            return true;
-        }
-
-        if (!($person instanceof Client) || !$company) {
-            return false;
-        }
-
-        $currentUbnsOfUser = $company->getUbns(true);
-        if (empty($currentUbnsOfUser)) {
-            return false;
-        }
-
-        return Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser);
-    }
-
-
-    /**
      * @param Animal $animal
      * @param Person $user
      * @param Location|null $location
@@ -421,7 +397,7 @@ class AnimalDetailsOutput extends OutputServiceBase
                     $childArray[JsonInputConstant::IS_PUBLIC] = $viewDetails->isPublic();
                     $childArray[JsonInputConstant::IS_OWN_HISTORIC_ANIMAL] = $this->isHistoricAnimalOfOwner($viewDetails, $user);
                     $childArray[ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                        $this->isUserAllowedToAccessAnimalDetails($viewDetails, $user, $company);
+                        UlnValidator::isUserAllowedToAccessAnimalDetails($viewDetails, $user, $company);
                 }
 
                 switch ($genderPrimaryParent) {

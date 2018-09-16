@@ -438,6 +438,7 @@ services:
           - '@templating'
           - '@translator'
           - '@knp_snappy.pdf'
+          - '@AppBundle\Validation\UlnValidatorInterface'
           - '%kernel.cache_dir%'
           - '%kernel.root_dir%'
           - '%output_reports_to_cache_folder_for_local_testing%'
@@ -579,6 +580,7 @@ services:
           - '@app.user'
           - '@translator'
           - '@logger'
+          - '@AppBundle\Validation\UlnValidatorInterface'
 
 
     AppBundle\Processor\ReportProcessor:
@@ -985,6 +987,14 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\AnimalResidenceService
 
+    AppBundle\Validation\UlnValidatorInterface: '@AppBundle\Validation\UlnValidator'
+
+    AppBundle\Validation\UlnValidator:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository'
+          - '@translator'
+        lazy: true
 
     # Listeners
     AppBundle\EventListener\ViewListener:

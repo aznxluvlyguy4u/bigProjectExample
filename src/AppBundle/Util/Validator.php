@@ -33,11 +33,14 @@ use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 class Validator
 {
+    const UNAUTHORIZED = 'UNAUTHORIZED';
+
     const MAX_NUMBER_OF_CURRENCY_INPUT_DECIMALS = 3;
 
     const DEFAULT_MIN_PASSWORD_LENGTH = 6;
@@ -854,5 +857,13 @@ class Validator
             $prefix = ' | ';
         }
         throw new PreconditionFailedHttpException($errorMessage);
+    }
+
+    /**
+     * @return UnauthorizedHttpException
+     */
+    public static function unauthorizedException(): UnauthorizedHttpException
+    {
+        return new UnauthorizedHttpException(null, self::UNAUTHORIZED,null);
     }
 }

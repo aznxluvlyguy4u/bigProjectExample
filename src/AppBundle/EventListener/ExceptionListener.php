@@ -34,7 +34,9 @@ class ExceptionListener
         $exception = $event->getException();
 
         $code = self::getHttpResponseCodeFromException($exception);
-        $errorMessage = empty($exception->getMessage()) ? self::getDefaultErrorMessage($code) : $exception->getMessage();
+        $errorMessage = empty($exception->getMessage())
+        || $exception instanceof \Doctrine\DBAL\DBALException // Prevent leaking of database schema
+            ? self::getDefaultErrorMessage($code) : $exception->getMessage();
         $errorData = $this->environment !== Environment::PROD ? self::nestErrorTrace($exception->getTraceAsString()) : null;
         $errorResponse = $this->errorResult($errorMessage, $code, $errorData);
         $event->setResponse($errorResponse);

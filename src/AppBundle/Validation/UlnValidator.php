@@ -1,289 +1,238 @@
 <?php
 
+
 namespace AppBundle\Validation;
 
 
-use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationRepository;
-use AppBundle\Util\ResultUtil;
+use AppBundle\Entity\Company;
+use AppBundle\Entity\Employee;
+use AppBundle\Entity\Person;
+use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
+use AppBundle\SqlView\View\ViewMinimalParentDetails;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\Translation\TranslatorInterface;
 
-class UlnValidator
+class UlnValidator implements UlnValidatorInterface
 {
-    const ERROR_CODE = 428;
-    const ERROR_MESSAGE = 'ANIMAL IS NOT REGISTERED WITH GIVEN CLIENT';
-    const VALID_CODE = 200;
-    const VALID_MESSAGE = 'ULN OF ANIMAL IS VALID';
-    const MISSING_INPUT_CODE = 428;
     const MISSING_INPUT_MESSAGE = 'NO ULN GIVEN';
-    const MISSING_ANIMAL_CODE = 428;
-    const MISSING_ANIMAL_MESSAGE = 'ANIMAL IS NOT REGISTERED WITH NSFO';
 
     const MAX_ANIMALS = 50;
     const ERROR_MESSAGE_MAX_ANIMALS_EXCEEDED = 'NO MORE THAN 50 ANIMALS CAN BE SELECTED AT A TIME';
 
-    /** @var boolean */
-    private $isUlnSetValid;
+    /** @var EntityManagerInterface */
+    private $em;
 
-    /** @var boolean */
-    private $isInputMissing;
+    /** @var ViewMinimalParentDetailsRepository */
+    private $viewMinimalParentDetailsRepository;
 
-    /** @var boolean */
-    private $isAnimalCountWithinLimit;
-
-    /** @var boolean */
-    private $isInDatabase;
-
-    /** @var string */
-    private $ulnCountryCode;
-
-    /** @var string */
-    private $ulnNumber;
-
-    /** @var int */
-    private $numberOfAnimals;
-
-    /** @var ArrayCollection */
-    private $locations;
-
-    /** @var ObjectManager */
-    private $manager;
+    /** @var TranslatorInterface */
+    private $translator;
 
     /** @var array */
     private $ulns;
+    /** @var array */
+    private $ulnsData;
+    /** @var array */
+    private $blockedUlns;
+    /** @var array */
+    private $missingUlns;
+    /** @var array */
+    private $invalidUlns;
 
-    /** @var boolean */
-    private $allowAllAnimals;
-
-    /**
-     * UbnValidator constructor.
-     * @param ObjectManager $manager
-     * @param Client $client
-     * @param Collection $content
-     * @param boolean $multipleAnimals
-     * @param Location $location
-     */
-    public function __construct(ObjectManager $manager, Collection $content, $multipleAnimals = false, Client $client = null, $location)
+    public function __construct(EntityManagerInterface $em,
+                                ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository,
+                                TranslatorInterface $translator)
     {
-        $this->manager = $manager;
+        $this->em = $em;
+        $this->viewMinimalParentDetailsRepository = $viewMinimalParentDetailsRepository;
+        $this->translator = $translator;
+    }
+
+
+    function validateUln(array $ulnSet)
+    {
+        $this->validateUlns([$ulnSet]);
+    }
+
+
+    function validateUlns(array $ulnSets)
+    {
+        if (empty($ulnSets)) {
+            throw new PreconditionFailedHttpException(self::MISSING_INPUT_MESSAGE);
+        }
+
+        if (count($ulnSets) > self::MAX_ANIMALS) {
+            throw new PreconditionFailedHttpException(self::ERROR_MESSAGE_MAX_ANIMALS_EXCEEDED);
+        }
 
         $this->ulns = [];
-        $this->allowAllAnimals = false;
-        if($client != null) {
-            /** @var LocationRepository $locationRepository */
-            $locationRepository = $manager->getRepository(Location::class);
-            $this->locations = $locationRepository->findAllLocationsOfClient($client);
-            $this->fillUlnSearchArrayOfHistoricAnimalsAllLocations();
-        } elseif ($location != null) {
-            $this->locations = new ArrayCollection();
-            $this->locations->add($location);
-            $this->fillUlnSearchArrayOfHistoricAnimalsAllLocations();
-        } else {
-            //If both client and location are null
-            $this->allowAllAnimals = true;
-        }
-
-        $animalArray = null;
-        $this->isInputMissing = true;
-        $this->isUlnSetValid = false;
-        $this->isInDatabase = true;
-        $this->isAnimalCountWithinLimit = true;
-        $this->numberOfAnimals = 0;
-
-        if($multipleAnimals == false) {
-
-            $animalArray = null;
-            foreach ($content->getKeys() as $key) {
-                if($key == Constant::ANIMAL_NAMESPACE) {
-                    $animalArray = $content->get($key);
-
-                    $this->isInputMissing = false;
-                    $this->isUlnSetValid = true;
-
-                    $this->isUlnSetValid = $this->validateUlnInput($animalArray, $client, $location);
-                    $this->numberOfAnimals++;
-                }
+        foreach ($ulnSets as $ulnSet) {
+            $uln = $ulnSet[JsonInputConstant::ULN_COUNTRY_CODE] . $ulnSet[JsonInputConstant::ULN_NUMBER];
+            if  (!Validator::verifyUlnFormat($uln, false)) {
+                $this->getInvalidUlns()[] = $uln;
             }
-
-        } else {
-
-            $animalArrays = null;
-            foreach ($content->getKeys() as $key) {
-                if($key == Constant::ANIMALS_NAMESPACE) {
-                    $animalArrays = $content->get($key);
-
-                    $this->isInputMissing = false;
-                    $this->isUlnSetValid = true;
-                    $this->numberOfAnimals = count($animalArrays);
-
-                    if($this->numberOfAnimals > self::MAX_ANIMALS) {
-                        $this->isAnimalCountWithinLimit = false;
-                        $this->isUlnSetValid = false;
-                    } else {
-                        foreach ($animalArrays as $animalArray) {
-                            $isUlnValid = $this->validateUlnInput($animalArray, $client, $location);
-                            if(!$isUlnValid) {
-                                $this->isUlnSetValid = false;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if($this->numberOfAnimals == 0) {
-            $this->isInputMissing = true;
-            $this->isUlnSetValid = false;
+            $this->ulns[] = $uln;
         }
 
-    }
+        $this->throwIfInvalidUlnsFound();
 
+        $this->getUlnsData();
 
-    private function fillUlnSearchArrayOfHistoricAnimalsAllLocations()
-    {
-        /** @var Location $location */
-        foreach ($this->locations as $location) {
-            $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
-            FROM animal a
-              INNER JOIN location l ON a.location_id = l.id
-            WHERE a.location_id = ".$location->getId()."
-            UNION
-            SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
-            FROM animal_residence r
-              INNER JOIN animal a ON r.animal_id = a.id
-              LEFT JOIN location l ON a.location_id = l.id
-              LEFT JOIN company c ON c.id = l.company_id
-            WHERE r.location_id = ".$location->getId()." AND (c.is_reveal_historic_animals = TRUE OR a.location_id ISNULL)";
-            $retrievedAnimalData = $this->manager->getConnection()->query($sql)->fetchAll();
-
-            foreach ($retrievedAnimalData as $animalData) {
-                $uln = $animalData['uln'];
-                $this->ulns[$uln] = $uln;
-            }
-        }
+        $this->throwIfUlnsMissing();
     }
 
 
     /**
-     * @param array $animalArray
-     * @param Client $client
-     * @param Location $location
-     * @return boolean
+     * @param array $ulnSets
+     * @param Person $person
+     * @param Company|null $company
+     * @throws \Exception
      */
-    private function validateUlnInput($animalArray, $client, $location)
+    function validateUlnsWithUserAccessPermission(array $ulnSets, Person $person, $company)
     {
-        $ulnExists = array_key_exists(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray) &&
-            array_key_exists(JsonInputConstant::ULN_NUMBER, $animalArray);
-
-        if ($ulnExists) {
-            $numberToCheck = $animalArray[JsonInputConstant::ULN_NUMBER];
-            $countryCodeToCheck = $animalArray[JsonInputConstant::ULN_COUNTRY_CODE];
-            $this->ulnCountryCode = $countryCodeToCheck;
-            $this->ulnNumber = $numberToCheck;
-        } else {
-            $this->isInputMissing = true;
-            return false;
+        if (!($person instanceof Client) && !($person instanceof Employee)) {
+            throw Validator::unauthorizedException();
         }
 
-        if(!is_string($countryCodeToCheck) || !is_string($numberToCheck)) { return false; }
+        $this->validateUlns($ulnSets);
 
-        if($this->allowAllAnimals) {
-            //If all animals are allowed only check if the animal is in the database or not
-            $criteria = Criteria::create()
-                ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
-                ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck));
+        if ($person instanceof Employee) {
+            return;
+        }
 
-        } else {
-            //First check if the animals is a historic animal
-            if(array_key_exists($countryCodeToCheck.$numberToCheck, $this->ulns)) {
-                return true;
+        if (!$company) {
+            throw Validator::unauthorizedException();
+        }
+
+        $currentUbnsOfUser = $company->getUbns(true);
+        if (empty($currentUbnsOfUser)) {
+            throw Validator::unauthorizedException();
+        }
+
+        $this->blockedUlns = [];
+        $animals = $this->viewMinimalParentDetailsRepository->findByUlns($this->ulns);
+        foreach ($animals as $animal) {
+            if (!Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser)) {
+                $this->blockedUlns[] = $animal->getUln();
             }
-
-            $criteria = Criteria::create()
-                ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
-                ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck))
-                ->andWhere(Criteria::expr()->eq('location', $location ));
         }
 
-        $results = $this->manager->getRepository(Animal::class)
-            ->matching($criteria);
-
-        //First verify if animal actually exists
-        if(count($results) == 0) {
-            $this->isInDatabase = false;
-            return false;
-
-        } else {
-            //If animal exists, get any animals regardless of client
-            return true;
+        if (!empty($this->blockedUlns)) {
+            throw new PreconditionFailedHttpException($this->translator->trans('THE FOLLOWING ULNS ARE BLOCKED FOR YOU').': '. implode(', ', $this->blockedUlns));
         }
     }
 
+
     /**
-     * Only create this JsonResponse when there actually are errors.
-     *
-     * @return JsonResponse
+     * @param ArrayCollection $collection
+     * @param Person $person
+     * @param Company|null $company
+     * @throws \Exception
      */
-    public function createArrivalJsonErrorResponse()
+    public function pedigreeCertificateUlnsInputValidation(ArrayCollection $collection, Person $person, $company)
     {
-        $uln = null;
+        $ulnSets = $collection->get(Constant::ANIMALS_NAMESPACE);
+        if (!is_array($ulnSets)) {
+            throw new PreconditionFailedHttpException(Constant::ANIMALS_NAMESPACE.'must contain ulnSets array');
+        }
 
-        if(!$this->isAnimalCountWithinLimit) {
-            $code = self::ERROR_CODE;
-            $message = self::ERROR_MESSAGE_MAX_ANIMALS_EXCEEDED;
-        } else if($this->isUlnSetValid) {
-            $code = self::VALID_CODE;
-            $message = self::VALID_MESSAGE;
+        $includeAccessPermission = false;
+        if ($includeAccessPermission) {
+            $this->validateUlnsWithUserAccessPermission($ulnSets, $person, $company);
         } else {
-            $code = self::ERROR_CODE;
-            $message = self::ERROR_MESSAGE;
+            $this->validateUlns($ulnSets);
         }
-
-        //Only return the values for the identification type being tested
-        if (!$this->isInputMissing && $this->isInDatabase) {
-            $uln = $this->ulnCountryCode . $this->ulnNumber;
-        } else if (!$this->isInDatabase) {
-            $code = self::MISSING_ANIMAL_CODE;
-            $message = self::MISSING_ANIMAL_MESSAGE;
-            $uln = $this->ulnCountryCode . $this->ulnNumber;
-        } else { //If no ULN or PEDIGREE found
-            $code = self::MISSING_INPUT_CODE;
-            $message = self::MISSING_INPUT_MESSAGE;
-        }
-
-        return ResultUtil::errorResult($message, $code, $uln);
     }
 
-
     /**
+     * @param ViewMinimalParentDetails $animal
+     * @param Person $person
+     * @param Company|null $company
      * @return bool
      */
-    public function getIsUlnSetValid() {
-        return $this->isUlnSetValid;
+    public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Company $company)
+    {
+        if ($person instanceof Employee) {
+            return true;
+        }
+
+        if (!($person instanceof Client) || !$company) {
+            return false;
+        }
+
+        $currentUbnsOfUser = $company->getUbns(true);
+        if (empty($currentUbnsOfUser)) {
+            return false;
+        }
+
+        return Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser);
+    }
+
+
+    private function getInvalidUlns(): array
+    {
+        if ($this->invalidUlns === null) {
+            $this->invalidUlns = [];
+        }
+        return $this->invalidUlns;
+    }
+
+
+    private function throwIfInvalidUlnsFound()
+    {
+        if (!empty($this->getInvalidUlns())) {
+            throw new PreconditionFailedHttpException($this->translator->trans('THE FOLLOWING ULNS HAVE AN INCORRECT FORMAT').': '. implode(', ', $this->getInvalidUlns()));
+        }
+    }
+
+    private function throwIfUlnsMissing()
+    {
+        $this->missingUlns = [];
+        foreach ($this->ulnsData as $ulnDatum) {
+            if (!$ulnDatum['uln_exists']) {
+                $this->missingUlns[] = $ulnDatum['uln'];
+            }
+        }
+
+        if (!empty($this->missingUlns)) {
+            throw new PreconditionFailedHttpException($this->translator->trans('THE FOLLOWING ULNS ARE DO NOT EXIST IN THE DATABASE').': '. implode(', ', $this->missingUlns));
+        }
     }
 
     /**
-     * @return int
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public function getNumberOfAnimals()
+    public function getUlnsData()
     {
-        return $this->numberOfAnimals;
+        if (empty($this->ulns)) {
+            $this->ulnsData = [];
+        }
+
+        $ulnSearchString = "('" . implode("'),('", $this->ulns) . "')";
+
+        $sql = "SELECT
+                  uln_sets.uln,
+                  v.uln NOTNULL as uln_exists,
+                  v.is_public,
+                  v.historic_ubns,
+                  v.historic_location_ids
+                FROM (VALUES $ulnSearchString) AS uln_sets(uln)
+                LEFT JOIN (
+                    SELECT
+                      uln,
+                      is_public,
+                      historic_ubns,
+                      historic_location_ids
+                    FROM view_minimal_parent_details
+                    )v ON v.uln = uln_sets.uln";
+
+        $this->ulnsData = $this->em->getConnection()->query($sql)->fetchAll();
     }
-
-    /**
-     * @return string
-     */
-    public function getUlnCode()
-    {
-        return $this->ulnCountryCode . $this->ulnNumber;
-    }
-
-
 }
