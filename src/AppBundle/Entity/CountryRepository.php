@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;
@@ -34,5 +35,28 @@ class CountryRepository extends BaseRepository {
         }
         return $countries;
     }
+
+
+    /**
+     * @param Location $location
+     * @return string|null
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    function getCountryFromLocation(Location $location): ?string
+    {
+        if (!$location || !is_int($location->getId())) {
+            return null;
+        }
+
+        $sql = "SELECT
+                  l.ubn,
+                  cd.code as ".JsonInputConstant::COUNTRY_CODE."
+                FROM location l
+                  INNER JOIN address a ON l.address_id = a.id
+                  LEFT JOIN country cd ON cd.name = a.country
+                WHERE l.id = ".$location->getId();
+        return $this->getManager()->getConnection()->query($sql)->fetch()[JsonInputConstant::COUNTRY_CODE];
+    }
+
 
 }

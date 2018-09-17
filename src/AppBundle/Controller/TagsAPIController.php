@@ -83,4 +83,41 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
   {
       return $this->get(TagsService::class)->getTags($request);
   }
+
+
+    /**
+     *
+     * Create a bunch of a Tags by plain text input of ULNs separated by separator symbol.
+     *
+     * @ApiDoc(
+     *   section = "Tags",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="state",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"=" Tags to filter on",
+     *        "format"="?state=state-type"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Create a bunch of a Tags by plain text input of ULNs separated by separator symbol."
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("")
+     * @Method("POST")
+     */
+    public function createTags(Request $request)
+    {
+        return $this->get(TagsService::class)->createTags($request);
+    }
 }

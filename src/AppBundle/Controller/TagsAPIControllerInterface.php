@@ -22,4 +22,10 @@ interface TagsAPIControllerInterface
    * @return mixed
    */
   public function getTags(Request $request);
+
+    /**
+     * @param Request $request
+     * @return mixed
+     */
+  public function createTags(Request $request);
 }

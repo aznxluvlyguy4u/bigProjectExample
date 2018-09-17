@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
@@ -11,7 +12,7 @@ use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
-use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
+use Doctrine\ORM\Mapping\ClassMetadata;
 
 class TagRepository extends BaseRepository {
 
@@ -73,17 +74,23 @@ class TagRepository extends BaseRepository {
   }
 
 
-  /**
-   * @param Client $client
-   * @param string $tagStatus
-   * @return array
-   */
-  public function findTags(Client $client, Location $location, $tagStatus = TagStateType::UNASSIGNED)
+    /**
+     * @param Client $client
+     * @param Location $location
+     * @param string $tagStatus
+     * @param bool $ignoreLocationId
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+  public function findTags(Client $client, Location $location, $tagStatus = TagStateType::UNASSIGNED,
+                           bool $ignoreLocationId = false)
   {
     if($client == null || $location == null) { return []; }
 
+    $locationFilter = $ignoreLocationId ? " " : " AND location_id = ".$location->getId()." ";
+
     $sql = "SELECT tag_status, animal_order_number, order_date, uln_country_code, uln_number 
-            FROM tag WHERE owner_id = ".$client->getId()." AND location_id = ".$location->getId()."  AND tag_status = '".$tagStatus."'";
+            FROM tag WHERE owner_id = ".$client->getId().$locationFilter."  AND tag_status = '".$tagStatus."'";
     $tags = $this->getManager()->getConnection()->query($sql)->fetchAll();
     
     return $tags;
@@ -247,4 +254,45 @@ class TagRepository extends BaseRepository {
 
     return $incorrectIdCount == 0;
   }
+
+
+    /**
+     * @param array $ulnParts
+     * @return array|Tag[]
+     */
+  function findByUlnPartsArray(array $ulnParts = [])
+  {
+      if (empty($ulnParts)) {
+          return [];
+      }
+
+      $qb = $this->getManager()->createQueryBuilder();
+
+      $qb
+          ->select('tag')
+          ->from (Tag::class, 'tag')
+      ;
+
+      foreach ($ulnParts as $ulnPart) {
+          $ulnCountryCode = $ulnPart[JsonInputConstant::ULN_COUNTRY_CODE];
+          $ulnNumber = $ulnPart[JsonInputConstant::ULN_NUMBER];
+          $qb->orWhere(
+              $qb->expr()->andX(
+                  $qb->expr()->eq('tag.ulnCountryCode', "'".$ulnCountryCode."'"),
+                  $qb->expr()->eq('tag.ulnNumber', "'".$ulnNumber."'")
+              )
+          );
+      }
+
+      $query = $qb->getQuery();
+      $query->useQueryCache(true);
+      $query->setCacheable(true);
+
+      $query->setFetchMode(Location::class, 'location', ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Client::class, 'owner', ClassMetadata::FETCH_EAGER);
+
+      return $query->getResult();
+  }
+
+
 }

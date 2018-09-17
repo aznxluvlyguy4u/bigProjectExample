@@ -321,6 +321,16 @@ ANNUAL_TE100_UBN_PRODUCTION: ANNUAL TE100 UBN PRODUCTION
 FERTILIZER_ACCOUNTING: FERTILIZER ACCOUNTING
 OFFSPRING_REPORT: OFFSPRING REPORT
 
+#Tag
+ASSIGNED: Assigned
+ASSIGNING: Assigning
+UNASSIGNED: Unassigned
+TRANSFERRING_TO_NEW_OWNER: Transferring to new owner
+TRANSFERRED_TO_NEW_OWNER: Transferred to new owner
+REPLACING: Replacing
+REPLACED: Replaced
+RESERVED: Reserved
+
 #ErrorMessages
 'STUD RAM: NO ULN OR PEDIGREE GIVEN': NO STUDRAM WAS GIVEN
 'STUD RAM: ULN FORMAT INCORRECT': THE ULN FORMAT FOR THE STUDRAM IS INCORRECT
@@ -404,6 +414,10 @@ START DATE IS MISSING: Start date is missing
 END DATE CANNOT BE BEFORE START DATE: End date cannot be before start date
 IS PENDING MUST BE A BOOLEAN: Is pending must be a boolean
 THE FOLLOWING ULNS ARE BLOCKED FOR YOU: The following ulns are blocked for you
+INVALID INPUT: Invalid input
+IS ALREADY OWNED BY ANOTHER USER: Is already owned by another user
+COUNTRY CODE DOES NOT MATCH COUNTRY CODE OF UBN: Country code does not match country code of UBN
+YOU ALREADY OWN TAGS WITH THE FOLLOWING ULNS: You already own tags with the following ulns
 
 #Messages
 DECLARE_ARRIVAL: Automatically issued an arrival notification

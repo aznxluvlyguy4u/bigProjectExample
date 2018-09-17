@@ -321,6 +321,16 @@ ANNUAL_TE100_UBN_PRODUCTION: JAARLIJKSE TE100 UBN PRODUCTIE
 FERTILIZER_ACCOUNTING: MESTBOEKHOUDING
 OFFSPRING_REPORT: NAKOMELINGEN RAPPORTAGE
 
+#Tag
+ASSIGNED: Toegewezen
+ASSIGNING: Wordt toegewezen
+UNASSIGNED: Vrij
+TRANSFERRING_TO_NEW_OWNER: Wordt overgedragen naar nieuwe eigenaar
+TRANSFERRED_TO_NEW_OWNER: Overgedragen naar nieuwe eigenaar
+REPLACING: Wordt omgenummered
+REPLACED: Omgenummered
+RESERVED: Gereserveerd
+
 #ErrorMessages
 'STUD RAM: NO ULN OR PEDIGREE GIVEN': ER IS GEEN DEKRAM OPGEGEVEN
 'STUD RAM: ULN FORMAT INCORRECT': HET ULN FORMAT VOOR DE DEKRAM IS ONJUIST
@@ -412,6 +422,10 @@ START DATE IS MISSING: Startdatum ontbreekt
 END DATE CANNOT BE BEFORE START DATE: Einddatum mag niet voor de startdatum zijn
 IS PENDING MUST BE A BOOLEAN: In behandeling moet een boolean zijn
 THE FOLLOWING ULNS ARE BLOCKED FOR YOU: De volgende ulns zijn voor u geblokkeerd
+INVALID INPUT: Ongeldige invoer
+IS ALREADY OWNED BY ANOTHER USER: Is al in het bezit van een andere gebruiker
+COUNTRY CODE DOES NOT MATCH COUNTRY CODE OF UBN: Landcode komt niet overeen met de landcode van de opgegeven UBN
+YOU ALREADY OWN TAGS WITH THE FOLLOWING ULNS: Je bezit al oormerken met de volgende ULNs
 
 #Messages
 DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd
