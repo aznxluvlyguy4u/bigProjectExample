@@ -14,6 +14,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
@@ -92,6 +93,8 @@ class TagsService extends ControllerServiceBase
             $this->getManager()->flush();
         }
 
+        ActionLogWriter::createTags($this->getManager(), $client, $this->getUser(), $ulnPartsArray);
+
         return $this->createTagsOutputByRequest($request);
     }
 
@@ -105,6 +108,8 @@ class TagsService extends ControllerServiceBase
 
         $this->getManager()->remove($tag);
         $this->getManager()->flush();
+
+        ActionLogWriter::deleteTag($this->getManager(), $client, $this->getUser(), $tag->getUln());
 
         return $this->createTagsOutputByRequest($request);
     }
