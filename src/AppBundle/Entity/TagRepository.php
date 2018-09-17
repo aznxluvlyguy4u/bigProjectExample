@@ -89,10 +89,10 @@ class TagRepository extends BaseRepository {
 
     $locationFilter = $ignoreLocationId ? " " : " AND location_id = ".$location->getId()." ";
 
-    $sql = "SELECT tag_status, animal_order_number, order_date, uln_country_code, uln_number 
+    $sql = "SELECT id, tag_status, animal_order_number, order_date, uln_country_code, uln_number
             FROM tag WHERE owner_id = ".$client->getId().$locationFilter."  AND tag_status = '".$tagStatus."'";
     $tags = $this->getManager()->getConnection()->query($sql)->fetchAll();
-    
+
     return $tags;
   }
 
