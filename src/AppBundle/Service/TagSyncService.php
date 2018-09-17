@@ -7,6 +7,7 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Controller\TagsSyncAPIControllerInterface;
+use AppBundle\Entity\Country;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Enumerator\AccessLevelType;
@@ -17,6 +18,7 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 
 class TagSyncService extends DeclareControllerServiceBase implements TagsSyncAPIControllerInterface
@@ -65,6 +67,10 @@ class TagSyncService extends DeclareControllerServiceBase implements TagsSyncAPI
 
         if($client == null) { return ResultUtil::errorResult('Client cannot be null', 428); }
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
+
+        if (!$this->getManager()->getRepository(Country::class)->isDutchLocation($location)) {
+            throw new PreconditionFailedHttpException('RVO tag sync cannot be executed for non-NL UBN');
+        }
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $retrieveEartagsRequest = $this->buildMessageObject(RequestType::RETRIEVE_TAGS_ENTITY, $content, $client, $loggedInUser, $location);

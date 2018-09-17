@@ -13,6 +13,7 @@ use AppBundle\Controller\AnimalAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\AnimalResidence;
+use AppBundle\Entity\Country;
 use AppBundle\Entity\EditType;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
@@ -44,6 +45,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
@@ -640,6 +642,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         if($client == null) { return ResultUtil::errorResult('Client cannot be null', 428); }
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
+
+        if (!$this->getManager()->getRepository(Country::class)->isDutchLocation($location)) {
+            throw new PreconditionFailedHttpException('RVO animal sync cannot be executed for non-NL UBN');
+        }
 
         $isRvoLeading = $content !== null && $content->get(JsonInputConstant::IS_RVO_LEADING) === true;
         if ($isRvoLeading) {
