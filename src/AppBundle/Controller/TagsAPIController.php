@@ -2,19 +2,12 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\Tag;
-use AppBundle\Entity\TagRepository;
-use AppBundle\Enumerator\TagStateType;
-use AppBundle\Util\Validator;
+use AppBundle\Service\TagsService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Symfony\Bridge\PhpUnit\ClockMock;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Enumerator\RequestType;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use AppBundle\Constant\Constant;
 
 /**
  * @Route("/api/v1/tags")
@@ -47,7 +40,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    */
   public function getTagById(Request $request, $Id)
   {
-      return $this->get('app.tags')->getTagById($request, $Id);
+      return $this->get(TagsService::class)->getTagById($request, $Id);
   }
 
   /**
@@ -88,6 +81,6 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    */
   public function getTags(Request $request)
   {
-      return $this->get('app.tags')->getTags($request);
+      return $this->get(TagsService::class)->getTags($request);
   }
 }
