@@ -279,7 +279,11 @@ class TagsService extends ControllerServiceBase
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
         $tagStatus = $this->getTagStatusQueryParam($request);
-        $ignoreLocation = RequestUtil::getBooleanQuery($request,QueryParameter::IGNORE_LOCATION,false);
+
+        // For non NL locations always display all eartags of client
+        $defaultIgnoreLocation = !$this->getManager()->getRepository(Country::class)->isDutchLocation($location);
+        $ignoreLocation = RequestUtil::getBooleanQuery($request,QueryParameter::IGNORE_LOCATION, $defaultIgnoreLocation);
+        
         return $this->createTagsOutput($client, $location, $tagStatus, $ignoreLocation);
     }
 

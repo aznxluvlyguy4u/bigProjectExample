@@ -59,4 +59,15 @@ class CountryRepository extends BaseRepository {
     }
 
 
+    /**
+     * @param Location $location
+     * @param bool $nullIsDutch
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    function isDutchLocation(Location $location, $nullIsDutch = true): bool
+    {
+        $countryCode = $this->getCountryFromLocation($location);
+        return $countryCode ? $countryCode === \AppBundle\Enumerator\Country::NL : $nullIsDutch;
+    }
 }
