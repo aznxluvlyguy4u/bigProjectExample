@@ -106,6 +106,10 @@ class TagsService extends ControllerServiceBase
             throw new PreconditionFailedHttpException($this->translator->trans('TAG DOES NOT BELONG TO YOU'));
         }
 
+        if ($tag->getUlnCountryCode() === \AppBundle\Enumerator\Country::NL) {
+            throw new PreconditionFailedHttpException($this->translator->trans('NL TAGS CANNOT BE MANUALLY DELETED'));
+        }
+
         $this->getManager()->remove($tag);
         $this->getManager()->flush();
 
