@@ -103,7 +103,7 @@ class TagsService extends ControllerServiceBase
      */
     private function getUlnPartsArrayFromPlainTextInput(ArrayCollection $content, string $countryCode)
     {
-        $plainTextInput = $content->get(JsonInputConstant::PLAIN_TEXT_INPUT);
+        $plainTextInput = StringUtil::preparePlainTextInput($content->get(JsonInputConstant::PLAIN_TEXT_INPUT));
         $separator = $content->get(JsonInputConstant::SEPARATOR);
 
         $incorrectInputs = [];
@@ -120,12 +120,14 @@ class TagsService extends ControllerServiceBase
 
             if (Validator::verifyUlnFormat($ulnString, false)) {
                 $ulnParts = Utils::getUlnFromString($ulnString);
-                if ($ulnParts[JsonInputConstant::ULN_COUNTRY_CODE] === $countryCode) {
+                $ulnCountryCode = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE];
+                if ($ulnCountryCode === $countryCode) {
                     $ulnPartsArray[] = $ulnParts;
                     continue;
                 } else {
                     $incorrectInputs[] = trim($part) . ' '.
-                        $this->translator->trans('COUNTRY CODE DOES NOT MATCH COUNTRY CODE OF UBN');
+                        $this->translator->trans('COUNTRY CODE DOES NOT MATCH COUNTRY CODE OF UBN').
+                        ' ' . $ulnCountryCode . ' ' . $this->translator->trans('SHOULD BE').' '.$countryCode;
                     continue;
                 }
             }

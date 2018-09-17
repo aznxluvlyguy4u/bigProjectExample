@@ -367,7 +367,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         $content = RequestUtil::getContentAsArray($request);
-        $plainTextInput = $content->get(JsonInputConstant::PLAIN_TEXT_INPUT);
+        $plainTextInput = StringUtil::preparePlainTextInput($content->get(JsonInputConstant::PLAIN_TEXT_INPUT));
         $separator = $content->get(JsonInputConstant::SEPARATOR);
 
         $ubns = [];

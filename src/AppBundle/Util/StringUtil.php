@@ -614,6 +614,26 @@ class StringUtil
 
 
     /**
+     * @param $string
+     * @return string
+     */
+    public static function preparePlainTextInput($string): string
+    {
+        if (!is_string($string)) {
+            return '';
+        }
+        // Note strtr does not work for \n, \r and \t
+        // Remove new lines
+        $string = str_replace("\n", "", $string);
+        $string = str_replace("\r", "", $string);
+
+        // remove tabs
+        $string = str_replace("\t", "", $string);
+        return strtr($string, [' ' => '',]);
+    }
+
+
+    /**
      * @param string $string
      * @return string
      */
