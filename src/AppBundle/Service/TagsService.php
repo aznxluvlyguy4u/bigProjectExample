@@ -96,6 +96,20 @@ class TagsService extends ControllerServiceBase
     }
 
 
+    public function deleteTag(Request $request, Tag $tag)
+    {
+        $client = $this->getAccountOwner($request);
+        if (!$tag->getOwnerId() === $client->getId()) {
+            throw new PreconditionFailedHttpException($this->translator->trans('TAG DOES NOT BELONG TO YOU'));
+        }
+
+        $this->getManager()->remove($tag);
+        $this->getManager()->flush();
+
+        return $this->createTagsOutputByRequest($request);
+    }
+
+
     /**
      * @param ArrayCollection $content
      * @param string $countryCode

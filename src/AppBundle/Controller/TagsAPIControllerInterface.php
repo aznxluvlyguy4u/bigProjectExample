@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Tag;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -28,4 +29,11 @@ interface TagsAPIControllerInterface
      * @return mixed
      */
   public function createTags(Request $request);
+
+    /**
+     * @param Request $request
+     * @param Tag $tag
+     * @return mixed
+     */
+  public function deleteTag(Request $request, Tag $tag);
 }

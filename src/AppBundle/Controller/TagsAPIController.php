@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Tag;
 use AppBundle\Service\TagsService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -69,6 +70,13 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    *        "required"=false,
    *        "description"=" Tags to filter on",
    *        "format"="?state=state-type"
+   *      },
+   *     {
+   *        "name"="ignore_location",
+   *        "dataType"="boolean",
+   *        "required"=false,
+   *        "description"=" Choose whether to return only tags linked to selected location or all tags linked to client. By default is false for NL locations and true for non-NL locations",
+   *        "format"="?ignore_location=false"
    *      }
    *   },
    *   resource = true,
@@ -78,6 +86,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    * @return JsonResponse
    * @Route("")
    * @Method("GET")
+   * @throws \Exception
    */
   public function getTags(Request $request)
   {
@@ -106,6 +115,13 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
      *        "required"=false,
      *        "description"=" Tags to filter on",
      *        "format"="?state=state-type"
+     *      },
+     *     {
+     *        "name"="ignore_location",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"=" Choose whether to return only tags linked to selected location or all tags linked to client. By default is false for NL locations and true for non-NL locations",
+     *        "format"="?ignore_location=false"
      *      }
      *   },
      *   resource = true,
@@ -115,9 +131,58 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
      * @return JsonResponse
      * @Route("")
      * @Method("POST")
+     * @throws \Exception
      */
     public function createTags(Request $request)
     {
         return $this->get(TagsService::class)->createTags($request);
+    }
+
+
+    /**
+     * @ApiDoc(
+     *   section = "Tags",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the ADMIN that is registered with the API"
+     *     },
+     *     {
+     *       "name"="tag",
+     *       "dataType"="integer",
+     *       "requirement"="\d+",
+     *       "description"="The id of the tag to be deleted"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="state",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"=" Tags to filter on",
+     *        "format"="?state=state-type"
+     *      },
+     *     {
+     *        "name"="ignore_location",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"=" Choose whether to return only tags linked to selected location or all tags linked to client. By default is false for NL locations and true for non-NL locations",
+     *        "format"="?ignore_location=false"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Delete a tag by id"
+     * )
+     * @Method("DELETE")
+     * @Route("/{tag}")
+     * @param Request $request
+     * @param Tag $tag
+     * @return array
+     */
+    public function deleteTag(Request $request, Tag $tag)
+    {
+        return $this->get(TagsService::class)->deleteTag($request, $tag);
     }
 }
