@@ -1,14 +1,11 @@
 <?php
 
 namespace AppBundle\Output;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
-use AppBundle\Component\Count;
 use AppBundle\Entity\Employee;
-use AppBundle\Entity\Location;
 use AppBundle\Entity\VwaEmployee;
-use AppBundle\Enumerator\LiveStockType;
-use AppBundle\Enumerator\RequestType;
-use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\EntityManagerInterface;
 
 
 /**
@@ -17,12 +14,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 class MenuBarOutput extends Output
 {
 
-    public static function create(Client $client)
+    public static function create(EntityManagerInterface $em, Client $client)
     {
         $result = array(
                   "first_name" => $client->getFirstName(),
                   "last_name" => $client->getLastName(),
-                  "ubns" => self::createUbnsArray($client),
+                  JsonInputConstant::LOCATIONS => self::createLocationsArray($em, $client),
                   "email_address" => $client->getEmailAddress()
         );
 
@@ -56,19 +53,22 @@ class MenuBarOutput extends Output
     }
 
 
-    public static function createUbnsArray(Client $client)
+    public static function createLocationsArray(EntityManagerInterface $em, Client $client)
     {
-        $ubns = array();
-
-        foreach($client->getCompanies() as $company) {
-            foreach($company->getLocations() as $location) {
-                if($location->getIsActive()) {
-                    $ubns[] = $location->getUbn();
-                }
-            }
+        if (!$client || !is_int($client->getId())) {
+            return [];
         }
 
-        return $ubns;
+        $sql = "SELECT
+                  l.ubn,
+                  cd.code as ".JsonInputConstant::COUNTRY_CODE."
+                FROM location l
+                  INNER JOIN company c ON l.company_id = c.id
+                  INNER JOIN address a ON l.address_id = a.id
+                  LEFT JOIN country cd ON cd.name = a.country
+                WHERE c.is_active AND l.is_active
+                  AND c.owner_id = ".$client->getId();
+        return $em->getConnection()->query($sql)->fetchAll();
     }
 
 }

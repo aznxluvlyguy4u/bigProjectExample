@@ -130,7 +130,7 @@ class AuthService extends AuthServiceBase
                 /** @var Client $client */
                 $result = [
                     "access_token"=>$client->getAccessToken(),
-                    "user" => MenuBarOutput::create($client)
+                    "user" => MenuBarOutput::create($this->getManager(), $client)
                 ];
 
                 $client->setLastLoginDate(new \DateTime());
