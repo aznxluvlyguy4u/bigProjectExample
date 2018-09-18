@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
@@ -3031,6 +3032,16 @@ abstract class Animal
     {
         $this->nLing = $nLing;
         return $this;
+    }
+
+
+    /**
+     * @param null|string $nullFiller
+     * @return null|string
+     */
+    public function getAnimalTypeInLatin($nullFiller = null)
+    {
+        return AnimalTypeInLatin::getByDatabaseEnum($this->animalType) ?? $nullFiller;
     }
 
 

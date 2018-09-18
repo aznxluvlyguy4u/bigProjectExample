@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Enumerator;
+use AppBundle\Traits\EnumInfo;
 
 /**
  * Class AnimalType
@@ -8,6 +9,8 @@ namespace AppBundle\Enumerator;
  */
 class AnimalType
 {
+    use EnumInfo;
+
     const sheep = 3;
     const goat = 4;
 }
