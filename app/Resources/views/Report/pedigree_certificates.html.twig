@@ -25,21 +25,7 @@
         {% set breederPostalCode = x.postalCodeBreeder %}
         {% set breederCity = x.addressBreeder.city %}
         {% set breederNumber = x.breederNumber %}
-
-        {# BreedIndex #}
-
-        {% set breedIndexStars = x.breederIndexStars %}
-        {% set mBreedIndexStars = x.mBreederIndexStars %}
-        {% set fBreedIndexStars = x.fBreederIndexStars %}
-        {% set extIndexStars = x.extIndexStars %}
-        {% set vlIndexStars = x.vlIndexStars %}
-
-        {#number/accuracy like 128/78#}
-        {% set breedIndexNoAcc = x.breederIndexNoAcc %}
-        {% set mBreedIndexNoAcc = x.mBreederIndexNoAcc %}
-        {% set fBreedIndexNoAcc = x.fBreederIndexNoAcc %}
-        {% set extIndexNoAcc = x.extIndexNoAcc %}
-
+        
         {# Animals, 'animals' #}
 
         {# child, 'c' #}
@@ -4026,53 +4012,6 @@
                     <switch>
                         <foreignObject style="overflow:visible;" pointer-events="all" width="144" height="90" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
                             <div xmlns="http://www.w3.org/1999/xhtml" style="display: inline-block; font-size: 12px; font-family: Lato; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 145px; height: 91px; overflow: hidden; white-space: nowrap;">
-                                <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
-                                    <tbody>
-                                    {#<tr>#}
-                                        {#<td style="text-align: center">#}
-                                            {#<font style="font-size: 12px">{{include(template_from_string(breedIndexStars))}}</font>#}
-                                            {#<br/>#}
-                                        {#</td>#}
-                                        {#<td>#}
-                                            {#<span>{{breedIndexNoAcc}}#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: center">#}
-                                            {#<span>{{include(template_from_string(mBreedIndexStars))}}#}
-                                            {#<br/>#}
-                                        {#</td>#}
-                                        {#<td>{{mBreedIndexNoAcc}}#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: center">#}
-                                            {#<span>{{include(template_from_string(fBreedIndexStars))}}#}
-                                            {#<br/>#}
-                                        {#</td>#}
-                                        {#<td>{{fBreedIndexNoAcc}}#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: center">#}
-                                            {#<span>{{include(template_from_string(extIndexStars))}}#}
-                                            {#<br/>#}
-                                        {#</td>#}
-                                        {#<td>{{extIndexNoAcc}}#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    <tr>
-                                        <td style="text-align: center">
-                                            {{include(template_from_string(vlIndexStars))}}
-                                            <br/>
-                                        </td>
-                                        <td>
-                                            <span>{{cVl}}
-                                            <br/>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
                             </div>
                         </foreignObject>
                         <text x="72" y="51" fill="#000000" text-anchor="middle" font-size="12px" font-family="Lato">[Not supported by viewer]</text>
