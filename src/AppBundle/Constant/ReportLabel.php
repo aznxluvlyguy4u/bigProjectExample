@@ -57,6 +57,7 @@ class ReportLabel
     const ANIMALS = 'animals';
     const ANIMAL_COUNT = 'animalCount';
     const ANIMAL_CATEGORY = 'animalCategory';
+    const ANIMAL_TYPE = 'animalType';
     const ANIMAL_TYPE_IN_LATIN = 'animalTypeInLatin';
     const RAM = 'ram';
     const EWE = 'ewe';

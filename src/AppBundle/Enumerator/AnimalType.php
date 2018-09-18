@@ -13,4 +13,12 @@ class AnimalType
 
     const sheep = 3;
     const goat = 4;
+
+    static function getByDatabaseEnum($enum): ?string {
+        switch ($enum) {
+            case AnimalType::sheep: return 'SHEEP';
+            case AnimalType::goat: return 'GOAT';
+            default: return null;
+        }
+    }
 }
