@@ -489,6 +489,10 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeCertificateReportService
         lazy: true
+        calls:
+          - method: setPedigreeCertificatesGenerator
+            arguments:
+              - '@AppBundle\Report\PedigreeCertificates'
 
     AppBundle\Service\Report\PedigreeRegisterOverviewReportService:
         parent: app.report.base
@@ -511,6 +515,20 @@ services:
     app.report.vwa.ubns_overview:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaUbnsOverviewReportService
+
+    AppBundle\Report\PedigreeCertificate:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@translator'
+        lazy: true
+
+    AppBundle\Report\PedigreeCertificates:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@AppBundle\Report\PedigreeCertificate'
+        calls:
+          - method: initializeConstants
+        lazy: true
 
     app.writer.csv_from_sql_results:
         class: AppBundle\Service\CsvFromSqlResultsWriterService

@@ -6,17 +6,13 @@ namespace AppBundle\Service\Report;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\ReportAPIController;
-use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Report\PedigreeCertificates;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\HttpFoundation\Request;
 
 class PedigreeCertificateReportService extends ReportServiceBase
 {
@@ -27,8 +23,17 @@ class PedigreeCertificateReportService extends ReportServiceBase
     const FILENAME = self::TITLE;
 
     /** @var PedigreeCertificates */
-    private $reportResults;
+    private $pedigreeCertificatesGenerator;
 
+    /**
+     * @required
+     *
+     * @param PedigreeCertificates $pedigreeCertificatesGenerator
+     */
+    public function setPedigreeCertificatesGenerator(PedigreeCertificates $pedigreeCertificatesGenerator)
+    {
+        $this->pedigreeCertificatesGenerator = $pedigreeCertificatesGenerator;
+    }
 
     /**
      * @param Person $person
@@ -55,7 +60,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
 
         $this->setLocale($locale);
 
-        $this->reportResults = new PedigreeCertificates($this->em, $content, $client, $location);
+        $this->pedigreeCertificatesGenerator->generate($content, $client, $location);
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
@@ -71,7 +76,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
     {
         //Or use... $this->getCurrentEnvironment() == Environment::PROD;
         $twigFile = ReportAPIController::IS_USE_PROD_VERSION_OUTPUT ? self::TWIG_FILE : self::TWIG_FILE_BETA;
-        return $this->getPdfReportBase($twigFile, $this->reportResults->getReports(), true);
+        return $this->getPdfReportBase($twigFile, $this->pedigreeCertificatesGenerator->getReports(), true);
     }
 
 
@@ -99,7 +104,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
             'pedigree' => 'stn'
         ];
 
-        $csvData = $this->convertNestedArraySetsToSqlResultFormat($this->reportResults->getReports(), $keysToIgnore, $customKeysToTranslate);
+        $csvData = $this->convertNestedArraySetsToSqlResultFormat($this->pedigreeCertificatesGenerator->getReports(), $keysToIgnore, $customKeysToTranslate);
 
         return $this->generateFile($this->filename,
             $csvData,self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting

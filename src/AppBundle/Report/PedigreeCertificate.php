@@ -24,6 +24,8 @@ use AppBundle\Util\Translation;
 use AppBundle\Util\TwigOutputUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class PedigreeCertificate
 {
@@ -56,17 +58,10 @@ class PedigreeCertificate
     /** @var ExteriorRepository */
     private $exteriorRepository;
 
-    /**
-     * PedigreeCertificate constructor.
-     * @param ObjectManager $em
-     * @param string $ubn
-     * @param int $animalId
-     * @param string $trimmedClientName
-     * @param CompanyAddress $companyAddress
-     * @param string $breedValuesLastGenerationDate
-     */
-    public function __construct(ObjectManager $em, $ubn, $animalId, $trimmedClientName, $companyAddress,
-                                $breedValuesLastGenerationDate)
+    /** @var TranslatorInterface */
+    private $translator;
+
+    public function __construct(EntityManagerInterface $em, TranslatorInterface $translator)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -74,6 +69,21 @@ class PedigreeCertificate
         $this->litterRepository = $em->getRepository(Litter::class);
         $this->exteriorRepository = $em->getRepository(Exterior::class);
 
+        $this->translator = $translator;
+    }
+
+
+    /**
+     * @param string $ubn
+     * @param int $animalId
+     * @param string $trimmedClientName
+     * @param CompanyAddress $companyAddress
+     * @param string $breedValuesLastGenerationDate
+     * @return array
+     */
+    public function generate($ubn, $animalId, $trimmedClientName, $companyAddress,
+                                $breedValuesLastGenerationDate)
+    {
         $this->data = array();
 
         //Set Default Owner details
@@ -90,7 +100,7 @@ class PedigreeCertificate
         $this->setBreederDataFromAnimalIdBySql($animalId);
 
         /** @var PedigreeRegisterRepository $pedigreeRegisterRepository */
-        $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
+        $pedigreeRegisterRepository = $this->em->getRepository(PedigreeRegister::class);
         $this->data[ReportLabel::PEDIGREE_REGISTER_NAME] = $this->parsePedigreeRegisterText($pedigreeRegisterRepository->getFullnameByAnimalId($animalId));
 
         // Add shared data
@@ -101,6 +111,8 @@ class PedigreeCertificate
         $generation = 0;
         $this->addAnimalValues($keyAnimal, $animalId, $generation);
         $this->addParents($animalId, $keyAnimal, $generation);
+
+        return $this->getData();
     }
 
 

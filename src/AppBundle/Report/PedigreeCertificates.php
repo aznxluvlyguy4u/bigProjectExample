@@ -3,20 +3,16 @@
 namespace AppBundle\Report;
 
 
-use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
-use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\NormalDistribution;
-use AppBundle\Enumerator\BreedValueCoefficientType;
 use AppBundle\Util\StringUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Class PedigreeCertificates
@@ -31,23 +27,38 @@ class PedigreeCertificates extends ReportBase
     /** @var int */
     private $animalCount;
 
+    /** @var PedigreeCertificate */
+    private $generator;
+
+    public function __construct(EntityManagerInterface $em, PedigreeCertificate $generator)
+    {
+        parent::__construct($em, null, self::FILE_NAME_REPORT_TYPE);
+        $this->generator = $generator;
+    }
+
+    /**
+     * @required
+     */
+    public function initializeConstants()
+    {
+        $this->fileNameType = self::FILE_NAME_REPORT_TYPE;
+    }
+
     /**
      * Create the data for the PedigreeCertificate.
      * Before this is run, it is assumed all the ulns have been verified.
      *
-     * @param ObjectManager $em
      * @param Collection $content containing the ulns of multiple animals
      * @param Client $client
      * @param Location $location
+     * @throws \Exception
      */
-    public function __construct(ObjectManager $em, Collection $content, $client, $location)
+    public function generate(Collection $content, $client, $location)
     {
-        parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
-        
         $this->reports = array();
         $this->client = $client;
 
-        $animalIds = self::getAnimalsInContentArray($em, $content);
+        $animalIds = self::getAnimalsInContentArray($this->em, $content);
         $this->animalCount = 0;
 
         if($client == null && $location == null) { //user is admin
@@ -62,17 +73,16 @@ class PedigreeCertificates extends ReportBase
             $ubn = $location->getUbn();
         }
 
-        $breedValuesLastGenerationDate = $em->getRepository(BreedValue::class)->getBreedValueLastGenerationDate();
+        $breedValuesLastGenerationDate = $this->em->getRepository(BreedValue::class)->getBreedValueLastGenerationDate();
 
         foreach ($animalIds as $animalId) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $ubn, $animalId, $trimmedCompanyName, $companyAddress,
-                $breedValuesLastGenerationDate);
-
-            $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
+            $this->reports[$this->animalCount] = $this->generator
+                ->generate($ubn, $animalId, $trimmedCompanyName, $companyAddress, $breedValuesLastGenerationDate);
 
             $this->animalCount++;
         }
     }
+
 
     /**
      * @param ObjectManager $em
