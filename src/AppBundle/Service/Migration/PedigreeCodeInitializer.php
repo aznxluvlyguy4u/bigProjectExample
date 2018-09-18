@@ -14,6 +14,7 @@ class PedigreeCodeInitializer extends MigratorServiceBase implements IMigratorSe
 {
     const IMPORT_SUB_FOLDER = 'initial_values/';
 
+    const PEDIGREE_CODE_DETAILS = 'pedigree_codes.csv';
     const PEDIGREE_CODES = 'pedigree_register_pedigree_codes.csv';
 
     /** @var array */
@@ -27,6 +28,7 @@ class PedigreeCodeInitializer extends MigratorServiceBase implements IMigratorSe
         parent::__construct($em, self::BATCH_SIZE, self::IMPORT_SUB_FOLDER, $rootDir);
 
         $this->filenames = array(
+            self::PEDIGREE_CODE_DETAILS => self::PEDIGREE_CODE_DETAILS,
             self::PEDIGREE_CODES => self::PEDIGREE_CODES,
         );
 
@@ -39,6 +41,7 @@ class PedigreeCodeInitializer extends MigratorServiceBase implements IMigratorSe
     public function run(CommandUtil $cmdUtil)
     {
         $this->initializePedigreeCodes();
+        $this->initializePedigreeCodesFromPedigreeRegisters();
         $this->initializePedigreeRegisterPedigreeCodesRelationships();
         $this->pedigreeCodes = null;
         $this->pedigreeRegisters = null;
@@ -47,6 +50,61 @@ class PedigreeCodeInitializer extends MigratorServiceBase implements IMigratorSe
 
     private function initializePedigreeCodes()
     {
+        $this->writeLn('PedigreeCodes: Processing '.self::PEDIGREE_CODE_DETAILS.' ... ');
+
+        $csv = $this->parseCSV(self::PEDIGREE_CODE_DETAILS);
+
+        $insertCount = 0;
+        $updateCount = 0;
+
+        foreach ($csv as $record) {
+            $code = $record[0];
+            $fullname = $record[1];
+
+            $pedigreeCode = $this->getPedigreeCode($code);
+            if ($pedigreeCode) {
+                $updatePedigreeCode = false;
+                if ($pedigreeCode->getFullName() !== $fullname) {
+                    $pedigreeCode->setFullName($fullname);
+                    $updatePedigreeCode = true;
+                }
+
+                if (!$pedigreeCode->isValidated()) {
+                    $pedigreeCode->setIsValidated(true);
+                    $updatePedigreeCode = true;
+                }
+
+                if (!$updatePedigreeCode) {
+                    continue;
+                }
+
+                $this->em->persist($pedigreeCode);
+                $this->em->flush();
+                $this->pedigreeCodes[$code] = $pedigreeCode;
+                $updateCount++;
+                continue;
+            }
+
+            $pedigreeCode = new PedigreeCode($code, $fullname, true);
+            $this->pedigreeCodes[$code] = $pedigreeCode;
+            $this->em->persist($pedigreeCode);
+            $this->em->flush();
+            $insertCount++;
+        }
+
+        if ($insertCount > 0) {
+            $this->em->flush();
+        }
+
+        $this->writeLn(($insertCount > 0 ? $insertCount : 'No') . ' new PedigreeCodes inserted');
+        $this->writeLn(($updateCount > 0 ? $updateCount : 'No') . ' existing PedigreeCodes updated');
+    }
+
+
+    private function initializePedigreeCodesFromPedigreeRegisters()
+    {
+        $this->writeLn('PedigreeCodes: Processing '.self::PEDIGREE_CODES.' ... ');
+
         $csv = $this->parseCSV(self::PEDIGREE_CODES);
 
         $insertCount = 0;
@@ -76,6 +134,8 @@ class PedigreeCodeInitializer extends MigratorServiceBase implements IMigratorSe
 
     private function initializePedigreeRegisterPedigreeCodesRelationships()
     {
+        $this->writeLn('PedigreeRegister-PedigreeCode relationships: Processing '.self::PEDIGREE_CODES.' ... ');
+
         $csv = $this->parseCSV(self::PEDIGREE_CODES);
 
         $updateCount = 0;
