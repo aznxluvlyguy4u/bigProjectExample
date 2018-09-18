@@ -96,8 +96,6 @@ class PedigreeCertificate
         //Set CurrentOwner Details!
         $this->setOwnerDataFromAnimalIdBySql($animalId);
 
-        //TODO Phase 2: Add breeder information
-        $this->data[ReportLabel::BREEDER] = null; //TODO delete this from twig file
         $this->setBreederDataFromAnimalIdBySql($animalId);
 
         /** @var PedigreeRegisterRepository $pedigreeRegisterRepository */
@@ -188,12 +186,10 @@ class PedigreeCertificate
                 $this->data[ReportLabel::BREEDER_NAME] = self::GENERAL_NULL_FILLER;
                 $this->data[ReportLabel::ADDRESS_BREEDER] = $this->getEmptyLocationAddress();
                 $this->data[ReportLabel::POSTAL_CODE_BREEDER] = self::GENERAL_NULL_FILLER;
-                $this->data[ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
             } else {
                 $ubnOfBreeder = Utils::getNullCheckedArrayValue('ubn_of_birth', $result);
 
                 //Use currentOwner values
-                $breederNumber = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('breeder_number', $result), self::GENERAL_NULL_FILLER);
                 $companyName = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('company_name', $result), self::GENERAL_NULL_FILLER);
                 $streetName = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('street_name', $result), self::GENERAL_NULL_FILLER);
                 $addressNumber = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number', $result), self::GENERAL_NULL_FILLER);
