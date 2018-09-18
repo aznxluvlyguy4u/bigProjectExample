@@ -22,6 +22,7 @@ use AppBundle\Filter\ActiveInvoiceFilter;
 use AppBundle\Filter\ActiveLocationFilter;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
+use AppBundle\Setting\InvoiceSetting;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\ArrayUtil;
@@ -155,11 +156,16 @@ class CompanyService extends AuthServiceBase
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
         $company->setCompanyRelationNumber($content->get('company_relation_number'));
-        $company->setDebtorNumber($content->get('debtor_number'));
+
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
-        $company->setTwinfieldOfficeCode($content->get("twinfield_administration_code"));
+
+        if (InvoiceSetting::IS_ACTIVE) {
+            $company->setTwinfieldOfficeCode($content->get("twinfield_administration_code"));
+            $company->setDebtorNumber($content->get('debtor_number'));
+        }
+
         if($content->get('subscription_date')) {
             $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
         }
@@ -398,10 +404,15 @@ class CompanyService extends AuthServiceBase
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
         $company->setCompanyRelationNumber($content->get('company_relation_number'));
-        $company->setDebtorNumber($content->get('debtor_number'));
+
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
-        $company->setTwinfieldOfficeCode($content->get("twinfield_administration_code"));
+
+        if (InvoiceSetting::IS_ACTIVE) {
+            $company->setTwinfieldOfficeCode($content->get("twinfield_administration_code"));
+            $company->setDebtorNumber($content->get('debtor_number'));
+        }
+
         if ($company->getAnimalHealthSubscription() != $content->get('animal_health_subscription')) {
             $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
             AdminActionLogWriter::updateAnimalHealthSubscription($this->getManager(), $admin, $company);
