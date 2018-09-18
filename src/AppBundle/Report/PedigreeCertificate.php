@@ -15,6 +15,7 @@ use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\PedigreeRegisterRepository;
+use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StarValueUtil;
@@ -304,11 +305,17 @@ class PedigreeCertificate
                 $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
                     scrapie_genotype, breed, breed_type, breed_code, date_of_birth, gender, predicate, predicate_score,
                     parent_father_id as father_id, parent_mother_id as mother_id, blindness_factor, c.company_name, d.city,
-                    a.nickname
+                    a.nickname,
+                    a.animal_type,
+                    birth_address.country as country_of_birth,
+                    pedigree_code.code as breed_code_letters,
+                    pedigree_code.full_name as breed_code_fullname
                 FROM animal a
                     LEFT JOIN location l ON a.location_of_birth_id = l.id
                     LEFT JOIN company c ON l.company_id = c.id
                     LEFT JOIN address d ON d.id = c.address_id
+                    LEFT JOIN address birth_address ON l.address_id = birth_address.id
+                    LEFT JOIN pedigree_code ON pedigree_code.code = substring(a.breed_code, 1, 2)
                 WHERE a.id = ".$animalId;
                 $animalData = $this->conn->query($sql)->fetch();
 
@@ -317,9 +324,13 @@ class PedigreeCertificate
                 $stn = $animalData[JsonInputConstant::STN];
                 $breed = $animalData[JsonInputConstant::BREED];
                 $breedCode = $animalData[JsonInputConstant::BREED_CODE];
+                $breedCodeLetters = $animalData[JsonInputConstant::BREED_CODE_LETTERS];
+                $breedCodeFullname = $animalData[JsonInputConstant::BREED_CODE_FULLNAME];
+                $countryOfBirth = $animalData[JsonInputConstant::COUNTRY_OF_BIRTH];
                 $breedType = $animalData[JsonInputConstant::BREED_TYPE];
                 $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
                 $gender = $animalData[JsonInputConstant::GENDER];
+                $animalTypeInLating = AnimalTypeInLatin::getByDatabaseEnum($animalData[JsonInputConstant::ANIMAL_TYPE]);
 
                 $nickname = null;
                 if(self::SHOW_NICKNAME) {
@@ -361,6 +372,10 @@ class PedigreeCertificate
                 $breedType = null;
                 $scrapieGenotype = null;
                 $gender = null;
+                $animalTypeInLating = null;
+                $breedCodeLetters = null;
+                $breedCodeFullname = null;
+                $countryOfBirth = null;
                 $nickname = null;
                 $predicate = self::GENERAL_NULL_FILLER;
                 $blindnessFactor = self::GENERAL_NULL_FILLER;
@@ -445,6 +460,10 @@ class PedigreeCertificate
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = self::getTypeAndInspectionDateByDateTime(
                 $animalCache[JsonInputConstant::KIND], $exteriorMeasurementDate, self::GENERAL_NULL_FILLER
             );
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ANIMAL_TYPE_IN_LATIN] = $animalTypeInLating ?? self::GENERAL_NULL_FILLER;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE_LETTERS] = $breedCodeLetters ?? self::GENERAL_NULL_FILLER;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE_FULLNAME] = $breedCodeFullname ?? self::GENERAL_NULL_FILLER;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::COUNTRY_OF_BIRTH] = $countryOfBirth ?? self::GENERAL_NULL_FILLER;
 
             /* variables translated to Dutch */
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($gender);

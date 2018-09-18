@@ -57,6 +57,7 @@ class ReportLabel
     const ANIMALS = 'animals';
     const ANIMAL_COUNT = 'animalCount';
     const ANIMAL_CATEGORY = 'animalCategory';
+    const ANIMAL_TYPE_IN_LATIN = 'animalTypeInLatin';
     const RAM = 'ram';
     const EWE = 'ewe';
     const EWES = 'ewes';
@@ -69,6 +70,7 @@ class ReportLabel
     const PEDIGREE_NUMBER = 'pedigreeNumber';
     const PEDIGREE = 'pedigree';
     const NAME = 'name';
+    const COUNTRY_OF_BIRTH = 'countryOfBirth';
     const DATE_OF_BIRTH = 'dateOfBirth';
     const LITTER_SIZE = 'litterSize'; //litter animal was born in
     const LITTER_GROUP = 'litterGroup'; //litter animal was born in
@@ -81,6 +83,8 @@ class ReportLabel
     const BREED = 'breed';
     const BREED_TYPE = 'breedType';
     const BREED_CODE = 'breedCode';
+    const BREED_CODE_LETTERS = 'breedCodeLetters';
+    const BREED_CODE_FULLNAME = 'breedCodeFullname';
     const INSPECTION_DATE = 'inspectionDate';
     const PREDICATE = 'predicate';
     const BLINDNESS_FACTOR = 'blindnessFactor';
