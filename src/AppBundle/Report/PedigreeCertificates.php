@@ -8,6 +8,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\NormalDistribution;
@@ -61,8 +62,11 @@ class PedigreeCertificates extends ReportBase
             $ubn = $location->getUbn();
         }
 
+        $breedValuesLastGenerationDate = $em->getRepository(BreedValue::class)->getBreedValueLastGenerationDate();
+
         foreach ($animalIds as $animalId) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $ubn, $animalId, $trimmedCompanyName, $companyAddress);
+            $pedigreeCertificate = new PedigreeCertificate($em, $ubn, $animalId, $trimmedCompanyName, $companyAddress,
+                $breedValuesLastGenerationDate);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 

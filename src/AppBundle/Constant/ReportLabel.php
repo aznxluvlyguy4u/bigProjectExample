@@ -85,6 +85,7 @@ class ReportLabel
     const BREED_CODE = 'breedCode';
     const BREED_CODE_LETTERS = 'breedCodeLetters';
     const BREED_CODE_FULLNAME = 'breedCodeFullname';
+    const BREED_VALUES_EVALUATION_DATE = 'breedValuesEvaluationDate';
     const INSPECTION_DATE = 'inspectionDate';
     const PREDICATE = 'predicate';
     const BLINDNESS_FACTOR = 'blindnessFactor';

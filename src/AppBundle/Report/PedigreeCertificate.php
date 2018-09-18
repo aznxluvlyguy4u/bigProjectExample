@@ -63,8 +63,10 @@ class PedigreeCertificate
      * @param int $animalId
      * @param string $trimmedClientName
      * @param CompanyAddress $companyAddress
+     * @param string $breedValuesLastGenerationDate
      */
-    public function __construct(ObjectManager $em, $ubn, $animalId, $trimmedClientName, $companyAddress)
+    public function __construct(ObjectManager $em, $ubn, $animalId, $trimmedClientName, $companyAddress,
+                                $breedValuesLastGenerationDate)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -90,6 +92,9 @@ class PedigreeCertificate
         /** @var PedigreeRegisterRepository $pedigreeRegisterRepository */
         $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
         $this->data[ReportLabel::PEDIGREE_REGISTER_NAME] = $this->parsePedigreeRegisterText($pedigreeRegisterRepository->getFullnameByAnimalId($animalId));
+
+        // Add shared data
+        $this->data[ReportLabel::BREED_VALUES_EVALUATION_DATE] = $breedValuesLastGenerationDate;
 
         $keyAnimal = ReportLabel::CHILD_KEY;
 
