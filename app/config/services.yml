@@ -520,6 +520,8 @@ services:
         arguments:
             - '@doctrine.orm.entity_manager'
             - '@translator'
+            - '%use_test_data%'
+            - '%environment%'
         lazy: true
 
     AppBundle\Report\PedigreeCertificates:
