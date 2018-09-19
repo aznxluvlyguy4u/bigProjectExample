@@ -87,6 +87,7 @@ class ReportLabel
     const BREED_CODE = 'breedCode';
     const BREED_CODE_LETTERS = 'breedCodeLetters';
     const BREED_CODE_FULLNAME = 'breedCodeFullname';
+    const BREED_VALUES = 'breedValues';
     const BREED_VALUES_EVALUATION_DATE = 'breedValuesEvaluationDate';
     const INSPECTION_DATE = 'inspectionDate';
     const PREDICATE = 'predicate';
@@ -122,10 +123,6 @@ class ReportLabel
     const SL = 'sl';
     const MARKINGS = 'markings';
 
-
-    const MUSCLE_THICKNESS = 'muscleThickness';
-    const BODY_FAT = 'bodyFat';
-    const TAIL_LENGTH = 'tailLength';
 
     //Pedrigree / Bloodline
     const CHILD_KEY = 'c';

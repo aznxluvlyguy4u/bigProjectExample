@@ -18,8 +18,10 @@ use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\NumberUtil;
 use AppBundle\Util\StarValueUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
@@ -66,6 +68,8 @@ class PedigreeCertificate
     private $translator;
     /** @var boolean */
     private $useTestData;
+    /** @var array */
+    private $breedValueResultTableColumnNamesSets;
 
     public function __construct(EntityManagerInterface $em,
                                 TranslatorInterface $translator,
@@ -91,12 +95,14 @@ class PedigreeCertificate
      * @param string $ownerEmailAddress
      * @param CompanyAddress $companyAddress
      * @param string $breedValuesLastGenerationDate
+     * @param array $breedValueResultTableColumnNamesSets
      * @return array
      */
     public function generate($ubn, $animalId, $trimmedClientName, $ownerEmailAddress, $companyAddress,
-                                $breedValuesLastGenerationDate)
+                                $breedValuesLastGenerationDate, $breedValueResultTableColumnNamesSets)
     {
         $this->data = array();
+        $this->breedValueResultTableColumnNamesSets = $breedValueResultTableColumnNamesSets;
 
         //Set Default Owner details
         $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName != null ? $trimmedClientName: self::GENERAL_NULL_FILLER;
@@ -544,34 +550,59 @@ class PedigreeCertificate
      */
     private function addBreedValuesToArrayFromSqlResult($key, $breedGrades)
     {
-        if(is_array($breedGrades)) {
-            $muscleThickness = BreedFormat::formatMuscleThicknessBreedValue($breedGrades['muscle_thickness'], $breedGrades['muscle_thickness_accuracy']);
-            $bodyFat = BreedFormat::formatFatThickness3BreedValue($breedGrades['fat_thickness3'], $breedGrades['fat_thickness3accuracy']);
-            $growth = BreedFormat::formatGrowthBreedValue($breedGrades['growth'], $breedGrades['growth_accuracy']);
-            $litterSizeBreedValue = BreedFormat::formatBreedValue($breedGrades['total_born'], $breedGrades['total_born_accuracy']);
-            $tailLength = BreedFormat::formatBreedValue($breedGrades['tail_length'], $breedGrades['tail_length_accuracy']);
-
-        } else {
-            $muscleThickness = BreedFormat::EMPTY_BREED_VALUE;
-            $bodyFat = BreedFormat::EMPTY_BREED_VALUE;
-            $growth = BreedFormat::EMPTY_BREED_VALUE;
-            $litterSizeBreedValue = BreedFormat::EMPTY_BREED_VALUE;
-            $tailLength = BreedFormat::EMPTY_BREED_VALUE;
+        if(!is_array($breedGrades)) {
+            $this->addEmptyBreedIndexes($key);
+            $this->addEmptyBreedValuesSet($key);
+            return;
         }
 
-        // Set values in result array
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $muscleThickness;
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $bodyFat;
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $growth;
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = $litterSizeBreedValue;
-
-        //NOTE this value is not used in the pdf, but it must be fill so there is no null pointer exception
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
+        $isFirstGeneration = strlen($key) <= 1;
+        if ($key == ReportLabel::CHILD_KEY || $isFirstGeneration) {
+            $this->addBreedValuesSet($key, $breedGrades);
+        }
 
         $isFirstOrSecondGeneration = strlen($key) <= 2;
         if($key == ReportLabel::CHILD_KEY || $isFirstOrSecondGeneration) {
             $this->addBreedIndexes($key, $breedGrades);
         }
+    }
+
+
+    private function addBreedValuesSet($key, $breedGrades)
+    {
+        foreach ($this->breedValueResultTableColumnNamesSets as $set)
+        {
+            $resultTableValueVariable = $set['result_table_value_variable'];
+            $resultTableAccuracyVariable = $set['result_table_accuracy_variable'];
+
+            $value = ArrayUtil::get($resultTableValueVariable, $breedGrades);
+            $accuracy = ArrayUtil::get($resultTableAccuracyVariable, $breedGrades);
+
+            $formattedValue = $value ? NumberUtil::getPlusSignIfNumberIsPositive($value) . BreedFormat::formatBreedValueValue($value) : BreedFormat::EMPTY_BREED_SINGLE_VALUE;
+            $formattedAccuracy = $accuracy ? BreedFormat::formatAccuracyForDisplay($accuracy) : BreedFormat::EMPTY_BREED_SINGLE_VALUE;
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][$resultTableValueVariable] = [
+                ReportLabel::VALUE => $formattedValue,
+                ReportLabel::ACCURACY => $formattedAccuracy,
+                ReportLabel::IS_EMPTY => empty($value) || empty($accuracy),
+            ];
+        }
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][ReportLabel::IS_EMPTY] = false;
+    }
+
+
+    private function addEmptyBreedValuesSet($key)
+    {
+        foreach ($this->breedValueResultTableColumnNamesSets as $set)
+        {
+            $resultTableValueVariable = $set['result_table_value_variable'];
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][$resultTableValueVariable] = [
+                ReportLabel::VALUE => BreedFormat::EMPTY_BREED_SINGLE_VALUE,
+                ReportLabel::ACCURACY => BreedFormat::EMPTY_BREED_SINGLE_VALUE,
+                ReportLabel::IS_EMPTY => true,
+            ];
+        }
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][ReportLabel::IS_EMPTY] = true;
     }
 
 
@@ -821,6 +852,8 @@ class PedigreeCertificate
 
         } else {
 
+            // TODO use real values when indexes are available
+
             $this->addBreedIndex(
                 $animalKey,
                 ReportLabel::INDEX_FATHER,
@@ -849,6 +882,42 @@ class PedigreeCertificate
                 0
             );
         }
+    }
+
+
+    /**
+     * @param string $animalKey
+     * @param array $breedGrades
+     */
+    private function addEmptyBreedIndexes($animalKey)
+    {
+        $this->addBreedIndex(
+            $animalKey,
+            ReportLabel::INDEX_FATHER,
+            0,
+            0
+        );
+
+        $this->addBreedIndex(
+            $animalKey,
+            ReportLabel::INDEX_MOTHER,
+            0,
+            0
+        );
+
+        $this->addBreedIndex(
+            $animalKey,
+            ReportLabel::INDEX_EXTERIOR,
+            0,
+            0
+        );
+
+        $this->addBreedIndex(
+            $animalKey,
+            ReportLabel::INDEX_BREED,
+            0,
+            0
+        );
     }
 
 

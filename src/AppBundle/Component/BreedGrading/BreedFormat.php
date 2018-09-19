@@ -21,6 +21,7 @@ class BreedFormat
     const EMPTY_INDEX_VALUE = '-';
     const EMPTY_INDEX_ACCURACY = '-';
     const EMPTY_BREED_VALUE = '-/-';
+    const EMPTY_BREED_SINGLE_VALUE = '-';
     const INDEX_DECIMAL_ACCURACY = 0;
 
     //Scaling
@@ -151,7 +152,7 @@ class BreedFormat
      * @param $breedValueType
      * @return float
      */
-    private static function formatBreedValueValue($correctedValue, $breedValueType = null)
+    public static function formatBreedValueValue($correctedValue, $breedValueType = null)
     {
         switch ($breedValueType) {
             case BreedValueTypeConstant::MUSCLE_THICKNESS:

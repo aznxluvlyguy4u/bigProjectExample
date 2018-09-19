@@ -3,6 +3,7 @@
 namespace AppBundle\Report;
 
 
+use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
@@ -76,10 +77,12 @@ class PedigreeCertificates extends ReportBase
         }
 
         $breedValuesLastGenerationDate = $this->em->getRepository(BreedValue::class)->getBreedValueLastGenerationDate();
+        $breedValueResultTableColumnNamesSets = BreedValuesResultTableUpdater::getResultTableVariables($this->conn);
 
         foreach ($animalIds as $animalId) {
             $this->reports[$this->animalCount] = $this->generator
-                ->generate($ubn, $animalId, $trimmedCompanyName, $ownerEmailAddress, $companyAddress, $breedValuesLastGenerationDate);
+                ->generate($ubn, $animalId, $trimmedCompanyName, $ownerEmailAddress, $companyAddress,
+                    $breedValuesLastGenerationDate, $breedValueResultTableColumnNamesSets);
 
             $this->animalCount++;
         }
