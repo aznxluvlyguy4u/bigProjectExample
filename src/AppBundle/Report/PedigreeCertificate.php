@@ -15,9 +15,9 @@ use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\PedigreeRegister;
-use AppBundle\Entity\PedigreeRegisterRepository;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\AnimalTypeInLatin;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StarValueUtil;
@@ -48,6 +48,8 @@ class PedigreeCertificate
     const EMPTY_SCRAPIE_GENOTYPE = '-/-';
 
     const GENERATION_OF_ASCENDANTS = 3;
+
+    const LAST_MATE_MAX_DAYS_BEFORE_TODAY = 160;
 
     /** @var array */
     private $data;
@@ -525,6 +527,10 @@ class PedigreeCertificate
                 $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = self::GENERAL_NULL_FILLER;
             }
 
+            if ($generation === 0) {
+                $this->setLastMate($animalId, $key);
+            }
+
         } else {
             $this->addAnimalValuesBySql($key, $animalId, $generation);
         }
@@ -893,4 +899,30 @@ class PedigreeCertificate
 
     }
 
+
+    private function setLastMate($animalId, $key)
+    {
+        $maxDays = self::LAST_MATE_MAX_DAYS_BEFORE_TODAY;
+        $sql = "SELECT
+                  m.ki,
+                  CONCAT(r.uln_country_code, r.uln_number) as uln_stud_ram,
+                  r.uln_country_code as uln_country_code_stud_ram,
+                  r.uln_number as uln_number_stud_ram,
+                  m.start_date,
+                  m.end_date,
+                  (m.start_date = m.end_date) as is_single_date,
+                  DATE_PART('day', NOW() - m.end_date) <= $maxDays as display_last_mate_info
+                FROM animal a
+                  INNER JOIN mate m ON m.stud_ewe_id = a.id
+                  INNER JOIN declare_nsfo_base dnb on m.id = dnb.id
+                  INNER JOIN animal r ON r.id = m.stud_ram_id
+                WHERE (dnb.request_state = '".RequestStateType::FINISHED."' 
+                    OR dnb.request_state = '".RequestStateType::FINISHED_WITH_WARNING."') AND
+                  a.id = $animalId
+                ORDER BY end_date DESC, start_date DESC LIMIT 1";
+        $result = $this->em->getConnection()->query($sql)->fetch();
+
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LAST_MATE] = $result;
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LAST_MATE][ReportLabel::IS_EMPTY] = empty($result);
+    }
 }

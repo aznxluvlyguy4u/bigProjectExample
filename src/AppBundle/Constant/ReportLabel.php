@@ -70,6 +70,7 @@ class ReportLabel
     const PEDIGREE_COUNTRY_CODE = 'pedigreeCountryCode';
     const PEDIGREE_NUMBER = 'pedigreeNumber';
     const PEDIGREE = 'pedigree';
+    const LAST_MATE = 'lastMate';
     const NAME = 'name';
     const COUNTRY_OF_BIRTH = 'countryOfBirth';
     const DATE_OF_BIRTH = 'dateOfBirth';
