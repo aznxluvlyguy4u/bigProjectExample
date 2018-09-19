@@ -110,9 +110,9 @@ class PedigreeCertificate
 
         $this->setBreederDataFromAnimalIdBySql($animalId);
 
-        /** @var PedigreeRegisterRepository $pedigreeRegisterRepository */
-        $pedigreeRegisterRepository = $this->em->getRepository(PedigreeRegister::class);
-        $this->data[ReportLabel::PEDIGREE_REGISTER_NAME] = $this->parsePedigreeRegisterText($pedigreeRegisterRepository->getFullnameByAnimalId($animalId));
+        /** @var PedigreeRegister $pedigreeRegister */
+        $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)->getByAnimalId($animalId);
+        $this->data[ReportLabel::PEDIGREE_REGISTER] = $pedigreeRegister;
 
         // Add shared data
         $this->data[ReportLabel::BREED_VALUES_EVALUATION_DATE] = $breedValuesLastGenerationDate;
@@ -892,21 +892,5 @@ class PedigreeCertificate
         }
 
     }
-
-
-    /**
-     * @param string $registerName
-     * @return string
-     */
-    private function parsePedigreeRegisterText($registerName)
-    {
-        if($registerName != null && $registerName != '') {
-            return 'Namens: '.$registerName;
-        } else {
-            return self::MISSING_PEDIGREE_REGISTER;
-        }
-    }
-
-
 
 }

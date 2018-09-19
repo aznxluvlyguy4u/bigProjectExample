@@ -90,7 +90,7 @@ class ReportLabel
     const INSPECTION_DATE = 'inspectionDate';
     const PREDICATE = 'predicate';
     const BLINDNESS_FACTOR = 'blindnessFactor';
-    const PEDIGREE_REGISTER_NAME = 'pedigreeRegisterName';
+    const PEDIGREE_REGISTER = 'pedigreeRegister';
     const LIVESTOCK = 'livestock';
     const IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS = 'is_user_allowed_to_access_animal_details';
 
