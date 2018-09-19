@@ -30,6 +30,7 @@ use AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Symfony\Component\HttpFoundation\Request;
@@ -399,7 +400,7 @@ class BatchInvoiceService extends ControllerServiceBase
         $validClients = new ArrayCollection();
         /** @var Client $client */
         foreach ($clients as $client) {
-            if (substr($client->getEmailAddress(), 0, 8) != EmailPrefix::INVALID_PREFIX) {
+            if (!Validator::isFillerEmailAddress($client->getEmailAddress())) {
                 $validClients->add($client);
             }
         }
