@@ -9,6 +9,7 @@ class ReportLabel
     const COLUMN_HEADERS = 'columnHeaders';
     const ENTITY = 'entity';
     const IS_PROD_ENV = 'isProdEnv';
+    const IS_EMPTY = 'isEmpty';
     const IMAGES_DIRECTORY = 'imagesDirectory';
     const DATE = 'date';
     const FOOTNOTE = 'footnote';
@@ -16,6 +17,8 @@ class ReportLabel
     const INVALID = 'invalid';
     const MONTHS = 'months';
     const TOTALS = 'totals';
+    const VALUE = 'value';
+    const ACCURACY = 'accuracy';
 
     //Person
     const OWNER_NAME = "ownerName";
@@ -27,19 +30,14 @@ class ReportLabel
     const BREEDER_NAME_CROPPED = "breederNameCropped";
     const BREEDER_NUMBER = 'breederNumber';
 
-    //BreedIndexStars
-    const BREEDER_INDEX_STARS = 'breederIndexStars';
-    const M_BREEDER_INDEX_STARS = 'mBreederIndexStars'; //Mother
-    const F_BREEDER_INDEX_STARS = 'fBreederIndexStars'; //Father
-    const EXT_INDEX_STARS = 'extIndexStars'; //exteriorIndex
-    const VL_INDEX_STARS = 'vlIndexStars'; //vleesLamIndex
-
-    //BreedIndex number/accuracy like 128/78
-    const BREEDER_INDEX_NO_ACC = 'breederIndexNoAcc';
-    const M_BREEDER_INDEX_NO_ACC = 'mBreederIndexNoAcc';
-    const F_BREEDER_INDEX_NO_ACC = 'fBreederIndexNoAcc';
-    const EXT_INDEX_NO_ACC = 'extIndexNoAcc';
-    const VL_INDEX_NO_ACC = 'vlIndexNoAcc';
+    //Breed Index
+    const INDEXES = 'indexes';
+    const STARS_VALUE = 'stars_value';
+    const STARS_OUTPUT = 'stars_output';
+    const INDEX_FATHER = 'indexFather';
+    const INDEX_MOTHER = 'indexMother';
+    const INDEX_EXTERIOR = 'indexExterior';
+    const INDEX_BREED = 'indexBreed';
     
     //Breed values
     const INBREEDING_COEFFICIENT = 'inbreedingCoefficient';

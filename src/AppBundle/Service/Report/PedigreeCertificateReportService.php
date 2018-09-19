@@ -5,6 +5,7 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\ReportAPIController;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
@@ -86,15 +87,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
     private function getCsvReport()
     {
         $keysToIgnore = [
-            'breederIndexStars',
-            'mBreederIndexStars',
-            'fBreederIndexStars',
-            'extIndexStars',
-            'vlIndexStars',
-            'breederIndexNoAcc',
-            'mBreederIndexNoAcc',
-            'fBreederIndexNoAcc',
-            'extIndexNoAcc',
+            ReportLabel::STARS_OUTPUT,
             //ignore the following two keys, so the columns always match in the csv
             'litterSize',
             'litterCount',

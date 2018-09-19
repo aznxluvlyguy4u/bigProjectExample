@@ -67,8 +67,6 @@
         {% set cGrowth = x.animals['c'].growth %}
         {% set cMuscleThickness = x.animals['c'].muscleThickness %}
         {% set cBodyFat = x.animals['c'].bodyFat %}
-        {% set cVl = x.animals['c'].vl %} {# Vleeslamindex #}
-        {% set cSl = x.animals['c'].sl %}
 
         {# dates #}
         {% set cDateOfBirth = x.animals['c'].dateOfBirth %}
@@ -110,8 +108,6 @@
         {% set fGrowth = x.animals['f'].growth %}
         {% set fMuscleThickness = x.animals['f'].muscleThickness %}
         {% set fBodyFat = x.animals['f'].bodyFat %}
-        {% set fVl = x.animals['f'].vl %}
-        {% set fSl = x.animals['f'].sl %}
 
         {# dates #}
         {% set fDateOfBirth = x.animals['f'].dateOfBirth %}
@@ -154,8 +150,6 @@
         {% set mGrowth = x.animals['m'].growth %}
         {% set mMuscleThickness = x.animals['m'].muscleThickness %}
         {% set mBodyFat = x.animals['m'].bodyFat %}
-        {% set mVl = x.animals['m'].vl %}
-        {% set mSl = x.animals['m'].sl %}
 
         {# dates #}
         {% set mDateOfBirth = x.animals['m'].dateOfBirth %}
@@ -198,8 +192,6 @@
         {% set ffGrowth = x.animals['ff'].growth %}
         {% set ffMuscleThickness = x.animals['ff'].muscleThickness %}
         {% set ffBodyFat = x.animals['ff'].bodyFat %}
-        {% set ffVl = x.animals['ff'].vl %}
-        {% set ffSl = x.animals['ff'].sl %}
 
         {# dates #}
         {% set ffDateOfBirth = x.animals['ff'].dateOfBirth %}
@@ -242,8 +234,6 @@
         {% set fmGrowth = x.animals['fm'].growth %}
         {% set fmMuscleThickness = x.animals['fm'].muscleThickness %}
         {% set fmBodyFat = x.animals['fm'].bodyFat %}
-        {% set fmVl = x.animals['fm'].vl %}
-        {% set fmSl = x.animals['fm'].sl %}
 
         {# dates #}
         {% set fmDateOfBirth = x.animals['fm'].dateOfBirth %}
@@ -286,8 +276,6 @@
         {% set mfGrowth = x.animals['mf'].growth %}
         {% set mfMuscleThickness = x.animals['mf'].muscleThickness %}
         {% set mfBodyFat = x.animals['mf'].bodyFat %}
-        {% set mfVl = x.animals['mf'].vl %}
-        {% set mfSl = x.animals['mf'].sl %}
 
         {# dates #}
         {% set mfDateOfBirth = x.animals['mf'].dateOfBirth %}
@@ -330,8 +318,6 @@
         {% set mmGrowth = x.animals['mm'].growth %}
         {% set mmMuscleThickness = x.animals['mm'].muscleThickness %}
         {% set mmBodyFat = x.animals['mm'].bodyFat %}
-        {% set mmVl = x.animals['mm'].vl %}
-        {% set mmSl = x.animals['mm'].sl %}
 
         {# dates #}
         {% set mmDateOfBirth = x.animals['mm'].dateOfBirth %}
@@ -1325,7 +1311,7 @@
                                             </font>
                                         </td>
                                         <td>
-                                            <span>{{cSl}}
+                                            <span>
                                             <br/>
                                         </td>
                                     </tr>
@@ -1565,7 +1551,7 @@
                                         </td>
                                         <td>9:&#xA0;<span>{{fBodyFat}}
                                         </td>
-                                        <td>10:&#xA0;<span>{{fSl}}
+                                        <td>10:&#xA0;<span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -1657,8 +1643,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Vleeslamindex:&#xA0;<span>{{fVl}}
-                                        </td>
                                         <td>
                                             <br/>
                                         </td>
@@ -1744,8 +1728,6 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span>Vleeslamindex:&#xA0;</span>
-                                            <span>{{ffVl}}
                                             <br/>
                                         </td>
                                         <td>
@@ -2036,8 +2018,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Vleeslamindex:&#xA0;<span>{{mVl}}
-                                        </td>
                                         <td>
                                             <br/>
                                         </td>
@@ -2206,8 +2186,6 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span>Vleeslamindex:&#xA0;</span>
-                                            <span>{{fmVl}}
                                             <br/>
                                         </td>
                                         <td>
@@ -2374,8 +2352,6 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span>Vleeslamindex:&#xA0;</span>
-                                            <span>{{mfVl}}
                                             <br/>
                                         </td>
                                         <td>
@@ -2541,8 +2517,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Vleeslamindex: {{mmVl}}<br/>
-                                        </td>
                                         <td>
                                             <br/>
                                         </td>
@@ -3628,7 +3602,7 @@
                                         </td>
                                         <td>9:&#xA0;<span>{{mBodyFat}}
                                         </td>
-                                        <td>10:&#xA0;<span>{{mSl}}
+                                        <td>10:&#xA0;<span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -3699,7 +3673,7 @@
                                         </td>
                                         <td>
                                             <font face="Lato">10:&#xA0;</font>
-                                            <span>{{ffSl}}
+                                            <span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -3771,7 +3745,7 @@
                                         </td>
                                         <td>
                                             <font face="Lato" style="font-size: 8px">10:&#xA0;</font>
-                                            <span>{{fmSl}}
+                                            <span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -3823,7 +3797,7 @@
                                         </td>
                                         <td>
                                             <font face="Lato">10:&#xA0;</font>
-                                            <span>{{mfSl}}
+                                            <span>
                                             <span>-</span>
                                             <font face="Lato">
                                                 <br/>
@@ -3899,7 +3873,7 @@
                                         </td>
                                         <td>
                                             <font face="Lato" style="font-size: 8px">10:&#xA0;</font>
-                                            <span>{{mmSl}}
+                                            <span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -3959,33 +3933,6 @@
                     <switch>
                         <foreignObject style="overflow:visible;" pointer-events="all" width="99" height="90" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
                             <div xmlns="http://www.w3.org/1999/xhtml" style="display: inline-block; font-size: 12px; font-family: Lato; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 100px; height: 91px; overflow: hidden; white-space: nowrap;">
-                                <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
-                                    <tbody>
-                                    {#<tr>#}
-                                        {#<td style="text-align: right">#}
-                                            {#<b>#}
-                                                {#<font style="font-size: 14px">Rasindex</font>#}
-                                            {#</b>#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: right">Moederindex</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: right">#}
-                                            {#<font face="Lato">Vaderindex</font>#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: right">#}
-                                            {#<font face="Lato">Exterieurindex</font>#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    <tr>
-                                        <td style="text-align: right">Vleeslamindex</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
                             </div>
                         </foreignObject>
                         <text x="50" y="51" fill="#000000" text-anchor="middle" font-size="12px" font-family="Lato">[Not supported by viewer]</text>

@@ -5,6 +5,7 @@ namespace AppBundle\Report;
 
 use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Utils;
+use AppBundle\Constant\Environment;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\CompanyAddress;
@@ -22,7 +23,6 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\StarValueUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
-use AppBundle\Util\TwigOutputUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -61,8 +61,13 @@ class PedigreeCertificate
 
     /** @var TranslatorInterface */
     private $translator;
+    /** @var boolean */
+    private $useTestData;
 
-    public function __construct(EntityManagerInterface $em, TranslatorInterface $translator)
+    public function __construct(EntityManagerInterface $em,
+                                TranslatorInterface $translator,
+                                $useTestData,
+                                $environment)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -71,6 +76,8 @@ class PedigreeCertificate
         $this->exteriorRepository = $em->getRepository(Exterior::class);
 
         $this->translator = $translator;
+
+        $this->useTestData = $useTestData && ($environment === Environment::DEV || $environment === Environment::STAGE);
     }
 
 
@@ -525,17 +532,12 @@ class PedigreeCertificate
             $litterSizeBreedValue = BreedFormat::formatBreedValue($breedGrades['total_born'], $breedGrades['total_born_accuracy']);
             $tailLength = BreedFormat::formatBreedValue($breedGrades['tail_length'], $breedGrades['tail_length_accuracy']);
 
-            $lambMeatIndex = BreedFormat::getJoinedLambMeatIndex($breedGrades['lamb_meat_index'], $breedGrades['lamb_meat_accuracy']);
-            $lambMeatIndexWithoutAccuracy = $breedGrades['lamb_meat_index'];
         } else {
             $muscleThickness = BreedFormat::EMPTY_BREED_VALUE;
             $bodyFat = BreedFormat::EMPTY_BREED_VALUE;
             $growth = BreedFormat::EMPTY_BREED_VALUE;
             $litterSizeBreedValue = BreedFormat::EMPTY_BREED_VALUE;
             $tailLength = BreedFormat::EMPTY_BREED_VALUE;
-
-            $lambMeatIndex = BreedFormat::EMPTY_INDEX_VALUE;
-            $lambMeatIndexWithoutAccuracy = null;
         }
 
         // Set values in result array
@@ -547,12 +549,9 @@ class PedigreeCertificate
         //NOTE this value is not used in the pdf, but it must be fill so there is no null pointer exception
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
 
-        //LambMeatIndex with Accuracy
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = $lambMeatIndex;
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = $tailLength;
-
-        if($key == ReportLabel::CHILD_KEY) {
-            $this->addBreedIndex($lambMeatIndexWithoutAccuracy);
+        $isFirstOrSecondGeneration = strlen($key) <= 2;
+        if($key == ReportLabel::CHILD_KEY || $isFirstOrSecondGeneration) {
+            $this->addBreedIndexes($key, $breedGrades);
         }
     }
 
@@ -763,28 +762,98 @@ class PedigreeCertificate
 
 
     /**
-     * @param float $lambMeatIndex
+     * @param string $animalKey
+     * @param array $breedGrades
      */
-    private function addBreedIndex($lambMeatIndex)
+    private function addBreedIndexes($animalKey, $breedGrades)
     {
-        //Empty
-        $breederStarCount = 0;
-        $motherBreederStarCount = 0;
-        $fatherBreederStarCount = 0;
-        $exteriorStarCount = 0;
-        
-        $lambMeatStarCount = StarValueUtil::getStarValue($lambMeatIndex);
+//        $unformattedIndexValue = $breedGrades['lamb_meat_index'];
+//        $accuracy = $breedGrades['lamb_meat_accuracy'];
 
-        $this->data[ReportLabel::BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($breederStarCount);
-        $this->data[ReportLabel::M_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($motherBreederStarCount);
-        $this->data[ReportLabel::F_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($fatherBreederStarCount);
-        $this->data[ReportLabel::EXT_INDEX_STARS] = TwigOutputUtil::createStarsIndex($exteriorStarCount);
-        $this->data[ReportLabel::VL_INDEX_STARS] = TwigOutputUtil::createStarsIndex($lambMeatStarCount);
+        if ($this->useTestData) {
 
-        $this->data[ReportLabel::BREEDER_INDEX_NO_ACC] = 'ab/acc';
-        $this->data[ReportLabel::M_BREEDER_INDEX_NO_ACC] = 'mb/acc';
-        $this->data[ReportLabel::F_BREEDER_INDEX_NO_ACC] = 'fb/acc';
-        $this->data[ReportLabel::EXT_INDEX_NO_ACC] = 'ex/acc';
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_FATHER,
+                -8,
+                0.5
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_MOTHER,
+                -1,
+                0.9
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_EXTERIOR,
+                0,
+                0.5
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_BREED,
+                3,
+                0.44
+            );
+
+        } else {
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_FATHER,
+                0,
+                0
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_MOTHER,
+                0,
+                0
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_EXTERIOR,
+                0,
+                0
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_BREED,
+                0,
+                0
+            );
+        }
+    }
+
+
+    /**
+     * @param string $animalKey
+     * @param string $indexType
+     * @param float $unformattedIndexValue
+     * @param float $accuracy
+     */
+    private function addBreedIndex($animalKey, $indexType, $unformattedIndexValue, $accuracy)
+    {
+        $isIndexEmpty = BreedFormat::isIndexEmpty($unformattedIndexValue, $accuracy);
+        $formattedIndexValue = BreedFormat::getFormattedIndexValue($unformattedIndexValue, $accuracy);
+        $formattedIndexAccuracy = BreedFormat::getFormattedIndexAccuracy($unformattedIndexValue, $accuracy);
+        $starsValue = StarValueUtil::getStarValue(($isIndexEmpty ? null : $unformattedIndexValue));
+        $starsOutput = StarValueUtil::getStarsOutput($starsValue);
+
+        $this->data[ReportLabel::ANIMALS][$animalKey][ReportLabel::INDEXES][$indexType] = [
+            ReportLabel::IS_EMPTY => $isIndexEmpty,
+            ReportLabel::VALUE => $formattedIndexValue,
+            ReportLabel::ACCURACY => $formattedIndexAccuracy,
+            ReportLabel::STARS_VALUE => $starsValue,
+            ReportLabel::STARS_OUTPUT => $starsOutput,
+        ];
     }
 
 

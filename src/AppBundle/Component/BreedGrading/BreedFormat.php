@@ -18,8 +18,9 @@ class BreedFormat
     const DEFAULT_DECIMAL_SYMBOL = '.';
 
     //Display
+    const EMPTY_INDEX_VALUE = '-';
+    const EMPTY_INDEX_ACCURACY = '-';
     const EMPTY_BREED_VALUE = '-/-';
-    const EMPTY_INDEX_VALUE = '-/-';
     const INDEX_DECIMAL_ACCURACY = 0;
 
     //Scaling
@@ -34,7 +35,6 @@ class BreedFormat
 
     //If the following accuracy are lower, they are ignored in the PedigreeCertificate
     const MIN_INDEX_ACCURACY = 0.30;
-    const MIN_LAMB_MEAT_INDEX_ACCURACY = 0.30;
     const MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT = 0.30; //Valid Growth, MuscleThickness and Fat BreedValues should at least have this accuracy
 
     const DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS = 7;
@@ -44,107 +44,54 @@ class BreedFormat
     const MUSCLE_THICKNESS_DECIMAL_ACCURACY = 2;
     const GROWTH_DECIMAL_ACCURACY = 1;
 
-
     /**
-     * @param $index
-     * @param $accuracy
+     * @param float $index
+     * @param float $accuracy
      * @return string
      */
-    public static function getJoinedLambMeatIndex($index, $accuracy)
+    public static function getJoinedIndex($index, $accuracy)
     {
-        return self::getJoinedIndex($index, $accuracy, BreedIndexDiscriminatorTypeConstant::LAMB_MEAT);
+        return self::getFormattedIndexValue($index, $accuracy) . '/' . self::getFormattedIndexAccuracy($index, $accuracy);
     }
 
 
     /**
-     * @param $index
-     * @param $accuracy
-     * @return string
+     * @param float $value
+     * @param float $accuracy
+     * @return bool
      */
-    public static function getJoinedFertilityIndex($index, $accuracy)
+    public static function isIndexEmpty($value, $accuracy): bool
     {
-        return self::getJoinedIndex($index, $accuracy, BreedIndexDiscriminatorTypeConstant::FERTILITY);
+        return empty($value) || empty($accuracy) || $accuracy < self::MIN_INDEX_ACCURACY;
     }
 
 
     /**
-     * @param $index
-     * @param $accuracy
+     * @param float $value
+     * @param float $accuracy
      * @return string
      */
-    public static function getJoinedExteriorIndex($index, $accuracy)
+    public static function getFormattedIndexValue($value, $accuracy): string
     {
-        return self::getJoinedIndex($index, $accuracy, BreedIndexDiscriminatorTypeConstant::EXTERIOR);
-    }
-
-
-    /**
-     * @param $index
-     * @param $accuracy
-     * @return string
-     */
-    public static function getJoinedWormResistanceIndex($index, $accuracy)
-    {
-        return self::getJoinedIndex($index, $accuracy, BreedIndexDiscriminatorTypeConstant::WORM_RESISTANCE);
-    }
-
-
-    /**
-     * @param $index
-     * @param $accuracy
-     * @param $type
-     * @param string $nullString
-     * @return string
-     */
-    private static function getJoinedIndex($index, $accuracy, $type, $nullString = BreedFormat::EMPTY_INDEX_VALUE)
-    {
-
-        //1. Null filter
-        if($index == null || $accuracy == null || NumberUtil::isFloatZero($accuracy)) {
-            return $nullString;
+        if (self::isIndexEmpty($value, $accuracy)) {
+            BreedFormat::EMPTY_INDEX_VALUE;
         }
-
-        //2. Value filters per type
-        switch ($type) {
-            case BreedIndexDiscriminatorTypeConstant::EXTERIOR:
-                //TODO
-                break;
-
-            case BreedIndexDiscriminatorTypeConstant::FERTILITY:
-                //TODO
-                break;
-
-            case BreedIndexDiscriminatorTypeConstant::LAMB_MEAT:
-                return self::getJoinedIndexBase($index, $accuracy, BreedFormat::MIN_LAMB_MEAT_INDEX_ACCURACY,
-                    BreedFormat::LAMB_MEAT_INDEX_SCALE, $nullString);
-
-            case BreedIndexDiscriminatorTypeConstant::WORM_RESISTANCE:
-                //TODO
-                break;
-
-            default:
-                return self::getJoinedIndexBase($index, $accuracy, BreedFormat::MIN_INDEX_ACCURACY,
-                    BreedFormat::INDEX_SCALE, $nullString);
-        }
-
-        return $nullString;
+        $scaledIndex = $value + self::INDEX_SCALE;
+        return number_format($scaledIndex, BreedFormat::INDEX_DECIMAL_ACCURACY, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR);
     }
 
 
     /**
-     * @param $index
-     * @param $accuracy
-     * @param $minAccuracy
-     * @param $scale
-     * @param string $nullString
+     * @param float $value
+     * @param float $accuracy
      * @return string
      */
-    private static function getJoinedIndexBase($index, $accuracy, $minAccuracy, $scale, $nullString = BreedFormat::EMPTY_INDEX_VALUE)
+    public static function getFormattedIndexAccuracy($value, $accuracy): string
     {
-        if($accuracy < $minAccuracy) { return $nullString; }
-
-        $scaledLambMeatIndex = $index + $scale;
-        return number_format($scaledLambMeatIndex, BreedFormat::INDEX_DECIMAL_ACCURACY, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR).'/'.round($accuracy*100);
+        if (self::isIndexEmpty($value, $accuracy)) {
+            BreedFormat::EMPTY_INDEX_ACCURACY;
+        }
+        return round($accuracy*100);
     }
 
 
