@@ -887,4 +887,15 @@ class Validator
             )
         ;
     }
+
+
+    /**
+     * @param string $emailAddress
+     * @param null $nullFiller
+     * @return mixed
+     */
+    public static function getFillerCheckedEmailAddress($emailAddress, $nullFiller = null)
+    {
+        return self::isFillerEmailAddress($emailAddress) ? $nullFiller : $emailAddress;
+    }
 }

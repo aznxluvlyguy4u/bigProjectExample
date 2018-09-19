@@ -23,12 +23,14 @@ class ReportLabel
     //Person
     const OWNER_NAME = "ownerName";
     const OWNER = 'owner';
+    const OWNER_EMAIL_ADDRESS = 'ownerEmailAddress';
 
     //Breeder
     const BREEDER = 'breeder';
     const BREEDER_NAME = "breederName";
     const BREEDER_NAME_CROPPED = "breederNameCropped";
     const BREEDER_NUMBER = 'breederNumber';
+    const BREEDER_EMAIL_ADDRESS = 'breederEmailAddress';
 
     //Breed Index
     const INDEXES = 'indexes';

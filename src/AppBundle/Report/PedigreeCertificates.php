@@ -64,11 +64,13 @@ class PedigreeCertificates extends ReportBase
         if($client == null && $location == null) { //user is admin
             $companyName = null;
             $trimmedCompanyName = null;
+            $ownerEmailAddress = null;
             $companyAddress = null;
             $ubn = null;
         } else {
             $companyName = $this->getCompanyName($location, $client);
             $trimmedCompanyName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
+            $ownerEmailAddress = $client->getEmailAddress();
             $companyAddress = $location->getCompany()->getAddress();
             $ubn = $location->getUbn();
         }
@@ -77,7 +79,7 @@ class PedigreeCertificates extends ReportBase
 
         foreach ($animalIds as $animalId) {
             $this->reports[$this->animalCount] = $this->generator
-                ->generate($ubn, $animalId, $trimmedCompanyName, $companyAddress, $breedValuesLastGenerationDate);
+                ->generate($ubn, $animalId, $trimmedCompanyName, $ownerEmailAddress, $companyAddress, $breedValuesLastGenerationDate);
 
             $this->animalCount++;
         }
