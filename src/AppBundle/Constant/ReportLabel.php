@@ -81,6 +81,7 @@ class ReportLabel
     const N_LING = 'nLing';
     const NICKNAME = 'nickname';
     const SCRAPIE = 'scrapie';
+    const SECTION_TYPE = 'section_type';
     const PRODUCTION = 'production';
     const BREED = 'breed';
     const BREED_TYPE = 'breedType';
