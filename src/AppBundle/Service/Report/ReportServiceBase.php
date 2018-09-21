@@ -21,6 +21,7 @@ use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\TwigOutputUtil;
+use AppBundle\Validation\UlnValidatorInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
@@ -74,7 +75,8 @@ class ReportServiceBase
     protected $outputReportsToCacheFolderForLocalTesting;
     /** @var boolean */
     protected $displayReportPdfOutputAsHtml;
-
+    /** @var UlnValidatorInterface */
+    protected $ulnValidator;
     /** @var string */
     protected $folderPath;
     /** @var string */
@@ -101,7 +103,9 @@ class ReportServiceBase
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
                                 UserService $userService, TwigEngine $templating,
                                 TranslatorInterface $translator,
-                                GeneratorInterface $knpGenerator, $cacheDir, $rootDir,
+                                GeneratorInterface $knpGenerator,
+                                UlnValidatorInterface $ulnValidator,
+                                $cacheDir, $rootDir,
                                 $outputReportsToCacheFolderForLocalTesting,
                                 $displayReportPdfOutputAsHtml
     )
@@ -115,6 +119,7 @@ class ReportServiceBase
         $this->templating = $templating;
         $this->translator = $translator;
         $this->knpGenerator = $knpGenerator;
+        $this->ulnValidator = $ulnValidator;
         $this->cacheDir = $cacheDir;
         $this->rootDir = $rootDir;
 
@@ -279,12 +284,11 @@ class ReportServiceBase
 
 
     /**
-     * @param Request $request
+     * @param $locale
      */
-    protected function setLocaleFromQueryParameter(Request $request)
+    protected function setLocale($locale)
     {
-        $this->language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
-        $this->translator->setLocale($this->language);
+        $this->translator->setLocale($locale);
     }
 
 

@@ -28,7 +28,7 @@ interface ParentInterface
     /**
      * Get children
      *
-     * @return Collection|Animal[]
+     * @return ArrayCollection|Animal[]
      */
     public function getChildren();
 

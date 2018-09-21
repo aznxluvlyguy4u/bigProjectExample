@@ -5,7 +5,6 @@ namespace AppBundle\Criteria;
 
 
 use AppBundle\Entity\Location;
-use AppBundle\Entity\Mate;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\Criteria;
 
@@ -50,6 +49,19 @@ class MateCriteria
                     ->where(
                         Criteria::expr()->eq('requestState', RequestStateType::FINISHED)
                     );
+    }
+
+
+    /**
+     * @param bool $isOverwritten
+     * @return Criteria
+     */
+    public static function isOverwrittenVersion(bool $isOverwritten = true)
+    {
+        return Criteria::create()
+            ->where(
+                Criteria::expr()->eq('isOverwrittenVersion', $isOverwritten)
+            );
     }
 
 

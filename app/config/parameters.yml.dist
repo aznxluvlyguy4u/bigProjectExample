@@ -48,7 +48,20 @@ parameters:
 
     test_email: ~
 
+    external_provider_user: ~
+    external_provider_password: ~
+    external_provider_organisation: ~
+
+    worker_queue_dir: '/tmp/nsfo-symfony-worker-queue'
+
     locale: en
 
     output_reports_to_cache_folder_for_local_testing: false
     display_report_pdf_output_as_html: false
+
+    firebase_notifications_project_id: ~
+    firebase_notifications_client_id: ~
+    firebase_notifications_client_email: ~
+    firebase_notifications_private_key: ~
+
+    sentry_dns: ~

@@ -4,6 +4,7 @@ parameters:
 #    parameter_name: value
 
 services:
+
     api.entity.validate:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
@@ -26,31 +27,12 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
 
-    app.cli.mixblup:
-        class: AppBundle\Service\MixBlupCliOptionsService
-        arguments:
-          - '@doctrine.orm.entity_manager'
-          - '@logger'
-          - '@app.report.breed_values_overview'
-          - '@app.breed.valueprinter'
-          - '@app.breed.value'
-          - '@app.breed.index'
-          - '@app.excel.service'
-          - '@AppBundle\Service\Migration\LambMeatIndexMigrator'
-          - '@AppBundle\Service\Migration\WormResistanceIndexMigrator'
-          - '@app.mixblup.input'
-          - '@app.mixblup.input.validate'
-          - '@app.mixblup.output'
-          - '@AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator'
-          - '@app.report.pedigree_register'
-          - '@AppBundle\Cache\BreedValuesResultTableUpdater'
-
     AppBundle\Cache\BreedValuesResultTableUpdater:
         arguments:
           - '@doctrine.orm.default_entity_manager'
           - '@logger'
-          - '@app.breed.value'
-          - '@app.breed.index'
+          - '@AppBundle\Service\BreedValueService'
+          - '@AppBundle\Service\BreedIndexService'
           - '@AppBundle\Service\NormalDistributionService'
 
     app.info.parameters:
@@ -159,6 +141,9 @@ services:
           - method: setAnimalDetailsBatchUpdater
             arguments:
               - '@AppBundle\Service\AnimalDetailsBatchUpdaterService'
+          - method: setAnimalDetailsOutput
+            arguments:
+              - '@AppBundle\Output\AnimalDetailsOutput'
 
     AppBundle\Service\AnimalDetailsBatchUpdaterService:
         parent: app.abstract_base.controller
@@ -173,8 +158,7 @@ services:
           - '@doctrine.orm.entity_manager'
           - '%environment%'
 
-    app.mixblup.input:
-        class: AppBundle\Service\MixBlupInputFilesService
+    AppBundle\Service\MixBlupInputFilesService:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.aws.storageservice'
@@ -183,22 +167,20 @@ services:
           - '%kernel.cache_dir%'
           - '@logger'
 
-    app.mixblup.output:
-        class: AppBundle\Service\MixBlupOutputFilesService
+    AppBundle\Service\MixBlupOutputFilesService:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.aws.storageservice'
           - '@app.aws.queueservice.mixblup_output'
-          - '@app.breed.index'
-          - '@app.breed.value'
+          - '@AppBundle\Service\BreedIndexService'
+          - '@AppBundle\Service\BreedValueService'
           - '@AppBundle\Cache\BreedValuesResultTableUpdater'
           - '@AppBundle\Service\NormalDistributionService'
           - '%environment%'
           - '%kernel.cache_dir%'
           - '@logger'
 
-    app.mixblup.input.validate:
-        class: AppBundle\Component\MixBlup\MixBlupInputFileValidator
+    AppBundle\Component\MixBlup\MixBlupInputFileValidator:
         arguments: ['%kernel.cache_dir%']
 
 
@@ -351,6 +333,9 @@ services:
     AppBundle\Service\Migration\PedigreeCodeInitializer:
         parent: app.migrator.base
 
+    AppBundle\Service\Invoice\BatchInvoiceRuleInitializer:
+        parent: app.migrator.base
+
     AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator:
         parent: app.migrator.base
 
@@ -372,27 +357,23 @@ services:
         parent: app.migrator.base
         class: AppBundle\Service\Migration\WormResistanceMigrator
 
-    app.breed.index:
-        class: AppBundle\Service\BreedIndexService
+    AppBundle\Service\BreedIndexService:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
 
-    app.breed.value:
-        class: AppBundle\Service\BreedValueService
+    AppBundle\Service\BreedValueService:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
 
-    app.breed.valueprinter:
-        class: AppBundle\Service\BreedValuePrinter
+    AppBundle\Service\BreedValuePrinter:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
           - '%kernel.cache_dir%'
 
-    app.excel.service:
-        class: AppBundle\Service\ExcelService
+    AppBundle\Service\ExcelService:
         arguments:
           - '@phpexcel'
           - '%kernel.cache_dir%'
@@ -445,10 +426,11 @@ services:
 
     app.report.base:
         abstract: true
+        lazy: true
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
-          - '@app.excel.service'
+          - '@AppBundle\Service\ExcelService'
           - '@logger'
           - '@app.aws.storageservice'
           - '@app.writer.csv_from_sql_results'
@@ -456,6 +438,7 @@ services:
           - '@templating'
           - '@translator'
           - '@knp_snappy.pdf'
+          - '@AppBundle\Validation\UlnValidatorInterface'
           - '%kernel.cache_dir%'
           - '%kernel.root_dir%'
           - '%output_reports_to_cache_folder_for_local_testing%'
@@ -466,7 +449,7 @@ services:
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
-          - '@app.excel.service'
+          - '@AppBundle\Service\ExcelService'
           - '@logger'
           - '@app.aws.storageservice'
           - '@app.writer.csv_from_sql_results'
@@ -474,6 +457,7 @@ services:
           - '@templating'
           - '@translator'
           - '@knp_snappy.pdf'
+          - '@AppBundle\Validation\UlnValidatorInterface'
           - '@app.report.generator.query.breed_values'
           - '%kernel.cache_dir%'
           - '%kernel.root_dir%'
@@ -486,8 +470,10 @@ services:
 
     AppBundle\Service\Report\AnimalsOverviewReportService:
         parent: app.report.breedvalues.base
+        lazy: true
 
     AppBundle\Service\Report\AnnualActiveLivestockReportService:
+        lazy: true
         parent: app.report.base
 
     AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService:
@@ -502,18 +488,18 @@ services:
     app.report.pedigree_certificates:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeCertificateReportService
+        lazy: true
 
-    app.report.pedigree_register:
+    AppBundle\Service\Report\PedigreeRegisterOverviewReportService:
         parent: app.report.base
-        class: AppBundle\Service\Report\PedigreeRegisterOverviewReportService
 
-    app.report.breed_values_overview:
+    AppBundle\Service\Report\BreedValuesOverviewReportService:
         parent: app.report.breedvalues.base
-        class: AppBundle\Service\Report\BreedValuesOverviewReportService
 
     app.report.inbreeding_coefficient:
         parent: app.report.base
         class: AppBundle\Service\Report\InbreedingCoefficientReportService
+        lazy: true
 
     AppBundle\Service\Report\FertilizerAccountingReport:
         parent: app.report.base
@@ -581,6 +567,41 @@ services:
           - '@logger'
           - '@AppBundle\SqlView\SqlViewManager'
 
+    AppBundle\Service\Google\FireBaseService:
+        arguments:
+          - '%firebase_notifications_project_id%'
+          - '%firebase_notifications_client_id%'
+          - '%firebase_notifications_client_email%'
+          - '%firebase_notifications_private_key%'
+
+    AppBundle\Service\ReportService:
+        arguments:
+          - '@enqueue.producer'
+          - '@app.serializer.base'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@translator'
+          - '@logger'
+          - '@AppBundle\Validation\UlnValidatorInterface'
+          - '@app.report.pedigree_certificates'
+
+
+    AppBundle\Processor\ReportProcessor:
+        arguments:
+          - '@AppBundle\Service\Report\AnnualActiveLivestockReportService'
+          - '@AppBundle\Service\Report\AnnualTe100UbnProductionReportService'
+          - '@AppBundle\Service\Report\FertilizerAccountingReport'
+          - '@app.report.inbreeding_coefficient'
+          - '@AppBundle\Service\Report\AnimalsOverviewReportService'
+          - '@AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService'
+          - '@AppBundle\Service\Report\OffspringReportService'
+          - '@AppBundle\Service\Report\PedigreeRegisterOverviewReportService'
+          - '@app.report.pedigree_certificates'
+          - '@app.report.livestock'
+          - '@doctrine.orm.entity_manager'
+        tags:
+          - {name: 'enqueue.client.processor'}
+
     app.abstract_base.auth:
         parent: app.abstract_base.controller
         abstract: true
@@ -628,11 +649,21 @@ services:
     app.animal:
         parent: app.abstract_base.declare
         class: AppBundle\Service\AnimalService
+        calls:
+          - method: setAnimalDetailsOutput
+            arguments:
+              - '@AppBundle\Output\AnimalDetailsOutput'
+          - method: setValidator
+            arguments:
+              - '@validator'
 
     app.arrival:
         parent: app.abstract_base.declare
         class: AppBundle\Service\ArrivalService
         calls:
+          - method: setFireBaseService
+            arguments:
+              - '@AppBundle\Service\Google\FireBaseService'
           - method: setHealthUpdaterService
             arguments:
               - '@app.health.updater'
@@ -701,6 +732,9 @@ services:
           - method: setEnvironment
             arguments:
               - '%kernel.environment%'
+          - method: setFireBaseService
+            arguments:
+              - '@AppBundle\Service\Google\FireBaseService'
     app.export:
         parent: app.abstract_base.declare
         class: AppBundle\Service\ExportService
@@ -712,6 +746,14 @@ services:
     app.invoice:
         parent: app.abstract_base.controller
         class: AppBundle\Service\InvoiceService
+        calls:
+          - method: instantiateServices
+            arguments:
+              - '@app.invoice.pdf.generator.service'
+              - '@AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService'
+          - method: setFireBaseService
+            arguments:
+              - '@AppBundle\Service\Google\FireBaseService'
 
     app.invoice.rule:
         parent: app.abstract_base.controller
@@ -739,6 +781,16 @@ services:
             - '%output_reports_to_cache_folder_for_local_testing%'
             - '%display_report_pdf_output_as_html%'
 
+    AppBundle\Service\Invoice\BatchInvoiceService:
+        parent: app.abstract_base.controller
+        calls:
+          - method: initializeServices
+            arguments:
+              - '@AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService'
+          - method: setFireBaseService
+            arguments:
+              - '@AppBundle\Service\Google\FireBaseService'
+
     app.loss:
         parent: app.abstract_base.declare
         class: AppBundle\Service\LossService
@@ -759,20 +811,21 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MessageService
 
+    AppBundle\Service\MobileService:
+        parent: app.abstract_base.controller
+
     app.mollie.payment:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MolliePaymentService
-        arguments:
-          - '@app.serializer.base'
-          - '@app.cache'
-          - '@doctrine.orm.default_entity_manager'
-          - '@app.user'
-          - '@translator'
-          - '@logger'
-          - '@app.mollie.service'
-          - '%mollie_test_api_key%'
-          - '%mollie_prod_api_key%'
-          - '%environment%'
+        calls:
+          - method: instantiateServices
+            arguments:
+              - '@app.mollie.service'
+          - method: setKeys
+            arguments:
+              - '%mollie_test_api_key%'
+              - '%mollie_prod_api_key%'
+              - '%environment%'
 
     app.pedigree_register:
         parent: app.abstract_base.controller
@@ -848,6 +901,36 @@ services:
         parent: app.pedigree_data_reprocessor.base
 
 
+    app.abstract_base.external_provider:
+        abstract: true
+        arguments:
+            - '@AppBundle\Service\ExternalProvider\ExternalProviderAuthenticator'
+        calls:
+            - method: reAuthenticate
+
+    AppBundle\Service\ExternalProvider\ExternalProviderAuthenticator:
+        arguments:
+            - '%external_provider_user%'
+            - '%external_provider_password%'
+            - '%external_provider_organisation%'
+
+    AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService:
+        parent: app.abstract_base.external_provider
+        calls:
+            - method: setExternalProviderCustomerService
+              arguments:
+                - '@AppBundle\Service\ExternalProvider\ExternalProviderCustomerService'
+
+    AppBundle\Service\ExternalProvider\ExternalProviderCustomerService:
+        parent: app.abstract_base.external_provider
+        calls:
+            - method: setExternalProviderOfficeService
+              arguments:
+                - '@AppBundle\Service\ExternalProvider\ExternalProviderOfficeService'
+
+    AppBundle\Service\ExternalProvider\ExternalProviderOfficeService:
+        parent: app.abstract_base.external_provider
+
     AppBundle\SqlView\SqlViewManager:
         arguments:
           - '@AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository'
@@ -883,6 +966,49 @@ services:
 
     AppBundle\SqlView\Repository\ViewPersonFullNameRepository:
         parent: app.sqlview.repository.base
+
+
+    app.output.base:
+        abstract: true
+        arguments:
+          - '@app.serializer.base'
+          - '@doctrine.orm.default_entity_manager'
+          - '@AppBundle\SqlView\SqlViewManager'
+          - '@translator'
+
+    AppBundle\Output\AnimalDetailsOutput:
+        parent: app.output.base
+        calls:
+          - method: setBreedValuesOutput
+            arguments:
+              - '@AppBundle\Output\BreedValuesOutput'
+
+    AppBundle\Output\BreedValuesOutput:
+        parent: app.output.base
+
+    AppBundle\Service\AnimalResidenceServiceInterface:
+        parent: app.abstract_base.controller
+        class: AppBundle\Service\AnimalResidenceService
+
+    AppBundle\Validation\UlnValidatorInterface: '@AppBundle\Validation\UlnValidator'
+
+    AppBundle\Validation\UlnValidator:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository'
+          - '@translator'
+        lazy: true
+
+    # Listeners
+    AppBundle\EventListener\ViewListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.view }
+
+    AppBundle\EventListener\ExceptionListener:
+        arguments:
+            - '%environment%'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
 
     # This custom handler is not properly registered by the jms serializer yet!
     jms_serializer.custom_datetime_handler:

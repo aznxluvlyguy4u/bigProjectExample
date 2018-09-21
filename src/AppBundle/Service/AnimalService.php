@@ -12,14 +12,19 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\AnimalAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\AnimalResidence;
+use AppBundle\Entity\EditType;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
+use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\EditTypeEnum;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
@@ -27,7 +32,7 @@ use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\AdminActionLogWriter;
-use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -38,9 +43,36 @@ use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
 {
+    /** @var AnimalDetailsOutput */
+    private $animalDetailsOutput;
+
+    /** @var ValidatorInterface */
+    private $validator;
+
+    /**
+     * @required
+     *
+     * @param AnimalDetailsOutput $animalDetailsOutput
+     */
+    public function setAnimalDetailsOutput(AnimalDetailsOutput $animalDetailsOutput)
+    {
+        $this->animalDetailsOutput = $animalDetailsOutput;
+    }
+
+		/**
+		 * @required
+		 *
+		 * @param ValidatorInterface $validator
+		 */
+		public function setValidator(ValidatorInterface $validator)
+		{
+			$this->validator = $validator;
+		}
 
     /**
      * @param Request $request
@@ -55,6 +87,269 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return $this->getAllAnimalsByTypeOrState($request);
     }
 
+    /**
+		 * @param Request $request
+		 * @return JsonResponse
+		 */
+    public function createAnimal(Request $request)
+    {
+        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $animalArray = RequestUtil::getContentAsArray($request)->toArray();
+
+        /** @var Neuter|Ram|Ewe $newAnimal */
+        $newAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, Ram::class, false);
+
+        $uln = $newAnimal->getUln();
+        if(!Validator::verifyUlnFormat($uln)) {
+            return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
+        }
+
+        $existingAnimal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
+        if(!empty($existingAnimal))
+            return ResultUtil::errorResult('Dit dier bestaat al.', Response::HTTP_BAD_REQUEST);
+
+        if (empty($newAnimal->getDateOfBirth()))
+            return ResultUtil::errorResult('Vul een geboortedatum in.', Response::HTTP_BAD_REQUEST);
+
+        if ($newAnimal->getNLing() === '' || $newAnimal->getNLing() === null) {
+            $newAnimal->setNLing(null);
+        } elseif (!is_int($newAnimal->getNLing()) && !ctype_digit($newAnimal->getNLing())) {
+            return ResultUtil::errorResult('n-Ling moet een integer zijn', Response::HTTP_BAD_REQUEST);
+        } elseif ($newAnimal->getNLing() < Animal::MIN_N_LING_VALUE || Animal::MAX_N_LING_VALUE < $newAnimal->getNLing()) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7').': '.$newAnimal->getNLing(), Response::HTTP_BAD_REQUEST);
+        }
+
+
+        $newAnimal->getDateOfBirth()->setTime(0,0,0);
+
+        // Set non nullable values
+        $newAnimal->setAnimalType(AnimalType::sheep);
+        $newAnimal->setAnimalCategory(Constant::DEFAULT_ANIMAL_CATEGORY);
+        $newAnimal->setUpdatedGeneDiversity(false);
+        $newAnimal->setCreationDate(new \DateTime());
+
+        switch (true) {
+            case $newAnimal instanceof Ram: $objectType = AnimalObjectType::Ram; break;
+            case $newAnimal instanceof Ewe: $objectType = AnimalObjectType::Ewe; break;
+            case $newAnimal instanceof Neuter: $objectType = AnimalObjectType::Neuter; break;
+            default: $objectType = null; break;
+        }
+        $newAnimal->setObjectType($objectType);
+
+        // Just use default values for now
+        $newAnimal->setIsImportAnimal(false);
+        $newAnimal->setIsExportAnimal(false);
+        $newAnimal->setIsDepartedAnimal(false);
+
+        $newAnimal = AnimalDetailsBatchUpdaterService::cleanUpAnimalInputValues($newAnimal);
+
+        if (!BreedCodeUtil::isValidBreedCodeString($newAnimal->getBreedCode()) && $newAnimal->getBreedCode() !== null)
+            return ResultUtil::errorResult('Ongeldige rascode', Response::HTTP_BAD_REQUEST);
+
+        if (!Validator::hasValidBreedType($newAnimal->getBreedType(), true))
+            return ResultUtil::errorResult('Ongeldige rastype', Response::HTTP_BAD_REQUEST);
+
+        try {
+            $newAnimal->setAnimalOrderNumber(StringUtil::getLast5CharactersFromString($newAnimal->getUlnNumber()));
+            $newAnimal = $this->setLocationOfBirth($newAnimal);
+            $newAnimal = $this->setCurrentLocation($newAnimal);
+            $newAnimal = $this->setStartAnimalResidence($newAnimal);
+
+            $newAnimal = $this->setParents($newAnimal);
+            if ($newAnimal instanceof JsonResponse) {
+                return $newAnimal;
+            }
+
+            $newAnimal = $this->setPedigreeRegister($newAnimal);
+
+            $this->getManager()->persist($newAnimal);
+            $this->getManager()->flush();
+        }
+        catch(\Exception $e) {
+            $this->logExceptionAsError($e);
+            return ResultUtil::errorResult('INTERNAL SERVER ERROR', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $minimizedOutput = AnimalOutput::createAnimalArray($newAnimal, $this->getManager());
+        return ResultUtil::successResult($minimizedOutput);
+    }
+
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
+    private function setLocationOfBirth(Animal $animal): Animal
+    {
+        $setEmptyLocationOfBirth = true;
+        if ($animal->getLocation() && $animal->getLocationOfBirth()->getLocationId()) {
+            $locationOfBirth = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $animal->getLocationOfBirth()->getLocationId()]);
+            if ($locationOfBirth) {
+                $animal->setLocationOfBirth($locationOfBirth);
+                $setEmptyLocationOfBirth = false;
+            }
+        }
+
+        if ($setEmptyLocationOfBirth) {
+            $animal->setLocationOfBirth(null);
+        }
+
+        return $animal;
+    }
+
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
+    private function setCurrentLocation(Animal $animal): Animal
+    {
+        $setEmptyLocation = true;
+        if ($animal->getLocation() && $animal->getLocation()->getLocationId()) {
+            $location = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $animal->getLocation()->getLocationId()]);
+            if ($location) {
+                $animal->setLocation($location);
+                $setEmptyLocation = false;
+            }
+        }
+
+        if ($setEmptyLocation) {
+            $animal->setLocation(null);
+        }
+
+        return $animal;
+    }
+
+    private function setStartAnimalResidence(Animal $animal)
+    {
+        $residences = new ArrayCollection();
+        if ($animal->getAnimalResidenceHistory() && $animal->getAnimalResidenceHistory()->count() > 0) {
+            $editType = $this->getManager()->getRepository(EditType::class)->getEditType(EditTypeEnum::ADMIN_CREATE);
+
+            /** @var AnimalResidence $startResidence */
+            $startResidence = $animal->getAnimalResidenceHistory()->first();
+            $startResidence->getStartDate()->setTime(0,0,0);
+            $startResidence->setStartDateEditedBy($this->getUser());
+            $startResidence->setStartDateEditType($editType);
+            $startResidence->setAnimal($animal);
+            $startResidence->setIsPending(false);
+
+            if ($startResidence->getLocation() && $startResidence->getLocation()->getLocationId()) {
+                $location = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $startResidence->getLocation()->getLocationId()]);
+                if ($location) {
+                    $startResidence->setLocation($location);
+                    $countryCode = $this->getManager()->getRepository(Location::class)->getCountryCode($location);
+                    $startResidence->setCountry($countryCode);
+                    $startResidence->setLogDate(new \DateTime());
+
+                    $residences->add($startResidence);
+                }
+            }
+        }
+        $animal->setAnimalResidenceHistory($residences);
+        return $animal;
+    }
+
+    /**
+     * @param Animal $animal
+     * @return Animal|JsonResponse
+     */
+    private function setParents(Animal $animal)
+    {
+        $isMotherYoungerThanChild = false;
+        $isFatherYoungerThanChild = false;
+        $removeMother = true;
+        $removeFather = true;
+        if ($animal->getParentMotherId()) {
+            $mother = $this->getManager()->getRepository(Animal::class)->find($animal->getParentMotherId());
+            if ($mother) {
+                if ($mother->getDateOfBirth() > $animal->getDateOfBirth()) {
+                    $isMotherYoungerThanChild = true;
+                } else {
+                    $animal->setParentMother($mother);
+                    $removeMother = false;
+                }
+            }
+        }
+
+        if ($animal->getParentFatherId()) {
+            $father = $this->getManager()->getRepository(Animal::class)->find($animal->getParentFatherId());
+            if ($father) {
+                if ($mother->getDateOfBirth() > $animal->getDateOfBirth()) {
+                    $isFatherYoungerThanChild = true;
+                } else {
+                    $animal->setParentFather($father);
+                    $removeFather = false;
+                }
+            }
+        }
+
+        if ($removeMother) {
+            $animal->setParentMother(null);
+        }
+
+        if ($removeFather) {
+            $animal->setParentFather(null);
+        }
+
+        if ($isMotherYoungerThanChild || $isFatherYoungerThanChild) {
+            $errorMessage = $isMotherYoungerThanChild ? $this->translateUcFirstLower('MOTHER CANNOT BE YOUNGER THAN CHILD') . '. ' : '';
+            $errorMessage .= $isFatherYoungerThanChild ? $this->translateUcFirstLower('FATHER CANNOT BE YOUNGER THAN CHILD') . '. ' : '';
+            return ResultUtil::errorResult($errorMessage,Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        return $animal;
+    }
+
+    /**
+     * @param Animal $animal
+     * @return Animal
+     */
+    private function setPedigreeRegister(Animal $animal): Animal
+    {
+        $removeRegister = true;
+        if ($animal->getPedigreeRegister() && $animal->getPedigreeRegister()->getId()) {
+            $pedigreeRegister = $this->getManager()->getRepository(PedigreeRegister::class)
+                ->find($animal->getPedigreeRegister()->getId());
+            $animal->setPedigreeRegister($pedigreeRegister);
+            $removeRegister = false;
+        }
+
+        if ($removeRegister) {
+            $animal->setPedigreeRegister(null);
+        }
+
+        return $animal;
+    }
+
+    public function findAnimal(Request $request)
+    {
+        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $data = RequestUtil::getContentAsArray($request);
+        $uln = $data->get('uln');
+        if (is_string($uln)) {
+            $uln = strtoupper(strtr($uln, [' ' => '']));
+        }
+        if(!Validator::verifyUlnFormat($uln)) {
+            return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $animal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
+            if(!$animal)
+                return ResultUtil::errorResult('Dit dier bestaat niet.', Response::HTTP_BAD_REQUEST);
+
+            $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
+            return ResultUtil::successResult($minimizedOutput);
+        }
+        catch (\Exception $e){
+            return ResultUtil::successResult($e);
+        }
+    }
 
     /**
      * @param Request $request
@@ -118,7 +413,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return ResultUtil::errorResult($exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $serializedAnimalsOutput = self::getSerializedAnimalsInBatchEditFormat($this, $animals);
+        $includeLitter = RequestUtil::getBooleanQuery($request, QueryParameter::INCLUDE_LITTER, false);
+        $serializedAnimalsOutput = self::getSerializedAnimalsInBatchEditFormat($this, $animals, $includeLitter);
 
         $ulnsWithMissingAnimals = [];
         $stnsWithMissingAnimals = [];
@@ -144,19 +440,29 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         ]);
     }
 
-
-    public static function getSerializedAnimalsInBatchEditFormat(ControllerServiceBase $controllerServiceBase, array $animals = [])
+    /**
+     * @param ControllerServiceBase $controllerServiceBase
+     * @param array $animals
+     * @param bool $includeLitter
+     * @return array
+     */
+    public static function getSerializedAnimalsInBatchEditFormat(ControllerServiceBase $controllerServiceBase, array $animals = [], $includeLitter = false)
     {
         $foundUlns = [];
         $foundStns = [];
 
         $totalFoundAnimals = [];
 
+        $jmsGroups = [JmsGroup::ANIMALS_BATCH_EDIT];
+        if ($includeLitter) {
+            $jmsGroups[] = JmsGroup::LITTER;
+        }
+
         /** @var Animal $animal */
         foreach ($animals as $animal) {
             $serializedAnimal = $controllerServiceBase->getDecodedJsonOfAnimalWithParents(
                 $animal,
-                [JmsGroup::ANIMALS_BATCH_EDIT],
+                $jmsGroups,
                 true,
                 true
             );
@@ -175,7 +481,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             JsonInputConstant::FOUND_STNS => $foundStns,
         ];
     }
-
 
     /**
      * @param Request $request
@@ -208,7 +513,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return true;
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -237,7 +541,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($minimizedOutput);
     }
 
-
     /**
      * @param Request $request
      * @param $uln
@@ -249,7 +552,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
         return new JsonResponse($minimizedOutput, 200);
     }
-
 
     /**
      * @param Request $request
@@ -280,7 +582,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($serializedLivestockAnimals);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -309,7 +610,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($this->getManager()->getRepository(Animal::class)->getAllRams());
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
@@ -325,10 +625,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($retrieveAnimals);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws \Exception
      */
     public function createRetrieveAnimals(Request $request)
     {
@@ -365,10 +665,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($messageArray);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @throws \Exception
      */
     public function createRetrieveAnimalsForAllLocations(Request $request)
     {
@@ -382,11 +682,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($message);
     }
 
-
     /**
      * @param $loggedInUser
      * @param int $hasNotBeenSyncedForAtLeastThisAmountOfDays
      * @return array
+     * @throws \Exception
      */
     public function syncAnimalsForAllLocations($loggedInUser, $hasNotBeenSyncedForAtLeastThisAmountOfDays = 0)
     {
@@ -396,8 +696,19 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $count = 0;
 
         /** @var Location $location */
-        foreach($allLocations as $location) {
+        foreach($allLocations as $location)
+        {
+            if (!$location->getIsActive() && !$location->getCompany()->isActive()) {
+                continue;
+            }
+
             $client = $location->getCompany()->getOwner();
+
+            if (empty($client->getRelationNumberKeeper())) {
+                $this->getLogger()->error('Animal Sync failed due to missing relationNumberKeeper for UBN: '.
+                $location->getUbn().', ownerId: '.$client->getId());
+                continue;
+            }
 
             //Convert the array into an object and add the mandatory values retrieved from the database
             $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
@@ -418,10 +729,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             Constant::COUNT => $count);
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws \Exception
      */
     function createAnimalDetails(Request $request)
     {
@@ -443,11 +754,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return new JsonResponse($messageArray, 200);
     }
 
-
     /**
      * @param Request $request
      * @param string $ulnString
      * @return JsonResponse
+     * @throws \Exception
      */
     public function getAnimalDetailsByUln(Request $request, $ulnString)
     {
@@ -482,7 +793,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = null;
         if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
 
-        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $isAdmin, $location, $ulnString);
+        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $this->getSqlViewManager(), $isAdmin, $location, $ulnString);
         if(!$animalDetailsValidator->getIsInputValid()) {
             return $animalDetailsValidator->createJsonResponse();
         }
@@ -493,9 +804,63 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return $this->getBasicAnimalDetailsByUln($ulnString);
         }
 
-        return $this->getAnimalDetailsOutputForUserEnvironment($animal);
+        return ResultUtil::successResult(
+            $this->animalDetailsOutput->getForUserEnvironment(
+                $animal,
+                $this->getUser(),
+                $location
+            )
+        );
     }
 
+    /**
+     * @param Request $request
+     * @param string $ulnString
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function getChildrenByUln(Request $request, $ulnString)
+    {
+        //VWA environment
+        if ($this->getUser() instanceof VwaEmployee) {
+            throw AdminValidator::standardException();
+        }
+
+        //Admin environment
+        $location = null;
+        $isAdminEnvironment = RequestUtil::getBooleanQuery($request, JsonInputConstant::IS_ADMIN_ENV);
+        if($isAdminEnvironment) {
+            if(!AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::ADMIN))
+            { throw AdminValidator::standardException(); }
+
+            $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
+            if($animal === null) {
+                return ResultUtil::errorResult("No animal was found with uln: ".$ulnString, Response::HTTP_NOT_FOUND);
+            }
+
+        } else {
+            //User environment
+            $isAdmin = AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::ADMIN);
+
+            $location = null;
+            if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
+
+            $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $this->getSqlViewManager(), $isAdmin, $location, $ulnString);
+            if(!$animalDetailsValidator->getIsInputValid()) {
+                return $animalDetailsValidator->createJsonResponse();
+            }
+
+            $animal = $animalDetailsValidator->getAnimal();
+        }
+
+        return ResultUtil::successResult(
+            $this->animalDetailsOutput->getChildrenOutput(
+                $animal,
+                $this->getUser(),
+                $location
+            )
+        );
+    }
 
     /**
      * @param string $ulnString
@@ -510,11 +875,11 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $output = $this->getBaseSerializer()->getDecodedJson($animal, [JmsGroup::BASIC]);
         return ResultUtil::successResult($output);
     }
-
-
+    
     /**
      * @param Request $request
      * @return JsonResponse|Animal|null
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function changeGenderOfUln(Request $request)
     {
@@ -554,19 +919,23 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $genderChanger = new GenderChanger($this->getManager());
         $oldGender = $animal->getGender();
         $targetGender = null;
+        $targetObjectType = null;
         $result = null;
 
         switch ($gender) {
             case AnimalObjectType::EWE:
                 $targetGender = "FEMALE";
+                $targetObjectType = AnimalObjectType::Ewe;
                 $result = $genderChanger->changeToGender($animal, Ewe::class, $this->getUser());
                 break;
             case AnimalObjectType::RAM:
                 $targetGender = "MALE";
+                $targetObjectType = AnimalObjectType::Ram;
                 $result = $genderChanger->changeToGender($animal, Ram::class, $this->getUser());
                 break;
             case AnimalObjectType::NEUTER:
                 $targetGender = "NEUTER";
+                $targetObjectType = AnimalObjectType::Neuter;
                 $result = $genderChanger->changeToGender($animal, Neuter::class, $this->getUser());
                 break;
         }
@@ -586,6 +955,42 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $this->clearLivestockCacheForLocation($this->getSelectedLocation($request), $animal);
 
         $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
+
+        //FIXME Temporarily workaround
+        $minimizedOutput['type'] = $targetObjectType;
+
         return new JsonResponse($minimizedOutput, 200);
     }
+
+	/**
+	 * @param Request $request
+	 * @param Ram|Ewe|Neuter|Animal $animal
+	 * @return array|null
+	 */
+		public function changeNicknameOfAnimal(Request $request, Animal $animal)
+		{
+				$content = RequestUtil::getContentAsArray($request);
+
+				//Check if mandatory field values are given
+				if(!$content->containsKey(ReportLabel::NICKNAME)) {
+				    throw new BadRequestHttpException(ReportLabel::NICKNAME.' is missing.');
+				}
+
+				//Try to change animal gender
+				$nickname = $content->get(ReportLabel::NICKNAME);
+				$animal->setNickname($nickname);
+
+				$errors = $this->validator->validate($animal);
+				Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
+
+				$manager = $this->getManager();
+				$manager->persist($animal);
+				$manager->flush();
+
+				$minimizedOutput = AnimalOutput::createAnimalArray($animal, $manager);
+
+				//FIXME Temporarily workaround
+				$minimizedOutput['type'] = $animal->getObjectType();
+				return $minimizedOutput;
+		}
 }

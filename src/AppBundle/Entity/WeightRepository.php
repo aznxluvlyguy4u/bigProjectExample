@@ -33,12 +33,14 @@ class WeightRepository extends MeasurementRepository {
         if(!($animal instanceof Animal)) { return $results; }
         elseif(!is_int($animal->getId())){ return $results; }
 
+        $animalId = $animal->getId();
+
         $sql = "SELECT m.id as id, measurement_date, t.*, p.person_id, p.first_name, p.last_name
                 FROM measurement m
                   INNER JOIN weight t ON t.id = m.id
                   LEFT JOIN person p ON p.id = m.inspector_id
                   INNER JOIN animal a ON a.id = t.animal_id
-                WHERE m.is_active = TRUE AND t.is_revoked = FALSE AND t.animal_id = ".$animal->getId();
+                WHERE m.is_active = TRUE AND t.is_revoked = FALSE AND t.animal_id = $animalId ORDER BY m.measurement_date";
         $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
         foreach ($retrievedMeasurementData as $measurementData)

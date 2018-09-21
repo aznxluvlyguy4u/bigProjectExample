@@ -40,7 +40,8 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
             //$location = $this->getSelectedLocation($request);
         }
 
-        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $isAdmin, $location, $ulnString);
+        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $this->getSqlViewManager(),
+            $isAdmin, $location, $ulnString);
         if (!$animalDetailsValidator->getIsInputValid()) {
             return $animalDetailsValidator->createJsonResponse();
         }
@@ -117,7 +118,8 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
             //$location = $this->getSelectedLocation($request);
         }
 
-        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $isAdmin, $location, $ulnString);
+        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $this->getSqlViewManager(),
+            $isAdmin, $location, $ulnString);
         if (!$animalDetailsValidator->getIsInputValid()) {
             return $animalDetailsValidator->createJsonResponse();
         }
@@ -224,7 +226,7 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
         $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::ADMIN);
         $location = $isAdmin ? null : $this->getSelectedLocation($request);
 
-        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $isAdmin, $location, $ulnString);
+        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $this->getSqlViewManager(), $isAdmin, $location, $ulnString);
         if (!$animalDetailsValidator->getIsInputValid()) {
             return $animalDetailsValidator->createJsonResponse();
         }
@@ -248,7 +250,8 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
         $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::ADMIN);
         $location = $isAdmin ? null : $this->getSelectedLocation($request);
 
-        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $isAdmin, $location, $ulnString);
+        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $this->getSqlViewManager(),
+            $isAdmin, $location, $ulnString);
         if (!$animalDetailsValidator->getIsInputValid()) {
             return $animalDetailsValidator->createJsonResponse();
         }

@@ -13,13 +13,16 @@ class JmsGroup
     const ANIMALS_BATCH_EDIT = 'ANIMALS_BATCH_EDIT';
 
     const BASIC = 'BASIC';
+    const BASIC_SUB_ANIMAL_DETAILS = 'BASIC_SUB_ANIMAL_DETAILS';
 
     const CHILD = 'CHILD';
     const CONTACT_INFO = 'CONTACT_INFO';
+    const DOSSIER = "DOSSIER";
 
     const DECLARE_ = 'DECLARE';
     const DETAILS = 'DETAILS';
 
+    const EDIT_OVERVIEW = 'EDIT_OVERVIEW';
     const ERROR_DETAILS = 'ERROR_DETAILS';
 
     const GHOST_LOGIN = 'GHOST_LOGIN';
@@ -28,6 +31,7 @@ class JmsGroup
 
     const INVOICE = 'INVOICE';
     const INVOICE_NO_COMPANY = 'INVOICE_NO_COMPANY';
+    const INVOICE_OVERVIEW = 'INVOICE_OVERVIEW';
     const INVOICE_RULE = 'INVOICE_RULE';
     const INVOICE_RULE_TEMPLATE = 'INVOICE_RULE_TEMPLATE';
     const INVOICE_SENDER_DETAILS = 'INVOICE_SENDER_DETAILS';
@@ -35,6 +39,7 @@ class JmsGroup
     const IS_NOT_HISTORIC_ANIMAL = 'IS_NOT_HISTORIC_ANIMAL';
 
     const LAST_MATE = 'LAST_MATE';
+    const LITTER_EDIT = 'LITTER';
     const LIVESTOCK = 'LIVESTOCK';
 
     const MATINGS = 'MATINGS';

@@ -61,12 +61,15 @@ class CompanyOutput
                 'address_number_suffix' => Utils::fillNull($company['billingAddress']['addressNumberSuffix']),
                 'postal_code' => Utils::fillNull($company['billingAddress']['postalCode']),
                 'city' => Utils::fillNull($company['billingAddress']['city']),
-                'state' => Utils::fillNull($company['billingAddress']['state'])
+                'state' => Utils::fillNull($company['billingAddress']['state']),
+                'country' => Utils::fillNull($company['billingAddress']['country']),
             ] : [];
 
             $res[] = array(
                 'company_id' => Utils::fillNull($company['companyId']),
                 'debtor_number' => Utils::fillNull($company['debtorNumber']),
+                'twinfield_office_code' => Utils::fillNull($company['twinfieldOfficeCode']),
+                'twinfield_administration_code' => Utils::fillNull($company['twinfieldOfficeCode']),
                 'company_name' => Utils::fillNull($company['companyName']),
                 'subscription_date' => Utils::fillNull($company['subscriptionDate']),
                 'animal_health_subscription' => Utils::fillNull($company['animalHealthSubscription']),
@@ -80,7 +83,8 @@ class CompanyOutput
                     'address_number_suffix' => Utils::fillNull($company['address']['addressNumberSuffix']),
                     'postal_code' => Utils::fillNull($company['address']['postalCode']),
                     'city' => Utils::fillNull($company['address']['city']),
-                    'state' => Utils::fillNull($company['address']['state'])
+                    'state' => Utils::fillNull($company['address']['state']),
+                    'country' => Utils::fillNull($company['address']['country']),
                 ),
                 'owner' => array(
                     'person_id' => Utils::fillNull($company['owner']['personId']),
@@ -195,7 +199,7 @@ class CompanyOutput
      *
      * @return array
      */
-    public static function createCompanyDetails($company)
+    public static function createCompanyDetails($company, array $breederNumbers = [])
     {
         $res = array();
         $res['company_id'] = Utils::fillNull($company->getCompanyId());
@@ -217,6 +221,7 @@ class CompanyOutput
             'postal_code' => Utils::fillNull($company->getAddress()->getPostalCode()),
             'city' => Utils::fillNull($company->getAddress()->getCity()),
             'state' => Utils::fillNull($company->getAddress()->getState()),
+            'country' => Utils::fillNull($company->getAddress()->getCountry()),
         );
 
         $liveStockCount = Count::getCompanyLiveStockCount($company);
@@ -241,7 +246,7 @@ class CompanyOutput
             ),
         );
 
-        $res['breeder_numbers'] = array();
+        $res['breeder_numbers'] = $breederNumbers;
         $res['invoices'] = $company->getInvoices();
 
         /*

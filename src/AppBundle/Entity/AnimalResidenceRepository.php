@@ -120,4 +120,36 @@ class AnimalResidenceRepository extends BaseRepository {
 							)VALUES(nextval('animal_residence_id_seq'),".$animalId.",'".$logDateString."',".
         SqlUtil::getNullCheckedValueForSqlQuery($startDateString, true).",".SqlUtil::getNullCheckedValueForSqlQuery($endDateString, true).",".StringUtil::getBooleanAsString($isPending).",'".$country."',".$locationId.")";
     }
+
+
+    /**
+     * @param array $animalIds
+     * @return array|AnimalResidence[]
+     */
+    public function getByAnimalIds($animalIds = [])
+    {
+        if (empty($animalIds)) {
+            return [];
+        }
+
+
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $qb
+            ->select('r')
+            ->from (AnimalResidence::class, 'r')
+        ;
+
+        foreach ($animalIds as $animalId) {
+            $qb->orWhere($qb->expr()->eq('r.animal', $animalId));
+        }
+
+        $qb
+            ->orderBy('r.animal' ,'ASC')
+            ->addOrderBy('r.startDate', 'ASC')
+            ->addOrderBy('r.endDate', 'ASC')
+        ;
+
+        return $qb->getQuery()->getResult();
+    }
 }

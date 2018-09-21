@@ -40,7 +40,8 @@ use JMS\Serializer\Annotation\Expose;
  *     "TREATMENT_TEMPLATE",
  *     "UBN",
  *     "USER_MEASUREMENT",
- *     "VWA"
+ *     "VWA",
+ *     "DOSSIER"
  *  })
  *
  * @package AppBundle\Entity
@@ -72,7 +73,8 @@ abstract class Person implements UserInterface
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
-   *     "VWA"
+   *     "VWA",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -98,7 +100,8 @@ abstract class Person implements UserInterface
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
-   *     "VWA"
+   *     "VWA",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -124,7 +127,8 @@ abstract class Person implements UserInterface
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
-   *     "VWA"
+   *     "VWA",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -139,7 +143,8 @@ abstract class Person implements UserInterface
    * @JMS\Groups({
    *     "BASIC",
    *     "GHOST_LOGIN",
-   *     "VWA"
+   *     "VWA",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -164,7 +169,8 @@ abstract class Person implements UserInterface
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
      *     "USER_MEASUREMENT",
-     *     "VWA"
+     *     "VWA",
+     *     "DOSSIER"
      * })
      * @Expose
      */
@@ -289,7 +295,6 @@ abstract class Person implements UserInterface
      */
     private $passwordResetToken;
 
-
     /**
      * @var \DateTime
      *
@@ -299,11 +304,37 @@ abstract class Person implements UserInterface
      */
     protected $passwordResetTokenCreationDate;
 
+    /**
+     * @ORM\OneToOne(targetEntity="EmailChangeConfirmation", mappedBy="person", cascade={"persist", "remove"})
+     * @JMS\Type("AppBundle\Entity\EmailChangeConfirmation")
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
+     */
+    private $emailChangeToken;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="MobileDevice", mappedBy="owner", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\MobileDevice>")
+     */
+    private $mobileDevices;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Worker", mappedBy="owner", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Worker>")
+     */
+    private $workers;
 
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
   {
     $this->tokens = new ArrayCollection();
+    $this->mobileDevices = new ArrayCollection();
+    $this->workers = new ArrayCollection();
     
     $this->setFirstName($firstName);
     $this->setLastName($lastName);
@@ -560,6 +591,7 @@ abstract class Person implements UserInterface
       foreach($this->tokens as $token) {
         if($token->getType() == TokenType::ACCESS) {
           $token->setCode($accessToken);
+          $token->setCreationDateTime(new \DateTime());
           return;
         }
       }
@@ -811,6 +843,64 @@ abstract class Person implements UserInterface
         return $this;
     }
 
+    /**
+     * @param
+     * @return EmailChangeConfirmation
+     */
+    public function getEmailChangeToken(){
+        return $this->emailChangeToken;
+    }
+
+    /**
+     * @param $token
+     * @return Person
+     */
+    public function setEmailChangeToken($token){
+        $this->emailChangeToken = $token;
+        return $this;
+    }
+
+    /**
+     * @return ArrayCollection|MobileDevice[]
+     */
+    public function getMobileDevices()
+    {
+        if ($this->mobileDevices === null) {
+            $this->mobileDevices = new ArrayCollection();
+        }
+        return $this->mobileDevices;
+    }
+
+    /**
+     * @param ArrayCollection $mobileDevices
+     * @return Person
+     */
+    public function setMobileDevices($mobileDevices)
+    {
+        $this->mobileDevices = $mobileDevices;
+        return $this;
+    }
+
+
+    /**
+     * @param MobileDevice $mobileDevice
+     * @return $this
+     */
+    public function addMobileDevice($mobileDevice)
+    {
+        $this->getMobileDevices()->add($mobileDevice);
+        return $this;
+    }
+
+    /**
+     * @param MobileDevice $mobileDevice
+     * @return $this
+     */
+    public function removeMobileDevice($mobileDevice)
+    {
+        $this->getMobileDevices()->removeElement($mobileDevice);
+        return $this;
+    }
 
     /**
      * @return Person

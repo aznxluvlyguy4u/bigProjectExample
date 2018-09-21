@@ -107,23 +107,39 @@ class CommandUtil
     }
 
 
-
     /**
+     * @param string $confirmationQuestion
+     * @param bool $includeDefaultOptionText
+     * @param bool $logAnswer
      * @return bool
      */
-    public function generateConfirmationQuestion($confirmationQuestion = 'Continue with this action?')
+    public function generateConfirmationQuestion($confirmationQuestion = 'Continue with this action?',
+                                                 $includeDefaultOptionText = false,
+                                                 $logAnswer = false)
     {
+        $defaultAnswer = false;
+        $fullConfirmationQuestion = $confirmationQuestion;
+        if ($includeDefaultOptionText) {
+            $fullConfirmationQuestion = $confirmationQuestion
+            .'  (y/n, default is '.StringUtil::getBooleanAsString($defaultAnswer).')';
+        }
+
         $question = new ConfirmationQuestion(
-            $confirmationQuestion,
-            false,
+            $fullConfirmationQuestion,
+            $defaultAnswer,
             '/^(y|j)/i' //Anything starting with y or j is accepted
         );
 
+        $answer = !$defaultAnswer;
         if (!$this->helper->ask($this->inputInterface, $this->outputInterface, $question)) {
-            return false;
-        } else {
-            return true;
+            $answer = $defaultAnswer;
         }
+
+        if ($logAnswer) {
+            $this->writeln(rtrim($confirmationQuestion,'?').': '. StringUtil::getBooleanAsString($answer));
+        }
+
+        return $answer;
     }
 
 
@@ -243,6 +259,13 @@ class CommandUtil
     public function getOutputInterface()
     {
         return $this->outputInterface;
+    }
+
+    /**
+     * @return InputInterface
+     */
+    public function getInputInterface() {
+        return $this->inputInterface;
     }
 
 

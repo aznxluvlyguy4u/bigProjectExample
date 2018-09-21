@@ -112,6 +112,30 @@ class InvoiceRule
     private $ledgerCategory;
 
     /**
+     * @var string
+     * @ORM\Column(name="article_code", type="string")
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $articleCode;
+
+    /**
+     * @var string
+     * @ORM\Column(name="sub_article_code", type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $subArticleCode;
+
+    /**
      * @var boolean
      * @ORM\Column(type="boolean", name="is_deleted", options={"default":false})
      * @JMS\Type("boolean")
@@ -149,11 +173,35 @@ class InvoiceRule
     private $invoiceRuleSelections;
 
     /**
+     * For batch edit rules, the admin may wish to temporarily activate or deactivate certain invoiceRules
+     *
+     * @var boolean
+     * @ORM\Column(type="boolean", name="is_active", options={"default":true})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "INVOICE_RULE",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY"
+     * })
+     */
+    private $isActive;
+
+    /**
      * InvoiceRule constructor.
      */
     public function __construct()
     {
         $this->invoiceRuleSelections = new ArrayCollection();
+        $this->isActive = true;
+    }
+
+    /**
+     * InvoiceRule clone
+     */
+    function __clone()
+    {
+        $this->id = null;
+        $this->isBatch = false;
     }
 
     /**
@@ -340,4 +388,56 @@ class InvoiceRule
     {
         $this->isBatch = $isBatch;
     }
+
+    /**
+     * @return string
+     */
+    public function getArticleCode(): string
+    {
+        return $this->articleCode;
+    }
+
+    /**
+     * @param string $articleCode
+     */
+    public function setArticleCode(string $articleCode): void
+    {
+        $this->articleCode = $articleCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubArticleCode(): ?string
+    {
+        return $this->subArticleCode;
+    }
+
+    /**
+     * @param string $subArticleCode
+     */
+    public function setSubArticleCode(?string $subArticleCode): void
+    {
+        $this->subArticleCode = $subArticleCode;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param bool $isActive
+     * @return InvoiceRule
+     */
+    public function setIsActive(bool $isActive): InvoiceRule
+    {
+        $this->isActive = $isActive;
+        return $this;
+    }
+
+
 }

@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\BreedCodeUtil;
@@ -38,6 +39,7 @@ use \DateTime;
  *     "ANIMAL_DETAILS",
  *     "ANIMALS_BATCH_EDIT",
  *     "BASIC",
+ *     "BASIC_SUB_ANIMAL_DETAILS",
  *     "DECLARE",
  *     "MINIMAL",
  *     "MIXBLUP",
@@ -51,6 +53,9 @@ abstract class Animal
 {
     use EntityClassInfo;
 
+    const MIN_N_LING_VALUE = 0;
+    const MAX_N_LING_VALUE = 7;
+
     /**
      * @var integer
      *
@@ -61,6 +66,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "BASIC_SUB_ANIMAL_DETAILS",
      *     "DECLARE",
      *     "ERROR_DETAILS",
      *     "MIXBLUP",
@@ -98,6 +104,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "BASIC_SUB_ANIMAL_DETAILS",
      *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
@@ -121,6 +128,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "BASIC_SUB_ANIMAL_DETAILS",
      *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
@@ -185,6 +193,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "BASIC_SUB_ANIMAL_DETAILS",
      *     "CHILD",
      *     "DECLARE",
      *     "LIVESTOCK",
@@ -221,6 +230,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "BASIC_SUB_ANIMAL_DETAILS",
      *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
@@ -436,6 +446,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "BASIC_SUB_ANIMAL_DETAILS",
      *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
@@ -461,6 +472,7 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "BASIC_SUB_ANIMAL_DETAILS",
      *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
@@ -746,7 +758,7 @@ abstract class Animal
      * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "ANIMALS_BATCH_EDIT"
+     *     "LITTER"
      * })
      */
     protected $litter;
@@ -817,9 +829,16 @@ abstract class Animal
     /**
      * @var ResultTableBreedGrades
      * @ORM\OneToOne(targetEntity="ResultTableBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\ResultTableBreedGrades>")
+     * @JMS\Type("AppBundle\Entity\ResultTableBreedGrades")
      */
     protected $latestBreedGrades;
+
+    /**
+     * @var ResultTableNormalizedBreedGrades
+     * @ORM\OneToOne(targetEntity="ResultTableNormalizedBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("AppBundle\Entity\ResultTableNormalizedBreedGrades")
+     */
+    protected $latestNormalizedBreedGrades;
 
     /**
      * @var ArrayCollection
@@ -831,6 +850,7 @@ abstract class Animal
 
     /**
      * @var string
+     * @Assert\Length(max = 20)
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -846,7 +866,8 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "ANIMALS_BATCH_EDIT"
+     *     "ANIMALS_BATCH_EDIT",
+     *     "LIVESTOCK"
      * })
      */
     protected $collarColor;
@@ -857,7 +878,8 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
-     *     "ANIMALS_BATCH_EDIT"
+     *     "ANIMALS_BATCH_EDIT",
+     *     "LIVESTOCK"
      * })
      */
     protected $collarNumber;
@@ -879,13 +901,17 @@ abstract class Animal
      * @JMS\VirtualProperty
      * @JMS\SerializedName("merged_n_ling")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT"
      * })
      * @return integer
      */
     public function mergedNLing()
     {
-        if ($this->getLitter()) {
+        if ($this->getLitter()
+            && $this->getLitter()->getAnimalMother()
+            && $this->getLitter()->getStatus() !== RequestStateType::REVOKED
+        ) {
             return intval($this->getLitter()->getSize());
         }
 
@@ -2045,7 +2071,7 @@ abstract class Animal
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|AnimalResidence[]
      */
     public function getAnimalResidenceHistory()
     {
@@ -2831,6 +2857,25 @@ abstract class Animal
 
 
     /**
+     * @return ResultTableNormalizedBreedGrades
+     */
+    public function getLatestNormalizedBreedGrades()
+    {
+        return $this->latestNormalizedBreedGrades;
+    }
+
+    /**
+     * @param ResultTableNormalizedBreedGrades $latestNormalizedBreedGrades
+     * @return Animal
+     */
+    public function setLatestNormalizedBreedGrades($latestNormalizedBreedGrades)
+    {
+        $this->latestNormalizedBreedGrades = $latestNormalizedBreedGrades;
+        return $this;
+    }
+
+
+    /**
      * @return string
      */
     public function getNickname()
@@ -2843,6 +2888,7 @@ abstract class Animal
      */
     public function setNickname($nickname)
     {
+    	  $nickname = $nickname === '' ? null : $nickname;
         $this->nickname = $nickname;
     }
 

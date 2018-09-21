@@ -51,6 +51,7 @@ class ReportLabel
     const POSTAL_CODE_BREEDER = 'postalCodeBreeder';
     const ADDRESS_BREEDER = 'addressBreeder';
     const UBN = 'ubn';
+    const COUNTRY = 'country';
 
     //Animal
     const ANIMALS = 'animals';
@@ -74,6 +75,7 @@ class ReportLabel
     const LITTER_COUNT = 'litterCount'; //number of offspring litters
     const OFFSPRING_COUNT = 'offspringCount'; //number of offspring
     const N_LING = 'nLing';
+    const NICKNAME = 'nickname';
     const SCRAPIE = 'scrapie';
     const PRODUCTION = 'production';
     const BREED = 'breed';
@@ -84,6 +86,7 @@ class ReportLabel
     const BLINDNESS_FACTOR = 'blindnessFactor';
     const PEDIGREE_REGISTER_NAME = 'pedigreeRegisterName';
     const LIVESTOCK = 'livestock';
+    const IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS = 'is_user_allowed_to_access_animal_details';
 
     //Location
     const LOCATIONS = 'locations';
@@ -91,6 +94,7 @@ class ReportLabel
     const MAEDI_VISNA_STATUS = 'maediVisnaStatus';
     const SCRAPIE_STATUS = 'scrapieStatus';
     const CAE_STATUS = 'caeStatus';
+    const IS_PENDING = 'is_pending';
 
     //Measurements
     const EXTERIOR = 'exterior';

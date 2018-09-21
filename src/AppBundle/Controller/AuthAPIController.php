@@ -94,6 +94,33 @@ class AuthAPIController extends APIController {
       return $this->get('app.security.auth')->authorizeUser($request);
   }
 
+    /**
+     * Retrieve a valid access token.
+     *
+     * @ApiDoc(
+     *   section = "Auth",
+     *   requirements={
+     *     {
+     *       "name"="Authorization header",
+     *       "dataType"="string",
+     *       "requirement"="Base64 encoded",
+     *       "format"="Authorization: Basic xxxxxxx==",
+     *       "description"="Basic Authentication, Base64 encoded string with delimiter"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve a valid access token for a registered and activated user"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/authorize")
+     * @Method("POST")
+     */
+    public function authorizeUserByPost(Request $request)
+    {
+        return $this->get('app.security.auth')->authorizeUser($request);
+    }
+
   /**
    * Change password when already logged in.
    *
@@ -248,6 +275,31 @@ class AuthAPIController extends APIController {
     public function passwordResetConfirmation(Request $request, $resetToken)
     {
         return $this->get('app.security.auth')->passwordResetConfirmation($resetToken);
+    }
+
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/email-change")
+     * @Method("POST")
+     */
+    public function emailChangeRequest(Request $request)
+    {
+        return $this->get('app.security.auth')->emailChangeRequest($request);
+    }
+
+
+    /**
+     * @param Request $request the request object
+     * @return string
+     * @Route("/email-change-verification/{resetToken}")
+     * @Method("GET")
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @throws \Twig\Error\Error
+     */
+    public function emailChangeConfirmation(Request $request, $resetToken)
+    {
+        return $this->get('app.security.auth')->emailChangeConfirmation($resetToken);
     }
 
 }

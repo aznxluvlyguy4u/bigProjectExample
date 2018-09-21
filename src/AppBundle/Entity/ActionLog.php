@@ -173,10 +173,13 @@ class ActionLog
 
     /**
      * @param \DateTime $logDate
+     * @return ActionLog
      */
     public function setLogDate($logDate)
     {
         $this->logDate = $logDate;
+
+        return $this;
     }
 
     /**
@@ -189,10 +192,13 @@ class ActionLog
 
     /**
      * @param Person $userAccount
+     * @return ActionLog
      */
     public function setUserAccount($userAccount)
     {
         $this->userAccount = $userAccount;
+
+        return $this;
     }
 
     /**
@@ -205,10 +211,13 @@ class ActionLog
 
     /**
      * @param Person $actionBy
+     * @return ActionLog
      */
     public function setActionBy($actionBy)
     {
         $this->actionBy = $actionBy;
+
+        return $this;
     }
 
     /**
@@ -221,10 +230,13 @@ class ActionLog
 
     /**
      * @param string $userActionType
+     * @return ActionLog
      */
     public function setUserActionType($userActionType)
     {
         $this->userActionType = $userActionType;
+
+        return $this;
     }
 
     /**
@@ -237,10 +249,13 @@ class ActionLog
 
     /**
      * @param boolean $isCompleted
+     * @return ActionLog
      */
     public function setIsCompleted($isCompleted)
     {
         $this->isCompleted = $isCompleted;
+
+        return $this;
     }
 
     /**
@@ -253,10 +268,13 @@ class ActionLog
 
     /**
      * @param string $description
+     * @return ActionLog
      */
     public function setDescription($description)
     {
         $this->description = $description;
+
+        return $this;
     }
 
     /**
@@ -269,10 +287,13 @@ class ActionLog
 
     /**
      * @param boolean $isUserEnvironment
+     * @return ActionLog
      */
     public function setIsUserEnvironment($isUserEnvironment)
     {
         $this->isUserEnvironment = $isUserEnvironment;
+
+        return $this;
     }
 
     /**
@@ -285,10 +306,13 @@ class ActionLog
 
     /**
      * @param bool $isRvoMessage
+     * @return ActionLog
      */
     public function setIsRvoMessage($isRvoMessage)
     {
         $this->isRvoMessage = $isRvoMessage;
+
+        return $this;
     }
 
 

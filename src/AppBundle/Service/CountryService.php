@@ -6,12 +6,14 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Criteria\CountryCriteria;
 use AppBundle\Entity\Country;
 use AppBundle\Entity\Province;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\ProvinceOutput;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 
 class CountryService extends DeclareControllerServiceBase
@@ -22,18 +24,18 @@ class CountryService extends DeclareControllerServiceBase
      */
     public function getCountryCodes(Request $request)
     {
-        $repository = $this->getManager()->getRepository(Country::class);
+        $countries = $this->getManager()->getRepository(Country::class)
+            ->getAll($this->getBaseSerializer(), $this->getCacheService());
 
-        if (!$request->query->has(Constant::CONTINENT_NAMESPACE)) {
-            $countries = $repository->findAll();
-        }
-        else {
+        if ($request->query->has(Constant::CONTINENT_NAMESPACE)) {
             $continent = ucfirst($request->query->get(Constant::CONTINENT_NAMESPACE));
-            if ($continent == Constant::ALL_NAMESPACE) {
-                $countries = $repository->findAll();
-            }
-            else {
-                $countries = $repository->findBy(array (Constant::CONTINENT_NAMESPACE => $continent));
+
+            if (strtolower($continent) !== Constant::ALL_NAMESPACE) {
+                $countriesCollection = new ArrayCollection($countries);
+                $countries = $countriesCollection
+                    ->matching(CountryCriteria::byContinent($continent))
+                    ->toArray()
+                ;
             }
         }
 

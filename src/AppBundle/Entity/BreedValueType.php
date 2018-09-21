@@ -38,6 +38,15 @@ class BreedValueType
     private $mixBlupAnalysisType;
 
     /**
+     * @var BreedValueGraphGroup
+     *
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\BreedValueGraphGroup", inversedBy="breedValueTypes")
+     * @ORM\JoinColumn(name="graph_group_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\BreedValueGraphGroup")
+     */
+    private $graphGroup;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="string")
@@ -84,6 +93,8 @@ class BreedValueType
     private $resultTableAccuracyVariable;
 
     /**
+     * Display in reports
+     *
      * @var boolean
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
@@ -92,12 +103,40 @@ class BreedValueType
     private $showResult;
 
     /**
+     * Order in animal details output
+     *
+     * Due to multiple exterior breedType possibly having the same ordinal, for different animals,
+     * this field cannot be set to unique=true;
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $graphOrdinal;
+
+    /**
      * @var boolean
      * @ORM\Column(type="boolean", options={"default":false})
      * @JMS\Type("boolean")
      * @Assert\NotBlank
      */
     private $useNormalDistribution;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", options={"default":false})
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     */
+    private $prioritizeNormalizedValuesInReport;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", options={"default":false})
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     */
+    private $invertNormalDistribution;
 
     /**
      * @var float
@@ -120,6 +159,7 @@ class BreedValueType
         $this->resultTableAccuracyVariable = ResultTableBreedGrades::getAccuracyVariableByBreedValueType($en);
         $this->showResult = true;
         $this->useNormalDistribution = false;
+        $this->invertNormalDistribution = false;
     }
 
     /**
@@ -155,6 +195,24 @@ class BreedValueType
     public function setMixBlupAnalysisType($mixBlupAnalysisType)
     {
         $this->mixBlupAnalysisType = $mixBlupAnalysisType;
+        return $this;
+    }
+
+    /**
+     * @return BreedValueGraphGroup
+     */
+    public function getGraphGroup()
+    {
+        return $this->graphGroup;
+    }
+
+    /**
+     * @param BreedValueGraphGroup $graphGroup
+     * @return BreedValueType
+     */
+    public function setGraphGroup($graphGroup)
+    {
+        $this->graphGroup = $graphGroup;
         return $this;
     }
 
@@ -285,6 +343,42 @@ class BreedValueType
     }
 
     /**
+     * @return bool
+     */
+    public function isInvertNormalDistribution(): bool
+    {
+        return $this->invertNormalDistribution;
+    }
+
+    /**
+     * @param bool $invertNormalDistribution
+     * @return BreedValueType
+     */
+    public function setInvertNormalDistribution(bool $invertNormalDistribution): BreedValueType
+    {
+        $this->invertNormalDistribution = $invertNormalDistribution;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPrioritizeNormalizedValuesInReport(): bool
+    {
+        return $this->prioritizeNormalizedValuesInReport;
+    }
+
+    /**
+     * @param bool $prioritizeNormalizedValuesInReport
+     * @return BreedValueType
+     */
+    public function setPrioritizeNormalizedValuesInReport(bool $prioritizeNormalizedValuesInReport): BreedValueType
+    {
+        $this->prioritizeNormalizedValuesInReport = $prioritizeNormalizedValuesInReport;
+        return $this;
+    }
+
+    /**
      * @return float
      */
     public function getStandardDeviationStepSize()
@@ -299,6 +393,24 @@ class BreedValueType
     public function setStandardDeviationStepSize($standardDeviationStepSize)
     {
         $this->standardDeviationStepSize = $standardDeviationStepSize;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getGraphOrdinal()
+    {
+        return $this->graphOrdinal;
+    }
+
+    /**
+     * @param int $graphOrdinal
+     * @return BreedValueType
+     */
+    public function setGraphOrdinal($graphOrdinal)
+    {
+        $this->graphOrdinal = $graphOrdinal;
         return $this;
     }
 

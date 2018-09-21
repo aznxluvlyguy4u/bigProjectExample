@@ -671,29 +671,82 @@ class ActionLogWriter
 
 
     /**
-     * @param ObjectManager $om
-     * @param Person $person
+     * @param Person $actionBy
+     * @param Person $userAccount
      * @return ActionLog
      */
-    public static function passwordResetConfirmation(ObjectManager $om, $person)
+    private static function getActionByAccountOwner(Person $actionBy, Person $userAccount)
     {
-        $userActionType = UserActionType::USER_PASSWORD_RESET;
         $isUserEnvironment = true;
         $isVwaEnvironment = false;
-        if ($person instanceof Employee) {
-            $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
+
+        if ($userAccount instanceof Employee) {
             $isUserEnvironment = false;
             $isVwaEnvironment = false;
-        } elseif ($person instanceof VwaEmployee) {
-            $userActionType = UserActionType::VWA_PASSWORD_RESET;
+
+        } elseif ($userAccount instanceof VwaEmployee) {
             $isUserEnvironment = false;
             $isVwaEnvironment = true;
         }
 
-        $log = new ActionLog($person, $person, $userActionType, true,
-            self::getPasswordResetDescription($person->getEmailAddress(), false),
-            $isUserEnvironment, $isVwaEnvironment);
-        DoctrineUtil::persistAndFlush($om, $log);
+        return new ActionLog($userAccount, $actionBy, null, null,
+            null, $isUserEnvironment, $isVwaEnvironment);
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Person $person
+     * @return ActionLog
+     */
+    public static function passwordResetConfirmation(EntityManagerInterface $em, $person)
+    {
+        $log = self::getActionByAccountOwner($person, $person);
+
+        $userActionType = UserActionType::USER_PASSWORD_RESET;
+        if ($person instanceof Employee) {
+            $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
+        } elseif ($person instanceof VwaEmployee) {
+            $userActionType = UserActionType::VWA_PASSWORD_RESET;
+        }
+
+        $log
+            ->setUserActionType($userActionType)
+            ->setIsCompleted(true)
+            ->setDescription(self::getPasswordResetDescription($person->getEmailAddress(), false))
+        ;
+
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Person $person
+     * @param string $oldEmailAddress
+     * @param string $newEmailAddress
+     * @return ActionLog
+     */
+    public static function emailChangeConfirmation(EntityManagerInterface $em, $person, $oldEmailAddress, $newEmailAddress)
+    {
+        $log = self::getActionByAccountOwner($person, $person);
+
+        $userActionType = UserActionType::USER_EMAIL_CHANGE;
+        if ($person instanceof Employee) {
+            $userActionType = UserActionType::ADMIN_EMAIL_CHANGE;
+        } elseif ($person instanceof VwaEmployee) {
+            $userActionType = UserActionType::VWA_EMAIL_CHANGE;
+        }
+
+        $log
+            ->setUserActionType($userActionType)
+            ->setIsCompleted(true)
+            ->setDescription($oldEmailAddress . ' => ' . $newEmailAddress)
+        ;
+
+        DoctrineUtil::persistAndFlush($em, $log);
 
         return $log;
     }

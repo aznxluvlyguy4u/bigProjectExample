@@ -231,6 +231,18 @@ abstract class DeclareBase implements DeclareLogInterface
      */
     protected $newestVersion;
 
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false, options={"default":true})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "ADMIN_HIDDEN_STATUS",
+     *     "ERROR_DETAILS",
+     *     "HIDDEN_STATUS"
+     * })
+     */
+    protected $isRvoMessage;
 
     /**
      * DeclareBase constructor.
@@ -239,6 +251,7 @@ abstract class DeclareBase implements DeclareLogInterface
         $this->setHideFailedMessage(false);
         $this->hideForAdmin = false;
         $this->hideFailedMessage = false;
+        $this->isRvoMessage = true;
     }
 
     /**
@@ -523,8 +536,27 @@ abstract class DeclareBase implements DeclareLogInterface
     public function setNewestVersion($newestVersion)
     {
         $this->newestVersion = $newestVersion;
+        return $this;
     }
 
+
+    /**
+     * @return bool
+     */
+    public function isRvoMessage(): bool
+    {
+        return $this->isRvoMessage;
+    }
+
+    /**
+     * @param bool $isRvoMessage
+     * @return DeclareBase
+     */
+    public function setIsRvoMessage(bool $isRvoMessage): DeclareBase
+    {
+        $this->isRvoMessage = $isRvoMessage;
+        return $this;
+    }
 
 
     /**

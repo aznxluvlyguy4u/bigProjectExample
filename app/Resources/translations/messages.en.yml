@@ -67,6 +67,34 @@ REGISTER: REGISTER
 SECONDARY_REGISTER: SECONDARY_REGISTER
 UNDETERMINED: UNDETERMINED
 
+#Countries
+Austria: Austria
+Belgium: Belgium
+Bulgaria: Bulgaria
+Cyprus: Cyprus
+Czech Republic: Czech Republic
+Denmark: Denmark
+Estland: Estland
+Finland: Finland
+France: France
+Germany: Germany
+Greece: Greece
+Hungary: Hungary
+Ireland: Ireland
+Italy: Italy
+Latvia: Latvia
+Lithuania: Lithuania
+Luxembourg: Luxembourg
+Netherlands: Netherlands
+Poland: Poland
+Portugal: Portugal
+Romania: Romania
+Slovakia: Slovakia
+Slovenia: Slovenia
+Spain: Spain
+Sweden: Sweden
+United Kingdom: United Kingdom
+
 #Declares
 DECLARE DEPART: DECLARE DEPART
 DECLARE EXPORT: DECLARE EXPORT
@@ -259,6 +287,32 @@ DATEFORMAT: Y-m-d
 TRUE: true
 FALSE: false
 
+#Chart labels
+CHART_LABEL_TOTAL_BORN: Total born per litter
+CHART_LABEL_STILL_BORN: Total dead per litter
+CHART_LABEL_EARLY_FERTILITY: Early fertility
+CHART_LABEL_BIRTH_INTERVAL: Birth interval
+CHART_LABEL_BIRTH_DELIVERY_PROGRESS: Delivery progress
+CHART_LABEL_BIRTH_WEIGHT: Birth weight
+
+CHART_LABEL_BIRTH_PROGRESS: Birth progress
+CHART_LABEL_WEIGHT_AT_8_WEEKS: Weight at 8 weeks
+CHART_LABEL_WEIGHT_AT_20_WEEKS: Weigt at 20 weeks
+CHART_LABEL_MUSCLE_THICKNESS_AT_20_WEEKS: Musclethickness
+CHART_LABEL_FAT_THICKNESS_AT_20_WEEKS: Fat thickness
+
+CHART_LABEL_MUSCULARITY: Muscularity
+
+CHART_LABEL_PROPORTION: Proportion
+CHART_LABEL_SKULL: Skull
+CHART_LABEL_EXTERIOR_TYPE: Exterior type
+CHART_LABEL_LEG_WORK: Legwork
+CHART_LABEL_PROGRESS: Progress
+
+CHART_LABEL_ODIN_BC: Worm Resistance
+
+CHART_LABEL_TAIL_LENGTH: Tail Length
+
 #Reports
 ANIMALS_OVERVIEW_REPORT: ANIMALS OVERVIEW REPORT
 ANNUAL_ACTIVE_LIVESTOCK_REPORT: ANNUAL ACTIVE LIVESTOCK REPORT
@@ -289,6 +343,7 @@ THE FOLLOWING ULNS WERE INSERTED MULTIPLE TIMES: THE FOLLOWING ULNS WERE INSERTE
 THE FOLLOWING PEDIGREE NUMBERS WERE INSERTED MULTIPLE TIMES: THE FOLLOWING PEDIGREE NUMBERS WERE INSERTED MULTIPLE TIMES
 THE FOLLOWING IDS WERE INSERTED MULTIPLE TIMES: THE FOLLOWING IDS WERE INSERTED MULTIPLE TIMES
 THE FOLLOWING IDS WERE NOT FOUND IN THE DATABASE: THE FOLLOWING IDS WERE NOT FOUND IN THE DATABASE
+THE FOLLOWING ULNS ARE DO NOT EXIST IN THE DATABASE: The following ulns do not exist in the database
 THE FOLLOWING ULNS HAVE AN INCORRECT FORMAT: THE FOLLOWING ULNS HAVE AN INCORRECT FORMAT
 THE FOLLOWING STNS HAVE AN INCORRECT FORMAT: THE FOLLOWING STNS HAVE AN INCORRECT FORMAT
 THE FOLLOWING UBNS HAVE AN INCORRECT FORMAT: THE FOLLOWING UBNS HAVE AN INCORRECT FORMAT
@@ -315,6 +370,8 @@ THE START DATE OVERLAPS A REGISTERED MATING PERIOD: THE START DATE OVERLAPS A RE
 THE END DATE OVERLAPS A REGISTERED MATING PERIOD: THE END DATE OVERLAPS A REGISTERED MATING PERIOD
 THE LAST BIRTH AND THE CURRENT MATE PERIOD ARE LESS THAN 6 WEEKS: THE LAST BIRTH AND THE CURRENT MATE PERIOD ARE LESS THAN 6 WEEKS
 ANIMAL WAS NOT FOUND: ANIMAL WAS NOT FOUND
+NO ANIMAL WAS NOT FOUND FOR ID: No animal was found for id
+ANIMAL IS NOT ALLOWED TO BE CHANGED: Animal cannot be changed
 DESCRIPTION CANNOT BE EMPTY: DESCRIPTION CANNOT BE EMPTY
 PRICE EXCL VAT CANNOT BE EMPTY, BUT CAN BE ZERO: PRICE EXCL VAT CANNOT BE EMPTY, BUT CAN BE ZERO
 VAT PERCENTAGE RATE CANNOT BE EMPTY, BUT CAN BE ZERO: VAT PERCENTAGE RATE CANNOT BE EMPTY, BUT CAN BE ZERO
@@ -329,3 +386,28 @@ DATA IS EMPTY: DATA IS EMPTY
 NO ANIMALS FOUND FOR GIVEN INPUT: NO ANIMALS FOUND FOR GIVEN INPUT
 THE FOLLOWING ANIMALS ARE NOT CURRENT LIVESTOCK OR HISTORIC LIVESTOCK ANIMALS OF THIS UBN: THE FOLLOWING ANIMALS ARE NOT CURRENT LIVESTOCK OR HISTORIC LIVESTOCK ANIMALS OF THIS UBN
 FERTILIZER ACCOUNTING NOTE: The fixed excretion standards that are included in this report are based on Table 4 Animal-related flat-rate levels %year% RVO. Do you have a biological company that is registered with the Skal Foundation and do you keep grazing animals? Other nitrogen excretion levels may then apply (see excretory levels for nitrogen from the appendix to the Animal Products Regulation). For the calculation of phosphate excretion, you can use the figures in this report.
+THIS IS NOT A VALID EMAIL ADDRESS: This is not a valid email address
+A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS: A user already exists for this email address
+THE PASSWORD IS INCORRECT: The password is invalid
+MOTHER CANNOT BE YOUNGER THAN CHILD: Mother cannot be younger than child
+FATHER CANNOT BE YOUNGER THAN CHILD: Father cannot be younger than child
+ADDRESS COUNTRY CANNOT BE EMPTY: Country of address cannot be empty
+BILLING ADDRESS COUNTRY CANNOT BE EMPTY: Country of billing address cannot be empty
+LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Country of location address cannot be empty
+UBN IS NOT A VALID NUMBER: The UBN is not a valid number
+INVOICES THAT ARE ALREADY CANCELLED, SENT BUT UNPAID OR PAID CANNOT BE EDITED ANYMORE: Invoices that are already cancelled or sent cannot be edited anymore
+NO LOCATION FOUND FOR LOCATION ID: No location found for location_id
+LOCATION CANNOT BE EMPTY: Location cannot be empty
+COUNTRY CODE IS INVALID: Country code is invalid
+COUNTRY CODE IS MISSING: Country code is missing
+START DATE IS MISSING: Start date is missing
+END DATE CANNOT BE BEFORE START DATE: End date cannot be before start date
+IS PENDING MUST BE A BOOLEAN: Is pending must be a boolean
+THE FOLLOWING ULNS ARE BLOCKED FOR YOU: The following ulns are blocked for you
+
+#Messages
+DECLARE_ARRIVAL: Automatically issued an arrival notification
+DECLARE_DEPART: Automatically issued a departure notification
+NEW_INVOICE: U just received a new invoice
+A SIMILAR REPORT IS ALREADY BEING GENERATED: A similar report is already being generated
+THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7: The following n-lings should have a value between 0 and 7

@@ -11,6 +11,7 @@ class JsonInputConstant
     const UPDATED = 'updated';
     const NOT_UPDATED = 'not_updated';
     const SUCCESSFUL_UPDATE_SECONDARY_VALUES = 'successful_update_secondary_values';
+    const SUCCESSFUL_UPDATE_RESULT_TABLE_VALUES = 'successful_update_result_table_values';
 
     //Admins
     const ADMINS = 'admins';
@@ -40,6 +41,8 @@ class JsonInputConstant
     const IS_REVEAL_HISTORIC_ANIMALS = 'is_reveal_historic_animals';
     const IS_HISTORIC_ANIMAL = 'is_historic_animal';
     const IS_PUBLIC = 'is_public';
+    const IS_OWN_HISTORIC_ANIMAL = 'is_own_historic_animal';
+    const IS_OWN_ANIMAL = 'is_own_animal';
     const ULN = 'uln';
     const ULN_FATHER = 'uln_mother';
     const ULN_MOTHER = 'uln_father';
@@ -136,6 +139,10 @@ class JsonInputConstant
     const USERNAME = "username";
     const CELLPHONE_NUMBER = "cellphone_number";
     const RELATION_NUMBER_KEEPER = "relation_number_keeper";
+
+    //Mobile
+    const REGISTRATION_TOKEN = 'registration_token';
+    const DEVICE_ID = 'uuid';
 
     //Content Management System (cms)
     const DASHBOARD = 'dashboard';
@@ -253,6 +260,7 @@ class JsonInputConstant
     const GESTATION_PERIOD = 'gestation_period';
     const SIZE = 'size';
     const N_LING = 'n_ling';
+    const N_LING_VALUE = 'n_ling_max_value';
     const SUCKLE_COUNT = 'suckle_count';
     const LITTER_GROUP = 'litter_group';
     const LITTER_COUNT = 'litter_count';

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
 use AppBundle\Criteria\MateCriteria;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
@@ -79,9 +80,10 @@ class Ewe extends Animal implements ParentInterface
     {
         if ($this->getMatings()->count() > 0) {
             return $this->getMatings()
-                ->matching(MateCriteria::orderByEndDateDesc())
                 ->matching(MateCriteria::requestStateIsFinished())
                 ->matching(MateCriteria::hasNoLitter())
+                ->matching(MateCriteria::isOverwrittenVersion(false))
+                ->matching(MateCriteria::orderByEndDateDesc())
                 ->first();
         }
         return null;
@@ -97,7 +99,7 @@ class Ewe extends Animal implements ParentInterface
          $this->objectType = "Ewe";
          $this->setAnimalType(AnimalType::sheep);
          $this->setGender(GenderType::FEMALE);
-         $this->setAnimalCategory(3);
+         $this->setAnimalCategory(Constant::DEFAULT_ANIMAL_CATEGORY);
        
          $this->litters = new ArrayCollection();
          $this->children = new ArrayCollection();
@@ -271,7 +273,7 @@ class Ewe extends Animal implements ParentInterface
         $declareBirths = [];
 
         /** @var Litter $litter */
-        foreach ($this->litters as $litter) {//dump($litter->getChildren());die;
+        foreach ($this->litters as $litter) {
             foreach ($litter->getDeclareBirths() as $birth) {
                 $declareBirths[] = $birth;
             }

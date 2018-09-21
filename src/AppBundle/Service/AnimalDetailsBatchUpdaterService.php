@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Cache\GeneDiversityUpdater;
+use AppBundle\Cache\NLingCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -47,6 +48,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     private $parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated;
     /** @var array */
     private $parentValidationErrorSets;
+
+    /** @var array */
+    private $animalIdsWithUpdatedNLingValues;
 
     /* Parent error messages */
     const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
@@ -131,7 +135,6 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         }
 
 
-
         $this->getManager()->getConnection()->beginTransaction();
         $this->getManager()->getConnection()->setAutoCommit(false);
 
@@ -161,12 +164,13 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $this->logExceptionAsError($exception);
 
             $errorMessage =
-                $this->translateUcFirstLower('SOMETHING WENT WRONG WHEN PERSISTING THE CHANGES') .'. '.
-                $this->translateUcFirstLower('THE CHANGES WERE NOT SAVED') .'. '
-            ;
+                $this->translateUcFirstLower('SOMETHING WENT WRONG WHEN PERSISTING THE CHANGES') . '. ' .
+                $this->translateUcFirstLower('THE CHANGES WERE NOT SAVED') . '. ';
             return ResultUtil::errorResult($errorMessage, Response::HTTP_INTERNAL_SERVER_ERROR);
 
         }
+
+        $this->getManager()->getConnection()->setAutoCommit(true);
 
         $successfulUpdateOfSecondaryValues = true;
         $updateIndirectValuesResult = $this->updateIndirectSecondaryValues();
@@ -174,16 +178,39 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $successfulUpdateOfSecondaryValues = false;
         }
 
+        $successFullyUpdatedResultTableValues = true;
+        if ($this->updateResultTableValues() instanceof JsonResponse) {
+            $successFullyUpdatedResultTableValues = false;
+        }
+
         $serializedUpdatedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults[JsonInputConstant::UPDATED])[JsonInputConstant::ANIMALS];
         $serializedNonUpdatedAnimalsOutput = AnimalService::getSerializedAnimalsInBatchEditFormat($this, $updateAnimalResults[JsonInputConstant::NOT_UPDATED])[JsonInputConstant::ANIMALS];
 
         return ResultUtil::successResult([
             JsonInputConstant::ANIMALS => [
-                    JsonInputConstant::UPDATED => $serializedUpdatedAnimalsOutput,
-                    JsonInputConstant::NOT_UPDATED => $serializedNonUpdatedAnimalsOutput,
-                ],
+                JsonInputConstant::UPDATED => $serializedUpdatedAnimalsOutput,
+                JsonInputConstant::NOT_UPDATED => $serializedNonUpdatedAnimalsOutput,
+            ],
             JsonInputConstant::SUCCESSFUL_UPDATE_SECONDARY_VALUES => $successfulUpdateOfSecondaryValues,
+            JsonInputConstant::SUCCESSFUL_UPDATE_RESULT_TABLE_VALUES => $successFullyUpdatedResultTableValues,
         ]);
+    }
+
+
+    /**
+     * @return JsonResponse|bool
+     */
+    private function updateResultTableValues()
+    {
+        if (!empty($this->animalIdsWithUpdatedNLingValues)) {
+            try {
+                NLingCacher::updateNLingValues($this->getConnection(), $this->animalIdsWithUpdatedNLingValues);
+            } catch (\Exception $exception) {
+                $this->logExceptionAsError($exception);
+                return ResultUtil::errorResult('SOMETHING WENT WRONG WHILE UPDATING THE RESULT TABLE VALUES, BUT THE PRIMARY VALUES WERE CORRECTLY UPDATED', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        }
+        return true;
     }
 
 
@@ -214,80 +241,97 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     private function cleanUpInputValues(array $animalsWithNewValues = [])
     {
         foreach ($animalsWithNewValues as $key => $animalsWithNewValue) {
-            if ($animalsWithNewValue->getBirthProgress() === '') {
-                $animalsWithNewValue->setBirthProgress(null);
-            }
-
-            if ($animalsWithNewValue->getBreedType() === '') {
-                $animalsWithNewValue->setBreedType(null);
-            }
-
-            if ($animalsWithNewValue->getBlindnessFactor() === '') {
-                $animalsWithNewValue->setBlindnessFactor(null);
-            }
-
-            if ($animalsWithNewValue->getCollarColor() === '') {
-                $animalsWithNewValue->setCollarColor(null);
-            }
-
-            if ($animalsWithNewValue->getCollarNumber() === '') {
-                $animalsWithNewValue->setCollarNumber(null);
-            }
-
-            if ($animalsWithNewValue->getParentMotherId() === null) {
-                $animalsWithNewValue->setParentMother(null);
-            }
-
-            if ($animalsWithNewValue->getParentFatherId() === null) {
-                $animalsWithNewValue->setParentFather(null);
-            }
-
-            if ($animalsWithNewValue->getSurrogate() && $animalsWithNewValue->getSurrogate()->getId() === null) {
-                $animalsWithNewValue->setSurrogate(null);
-            }
-
-            if ($animalsWithNewValue->getLocation() && $animalsWithNewValue->getLocation()->getLocationId() === null) {
-                $animalsWithNewValue->setLocation(null);
-            }
-
-            if ($animalsWithNewValue->getLocationOfBirth() && $animalsWithNewValue->getLocationOfBirth()->getLocationId() === null) {
-                $animalsWithNewValue->setLocationOfBirth(null);
-            }
-
-            if ($animalsWithNewValue->getPedigreeRegister() && $animalsWithNewValue->getPedigreeRegister()->getId() === null) {
-                $animalsWithNewValue->setPedigreeRegister(null);
-            }
-
-            if ($animalsWithNewValue->getLitter()) {
-                if ($animalsWithNewValue->getLitter()->getId() === null) {
-                    $animalsWithNewValue->setLitter(null);
-                } else {
-                    if ($animalsWithNewValue->getLitter()->getAnimalMother()
-                        && $animalsWithNewValue->getLitter()->getAnimalMother()->getId() === null) {
-                        $animalsWithNewValue->getLitter()->setAnimalMother(null);
-                    }
-
-                    if ($animalsWithNewValue->getLitter()->getAnimalFather()
-                        && $animalsWithNewValue->getLitter()->getAnimalFather()->getId() === null) {
-                        $animalsWithNewValue->getLitter()->setAnimalFather(null);
-                    }
-                }
-            }
-
-            if ($animalsWithNewValue->getPredicate() === '') {
-                $animalsWithNewValue->setPredicate(null);
-            }
-
-            if ($animalsWithNewValue->getPredicateScore() === '' || $animalsWithNewValue->getPredicateScore() === 0) {
-                $animalsWithNewValue->setPredicateScore(null);
-            }
-
-            $animalsWithNewValues[$key] = $animalsWithNewValue;
+            $animalsWithNewValues[$key] = self::cleanUpAnimalInputValues($animalsWithNewValue);
         }
 
         return $animalsWithNewValues;
     }
 
+
+    /**
+     * @param Animal $animalsWithNewValue
+     * @return Animal
+     */
+    public static function cleanUpAnimalInputValues(Animal $animalsWithNewValue): Animal
+    {
+        if ($animalsWithNewValue->getBirthProgress() === '') {
+            $animalsWithNewValue->setBirthProgress(null);
+        }
+
+        if ($animalsWithNewValue->getBreedType() === '') {
+            $animalsWithNewValue->setBreedType(null);
+        }
+
+        if ($animalsWithNewValue->getBreedCode() === '') {
+            $animalsWithNewValue->setBreedCode(null);
+        }
+
+        if ($animalsWithNewValue->getBlindnessFactor() === '') {
+            $animalsWithNewValue->setBlindnessFactor(null);
+        }
+
+        if ($animalsWithNewValue->getCollarColor() === '') {
+            $animalsWithNewValue->setCollarColor(null);
+        }
+
+        if ($animalsWithNewValue->getCollarNumber() === '') {
+            $animalsWithNewValue->setCollarNumber(null);
+        }
+
+        if ($animalsWithNewValue->getParentMotherId() === null) {
+            $animalsWithNewValue->setParentMother(null);
+        }
+
+        if ($animalsWithNewValue->getParentFatherId() === null) {
+            $animalsWithNewValue->setParentFather(null);
+        }
+
+        if ($animalsWithNewValue->getSurrogate() && $animalsWithNewValue->getSurrogate()->getId() === null) {
+            $animalsWithNewValue->setSurrogate(null);
+        }
+
+        if ($animalsWithNewValue->getLocation() && $animalsWithNewValue->getLocation()->getLocationId() === null) {
+            $animalsWithNewValue->setLocation(null);
+        }
+
+        if ($animalsWithNewValue->getLocationOfBirth() && $animalsWithNewValue->getLocationOfBirth()->getLocationId() === null) {
+            $animalsWithNewValue->setLocationOfBirth(null);
+        }
+
+        if ($animalsWithNewValue->getPedigreeRegister() && $animalsWithNewValue->getPedigreeRegister()->getId() === null) {
+            $animalsWithNewValue->setPedigreeRegister(null);
+        }
+
+        if ($animalsWithNewValue->getLitter()) {
+            if ($animalsWithNewValue->getLitter()->getId() === null) {
+                $animalsWithNewValue->setLitter(null);
+            } else {
+                if ($animalsWithNewValue->getLitter()->getAnimalMother()
+                    && $animalsWithNewValue->getLitter()->getAnimalMother()->getId() === null) {
+                    $animalsWithNewValue->getLitter()->setAnimalMother(null);
+                }
+
+                if ($animalsWithNewValue->getLitter()->getAnimalFather()
+                    && $animalsWithNewValue->getLitter()->getAnimalFather()->getId() === null) {
+                    $animalsWithNewValue->getLitter()->setAnimalFather(null);
+                }
+            }
+        }
+
+        if ($animalsWithNewValue->getPredicate() === '') {
+            $animalsWithNewValue->setPredicate(null);
+        }
+
+        if ($animalsWithNewValue->getPredicateScore() === '' || $animalsWithNewValue->getPredicateScore() === 0) {
+            $animalsWithNewValue->setPredicateScore(null);
+        }
+
+        if ($animalsWithNewValue->getNLing() === '') {
+            $animalsWithNewValue->setNLing(null);
+        }
+
+        return $animalsWithNewValue;
+    }
 
 
     /**
@@ -321,10 +365,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 $currentParent = $retrievedAnimal->getParent($parentType);
                 $newParent = $animalsWithNewValue->getParent($parentType);
 
-                $this->validateSingeParent($retrievedAnimal, $newParent, $currentParent, $parentType);
+                $this->validateSingleParent($retrievedAnimal, $newParent, $currentParent, $parentType);
             }
 
-            $this->validateSingeParent($retrievedAnimal, $animalsWithNewValue->getSurrogate(), $retrievedAnimal->getSurrogate(), Constant::SURROGATE_NAMESPACE);
+            $this->validateSingleParent($retrievedAnimal, $animalsWithNewValue->getSurrogate(), $retrievedAnimal->getSurrogate(), Constant::SURROGATE_NAMESPACE);
         }
 
         $totalErrorMessage = '';
@@ -372,7 +416,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      * @param Animal $retrievedCurrentParent
      * @param string $parentType
      */
-    private function validateSingeParent($retrievedAnimal, $serializedNewParent, $retrievedCurrentParent, $parentType)
+    private function validateSingleParent($retrievedAnimal, $serializedNewParent, $retrievedCurrentParent, $parentType)
     {
         if ($this->hasParentChanged($retrievedCurrentParent, $serializedNewParent)) {
             if ($serializedNewParent) {
@@ -432,6 +476,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
         $updatedAnimals = [];
         $nonUpdatedAnimals = [];
+        $this->animalIdsWithUpdatedNLingValues = [];
 
         foreach ($animalsWithNewValues as $animalsWithNewValue) {
             $animalId = $animalsWithNewValue->getId();
@@ -632,6 +677,14 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $oldName = $retrievedAnimal->getName();
             $retrievedAnimal->setName($newName);
             $this->updateCurrentActionLogMessage('aiind', $oldName, $newName);
+        }
+
+        $newNLing = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getNLing());
+        if($retrievedAnimal->getNLing() !== $newNLing) {
+            $oldNLing = $retrievedAnimal->getNLing();
+            $retrievedAnimal->setNLing($newNLing);
+            $this->updateCurrentActionLogMessage('N-Ling backup value', $oldNLing, $newNLing);
+            $this->animalIdsWithUpdatedNLingValues[] = $retrievedAnimal->getId();
         }
 
         $newBlindnessFactor = StringUtil::convertEmptyStringToNull($animalsWithNewValue->getBlindnessFactor());
@@ -1165,6 +1218,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             JsonInputConstant::BREED_TYPE => [],
             JsonInputConstant::BLINDNESS_FACTOR => [],
             JsonInputConstant::BIRTH_PROGRESS => [],
+            JsonInputConstant::N_LING => [],
+            JsonInputConstant::N_LING_VALUE => [],
         ];
 
         foreach ($animalsWithNewValues as $animalsWithNewValue) {
@@ -1186,6 +1241,13 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             if (!Validator::hasValidBirthProgressType($this->getManager(), $animalsWithNewValue->getBirthProgress(), true)) {
                 $incorrectFormatSets[JsonInputConstant::BIRTH_PROGRESS][$animalId] = $animalsWithNewValue->getBirthProgress();
             }
+
+            if ($animalsWithNewValue->getNLing() !== null && !is_int($animalsWithNewValue->getNLing()) && !ctype_digit($animalsWithNewValue->getNLing())) {
+                $incorrectFormatSets[JsonInputConstant::N_LING][$animalId] = $animalsWithNewValue->getNLing();
+            } elseif ($animalsWithNewValue->getNLing() < Animal::MIN_N_LING_VALUE
+                || Animal::MAX_N_LING_VALUE < $animalsWithNewValue->getNLing()) {
+                $incorrectFormatSets[JsonInputConstant::N_LING_VALUE][$animalId] = $animalsWithNewValue->getNLing();
+            }
         }
 
         $errorMessage = '';
@@ -1197,6 +1259,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                     case JsonInputConstant::BREED_TYPE: $errorMessageKey = 'THE FOLLOWING BREED TYPES HAVE AN INCORRECT FORMAT'; break;
                     case JsonInputConstant::BLINDNESS_FACTOR: $errorMessageKey = 'THE FOLLOWING BLINDNESS FACTORS HAVE AN INCORRECT FORMAT'; break;
                     case JsonInputConstant::BIRTH_PROGRESS: $errorMessageKey = 'THE FOLLOWING BIRTH PROGESSES HAVE AN INCORRECT FORMAT'; break;
+                    case JsonInputConstant::N_LING: $errorMessageKey = 'THE FOLLOWING N LINGS HAVE AN INCORRECT FORMAT'; break;
+                    case JsonInputConstant::N_LING_VALUE: $errorMessageKey = 'THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN '.Animal::MIN_N_LING_VALUE.' AND '.Animal::MAX_N_LING_VALUE; break;
                     default: $errorMessageKey = null; break;
                 }
                 if ($errorMessageKey === null) {

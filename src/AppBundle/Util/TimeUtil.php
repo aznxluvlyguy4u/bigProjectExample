@@ -123,11 +123,13 @@ class TimeUtil
         if(!$dt1 || !$dt2){
             return false;
         }
-        $dt1->setTime(0,0,0);
-        $dt2->setTime(0,0,0);
+        $dt1Clone = clone $dt1;
+        $dt2Clone = clone $dt2;
+        $dt1Clone->setTime(0,0,0);
+        $dt2Clone->setTime(0,0,0);
 
         // DateInterval
-        $dti = $dt1->diff($dt2);
+        $dti = $dt1Clone->diff($dt2Clone);
 
         // nb: ->days always positive
         return $dti->days * ( $dti->invert ? -1 : 1);   

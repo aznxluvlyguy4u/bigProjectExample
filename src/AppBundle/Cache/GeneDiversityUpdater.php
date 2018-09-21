@@ -103,15 +103,18 @@ class GeneDiversityUpdater
         $sql = "SELECT id FROM animal
                 WHERE parent_father_id IN (".$parentIdsString.") OR parent_mother_id IN (".$parentIdsString.")";
         $results = $conn->query($sql)->fetchAll();
-        $animalIds[] = ArrayUtil::concatArrayValues(ArrayUtil::get('id', SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results), []), $parentIds);
-        $updateCount += self::updateByAnimalIds($conn, $animalIds, $recalculateAllValues, null, $cmdUtil, false);
+        $animalIds = ArrayUtil::concatArrayValues(ArrayUtil::get('id', SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results), []), $parentIds);
+        if (count($animalIds) > 0) {
+            $updateCount += self::updateByAnimalIds($conn, $animalIds, $recalculateAllValues, null, $cmdUtil, false);
+        }
 
         $sql = "SELECT id FROM litter
                 WHERE animal_father_id IN (".$parentIdsString.") OR animal_mother_id IN (".$parentIdsString.")";
         $results = $conn->query($sql)->fetchAll();
         $litterIds = ArrayUtil::get('id', SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results), []);
-        $updateCount += self::updateByLitterIds($conn, $litterIds, $recalculateAllValues, null, $cmdUtil, false);
-
+        if (count($litterIds) > 0) {
+            $updateCount += self::updateByLitterIds($conn, $litterIds, $recalculateAllValues, null, $cmdUtil, false);
+        }
         $updateCount += self::updateLittersWithPureBredOffspring($conn, false);
 
         if($cmdUtil) { $cmdUtil->writeln('UpdateCount: '.$updateCount); }

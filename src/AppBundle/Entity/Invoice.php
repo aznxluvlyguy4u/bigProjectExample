@@ -25,7 +25,8 @@ class Invoice
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     protected $id;
@@ -36,7 +37,8 @@ class Invoice
      * @ORM\Column(type="string",  unique=true, nullable=true)
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $invoiceNumber;
@@ -49,7 +51,8 @@ class Invoice
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $invoiceDate;
@@ -62,7 +65,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $status;
@@ -96,7 +100,8 @@ class Invoice
      * @JMS\Type("float")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $total;
@@ -119,7 +124,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $companyLocalId;
@@ -130,7 +136,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $companyName;
@@ -141,7 +148,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $companyVatNumber;
@@ -149,6 +157,11 @@ class Invoice
     /**
      * @var string $companyAddressStreetName
      * @ORM\Column(name="company_address_street_name", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
      * @JMS\Type("string")
      */
     private $companyAddressStreetName;
@@ -156,6 +169,11 @@ class Invoice
     /**
      * @var int $companyAddressStreetNumber
      * @ORM\Column(name="company_address_street_number", type="integer", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
      * @JMS\Type("integer")
      */
     private $companyAddressStreetNumber;
@@ -163,6 +181,11 @@ class Invoice
     /**
      * @var string $companyAddressStreetName
      * @ORM\Column(name="company_address_postal_code", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
      * @JMS\Type("string")
      */
     private $companyAddressPostalCode;
@@ -170,6 +193,11 @@ class Invoice
     /**
      * @var string $companyAddressStreetName
      * @ORM\Column(name="company_address_street_number_suffix", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
      * @JMS\Type("string")
      */
     private $companyAddressStreetNumberSuffix;
@@ -177,6 +205,11 @@ class Invoice
     /**
      * @var string $companyAddressCountry
      * @ORM\Column(name="company_address_country", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
      * @JMS\Type("string")
      */
     private $companyAddressCountry;
@@ -184,9 +217,26 @@ class Invoice
     /**
      * @var string
      * @ORM\Column(name="company_address_state", nullable=true)
-     * @JMS\Type("String")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     * @JMS\Type("string")
      */
     private $companyAddressState;
+
+    /**
+     * @var string
+     * @ORM\Column(name="company_address_city", nullable=true)
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     * @JMS\Type("string")
+     */
+    private $companyAddressCity;
 
     /**
      * @var string
@@ -194,7 +244,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $companyDebtorNumber;
@@ -205,7 +256,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $mollieId;
@@ -217,7 +269,8 @@ class Invoice
      * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $senderDetails;
@@ -228,7 +281,8 @@ class Invoice
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $ubn;
@@ -240,7 +294,8 @@ class Invoice
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $paidDate;
@@ -250,7 +305,8 @@ class Invoice
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $isDeleted = false;
@@ -261,17 +317,43 @@ class Invoice
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      */
     private $isBatch = false;
+
+    /**
+     * @var string
+     * @ORM\Column(name="company_twinfield_code", type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     */
+    private $companyTwinfieldCode;
+
+    /**
+     * @var string
+     * @ORM\Column(name="company_twinfield_office_code", type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
+     * })
+     */
+    private $companyTwinfieldOfficeCode;
 
     /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("vat_breakdown")
      * @JMS\Groups({
      *     "INVOICE",
-     *     "INVOICE_NO_COMPANY"
+     *     "INVOICE_NO_COMPANY",
+     *     "INVOICE_OVERVIEW"
      * })
      * @return VatBreakdown
      */
@@ -381,7 +463,7 @@ class Invoice
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|InvoiceRuleSelection[]
      */
     public function getInvoiceRuleSelections()
     {
@@ -670,7 +752,23 @@ class Invoice
      */
     public function setCompanyAddressStreetNumberSuffix($companyAddressStreetNumberSuffix)
     {
-        $this->companyAddressStreetNumberSuffix = $companyAddressStreetNumberSuffix;
+        $this->companyAddressStreetNumberSuffix = empty($companyAddressStreetNumberSuffix) ? null : $companyAddressStreetNumberSuffix;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyAddressCity()
+    {
+        return $this->companyAddressCity;
+    }
+
+    /**
+     * @param string $companyAddressCity
+     */
+    public function setCompanyAddressCity($companyAddressCity)
+    {
+        $this->companyAddressCity = empty($companyAddressCity) ? null : $companyAddressCity;
     }
 
     /**
@@ -705,17 +803,58 @@ class Invoice
         $this->companyAddressCountry = $companyAddressCountry;
     }
 
+    /**
+     * @return string
+     */
+    public function getCompanyTwinfieldCode(): ?string
+    {
+        return $this->companyTwinfieldCode;
+    }
+
+    /**
+     * @param string $companyTwinfieldCode
+     */
+    public function setCompanyTwinfieldCode(?string $companyTwinfieldCode)
+    {
+        $this->companyTwinfieldCode = $companyTwinfieldCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyTwinfieldOfficeCode(): ?string
+    {
+        return $this->companyTwinfieldOfficeCode;
+    }
+
+    /**
+     * @param string $companyTwinfieldOfficeCode
+     */
+    public function setCompanyTwinfieldOfficeCode(?string $companyTwinfieldOfficeCode): void
+    {
+        $this->companyTwinfieldOfficeCode = empty($companyTwinfieldOfficeCode) ? null : $companyTwinfieldOfficeCode;;
+    }
+
     public function copyValues(Invoice $invoice){
         $this->setCompany($invoice->getCompany());
         $this->setCompanyLocalId($invoice->getCompanyLocalId());
         $this->setCompanyName($invoice->getCompanyName());
         $this->setCompanyVatNumber($invoice->getCompanyVatNumber());
+        $this->setCompanyAddressStreetName($invoice->getCompanyAddressStreetName());
+        $this->setCompanyAddressStreetNumber($invoice->getCompanyAddressStreetNumber());
+        $this->setCompanyAddressStreetNumberSuffix($invoice->getCompanyAddressStreetNumberSuffix());
+        $this->setCompanyAddressPostalCode($invoice->getCompanyAddressPostalCode());
+        $this->setCompanyAddressCountry($invoice->getCompanyAddressCountry());
+        $this->setCompanyAddressState($invoice->getCompanyAddressState());
+        $this->setCompanyAddressCity($invoice->getCompanyAddressCity());
         $this->setCompanyDebtorNumber($invoice->getCompanyDebtorNumber());
         $this->setUbn($invoice->getUbn());
         $this->setTotal($invoice->getTotal());
         $this->setDocumentUrl($invoice->getDocumentUrl());
         $this->setInvoiceDate($invoice->getInvoiceDate());
         $this->setInvoiceNumber($invoice->getInvoiceNumber());
+        $this->setCompanyTwinfieldCode($invoice->getCompanyTwinfieldCode());
+        $this->setCompanyTwinfieldOfficeCode($invoice->getCompanyTwinfieldOfficeCode());
         $this->setStatus($invoice->getStatus());
     }
 }

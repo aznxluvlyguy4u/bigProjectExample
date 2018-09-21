@@ -31,6 +31,7 @@ class Client extends Person implements PersonImplementationInterface
      *     "BASIC",
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER",
      *     "RVO"
      * })
     * @Expose
@@ -179,7 +180,7 @@ class Client extends Person implements PersonImplementationInterface
     /**
     * Get companies
     *
-    * @return \Doctrine\Common\Collections\Collection
+    * @return \Doctrine\Common\Collections\Collection|Company[]
     */
     public function getCompanies()
     {
@@ -287,5 +288,26 @@ class Client extends Person implements PersonImplementationInterface
         } else {
             return false;
         }
+    }
+
+
+    /**
+     * @return array|string[]
+     */
+    public function getUbns()
+    {
+        if (!$this->getCompanies()) {
+            return [];
+        }
+
+        $ubns = [];
+        foreach ($this->getCompanies() as $company) {
+            foreach ($company->getLocations() as $location) {
+                if (!empty($location->getUbn())) {
+                    $ubns[] = $location->getUbn();
+                }
+            }
+        }
+        return $ubns;
     }
 }

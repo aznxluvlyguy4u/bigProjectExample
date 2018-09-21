@@ -33,7 +33,7 @@ class AnimalOutput
 
 
     /**
-     * @param Ram|Ewe|Neuter $animal
+     * @param Ram|Ewe|Neuter|Animal $animal
      * @param ObjectManager $em
      * @return array
      */
@@ -58,13 +58,15 @@ class AnimalOutput
             "work_number" => $animal->getAnimalOrderNumber(),
 //            "collar_number" => "unknown", //TODO not available in phase 1
             "gender" => $animal->getGender(),
+            "nickname" => $animal->getNickname(),
             "date_of_birth" => $animal->getDateOfBirth(),
 //            "breed_status" => "unknown", //TODO not available in phase 1
 //            "inflow_date" => "unknown", //TODO not available in phase 1
             "is_alive" => $animal->getIsAlive(),
             "is_departed_animal" => $animal->getIsDepartedAnimal(),
             'weight' => $weight,
-            'weight_measurement_date' => $weightMeasurementDate
+            'weight_measurement_date' => $weightMeasurementDate,
+            "type" => $animal->getObjectType(),
         );
 
         return $result;

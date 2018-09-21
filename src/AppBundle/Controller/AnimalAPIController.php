@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Animal;
 use AppBundle\Service\AnimalDetailsBatchUpdaterService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -95,6 +96,75 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
         return $this->get('app.animal')->getAnimals($request);
     }
 
+    /**
+     * Create an animal
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="plain_text_input",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="input type (currently the false path is not implemented), true by default",
+     *        "format"="?plain_text_input=true"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve a list of animals by plain text input"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/create")
+     * @Method("POST")
+     */
+    public function createAnimal(Request $request)
+    {
+        return $this->get('app.animal')->createAnimal($request);
+    }
+
+    /**
+     * Find an animal
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="plain_text_input",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="input type (currently the false path is not implemented), true by default",
+     *        "format"="?plain_text_input=true"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve a list of animals by plain text input"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/find")
+     * @Method("POST")
+     */
+    public function findAnimal(Request $request)
+    {
+        return $this->get('app.animal')->findAnimal($request);
+    }
 
   /**
    * Retrieve an animal, found by it's ULN. For example NL100029511721
@@ -394,6 +464,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @return JsonResponse
    * @Route("-details/{ulnString}")
    * @Method("GET")
+   * @throws \Exception
    */
   public function getAnimalDetailsByUln(Request $request, $ulnString)
   {
@@ -401,32 +472,90 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
 
-  /**
-   *
-   * Change the gender of an Animal for a given ULN. For example NL100029511721
-   *
-   * @ApiDoc(
-   *   section = "Animals",
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Change the gender of an Animal for a given ULN"
-   * )
-   *
-   * @param Request $request the request object
-   * @return jsonResponse
-   * @Route("-gender")
-   * @Method("POST")
-   */
+    /**
+     * Get children of animal by ULN. For example NL100029511721
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get children of animal by ULN. For example NL100029511721"
+     * )
+     * @param Request $request the request object
+     * @param string $ulnString
+     * @return JsonResponse
+     * @Route("-details/{ulnString}/children")
+     * @Method("GET")
+     * @throws \Exception
+     */
+    public function getChildrenByUln(Request $request, $ulnString)
+    {
+        return $this->get('app.animal')->getChildrenByUln($request, $ulnString);
+    }
+
+
+	/**
+	 *
+	 * Change the gender of an Animal for a given ULN. For example NL100029511721
+	 *
+	 * @ApiDoc(
+	 *   section = "Animals",
+	 *   requirements={
+	 *     {
+	 *       "name"="AccessToken",
+	 *       "dataType"="string",
+	 *       "requirement"="",
+	 *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+	 *     }
+	 *   },
+	 *   resource = true,
+	 *   description = "Change the gender of an Animal for a given ULN"
+	 * )
+	 *
+	 * @param Request $request the request object
+	 * @return jsonResponse
+	 * @Route("-gender")
+	 * @Method("POST")
+	 */
   public function changeGenderOfUln(Request $request)
   {
       return $this->get('app.animal')->changeGenderOfUln($request);
   }
+
+	/**
+	 *
+	 * Change the nickname of an Animal for a given id.
+	 *
+	 * @ApiDoc(
+	 *   section = "Animals",
+	 *   requirements={
+	 *     {
+	 *       "name"="AccessToken",
+	 *       "dataType"="string",
+	 *       "requirement"="",
+	 *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+	 *     }
+	 *   },
+	 *   resource = true,
+	 *   description = "Change the nickname of an Animal for a given id"
+	 * )
+	 *
+	 * @param Request $request the request object
+	 * @param Animal $animal
+	 * @return jsonResponse
+	 * @Route("-nickname/{animal}")
+	 * @Method("PUT")
+	 */
+	public function changeNicknameOfAnimalById(Request $request, Animal $animal)
+	{
+			return $this->get('app.animal')->changeNicknameOfAnimal($request, $animal);
+	}
 
 }

@@ -40,6 +40,7 @@ use Doctrine\ORM\Query\Parameter;
 use Symfony\Component\Console\Output\OutputInterface;
 use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Class AnimalRepository
@@ -376,8 +377,12 @@ class AnimalRepository extends BaseRepository
               /** @var Ewe[] $ewes */
               $ewes = $this->getEwesLivestockWithLastMateQuery($location, $onlyIncludeAliveEwes)->getResult();
 
-              foreach ($ewes as $ewe) {
-                  $ewe->onlyKeepLastActiveMateInMatings();
+              foreach ($ewes as $key => $ewe) {
+                  if ($ewe instanceof Ewe) {
+                      $ewe->onlyKeepLastActiveMateInMatings();
+                  } else {
+                      unset($ewes[$key]);
+                  }
               }
 
               $jmsGroups = self::getEwesLivestockWithLastMateJmsGroups();
@@ -1434,10 +1439,32 @@ class AnimalRepository extends BaseRepository
     }
 
 
-  /**
-   * @param $animalId
-   * @return int
-   */
+    /**
+     * @param Animal $animal
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function offspringCount(Animal $animal): int
+    {
+        if (!($animal instanceof ParentInterface)) {
+            return 0;
+        }
+
+        $animalId = $animal->getId();
+        if (empty($animalId) || !is_int($animalId)) {
+            throw new BadRequestHttpException('Animal.id is missing');
+        }
+        $animalId = intval($animalId);
+
+        return $this->getOffspringCount($animalId);
+    }
+
+
+    /**
+     * @param $animalId
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
   public function getOffspringCount($animalId)
   {
     if(!is_int($animalId)) { return 0; }
@@ -2096,5 +2123,45 @@ class AnimalRepository extends BaseRepository
         }
 
         return $this->getConnection()->query($sql)->fetchAll();
+    }
+
+    /**
+     * This function gets the animal counts for each pedigree register on a location on the given input dateString
+     * and returns them grouped by the location company
+     *
+     * @param $controlDateString
+     * @return array
+     */
+    public function getAnimalCountsByCompanyLocationPedigreeRegisterOnControlDate($controlDateString) {
+        $sql = "SELECT
+        g.company_id as company_id,
+        g.id as location_id,
+        pr.abbreviation,
+        g.count as animal_count
+        FROM pedigree_register pr
+          INNER JOIN (
+               SELECT l.id, l.company_id, prr.pedigree_register_id, COUNT(a.id) FROM location l
+                 INNER JOIN
+                            (
+                              SELECT prr.location_id, prr.pedigree_register_id FROM pedigree_register_registration prr
+                              WHERE
+                                (
+                                  ( prr.is_active = TRUE  AND prr.end_date ISNULL AND prr.start_date ISNULL)
+                                  OR (prr.start_date <= '$controlDateString' AND prr.end_date ISNULL)
+                                  OR ('$controlDateString' BETWEEN prr.start_date AND prr.end_date)
+                                )
+                            )prr ON prr.location_id = l.id
+                 INNER JOIN (
+                              SELECT ar.animal_id, ar.location_id FROM animal_residence ar
+                              WHERE (('$controlDateString' BETWEEN ar.start_date AND ar.end_date)
+                                     OR (ar.start_date <= '$controlDateString' AND ar.end_date ISNULL))
+                              GROUP BY animal_id, location_id
+                            ) AS ar ON ar.location_id = l.id
+                 INNER JOIN animal a ON a.pedigree_register_id = prr.pedigree_register_id AND ar.animal_id = a.id
+               GROUP BY l.company_id, l.id ,prr.pedigree_register_id
+             )g ON g.pedigree_register_id = pr.id
+        ORDER BY company_id";
+
+        return $this->getManager()->getConnection()->query($sql)->fetchAll(\PDO::FETCH_GROUP);
     }
 }

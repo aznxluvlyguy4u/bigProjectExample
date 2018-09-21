@@ -151,3 +151,13 @@ monolog:
             type: console
             verbosity_levels:
                 VERBOSITY_NORMAL: NOTICE
+
+enqueue:
+    transport:
+        default: "fs"
+        fs:
+            dsn: "%worker_queue_dir%"
+    client: ~
+
+sentry:
+    dsn: "%sentry_dns%"

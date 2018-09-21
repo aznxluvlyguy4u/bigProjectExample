@@ -14,6 +14,7 @@ use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\CompanyNote;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
+use AppBundle\Entity\PedigreeRegisterRegistration;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Filter\ActiveCompanyFilter;
@@ -21,6 +22,7 @@ use AppBundle\Filter\ActiveInvoiceFilter;
 use AppBundle\Filter\ActiveLocationFilter;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
+use AppBundle\Setting\InvoiceSetting;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\ArrayUtil;
@@ -30,15 +32,14 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 
 class CompanyService extends AuthServiceBase
 {
-    const DEFAULT_COUNTRY = '';
 
     /**
      * @param Request $request
@@ -111,6 +112,12 @@ class CompanyService extends AuthServiceBase
 
         // Create Address
         $contentAddress = $content->get('address');
+
+        $addressCountry = ArrayUtil::get('country', $contentAddress);
+        if (empty($addressCountry)) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
         $address = new CompanyAddress();
         $address->setStreetName($contentAddress['street_name']);
         $address->setAddressNumber($contentAddress['address_number']);
@@ -121,8 +128,8 @@ class CompanyService extends AuthServiceBase
 
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
-        $address->setState($contentAddress['state']);
-        $address->setCountry(ArrayUtil::get('country', $contentAddress, self::DEFAULT_COUNTRY));
+        $address->setState(ArrayUtil::get('state', $contentAddress));
+        $address->setCountry($addressCountry);
 
         // Create Billing Address
         $contentBillingAddress = $content->get('billing_address');
@@ -130,24 +137,35 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setStreetName($contentBillingAddress['street_name']);
         $billingAddress->setAddressNumber($contentBillingAddress['address_number']);
 
+
+        $billingAddressCountry = ArrayUtil::get('country', $contentBillingAddress);        if (empty($billingAddressCountry)) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('BILLING ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
         if(isset($contentBillingAddress['suffix'])) {
             $billingAddress->setAddressNumberSuffix($contentBillingAddress['suffix']);
         }
 
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
-        $billingAddress->setState($contentBillingAddress['state']);
-        $billingAddress->setCountry(ArrayUtil::get('country', $contentBillingAddress, self::DEFAULT_COUNTRY));
+        $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
+        $billingAddress->setCountry($billingAddressCountry);
 
         // Create Company
         $company = new Company();
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
         $company->setCompanyRelationNumber($content->get('company_relation_number'));
-        $company->setDebtorNumber($content->get('debtor_number'));
+
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
+
+        if (InvoiceSetting::IS_ACTIVE) {
+            $company->setTwinfieldOfficeCode($content->get("twinfield_administration_code"));
+            $company->setDebtorNumber($content->get('debtor_number'));
+        }
+
         if($content->get('subscription_date')) {
             $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
         }
@@ -178,6 +196,11 @@ class CompanyService extends AuthServiceBase
 
             // Create Location Address
             $contentLocationAddress = $contentLocation['address'];
+
+            $locationAddressCountry = ArrayUtil::get('country', $contentLocationAddress);        if (empty($locationAddressCountry)) {
+                return ResultUtil::errorResult($this->translateUcFirstLower('LOCATION ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+            }
+
             $locationAddress = new LocationAddress();
             $locationAddress->setStreetName($contentLocationAddress['street_name']);
             $locationAddress->setAddressNumber($contentLocationAddress['address_number']);
@@ -188,8 +211,8 @@ class CompanyService extends AuthServiceBase
 
             $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
             $locationAddress->setCity($contentLocationAddress['city']);
-            $locationAddress->setState($contentLocationAddress['state']);
-            $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
+            $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
+            $locationAddress->setCountry($locationAddressCountry);
 
             $location = new Location();
             $location->setUbn($contentLocation['ubn']);
@@ -264,10 +287,7 @@ class CompanyService extends AuthServiceBase
         $company = $this->getManager()->getRepository(Company::class)->findOneByCompanyId($companyId);
         $this->deactivateFilter(ActiveInvoiceFilter::NAME);
 
-        // Generate Company Details
-        $result = CompanyOutput::createCompany($company, $this->getBaseSerializer());
-
-        return ResultUtil::successResult($result);
+        return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($company, [JmsGroup::DOSSIER]));
     }
 
 
@@ -339,6 +359,11 @@ class CompanyService extends AuthServiceBase
         $address = $company->getAddress();
         $contentAddress = $content->get('address');
 
+        $addressCountry = ArrayUtil::get('country', $contentAddress);
+        if (empty($addressCountry)) {
+            return ResultUtil::errorResult($this->translateUcFirstLower('ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
         $address->setStreetName($contentAddress['street_name']);
         $address->setAddressNumber($contentAddress['address_number']);
 
@@ -350,12 +375,16 @@ class CompanyService extends AuthServiceBase
 
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
-        $address->setState($contentAddress['state']);
-        $address->setCountry(ArrayUtil::get('country', $contentAddress, self::DEFAULT_COUNTRY));
+        $address->setState(ArrayUtil::get('state', $contentAddress));
+        $address->setCountry(ArrayUtil::get('country', $contentAddress, $addressCountry));
 
         // Update Billing Address
         $billingAddress = $company->getBillingAddress();
         $contentBillingAddress = $content->get('billing_address');
+
+        $billingAddressCountry = ArrayUtil::get('country', $contentBillingAddress);        if (empty($billingAddressCountry)) {
+        return ResultUtil::errorResult($this->translateUcFirstLower('BILLING ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+        }
 
         $billingAddress->setStreetName($contentBillingAddress['street_name']);
         $billingAddress->setAddressNumber($contentBillingAddress['address_number']);
@@ -368,16 +397,21 @@ class CompanyService extends AuthServiceBase
 
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
-        $billingAddress->setState($contentBillingAddress['state']);
-        $billingAddress->setCountry(ArrayUtil::get('country', $contentBillingAddress, self::DEFAULT_COUNTRY));
+        $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
+        $billingAddress->setCountry($billingAddressCountry);
 
         // Update Company
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
         $company->setCompanyRelationNumber($content->get('company_relation_number'));
-        $company->setDebtorNumber($content->get('debtor_number'));
+
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
+
+        if (InvoiceSetting::IS_ACTIVE) {
+            $company->setTwinfieldOfficeCode($content->get("twinfield_administration_code"));
+            $company->setDebtorNumber($content->get('debtor_number'));
+        }
 
         if ($company->getAnimalHealthSubscription() != $content->get('animal_health_subscription')) {
             $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
@@ -411,7 +445,20 @@ class CompanyService extends AuthServiceBase
         $contentLocations = $content->get('locations');
         $repository = $this->getManager()->getRepository(Location::class);
         foreach($contentLocations as $contentLocation) {
-            $location = $repository->findOneBy(array('ubn' => $contentLocation['ubn'], 'isActive' => true));
+            $ubn = trim($contentLocation['ubn']);
+
+            if (!ctype_digit($ubn) && !is_int($ubn)) {
+                return new JsonResponse(
+                    array(
+                        Constant::CODE_NAMESPACE => 400,
+                        Constant::MESSAGE_NAMESPACE => $this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn,
+                        'data' => $ubn
+                    ),
+                    400
+                );
+            }
+
+            $location = $repository->findOneBy(array('ubn' => $ubn, 'isActive' => true));
 
             /**
              * @var Location $location
@@ -424,16 +471,21 @@ class CompanyService extends AuthServiceBase
                         array(
                             Constant::CODE_NAMESPACE => 400,
                             Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
-                            'data' => $contentLocation['ubn']
+                            'data' => $ubn
                         ),
                         400
                     );
                 }
 
                 $location = $repository->findOneByLocationId($contentLocationId);
-                $location->setUbn($contentLocation['ubn']);
+                $location->setUbn($ubn);
                 $locationAddress = $location->getAddress();
                 $contentLocationAddress = $contentLocation['address'];
+
+                $locationAddressCountry = ArrayUtil::get('country', $contentLocationAddress);        if (empty($locationAddressCountry)) {
+                    return ResultUtil::errorResult($this->translateUcFirstLower('LOCATION ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+                }
+
                 $locationAddress->setStreetName($contentLocationAddress['street_name']);
                 $locationAddress->setAddressNumber($contentLocationAddress['address_number']);
 
@@ -445,8 +497,8 @@ class CompanyService extends AuthServiceBase
 
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
-                $locationAddress->setState($contentLocationAddress['state']);
-                $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
+                $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
+                $locationAddress->setCountry($locationAddressCountry);
 
                 $this->getManager()->persist($location);
                 $this->getManager()->flush();
@@ -456,13 +508,18 @@ class CompanyService extends AuthServiceBase
                         array(
                             Constant::CODE_NAMESPACE => 400,
                             Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
-                            'data' => $contentLocation['ubn']
+                            'data' => $ubn
                         ),
                         400
                     );
                 }
 
                 $contentLocationAddress = $contentLocation['address'];
+
+                $locationAddressCountry = ArrayUtil::get('country', $contentLocationAddress);        if (empty($locationAddressCountry)) {
+                    return ResultUtil::errorResult($this->translateUcFirstLower('LOCATION ADDRESS COUNTRY CANNOT BE EMPTY'), Response::HTTP_PRECONDITION_REQUIRED);
+                }
+
                 $locationAddress = new LocationAddress();
                 $locationAddress->setStreetName($contentLocationAddress['street_name']);
                 $locationAddress->setAddressNumber($contentLocationAddress['address_number']);
@@ -473,11 +530,11 @@ class CompanyService extends AuthServiceBase
 
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
-                $locationAddress->setState($contentLocationAddress['state']);
-                $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
+                $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
+                $locationAddress->setCountry($locationAddressCountry);
 
                 $location = new Location();
-                $location->setUbn($contentLocation['ubn']);
+                $location->setUbn($ubn);
                 $location->setAddress($locationAddress);
                 $location->setCompany($company);
                 $location->setIsActive(true);
@@ -616,9 +673,11 @@ class CompanyService extends AuthServiceBase
 
         // Get Company
         $company = $this->getManager()->getRepository(Company::class)->findOneByCompanyId($companyId);
+        $breederNumbers = $this->getManager()->getRepository(PedigreeRegisterRegistration::class)
+            ->getCompanyBreederNumbersWithPedigreeRegisterAbbreviations($company, $this->getLogger());
 
         // Generate Company Details
-        $result = CompanyOutput::createCompanyDetails($company);
+        $result = CompanyOutput::createCompanyDetails($company, $breederNumbers);
 
         return ResultUtil::successResult($result);
     }

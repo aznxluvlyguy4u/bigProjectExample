@@ -47,10 +47,12 @@ class Location
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
+     *     "EDIT_OVERVIEW",
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
      *     "MINIMAL",
-     *     "RVO"
+     *     "RVO",
+     *     "DOSSIER"
      * })
      * @Expose
      */
@@ -67,6 +69,7 @@ class Location
    *     "ANIMAL_DETAILS",
    *     "ANIMALS_BATCH_EDIT",
    *     "BASIC",
+   *     "EDIT_OVERVIEW",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
    *     "LIVESTOCK",
@@ -74,7 +77,8 @@ class Location
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "TREATMENT_TEMPLATE_MIN",
-   *     "UBN"
+   *     "UBN",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -87,7 +91,8 @@ class Location
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ANIMAL_DETAILS",
-   *     "BASIC"
+   *     "BASIC",
+   *     "DOSSIER"
    * })
    * @Expose
    */
@@ -202,10 +207,12 @@ class Location
    * @var LocationAddress
    *
    * @ORM\OneToOne(targetEntity="LocationAddress", cascade={"persist"})
+   * @Expose
    * @JMS\Type("AppBundle\Entity\LocationAddress")
    * @JMS\Groups({
    *     "INVOICE",
-   *     "INVOICE_NO_COMPANY"
+   *     "INVOICE_NO_COMPANY",
+   *     "DOSSIER"
    * })
    */
   private $address;
@@ -293,11 +300,20 @@ class Location
      *     "BASIC",
      *     "INVOICE",
      *     "MINIMAL",
-     *     "TREATMENT_TEMPLATE"
+     *     "TREATMENT_TEMPLATE",
+     *     "DOSSIER"
      * })
      * @Expose
      */
     private $isActive;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Worker", mappedBy="location", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Worker>")
+     */
+    private $workers;
 
     /**
      * @JMS\VirtualProperty
@@ -370,6 +386,7 @@ class Location
     $this->treatmentTemplates = new ArrayCollection();
     $this->treatments = new ArrayCollection();
     $this->pedigreeRegisterRegistrations = new ArrayCollection();
+    $this->workers = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 

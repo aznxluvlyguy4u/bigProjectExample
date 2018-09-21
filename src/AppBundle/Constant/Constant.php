@@ -88,6 +88,7 @@ class Constant
     const DATE_OF_BIRTH_NAMESPACE  = 'date_of_birth';
     const DATE_OF_DEATH_NAMESPACE  = 'date_of_death';
     const IS_IMPORT_ANIMAL = 'is_import_animal';
+    const DEFAULT_ANIMAL_CATEGORY = 3;
 
     //Health Status
     const ILLNESSES = "illnesses";

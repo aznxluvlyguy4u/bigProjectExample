@@ -79,6 +79,37 @@ class ViewMinimalParentDetails implements SqlViewInterface
      */
     private $breedTypeAsDutchFirstLetter;
 
+    /**
+     * @var bool
+     * @JMS\Type("boolean")
+     */
+    private $isPublic;
+
+    /**
+     * @var integer
+     * @JMS\Type("integer")
+     */
+    private $locationOfBirthId;
+
+    /**
+     * Array as json string
+     * @var string
+     * @JMS\Type("string")
+     */
+    private $historicUbns;
+
+    /**
+     * Array as json string
+     * @var string
+     * @JMS\Type("string")
+     */
+    private $historicLocationIds;
+
+    /**
+     * @var bool
+     * @JMS\Type("boolean")
+     */
+    private $isOwnHistoricAnimal;
 
     /**
      * @return string
@@ -309,6 +340,112 @@ class ViewMinimalParentDetails implements SqlViewInterface
     public function setBreedTypeAsDutchFirstLetter($breedTypeAsDutchFirstLetter)
     {
         $this->breedTypeAsDutchFirstLetter = $breedTypeAsDutchFirstLetter;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPublic(): bool
+    {
+        return $this->isPublic ?? false;
+    }
+
+    /**
+     * @param bool $isPublic
+     * @return ViewMinimalParentDetails
+     */
+    public function setIsPublic(bool $isPublic): ViewMinimalParentDetails
+    {
+        $this->isPublic = $isPublic;
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getLocationOfBirthId(): ?int
+    {
+        return $this->locationOfBirthId;
+    }
+
+    /**
+     * @param int|null $locationOfBirthId
+     * @return ViewMinimalParentDetails
+     */
+    public function setLocationOfBirthId(?int $locationOfBirthId): ViewMinimalParentDetails
+    {
+        $this->locationOfBirthId = $locationOfBirthId;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHistoricUbnsAsArray(): array
+    {
+        return empty($this->historicUbns) ? [] : json_decode($this->historicUbns);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getHistoricUbns()
+    {
+        return $this->historicUbns;
+    }
+
+    /**
+     * @param string $historicUbns
+     * @return ViewMinimalParentDetails
+     */
+    public function setHistoricUbns(string $historicUbns): ViewMinimalParentDetails
+    {
+        $this->historicUbns = $historicUbns;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHistoricLocationIdsAsArray(): array
+    {
+        return empty($this->historicLocationIds) ? [] : json_decode($this->historicLocationIds,false);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getHistoricLocationIds()
+    {
+        return $this->historicLocationIds;
+    }
+
+    /**
+     * @param string $historicLocationIds
+     * @return ViewMinimalParentDetails
+     */
+    public function setHistoricLocationIds(string $historicLocationIds): ViewMinimalParentDetails
+    {
+        $this->historicLocationIds = $historicLocationIds;
+        return $this;
+    }
+
+    /**
+     * @return bool|null
+     */
+    public function isOwnHistoricAnimal(): ?bool
+    {
+        return $this->isOwnHistoricAnimal;
+    }
+
+    /**
+     * @param bool $isOwnHistoricAnimal
+     * @return ViewMinimalParentDetails
+     */
+    public function setIsOwnHistoricAnimal(bool $isOwnHistoricAnimal): ViewMinimalParentDetails
+    {
+        $this->isOwnHistoricAnimal = $isOwnHistoricAnimal;
         return $this;
     }
 

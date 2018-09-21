@@ -67,6 +67,34 @@ REGISTER: REGISTER
 SECONDARY_REGISTER: HULPBOEK
 UNDETERMINED: ONBEPAALD
 
+#Countries
+Austria: Oostenrijk
+Belgium: België
+Bulgaria: Bulgarije
+Cyprus: Cyprus
+Czech Republic: Tsjechische Republiek
+Denmark: Denemarken
+Estland: Estland
+Finland: Finland
+France: Frankrijk
+Germany: Duitsland
+Greece: Griekenland
+Hungary: Hongarije
+Ireland: Ierland
+Italy: Italië
+Latvia: Letland
+Lithuania: Litouwen
+Luxembourg: Luxemburg
+Netherlands: Nederland
+Poland: Polen
+Portugal: Portugal
+Romania: Roemenië
+Slovakia: Slowakije
+Slovenia: Slovenië
+Spain: Spanje
+Sweden: Zweden
+United Kingdom: Verenigd Koningkrijk
+
 #Declares
 DECLARE DEPART: AFVOERMELDING
 DECLARE EXPORT: EXPORTMELDING
@@ -259,6 +287,32 @@ DATEFORMAT: d-m-Y
 TRUE: waar
 FALSE: onwaar
 
+#Chart labels
+CHART_LABEL_TOTAL_BORN: Totaal geb. per worp
+CHART_LABEL_STILL_BORN: Doodgeb. per worp
+CHART_LABEL_EARLY_FERTILITY: Vroegrijpheid
+CHART_LABEL_BIRTH_INTERVAL: Tussenlamtijd
+CHART_LABEL_BIRTH_DELIVERY_PROGRESS: Aflamgemak
+CHART_LABEL_BIRTH_WEIGHT: Geboortegewicht
+
+CHART_LABEL_BIRTH_PROGRESS: Geboortegemak
+CHART_LABEL_WEIGHT_AT_8_WEEKS: 8-weken gewicht
+CHART_LABEL_WEIGHT_AT_20_WEEKS: 20-weken gewicht
+CHART_LABEL_MUSCLE_THICKNESS_AT_20_WEEKS: Spierdikte 20 weken
+CHART_LABEL_FAT_THICKNESS_AT_20_WEEKS: Vetdikte 20 weken
+
+CHART_LABEL_MUSCULARITY: Bespiering
+CHART_LABEL_PROPORTION: Evenredigheid
+CHART_LABEL_SKULL: Kop
+CHART_LABEL_EXTERIOR_TYPE: Type
+CHART_LABEL_LEG_WORK: Beenwerk
+CHART_LABEL_PROGRESS: Ontwikkeling
+
+CHART_LABEL_ODIN_BC: Wormresistentie
+
+CHART_LABEL_TAIL_LENGTH: Staartlengte
+
+
 #Reports
 ANIMALS_OVERVIEW_REPORT: DIEREN OVERZICHT RAPPORTAGE
 ANNUAL_ACTIVE_LIVESTOCK_REPORT: JAARLIJKSE ACTIEVE STALLIJST RAPPORTAGE
@@ -289,6 +343,7 @@ THE FOLLOWING ULNS WERE INSERTED MULTIPLE TIMES: DEZE ULNS WAREN MEERDERE KEREN 
 THE FOLLOWING PEDIGREE NUMBERS WERE INSERTED MULTIPLE TIMES: DEZE STNS WAREN MEERDERE KEREN INGEVULD
 THE FOLLOWING IDS WERE INSERTED MULTIPLE TIMES: DEZE IDS WAREN MEERDERE KEREN INGEVULD
 THE FOLLOWING IDS WERE NOT FOUND IN THE DATABASE: DEZE IDS WAREN NIET GEVONDEN IN DE DATABASE
+THE FOLLOWING ULNS ARE DO NOT EXIST IN THE DATABASE: De volgende ulns bestaan niet in de database
 THE FOLLOWING ULNS HAVE AN INCORRECT FORMAT: DEZE ULNS HEBBEN EEN ONJUIST FORMAT
 THE FOLLOWING STNS HAVE AN INCORRECT FORMAT: DEZE STNS HEBBEN EEN ONJUIST FORMAT
 THE FOLLOWING UBNS HAVE AN INCORRECT FORMAT: DEZE UBNS HEBBEN EEN ONJUIST FORMAT
@@ -322,7 +377,9 @@ START DATE CANNOT BE AFTER END DATE: STARTDATUM MAG NIET LATER ZIJN DAN DE EINDD
 THE START DATE OVERLAPS A REGISTERED MATING PERIOD: DE START DATUM OVERLAPT MET EEN GEREGISTREERDE DEKKINGSPERIODE
 THE END DATE OVERLAPS A REGISTERED MATING PERIOD: DE EINDDATUM OVERLAPT MET EEN GEREGISTREERDE DEKKINGSPERIODE
 THE LAST BIRTH AND THE CURRENT MATE PERIOD ARE LESS THAN 6 WEEKS: DE LAATSTE GEBOORTE EN HUIDIGE DEKKINGSPERIODE ZIJN KORTER DAN 6 WEKEN
-ANIMAL WAS NOT FOUND: DIER WAS NIET GEVONDEN
+ANIMAL WAS NOT FOUND: Dier was niet gevonden
+NO ANIMAL WAS NOT FOUND FOR ID: Geen dier was gevonden voor id
+ANIMAL IS NOT ALLOWED TO BE CHANGED: Dier mag niet worden veranderd
 DESCRIPTION CANNOT BE EMPTY: BESCHRIJVING MAG NIET LEEG ZIJN
 PRICE EXCL VAT CANNOT BE EMPTY, BUT CAN BE ZERO: PRIJS EXCLUSIEF BTW MAG NIET LEEG ZIJN, MAAR NUL IS TOEGESTAAN
 VAT PERCENTAGE RATE CANNOT BE EMPTY, BUT CAN BE ZERO: BTW-TARIEF MAG NIET LEEG ZIJN, MAAR NUL IS TOEGESTAAN
@@ -337,3 +394,28 @@ DATA IS EMPTY: DATA IS LEEG
 NO ANIMALS FOUND FOR GIVEN INPUT: ER ZIJN GEEN DIEREN GEVONDEN VOOR DE GEGEVEN INVOER
 THE FOLLOWING ANIMALS ARE NOT CURRENT LIVESTOCK OR HISTORIC LIVESTOCK ANIMALS OF THIS UBN: DE VOLGENDE DIEREN ZIJN GEEN HUIDIGE STALLIJST OF HISTORISCHE STALLIJST DIEREN VAN DIT UBN
 FERTILIZER ACCOUNTING NOTE: De forfaitaire excretienormen waar in deze rapportage mee is gerekend zijn gebaseerd op Tabel 4 Diergebonden forfaitaire gehalten %year% RVO. Heeft u een biologisch bedrijf dat is geregistreerd bij de  Stichting Skal en houdt u graasdieren? Dan gelden mogelijk andere stikstofexcretiegehalten (zie de excretiegehalten voor stikstof uit de bijlage van de Regeling dierlijke producten). Voor de berekening van de fosfaatexcretie kunt u wel gebruik maken van de getallen in deze rapportage.
+THIS IS NOT A VALID EMAIL ADDRESS: Dit is geen valide e-mailadres
+A USER ALREADY EXISTS FOR THIS EMAIL ADDRESS: Er bestaat al een gebruiker met dit e-mailadres
+THE PASSWORD IS INCORRECT: Het wachtwoord is onjuist
+MOTHER CANNOT BE YOUNGER THAN CHILD: Moeder kan niet jonger zijn dan kind
+FATHER CANNOT BE YOUNGER THAN CHILD: Vader kan niet jonger zijn dan kind
+ADDRESS COUNTRY CANNOT BE EMPTY: Land van adres mag niet leeg zijn
+BILLING ADDRESS COUNTRY CANNOT BE EMPTY: Land van factuuradres mag niet leeg zijn
+LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Land van locatieadres mag niet leeg zijn
+UBN IS NOT A VALID NUMBER: Het UBN is geen geldig nummer
+INVOICES THAT ARE ALREADY CANCELLED, SENT BUT UNPAID OR PAID CANNOT BE EDITED ANYMORE: Factures die al zijn geannuleerd of verzonden kunnen niet meer worden aangepast
+NO LOCATION FOUND FOR LOCATION ID: Geen locatie is gevonden voor locatie_id
+LOCATION CANNOT BE EMPTY: Locatie mag niet leeg zijn
+COUNTRY CODE IS INVALID: Landcode is niet geldig
+COUNTRY CODE IS MISSING: Landcode ontbreekt
+START DATE IS MISSING: Startdatum ontbreekt
+END DATE CANNOT BE BEFORE START DATE: Einddatum mag niet voor de startdatum zijn
+IS PENDING MUST BE A BOOLEAN: In behandeling moet een boolean zijn
+THE FOLLOWING ULNS ARE BLOCKED FOR YOU: De volgende ulns zijn voor u geblokkeerd
+
+#Messages
+DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd
+DECLARE_DEPART: Automatisch een afvoer melding uitgevoerd
+NEW_INVOICE: U heeft een nieuwe factuur ontvangen
+A SIMILAR REPORT IS ALREADY BEING GENERATED: Een identieke rapportage wordt al gegenereerd
+THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7: De volgende n-ling waarden moeten zitten tussen 0 en 7

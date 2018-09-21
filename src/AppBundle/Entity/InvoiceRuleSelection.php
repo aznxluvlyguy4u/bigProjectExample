@@ -19,6 +19,8 @@ class InvoiceRuleSelection
 {
     use EntityClassInfo;
 
+    const AMOUNT_MAX_DECIMALS = 2;
+
     /**
      * @var int
      * @ORM\Column(type="integer")
@@ -59,8 +61,8 @@ class InvoiceRuleSelection
     /**
      * @var integer
      *
-     * @ORM\Column(type="integer", options={"default":0})
-     * @JMS\Type("integer")
+     * @ORM\Column(type="float", options={"default":0})
+     * @JMS\Type("float")
      * @JMS\Groups({
      *     "INVOICE_RULE",
      *     "INVOICE",
@@ -136,7 +138,7 @@ class InvoiceRuleSelection
     }
 
     /**
-     * @return int
+     * @return float
      */
     public function getAmount()
     {
@@ -144,7 +146,7 @@ class InvoiceRuleSelection
     }
 
     /**
-     * @param int $amount
+     * @param float $amount
      * @return InvoiceRuleSelection
      */
     public function setAmount($amount)

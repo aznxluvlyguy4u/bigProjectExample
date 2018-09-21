@@ -10,8 +10,8 @@
 <body>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-6 offset-6">
-            <img src="file://{{ rootDirectory }}/assets/images/nsfo-logo.png" class="img-fluid" alt="">
+        <div class="col-3 offset-9">
+            <img src="file://{{ rootDirectory }}/assets/images/nsfo-logo.png" class="img-fluid img-spacing" alt="">
         </div>
     </div>
     <div class="row">
@@ -25,45 +25,35 @@
             </span>
         </div>
     </div>
-    <div class="row sender-recipient-details">
-        <div class="sender-wrapper table-responsive d-inline-block col-4">
-            <table class="table borderless ">
+
+    <div class="row">
+        <div class="col-12">
+            <table class="table borderless">
                 <tbody>
                 <tr>
-                    <td class="height-auto">
+                    <td class="height-auto top-table-info-label-column">
                         Factuurnummer:
                     </td>
-                    <td class="height-auto">
+                    <td class="height-auto top-table-info-data-column">
                         {{ invoice.invoiceNumber }}
                     </td>
-                </tr>
-                <tr>
-                    <td class="height-auto">
-                        Factuurdatum:
+                    <td class="height-auto top-table-gutter">
+                       <span></span>
                     </td>
-                    <td class="height-auto">
-                        {{ invoice.invoiceDate | date("d-m-Y") }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="height-auto">
-                        Debiteurnummer:
-                    </td>
-                    <td class="height-auto">
-                        {{ invoice.companyDebtorNumber }}
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="recipient-wrapper table-responsive d-inline-block col-4 offset-3">
-            <table class="table borderless">
-                <tr>
                     <td class="height-auto">
                         {{ invoice.companyName }}
                     </td>
                 </tr>
                 <tr>
+                    <td class="height-auto top-table-info-label-column">
+                        Factuurdatum:
+                    </td>
+                    <td class="height-auto top-table-info-data-column">
+                        {{ invoice.invoiceDate | date("d-m-Y") }}
+                    </td>
+                    <td class="height-auto top-table-gutter">
+                        <span></span>
+                    </td>
                     <td class="height-auto">
                         {{ invoice.companyAddressStreetName ? invoice.companyAddressStreetName : "" }}
                         {{ invoice.companyAddressStreetNumber ? invoice.companyAddressStreetNumber : "" }}
@@ -71,13 +61,80 @@
                     </td>
                 </tr>
                 <tr>
+                    <td class="height-auto top-table-info-label-column">
+                        Debiteurnummer:
+                    </td>
+                    <td class="height-auto top-table-info-data-column">
+                        {{ invoice.companyDebtorNumber }}
+                    </td>
+                    <td class="height-auto top-table-gutter">
+                        <span></span>
+                    </td>
                     <td class="height-auto">
-                        {{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressState ? invoice.companyAddressState | upper : ""}} {{ invoice.companyAddressCountry ? invoice.companyAddressCountry | upper : "" }}
+                        {{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressCity ? invoice.companyAddressCity | upper : ""}} &ensp; {{ invoice.companyAddressCountry ? invoice.companyAddressCountry | upper : "" }}
                     </td>
                 </tr>
+                </tbody>
             </table>
         </div>
     </div>
+
+    {# TOP TABLE VERSION USING BOOTSTRAP #}
+    {#<div class="row sender-recipient-details">#}
+        {#<div class="sender-wrapper table-responsive d-inline-block col-4" style="width: 80%; background: yellow">#}
+            {#<table class="table borderless">#}
+                {#<tbody>#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#Factuurnummer:#}
+                    {#</td>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.invoiceNumber }}#}
+                    {#</td>#}
+                {#</tr>#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#Factuurdatum:#}
+                    {#</td>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.invoiceDate | date("d-m-Y") }}#}
+                    {#</td>#}
+                {#</tr>#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#Debiteurnummer:#}
+                    {#</td>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.companyDebtorNumber }}#}
+                    {#</td>#}
+                {#</tr>#}
+                {#</tbody>#}
+            {#</table>#}
+        {#</div>#}
+        {#<div class="recipient-wrapper table-responsive d-inline-block col-4 offset-3">#}
+            {#<table class="table borderless">#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.companyName }}#}
+                    {#</td>#}
+                {#</tr>#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.companyAddressStreetName ? invoice.companyAddressStreetName : "" }}#}
+                        {#{{ invoice.companyAddressStreetNumber ? invoice.companyAddressStreetNumber : "" }}#}
+                        {#{{ invoice.companyAddressStreetNumberSuffix ? invoice.companyAddressStreetNumberSuffix : "" }}#}
+                    {#</td>#}
+                {#</tr>#}
+                {#<tr>#}
+                    {#<td class="height-auto">#}
+                        {#{{ invoice.companyAddressPostalCode ? invoice.companyAddressPostalCode : "" }} {{ invoice.companyAddressCity ? invoice.companyAddressCity | upper : ""}} {{ invoice.companyAddressCountry ? invoice.companyAddressCountry | upper : "" }}#}
+                    {#</td>#}
+                {#</tr>#}
+            {#</table>#}
+        {#</div>#}
+    {#</div>#}
+    {# TOP TABLE VERSION USING BOOTSTRAP END #}
+
     <div class="row">
         <div class="col-12">
             <table class="table borderless invoice-rule-table invoice-rule-table-spacing">
@@ -92,22 +149,22 @@
                             Artikelomschrijving
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             Aantal
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             Stuksprijs
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             Totaalprijs
                         </b>
                     </th>
-                    <th scope="col" class="align-left">
+                    <th scope="col" class="align-right">
                         <b>
                             BTW
                         </b>
@@ -121,17 +178,17 @@
                         <td class="height-auto">
                             {{ selection.invoiceRule.description }}
                         </td>
-                        <td class="height-auto">
-                            {{ selection.amount | number_format(2, '.', ',') }}
+                        <td class="height-auto align-right">
+                            {{ selection.amount | number_format(2, ',', '.') }}
                         </td>
-                        <td class="height-auto">
-                            {{ selection.invoiceRule.priceExclVat | number_format(2, '.', ',') }}
+                        <td class="height-auto align-right">
+                            {{ selection.invoiceRule.priceExclVat | number_format(2, ',', '.') }}
                         </td>
-                        <td class="height-auto">
-                            {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, '.', ',') }}
+                        <td class="height-auto align-right">
+                            {{ (selection.invoiceRule.priceExclVat * selection.amount) | number_format(2, ',', '.') }}
                         </td>
-                        <td class="height-auto">
-                            {{ selection.invoiceRule.vatPercentageRate | number_format(2, '.', ',') }}
+                        <td class="height-auto align-right">
+                            {{ selection.invoiceRule.vatPercentageRate }} %
                         </td>
                     </tr>
                 {% endfor %}
@@ -146,26 +203,26 @@
                         {% for vatBreakdownRecord in vatBreakdown.records %}
                             <tr>
                                 <td>
-                                    {{ vatBreakdownRecord.vatPercentageRate }}% BTW over {{ vatBreakdownRecord.priceExclVatTotal | number_format(2, '.', ',') }}
+                                    {{ vatBreakdownRecord.vatPercentageRate }}% BTW over {{ vatBreakdownRecord.priceExclVatTotal | number_format(2, ',', '.') }}
                                 </td>
                                 <td>
                                     =
                                 </td>
                                 <td>
-                                    {{ vatBreakdownRecord.vat | number_format(2, '.', ',') }}
+                                    {{ vatBreakdownRecord.vat | number_format(2, ',', '.') }}
                                 </td>
                             </tr>
                         {% endfor %}
                     </table>
                 </div>
-                <div class="col-4 offset-3">
+                <div class="col-4 offset-3 no-padding">
                     <table class="table borderless">
                         <tr class="no-borders">
                             <td>
                                 Subtotaal:
                             </td>
                             <td class="align-right">
-                                {{ vatBreakdown.totalExclVat | number_format(2, '.', ',') }}
+                                {{ vatBreakdown.totalExclVat | number_format(2, ',', '.') }}
                             </td>
                         </tr>
                         <tr class="no-borders">
@@ -173,7 +230,7 @@
                                 BTW:
                             </td>
                             <td class="align-right">
-                                {{ vatBreakdown.vat | number_format(2, '.', ',') }}
+                                {{ vatBreakdown.vat | number_format(2, ',', '.') }}
                             </td>
                         </tr>
                         <tr class="totals-top-bottom-border">
@@ -181,7 +238,7 @@
                                 <b>Totaal: &#0128;</b>
                             </td>
                             <td class="align-right">
-                                <b>{{ vatBreakdown.totalInclVat | number_format(2, '.', ',') }}</b>
+                                <b>{{ vatBreakdown.totalInclVat | number_format(2, ',', '.') }}</b>
                             </td>
                         </tr>
                     </table>
