@@ -150,6 +150,37 @@ class BaseSerializer
 
 
     /**
+     * @param $object
+     * @param null $type
+     * @param bool $enableMaxDepthChecks
+     * @return array
+     */
+    public function normalizeResultTableToArray($object, $type = null, $enableMaxDepthChecks = true)
+    {
+        $array = $this->normalizeToArray($object, $type, $enableMaxDepthChecks);
+
+        $keysToReplace = [
+            'fat_thickness1_accuracy' => 'fat_thickness1accuracy',
+            'fat_thickness2_accuracy' => 'fat_thickness2accuracy',
+            'fat_thickness3_accuracy' => 'fat_thickness3accuracy',
+            'weight_at8_weeks' => 'weight_at8weeks',
+            'weight_at8_weeks_accuracy' => 'weight_at8weeks_accuracy',
+            'weight_at20_weeks' => 'weight_at20weeks',
+            'weight_at20_weeks_accuracy' => 'weight_at20weeks_accuracy',
+        ];
+
+        foreach ($keysToReplace as $oldKey => $newKey)
+        {
+            if (key_exists($oldKey, $array)) {
+                $array[$newKey] = $array[$oldKey];
+            }
+        }
+
+        return $array;
+    }
+
+
+    /**
      * @param array $array
      * @param $clazz
      * @param boolean $isArrayOfObjects

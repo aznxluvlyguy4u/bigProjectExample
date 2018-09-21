@@ -11,6 +11,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\JsonFormat\ValidationResults;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Constant\Constant;
 use \Symfony\Component\HttpFoundation\JsonResponse;
@@ -106,6 +107,6 @@ class AdminValidator
      */
     public static function standardException(): UnauthorizedHttpException
     {
-        return new UnauthorizedHttpException(null, self::ERROR_MESSAGE,null);
+        return Validator::unauthorizedException();
     }
 }

@@ -38,8 +38,8 @@ class BreedValuesOutput extends OutputServiceBase
 
         /** @var BreedValueType[] $breedValueTypes */
         $this->breedValueTypes = new ArrayCollection($this->getManager()->getRepository(BreedValueType::class)->findAll());
-        $this->breedValuesAndAccuracies = $this->getSerializer()->normalizeToArray($animal->getLatestBreedGrades());
-        $this->normalizedBreedValues = $this->getSerializer()->normalizeToArray($animal->getLatestNormalizedBreedGrades());
+        $this->breedValuesAndAccuracies = $this->getSerializer()->normalizeResultTableToArray($animal->getLatestBreedGrades());
+        $this->normalizedBreedValues = $this->getSerializer()->normalizeResultTableToArray($animal->getLatestNormalizedBreedGrades());
 
         $breedValueSets = $this->getGeneralBreedValues();
         $breedValueSets = $this->addExteriorBreedValues($breedValueSets);

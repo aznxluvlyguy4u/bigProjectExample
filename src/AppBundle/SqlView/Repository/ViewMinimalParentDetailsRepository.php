@@ -38,4 +38,29 @@ class ViewMinimalParentDetailsRepository extends SqlViewRepositoryBase implement
     {
         return $this->findOneByPrimaryId($animalId);
     }
+
+
+    /**
+     * @param array $ulns
+     * @return ArrayCollection|ViewMinimalParentDetails[]
+     * @throws \Exception
+     */
+    public function findByUlns(array $ulns = [])
+    {
+        $results = new ArrayCollection();
+        if (empty($ulns)) {
+            return $results;
+        }
+
+        $ulnSearchString = "'" . implode("','", $ulns) . "'";
+        $sql = "SELECT * FROM ".$this->getTableName()." WHERE uln IN (".$ulnSearchString.")";
+        $sqlResults = $this->getConnection()->query($sql)->fetchAll();
+        $objects = $this->denormalizeToObjects($sqlResults);
+
+        /** @var ViewMinimalParentDetails $object */
+        foreach ($objects as $object) {
+            $results->set($object->getPrimaryKey(), $object);
+        }
+        return $results;
+    }
 }

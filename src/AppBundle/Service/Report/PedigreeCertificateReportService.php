@@ -15,7 +15,6 @@ use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Report\PedigreeCertificates;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
-use AppBundle\Validation\UlnValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -48,11 +47,8 @@ class PedigreeCertificateReportService extends ReportServiceBase
             $client = $person;
         }
 
-        //Validate if given ULNs are correct AND there should at least be one ULN given
-        $ulnValidator = new UlnValidator($this->em, $content, true, null, $location);
-        if(!$ulnValidator->getIsUlnSetValid()) {
-            return $ulnValidator->createArrivalJsonErrorResponse();
-        }
+        $company = $selectedLocation ? $selectedLocation->getCompany() : null;
+        $this->ulnValidator->pedigreeCertificateUlnsInputValidation($content, $person, $company);
 
         $this->filename = $this->translate(self::FILENAME);
         $this->folderName = self::FOLDER_NAME;

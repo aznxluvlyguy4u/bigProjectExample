@@ -33,11 +33,14 @@ use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 class Validator
 {
+    const UNAUTHORIZED = 'UNAUTHORIZED';
+
     const MAX_NUMBER_OF_CURRENCY_INPUT_DECIMALS = 3;
 
     const DEFAULT_MIN_PASSWORD_LENGTH = 6;
@@ -638,11 +641,10 @@ class Validator
      * @param ViewMinimalParentDetails $animal
      * @param Company $companyOfUser
      * @param array $currentUbnsOfUser
-     * @param int|null $locationIdOfUser
      * @return bool
      */
     public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Company $companyOfUser,
-                                                              $currentUbnsOfUser = [], ?int $locationIdOfUser): bool
+                                                              $currentUbnsOfUser = []): bool
     {
         /*
          * 1. Always show animals on own location/ubn
@@ -652,17 +654,13 @@ class Validator
          * Note, the current ubn is included in the historic ubns list of the sqlViews
          */
 
-        if (!empty($animal->getHistoricUbns()) && !empty($currentUbnsOfUser)) {
-            return ArrayUtil::hasAtLeastOneValueInArray($animal->getHistoricUbnsAsArray(), $currentUbnsOfUser);
-        }
-
-        //3. Always allow breeder to see his own animals!
-        if ($locationIdOfUser && $locationIdOfUser === $animal->getLocationOfBirthId()) {
+        if (!empty($animal->getHistoricUbns()) && !empty($currentUbnsOfUser)
+        && ArrayUtil::hasAtLeastOneValueInArray($animal->getHistoricUbnsAsArray(), $currentUbnsOfUser)) {
             return true;
         }
 
         /*
-         * 4. For the public, allow access to all public animals
+         * 3. For the public, allow access to all public animals
          */
         if (!$companyOfUser) {
             return $animal->isPublic();
@@ -670,16 +668,16 @@ class Validator
         } elseif ($companyOfUser->getIsRevealHistoricAnimals()) {
 
             /*
-             * 5. If user set own livestock to public, allow access to all public animals
+             * 4. If user set own livestock to public, allow access to all public animals
              */
 
-            // TODO 7. Set a delay before giving access to animal using $company->getLastMakeLivestockPublicDate()
+            // TODO 6. Set a delay before giving access to animal using $company->getLastMakeLivestockPublicDate()
 
             return $animal->isPublic();
         }
 
         /*
-         * 6. ... else block animals not belonging to user in points 1-3,
+         * 5. ... else block animals not belonging to user in points 1-3,
          * to encourage the user to reveal his own livestock
          */
         return false;
@@ -859,5 +857,13 @@ class Validator
             $prefix = ' | ';
         }
         throw new PreconditionFailedHttpException($errorMessage);
+    }
+
+    /**
+     * @return UnauthorizedHttpException
+     */
+    public static function unauthorizedException(): UnauthorizedHttpException
+    {
+        return new UnauthorizedHttpException(null, self::UNAUTHORIZED,null);
     }
 }

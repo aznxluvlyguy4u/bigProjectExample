@@ -439,6 +439,21 @@ class Company
     }
 
     /**
+     * @param bool $onlyReturnActiveUbns
+     * @return array|string[]
+     */
+    public function getLocationIds(bool $onlyReturnActiveUbns = true): array
+    {
+        $ubns = [];
+        foreach ($this->locations as $location) {
+            if (!$onlyReturnActiveUbns || $location->getIsActive()) {
+                $ubns[] = $location->getUbn();
+            }
+        }
+        return $ubns;
+    }
+
+    /**
      * Set owner
      *
      * @param \AppBundle\Entity\Client $owner
