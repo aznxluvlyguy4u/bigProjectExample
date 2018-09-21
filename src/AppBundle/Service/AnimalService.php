@@ -702,8 +702,19 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $count = 0;
 
         /** @var Location $location */
-        foreach($allLocations as $location) {
+        foreach($allLocations as $location)
+        {
+            if (!$location->getIsActive() && !$location->getCompany()->isActive()) {
+                continue;
+            }
+
             $client = $location->getCompany()->getOwner();
+
+            if (empty($client->getRelationNumberKeeper())) {
+                $this->getLogger()->error('Animal Sync failed due to missing relationNumberKeeper for UBN: '.
+                $location->getUbn().', ownerId: '.$client->getId());
+                continue;
+            }
 
             //Convert the array into an object and add the mandatory values retrieved from the database
             $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
