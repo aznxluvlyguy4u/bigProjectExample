@@ -56,6 +56,7 @@ class ExteriorRepository extends MeasurementRepository {
         foreach ($retrievedMeasurementData as $measurementData)
         {
             $results[$count] = [
+                JsonInputConstant::ID => $measurementData['id'],
                 JsonInputConstant::MEASUREMENT_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue('measurement_date', $measurementData, $nullFiller),
                 JsonInputConstant::HEIGHT => Utils::fillNullOfFloatValue($measurementData['height']),
                 JsonInputConstant::KIND => Utils::fillNullOrEmptyString($measurementData['kind'], $nullFiller),
@@ -79,6 +80,7 @@ class ExteriorRepository extends MeasurementRepository {
                     JsonInputConstant::PERSON_ID => $personId,
                     JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
                     JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
+                    JsonInputConstant::TYPE => "Inspector",
                 ];
             }
 
