@@ -57,19 +57,19 @@ class ExteriorRepository extends MeasurementRepository {
         {
             $results[$count] = [
                 JsonInputConstant::MEASUREMENT_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue('measurement_date', $measurementData, $nullFiller),
-                JsonInputConstant::HEIGHT => Utils::fillNullOrEmptyString($measurementData['height'], $nullFiller),
+                JsonInputConstant::HEIGHT => Utils::fillNullOfFloatValue($measurementData['height']),
                 JsonInputConstant::KIND => Utils::fillNullOrEmptyString($measurementData['kind'], $nullFiller),
-                JsonInputConstant::PROGRESS => Utils::fillNullOrEmptyString($measurementData['progress'], $nullFiller),
-                JsonInputConstant::SKULL => Utils::fillNullOrEmptyString($measurementData['skull'], $nullFiller),
-                JsonInputConstant::MUSCULARITY => Utils::fillNullOrEmptyString($measurementData['muscularity'], $nullFiller),
-                JsonInputConstant::PROPORTION => Utils::fillNullOrEmptyString($measurementData['proportion'], $nullFiller),
-                JsonInputConstant::EXTERIOR_TYPE => Utils::fillNullOrEmptyString($measurementData['exterior_type'], $nullFiller),
-                JsonInputConstant::LEG_WORK => Utils::fillNullOrEmptyString($measurementData['leg_work'], $nullFiller),
-                JsonInputConstant::FUR => Utils::fillNullOrEmptyString($measurementData['fur'], $nullFiller),
-                JsonInputConstant::GENERAL_APPEARANCE => Utils::fillNullOrEmptyString($measurementData['general_appearance'], $nullFiller),
-                JsonInputConstant::BREAST_DEPTH => Utils::fillNullOrEmptyString($measurementData['breast_depth'], $nullFiller),
-                JsonInputConstant::TORSO_LENGTH => Utils::fillNullOrEmptyString($measurementData['torso_length'], $nullFiller),
-                JsonInputConstant::MARKINGS => Utils::fillNullOrEmptyString($measurementData['markings'], $nullFiller),
+                JsonInputConstant::PROGRESS => Utils::fillNullOfFloatValue($measurementData['progress']),
+                JsonInputConstant::SKULL => Utils::fillNullOfFloatValue($measurementData['skull']),
+                JsonInputConstant::MUSCULARITY => Utils::fillNullOfFloatValue($measurementData['muscularity']),
+                JsonInputConstant::PROPORTION => Utils::fillNullOfFloatValue($measurementData['proportion']),
+                JsonInputConstant::EXTERIOR_TYPE => Utils::fillNullOfFloatValue($measurementData['exterior_type']),
+                JsonInputConstant::LEG_WORK => Utils::fillNullOfFloatValue($measurementData['leg_work']),
+                JsonInputConstant::FUR => Utils::fillNullOfFloatValue($measurementData['fur']),
+                JsonInputConstant::GENERAL_APPEARANCE => Utils::fillNullOfFloatValue($measurementData['general_appearance']),
+                JsonInputConstant::BREAST_DEPTH => Utils::fillNullOfFloatValue($measurementData['breast_depth']),
+                JsonInputConstant::TORSO_LENGTH => Utils::fillNullOfFloatValue($measurementData['torso_length']),
+                JsonInputConstant::MARKINGS => Utils::fillNullOfFloatValue($measurementData['markings']),
             ];
 
             //Only include inspector key if it exists
