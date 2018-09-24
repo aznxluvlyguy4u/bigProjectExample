@@ -206,7 +206,7 @@ class SqlView
     {
         return
             "SELECT
-                c.animal_id,
+                a.id as animal_id,
                 CONCAT(a.uln_country_code, a.uln_number) as uln,
                 CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
                 to_char(a.date_of_birth, 'DD-MM-YYYY') as dd_mm_yyyy_date_of_birth,
