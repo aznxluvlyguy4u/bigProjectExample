@@ -12,6 +12,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\CompanyNote;
+use AppBundle\Entity\Country;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\PedigreeRegisterRegistration;
@@ -130,6 +131,7 @@ class CompanyService extends AuthServiceBase
         $address->setCity($contentAddress['city']);
         $address->setState(ArrayUtil::get('state', $contentAddress));
         $address->setCountry($addressCountry);
+        $address->setCountryDetails($this->getCountryByName($addressCountry));
 
         // Create Billing Address
         $contentBillingAddress = $content->get('billing_address');
@@ -150,6 +152,7 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
         $billingAddress->setCountry($billingAddressCountry);
+        $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
 
         // Create Company
         $company = new Company();
@@ -213,6 +216,7 @@ class CompanyService extends AuthServiceBase
             $locationAddress->setCity($contentLocationAddress['city']);
             $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
             $locationAddress->setCountry($locationAddressCountry);
+            $locationAddress->setCountryDetails($this->getCountryByName($locationAddressCountry));
 
             $location = new Location();
             $location->setUbn($contentLocation['ubn']);
@@ -376,7 +380,9 @@ class CompanyService extends AuthServiceBase
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState(ArrayUtil::get('state', $contentAddress));
-        $address->setCountry(ArrayUtil::get('country', $contentAddress, $addressCountry));
+        $countryName = ArrayUtil::get('country', $contentAddress, $addressCountry);
+        $address->setCountry($countryName);
+        $address->setCountryDetails($this->getCountryByName($countryName));
 
         // Update Billing Address
         $billingAddress = $company->getBillingAddress();
@@ -399,6 +405,7 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
         $billingAddress->setCountry($billingAddressCountry);
+        $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
 
         // Update Company
         $company->setCompanyName($content->get('company_name'));
@@ -499,6 +506,7 @@ class CompanyService extends AuthServiceBase
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
                 $locationAddress->setCountry($locationAddressCountry);
+                $locationAddress->setCountryDetails($this->getCountryByName($locationAddressCountry));
 
                 $this->getManager()->persist($location);
                 $this->getManager()->flush();
@@ -532,6 +540,7 @@ class CompanyService extends AuthServiceBase
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
                 $locationAddress->setCountry($locationAddressCountry);
+                $locationAddress->setCountryDetails($this->getCountryByName($locationAddressCountry));
 
                 $location = new Location();
                 $location->setUbn($ubn);
@@ -777,5 +786,14 @@ class CompanyService extends AuthServiceBase
         $companies = $qb->getQuery()->getResult();
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
     }
-    
+
+
+    /**
+     * @param string $countryName
+     * @return Country|null
+     */
+    private function getCountryByName($countryName): ?Country
+    {
+        return $this->getManager()->getRepository(Country::class)->getCountryByName($countryName);
+    }
 }

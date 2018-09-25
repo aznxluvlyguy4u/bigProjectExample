@@ -38,6 +38,19 @@ class CountryRepository extends BaseRepository {
 
 
     /**
+     * @param string $countryName
+     * @return Country|null
+     */
+    function getCountryByName($countryName): ?Country
+    {
+        if (!is_string($countryName)) {
+            return null;
+        }
+        return $this->findOneBy(['name' => trim($countryName)]);
+    }
+
+
+    /**
      * @param Location $location
      * @return string|null
      * @throws \Doctrine\DBAL\DBALException
