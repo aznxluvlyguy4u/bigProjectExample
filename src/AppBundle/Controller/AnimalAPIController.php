@@ -206,6 +206,22 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
    *     }
    *   },
+   *   parameters={
+   *      {
+   *        "name"="gender",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"="filter output by gender (male, female, neuter), null by default",
+   *        "format"="?gender=female"
+   *      },
+   *      {
+   *        "name"="is_ewes_with_last_mate",
+   *        "dataType"="boolean",
+   *        "required"=false,
+   *        "description"="only return ewes and add their last mate, false by default",
+   *        "format"="?is_ewes_with_last_mate=true"
+   *      }
+   *   },
    *   resource = true,
    *   description = " Retrieve all alive, on-location, animals belonging to the given UBN"
    * )
@@ -233,6 +249,15 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *       "requirement"="",
    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
    *     }
+   *   },
+   *   parameters={
+   *      {
+   *        "name"="gender",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"="filter output by gender (male, female, neuter), null by default",
+   *        "format"="?gender=female"
+   *      }
    *   },
    *   resource = true,
    *   description = "Retrieve all historic animals,dead or alive, that ever resided on the given UBN"
