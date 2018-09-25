@@ -1214,4 +1214,28 @@ class Location
     {
         return $this->company ? $this->company->getAnimalHealthSubscription() : false;
     }
+
+
+    /**
+     * @return bool
+     */
+    public function isDutchLocation(): bool
+    {
+        if ($this->getAddress()) {
+            return $this->getAddress()->isDutchAddress();
+        }
+        return Address::IS_DUTCH_COUNTRY_DEFAULT_BOOLEAN;
+    }
+
+
+    /**
+     * @return null|string
+     */
+    public function getCountryCode(): ?string
+    {
+        if ($this->getAddress()) {
+            return $this->getAddress()->getCountryCode();
+        }
+        return null;
+    }
 }

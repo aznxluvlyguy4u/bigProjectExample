@@ -50,37 +50,4 @@ class CountryRepository extends BaseRepository {
     }
 
 
-    /**
-     * @param Location $location
-     * @return string|null
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    function getCountryFromLocation(Location $location): ?string
-    {
-        if (!$location || !is_int($location->getId())) {
-            return null;
-        }
-
-        $sql = "SELECT
-                  l.ubn,
-                  cd.code as ".JsonInputConstant::COUNTRY_CODE."
-                FROM location l
-                  INNER JOIN address a ON l.address_id = a.id
-                  LEFT JOIN country cd ON cd.name = a.country
-                WHERE l.id = ".$location->getId();
-        return $this->getManager()->getConnection()->query($sql)->fetch()[JsonInputConstant::COUNTRY_CODE];
-    }
-
-
-    /**
-     * @param Location $location
-     * @param bool $nullIsDutch
-     * @return bool
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    function isDutchLocation(Location $location, $nullIsDutch = true): bool
-    {
-        $countryCode = $this->getCountryFromLocation($location);
-        return $countryCode ? $countryCode === \AppBundle\Enumerator\Country::NL : $nullIsDutch;
-    }
 }

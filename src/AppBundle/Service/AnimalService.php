@@ -13,7 +13,6 @@ use AppBundle\Controller\AnimalAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\AnimalResidence;
-use AppBundle\Entity\Country;
 use AppBundle\Entity\EditType;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
@@ -653,7 +652,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         if($client == null) { return ResultUtil::errorResult('Client cannot be null', 428); }
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
-        if (!$this->getManager()->getRepository(Country::class)->isDutchLocation($location)) {
+        if (!$location->isDutchLocation()) {
             throw new PreconditionFailedHttpException('RVO animal sync cannot be executed for non-NL UBN');
         }
 

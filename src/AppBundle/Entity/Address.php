@@ -33,6 +33,8 @@ abstract class Address
 {
     use EntityClassInfo;
 
+    const IS_DUTCH_COUNTRY_DEFAULT_BOOLEAN = true;
+
   /**
    * @ORM\Column(type="integer")
    * @ORM\Id
@@ -364,6 +366,25 @@ abstract class Address
     public function getState()
     {
         return $this->state;
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isDutchAddress(): bool
+    {
+        return $this->getCountryCode() ? $this->getCountryCode() === \AppBundle\Enumerator\Country::NL
+            : Address::IS_DUTCH_COUNTRY_DEFAULT_BOOLEAN;
+    }
+
+
+    /**
+     * @return null|string
+     */
+    public function getCountryCode(): ?string
+    {
+        return $this->getCountryDetails() ? $this->getCountryDetails()->getCode() : null;
     }
 
 

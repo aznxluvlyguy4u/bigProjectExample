@@ -79,15 +79,13 @@ class TagsService extends ControllerServiceBase
         $location = $this->getSelectedLocation($request);
         $content = RequestUtil::getContentAsArray($request);
 
-        $countryCode = $this->getManager()->getRepository(Country::class)->getCountryFromLocation($location);
-
-        $ulnPartsArray = $this->getUlnPartsArrayFromPlainTextInput($content, $countryCode);
+        $ulnPartsArray = $this->getUlnPartsArrayFromPlainTextInput($content, $location->getCountryCode());
 
         $tagRepository = $this->getManager()->getRepository(Tag::class);
         $currentTags = $tagRepository->findByUlnPartsArray($ulnPartsArray);
 
         $hasUpdatedCurrentTags = $this->updateTagsByFoundCurrentTags($client, $location, $currentTags);
-        $hasInsertedNewTags = $this->insertNewTags($ulnPartsArray, $currentTags, $client, $location, $countryCode);
+        $hasInsertedNewTags = $this->insertNewTags($ulnPartsArray, $currentTags, $client, $location);
 
         if ($hasUpdatedCurrentTags || $hasInsertedNewTags) {
             $this->getManager()->flush();
@@ -243,12 +241,10 @@ class TagsService extends ControllerServiceBase
      * @param array|Tag[] $currentTags
      * @param Client $client
      * @param Location $location
-     * @param string $countryCode
      * @return bool
      */
     private function insertNewTags(array $ulnPartsArray, array $currentTags,
-                                   Client $client, Location $location,
-                                   $countryCode): bool
+                                   Client $client, Location $location): bool
     {
         $insertedNewTags = false;
 
@@ -274,7 +270,7 @@ class TagsService extends ControllerServiceBase
             $newTag->setOrderDate(new \DateTime());
             $newTag->setOwner($client);
             $newTag->setLocation($location);
-            $newTag->setUlnCountryCode($countryCode);
+            $newTag->setUlnCountryCode($location->getCountryCode());
             $newTag->setUlnNumber($ulnNumber);
             $newTag->setAnimalOrderNumber(StringUtil::getLast5CharactersFromString($ulnNumber));
 
@@ -304,7 +300,7 @@ class TagsService extends ControllerServiceBase
         $tagStatus = $this->getTagStatusQueryParam($request);
 
         // For non NL locations always display all eartags of client
-        $defaultIgnoreLocation = !$this->getManager()->getRepository(Country::class)->isDutchLocation($location);
+        $defaultIgnoreLocation = !$location->isDutchLocation();
         $ignoreLocation = RequestUtil::getBooleanQuery($request,QueryParameter::IGNORE_LOCATION, $defaultIgnoreLocation);
 
         return $this->createTagsOutput($client, $location, $tagStatus, $ignoreLocation);
