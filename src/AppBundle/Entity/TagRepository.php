@@ -79,18 +79,30 @@ class TagRepository extends BaseRepository {
      * @param Location $location
      * @param string $tagStatus
      * @param bool $ignoreLocationId
+     * @param bool $checkIfCountryCodesMatchSelectedLocations
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
   public function findTags(Client $client, Location $location, $tagStatus = TagStateType::UNASSIGNED,
-                           bool $ignoreLocationId = false)
+                           bool $ignoreLocationId = false, bool $checkIfCountryCodesMatchSelectedLocations = true)
   {
-    if($client == null || $location == null) { return []; }
+    if($client == null || $location == null || !is_int($location->getId())) { return []; }
 
     $locationFilter = $ignoreLocationId ? " " : " AND location_id = ".$location->getId()." ";
+    $countryCodesCheckFilter = $checkIfCountryCodesMatchSelectedLocations ?
+        " AND uln_country_code = (
+          SELECT
+            c.code as location_country_code
+          FROM location l
+            INNER JOIN address a ON a.id = l.address_id
+            INNER JOIN country c ON c.name = a.country
+          WHERE l.id = ".$location->getId()."
+          LIMIT 1
+        )  " : " ";
 
     $sql = "SELECT id, tag_status, animal_order_number, order_date, uln_country_code, uln_number
-            FROM tag WHERE owner_id = ".$client->getId().$locationFilter."  AND tag_status = '".$tagStatus."'";
+            FROM tag WHERE owner_id = ".$client->getId().$locationFilter.$countryCodesCheckFilter
+            ."  AND tag_status = '".$tagStatus."'";
     $tags = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
     return $tags;
