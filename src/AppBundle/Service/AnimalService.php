@@ -25,6 +25,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\EditTypeEnum;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
@@ -44,6 +45,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
@@ -100,7 +102,16 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $animalArray = RequestUtil::getContentAsArray($request)->toArray();
 
         /** @var Neuter|Ram|Ewe $newAnimal */
-        $newAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, Ram::class, false);
+        $tempNewAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, Animal::class, false);
+
+        switch ($tempNewAnimal->getGender()) {
+            case GenderType::FEMALE: $clazz = Ewe::class; break;
+            case GenderType::MALE: $clazz = Ram::class; break;
+            default: throw new PreconditionFailedHttpException(
+                'Gender must be '.GenderType::MALE.' OR '.GenderType::FEMALE);
+        }
+        $tempNewAnimal = null;
+        $newAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, $clazz, false);
 
         $uln = $newAnimal->getUln();
         if(!Validator::verifyUlnFormat($uln)) {

@@ -5,11 +5,15 @@ namespace AppBundle\Service;
 
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\MeasurementAPIControllerInterface;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\InspectorAuthorization;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\RequestUtil;
@@ -26,8 +30,9 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
 
     /**
      * @param Request $request
-     * @param string $ulnString
-     * @return JsonResponse
+     * @param $ulnString
+     * @return array|mixed
+     * @throws \Exception
      */
     public function createExteriorMeasurement(Request $request, $ulnString)
     {
@@ -97,7 +102,11 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
 
         $output = $this->getBaseSerializer()->getDecodedJson($exterior, JmsGroup::USER_MEASUREMENT);
 
-        return ResultUtil::successResult($output);
+        if (RequestUtil::getBooleanQuery($request, QueryParameter::FULL_OUTPUT, false)) {
+            return $this->getOutputIncludingAllActiveExteriorsOfAnimal($animal, $output);
+        }
+
+        return $output;
     }
 
 
@@ -105,7 +114,8 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
      * @param Request $request
      * @param $ulnString
      * @param $measurementDateString
-     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse|array|mixed|\Symfony\Component\HttpFoundation\JsonResponse
+     * @throws \Exception
      */
     public function editExteriorMeasurement(Request $request, $ulnString, $measurementDateString)
     {
@@ -211,7 +221,25 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
 
         }
 
-        return ResultUtil::successResult($output);
+        if (RequestUtil::getBooleanQuery($request, QueryParameter::FULL_OUTPUT, false)) {
+            return $this->getOutputIncludingAllActiveExteriorsOfAnimal($animal, $output);
+        }
+
+        return $output;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param $outputSelectedExterior
+     * @return array
+     */
+    private function getOutputIncludingAllActiveExteriorsOfAnimal(Animal $animal, $outputSelectedExterior)
+    {
+        return [
+            JsonInputConstant::FULL_OUTPUT => $this->getManager()->getRepository(Exterior::class)->getAllOfAnimalBySql($animal),
+            JsonInputConstant::SELECTED => $outputSelectedExterior,
+        ];
     }
 
 
