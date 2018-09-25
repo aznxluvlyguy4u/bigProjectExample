@@ -29,6 +29,15 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="full_output",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="set to true to return all active exteriors of animals, it is false by default",
+     *        "format"="?full_output=true"
+     *      }
+     *   },
      *   resource = true,
      *   description = "Update an exterior measurement for a specific ULN and measurementDate"
      * )
@@ -38,6 +47,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * @return jsonResponse
      * @Route("/{ulnString}/exteriors")
      * @Method("POST")
+     * @throws \Exception
      */
     public function createExteriorMeasurement(Request $request, $ulnString)
     {
@@ -59,6 +69,15 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
+     *   parameters={
+     *      {
+     *        "name"="full_output",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="set to true to return all active exteriors of animals, it is false by default",
+     *        "format"="?full_output=true"
+     *      }
+     *   },
      *   resource = true,
      *   description = "Update or Deactivate an exterior measurement for a specific ULN and measurementDate"
      * )
@@ -69,6 +88,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * @return jsonResponse
      * @Route("/{ulnString}/exteriors/{measurementDateString}")
      * @Method("PUT")
+     * @throws \Exception
      */
     public function editExteriorMeasurement(Request $request, $ulnString, $measurementDateString)
     {

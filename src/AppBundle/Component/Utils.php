@@ -529,6 +529,21 @@ class Utils
         }
     }
 
+
+    /**
+     * @param float $value
+     * @return float
+     */
+    public static function fillNullOfFloatValue($value)
+    {
+        if($value === null || $value === ""  || $value === " ") {
+            return 0.0;
+        } else {
+            return floatval($value);
+        }
+    }
+
+
     /**
      * Replace zeroes with replacement text.
      *
