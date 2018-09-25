@@ -25,6 +25,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\EditTypeEnum;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
@@ -562,7 +563,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = $this->getSelectedLocation($request);
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
-        $isEwesWithLastMate = RequestUtil::getBooleanQuery($request, QueryParameter::IS_EWES_WITH_LAST_MATE, false);;
+        $isEwesWithLastMate = RequestUtil::getBooleanQuery($request, QueryParameter::IS_EWES_WITH_LAST_MATE, false);
 
         if ($isEwesWithLastMate) {
             $livestock = $this->getManager()->getRepository(Animal::class)
@@ -574,12 +575,50 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $livestock = $this->getManager()->getRepository(Animal::class)
                 ->getLiveStock($location, $this->getCacheService(), $this->getBaseSerializer(), true);
             $jmsGroups = [JmsGroup::LIVESTOCK, JmsGroup::IS_NOT_HISTORIC_ANIMAL];
+
+            $gender = $request->query->get(QueryParameter::GENDER);
+            $livestock = $this->filterLivestockByGenderQueryParam($livestock, $gender);
         }
 
         $serializedLivestockAnimals = $this->getBaseSerializer()
             ->getDecodedJson($livestock, $jmsGroups);
 
         return ResultUtil::successResult($serializedLivestockAnimals);
+    }
+
+
+    /**
+     * @param Animal[] $animals
+     * @param string $genderQueryParam
+     * @return Animal[]
+     */
+    private function filterLivestockByGenderQueryParam($animals, $genderQueryParam)
+    {
+        if (!is_string($genderQueryParam)) {
+            return $animals;
+        }
+
+        $genderQueryParam = strtoupper($genderQueryParam);
+
+        if (
+            $genderQueryParam !== GenderType::MALE &&
+            $genderQueryParam !== GenderType::FEMALE &&
+            $genderQueryParam !== GenderType::NEUTER
+        ) {
+            return $animals;
+        }
+
+        /**
+         * @var int $key
+         * @var Animal $animal
+         */
+        foreach ($animals as $key => $animal) {
+            if ($animal->getGender() !== $genderQueryParam) {
+                unset($animals[$key]);
+            }
+        }
+
+        return $animals;
     }
 
     /**
@@ -593,6 +632,9 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         $historicLivestock = $this->getManager()->getRepository(Animal::class)
             ->getHistoricLiveStock($location, $this->getCacheService(), $this->getBaseSerializer());
+
+        $gender = $request->query->get(QueryParameter::GENDER);
+        $historicLivestock = $this->filterLivestockByGenderQueryParam($historicLivestock, $gender);
 
         $serializedHistoricLivestock = $this->getBaseSerializer()
             ->getDecodedJson($historicLivestock,[JmsGroup::LIVESTOCK, JmsGroup::IS_HISTORIC_ANIMAL]);
