@@ -150,6 +150,22 @@ abstract class Address
    */
   private $state;
 
+
+    /**
+     * @var Country
+     *
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Country", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Country")
+     * @JMS\Groups({
+     *     "ADDRESS",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER"
+     * })
+     */
+  private $countryDetails;
+
     /**
      * Get id
      *
@@ -302,6 +318,24 @@ abstract class Address
     public function getCountry()
     {
         return $this->country;
+    }
+
+    /**
+     * @return Country
+     */
+    public function getCountryDetails(): Country
+    {
+        return $this->countryDetails;
+    }
+
+    /**
+     * @param Country $countryDetails
+     * @return Address
+     */
+    public function setCountryDetails(Country $countryDetails): Address
+    {
+        $this->countryDetails = $countryDetails;
+        return $this;
     }
 
     /**
