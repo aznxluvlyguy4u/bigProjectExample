@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Constant\DeclareLogMessage;
 use AppBundle\Enumerator\Language;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\Translation;
 use Doctrine\ORM\Mapping as ORM;
@@ -659,5 +660,14 @@ abstract class DeclareBase implements DeclareLogInterface
     }
 
 
+    public function setFinishedRequestState()
+    {
+        $this->setRequestState(RequestStateType::FINISHED);
+    }
 
+
+    public function setRevokedRequestState()
+    {
+        $this->setRequestState(RequestStateType::REVOKED);
+    }
 }
