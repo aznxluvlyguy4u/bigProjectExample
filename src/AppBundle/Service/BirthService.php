@@ -1033,7 +1033,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $response->setSuccessValues();
         $birth->addResponse($response);
 
-        $birth->setRequestState(RequestStateType::FINISHED);
+        $birth->setFinishedRequestState();
         $this->removeReservedTag($birth);
 
         $this->getManager()->persist($response);
