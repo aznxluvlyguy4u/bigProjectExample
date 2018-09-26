@@ -32,4 +32,12 @@ class Regex
         return '[A-Z]{2}';
     }
 
+
+    /**
+     * @return string
+     */
+    public static function dutchPostalCode()
+    {
+        return '/([0-9]{4}[A-Z]{2})\b/';
+    }
 }

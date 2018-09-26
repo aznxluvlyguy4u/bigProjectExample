@@ -131,6 +131,16 @@ class Validator
 
 
     /**
+     * @param $postalCode
+     * @return bool
+     */
+    public static function hasValidDutchPostalCodeFormat($postalCode): bool
+    {
+        return is_string($postalCode) && boolval(preg_match(Regex::dutchPostalCode(), $postalCode));
+    }
+
+
+    /**
      * @param $animalOrderNumber
      * @return bool
      */
