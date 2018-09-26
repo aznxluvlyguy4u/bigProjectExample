@@ -113,7 +113,6 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $janVanRijnsbergenLocationAddress->setPostalCode("1111XX");
     $janVanRijnsbergenLocationAddress->setState("ZH");
     $janVanRijnsbergenLocationAddress->setStreetName("Straat A");
-    $janVanRijnsbergenLocationAddress->setCountry($netherlandsName);
     $janVanRijnsbergenLocationAddress->setCountryDetails($netherlands);
 
     $janVanRijnsbergenBillingAddress = new BillingAddress();
@@ -122,7 +121,6 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $janVanRijnsbergenBillingAddress->setPostalCode("2222XX");
     $janVanRijnsbergenBillingAddress->setState("ZH");
     $janVanRijnsbergenBillingAddress->setStreetName("Straat B");
-    $janVanRijnsbergenBillingAddress->setCountry($netherlandsName);
     $janVanRijnsbergenBillingAddress->setCountryDetails($netherlands);
 
     $janVanRijnsbergenCompanyAddress = new CompanyAddress();
@@ -131,7 +129,6 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $janVanRijnsbergenCompanyAddress->setPostalCode("3333XX");
     $janVanRijnsbergenCompanyAddress->setState("ZH");
     $janVanRijnsbergenCompanyAddress->setStreetName("Straat C");
-    $janVanRijnsbergenCompanyAddress->setCountry($netherlandsName);
     $janVanRijnsbergenCompanyAddress->setCountryDetails($netherlands);
 
     $janVanRijnsbergenCompany = new Company();
@@ -188,7 +185,6 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $reinardEvertsLocationAddress->setPostalCode("1111XX");
     $reinardEvertsLocationAddress->setState("ZH");
     $reinardEvertsLocationAddress->setStreetName("Straat A");
-    $reinardEvertsLocationAddress->setCountry($netherlandsName);
     $reinardEvertsLocationAddress->setCountryDetails($netherlands);
 
     $reinardEvertsBillingAddress = new BillingAddress();
@@ -197,7 +193,6 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $reinardEvertsBillingAddress->setPostalCode("2222XX");
     $reinardEvertsBillingAddress->setState("ZH");
     $reinardEvertsBillingAddress->setStreetName("Straat B");
-    $reinardEvertsBillingAddress->setCountry($netherlandsName);
     $reinardEvertsBillingAddress->setCountryDetails($netherlands);
 
     $reinardEvertsCompanyAddress = new CompanyAddress();
@@ -206,7 +201,6 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $reinardEvertsCompanyAddress->setPostalCode("3333XX");
     $reinardEvertsCompanyAddress->setState("ZH");
     $reinardEvertsCompanyAddress->setStreetName("Straat C");
-    $reinardEvertsCompanyAddress->setCountry($netherlandsName);
     $reinardEvertsCompanyAddress->setCountryDetails($netherlands);
 
     $reinardEvertsCompany = new Company();
@@ -263,7 +257,6 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountLocationAddress->setPostalCode("1111XX");
     $nsfoTestAccountLocationAddress->setState("ZH");
     $nsfoTestAccountLocationAddress->setStreetName("Straat A");
-    $nsfoTestAccountLocationAddress->setCountry($netherlandsName);
     $nsfoTestAccountLocationAddress->setCountryDetails($netherlands);
 
     $nsfoTestAccountBillingAddress = new BillingAddress();
@@ -272,7 +265,6 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountBillingAddress->setPostalCode("2222XX");
     $nsfoTestAccountBillingAddress->setState("ZH");
     $nsfoTestAccountBillingAddress->setStreetName("Straat B");
-    $nsfoTestAccountBillingAddress->setCountry($netherlandsName);
     $nsfoTestAccountBillingAddress->setCountryDetails($netherlands);
 
     $nsfoTestAccountCompanyAddress = new CompanyAddress();
@@ -281,7 +273,6 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountCompanyAddress->setPostalCode("3333XX");
     $nsfoTestAccountCompanyAddress->setState("ZH");
     $nsfoTestAccountCompanyAddress->setStreetName("Straat C");
-    $nsfoTestAccountCompanyAddress->setCountry($netherlandsName);
     $nsfoTestAccountCompanyAddress->setCountryDetails($netherlands);
 
     $nsfoTestAccountCompany = new Company();

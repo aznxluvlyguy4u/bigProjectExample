@@ -428,6 +428,7 @@ COUNTRY CODE DOES NOT MATCH COUNTRY CODE OF UBN: Landcode komt niet overeen met 
 YOU ALREADY OWN TAGS WITH THE FOLLOWING ULNS: Je bezit al oormerken met de volgende ULNs
 TAG DOES NOT BELONG TO YOU: U bent niet in bezit van het oormerk
 NL TAGS CANNOT BE MANUALLY DELETED: NL oormerken kunnen niet handmatig worden verwijderd
+COUNTRY DOES NOT EXIST IN THE DATABASE: Land bestaat niet in de database
 
 #Messages
 DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd

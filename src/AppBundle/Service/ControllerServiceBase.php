@@ -10,6 +10,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Country;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -43,6 +44,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
 /**
@@ -480,5 +482,22 @@ abstract class ControllerServiceBase
     protected function getEditTypeByEnum(int $editTypeEnum): ?EditType
     {
         return $this->getManager()->getRepository(EditType::class)->getEditType($editTypeEnum);
+    }
+
+
+    /**
+     * @param string $countryName
+     * @return Country
+     */
+    protected function getCountryByName($countryName): Country
+    {
+        $country = $this->getManager()->getRepository(Country::class)->getCountryByName($countryName);
+        if (!$country) {
+            throw new PreconditionFailedHttpException(
+                $this->translator->trans('COUNTRY DOES NOT EXIST IN THE DATABASE').
+                ': '.strval($country)
+            );
+        }
+        return $country;
     }
 }

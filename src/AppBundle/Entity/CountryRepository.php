@@ -1,7 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
-use AppBundle\Constant\JsonInputConstant;
+
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;

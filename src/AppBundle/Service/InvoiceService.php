@@ -243,7 +243,7 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setCompanyAddressStreetNumber($company->getBillingAddress()->getAddressNumber());
             $invoice->setCompanyAddressPostalCode($company->getBillingAddress()->getPostalCode());
             $invoice->setCompanyAddressCity($company->getBillingAddress()->getCity());
-            $invoice->setCompanyAddressCountry($company->getBillingAddress()->getCountry());
+            $invoice->setCompanyAddressCountry($company->getBillingAddress()->getCountryName());
             if ($company->getBillingAddress()->getAddressNumberSuffix() != null && $company->getBillingAddress()->getAddressNumberSuffix() != "") {
                 $invoice->setCompanyAddressStreetNumberSuffix($company->getBillingAddress()->getAddressNumberSuffix());
             }

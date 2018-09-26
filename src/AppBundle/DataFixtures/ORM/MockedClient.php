@@ -109,7 +109,6 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedLocationAddress->setPostalCode("1111AZ");
     self::$mockedLocationAddress->setState("ZH");
     self::$mockedLocationAddress->setStreetName("Boederij");
-    self::$mockedLocationAddress->setCountry($netherlandsName);
     self::$mockedLocationAddress->setCountryDetails($netherlands);
 
     self::$mockedBillingAddress = new BillingAddress();
@@ -118,7 +117,6 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedBillingAddress->setPostalCode("2222GG");
     self::$mockedBillingAddress->setState("ZH");
     self::$mockedBillingAddress->setStreetName("Raamweg");
-    self::$mockedBillingAddress->setCountry($netherlandsName);
     self::$mockedBillingAddress->setCountryDetails($netherlands);
 
     self::$mockedCompanyAddress = new CompanyAddress();
@@ -127,7 +125,6 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedCompanyAddress->setPostalCode("3333XX");
     self::$mockedCompanyAddress->setState("ZH");
     self::$mockedCompanyAddress->setStreetName("Papierengeldweg");
-    self::$mockedCompanyAddress->setCountry($netherlandsName);
     self::$mockedCompanyAddress->setCountryDetails($netherlands);
 
     self::$mockedCompany = new Company();
@@ -177,7 +174,6 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
       $mockedLocationAddress->setPostalCode("2222ZZ");
       $mockedLocationAddress->setState("ZH");
       $mockedLocationAddress->setStreetName("Streetroadlane");
-      $mockedLocationAddress->setCountry($netherlandsName);
       $mockedLocationAddress->setCountryDetails($netherlands);
 
       $mockedBillingAddress = new BillingAddress();
@@ -186,7 +182,6 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
       $mockedBillingAddress->setPostalCode("2222PP");
       $mockedBillingAddress->setState("ZH");
       $mockedBillingAddress->setStreetName("Raamweg");
-      $mockedBillingAddress->setCountry($netherlandsName);
       $mockedBillingAddress->setCountryDetails($netherlands);
 
       $mockedCompanyAddress = new CompanyAddress();
@@ -195,7 +190,6 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
       $mockedCompanyAddress->setPostalCode("3333XX");
       $mockedCompanyAddress->setState("ZH");
       $mockedCompanyAddress->setStreetName("Het Geertje");
-      $mockedCompanyAddress->setCountry($netherlandsName);
       $mockedCompanyAddress->setCountryDetails($netherlands);
 
       $mockedCompany = new Company();

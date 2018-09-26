@@ -298,13 +298,15 @@ abstract class Address
     }
 
     /**
+     * WARNING THIS IS THE SETTING FOR AN OBSOLETE VARIABLE! Use setCountryDetails instead.
+     *
      * Set country
      *
      * @param string $country
      *
      * @return Address
      */
-    public function setCountry($country)
+    protected function setCountry($country)
     {
         $this->country = trim($country);
 
@@ -314,11 +316,11 @@ abstract class Address
     /**
      * Get country
      *
-     * @return string
+     * @return string|null
      */
-    public function getCountry()
+    public function getCountryName(): ?string
     {
-        return $this->country;
+        return $this->countryDetails ? $this->countryDetails->getName() : null;
     }
 
     /**
@@ -336,6 +338,7 @@ abstract class Address
     public function setCountryDetails(Country $countryDetails): Address
     {
         $this->countryDetails = $countryDetails;
+        $this->setCountry($countryDetails->getName());
         return $this;
     }
 

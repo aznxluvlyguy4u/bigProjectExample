@@ -62,10 +62,7 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
 
         $country = ArrayUtil::get('country', $contentAddress);
         if ($country !== null && $country !== '') {
-            $address->setCountry($country);
-            $address->setCountryDetails(
-                $this->getManager()->getRepository(Country::class)->getCountryByName($country)
-            );
+            $address->setCountryDetails($this->getCountryByName($country));
         }
 
         $details->setName($content->get('name'));
@@ -131,10 +128,7 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
 
         $country = ArrayUtil::get('country', $contentAddress);
         if ($country !== null && $country !== '') {
-            $temporaryAddress->setCountry($country);
-            $temporaryAddress->setCountryDetails(
-                $this->getManager()->getRepository(Country::class)->getCountryByName($country)
-            );
+            $temporaryAddress->setCountryDetails($this->getCountryByName($country));
         }
 
         $temporaryInvoiceSenderDetails->setName($content->get('name'));

@@ -130,7 +130,6 @@ class CompanyService extends AuthServiceBase
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState(ArrayUtil::get('state', $contentAddress));
-        $address->setCountry($addressCountry);
         $address->setCountryDetails($this->getCountryByName($addressCountry));
 
         // Create Billing Address
@@ -151,7 +150,6 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
-        $billingAddress->setCountry($billingAddressCountry);
         $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
 
         // Create Company
@@ -215,7 +213,6 @@ class CompanyService extends AuthServiceBase
             $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
             $locationAddress->setCity($contentLocationAddress['city']);
             $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
-            $locationAddress->setCountry($locationAddressCountry);
             $locationAddress->setCountryDetails($this->getCountryByName($locationAddressCountry));
 
             $location = new Location();
@@ -381,7 +378,6 @@ class CompanyService extends AuthServiceBase
         $address->setCity($contentAddress['city']);
         $address->setState(ArrayUtil::get('state', $contentAddress));
         $countryName = ArrayUtil::get('country', $contentAddress, $addressCountry);
-        $address->setCountry($countryName);
         $address->setCountryDetails($this->getCountryByName($countryName));
 
         // Update Billing Address
@@ -404,7 +400,6 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
-        $billingAddress->setCountry($billingAddressCountry);
         $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
 
         // Update Company
@@ -505,7 +500,6 @@ class CompanyService extends AuthServiceBase
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
-                $locationAddress->setCountry($locationAddressCountry);
                 $locationAddress->setCountryDetails($this->getCountryByName($locationAddressCountry));
 
                 $this->getManager()->persist($location);
@@ -539,7 +533,6 @@ class CompanyService extends AuthServiceBase
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
-                $locationAddress->setCountry($locationAddressCountry);
                 $locationAddress->setCountryDetails($this->getCountryByName($locationAddressCountry));
 
                 $location = new Location();
@@ -787,13 +780,4 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
     }
 
-
-    /**
-     * @param string $countryName
-     * @return Country|null
-     */
-    private function getCountryByName($countryName): ?Country
-    {
-        return $this->getManager()->getRepository(Country::class)->getCountryByName($countryName);
-    }
 }

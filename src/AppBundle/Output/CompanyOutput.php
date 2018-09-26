@@ -138,7 +138,7 @@ class CompanyOutput
             'postal_code' => Utils::fillNull($company->getAddress()->getPostalCode()),
             'city' => Utils::fillNull($company->getAddress()->getCity()),
             'state' => Utils::fillNull($company->getAddress()->getState()),
-            'country' => Utils::fillNull($company->getAddress()->getCountry()),
+            'country' => Utils::fillNull($company->getAddress()->getCountryName()),
         );
 
         $res['billing_address'] = array(
@@ -148,7 +148,7 @@ class CompanyOutput
             'postal_code' => Utils::fillNull($company->getBillingAddress()->getPostalCode()),
             'city' => Utils::fillNull($company->getBillingAddress()->getCity()),
             'state' => Utils::fillNull($company->getBillingAddress()->getState()),
-            'country' => Utils::fillNull($company->getBillingAddress()->getCountry()),
+            'country' => Utils::fillNull($company->getBillingAddress()->getCountryName()),
         );
 
         $res['invoices'] = $baseSerializer->getDecodedJson($company->getInvoices(), JmsGroup::INVOICE_NO_COMPANY);
@@ -168,7 +168,7 @@ class CompanyOutput
                     'postal_code' => Utils::fillNull($location->getAddress()->getPostalCode()),
                     'city' => Utils::fillNull($location->getAddress()->getCity()),
                     'state' => Utils::fillNull($location->getAddress()->getState()),
-                    'country' => Utils::fillNull($location->getAddress()->getCountry()),
+                    'country' => Utils::fillNull($location->getAddress()->getCountryName()),
                 );
                 $res['locations'][] = $newLocation;
             }
@@ -221,7 +221,7 @@ class CompanyOutput
             'postal_code' => Utils::fillNull($company->getAddress()->getPostalCode()),
             'city' => Utils::fillNull($company->getAddress()->getCity()),
             'state' => Utils::fillNull($company->getAddress()->getState()),
-            'country' => Utils::fillNull($company->getAddress()->getCountry()),
+            'country' => Utils::fillNull($company->getAddress()->getCountryName()),
         );
 
         $liveStockCount = Count::getCompanyLiveStockCount($company);
