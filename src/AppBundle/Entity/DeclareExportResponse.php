@@ -6,7 +6,6 @@ use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\DeclareExport;
 
 /**
  * Class DeclareExportResponse
@@ -234,5 +233,21 @@ class DeclareExportResponse extends DeclareBaseResponse
     public function getReasonOfExport()
     {
         return $this->reasonOfExport;
+    }
+
+
+    /**
+     * @param DeclareExport $export
+     * @return DeclareExportResponse
+     */
+    public function setDeclareExportIncludingAllValues(DeclareExport $export): DeclareExportResponse
+    {
+        $this->setDeclareBaseValues($export);
+        $this->setDeclareExportRequestMessage($export);
+        $this->setUlnCountryCode($export->getUlnCountryCode());
+        $this->setUlnNumber($export->getUlnNumber());
+        $this->setExportDate($export->getExportDate());
+        $this->setReasonOfExport($export->getReasonOfExport());
+        return $this;
     }
 }

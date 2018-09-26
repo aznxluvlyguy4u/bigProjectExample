@@ -6,7 +6,6 @@ use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\DeclareDepart;
 
 /**
  * Class DeclareDepartResponse
@@ -314,5 +313,22 @@ class DeclareDepartResponse extends DeclareBaseResponse
     public function getReasonOfDepart()
     {
         return $this->reasonOfDepart;
+    }
+
+
+    /**
+     * @param DeclareDepart $depart
+     * @return DeclareDepartResponse
+     */
+    public function setDeclareDepartIncludingAllValues(DeclareDepart $depart): DeclareDepartResponse
+    {
+        $this->setDeclareBaseValues($depart);
+        $this->setDeclareDepartRequestMessage($depart);
+        $this->setUlnCountryCode($depart->getUlnCountryCode());
+        $this->setUlnNumber($depart->getUlnNumber());
+        $this->setDepartDate($depart->getDepartDate());
+        $this->setReasonOfDepart($depart->getReasonOfDepart());
+        $this->setUbnNewOwner($depart->getUbnNewOwner());
+        return $this;
     }
 }

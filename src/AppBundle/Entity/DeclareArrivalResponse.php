@@ -6,7 +6,6 @@ use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\DeclareArrival;
 
 /**
  * Class DeclareArrivalResponse
@@ -164,5 +163,22 @@ class DeclareArrivalResponse extends DeclareBaseResponse
     public function getGender()
     {
         return $this->gender;
+    }
+
+
+    /**
+     * @param DeclareArrival $arrival
+     * @return DeclareArrivalResponse
+     */
+    public function setDeclareArrivalIncludingAllValues(DeclareArrival $arrival): DeclareArrivalResponse
+    {
+        $this->setDeclareBaseValues($arrival);
+        $this->setDeclareArrivalRequestMessage($arrival);
+        $this->setArrivalDate($arrival->getArrivalDate());
+        $this->setUbnPreviousOwner($arrival->getUbnPreviousOwner());
+        if ($arrival->getAnimal()) {
+            $this->setGender($arrival->getAnimal()->getGender());
+        }
+        return $this;
     }
 }

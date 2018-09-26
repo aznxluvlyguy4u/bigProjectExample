@@ -85,4 +85,16 @@ class RevokeDeclarationResponse extends DeclareBaseResponse
     {
         return $this->date;
     }
+
+
+    /**
+     * @param RevokeDeclaration $revoke
+     * @return RevokeDeclarationResponse
+     */
+    public function setRevokeDeclarationIncludingAllValues(RevokeDeclaration $revoke): RevokeDeclarationResponse
+    {
+        $this->setDeclareBaseValues($revoke);
+        $this->setRevokeDeclarationRequestMessage($revoke);
+        return $this;
+    }
 }
