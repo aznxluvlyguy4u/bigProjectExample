@@ -96,7 +96,6 @@ abstract class Address
    *
    * @ORM\Column(type="string")
    * @Assert\NotBlank
-   * @Assert\Regex("/([0-9]{4}[A-Z]{2})\b/")
    * @Assert\Length(max = 6)
    * @JMS\Type("string")
    * @JMS\Groups({
