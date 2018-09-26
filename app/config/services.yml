@@ -599,6 +599,7 @@ services:
           - '@app.report.pedigree_certificates'
           - '@app.report.livestock'
           - '@doctrine.orm.entity_manager'
+          - '@logger'
         tags:
           - {name: 'enqueue.client.processor'}
 
@@ -1005,6 +1006,7 @@ services:
 
     AppBundle\EventListener\ExceptionListener:
         arguments:
+            - '@logger'
             - '%environment%'
         tags:
             - { name: kernel.event_listener, event: kernel.exception }

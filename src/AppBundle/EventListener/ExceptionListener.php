@@ -8,6 +8,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Environment;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\ResultUtil;
+use Monolog\Logger;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -23,8 +24,12 @@ class ExceptionListener
     /** @var string */
     private $environment;
 
-    public function __construct($environment)
+    /** @var Logger */
+    private $logger;
+
+    public function __construct(Logger $logger, $environment)
     {
+        $this->logger = $logger;
         $this->environment = $environment;
     }
 
@@ -32,6 +37,9 @@ class ExceptionListener
     {
         // You get the exception object from the received event
         $exception = $event->getException();
+
+        $this->logger->error($exception->getMessage());
+        $this->logger->error($exception->getTraceAsString());
 
         $code = self::getHttpResponseCodeFromException($exception);
         $errorMessage = empty($exception->getMessage())
