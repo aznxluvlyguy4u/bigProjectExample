@@ -3,6 +3,8 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\NLingCacher;
+use AppBundle\Cache\ProductionCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\Constant;
@@ -12,6 +14,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBaseResponse;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareBirthResponse;
 use AppBundle\Entity\DeclareDepart;
@@ -40,11 +43,13 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Util\WorkerTaskUtil;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\Task\WorkerMessageBodyLitter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class BirthService extends DeclareControllerServiceBase implements BirthAPIControllerInterface
 {
@@ -110,7 +115,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $location = $this->getSelectedLocation($request);
 
         if(!$location) {
-            return ResultUtil::errorResult('UBN kan niet gevonden worden', 428);
+            return ResultUtil::errorResult('UBN kan niet gevonden worden', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
         /** @var Litter $litter */
@@ -119,7 +124,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         if($litter instanceof Litter) {
             $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
         } else {
-            $result = ResultUtil::errorResult('Geen worp gevonden voor gegeven worpId en ubn', 428);
+            $result = ResultUtil::errorResult('Geen worp gevonden voor gegeven worpId en ubn', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
         if($result instanceof JsonResponse) {
@@ -201,9 +206,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             //First persist requestmessage, before sending it to the queue
             $this->persist($requestMessage);
 
-            //Send it to the queue and persist/update any changed state to the database
-            $result[] = $this->sendMessageObjectToQueue($requestMessage);
-
+            $result[] = $this->runDeclareBirthWorkerLogic($requestMessage);
 
             if ($litter === null &&
                 ($requestMessage instanceof DeclareBirth || $requestMessage instanceof Stillborn)) {
@@ -217,8 +220,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         if ($litter) {
             $this->saveNewestDeclareVersion($content, $litter);
 
-            //Send workerTask to update resultTable records of parents and children
-            $this->sendTaskToQueue($this->internalQueueService, WorkerTaskUtil::createResultTableMessageBodyByBirthRequests($requestMessages));
+            $this->updateLitterStatus($litter, $location->isDutchLocation());
+            $this->updateResultTableValuesByBirthRequests($requestMessages, $location->isDutchLocation());
 
             //Clear cache for this location, to reflect changes on the livestock
             $this->clearLivestockCacheForLocation($location);
@@ -273,7 +276,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $content = RequestUtil::getContentAsArray($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
-        $statusCode = 428;
+        $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
         $litterId = null;
 
         if (!key_exists('litter_id', $content->toArray())) {
@@ -300,7 +303,6 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 ), $statusCode);
         }
 
-        $litterClone = clone $litter;
         $childrenToRemove = [];
         $stillbornsToRemove = [];
 
@@ -327,8 +329,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             $stillbornsToRemove[] = $stillborn;
         }
 
-        //Send workerTask to update productionValues of parents
-        $this->sendTaskToQueue($this->internalQueueService, WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litter));
+        $workerMessageBodyForRevoke = WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litter);
 
         //Remove alive child animal
         try {
@@ -530,8 +531,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         }
 
 
-        //Send workerTask to update productionValues of parents
-        $this->sendTaskToQueue($this->internalQueueService, WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litterClone));
+        $this->updateResultTableValuesByWorkerMessageBodyLitter($workerMessageBodyForRevoke, $location->isDutchLocation());
 
         //Clear cache for this location, to reflect changes on the livestock.
         $this->clearLivestockCacheForLocation($location);
@@ -562,8 +562,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $stillbornsToRemove = null;
 
         if($succeeded) {
-            $litter->setStatus(RequestStateType::REVOKED);
-            $litter->setRequestState(RequestStateType::REVOKED);
+            $litter->setRevokedStatus();
             $litter->setMate(null);
             $litter->setRevokeDate(new \DateTime());
             $litter->setRevokedBy($loggedInUser);
@@ -577,6 +576,13 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             //Create revoke request for every declareBirth request
             if ($litter->getDeclareBirths()->count() > 0) {
                 foreach ($litter->getDeclareBirths() as $declareBirth) {
+
+                    if (!$declareBirth->isRvoMessage()) {
+                        // If one declareBirth is not an RVO message,
+                        // the others in the same litter are also not RVO messages.
+                        break;
+                    }
+
                     $declareBirthCount++;
                     $declareBirthResponse = $this->entityGetter
                         ->getResponseDeclarationByMessageId($declareBirth->getMessageId());
@@ -598,16 +604,16 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             }
 
             //Create response
-            $statusCode = 200;
+            $statusCode = Response::HTTP_OK;
             $message = 'OK';
 
             $missingMessages = $declareBirthCount-$declareBirthResponseCount;
             if ($declareBirthCount > $declareBirthResponseCount) {
                 $message = 'There are '.$declareBirthCount.' declareBirths found for the litter, which are missing '.$missingMessages.' responses';
-                $statusCode = 428;
+                $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
             } elseif($declareBirthCount == 0 && $litter->getBornAliveCount() != 0) {
                 $message = 'The litter does not contain any declareBirths';
-                $statusCode = 428;
+                $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
             }
 
             ActionLogWriter::revokeLitter($this->getManager(), $litter, $loggedInUser, $client);
@@ -652,7 +658,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         }
 
         if(!$mother) {
-            $statusCode = 428;
+            $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
             return new JsonResponse(
                 array(
                     Constant::RESULT_NAMESPACE => array(
@@ -752,7 +758,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         }
 
         if(!$mother) {
-            $statusCode = 428;
+            $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
             return new JsonResponse(
                 array(
                     Constant::RESULT_NAMESPACE => array(
@@ -997,7 +1003,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $declareBirthResponse = WorkerTaskUtil::deserializeMessageToDeclareBirthResponse($request, $this->irSerializer);
 
         $message = 'Message is not a DeclareBirthResponse';
-        $statusCode = 428;
+        $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
         if($declareBirthResponse instanceof DeclareBirthResponse) {
             $sendToQresult = $this->internalQueueService
                 ->sendDeclareResponse($jsonMessage, $taskType, $messageId);
@@ -1010,4 +1016,134 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     }
 
 
+    /**
+     * @param DeclareBirth $birth
+     * @return array|mixed
+     */
+    public function runDeclareBirthWorkerLogic(DeclareBirth $birth)
+    {
+        if ($birth->isRvoMessage()) {
+            //Send it to the queue and persist/update any changed state to the database
+            return $this->sendMessageObjectToQueue($birth);
+        }
+
+        // Note animal and litter have already been set before
+        $response = new DeclareBirthResponse();
+        $response->setDeclareBirthIncludingAllValues($birth);
+        $response->setSuccessValues();
+        $birth->addResponse($response);
+
+        $birth->setRequestState(RequestStateType::FINISHED);
+        $this->removeReservedTag($birth);
+
+        $this->getManager()->persist($response);
+        $this->getManager()->persist($birth);
+
+        return $this->getDeclareMessageArray($birth, false);
+    }
+
+
+    /**
+     * @param DeclareBirth $birth
+     */
+    private function removeReservedTag(DeclareBirth $birth)
+    {
+        if (!$birth->getAnimal()) {
+            return;
+        }
+
+        $tag = $this->getManager()->getRepository(Tag::class)->findOneBy([
+           'ulnCountryCode' => $birth->getAnimal()->getUlnCountryCode(),
+           'ulnNumber' => $birth->getAnimal()->getUlnNumber(),
+           'tagStatus' => TagStateType::RESERVED
+        ]);
+
+        if ($tag) {
+            $this->getManager()->remove($tag);
+        }
+    }
+
+
+    private function updateLitterStatus(Litter $litter, bool $isRvoMessage)
+    {
+        if ($isRvoMessage) {
+            return;
+        }
+
+        $hasIncompleteBirths = false;
+        foreach ($litter->getDeclareBirths() as $birth) {
+            if ($birth->getRequestState() === RequestStateType::OPEN) {
+                $hasIncompleteBirths = true;
+                break;
+            }
+        }
+
+        if (!$hasIncompleteBirths) {
+            $litter->setFinishedStatus();
+            $this->getManager()->persist($litter);
+            $this->getManager()->flush();
+        }
+    }
+
+
+    /**
+     * @param DeclareBirth[] $births
+     * @param bool $isRvoMessage
+     */
+    private function updateResultTableValuesByBirthRequests($births, bool $isRvoMessage)
+    {
+        if ($isRvoMessage) {
+            //Send workerTask to update resultTable records of parents and children
+            $this->sendTaskToQueue($this->internalQueueService, WorkerTaskUtil::createResultTableMessageBodyByBirthRequests($births));
+            return;
+        }
+
+        $animalIds = [];
+        foreach ($births as $birth) {
+            if ($birth->getAnimal() && $birth->getAnimal()->getId()) {
+                $animalIds[$birth->getAnimal()->getId()] = $birth->getAnimal()->getId();
+            }
+
+            if ($birth->getLitter()){
+                $father = $birth->getLitter()->getAnimalFather();
+                if ($father && $father->getId()) {
+                    $animalIds[$father->getId()] = $father->getId();
+                }
+
+                $mother = $birth->getLitter()->getAnimalMother();
+                if ($mother && $mother->getId()) {
+                    $animalIds[$mother->getId()] = $mother->getId();
+                }
+            }
+        }
+
+        $this->directlyUpdateResultTableValuesByAnimalIds(array_values($animalIds));
+    }
+
+
+    /**
+     * @param WorkerMessageBodyLitter $workerMessageBodyLitter
+     * @param bool $isRvoMessage
+     */
+    private function updateResultTableValuesByWorkerMessageBodyLitter(WorkerMessageBodyLitter $workerMessageBodyLitter,
+                                                                     bool $isRvoMessage)
+    {
+        if ($isRvoMessage) {
+            //Send workerTask to update productionValues of parents
+            $this->sendTaskToQueue($this->internalQueueService, $workerMessageBodyLitter);
+            return;
+        }
+
+        $this->directlyUpdateResultTableValuesByAnimalIds($workerMessageBodyLitter->getParentIds());
+    }
+
+
+    /**
+     * @param array $animalIds
+     */
+    private function directlyUpdateResultTableValuesByAnimalIds(array $animalIds)
+    {
+        ProductionCacher::updateProductionValues($this->getConnection(), $animalIds);
+        NLingCacher::updateNLingValues($this->getConnection(), $animalIds);
+    }
 }

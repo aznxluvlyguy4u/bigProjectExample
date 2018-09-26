@@ -14,6 +14,8 @@ class JsonInputConstant
     const SUCCESSFUL_UPDATE_RESULT_TABLE_VALUES = 'successful_update_result_table_values';
     const FULL_OUTPUT = 'full_output';
     const SELECTED = 'selected';
+    const ARRAY = 'array';
+    const JSON = 'json';
 
     //Admins
     const ADMINS = 'admins';

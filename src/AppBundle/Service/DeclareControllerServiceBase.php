@@ -89,19 +89,10 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     protected function sendMessageObjectToQueue($messageObject, $isUpdate = false, $jmsGroups = [JmsGroup::RVO]) {
 
         $requestId = $messageObject->getRequestId();
-        //$repository = $this->getManager()->getRepository(Utils::getRepositoryNameSpace($messageObject));
 
-        //create array and jsonMessage
-        $messageArray = RequestMessageOutputBuilder::createOutputArray($this->getManager(), $messageObject, $isUpdate);
-
-        if($messageArray == null) {
-            //These objects do not have a customized minimal json output for the queue yet
-            $jsonMessage = $this->irSerializer->serializeToJSON($messageObject, $jmsGroups);
-            $messageArray = json_decode($jsonMessage, true);
-        } else {
-            //Use the minimized custom output
-            $jsonMessage = $this->irSerializer->serializeToJSON($messageArray);
-        }
+        $declareOutputs = $this->getDeclareMessageArrayAndJsonMessage($messageObject, $isUpdate, $jmsGroups);
+        $messageArray = $declareOutputs[JsonInputConstant::ARRAY];
+        $jsonMessage = $declareOutputs[JsonInputConstant::JSON];
 
         //Send serialized message to Queue
         $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
@@ -121,6 +112,44 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         }
 
         return $messageArray;
+    }
+
+
+    /**
+     * @param DeclareBase $messageObject
+     * @param bool $isUpdate
+     * @param array $jmsGroups
+     * @return mixed
+     */
+    protected function getDeclareMessageArray($messageObject, bool $isUpdate, $jmsGroups = [JmsGroup::RVO])
+    {
+        return $this->getDeclareMessageArrayAndJsonMessage($messageObject, $isUpdate, $jmsGroups)[JsonInputConstant::ARRAY];
+    }
+
+
+    /**
+     * @param DeclareBase $messageObject
+     * @param bool $isUpdate
+     * @param array $jmsGroups
+     * @return array
+     */
+    protected function getDeclareMessageArrayAndJsonMessage($messageObject, bool $isUpdate, $jmsGroups = [JmsGroup::RVO]): array
+    {
+        $messageArray = RequestMessageOutputBuilder::createOutputArray($this->getManager(), $messageObject, $isUpdate);
+
+        if($messageArray == null) {
+            //These objects do not have a customized minimal json output for the queue yet
+            $jsonMessage = $this->irSerializer->serializeToJSON($messageObject, $jmsGroups);
+            $messageArray = json_decode($jsonMessage, true);
+        } else {
+            //Use the minimized custom output
+            $jsonMessage = $this->irSerializer->serializeToJSON($messageArray);
+        }
+
+        return [
+          JsonInputConstant::ARRAY => $messageArray,
+          JsonInputConstant::JSON => $jsonMessage,
+        ];
     }
 
 

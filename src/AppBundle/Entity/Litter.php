@@ -580,7 +580,7 @@ class Litter extends DeclareNsfoBase
     /**
      * Get declareBirths
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection|DeclareBirth[]
      */
     public function getDeclareBirths()
     {
@@ -740,8 +740,7 @@ class Litter extends DeclareNsfoBase
     public static function getNewImportedLitter($bornAliveCount, $stillbornCount)
     {
         $litter = new Litter();
-        $litter->setRequestState(RequestStateType::IMPORTED);
-        $litter->setStatus(RequestStateType::IMPORTED);
+        $litter->setImportedStatus();
         $litter->setIsAbortion(false);
         $litter->setIsPseudoPregnancy(false);
 
@@ -750,4 +749,33 @@ class Litter extends DeclareNsfoBase
 
         return $litter;
     }
+
+
+    public function setFinishedStatus()
+    {
+        $this->setStatus(RequestStateType::COMPLETED);
+        $this->setRequestState(RequestStateType::FINISHED);
+    }
+
+
+    public function setRevokedStatus()
+    {
+        $this->setStatus(RequestStateType::REVOKED);
+        $this->setRequestState(RequestStateType::REVOKED);
+    }
+
+
+    public function setOpenStatus()
+    {
+        $this->setStatus(RequestStateType::INCOMPLETE);
+        $this->setRequestState(RequestStateType::OPEN);
+    }
+
+
+    protected function setImportedStatus()
+    {
+        $this->setStatus(RequestStateType::IMPORTED);
+        $this->setRequestState(RequestStateType::IMPORTED);
+    }
+
 }

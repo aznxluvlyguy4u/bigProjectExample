@@ -469,11 +469,9 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $litter->setIsPseudoPregnancy($isPseudoPregnancy);
 
         if ($isAborted || $isPseudoPregnancy || $litterSize == $stillbornCount) {
-            $litter->setStatus('COMPLETED');
-            $litter->setRequestState(RequestStateType::FINISHED);
+            $litter->setFinishedStatus();
         } else {
-            $litter->setStatus('INCOMPLETE');
-            $litter->setRequestState(RequestStateType::OPEN);
+            $litter->setOpenStatus();
         }
 
         $litter->setActionBy($loggedInUser);
@@ -526,6 +524,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
             } else if($isAlive) {
                 //Create I&R Declare Birth request per child
                 $declareBirthRequest = new DeclareBirth();
+                $declareBirthRequest->setIsRvoMessage($location->isDutchLocation());
 
                 //Generate new requestId
 
