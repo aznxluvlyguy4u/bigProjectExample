@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\TagSyncService;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\Validator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -45,7 +46,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    */
   public function getRetrieveTagsById(Request $request, $Id)
   {
-      return $this->get('app.tag.sync')->getRetrieveTagsById($request, $Id);
+      return $this->get(TagSyncService::class)->getRetrieveTagsById($request, $Id);
   }
 
   /**
@@ -86,7 +87,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    */
   public function getRetrieveTags(Request $request)
   {
-      return $this->get('app.tag.sync')->getRetrieveTags($request);
+      return $this->get(TagSyncService::class)->getRetrieveTags($request);
   }
 
   /**
@@ -113,7 +114,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    */
   public function createRetrieveTags(Request $request)
   {
-      return $this->get('app.tag.sync')->createRetrieveTags($request);
+      return $this->get(TagSyncService::class)->createRetrieveTags($request);
   }
 
 
@@ -141,6 +142,6 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
     */
     public function getRetrieveTagsStatusOverview(Request $request)
     {
-        return $this->get('app.tag.sync')->getRetrieveTagsStatusOverview($request);
+        return $this->get(TagSyncService::class)->getRetrieveTagsStatusOverview($request);
     }
 }

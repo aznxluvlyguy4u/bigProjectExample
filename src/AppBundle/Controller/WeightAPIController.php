@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\WeightService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -40,7 +41,7 @@ class WeightAPIController extends APIController
      */
     public function createWeightMeasurements(Request $request)
     {
-        return $this->get('app.weight')->createWeightMeasurements($request);
+        return $this->get(WeightService::class)->createWeightMeasurements($request);
     }
 
 
@@ -69,7 +70,7 @@ class WeightAPIController extends APIController
      */
     public function editWeightMeasurements(Request $request, $messageId)
     {
-        return $this->get('app.weight')->editWeightMeasurements($request, $messageId);
+        return $this->get(WeightService::class)->editWeightMeasurements($request, $messageId);
     }
 
 
@@ -98,6 +99,6 @@ class WeightAPIController extends APIController
      */
     public function getDeclareWeightHistory(Request $request)
     {
-        return $this->get('app.weight')->getDeclareWeightHistory($request);
+        return $this->get(WeightService::class)->getDeclareWeightHistory($request);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\DepartService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -39,7 +40,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function getDepartById(Request $request, $Id)
   {
-      return $this->get('app.depart')->getDepartById($request, $Id);
+      return $this->get(DepartService::class)->getDepartById($request, $Id);
   }
 
 
@@ -81,7 +82,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function getDepartures(Request $request)
   {
-      return $this->get('app.depart')->getDepartures($request);
+      return $this->get(DepartService::class)->getDepartures($request);
   }
 
 
@@ -109,7 +110,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     */
     public function createDepart(Request $request)
     {
-        return $this->get('app.depart')->createDepart($request);
+        return $this->get(DepartService::class)->createDepartOrExport($request);
     }
 
 
@@ -138,7 +139,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function updateDepart(Request $request, $Id)
   {
-      return $this->get('app.depart')->updateDepart($request, $Id);
+      return $this->get(DepartService::class)->updateDepart($request, $Id);
   }
 
   /**
@@ -166,7 +167,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function getDepartErrors(Request $request)
   {
-      return $this->get('app.depart')->getDepartErrors($request);
+      return $this->get(DepartService::class)->getDepartErrors($request);
   }
 
 
@@ -195,6 +196,6 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function getDepartHistory(Request $request)
   {
-      return $this->get('app.depart')->getDepartHistory($request);
+      return $this->get(DepartService::class)->getDepartHistory($request);
   }
 }

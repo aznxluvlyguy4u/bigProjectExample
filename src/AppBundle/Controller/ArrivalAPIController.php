@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\ArrivalService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -40,7 +41,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalById(Request $request, $Id)
   {
-      return $this->get('app.arrival')->getArrivalById($request, $Id);
+      return $this->get(ArrivalService::class)->getArrivalById($request, $Id);
   }
 
   /**
@@ -83,7 +84,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivals(Request $request)
   {
-      return $this->get('app.arrival')->getArrivals($request);
+      return $this->get(ArrivalService::class)->getArrivals($request);
   }
 
 
@@ -110,7 +111,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
     public function createArrival(Request $request)
     {
-        return $this->get('app.arrival')->createArrival($request);
+        return $this->get(ArrivalService::class)->createArrival($request);
     }
 
   /**
@@ -137,7 +138,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function updateArrival(Request $request, $Id)
   {
-      return $this->get('app.arrival')->updateArrival($request, $Id);
+      return $this->get(ArrivalService::class)->updateArrival($request, $Id);
   }
 
 
@@ -166,7 +167,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalErrors(Request $request)
   {
-      return $this->get('app.arrival')->getArrivalErrors($request);
+      return $this->get(ArrivalService::class)->getArrivalErrors($request);
   }
 
 
@@ -195,7 +196,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalHistory(Request $request)
   {
-      return $this->get('app.arrival')->getArrivalHistory($request);
+      return $this->get(ArrivalService::class)->getArrivalHistory($request);
   }
 
 

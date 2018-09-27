@@ -658,9 +658,8 @@ services:
             arguments:
               - '@validator'
 
-    app.arrival:
+    AppBundle\Service\ArrivalService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\ArrivalService
         calls:
           - method: setFireBaseService
             arguments:
@@ -675,9 +674,8 @@ services:
             arguments:
               - '%kernel.environment%'
 
-    app.birth:
+    AppBundle\Service\BirthService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\BirthService
         calls:
           - method: setEntityGetter
             arguments:
@@ -726,9 +724,8 @@ services:
         class: AppBundle\Service\DashboardService
 
 
-    app.depart:
+    AppBundle\Service\DepartService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\DepartService
         calls:
           - method: setEnvironment
             arguments:
@@ -736,13 +733,12 @@ services:
           - method: setFireBaseService
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
-    app.export:
-        parent: app.abstract_base.declare
-        class: AppBundle\Service\ExportService
 
-    app.import:
+    AppBundle\Service\ExportService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\ImportService
+
+    AppBundle\Service\ImportService:
+        parent: app.abstract_base.declare
 
     app.invoice:
         parent: app.abstract_base.controller
@@ -792,9 +788,8 @@ services:
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
 
-    app.loss:
+    AppBundle\Service\LossService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\LossService
 
     app.health.location:
         parent: app.abstract_base.controller
@@ -836,17 +831,15 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\ProfileService
 
-    app.declare.revoke:
+    AppBundle\Service\RevokeService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\RevokeService
         calls:
           - method: setEntityGetter
             arguments:
               - '@app.doctrine.entitygetter'
 
-    app.queue_dashboard:
+    AppBundle\Service\QueueDashboardService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\QueueDashboardService
         calls:
           - method: setExternalQueueService
             arguments:
@@ -855,32 +848,26 @@ services:
             arguments:
               - '@app.aws.queueservice.internal'
 
-    app.tag.replace:
+    AppBundle\Service\TagReplaceService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\TagReplaceService
 
-    app.tag.sync:
+    AppBundle\Service\TagSyncService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\TagSyncService
 
-    app.tag.transfer:
+    AppBundle\Service\TagTransferService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\TagTransferService
 
     AppBundle\Service\TagsService:
         parent: app.abstract_base.controller
 
-    app.ubn:
+    AppBundle\Service\UbnService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\UbnService
 
-    app.vwa.employee:
+    AppBundle\Service\VwaEmployeeService:
         parent: app.abstract_base.auth
-        class: AppBundle\Service\VwaEmployeeService
 
-    app.weight:
+    AppBundle\Service\WeightService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\WeightService
 
     AppBundle\Service\PedigreeDataGenerator:
         arguments:

@@ -3,6 +3,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\VwaEmployeeService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -80,7 +81,7 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
      */
     function getAll(Request $request)
     {
-        return $this->get('app.vwa.employee')->getAll($request);
+        return $this->get(VwaEmployeeService::class)->getAll($request);
     }
 
 
@@ -137,7 +138,7 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
      */
     function getById(Request $request, $id)
     {
-        return $this->get('app.vwa.employee')->getById($request, $id);
+        return $this->get(VwaEmployeeService::class)->getById($request, $id);
     }
 
 
@@ -201,7 +202,7 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
      */
     function create(Request $request)
     {
-        return $this->get('app.vwa.employee')->create($request);
+        return $this->get(VwaEmployeeService::class)->create($request);
     }
 
 
@@ -273,7 +274,7 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
      */
     function edit(Request $request, $id)
     {
-        return $this->get('app.vwa.employee')->edit($request, $id);
+        return $this->get(VwaEmployeeService::class)->edit($request, $id);
     }
 
 
@@ -330,7 +331,7 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
      */
     function deactivate(Request $request, $id)
     {
-        return $this->get('app.vwa.employee')->deactivate($request, $id);
+        return $this->get(VwaEmployeeService::class)->deactivate($request, $id);
     }
 
 
@@ -372,7 +373,7 @@ class VwaEmployeeAPIController extends APIController implements VwaEmployeeAPICo
      */
     function authorize(Request $request)
     {
-        return $this->get('app.vwa.employee')->authorize($request);
+        return $this->get(VwaEmployeeService::class)->authorize($request);
     }
 
 
