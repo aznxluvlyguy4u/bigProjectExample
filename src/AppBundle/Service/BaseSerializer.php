@@ -157,6 +157,9 @@ class BaseSerializer
      */
     public function normalizeResultTableToArray($object, $type = null, $enableMaxDepthChecks = true)
     {
+        if (!$object) {
+            return [];
+        }
         $array = $this->normalizeToArray($object, $type, $enableMaxDepthChecks);
 
         $keysToReplace = [
