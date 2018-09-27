@@ -17,11 +17,25 @@ use AppBundle\Util\DateUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\DirectProcessor\DeclareLossProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 
 class LossService extends DeclareControllerServiceBase
 {
+    /** @var DeclareLossProcessorInterface */
+    private $lossProcessor;
+
+    /**
+     * @required
+     *
+     * @param DeclareLossProcessorInterface $lossProcessor
+     */
+    public function setLossProcessor(DeclareLossProcessorInterface $lossProcessor): void
+    {
+        $this->lossProcessor = $lossProcessor;
+    }
+
     /**
      * @param Request $request
      * @param $Id

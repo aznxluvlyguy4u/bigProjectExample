@@ -15,11 +15,25 @@ use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessorInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 
 class TagTransferService extends DeclareControllerServiceBase
 {
+    /** @var DeclareTagTransferProcessorInterface */
+    private $tagTransferProcessor;
+
+    /**
+     * @required
+     *
+     * @param DeclareTagTransferProcessorInterface $tagTransferProcessor
+     */
+    public function setTagTransferProcessor(DeclareTagTransferProcessorInterface $tagTransferProcessor): void
+    {
+        $this->tagTransferProcessor = $tagTransferProcessor;
+    }
+
     /**
      * @param Request $request
      * @return JsonResponse

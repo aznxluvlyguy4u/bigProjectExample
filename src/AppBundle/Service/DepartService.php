@@ -25,6 +25,9 @@ use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface;
+use AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface;
+use AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,6 +39,43 @@ class DepartService extends DeclareControllerServiceBase
 
     /** @var FireBaseService */
     private $fireBaseService;
+
+    /** @var DeclareArrivalProcessorInterface */
+    private $arrivalProcessor;
+    /** @var DeclareDepartProcessorInterface */
+    private $departProcessor;
+    /** @var DeclareExportProcessorInterface */
+    private $exportProcessor;
+
+    /**
+     * @required
+     *
+     * @param DeclareArrivalProcessorInterface $arrivalProcessor
+     */
+    public function setArrivalProcessor(DeclareArrivalProcessorInterface $arrivalProcessor): void
+    {
+        $this->arrivalProcessor = $arrivalProcessor;
+    }
+
+    /**
+     * @required
+     *
+     * @param DeclareDepartProcessorInterface $departProcessor
+     */
+    public function setDepartProcessor(DeclareDepartProcessorInterface $departProcessor): void
+    {
+        $this->departProcessor = $departProcessor;
+    }
+
+    /**
+     * @required
+     *
+     * @param DeclareExportProcessorInterface $exportProcessor
+     */
+    public function setExportProcessor(DeclareExportProcessorInterface $exportProcessor): void
+    {
+        $this->exportProcessor = $exportProcessor;
+    }
 
     /**
      * @required

@@ -661,6 +661,15 @@ services:
     AppBundle\Service\ArrivalService:
         parent: app.abstract_base.declare
         calls:
+          - method: setArrivalProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface'
+          - method: setDepartProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface'
+          - method: setImportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface'
           - method: setFireBaseService
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
@@ -727,6 +736,15 @@ services:
     AppBundle\Service\DepartService:
         parent: app.abstract_base.declare
         calls:
+          - method: setArrivalProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface'
+          - method: setDepartProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface'
+          - method: setExportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface'
           - method: setEnvironment
             arguments:
               - '%kernel.environment%'
@@ -736,9 +754,17 @@ services:
 
     AppBundle\Service\ExportService:
         parent: app.abstract_base.declare
+        calls:
+          - method: setExportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface'
 
     AppBundle\Service\ImportService:
         parent: app.abstract_base.declare
+        calls:
+          - method: setImportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface'
 
     app.invoice:
         parent: app.abstract_base.controller
@@ -790,6 +816,10 @@ services:
 
     AppBundle\Service\LossService:
         parent: app.abstract_base.declare
+        calls:
+          - method: setLossProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareLossProcessorInterface'
 
     app.health.location:
         parent: app.abstract_base.controller
@@ -850,12 +880,20 @@ services:
 
     AppBundle\Service\TagReplaceService:
         parent: app.abstract_base.declare
+        calls:
+          - method: setTagReplaceProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessorInterface'
 
     AppBundle\Service\TagSyncService:
         parent: app.abstract_base.declare
 
     AppBundle\Service\TagTransferService:
         parent: app.abstract_base.declare
+        calls:
+          - method: setTagTransferProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessorInterface'
 
     AppBundle\Service\TagsService:
         parent: app.abstract_base.controller

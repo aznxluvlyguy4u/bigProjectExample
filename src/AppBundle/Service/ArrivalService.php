@@ -28,6 +28,9 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\TagValidator;
+use AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface;
+use AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface;
+use AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -42,6 +45,42 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     private $environment;
     /** @var FireBaseService */
     private $fireBaseService;
+    /** @var DeclareArrivalProcessorInterface */
+    private $arrivalProcessor;
+    /** @var DeclareDepartProcessorInterface */
+    private $departProcessor;
+    /** @var DeclareImportProcessorInterface */
+    private $importProcessor;
+
+    /**
+     * @required
+     *
+     * @param DeclareArrivalProcessorInterface $arrivalProcessor
+     */
+    public function setArrivalProcessor(DeclareArrivalProcessorInterface $arrivalProcessor): void
+    {
+        $this->arrivalProcessor = $arrivalProcessor;
+    }
+
+    /**
+     * @required
+     *
+     * @param DeclareDepartProcessorInterface $departProcessor
+     */
+    public function setDepartProcessor(DeclareDepartProcessorInterface $departProcessor): void
+    {
+        $this->departProcessor = $departProcessor;
+    }
+
+    /**
+     * @required
+     *
+     * @param DeclareImportProcessorInterface $importProcessor
+     */
+    public function setImportProcessor(DeclareImportProcessorInterface $importProcessor): void
+    {
+        $this->importProcessor = $importProcessor;
+    }
 
     /**
      * @required

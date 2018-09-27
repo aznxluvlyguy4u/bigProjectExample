@@ -19,12 +19,26 @@ use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 
 class TagReplaceService extends DeclareControllerServiceBase
 {
+    /** @var DeclareTagReplaceProcessorInterface */
+    private $tagReplaceProcessor;
+
+    /**
+     * @required
+     *
+     * @param DeclareTagReplaceProcessorInterface $tagReplaceProcessor
+     */
+    public function setTagReplaceProcessor(DeclareTagReplaceProcessorInterface $tagReplaceProcessor): void
+    {
+        $this->tagReplaceProcessor = $tagReplaceProcessor;
+    }
+
     /**
      * @param Request $request
      * @return JsonResponse
