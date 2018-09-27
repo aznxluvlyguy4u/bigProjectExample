@@ -112,7 +112,9 @@ class LossService extends DeclareControllerServiceBase
 
         //First Persist object to Database, before sending it to the queue
         $this->persist($messageObject);
-        $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
+        $messageObject->getAnimal()->setTransferringTransferState();
+        $this->getManager()->persist($messageObject->getAnimal());
+        $this->getManager()->flush();
 
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($messageObject);
@@ -159,10 +161,13 @@ class LossService extends DeclareControllerServiceBase
 
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendEditMessageObjectToQueue($messageObject);
-        $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
+
+        $messageObject->getAnimal()->setTransferringTransferState();
+        $this->getManager()->persist($messageObject->getAnimal());
 
         //Persist object to Database
         $this->persist($messageObject);
+        $this->getManager()->flush();
 
         $this->clearLivestockCacheForLocation($location);
 

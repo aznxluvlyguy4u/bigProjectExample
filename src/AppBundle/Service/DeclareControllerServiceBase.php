@@ -7,7 +7,6 @@ namespace AppBundle\Service;
 use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -19,17 +18,13 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareTagsTransfer;
-use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Person;
-use AppBundle\Entity\Ram;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
-use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -135,20 +130,33 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      */
     protected function getDeclareMessageArrayAndJsonMessage($messageObject, bool $isUpdate, $jmsGroups = [JmsGroup::RVO]): array
     {
-        $messageArray = RequestMessageOutputBuilder::createOutputArray($this->getManager(), $messageObject, $isUpdate);
+        return self::staticGetDeclareMessageArrayAndJsonMessage($this->getManager(), $this->irSerializer,
+            $messageObject, $isUpdate, $jmsGroups);
+    }
+
+
+    public static function staticGetDeclareMessageArrayAndJsonMessage(
+        EntityManagerInterface $em,
+        BaseSerializer $serializer,
+        $messageObject,
+        bool $isUpdate,
+        $jmsGroups = [JmsGroup::RVO]
+    ): array
+    {
+        $messageArray = RequestMessageOutputBuilder::createOutputArray($em, $messageObject, $isUpdate);
 
         if($messageArray == null) {
             //These objects do not have a customized minimal json output for the queue yet
-            $jsonMessage = $this->irSerializer->serializeToJSON($messageObject, $jmsGroups);
+            $jsonMessage = $serializer->serializeToJSON($messageObject, $jmsGroups);
             $messageArray = json_decode($jsonMessage, true);
         } else {
             //Use the minimized custom output
-            $jsonMessage = $this->irSerializer->serializeToJSON($messageArray);
+            $jsonMessage = $serializer->serializeToJSON($messageArray);
         }
 
         return [
-          JsonInputConstant::ARRAY => $messageArray,
-          JsonInputConstant::JSON => $jsonMessage,
+            JsonInputConstant::ARRAY => $messageArray,
+            JsonInputConstant::JSON => $jsonMessage,
         ];
     }
 
@@ -195,17 +203,6 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKING);
 
         $this->persist($messageObjectWithRevokedRequestState);
-    }
-
-
-    /**
-     * @param Animal|Ram|Ewe|Neuter $animal
-     */
-    public function persistAnimalTransferringStateAndFlush($animal)
-    {
-        $animal->setTransferState(AnimalTransferStatus::TRANSFERRING);
-        $this->getManager()->persist($animal);
-        $this->getManager()->flush();
     }
 
 

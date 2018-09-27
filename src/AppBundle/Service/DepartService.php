@@ -31,6 +31,7 @@ use AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class DepartService extends DeclareControllerServiceBase
 {
@@ -149,7 +150,14 @@ class DepartService extends DeclareControllerServiceBase
      * @param Request $request
      * @return JsonResponse
      */
-    public function createDepart(Request $request)
+    public function createDepartOrExport(Request $request)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+        return $content['is_export_animal'] ? $this->createExport($request) : $this->createDepart($request);
+    }
+
+
+    private function createDepart(Request $request)
     {
         $arrivalLocation = null;
 
@@ -169,45 +177,37 @@ class DepartService extends DeclareControllerServiceBase
             return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
         }
 
-        $isExportAnimal = $content['is_export_animal'];
+        //Convert the array into an object and add the mandatory values retrieved from the database
+        $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);
 
-        if($isExportAnimal) {
-            //Convert the array into an object and add the mandatory values retrieved from the database
-            $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
+        /** @var Location $arrivalLocation */
+        $repository = $this->getManager()->getRepository(Location::class);
+        $arrivalLocation = $repository->findOneBy(['ubn' => $messageObject->getUbnNewOwner(), 'isActive' => true]);
 
-        } else {
-            //Convert the array into an object and add the mandatory values retrieved from the database
-            $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);
+        if($arrivalLocation) {
+            $arrivalOwner = $arrivalLocation->getCompany()->getOwner();
 
-            /** @var Location $arrivalLocation */
-            $repository = $this->getManager()->getRepository(Location::class);
-            $arrivalLocation = $repository->findOneBy(['ubn' => $messageObject->getUbnNewOwner(), 'isActive' => true]);
+            //DeclareArrival
+            $arrival = new DeclareArrival();
+            $arrival->setUlnCountryCode($messageObject->getUlnCountryCode());
+            $arrival->setUlnNumber($messageObject->getUlnNumber());
+            $arrival->setAnimal($messageObject->getAnimal());
+            $arrival->setArrivalDate($messageObject->getDepartDate());
+            $arrival->setIsImportAnimal(false);
+            $arrival->setAnimalObjectType(Utils::getClassName($messageObject->getAnimal()));
+            $arrival->setRelationNumberKeeper($arrivalOwner->getRelationNumberKeeper());
+            $arrival->setUbn($arrivalLocation->getUbn());
+            $arrival->setUbnPreviousOwner($location->getUbn());
+            $arrival->setRecoveryIndicator(RecoveryIndicatorType::N);
+            $arrival->setIsArrivedFromOtherNsfoClient(true);
 
-            if($arrivalLocation) {
-                $arrivalOwner = $arrivalLocation->getCompany()->getOwner();
+            $arrivalMessage = new ArrivalMessageBuilder($this->getManager(), $this->environment);
+            $arrivalMessageObject = $arrivalMessage->buildMessage($arrival, $arrivalOwner, $loggedInUser, $arrivalLocation);
+            $this->persist($arrivalMessageObject);
 
-                //DeclareArrival
-                $arrival = new DeclareArrival();
-                $arrival->setUlnCountryCode($messageObject->getUlnCountryCode());
-                $arrival->setUlnNumber($messageObject->getUlnNumber());
-                $arrival->setAnimal($messageObject->getAnimal());
-                $arrival->setArrivalDate($messageObject->getDepartDate());
-                $arrival->setIsImportAnimal(false);
-                $arrival->setAnimalObjectType(Utils::getClassName($messageObject->getAnimal()));
-                $arrival->setRelationNumberKeeper($arrivalOwner->getRelationNumberKeeper());
-                $arrival->setUbn($arrivalLocation->getUbn());
-                $arrival->setUbnPreviousOwner($location->getUbn());
-                $arrival->setRecoveryIndicator(RecoveryIndicatorType::N);
-                $arrival->setIsArrivedFromOtherNsfoClient(true);
+            $this->sendMessageObjectToQueue($arrivalMessageObject);
 
-                $arrivalMessage = new ArrivalMessageBuilder($this->getManager(), $this->environment);
-                $arrivalMessageObject = $arrivalMessage->buildMessage($arrival, $arrivalOwner, $loggedInUser, $arrivalLocation);
-                $this->persist($arrivalMessageObject);
-
-                $this->sendMessageObjectToQueue($arrivalMessageObject);
-
-                $arrivalLog = ActionLogWriter::declareArrival($arrival, $arrivalOwner, true);
-            }
+            $arrivalLog = ActionLogWriter::declareArrival($arrival, $arrivalOwner, true);
         }
 
         //Send it to the queue and persist/update any changed state to the database
@@ -220,7 +220,7 @@ class DepartService extends DeclareControllerServiceBase
         $this->persist($messageObject);
 
         // Create Message for Receiving Owner
-        if(!$isExportAnimal && $arrivalLocation) {
+        if($arrivalLocation) {
             $uln = $messageObject->getAnimal()->getUlnCountryCode() . $messageObject->getAnimal()->getUlnNumber();
 
             $message = new Message();
@@ -237,7 +237,9 @@ class DepartService extends DeclareControllerServiceBase
             }
         }
 
-        $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
+        $messageObject->getAnimal()->setTransferringTransferState();
+        $this->getManager()->persist($messageObject->getAnimal());
+        $this->getManager()->flush();
 
         $this->saveNewestDeclareVersion($content, $messageObject);
 
@@ -246,7 +248,61 @@ class DepartService extends DeclareControllerServiceBase
 
         $this->clearLivestockCacheForLocation($location);
 
-        return new JsonResponse($messageArray, 200);
+        return new JsonResponse($messageArray, Response::HTTP_OK);
+    }
+
+
+    private function createExport(Request $request)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+        $client = $this->getAccountOwner($request);
+        $loggedInUser = $this->getUser();
+        $location = $this->getSelectedLocation($request);
+
+        $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
+        $arrivalLog = null;
+
+        //Client can only depart/export own animals
+        $animal = $content->get(Constant::ANIMAL_NAMESPACE);
+        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)->verifyIfClientOwnsAnimal($client, $animal);
+
+        if(!$isAnimalOfClient) {
+            return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
+        }
+
+        //Convert the array into an object and add the mandatory values retrieved from the database
+        $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
+
+        $messageArray = $this->runDeclareExportWorkerLogic($messageObject, $content);
+
+        if ($arrivalLog) { $this->persist($arrivalLog); }
+        ActionLogWriter::completeActionLog($this->getManager(), $departOrExportLog);
+
+        $this->clearLivestockCacheForLocation($location);
+
+        return new JsonResponse($messageArray, Response::HTTP_OK);
+    }
+
+
+    public function runDeclareExportWorkerLogic(DeclareExport $export, ArrayCollection $content)
+    {
+        if ($export->isRvoMessage()) {
+            //Send it to the queue and persist/update any changed state to the database
+            $messageArray = $this->sendMessageObjectToQueue($export);
+
+            //Reset isExportAnimal to false before persisting
+            $export->getAnimal()->setIsExportAnimal(false);
+            $export->getAnimal()->setTransferringTransferState();
+            $this->getManager()->persist($export->getAnimal());
+            $this->getManager()->flush();
+
+        } else {
+            $messageArray = $this->exportProcessor->process($export);
+        }
+
+        $this->saveNewestDeclareVersion($content, $export);
+
+        return $messageArray;
     }
 
 
@@ -299,10 +355,12 @@ class DepartService extends DeclareControllerServiceBase
 
         //Reset isExportAnimal to false before persisting
         $messageObject->getAnimal()->setIsExportAnimal(false);
+        $messageObject->getAnimal()->setTransferringTransferState();
+        $this->getManager()->persist($messageObject->getAnimal());
 
         //First Persist object to Database, before sending it to the queue
         $this->persist($messageObject);
-        $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
+        $this->getManager()->flush();
 
         //updating the Animal location history is done completely in the worker
 

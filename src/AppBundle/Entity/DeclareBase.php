@@ -665,6 +665,15 @@ abstract class DeclareBase implements DeclareLogInterface
         $this->setRequestState(RequestStateType::FINISHED);
     }
 
+    public function setFinishedWithWarningRequestState()
+    {
+        $this->setRequestState(RequestStateType::FINISHED_WITH_WARNING);
+    }
+
+    public function setFailedRequestState()
+    {
+        $this->setRequestState(RequestStateType::FAILED);
+    }
 
     public function setRevokedRequestState()
     {

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
@@ -3060,5 +3061,43 @@ abstract class Animal
                 $this->tagReplacements->toArray()
             )
         );
+    }
+
+
+    public function setTransferringTransferState(): void
+    {
+        $this->setTransferState(AnimalTransferStatus::TRANSFERRING);
+    }
+
+
+    public function setTransferredTransferState(): void
+    {
+        $this->setTransferState(AnimalTransferStatus::TRANSFERRED);
+    }
+
+
+    /**
+     * @param Location $location
+     * @return bool
+     */
+    public function isOnLocation(Location $location): bool
+    {
+        if (!$this->getLocation() || !$location
+        || (
+                (!$this->getLocation()->getId() && !$location->getId()) &&
+                (!$this->getLocation()->getLocationId() && !$location->getLocationId())
+            )
+        ) {
+            return false;
+        }
+
+        return (
+                $this->getLocation()->getId() === $location->getId() &&
+                $location->getId() !== null
+            )  ||
+            (
+                $this->getLocation()->getLocationId() === $location->getLocationId() &&
+                $location->getLocationId() !== null
+            );
     }
 }
