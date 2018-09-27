@@ -422,6 +422,7 @@ YOU ALREADY OWN TAGS WITH THE FOLLOWING ULNS: You already own tags with the foll
 TAG DOES NOT BELONG TO YOU: Tag does not belong to you
 NL TAGS CANNOT BE MANUALLY DELETED: NL tags cannot be manually deleted
 COUNTRY DOES NOT EXIST IN THE DATABASE: Country does not exist in the database
+ANIMAL ALREADY HAS A DIFFERENT DATE OF DEATH: Animal already has a different date of death
 
 #Messages
 DECLARE_ARRIVAL: Automatically issued an arrival notification

@@ -116,8 +116,7 @@ class LossService extends DeclareControllerServiceBase
         $this->getManager()->persist($messageObject->getAnimal());
         $this->getManager()->flush();
 
-        //Send it to the queue and persist/update any changed state to the database
-        $messageArray = $this->sendMessageObjectToQueue($messageObject);
+        $messageArray = $this->runDeclareLossWorkerLogic($messageObject);
 
         $this->saveNewestDeclareVersion($content, $messageObject);
 
@@ -126,6 +125,16 @@ class LossService extends DeclareControllerServiceBase
         $this->clearLivestockCacheForLocation($location);
 
         return new JsonResponse($messageArray, 200);
+    }
+
+
+    private function runDeclareLossWorkerLogic(DeclareLoss $loss)
+    {
+        if ($loss->isRvoMessage()) {
+            //Send it to the queue and persist/update any changed state to the database
+            return $this->sendMessageObjectToQueue($loss);
+        }
+        return $this->lossProcessor->process($loss);
     }
 
 
