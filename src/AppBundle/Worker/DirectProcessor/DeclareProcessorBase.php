@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Worker\DirectProcessing;
+namespace AppBundle\Worker\DirectProcessor;
 
 
 use AppBundle\Entity\Animal;
@@ -9,7 +9,7 @@ use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Location;
 use AppBundle\Service\ControllerServiceBase;
 
-class DeclareProcessingBase extends ControllerServiceBase
+class DeclareProcessorBase extends ControllerServiceBase
 {
     /**
      * @param Animal $animal

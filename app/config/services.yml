@@ -987,37 +987,37 @@ services:
         lazy: true
 
 
-    app.abstract_base.direct_processing:
+    app.abstract_base.direct_processor:
         abstract: true
         parent: app.abstract_base.controller
 
-    AppBundle\Worker\DirectProcessing\DeclareArrivalProcessingInterface:
-        class: AppBundle\Worker\DirectProcessing\DeclareArrivalProcessing
-        parent: app.abstract_base.direct_processing
+    AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor
+        parent: app.abstract_base.direct_processor
 
-    AppBundle\Worker\DirectProcessing\DeclareDepartProcessingInterface:
-        class: AppBundle\Worker\DirectProcessing\DeclareDepartProcessing
-        parent: app.abstract_base.direct_processing
+    AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareDepartProcessor
+        parent: app.abstract_base.direct_processor
 
-    AppBundle\Worker\DirectProcessing\DeclareExportProcessingInterface:
-        class: AppBundle\Worker\DirectProcessing\DeclareExportProcessing
-        parent: app.abstract_base.direct_processing
+    AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareExportProcessor
+        parent: app.abstract_base.direct_processor
 
-    AppBundle\Worker\DirectProcessing\DeclareImportProcessingInterface:
-        class: AppBundle\Worker\DirectProcessing\DeclareImportProcessing
-        parent: app.abstract_base.direct_processing
+    AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareImportProcessor
+        parent: app.abstract_base.direct_processor
 
-    AppBundle\Worker\DirectProcessing\DeclareLossProcessingInterface:
-        class: AppBundle\Worker\DirectProcessing\DeclareLossProcessing
-        parent: app.abstract_base.direct_processing
+    AppBundle\Worker\DirectProcessor\DeclareLossProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareLossProcessor
+        parent: app.abstract_base.direct_processor
 
-    AppBundle\Worker\DirectProcessing\DeclareTagReplaceProcessingInterface:
-        class: AppBundle\Worker\DirectProcessing\DeclareTagReplaceProcessing
-        parent: app.abstract_base.direct_processing
+    AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessor
+        parent: app.abstract_base.direct_processor
 
-    AppBundle\Worker\DirectProcessing\DeclareTagTransferProcessingInterface:
-        class: AppBundle\Worker\DirectProcessing\DeclareTagTransferProcessing
-        parent: app.abstract_base.direct_processing
+    AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessor
+        parent: app.abstract_base.direct_processor
 
 
 
