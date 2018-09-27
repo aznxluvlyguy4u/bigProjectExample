@@ -187,7 +187,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray, Client $client, $isEditMessage)
+    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray, Client $client, Location $location, $isEditMessage)
     {
         $declareArrivalContentArray["type"] = RequestType::DECLARE_ARRIVAL_ENTITY;
 
@@ -220,6 +220,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
             $retrievedAnimal->setIsImportAnimal(false);
 
             $declareArrivalRequest = new DeclareArrival();
+            $declareArrivalRequest->setIsRvoMessage($location->isDutchLocation());
             $declareArrivalRequest->setAnimal($retrievedAnimal);
             $declareArrivalRequest->setArrivalDate(new \DateTime($declareArrivalContentArray['arrival_date']));
             $declareArrivalRequest->setUbnPreviousOwner($declareArrivalContentArray['ubn_previous_owner']);
@@ -796,7 +797,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareDepart(ArrayCollection $declareDepartContentArray, Client $client,$isEditMessage)
+    function parseDeclareDepart(ArrayCollection $declareDepartContentArray, Client $client, Location $location, $isEditMessage)
     {
         $declareDepartContentArray["type"] = RequestType::DECLARE_DEPART_ENTITY;
         $isExportAnimal = $declareDepartContentArray['is_export_animal'];
@@ -807,6 +808,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
 
         //Add retrieved animal properties including type to initial animalContentArray
         $declareDepartRequest = new DeclareDepart();
+        $declareDepartRequest->setIsRvoMessage($location->isDutchLocation());
         $declareDepartRequest->setAnimal($retrievedAnimal);
         $declareDepartRequest->setDepartDate(new \DateTime($declareDepartContentArray['depart_date']));
         $declareDepartRequest->setReasonOfDepart($declareDepartContentArray['reason_of_depart']);
@@ -832,7 +834,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareTagsTransfer(ArrayCollection $contentArray, Client $client, $isEditMessage)
+    function parseDeclareTagsTransfer(ArrayCollection $contentArray, Client $client, Location $location, $isEditMessage)
     {
         $contentArray["type"] = RequestType::DECLARE_TAGS_TRANSFER_ENTITY;
 
@@ -840,6 +842,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $relationNumberAcceptant = $contentArray['relation_number_acceptant'];
 
         $declareTagsTransfer = new DeclareTagsTransfer();
+        $declareTagsTransfer->setIsRvoMessage($location->isDutchLocation());
         $declareTagsTransfer->setRelationNumberAcceptant($relationNumberAcceptant);
         $declareTagsTransfer->setUbnNewOwner($ubnNewOwner);
         $fetchedTag = null;
@@ -874,7 +877,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareTagReplace(ArrayCollection $contentArray, Client $client, $isEditMessage)
+    function parseDeclareTagReplace(ArrayCollection $contentArray, Client $client, Location $location, $isEditMessage)
     {
         $contentArray["type"] = RequestType::DECLARE_TAG_REPLACE_ENTITY;
 
@@ -884,6 +887,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         //denormalize the content to an object
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($contentArray);
         $declareTagReplace = new DeclareTagReplace();
+        $declareTagReplace->setIsRvoMessage($location->isDutchLocation());
 
         $declareTagReplace->setReplaceDate($replaceDate);
 
@@ -928,7 +932,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareLoss(ArrayCollection $declareLossContentArray, Client $client,$isEditMessage)
+    function parseDeclareLoss(ArrayCollection $declareLossContentArray, Client $client, Location $location, $isEditMessage)
     {
         $declareLossContentArray["type"] = RequestType::DECLARE_LOSS_ENTITY;
 
@@ -943,6 +947,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $ubnProcessor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_PROCESSOR, $declareLossContentArray);
 
         $declareLossRequest = new DeclareLoss();
+        $declareLossRequest->setIsRvoMessage($location->isDutchLocation());
         //Add retrieved animal to DeclareLoss
         $declareLossRequest->setAnimal($retrievedAnimal);
         $declareLossRequest->setDateOfDeath($dateOfDeath);
@@ -969,7 +974,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareExport(ArrayCollection $declareExportContentArray, Client $client,$isEditMessage)
+    function parseDeclareExport(ArrayCollection $declareExportContentArray, Client $client, Location $location, $isEditMessage)
     {
         $declareExportContentArray["type"] = RequestType::DECLARE_EXPORT_ENTITY;
 
@@ -980,6 +985,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $retrievedAnimal->setIsExportAnimal($isExportAnimal);
 
         $declareExportRequest = new DeclareExport();
+        $declareExportRequest->setIsRvoMessage($location->isDutchLocation());
         $declareExportRequest->setAnimal($retrievedAnimal);
         $declareExportRequest->setExportDate(new \DateTime($exportDate));
         $declareExportRequest->setIsExportAnimal($isExportAnimal);
@@ -1093,6 +1099,8 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
 
         //At the moment all imports are from location with unknown health status
         $declareImportRequest->setLocation($locationOfDestination);
+
+        $declareImportRequest->setIsRvoMessage($locationOfDestination->isDutchLocation());
 
         return $declareImportRequest;
     }

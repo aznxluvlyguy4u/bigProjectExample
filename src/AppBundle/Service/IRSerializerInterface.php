@@ -46,14 +46,17 @@ interface IRSerializerInterface
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
+     * @param Location $location
      * @param boolean $isEditMessage
      * @return DeclareArrival
      */
-    function parseDeclareArrival(ArrayCollection $contentArray, Client $client, $isEditMessage);
+    function parseDeclareArrival(ArrayCollection $contentArray, Client $client, Location $location, $isEditMessage);
 
     /**
-     * @param ArrayCollection $contentArray
+     * @param ArrayCollection $declareBirthContentArray
      * @param Client $client
+     * @param Person $loggedInUser
+     * @param Location $location
      * @param boolean $isEditMessage
      * @return DeclareBirth
      */
@@ -62,42 +65,47 @@ interface IRSerializerInterface
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
+     * @param Location $location
      * @param boolean $isEditMessage
      * @return DeclareDepart
      */
-    function parseDeclareDepart(ArrayCollection $contentArray, Client $client, $isEditMessage);
+    function parseDeclareDepart(ArrayCollection $contentArray, Client $client, Location $location, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
+     * @param Location $location
      * @param boolean $isEditMessage
      * @return DeclareTagsTransfer
      */
-    function parseDeclareTagsTransfer(ArrayCollection $contentArray, Client $client, $isEditMessage);
+    function parseDeclareTagsTransfer(ArrayCollection $contentArray, Client $client, Location $location, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
+     * @param Location $location
      * @param boolean $isEditMessage
      * @return DeclareTagReplace
      */
-    function parseDeclareTagReplace(ArrayCollection $contentArray, Client $client, $isEditMessage);
+    function parseDeclareTagReplace(ArrayCollection $contentArray, Client $client, Location $location, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
+     * @param Location $location
      * @param boolean $isEditMessage
      * @return DeclareLoss
      */
-    function parseDeclareLoss(ArrayCollection $contentArray, Client $client, $isEditMessage);
+    function parseDeclareLoss(ArrayCollection $contentArray, Client $client, Location $location, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
+     * @param Location $location
      * @param boolean $isEditMessage
      * @return DeclareExport
      */
-    function parseDeclareExport(ArrayCollection $contentArray, Client $client, $isEditMessage);
+    function parseDeclareExport(ArrayCollection $contentArray, Client $client, Location $location, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
