@@ -5,6 +5,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\VwaEmployee;
+use AppBundle\Enumerator\Country;
 use Doctrine\ORM\EntityManagerInterface;
 
 
@@ -61,7 +62,8 @@ class MenuBarOutput extends Output
 
         $sql = "SELECT
                   l.ubn,
-                  cd.code as ".JsonInputConstant::COUNTRY_CODE."
+                  cd.code as ".JsonInputConstant::COUNTRY_CODE.",
+                  cd.code = '".Country::NL."' as ".JsonInputConstant::USE_RVO_LOGIC."
                 FROM location l
                   INNER JOIN company c ON l.company_id = c.id
                   INNER JOIN address a ON l.address_id = a.id

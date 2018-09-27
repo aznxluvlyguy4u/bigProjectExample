@@ -312,4 +312,7 @@ class JsonInputConstant
     const CLASS_CARLA_IGA_NZ = 'class_carla_iga_nz';
     const SAMPLE_PERIOD = 'sample_period';
     const YEAR = 'year';
+
+    // User
+    const USE_RVO_LOGIC = 'use_rvo_logic';
 }
