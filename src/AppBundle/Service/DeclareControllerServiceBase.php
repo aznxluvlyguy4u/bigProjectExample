@@ -220,11 +220,8 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      */
     protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
     {
-        $isEditMessage = true;
-        $messageObject = $this->requestMessageBuilder
-            ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
-
-        return $messageObject;
+        return $this->requestMessageBuilder
+            ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, true);
     }
 
 
@@ -239,11 +236,8 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      */
     protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
     {
-        $isEditMessage = false;
-        $messageObject = $this->requestMessageBuilder
-            ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
-
-        return $messageObject;
+        return $this->requestMessageBuilder
+            ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, false);
     }
 
 
