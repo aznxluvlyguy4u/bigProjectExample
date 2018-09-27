@@ -986,6 +986,41 @@ services:
           - '@translator'
         lazy: true
 
+
+    app.abstract_base.direct_processing:
+        abstract: true
+        parent: app.abstract_base.controller
+
+    AppBundle\Worker\DirectProcessing\DeclareArrivalProcessingInterface:
+        class: AppBundle\Worker\DirectProcessing\DeclareArrivalProcessing
+        parent: app.abstract_base.direct_processing
+
+    AppBundle\Worker\DirectProcessing\DeclareDepartProcessingInterface:
+        class: AppBundle\Worker\DirectProcessing\DeclareDepartProcessing
+        parent: app.abstract_base.direct_processing
+
+    AppBundle\Worker\DirectProcessing\DeclareExportProcessingInterface:
+        class: AppBundle\Worker\DirectProcessing\DeclareExportProcessing
+        parent: app.abstract_base.direct_processing
+
+    AppBundle\Worker\DirectProcessing\DeclareImportProcessingInterface:
+        class: AppBundle\Worker\DirectProcessing\DeclareImportProcessing
+        parent: app.abstract_base.direct_processing
+
+    AppBundle\Worker\DirectProcessing\DeclareLossProcessingInterface:
+        class: AppBundle\Worker\DirectProcessing\DeclareLossProcessing
+        parent: app.abstract_base.direct_processing
+
+    AppBundle\Worker\DirectProcessing\DeclareTagReplaceProcessingInterface:
+        class: AppBundle\Worker\DirectProcessing\DeclareTagReplaceProcessing
+        parent: app.abstract_base.direct_processing
+
+    AppBundle\Worker\DirectProcessing\DeclareTagTransferProcessingInterface:
+        class: AppBundle\Worker\DirectProcessing\DeclareTagTransferProcessing
+        parent: app.abstract_base.direct_processing
+
+
+
     # Listeners
     AppBundle\EventListener\ViewListener:
         tags:
