@@ -220,7 +220,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
             $retrievedAnimal->setIsImportAnimal(false);
 
             $declareArrivalRequest = new DeclareArrival();
-            $declareArrivalRequest->setIsRvoMessage($location->isDutchLocation());
             $declareArrivalRequest->setAnimal($retrievedAnimal);
             $declareArrivalRequest->setArrivalDate(new \DateTime($declareArrivalContentArray['arrival_date']));
             $declareArrivalRequest->setUbnPreviousOwner($declareArrivalContentArray['ubn_previous_owner']);
@@ -525,7 +524,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
             } else if($isAlive) {
                 //Create I&R Declare Birth request per child
                 $declareBirthRequest = new DeclareBirth();
-                $declareBirthRequest->setIsRvoMessage($location->isDutchLocation());
 
                 //Generate new requestId
 
@@ -808,7 +806,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
 
         //Add retrieved animal properties including type to initial animalContentArray
         $declareDepartRequest = new DeclareDepart();
-        $declareDepartRequest->setIsRvoMessage($location->isDutchLocation());
         $declareDepartRequest->setAnimal($retrievedAnimal);
         $declareDepartRequest->setDepartDate(new \DateTime($declareDepartContentArray['depart_date']));
         $declareDepartRequest->setReasonOfDepart($declareDepartContentArray['reason_of_depart']);
@@ -842,7 +839,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $relationNumberAcceptant = $contentArray['relation_number_acceptant'];
 
         $declareTagsTransfer = new DeclareTagsTransfer();
-        $declareTagsTransfer->setIsRvoMessage($location->isDutchLocation());
         $declareTagsTransfer->setRelationNumberAcceptant($relationNumberAcceptant);
         $declareTagsTransfer->setUbnNewOwner($ubnNewOwner);
         $fetchedTag = null;
@@ -887,7 +883,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         //denormalize the content to an object
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($contentArray);
         $declareTagReplace = new DeclareTagReplace();
-        $declareTagReplace->setIsRvoMessage($location->isDutchLocation());
 
         $declareTagReplace->setReplaceDate($replaceDate);
 
@@ -947,7 +942,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $ubnProcessor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_PROCESSOR, $declareLossContentArray);
 
         $declareLossRequest = new DeclareLoss();
-        $declareLossRequest->setIsRvoMessage($location->isDutchLocation());
         //Add retrieved animal to DeclareLoss
         $declareLossRequest->setAnimal($retrievedAnimal);
         $declareLossRequest->setDateOfDeath($dateOfDeath);
@@ -985,7 +979,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $retrievedAnimal->setIsExportAnimal($isExportAnimal);
 
         $declareExportRequest = new DeclareExport();
-        $declareExportRequest->setIsRvoMessage($location->isDutchLocation());
         $declareExportRequest->setAnimal($retrievedAnimal);
         $declareExportRequest->setExportDate(new \DateTime($exportDate));
         $declareExportRequest->setIsExportAnimal($isExportAnimal);
@@ -1099,8 +1092,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
 
         //At the moment all imports are from location with unknown health status
         $declareImportRequest->setLocation($locationOfDestination);
-
-        $declareImportRequest->setIsRvoMessage($locationOfDestination->isDutchLocation());
 
         return $declareImportRequest;
     }

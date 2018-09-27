@@ -15,6 +15,7 @@ use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareMate;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
@@ -83,12 +84,14 @@ class MessageBuilderBase
      * Here the values are set for the variables that could not easily
      * be set in the constructor.
      *
-     * @param object $messageObject the message received from the front-end as an entity from a class that is extended from DeclareBase.
+     * @param DeclareBase $messageObject the message received from the front-end as an entity from a class that is extended from DeclareBase.
      * @param Person $person
      * @param Person $loggedInUser
+     * @param Location $location
      * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|DeclareMate|DeclarationDetail|RevokeDeclaration|DeclareTagReplace the base message
      */
-    protected function buildBaseMessageObject($messageObject, Person $person, Person $loggedInUser)
+    protected function buildBaseMessageObject($messageObject, Person $person, Person $loggedInUser,
+                                              Location $location)
     {
         //Generate new requestId
 
@@ -122,6 +125,8 @@ class MessageBuilderBase
         if($loggedInUser instanceof Person) {
             $messageObject->setActionBy($loggedInUser);
         }
+
+        $messageObject->setIsRvoMessage($location->isDutchLocation());
 
         return $messageObject;
     }
