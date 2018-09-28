@@ -68,6 +68,10 @@ class BreedValueRepository extends BaseRepository
                                FROM breed_value
                              )v ON v.max_id = breed_value.id";
         $result = $this->getConnection()->query($sql)->fetch();
+        if (!$result) {
+            return null;
+        }
+
         $generationDateString =  ArrayUtil::get('generation_date', $result);
         if (!$generationDateString) {
             return null;
