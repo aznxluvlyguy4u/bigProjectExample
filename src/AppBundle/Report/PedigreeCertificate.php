@@ -124,7 +124,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::PEDIGREE_REGISTER] = $pedigreeRegister;
 
         // Add shared data
-        $this->data[ReportLabel::BREED_VALUES_EVALUATION_DATE] = $breedValuesLastGenerationDate;
+        $this->data[ReportLabel::BREED_VALUES_EVALUATION_DATE] = ($breedValuesLastGenerationDate ? $breedValuesLastGenerationDate: self::GENERAL_NULL_FILLER);
 
         $keyAnimal = ReportLabel::CHILD_KEY;
 
