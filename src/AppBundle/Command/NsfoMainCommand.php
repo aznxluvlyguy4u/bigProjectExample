@@ -10,6 +10,7 @@ use AppBundle\Cache\NLingCacher;
 use AppBundle\Cache\ProductionCacher;
 use AppBundle\Cache\TailLengthCacher;
 use AppBundle\Cache\WeightCacher;
+use AppBundle\Component\AsciiArt;
 use AppBundle\Component\MixBlup\MixBlupInputFileValidator;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
@@ -121,30 +122,7 @@ class NsfoMainCommand extends ContainerAwareCommand
      */
     public function printAsciiArt()
     {
-        $this->cmdUtil->writeln("
-                                            III III                                     
-                                            IIIIIII                                     
-                                             IIIII                                      
-                                              III                                       
-                                    ,,,,,             88888                             
-                                  ,,,,,,,DDD       DDZ8888888                           
-                                DDD,88888             :::::8DDD                         
-              ,,,,,       ,,,,,,,,,,,88888           :::::88888888888$    0888888$      
-          ,,,,,,,,,,,,,,,,,,,,,,,,,,,,88888         :::::8888888888888888888888888888   
-         ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,             88888888888888888888888888888888  
-        ,,,,,,,,,,,,,,,,,,,,,,,,,,,,:,,,               88888888888888888888888888888888 
-        ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                 8888888888888888888888888888888 
-        ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                 8888888888888888888888888888888 
-         ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                 888888888888888888888888888888  
-         ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                   88888888888888888888888888888  
-         :,,,,,,,,,,,,,,,,, ,,,,,,,,,                     888888888D88888888888888888D  
-         ::,,,,,, ,,,,,,,,, ,,,,,::                         DD88888 888888888 888888DD  
-        :::,,,,              ,,,:=                           DD888              8888DDD 
-        :::,,                8 88                             :: :                88DDD 
-         ::,,                8 8                              :: :               888DD  
-         :: ,8              8 Z8                               : ::              :8 DD  
-          8  8I             88 8                               : ::             ::  :   
-                                                              == =              =   =   ");
+        $this->cmdUtil->writeln(AsciiArt::nsfoLogo());
     }
 
 
