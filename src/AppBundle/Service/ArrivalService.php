@@ -173,19 +173,26 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
      * @param Request $request
      * @return JsonResponse
      */
-    public function createArrival(Request $request)
+    public function createArrivalOrImport(Request $request)
     {
-        $departLocation = null;
-
         $content = RequestUtil::getContentAsArray($request);
+        if ($content->get(Constant::IS_IMPORT_ANIMAL)) {
+            return $this->createImport($request);
+        }
+        return $this->createArrival($request);
+    }
+
+
+    private function createArrival(Request $request)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+        $content = $this->capitalizePedigreeNumberInPostArray($content);
+
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
 
         $arrivalOrImportLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
-        $departLog = null;
-
-        $content = $this->capitalizePedigreeNumberInPostArray($content);
 
         //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
         $pedigreeValidation = $this->validateArrivalPost($content);
@@ -202,67 +209,55 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
-        if($isImportAnimal) { //DeclareImport
+        $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, true);
+        $arrival = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
 
-            //Validate if ulnNumber matches that of an unassigned Tag in the tag collection of the client
-            $tagValidator = new TagValidator($this->getManager(), $client, $location, $content);
-            if($tagValidator->getIsTagCollectionEmpty() || !$tagValidator->getIsTagValid() || $tagValidator->getIsInputEmpty()) {
-                return $tagValidator->createImportJsonErrorResponse();
-            }
+        /** @var Location $departLocation */
+        $departLocation = $this->getManager()->getRepository(Location::class)->findOneBy(['ubn' => $arrival->getUbnPreviousOwner(), 'isActive' => true]);
 
-            $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $loggedInUser, $location);
-        } else {
+        $departLog = null;
+        if($departLocation) {
+            $departOwner = $departLocation->getCompany()->getOwner();
 
-            //DeclareArrival
-            $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, true);
-            $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
+            //DeclareDepart
+            $depart = new DeclareDepart();
+            $depart->setUlnCountryCode($arrival->getUlnCountryCode());
+            $depart->setUlnNumber($arrival->getUlnNumber());
+            $depart->setAnimal($arrival->getAnimal());
+            $depart->setIsExportAnimal(false);
+            $depart->setDepartDate($arrival->getArrivalDate());
+            $depart->setReasonOfDepart("NO REASON");
+            $depart->setAnimalObjectType(Utils::getClassName($arrival->getAnimal()));
+            $depart->setRelationNumberKeeper($departOwner->getRelationNumberKeeper());
+            $depart->setUbn($departLocation->getUbn());
+            $depart->setUbnNewOwner($location->getUbn());
+            $depart->setRecoveryIndicator(RecoveryIndicatorType::N);
 
-            /** @var Location $departLocation */
-            $departLocation = $this->getManager()->getRepository(Location::class)->findOneBy(['ubn' => $messageObject->getUbnPreviousOwner(), 'isActive' => true]);
+            $departMessage = new DepartMessageBuilder($this->getManager() , $this->environment);
+            $departMessageObject = $departMessage->buildMessage($depart, $departOwner, $loggedInUser, $departLocation);
+            $this->persist($departMessageObject);
 
-            if($departLocation) {
-                $departOwner = $departLocation->getCompany()->getOwner();
+            $this->sendMessageObjectToQueue($departMessageObject);
 
-                //DeclareDepart
-                $depart = new DeclareDepart();
-                $depart->setUlnCountryCode($messageObject->getUlnCountryCode());
-                $depart->setUlnNumber($messageObject->getUlnNumber());
-                $depart->setAnimal($messageObject->getAnimal());
-                $depart->setIsExportAnimal(false);
-                $depart->setDepartDate($messageObject->getArrivalDate());
-                $depart->setReasonOfDepart("NO REASON");
-                $depart->setAnimalObjectType(Utils::getClassName($messageObject->getAnimal()));
-                $depart->setRelationNumberKeeper($departOwner->getRelationNumberKeeper());
-                $depart->setUbn($departLocation->getUbn());
-                $depart->setUbnNewOwner($location->getUbn());
-                $depart->setRecoveryIndicator(RecoveryIndicatorType::N);
-
-                $departMessage = new DepartMessageBuilder($this->getManager() , $this->environment);
-                $departMessageObject = $departMessage->buildMessage($depart, $departOwner, $loggedInUser, $departLocation);
-                $this->persist($departMessageObject);
-
-                $this->sendMessageObjectToQueue($departMessageObject);
-
-                $departLog = ActionLogWriter::declareDepart($depart, $departOwner, true);
-            }
+            $departLog = ActionLogWriter::declareDepart($depart, $departOwner, true);
         }
 
         //Send it to the queue and persist/update any changed state to the database
-        $this->sendMessageObjectToQueue($messageObject);
-        $messageObject->setAnimal(null);
+        $this->sendMessageObjectToQueue($arrival);
+        $arrival->setAnimal(null);
 
         //Persist message without animal. That is done after a successful response
-        $this->persist($messageObject);
+        $this->persist($arrival);
 
         // Create Message for Receiving Owner
         if(!$isImportAnimal && $departLocation) {
-            $uln = $messageObject->getUlnCountryCode() . $messageObject->getUlnNumber();
+            $uln = $arrival->getUlnCountryCode() . $arrival->getUlnNumber();
 
             $message = new Message();
             $message->setType(MessageType::DECLARE_ARRIVAL);
             $message->setSenderLocation($location);
             $message->setReceiverLocation($departLocation);
-            $message->setRequestMessage($messageObject);
+            $message->setRequestMessage($arrival);
             $message->setData($uln);
             $this->persist($message);
             foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
@@ -273,15 +268,71 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->getManager()->flush();
 
-        $this->saveNewestDeclareVersion($content, $messageObject);
+        $this->saveNewestDeclareVersion($content, $arrival);
 
         if ($location->getAnimalHealthSubscription()) {
             //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
-            $this->healthService->updateLocationHealth($messageObject);
+            $this->healthService->updateLocationHealth($arrival);
         }
 
         if ($departLog) { $this->persist($departLog); }
         ActionLogWriter::completeActionLog($this->getManager(), $arrivalOrImportLog);
+
+        $this->clearLivestockCacheForLocation($location);
+
+        return new JsonResponse(array("status"=>"ok"), 200);
+    }
+
+
+    private function createImport(Request $request)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+        $content = $this->capitalizePedigreeNumberInPostArray($content);
+
+        $client = $this->getAccountOwner($request);
+        $location = $this->getSelectedLocation($request);
+        $loggedInUser = $this->getUser();
+
+        $actionLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
+
+        //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
+        $pedigreeValidation = $this->validateArrivalPost($content);
+        if(!$pedigreeValidation->get(Constant::IS_VALID_NAMESPACE)) {
+            return $pedigreeValidation->get(Constant::RESPONSE);
+        }
+
+        //Convert the array into an object and add the mandatory values retrieved from the database
+        //Validate if ulnNumber matches that of an unassigned Tag in the tag collection of the client
+        $tagValidator = new TagValidator($this->getManager(), $client, $location, $content);
+        if($tagValidator->getIsTagCollectionEmpty() || !$tagValidator->getIsTagValid() || $tagValidator->getIsInputEmpty()) {
+            return $tagValidator->createImportJsonErrorResponse();
+        }
+
+        if ($location->getAnimalHealthSubscription()) {
+            //LocationHealth null value fixes
+            $this->healthService->fixLocationHealthMessagesWithNullValues($location);
+            $this->healthService->fixIncongruentLocationHealthIllnessValues($location);
+        }
+
+        $import = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $loggedInUser, $location);
+
+        //Send it to the queue and persist/update any changed state to the database
+        $this->sendMessageObjectToQueue($import);
+        $import->setAnimal(null);
+
+        //Persist message without animal. That is done after a successful response
+        $this->persist($import);
+
+        $this->getManager()->flush();
+
+        $this->saveNewestDeclareVersion($content, $import);
+
+        if ($location->getAnimalHealthSubscription()) {
+            //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
+            $this->healthService->updateLocationHealth($import);
+        }
+
+        ActionLogWriter::completeActionLog($this->getManager(), $actionLog);
 
         $this->clearLivestockCacheForLocation($location);
 

@@ -109,9 +109,9 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Route("")
    * @Method("POST")
    */
-    public function createArrival(Request $request)
+    public function createArrivalOrImport(Request $request)
     {
-        return $this->get(ArrivalService::class)->createArrival($request);
+        return $this->get(ArrivalService::class)->createArrivalOrImport($request);
     }
 
   /**
