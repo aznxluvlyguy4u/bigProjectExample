@@ -317,13 +317,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $import = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $loggedInUser, $location);
 
         //Send it to the queue and persist/update any changed state to the database
-        $this->sendMessageObjectToQueue($import);
-        $import->setAnimal(null);
-
-        //Persist message without animal. That is done after a successful response
-        $this->persist($import);
-
-        $this->getManager()->flush();
+       $messageArray = $this->runDeclareImportWorkerLogic($import);
 
         $this->saveNewestDeclareVersion($content, $import);
 
@@ -336,7 +330,25 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->clearLivestockCacheForLocation($location);
 
-        return new JsonResponse(array("status"=>"ok"), 200);
+        return $messageArray;
+    }
+
+
+    private function runDeclareImportWorkerLogic(DeclareImport $import)
+    {
+        if ($import->isRvoMessage()) {
+            //Send it to the queue and persist/update any changed state to the database
+            $messageArray = $this->sendMessageObjectToQueue($import);
+            $import->setAnimal(null);
+            //Persist message without animal. That is done after a successful response
+            $this->persist($import);
+            $this->getManager()->flush();
+
+            return $messageArray;
+        }
+
+        // DO NOT remove animal from import before importProcessor
+        return $this->importProcessor->process($import);
     }
 
 
