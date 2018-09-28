@@ -3100,4 +3100,22 @@ abstract class Animal
                 $location->getLocationId() !== null
             );
     }
+
+
+    /**
+     * @return bool
+     */
+    public function isDeclaredDead(): bool
+    {
+        return !$this->getIsAlive() && $this->getDateOfDeath();
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function hasLocation(): bool
+    {
+        return $this->getLocation() !== null;
+    }
 }
