@@ -34,6 +34,7 @@ use AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIControllerInterface
 {
@@ -200,20 +201,17 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             return $pedigreeValidation->get(Constant::RESPONSE);
         }
 
+        $departLocation = $this->getValidatedLocationPreviousOwner($location, $content->get(Constant::UBN_PREVIOUS_OWNER_NAMESPACE));
+
         if ($location->getAnimalHealthSubscription()) {
             //LocationHealth null value fixes
             $this->healthService->fixLocationHealthMessagesWithNullValues($location);
             $this->healthService->fixIncongruentLocationHealthIllnessValues($location);
         }
 
-        $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
-
         //Convert the array into an object and add the mandatory values retrieved from the database
         $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, true);
         $arrival = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
-
-        /** @var Location $departLocation */
-        $departLocation = $this->getManager()->getRepository(Location::class)->findOneBy(['ubn' => $arrival->getUbnPreviousOwner(), 'isActive' => true]);
 
         $departLog = null;
         if($departLocation) {
@@ -250,7 +248,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $this->persist($arrival);
 
         // Create Message for Receiving Owner
-        if(!$isImportAnimal && $departLocation) {
+        if($departLocation) {
             $uln = $arrival->getUlnCountryCode() . $arrival->getUlnNumber();
 
             $message = new Message();
@@ -553,4 +551,34 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         return $content;
     }
 
+
+    /**
+     * @param Location $locationOfDestination
+     * @param string $ubnOfPreviousOwner
+     * @return Location|null
+     */
+    private function getValidatedLocationPreviousOwner(Location $locationOfDestination, $ubnOfPreviousOwner): ?Location
+    {
+        if (empty($ubnOfPreviousOwner)) {
+            return null;
+        }
+
+        /** @var Location $departLocation */
+        $departLocation = $this->getManager()->getRepository(Location::class)
+            ->findOneBy(['ubn' => $ubnOfPreviousOwner, 'isActive' => true]);
+
+        if (empty($departLocation)) {
+            return null;
+        }
+
+        if ($locationOfDestination->getCountryCode() !== $departLocation->getCountryCode()
+        && !empty($locationOfDestination->getCountryCode())) {
+            throw new PreconditionFailedHttpException($this->translator->trans('ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY')
+                .'. '.$ubnOfPreviousOwner. '['.$departLocation->getCountryCode().']'
+                .' => '.$locationOfDestination->getUbn().' ['.$locationOfDestination->getCountryCode().']'
+            );
+        }
+
+        return $departLocation;
+    }
 }
