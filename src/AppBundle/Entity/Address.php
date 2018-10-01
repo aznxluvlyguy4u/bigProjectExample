@@ -314,6 +314,16 @@ abstract class Address
     }
 
     /**
+     * Get country id
+     *
+     * @return int|null
+     */
+    public function getCountryId(): ?int
+    {
+        return $this->countryDetails ? $this->countryDetails->getId() : null;
+    }
+
+    /**
      * Get country
      *
      * @return string|null
