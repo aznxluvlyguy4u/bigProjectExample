@@ -143,7 +143,8 @@ class TagsService extends ControllerServiceBase
                 $ulnParts = Utils::getUlnFromString($ulnString);
                 $ulnCountryCode = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE];
                 if ($ulnCountryCode === $countryCode) {
-                    $ulnPartsArray[] = $ulnParts;
+                    $uln = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE].$ulnParts[JsonInputConstant::ULN_NUMBER];
+                    $ulnPartsArray[$uln] = $ulnParts;
                     continue;
                 } else {
                     $incorrectInputs[] = trim($part) . ' '.
@@ -160,7 +161,7 @@ class TagsService extends ControllerServiceBase
             throw new PreconditionFailedHttpException($errorMessage.": ".implode(',', $incorrectInputs));
         }
 
-        return $ulnPartsArray;
+        return array_values($ulnPartsArray);
     }
 
 
