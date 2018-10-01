@@ -426,6 +426,7 @@ ANIMAL ALREADY HAS A DIFFERENT DATE OF DEATH: Animal already has a different dat
 ANIMAL HAS ALREADY BEEN DECLARED DEAD: Animal has already been declared dead
 ANIMAL IS STILL ON A DIFFERENT LOCATION: Animal is still on a different location
 ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Arrivals are only allowed between UBNs within the same country
+COMPANY RELATION NUMBER CANNOT BE EMPTY: Company relation number (BRS-number) cannot be empty
 
 #Messages
 DECLARE_ARRIVAL: Automatically issued an arrival notification

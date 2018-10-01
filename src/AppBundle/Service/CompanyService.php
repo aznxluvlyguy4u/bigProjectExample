@@ -37,6 +37,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 
 class CompanyService extends AuthServiceBase
@@ -76,6 +77,20 @@ class CompanyService extends AuthServiceBase
 
 
     /**
+     * company_relation_number
+     * @param $companyRelationNumber
+     */
+    private function validateIfRelationNumberKeeperIsNotNull($companyRelationNumber)
+    {
+        if (empty(trim($companyRelationNumber))) {
+            throw new PreconditionFailedHttpException($this->translator->trans(
+                'COMPANY RELATION NUMBER CANNOT BE EMPTY'
+            ));
+        }
+    }
+
+
+    /**
      * @param Request $request
      * @return JsonResponse
      */
@@ -107,7 +122,11 @@ class CompanyService extends AuthServiceBase
         $owner->setFirstName($contentOwner['first_name']);
         $owner->setLastName($contentOwner['last_name']);
         $owner->setEmailAddress($contentOwner['email_address']);
-        $owner->setRelationNumberKeeper($content->get('company_relation_number'));
+
+        $companyRelationNumber = $content->get('company_relation_number');
+        $this->validateIfRelationNumberKeeperIsNotNull($companyRelationNumber);
+        $owner->setRelationNumberKeeper($companyRelationNumber);
+
         $owner->setObjectType('Client');
         $owner->setIsActive(true);
 
@@ -156,7 +175,7 @@ class CompanyService extends AuthServiceBase
         $company = new Company();
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
-        $company->setCompanyRelationNumber($content->get('company_relation_number'));
+        $company->setCompanyRelationNumber($companyRelationNumber);
 
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
@@ -405,7 +424,10 @@ class CompanyService extends AuthServiceBase
         // Update Company
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
-        $company->setCompanyRelationNumber($content->get('company_relation_number'));
+
+        $companyRelationNumber = $content->get('company_relation_number');
+        $this->validateIfRelationNumberKeeperIsNotNull($companyRelationNumber);
+        $company->setCompanyRelationNumber($companyRelationNumber);
 
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
@@ -424,7 +446,7 @@ class CompanyService extends AuthServiceBase
             $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
         }
 
-        $company->getOwner()->setRelationNumberKeeper($content->get('company_relation_number'));
+        $company->getOwner()->setRelationNumberKeeper($companyRelationNumber);
 
         // Update Location
 
