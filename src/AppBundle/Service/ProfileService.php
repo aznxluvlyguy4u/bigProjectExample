@@ -13,12 +13,14 @@ use AppBundle\Entity\Company;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Country;
 use AppBundle\Entity\Location;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Output\LoginOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
@@ -67,6 +69,8 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
         $content = RequestUtil::getContentAsArray($request);
         $location = $this->getSelectedLocation($request);
 
+        $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::ADMIN);
+
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
@@ -96,7 +100,9 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
         $billingAddress->setPostalCode(strtoupper($billingAddressArray['postal_code']));
         $billingAddress->setCity(strtoupper($billingAddressArray['city']));
         $billingAddress->setState($billingAddressArray['state']);
-        $this->updateCountryFromAddressArray($billingAddressArray,BillingAddress::class, $company);
+        if ($isAdmin) {
+            $this->updateCountryFromAddressArray($billingAddressArray,BillingAddress::class, $company);
+        }
 
         $address->setStreetName($addressArray['street_name']);
         $address->setAddressNumberSuffix(ArrayUtil::get('suffix', $addressArray, null));
@@ -104,7 +110,9 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
         $address->setPostalCode(strtoupper($addressArray['postal_code']));
         $address->setCity(strtoupper($addressArray['city']));
         $address->setState($addressArray['state']);
-        $this->updateCountryFromAddressArray($addressArray,CompanyAddress::class, $company);
+        if ($isAdmin) {
+            $this->updateCountryFromAddressArray($addressArray,CompanyAddress::class, $company);
+        }
 
         $company->getOwner()->setFirstName($contactPersonArray['first_name']);
         $company->getOwner()->setLastName($contactPersonArray['last_name']);
