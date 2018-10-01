@@ -184,6 +184,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return ResultUtil::errorResult('INTERNAL SERVER ERROR', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
+        if ($newAnimal->getLocation()) {
+            $this->getCacheService()->clearLivestockCacheForLocation($newAnimal->getLocation(), $newAnimal);
+        }
+
         $minimizedOutput = AnimalOutput::createAnimalArray($newAnimal, $this->getManager());
         return ResultUtil::successResult($minimizedOutput);
     }
