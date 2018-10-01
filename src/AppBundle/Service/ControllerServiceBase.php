@@ -500,4 +500,26 @@ abstract class ControllerServiceBase
         }
         return $country;
     }
+
+
+    /**
+     * @param Client $client
+     */
+    protected function nullCheckClient(Client $client)
+    {
+        if ($client === null) {
+            throw new PreconditionFailedHttpException('Client cannot be empty');
+        }
+    }
+
+
+    /**
+     * @param Location $location
+     */
+    protected function nullCheckLocation(Location $location)
+    {
+        if ($location === null) {
+            throw new PreconditionFailedHttpException('Location cannot be empty');
+        }
+    }
 }

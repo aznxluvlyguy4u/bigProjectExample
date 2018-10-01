@@ -15,6 +15,7 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 
 class ProfileService extends ControllerServiceBase implements ProfileAPIControllerInterface
@@ -28,13 +29,10 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
 
-        if ($client === null) { return ResultUtil::errorResult('Client cannot be empty', 428); }
-        if ($location === null) { return ResultUtil::errorResult('Location cannot be empty', 428); }
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
 
-        //TODO Phase 2: Give back a specific company and location of that company. The CompanyProfileOutput already can process a ($client, $company, $location) method signature.
-        $company = $location->getCompany();
-
-        $outputArray = CompanyProfileOutput::create($client, $company, $location);
+        $outputArray = CompanyProfileOutput::create($location->getCompany(), $location);
 
         return ResultUtil::successResult($outputArray);
     }
@@ -48,8 +46,8 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
     {
         $loggedInUser = $this->getUser();
         $client = $this->getAccountOwner($request);
+        $this->nullCheckClient($client);
         $revealHistoricAnimals = $this->getSelectedLocation($request)->getCompany()->getIsRevealHistoricAnimals();
-        if ($client === null) { return ResultUtil::errorResult('Client cannot be empty', 428); }
         $outputArray = LoginOutput::create($client, $loggedInUser, $revealHistoricAnimals);
         return ResultUtil::successResult($outputArray);
     }
@@ -66,8 +64,8 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
         $content = RequestUtil::getContentAsArray($request);
         $location = $this->getSelectedLocation($request);
 
-        if ($client === null) { return ResultUtil::errorResult('Client cannot be empty', 428); }
-        if ($location === null) { return ResultUtil::errorResult('Location cannot be empty', 428); }
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
 
         //TODO Phase 2: Give back a specific company and location of that company. The CompanyProfileOutput already can process a ($client, $company, $location) method signature.
         $company = $location->getCompany();
@@ -78,7 +76,7 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
         $log = ActionLogWriter::updateProfile($this->getManager(), $client, $loggedInUser, $company);
         $this->flushClearAndGarbageCollect(); //Only flush after persisting both the client and ActionLogWriter
 
-        $outputArray = CompanyProfileOutput::create($client, $company, $location);
+        $outputArray = CompanyProfileOutput::create($company, $location);
 
         return ResultUtil::successResult($outputArray);
     }
