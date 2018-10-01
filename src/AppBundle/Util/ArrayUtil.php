@@ -40,6 +40,25 @@ class ArrayUtil
 
 
     /**
+     * @param array $keys
+     * @param array $array
+     * @param null|mixed $nullReplacement
+     * @return array|mixed|null
+     */
+    public static function getNestedValue(array $keys, array $array, $nullReplacement = null)
+    {
+        $subArray = $array;
+        foreach ($keys as $key) {
+            if (!key_exists($key, $subArray)) {
+                return $nullReplacement;
+            }
+            $subArray = $subArray[$key];
+        }
+        return $subArray;
+    }
+
+
+    /**
      * @param array $arrays
      * @param boolean $ignoreAllKeys This prevents overwriting values with identical keys, but you lose the keys.
      * @return array
