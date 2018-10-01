@@ -35,6 +35,7 @@ class JsonInputConstant
     const EWES = 'ewes';
     const CHILDREN = 'children';
     const LITTERS = 'litters';
+    const COUNTRY = 'country';
     const COUNTRY_CODE = 'country_code';
     const ULN_COUNTRY_CODE = 'uln_country_code';
     const ULN_NUMBER = 'uln_number';
