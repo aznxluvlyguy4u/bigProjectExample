@@ -5,25 +5,24 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\Utils;
 use AppBundle\Controller\ProfileAPIControllerInterface;
-use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Entity\Company;
+use AppBundle\Entity\Location;
 use AppBundle\FormInput\CompanyProfile;
-use AppBundle\Output\CompanyProfileOutput;
 use AppBundle\Output\LoginOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 
 class ProfileService extends ControllerServiceBase implements ProfileAPIControllerInterface
 {
     /**
      * @param Request $request
-     * @return JsonResponse
-     */
+     * @return array
+\     */
     public function getCompanyProfile(Request $request)
     {
         $client = $this->getAccountOwner($request);
@@ -32,9 +31,7 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
-        $outputArray = CompanyProfileOutput::create($location->getCompany(), $location);
-
-        return ResultUtil::successResult($outputArray);
+        return $this->getCompanyProfileOutput($location->getCompany(), $location);
     }
 
 
@@ -55,7 +52,7 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
 
     /**
      * @param Request $request
-     * @return JsonResponse
+     * @return array
      */
     public function editCompanyProfile(Request $request)
     {
@@ -76,8 +73,63 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
         $log = ActionLogWriter::updateProfile($this->getManager(), $client, $loggedInUser, $company);
         $this->flushClearAndGarbageCollect(); //Only flush after persisting both the client and ActionLogWriter
 
-        $outputArray = CompanyProfileOutput::create($company, $location);
+        return $this->getCompanyProfileOutput($company, $location);
+    }
 
-        return ResultUtil::successResult($outputArray);
+
+
+
+    /**
+     * @param Company $company
+     * @param Location $location
+     * @return array
+     */
+    private function getCompanyProfileOutput(Company $company, Location $location)
+    {
+        $billingAddress = $company->getBillingAddress();
+        $address = $company->getAddress();
+        $owner = $company->getOwner();
+
+        return [
+            "company_name" => Utils::fillNull($company->getCompanyName()),
+            "telephone_number" => Utils::fillNull($company->getTelephoneNumber()),
+            "ubn" => Utils::fillNull($location->getUbn()),
+            "vat_number" => Utils::fillNull($company->getVatNumber()),
+            "chamber_of_commerce_number" => Utils::fillNull($company->getChamberOfCommerceNumber()),
+            "company_relation_number" => Utils::fillNull($owner->getRelationNumberKeeper()),
+            "billing_address" =>
+                [
+                    "street_name" => Utils::fillNull($billingAddress->getStreetName()),
+                    "suffix" => Utils::fillNull($billingAddress->getAddressNumberSuffix()),
+                    "address_number" => Utils::fillNull($billingAddress->getAddressNumber()),
+                    "postal_code" => Utils::fillNull($billingAddress->getPostalCode()),
+                    "city" => Utils::fillNull($billingAddress->getCity()),
+                    "state" => Utils::fillNull($billingAddress->getState()),
+                    "country" => $billingAddress->getCountryDetails(),
+                ],
+            "address" =>
+                [
+                    "street_name" => Utils::fillNull($address->getStreetName()),
+                    "address_number" => $address->getAddressNumber(), //this is an integer
+                    "suffix" => Utils::fillNull($address->getAddressNumberSuffix()),
+                    "postal_code" => Utils::fillNull($address->getPostalCode()),
+                    "city" => Utils::fillNull($address->getCity()),
+                    "country" => $address->getCountryDetails(),
+                ],
+            "contact_person" =>
+                [
+                    "first_name" => Utils::fillNull($owner->getFirstName()),
+                    "last_name" => Utils::fillNull($owner->getLastName()),
+                    "cellphone_number" => Utils::fillNull($owner->getCellphoneNumber()),
+                ],
+            "veterinarian" =>
+                [
+                    "dap_number" => Utils::fillNull($company->getVeterinarianDapNumber()),
+                    "company_name" => Utils::fillNull($company->getVeterinarianCompanyName()),
+                    "telephone_number" => Utils::fillNull($company->getVeterinarianTelephoneNumber()),
+                    "email_address" => Utils::fillNull($company->getVeterinarianEmailAddress()),
+                ],
+            "is_reveal_historic_animals" => Utils::fillNull($company->getIsRevealHistoricAnimals()),
+        ];
     }
 }
