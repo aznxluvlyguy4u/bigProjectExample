@@ -433,8 +433,18 @@ COUNTRY DOES NOT EXIST IN THE DATABASE: Land bestaat niet in de database
 ANIMAL ALREADY HAS A DIFFERENT DATE OF DEATH: Dier heeft al een verschillende sterftedatum
 ANIMAL HAS ALREADY BEEN DECLARED DEAD: Dier is al dood gemeld
 ANIMAL IS STILL ON A DIFFERENT LOCATION: Dier is nog steeds op een andere locatie
-ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Aanvoeren zijn alleen toegestaan tussen UBNs binnen hetzelfde land
+ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: zijn alleen toegestaan tussen UBNs binnen hetzelfde land
 COMPANY RELATION NUMBER CANNOT BE EMPTY: BRS-nummer mag niet leeg zijn
+THE NEW OWNER HAS NO RELATION NUMBER KEEPER IN THE NSFO SYSTEM: De nieuwe eigenaar heeft geen relatienummerhouder in het NSFO systeem
+
+#Declares
+DECLARE_ARRIVALS: aanvoermeldingen
+DECLARE_DEPARTS: afvoermeldingen
+DECLARE_IMPORTS: importmeldingen
+DECLARE_EXPORTS: exportmeldingen
+DECLARE_LOSSES: sterftemeldingen
+DECLARE_TAG_TRANSFERS: oormerkoverdrachten
+DECLARE_TAG_REPLACEMENTS: omnummeringen
 
 #Messages
 DECLARE_ARRIVAL_NOTIFICATION_MESSAGE: Automatisch een aanvoer melding uitgevoerd
