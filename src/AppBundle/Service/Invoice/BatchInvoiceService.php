@@ -259,7 +259,7 @@ class BatchInvoiceService extends ControllerServiceBase
             if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
                 $this->persist($message);
                 foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                    $title = $this->translator->trans($message->getType());
+                    $title = $this->translator->trans($message->getNotificationMessageTranslationKey());
                     $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
                 }
             }

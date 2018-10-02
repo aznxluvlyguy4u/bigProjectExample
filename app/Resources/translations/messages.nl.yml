@@ -437,9 +437,9 @@ ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Aanvoeren zijn all
 COMPANY RELATION NUMBER CANNOT BE EMPTY: BRS-nummer mag niet leeg zijn
 
 #Messages
-DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd
-DECLARE_DEPART: Automatisch een afvoer melding uitgevoerd
-NEW_INVOICE: U heeft een nieuwe factuur ontvangen
+DECLARE_ARRIVAL_NOTIFICATION_MESSAGE: Automatisch een aanvoer melding uitgevoerd
+DECLARE_DEPART_NOTIFICATION_MESSAGE: Automatisch een afvoer melding uitgevoerd
+NEW_INVOICE_NOTIFICATION_MESSAGE: U heeft een nieuwe factuur ontvangen
 A SIMILAR REPORT IS ALREADY BEING GENERATED: Een identieke rapportage wordt al gegenereerd
 THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7: De volgende n-ling waarden moeten zitten tussen 0 en 7
 SHOULD BE: moet zijn

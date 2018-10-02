@@ -229,7 +229,7 @@ class InvoiceService extends ControllerServiceBase
             $location = $repository->findOneByActiveUbn($invoice->getUbn());
             $message = $this->createInvoiceCreatedMessage($request, $invoice);
             foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                $title = $this->translator->trans($message->getType());
+                $title = $this->translator->trans($message->getNotificationMessageTranslationKey());
                 $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
             }
         }
@@ -433,7 +433,7 @@ class InvoiceService extends ControllerServiceBase
 
             if ($location) {
                 foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                    $title = $this->translator->trans($message->getType());
+                    $title = $this->translator->trans($message->getNotificationMessageTranslationKey());
                     $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
                 }
             }
