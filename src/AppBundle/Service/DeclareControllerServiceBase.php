@@ -30,10 +30,12 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 abstract class DeclareControllerServiceBase extends ControllerServiceBase
 {
@@ -296,4 +298,16 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     }
 
 
+    /**
+     * @param Location $location
+     * @param string $declareClazz
+     */
+    protected function validateIfLocationIsDutch(Location $location, string $declareClazz)
+    {
+        if (!$location->isDutchLocation()) {
+            $message = ucfirst($this->translator->trans(StringUtil::getDeclareTranslationKey($declareClazz, true)))
+            .' '.$this->translator->trans('ARE ONLY ALLOWED FOR DUTCH UBNS');
+            throw new PreconditionFailedHttpException($message);
+        }
+    }
 }

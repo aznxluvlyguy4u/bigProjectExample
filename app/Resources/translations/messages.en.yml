@@ -426,6 +426,7 @@ ANIMAL ALREADY HAS A DIFFERENT DATE OF DEATH: Animal already has a different dat
 ANIMAL HAS ALREADY BEEN DECLARED DEAD: Animal has already been declared dead
 ANIMAL IS STILL ON A DIFFERENT LOCATION: Animal is still on a different location
 ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: are only allowed between UBNs within the same country
+ARE ONLY ALLOWED FOR DUTCH UBNS: are only allowed for Dutch UBNs
 COMPANY RELATION NUMBER CANNOT BE EMPTY: Company relation number (BRS-number) cannot be empty
 THE NEW OWNER HAS NO RELATION NUMBER KEEPER IN THE NSFO SYSTEM: The new owner has no relation number keeper (BSR-number) in the NSFO system
 
@@ -435,7 +436,7 @@ DECLARE_DEPARTS: departs
 DECLARE_IMPORTS: imports
 DECLARE_EXPORTS: exports
 DECLARE_LOSSES: losses
-DECLARE_TAG_TRANSFERS: tag transfers
+DECLARE_TAGS_TRANSFERS: tag transfers
 DECLARE_TAG_REPLACEMENTS: tag replacements
 
 #Messages

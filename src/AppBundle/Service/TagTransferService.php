@@ -47,6 +47,8 @@ class TagTransferService extends DeclareControllerServiceBase
 
         $log = ActionLogWriter::declareTagTransferPost($this->getManager(), $client, $loggedInUser, $content);
 
+        $this->validateIfLocationIsDutch($location,DeclareTagsTransfer::class);
+
         //Validate if ubn is in database and retrieve the relationNumberKeeper owning that ubn
         $locationNewOwner = $this->getValidatedLocationNewOwner($content->get(Constant::UBN_NEW_OWNER_NAMESPACE), $location);
         $content->set('relation_number_acceptant', $locationNewOwner->getOwner()->getRelationNumberKeeper());
