@@ -14,6 +14,7 @@ class QueryParameter
     const FORMAL = 'formal';
     const FULL_OUTPUT = 'full_output';
     const IGNORE_LOCATION = 'ignore_location';
+    const GENDER = 'gender';
     const INCLUDE_ALL_LIVESTOCK_ANIMALS = 'include_all_livestock_animals';
     const INCLUDE_GHOST_LOGIN_DATA = 'include_ghost_login_data';
     const INCLUDE_LITTER = 'include_litter';
