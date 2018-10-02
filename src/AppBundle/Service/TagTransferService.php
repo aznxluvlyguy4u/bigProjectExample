@@ -10,6 +10,7 @@ use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\TagTransferItemResponse;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Exception\DeclareToOtherCountryHttpException;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -97,7 +98,8 @@ class TagTransferService extends DeclareControllerServiceBase
             }
 
             if ($locationNewOwner->getCountryCode() !== $loggedInLocation->getCountryCode()){
-                // TODO add error message
+                throw new DeclareToOtherCountryHttpException($this->translator,DeclareTagsTransfer::class,
+                    $locationNewOwner, $loggedInLocation);
             }
 
             if (!$locationNewOwner->getOwner() || empty($locationNewOwner->getOwner()->getRelationNumberKeeper())) {
