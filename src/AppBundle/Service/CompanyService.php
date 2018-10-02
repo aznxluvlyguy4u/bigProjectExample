@@ -58,14 +58,17 @@ class CompanyService extends AuthServiceBase
         // Get all companies
         $em = $this->getManager();
         $query = $em->createQuery(
-            'SELECT c,a,u,l,o,i,b         
+            'SELECT c,a,u,l,o,i,b,la,lc         
             FROM AppBundle:Company c 
             LEFT JOIN c.locations l 
             LEFT JOIN c.owner o 
             LEFT JOIN c.companyUsers u 
             LEFT JOIN c.address a
             LEFT JOIN c.billingAddress b
-            LEFT JOIN c.invoices i'
+            LEFT JOIN c.invoices i
+            LEFT JOIN l.address la
+            LEFT JOIN la.countryDetails lc
+            '
         );
         $companies = $query->getResult(Query::HYDRATE_ARRAY);
 
