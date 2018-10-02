@@ -216,7 +216,11 @@ class ReportService
      */
     private function createPedigreeCertificatesWithoutWorker(Request $request)
     {
-        $person = $this->userService->getAccountOwner($request);
+        $person = $this->userService->getUser();
+        if(!AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
+            $person = $this->userService->getAccountOwner($request);
+        }
+
         $location = $this->userService->getSelectedLocation($request);
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
