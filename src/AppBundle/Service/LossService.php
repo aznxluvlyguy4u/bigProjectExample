@@ -100,13 +100,8 @@ class LossService extends DeclareControllerServiceBase
 
         $log = ActionLogWriter::declareLossPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
-        //Client can only report a loss of own animals //TODO verify if animal belongs to UBN
-        $animal = $content->get(Constant::ANIMAL_NAMESPACE);
-        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)->verifyIfClientOwnsAnimal($client, $animal);
+        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
 
-        if(!$isAnimalOfClient) {
-            return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
-        }
         //Convert the array into an object and add the mandatory values retrieved from the database
         $messageObject = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
 
@@ -150,13 +145,7 @@ class LossService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
-        //Client can only report a loss of own animals
-        $animal = $content->get(Constant::ANIMAL_NAMESPACE);
-        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)->verifyIfClientOwnsAnimal($client, $animal);
-
-        if(!$isAnimalOfClient) {
-            return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
-        }
+        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);

@@ -169,13 +169,7 @@ class DepartService extends DeclareControllerServiceBase
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
         $arrivalLog = null;
 
-        //Client can only depart/export own animals
-        $animal = $content->get(Constant::ANIMAL_NAMESPACE);
-        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)->verifyIfClientOwnsAnimal($client, $animal);
-
-        if(!$isAnimalOfClient) {
-            return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
-        }
+        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);
@@ -262,13 +256,7 @@ class DepartService extends DeclareControllerServiceBase
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
         $arrivalLog = null;
 
-        //Client can only depart/export own animals
-        $animal = $content->get(Constant::ANIMAL_NAMESPACE);
-        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)->verifyIfClientOwnsAnimal($client, $animal);
-
-        if(!$isAnimalOfClient) {
-            return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
-        }
+        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);

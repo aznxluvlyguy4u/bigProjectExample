@@ -55,14 +55,8 @@ class TagReplaceService extends DeclareControllerServiceBase
         }
 
         $log = ActionLogWriter::declareTagReplacePost($this->getManager(), $client, $loggedInUser, $content);
-        $animal = $content->get(Constant::ANIMAL_NAMESPACE);
 
-        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)->verifyIfClientOwnsAnimal($client, $animal);
-
-        //Check if uln is valid
-        if(!$isAnimalOfClient) {
-            return new JsonResponse("ANIMAL DOES NOT BELONG TO THIS ACCOUNT", 428);
-        }
+        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Check if tag replacement is unassigned and in the database, else don't send any TagReplace
         $tagContent = $content->get(Constant::TAG_NAMESPACE);

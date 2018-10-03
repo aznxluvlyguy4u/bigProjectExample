@@ -7,6 +7,8 @@ namespace AppBundle\Service;
 use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -308,6 +310,21 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
             $message = ucfirst($this->translator->trans(StringUtil::getDeclareTranslationKey($declareClazz, true)))
             .' '.$this->translator->trans('ARE ONLY ALLOWED FOR DUTCH UBNS');
             throw new PreconditionFailedHttpException($message);
+        }
+    }
+
+
+    /**
+     * @param Client $client
+     * @param array $animalArray
+     */
+    protected function verifyIfClientOwnsAnimal(Client $client, array $animalArray): void
+    {
+        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)
+            ->verifyIfClientOwnsAnimal($client, $animalArray);
+
+        if(!$isAnimalOfClient) {
+            throw new PreconditionFailedHttpException("Animal doesn't belong to this account.");
         }
     }
 }
