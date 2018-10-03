@@ -19,7 +19,7 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareLoss extends DeclareBase
+class DeclareLoss extends DeclareBase implements DeclareAnimalDataInterface, BasicRvoDeclareInterface
 {
     use EntityClassInfo;
 
@@ -217,11 +217,11 @@ class DeclareLoss extends DeclareBase
     /**
      * Set location
      *
-     * @param \AppBundle\Entity\Location $location
+     * @param Location $location
      *
      * @return DeclareLoss
      */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
+    public function setLocation(Location $location = null)
     {
         $this->location = $location;
         $this->setUbn($this->location->getUbn());
@@ -314,7 +314,7 @@ class DeclareLoss extends DeclareBase
     /**
      * @param RevokeDeclaration $revoke
      */
-    public function setRevoke($revoke = null)
+    public function setRevoke(RevokeDeclaration $revoke = null)
     {
         $this->revoke = $revoke;
     }

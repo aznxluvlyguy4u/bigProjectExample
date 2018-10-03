@@ -18,7 +18,7 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareBirth extends DeclareBase
+class DeclareBirth extends DeclareBase implements BasicRvoDeclareInterface
 {
     use EntityClassInfo;
 
@@ -403,11 +403,11 @@ class DeclareBirth extends DeclareBase
     /**
      * Set location
      *
-     * @param \AppBundle\Entity\Location $location
+     * @param Location $location
      *
      * @return DeclareBirth
      */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
+    public function setLocation(Location $location = null)
     {
         $this->location = $location;
         $this->setUbn($this->location->getUbn());
@@ -572,7 +572,7 @@ class DeclareBirth extends DeclareBase
     /**
      * @param RevokeDeclaration $revoke
      */
-    public function setRevoke($revoke = null)
+    public function setRevoke(RevokeDeclaration $revoke = null)
     {
         $this->revoke = $revoke;
     }

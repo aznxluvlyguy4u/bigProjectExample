@@ -59,7 +59,7 @@ use \DateTime;
  *
  * @package AppBundle\Entity\DeclareBase
  */
-abstract class DeclareBase implements DeclareLogInterface
+abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
 {
     use EntityClassInfo;
 

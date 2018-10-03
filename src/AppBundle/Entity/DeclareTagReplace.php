@@ -16,7 +16,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareTagReplaceRepository")
  * @package AppBundle\Entity
  */
-class DeclareTagReplace extends DeclareBase
+class DeclareTagReplace extends DeclareBase implements BasicRvoDeclareInterface
 {
     use EntityClassInfo;
 
@@ -303,11 +303,11 @@ class DeclareTagReplace extends DeclareBase
     /**
      * Set location
      *
-     * @param \AppBundle\Entity\Location $location
+     * @param Location $location
      *
      * @return DeclareTagReplace
      */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
+    public function setLocation(Location $location = null)
     {
         $this->location = $location;
         $this->setUbn($location->getUbn());
@@ -386,11 +386,11 @@ class DeclareTagReplace extends DeclareBase
     /**
      * Set revoke
      *
-     * @param \AppBundle\Entity\RevokeDeclaration $revoke
+     * @param RevokeDeclaration $revoke
      *
      * @return DeclareTagReplace
      */
-    public function setRevoke(\AppBundle\Entity\RevokeDeclaration $revoke = null)
+    public function setRevoke(RevokeDeclaration $revoke = null)
     {
         $this->revoke = $revoke;
 
