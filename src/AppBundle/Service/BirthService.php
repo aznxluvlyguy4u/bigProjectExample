@@ -577,20 +577,16 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             if ($litter->getDeclareBirths()->count() > 0) {
                 foreach ($litter->getDeclareBirths() as $declareBirth) {
 
-                    if (!$declareBirth->isRvoMessage()) {
-                        // If one declareBirth is not an RVO message,
-                        // the others in the same litter are also not RVO messages.
-                        break;
-                    }
-
                     $declareBirthCount++;
                     $declareBirthResponse = $this->entityGetter
                         ->getResponseDeclarationByMessageId($declareBirth->getMessageId());
 
                     if ($declareBirthResponse) {
                         $declareBirthResponseCount++;
-                        //Only successful responses contain messageNumbers and can be revoked
-                        if($declareBirthResponse->getMessageNumber() != null) {
+                        //Only successful RVO responses contain messageNumbers and can be revoked by a RevokeDeclare
+                        if ($declareBirth->isRvoMessage() &&
+                            $declareBirthResponse->getMessageNumber() != null
+                        ) {
                             $message = new ArrayCollection();
                             $message->set(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE, $declareBirthResponse->getMessageNumber());
                             $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $message, $client, $loggedInUser, $location);
