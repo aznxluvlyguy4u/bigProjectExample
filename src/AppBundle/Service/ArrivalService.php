@@ -203,6 +203,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $departLocation = $this->getValidatedLocationPreviousOwner($location, $content->get(Constant::UBN_PREVIOUS_OWNER_NAMESPACE));
 
+        $this->validateIfOriginAndDestinationAreInSameCountry(DeclareArrival::class, $departLocation, $location);
+
         if ($location->getAnimalHealthSubscription()) {
             //LocationHealth null value fixes
             $this->healthService->fixLocationHealthMessagesWithNullValues($location);

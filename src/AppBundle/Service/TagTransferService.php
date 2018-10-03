@@ -10,7 +10,6 @@ use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\TagTransferItemResponse;
 use AppBundle\Enumerator\RequestType;
-use AppBundle\Exception\DeclareToOtherCountryHttpException;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -99,10 +98,8 @@ class TagTransferService extends DeclareControllerServiceBase
                 $errorMessage .= ucfirst(strtolower($this->translator->trans('UBN NEW OWNER CANNOT BE SAME AS LOGGED IN UBN'))).'. ';
             }
 
-            if ($locationNewOwner->getCountryCode() !== $loggedInLocation->getCountryCode()){
-                throw new DeclareToOtherCountryHttpException($this->translator,DeclareTagsTransfer::class,
-                    $locationNewOwner, $loggedInLocation);
-            }
+            $this->validateIfOriginAndDestinationAreInSameCountry(DeclareTagsTransfer::class,
+                $loggedInLocation, $locationNewOwner);
 
             if (!$locationNewOwner->getOwner() || empty($locationNewOwner->getOwner()->getRelationNumberKeeper())) {
                 //'relationNumberKeeper' is an obligatory field in Client, so no need to verify if that field exists or not.

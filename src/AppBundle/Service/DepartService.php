@@ -178,6 +178,8 @@ class DepartService extends DeclareControllerServiceBase
         $repository = $this->getManager()->getRepository(Location::class);
         $arrivalLocation = $repository->findOneBy(['ubn' => $messageObject->getUbnNewOwner(), 'isActive' => true]);
 
+        $this->validateIfOriginAndDestinationAreInSameCountry(DeclareDepart::class, $location, $arrivalLocation);
+
         if($arrivalLocation) {
             $arrivalOwner = $arrivalLocation->getCompany()->getOwner();
 

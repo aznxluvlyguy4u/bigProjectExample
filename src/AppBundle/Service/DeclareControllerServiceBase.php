@@ -30,6 +30,7 @@ use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Exception\DeclareToOtherCountryHttpException;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
@@ -297,6 +298,20 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         }
 
         return $newestDeclare;
+    }
+
+
+    /**
+     * @param string $declareClazz
+     * @param Location $origin
+     * @param Location $destination
+     */
+    protected function validateIfOriginAndDestinationAreInSameCountry(string $declareClazz,
+                                                                      Location $origin, Location $destination)
+    {
+        if ($origin->getCountryCode() !== $destination->getCountryCode()){
+            throw new DeclareToOtherCountryHttpException($this->translator, $declareClazz, $destination, $origin);
+        }
     }
 
 
