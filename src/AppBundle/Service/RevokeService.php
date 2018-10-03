@@ -24,6 +24,7 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\DirectProcessor\RevokeProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -35,6 +36,9 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
     /** @var EntityGetter */
     private $entityGetter;
 
+    /** @var RevokeProcessorInterface */
+    private $revokeProcessor;
+
     /**
      * @required
      *
@@ -45,12 +49,32 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
         $this->entityGetter = $entityGetter;
     }
 
+    /**
+     * @required
+     *
+     * @param RevokeProcessorInterface $revokeProcessor
+     */
+    public function setRevokeProcessor(RevokeProcessorInterface $revokeProcessor): void
+    {
+        $this->revokeProcessor = $revokeProcessor;
+    }
+
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
     public function createRevoke(Request $request)
+    {
+        $location = $this->getSelectedLocation($request);
+        if ($location->isDutchLocation()) {
+            return $this->createRvoRevoke($request);
+        }
+        return $this->processNonRvoRevoke($request);
+    }
+
+
+    private function createRvoRevoke(Request $request)
     {
         $content = RequestUtil::getContentAsArray($request);
         $client = $this->getAccountOwner($request);
@@ -83,6 +107,28 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
         $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
         return new JsonResponse($messageArray, 200);
+    }
+
+
+    private function processNonRvoRevoke(Request $request)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+        $client = $this->getAccountOwner($request);
+        $loggedInUser = $this->getUser();
+        $location = $this->getSelectedLocation($request);
+
+        // TODO
+        // get declare from messageID
+        // switch
+        // $this->revokeProcessor->revokeArrival($declare);
+
+       //  $log = ActionLogWriter::revokePost($this->getManager(), $client, $loggedInUser, $revokeDeclarationObject);
+
+
+
+        // $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
+
+        // return new JsonResponse($messageArray, 200);
     }
 
 

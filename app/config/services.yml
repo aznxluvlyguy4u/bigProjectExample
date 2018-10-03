@@ -866,6 +866,9 @@ services:
           - method: setEntityGetter
             arguments:
               - '@app.doctrine.entitygetter'
+          - method: setRevokeProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\RevokeProcessorInterface'
 
     AppBundle\Service\QueueDashboardService:
         parent: app.abstract_base.controller
@@ -1056,6 +1059,9 @@ services:
         class: AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessor
         parent: app.abstract_base.direct_processor
 
+    AppBundle\Worker\DirectProcessor\RevokeProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\RevokeProcessor
+        parent: app.abstract_base.direct_processor
 
 
     # Listeners
