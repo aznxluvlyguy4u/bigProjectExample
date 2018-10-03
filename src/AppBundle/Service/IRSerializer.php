@@ -621,10 +621,8 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 }
 
                 //Create new residence
-                $animalResidence = new AnimalResidence();
+                $animalResidence = new AnimalResidence($tagToReserve->getUlnCountryCode(), false);
                 $animalResidence->setAnimal($child);
-                $animalResidence->setCountry($tagToReserve->getUlnCountryCode());
-                $animalResidence->setIsPending(false);
                 $animalResidence->setLocation($location);
                 $animalResidence->setStartDate($dateOfBirth);
                 $child->addAnimalResidenceHistory($animalResidence);

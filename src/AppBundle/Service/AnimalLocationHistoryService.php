@@ -37,7 +37,7 @@ class AnimalLocationHistoryService
      */
     public static function logAnimalResidenceInEdit($messageObject) {
 
-        $animal = $messageObject->getAnimal();;
+        $animal = $messageObject->getAnimal();
         $animalResidence = Utils::returnLastItemFromCollectionByLogDate($animal->getAnimalResidenceHistory());
         $animalResidence->setIsPending(true);
 
@@ -63,10 +63,9 @@ class AnimalLocationHistoryService
         $animalResidence = Utils::returnLastItemFromCollectionByLogDate($animal->getAnimalResidenceHistory());
 
         if($animalResidence == null) {
-            $animalResidence = new AnimalResidence();
+            $animalResidence = new AnimalResidence($location->getCountryCode(),true);
             self::$entityManager->persist($animalResidence);
             self::$entityManager->flush();
-            //isPending = true, by default when creating a new AnimalResidence
             $animalResidence->setAnimal($animal);
             $animalResidence->setLocation($location);
 

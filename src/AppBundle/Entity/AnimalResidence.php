@@ -2,9 +2,6 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Entity\Location;
-use AppBundle\Entity\Animal;
-use AppBundle\Enumerator\Country as CountryEnumerator;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -221,13 +218,10 @@ class AnimalResidence
     }
 
 
-    /**
-     * AnimalResidence constructor.
-     */
-    public function __construct($country = CountryEnumerator::NL, $isPending = true)
+    public function __construct($countryCode, $isPending = true)
     {
         $this->isPending = $isPending;
-        $this->country = $country;
+        $this->country = $countryCode;
         $this->logDate = new \DateTime('now');
     }
 
