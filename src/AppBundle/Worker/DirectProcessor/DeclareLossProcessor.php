@@ -8,6 +8,8 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareLossResponse;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Enumerator\RvoErrorCode;
+use AppBundle\Enumerator\RvoErrorMessage;
 use AppBundle\Util\TimeUtil;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
@@ -82,6 +84,10 @@ class DeclareLossProcessor extends DeclareProcessorBase implements DeclareLossPr
         }
 
         if (TimeUtil::isDateTimesOnTheSameDay($this->animal->getDateOfDeath(), $this->loss->getDateOfDeath())) {
+            $this->response->setWarningValues(
+                RvoErrorMessage::REPEATED_LOSS_00185,
+                RvoErrorCode::REPEATED_LOSS_00185
+            );
             return RequestStateType::FINISHED_WITH_WARNING;
         }
 
