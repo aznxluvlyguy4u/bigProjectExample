@@ -10,7 +10,6 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagReplace;
-use AppBundle\Entity\DeclareTagsTransfer;
 
 interface RevokeProcessorInterface extends DeclareProcessorBaseInterface
 {
