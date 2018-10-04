@@ -45,21 +45,22 @@ class ExceptionListener
         $errorMessage = empty($exception->getMessage())
         || $exception instanceof \Doctrine\DBAL\DBALException // Prevent leaking of database schema
             ? self::getDefaultErrorMessage($code) : $exception->getMessage();
-        $errorData = $this->environment !== Environment::PROD ? self::nestErrorTrace($exception->getTraceAsString()) : null;
+        $errorData = $this->environment !== Environment::PROD ? self::nestErrorTrace($exception) : null;
         $errorResponse = $this->errorResult($errorMessage, $code, $errorData);
         $event->setResponse($errorResponse);
     }
 
 
     /**
-     * @param string $traceAsString
+     * @param \Exception $exception
      * @return array
      */
-    private static function nestErrorTrace($traceAsString): array
+    private static function nestErrorTrace($exception): array
     {
         $nestedErrorTrace = [];
+        $nestedErrorTrace[] = $exception->getMessage();
 
-        foreach (explode('#',$traceAsString) as $line) {
+        foreach (explode('#',$exception->getTraceAsString()) as $line) {
             $nestedErrorTrace[] = explode(': ', $line);
         }
 
