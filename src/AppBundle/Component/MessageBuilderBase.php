@@ -12,10 +12,10 @@ use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
-use AppBundle\Entity\DeclareMate;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
@@ -28,8 +28,6 @@ use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\EntityGetter;
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\HttpFoundation\Request;
-use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
 
 /**
@@ -58,25 +56,7 @@ class MessageBuilderBase
     {
         $this->em = $em;
         $this->entityGetter = new EntityGetter($em);
-        
-        /* Set actionType based on environment */
-        switch($currentEnvironment) {
-            case Environment::PROD:
-                $this->actionType = ActionType::V_MUTATE;
-                break;
-            case Environment::DEV:
-                $this->actionType = ActionType::V_MUTATE;
-                break;
-            case Environment::TEST:
-                $this->actionType = ActionType::C_READ_ONLY;
-                break;
-            case Environment::LOCAL:
-                $this->actionType = ActionType::V_MUTATE;
-                break;
-            default; //dev
-                $this->actionType = ActionType::V_MUTATE;
-                break;
-        }
+        $this->actionType = self::getActionTypeByEnvironment($currentEnvironment);
     }
 
     /**
@@ -88,45 +68,20 @@ class MessageBuilderBase
      * @param Person $person
      * @param Person $loggedInUser
      * @param Location $location
-     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|DeclareMate|DeclarationDetail|RevokeDeclaration|DeclareTagReplace the base message
+     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|Mate|DeclarationDetail|RevokeDeclaration|DeclareTagReplace the base message
      */
     protected function buildBaseMessageObject($messageObject, Person $person, Person $loggedInUser,
                                               Location $location)
     {
-        //Generate new requestId
-
-        if($messageObject->getRequestId()== null) {
-            $requestId = $this->getNewRequestId();
-            //Add general data to content
-            $messageObject->setRequestId($requestId);
-        }
+        $messageObject = self::setStandardDeclareBaseValues($messageObject, $person, $loggedInUser, $this->actionType, $location->isDutchLocation());
 
         if($messageObject->getAction() == null) {
             $messageObject->setAction($this->actionType);
         }
 
-        $messageObject->setLogDate(new \DateTime());
-        $messageObject->setRequestState(RequestStateType::OPEN);
-
         if($messageObject->getRecoveryIndicator() == null) {
             $messageObject->setRecoveryIndicator(RecoveryIndicatorType::N);
         }
-
-        //Add relationNumberKeeper to content
-
-        if($person instanceof Client) {
-            $relationNumberKeeper = $person->getRelationNumberKeeper();
-        } else { //TODO what if an employee does a DA request?
-            $relationNumberKeeper = ""; // mandatory for I&R
-        }
-
-        $messageObject->setRelationNumberKeeper($relationNumberKeeper);
-
-        if($loggedInUser instanceof Person) {
-            $messageObject->setActionBy($loggedInUser);
-        }
-
-        $messageObject->setIsRvoMessage($location->isDutchLocation());
 
         return $messageObject;
     }
@@ -140,32 +95,7 @@ class MessageBuilderBase
      */
     protected function buildBaseRetrieveMessageObject($messageObject, $person, $loggedInUser)
     {
-        //Generate new requestId
-
-        if($messageObject->getRequestId()== null) {
-            $requestId = $this->getNewRequestId();
-            //Add general data to content
-            $messageObject->setRequestId($requestId);
-        }
-
-        $messageObject->setLogDate(new \DateTime());
-        $messageObject->setRequestState(RequestStateType::OPEN);
-
-        //Add relationNumberKeeper to content
-
-        if($person instanceof Client) {
-            $relationNumberKeeper = $person->getRelationNumberKeeper();
-        } else { //TODO what if an employee does a DA request?
-            $relationNumberKeeper = ""; // mandatory for I&R
-        }
-
-        $messageObject->setRelationNumberKeeper($relationNumberKeeper);
-
-        if($loggedInUser instanceof Person) {
-            $messageObject->setActionBy($loggedInUser);
-        }
-
-        return $messageObject;
+        return self::setStandardBaseRetrieveValues($messageObject, $person, $loggedInUser);
     }
 
     /**
@@ -178,4 +108,89 @@ class MessageBuilderBase
         return uniqid(mt_rand(0,9999999));
     }
 
+
+    /**
+     * @param DeclareBase $declare
+     * @param Person $person
+     * @param Person $loggedInUser
+     * @param string $actionType
+     * @param bool $isRvoMessage
+     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|Mate|DeclarationDetail|RevokeDeclaration|DeclareTagReplace the base message
+     */
+    public static function setStandardDeclareBaseValues($declare, $person, $loggedInUser, $actionType, $isRvoMessage)
+    {
+        $declare = self::setDeclareValuesBase($declare, $person, $loggedInUser);
+
+        if($declare->getAction() == null) {
+            $declare->setAction($actionType);
+        }
+
+        if($declare->getRecoveryIndicator() == null) {
+            $declare->setRecoveryIndicator(RecoveryIndicatorType::N);
+        }
+
+        $declare->setIsRvoMessage($isRvoMessage);
+
+        return $declare;
+    }
+
+
+    /**
+     * @param DeclareBase $declare
+     * @param Client $person
+     * @param Person $loggedInUser
+     * @return DeclareBase
+     */
+    public static function setStandardBaseRetrieveValues($declare, $person, $loggedInUser)
+    {
+        return self::setDeclareValuesBase($declare, $person, $loggedInUser);
+    }
+
+
+    /**
+     * @param DeclareBase $declare
+     * @param Client $person
+     * @param Person $loggedInUser
+     * @return DeclareBase
+     */
+    private static function setDeclareValuesBase($declare, $person, $loggedInUser)
+    {
+        if ($declare->getRequestId()== null) {
+            $declare->setRequestId(self::getNewRequestId());
+        }
+
+        $declare->setLogDate(new \DateTime());
+        $declare->setRequestState(RequestStateType::OPEN);
+
+        $relationNumberKeeper = ($person instanceof Client) ? $person->getRelationNumberKeeper() : null;
+        $declare->setRelationNumberKeeper($relationNumberKeeper);
+
+        if($loggedInUser instanceof Person) {
+            $declare->setActionBy($loggedInUser);
+        }
+
+        return $declare;
+    }
+
+
+    /**
+     * @param string $environment
+     * @return string
+     */
+    public static function getActionTypeByEnvironment($environment): string
+    {
+        if (
+            $environment === Environment::PROD ||
+            $environment === Environment::DEV ||
+            $environment === Environment::LOCAL
+        ) {
+            return ActionType::V_MUTATE;
+        }
+
+        if ($environment === Environment::TEST) {
+            return ActionType::C_READ_ONLY;
+        }
+
+        return ActionType::V_MUTATE;
+    }
 }
