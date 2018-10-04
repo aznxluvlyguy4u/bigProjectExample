@@ -229,7 +229,7 @@ class TagsService extends ControllerServiceBase
         }
 
         if (!empty($blockedTagsErrorMessage)) {
-            $errorMessage = $this->translator->trans('THE FOLLOWING ULNS ARE BLOCKED FOR YOU');
+            $errorMessage = $this->translator->trans('THE FOLLOWING ULNS ARE BLOCKED FOR YOU').': ';
             throw new PreconditionFailedHttpException($errorMessage . implode('; ', $blockedTagsErrorMessage));
         }
 
