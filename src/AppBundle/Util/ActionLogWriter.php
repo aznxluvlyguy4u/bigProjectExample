@@ -491,6 +491,29 @@ class ActionLogWriter
 
 
     /**
+     * @param EntityManagerInterface $em
+     * @param Client $client
+     * @param Person $actionBy
+     * @param RevokeDeclaration $revoke
+     * @return ActionLog
+     */
+    public static function nonRvoRevoke(EntityManagerInterface $em, $client, $actionBy, RevokeDeclaration $revoke)
+    {
+        $userActionType = UserActionType::REVOKE_DECLARATION;
+
+        $description = 'revoking: '.$revoke->getRequestTypeToRevoke()
+            .' with requestId: '.$revoke->getRequestIdToRevoke().'.';
+
+        $log = new ActionLog($client, $actionBy, $userActionType, true, $description,
+            true,false);
+        $log->setIsRvoMessage(false);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
      * @param ObjectManager $om
      * @param Person $loggedInUser
      * @param Client $client
