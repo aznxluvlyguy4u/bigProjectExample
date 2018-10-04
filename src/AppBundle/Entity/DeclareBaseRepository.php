@@ -138,4 +138,13 @@ class DeclareBaseRepository extends BaseRepository implements DeclareBaseReposit
         return $declare;
     }
 
+
+    /**
+     * @param $requestId
+     * @return null|object
+     */
+    public function getByRequestId($requestId)
+    {
+        return $this->findOneBy(['requestId' => $requestId]);
+    }
 }

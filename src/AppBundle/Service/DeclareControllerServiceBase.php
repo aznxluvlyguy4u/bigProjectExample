@@ -39,6 +39,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
 abstract class DeclareControllerServiceBase extends ControllerServiceBase
 {
@@ -341,5 +342,24 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         if(!$isAnimalOfClient) {
             throw new PreconditionFailedHttpException("Animal doesn't belong to this account.");
         }
+    }
+
+
+    /**
+     * @param string $requestId
+     * @return DeclareBase
+     */
+    protected function getRequestByRequestId($requestId): DeclareBase
+    {
+        if (empty($requestId)) {
+            throw new PreconditionRequiredHttpException('RequestId is empty');
+        }
+
+        $declareBase = $this->getManager()->getRepository(DeclareBase::class)->getByRequestId($requestId);
+        if (!$declareBase) {
+            throw new PreconditionRequiredHttpException('Declare was not found for requestId '.$requestId);
+        }
+
+        return $declareBase;
     }
 }
