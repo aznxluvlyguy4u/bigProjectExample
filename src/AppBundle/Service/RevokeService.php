@@ -9,10 +9,18 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\RevokeAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Mate;
 use AppBundle\Enumerator\AccessLevelType;
@@ -20,6 +28,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\Output;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
@@ -28,6 +37,7 @@ use AppBundle\Worker\DirectProcessor\RevokeProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
 
@@ -62,7 +72,8 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
     /**
      * @param Request $request
-     * @return JsonResponse
+     * @return array
+     * @throws \Exception
      */
     public function createRevoke(Request $request)
     {
@@ -74,6 +85,11 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
     }
 
 
+    /**
+     * @param Request $request
+     * @return array
+     * @throws \Exception
+     */
     private function createRvoRevoke(Request $request)
     {
         $content = RequestUtil::getContentAsArray($request);
@@ -81,14 +97,7 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
-        //Validate if there is a message_number. It is mandatory for IenR
-        $validation = $this->hasMessageNumber($content);
-        if(!$validation['isValid']) {
-            return ResultUtil::errorResult(
-                $validation[Constant::MESSAGE_NAMESPACE][Constant::MESSAGE_NAMESPACE],
-                $validation[Constant::CODE_NAMESPACE]
-            );
-        }
+        $this->hasMessageNumber($content);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $client, $loggedInUser, $location);
@@ -106,55 +115,69 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
         $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
-        return new JsonResponse($messageArray, 200);
+        return $messageArray;
     }
 
 
+    /**
+     * @param Request $request
+     * @return array
+     */
     private function processNonRvoRevoke(Request $request)
     {
         $content = RequestUtil::getContentAsArray($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
-        $location = $this->getSelectedLocation($request);
 
-        // TODO
-        // get declare from messageID
-        // switch
-        // $this->revokeProcessor->revokeArrival($declare);
+        $requestId = $content->get(JsonInputConstant::REQUEST_ID);
+        $declare = $this->getRequestByRequestId($requestId);
+        $this->validateDeclareForRevoke($declare);
 
-       //  $log = ActionLogWriter::revokePost($this->getManager(), $client, $loggedInUser, $revokeDeclarationObject);
+        switch (true) {
+            case $declare instanceof DeclareArrival:
+                $revoke = $this->revokeProcessor->revokeArrival($declare);
+                break;
 
+            case $declare instanceof DeclareDepart:
+                $revoke = $this->revokeProcessor->revokeDepart($declare);
+                break;
 
+            case $declare instanceof DeclareExport:
+                $revoke = $this->revokeProcessor->revokeExport($declare);
+                break;
 
-        // $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
+            case $declare instanceof DeclareImport:
+                $revoke = $this->revokeProcessor->revokeImport($declare);
+                break;
 
-        // return new JsonResponse($messageArray, 200);
+            case $declare instanceof DeclareLoss:
+                $revoke = $this->revokeProcessor->revokeLoss($declare);
+                break;
+
+            case $declare instanceof DeclareTagReplace:
+                $revoke = $this->revokeProcessor->revokeTagReplace($declare);
+                break;
+
+            default: throw new PreconditionRequiredHttpException(
+                'Non-NL revoke is not allowed for this declare type: '.Utils::getClassName($declare));
+        }
+
+        ActionLogWriter::nonRvoRevoke($this->getManager(), $client, $loggedInUser, $revoke);
+
+        return $this->getDeclareMessageArray($revoke,false);
     }
 
 
     /**
      * @param ArrayCollection $content
-     * @return array
      */
-    public function hasMessageNumber(ArrayCollection $content)
+    public function hasMessageNumber(ArrayCollection $content): void
     {
-        //Default values
-        $isValid = false;
-        $messageNumber = null;
-        $code = 428;
-        $messageBody = ucfirst(strtolower($this->translator->trans('THE MESSAGE NUMBER IS MISSING AND THEREFORE THE DECLARE CANNOT BE REVOKED')) . '.');
-
-        if($content->containsKey(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE)) {
-            $messageNumber = $content->get(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE);
-
-            if($messageNumber != null || $messageNumber != "") {
-                $isValid = true;
-                $code = 200;
-                $messageBody = 'MESSAGE NUMBER FIELD EXISTS AND IS NOT EMPTY';
-            }
+        $messageNumber = $content->get(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE);
+        if (empty($messageNumber)) {
+            $messageBody = ucfirst(strtolower($this->translator->trans('THE MESSAGE NUMBER IS MISSING AND THEREFORE THE DECLARE CANNOT BE REVOKED')) . '.');
+            throw new PreconditionRequiredHttpException($messageBody);
         }
-
-        return Utils::buildValidationArray($isValid, $code, $messageBody, array('messageNumber' => $messageNumber));
     }
 
 
@@ -213,5 +236,34 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
         $declareNsfoBase->setRevokeDate(new \DateTime('now'));
         $declareNsfoBase->setRevokedBy($loggedInUser);
         return $declareNsfoBase;
+    }
+
+
+    /**
+     * @param DeclareBase $declare
+     */
+    public function validateDeclareForRevoke(DeclareBase $declare): void
+    {
+        $requestState = $declare->getRequestState();
+
+        if (
+            $requestState === RequestStateType::FINISHED ||
+            $requestState === RequestStateType::FINISHED_WITH_WARNING
+        ) {
+            return;
+        }
+
+        if ($requestState === RequestStateType::REVOKED) {
+            throw new PreconditionRequiredHttpException($this->translator->trans('DECLARE HAS ALREADY BEEN REVOKED'));
+        }
+
+        if ($requestState === RequestStateType::REVOKING) {
+            throw new PreconditionRequiredHttpException($this->translator->trans('DECLARE IS BEING REVOKED'));
+        }
+
+        throw new PreconditionRequiredHttpException(
+            $this->translator->trans('A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED').': '.
+            $this->translator->trans($requestState)
+        );
     }
 }

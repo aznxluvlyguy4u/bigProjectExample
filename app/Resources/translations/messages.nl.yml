@@ -438,6 +438,9 @@ ARE ONLY ALLOWED FOR DUTCH UBNS: zijn alleen toegestaan voor Nederlandse UBNs
 COMPANY RELATION NUMBER CANNOT BE EMPTY: BRS-nummer mag niet leeg zijn
 THE NEW OWNER HAS NO RELATION NUMBER KEEPER IN THE NSFO SYSTEM: De nieuwe eigenaar heeft geen relatienummerhouder in het NSFO systeem
 NO ANIMAL WAS LINKED TO THIS DECLARE: Geen dier was gelinkt aan deze melding
+DECLARE HAS ALREADY BEEN REVOKED: Melding is al ingetrokken
+DECLARE IS BEING REVOKED: Melding wordt op dit moment ingetrokken
+A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED: Een melding met deze status kan niet worden ingetrokken
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen
@@ -455,3 +458,14 @@ NEW_INVOICE_NOTIFICATION_MESSAGE: U heeft een nieuwe factuur ontvangen
 A SIMILAR REPORT IS ALREADY BEING GENERATED: Een identieke rapportage wordt al gegenereerd
 THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7: De volgende n-ling waarden moeten zitten tussen 0 en 7
 SHOULD BE: moet zijn
+
+# Request states
+FINISHED: Afgerond
+FINISHED_WITH_WARNING: Afgerond met waarschuwing
+CANCELLED: Geannuleerd
+OPEN: In behandeling
+FAILED: Mislukt
+REVOKED: Ingetrokken
+REVOKING: Wordt ingetrokken
+PROCESSING: In Behandeling
+AVAILABLE: Beschikbaar

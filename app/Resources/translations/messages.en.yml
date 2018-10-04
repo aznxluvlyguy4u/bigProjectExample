@@ -430,6 +430,9 @@ ARE ONLY ALLOWED FOR DUTCH UBNS: are only allowed for Dutch UBNs
 COMPANY RELATION NUMBER CANNOT BE EMPTY: Company relation number (BRS-number) cannot be empty
 THE NEW OWNER HAS NO RELATION NUMBER KEEPER IN THE NSFO SYSTEM: The new owner has no relation number keeper (BSR-number) in the NSFO system
 NO ANIMAL WAS LINKED TO THIS DECLARE: No animal was linked to this declare
+DECLARE HAS ALREADY BEEN REVOKED: Declare has already been revoked
+DECLARE IS BEING REVOKED: Declare is being revoked
+A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED: A declare with this request state cannot be revoked
 
 #Declares
 DECLARE_ARRIVALS: arrivals
@@ -447,3 +450,14 @@ NEW_INVOICE_NOTIFICATION_MESSAGE: U just received a new invoice
 A SIMILAR REPORT IS ALREADY BEING GENERATED: A similar report is already being generated
 THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7: The following n-lings should have a value between 0 and 7
 SHOULD BE: should be
+
+# Request states
+FINISHED: Finished
+FINISHED_WITH_WARNING: Finished with warning
+CANCELLED: Cancelled
+OPEN: Open
+FAILED: Failed
+REVOKED: Revoked
+REVOKING: Revoking
+PROCESSING: Processing
+AVAILABLE: Available
