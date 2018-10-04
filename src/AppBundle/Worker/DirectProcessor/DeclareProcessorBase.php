@@ -7,8 +7,10 @@ namespace AppBundle\Worker\DirectProcessor;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBaseResponse;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Message;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
@@ -56,6 +58,49 @@ class DeclareProcessorBase extends ControllerServiceBase
     /**
      * @param Animal $animal
      * @param Location $location
+     */
+    protected function resetOriginPendingStateAnimalResidence(Animal $animal, Location $location)
+    {
+        $animalResidence = $this->getManager()->getRepository(AnimalResidence::class)
+            ->getLastOpenResidenceOnLocation($location, $animal);
+        if ($animalResidence->isPending()) {
+            $animalResidence->setIsPending(false);
+            $this->getManager()->persist($animalResidence);
+        }
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param Location $destination
+     */
+    protected function finalizeAnimalTransferAndAnimalResidenceDestination(Animal $animal, Location $destination)
+    {
+        if (!$destination || !$animal) {
+            return;
+        }
+
+        $animalResidence = $this->getManager()->getRepository(AnimalResidence::class)
+            ->getLastOpenResidenceOnLocation($destination, $animal);
+        if (!$animalResidence) {
+            return;
+        }
+
+        if ($animalResidence->isPending()) {
+            $animalResidence->setIsPending(false);
+            $this->getManager()->persist($animalResidence);
+        }
+        $animal->setLocation($destination);
+        $animal->setTransferState(null);
+        $destination->addAnimal($animal);
+        $this->getManager()->persist($animal);
+        $this->getManager()->persist($destination);
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param Location $location
      * @param \DateTime $endDate
      */
     protected function closeLastOpenAnimalResidence(Animal $animal, Location $location, $endDate)
@@ -70,6 +115,22 @@ class DeclareProcessorBase extends ControllerServiceBase
             $animalResidence->setEndDate($endDate);
             $animalResidence->setIsPending(false);
             $this->getManager()->persist($animalResidence);
+        }
+    }
+
+
+    /**
+     * @param DeclareBase $declare
+     * @param DeclareBaseResponse $response
+     */
+    protected function displayDeclareNotificationMessage(DeclareBase $declare, DeclareBaseResponse $response)
+    {
+        $message = $this->getManager()->getRepository(Message::class)
+            ->findOneByRequest($declare);
+        if ($message) {
+            $message->setHidden(false);
+            $message->setResponseMessage($response);
+            $this->getManager()->persist($message);
         }
     }
 

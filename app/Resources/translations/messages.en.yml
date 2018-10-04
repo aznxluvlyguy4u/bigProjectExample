@@ -433,6 +433,7 @@ NO ANIMAL WAS LINKED TO THIS DECLARE: No animal was linked to this declare
 DECLARE HAS ALREADY BEEN REVOKED: Declare has already been revoked
 DECLARE IS BEING REVOKED: Declare is being revoked
 A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED: A declare with this request state cannot be revoked
+ANIMAL IS ALREADY DEAD: Animal is already dead
 
 #Declares
 DECLARE_ARRIVALS: arrivals
