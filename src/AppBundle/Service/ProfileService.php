@@ -221,6 +221,7 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
                     "suffix" => Utils::fillNull($address->getAddressNumberSuffix()),
                     "postal_code" => Utils::fillNull($address->getPostalCode()),
                     "city" => Utils::fillNull($address->getCity()),
+                    "state" => Utils::fillNull($address->getState()),
                     "country" => $address->getCountryDetails(),
                 ],
             "contact_person" =>
