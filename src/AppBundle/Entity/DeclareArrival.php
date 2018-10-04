@@ -287,7 +287,7 @@ class DeclareArrival extends DeclareBase implements DeclareAnimalDataInterface, 
     public function setLocation(Location $location = null)
     {
         $this->location = $location;
-        $this->setUbn($this->location->getUbn());
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }

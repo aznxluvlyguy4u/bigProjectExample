@@ -231,7 +231,7 @@ class DeclareExport extends DeclareBase implements DeclareAnimalDataInterface, B
     public function setLocation(Location $location = null)
     {
         $this->location = $location;
-        $this->ubn = $location->getUbn();
+        $this->ubn = $location ? $location->getUbn() : null;
 
         return $this;
     }

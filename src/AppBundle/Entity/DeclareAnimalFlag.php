@@ -159,6 +159,7 @@ class DeclareAnimalFlag extends DeclareBase
     public function setLocation(Location $location = null)
     {
         $this->location = $location;
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }

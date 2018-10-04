@@ -224,7 +224,7 @@ class DeclareLoss extends DeclareBase implements DeclareAnimalDataInterface, Bas
     public function setLocation(Location $location = null)
     {
         $this->location = $location;
-        $this->setUbn($this->location->getUbn());
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }
