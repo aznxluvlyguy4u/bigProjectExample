@@ -8,6 +8,15 @@ namespace AppBundle\Entity;
  */
 class MessageRepository extends BaseRepository {
 
+    /**
+     * @param DeclareBase $declare
+     * @return Message|null
+     */
+    public function findOneByRequest(DeclareBase $declare): ?Message
+    {
+        return $declare ? $this->findOneBy(['requestMessage' => $declare]) : null;
+    }
+
     public function getNonInvoiceMessages(Client $client, Location $location) {
         $sql = "SELECT
                   receiver.last_name AS receiver_last_name,
