@@ -135,27 +135,27 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
         switch (true) {
             case $declare instanceof DeclareArrival:
-                $revoke = $this->revokeProcessor->revokeArrival($declare);
+                $revoke = $this->revokeProcessor->revokeArrival($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareDepart:
-                $revoke = $this->revokeProcessor->revokeDepart($declare);
+                $revoke = $this->revokeProcessor->revokeDepart($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareExport:
-                $revoke = $this->revokeProcessor->revokeExport($declare);
+                $revoke = $this->revokeProcessor->revokeExport($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareImport:
-                $revoke = $this->revokeProcessor->revokeImport($declare);
+                $revoke = $this->revokeProcessor->revokeImport($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareLoss:
-                $revoke = $this->revokeProcessor->revokeLoss($declare);
+                $revoke = $this->revokeProcessor->revokeLoss($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareTagReplace:
-                $revoke = $this->revokeProcessor->revokeTagReplace($declare);
+                $revoke = $this->revokeProcessor->revokeTagReplace($declare, $client, $loggedInUser);
                 break;
 
             default: throw new PreconditionRequiredHttpException(

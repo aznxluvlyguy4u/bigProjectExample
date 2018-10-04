@@ -1030,6 +1030,10 @@ services:
     app.abstract_base.direct_processor:
         abstract: true
         parent: app.abstract_base.controller
+        calls:
+          - method: setEnvironment
+            arguments:
+              - '%kernel.environment%'
 
     AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor

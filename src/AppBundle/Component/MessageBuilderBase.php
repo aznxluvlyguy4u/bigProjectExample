@@ -89,13 +89,13 @@ class MessageBuilderBase
     /**
      *
      * @param object $messageObject the message received
-     * @param Person $person
+     * @param Client $client
      * @param Person $loggedInUser
      * @return RetrieveUbnDetails|RetrieveAnimals|RetrieveAnimalDetails|RetrieveTags|RetrieveCountries the retrieve message
      */
-    protected function buildBaseRetrieveMessageObject($messageObject, $person, $loggedInUser)
+    protected function buildBaseRetrieveMessageObject($messageObject, $client, $loggedInUser)
     {
-        return self::setStandardBaseRetrieveValues($messageObject, $person, $loggedInUser);
+        return self::setStandardBaseRetrieveValues($messageObject, $client, $loggedInUser);
     }
 
     /**
@@ -110,16 +110,25 @@ class MessageBuilderBase
 
 
     /**
+     * @return string
+     */
+    public static function getRandomNonRvoMessageNumber():string
+    {
+        return substr(self::getNewRequestId(),0,RevokeDeclaration::MESSAGE_NUMBER_MAX_COUNT);
+    }
+
+
+    /**
      * @param DeclareBase $declare
-     * @param Person $person
+     * @param Client $client
      * @param Person $loggedInUser
      * @param string $actionType
      * @param bool $isRvoMessage
      * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|Mate|DeclarationDetail|RevokeDeclaration|DeclareTagReplace the base message
      */
-    public static function setStandardDeclareBaseValues($declare, $person, $loggedInUser, $actionType, $isRvoMessage)
+    public static function setStandardDeclareBaseValues($declare, $client, $loggedInUser, $actionType, $isRvoMessage)
     {
-        $declare = self::setDeclareValuesBase($declare, $person, $loggedInUser);
+        $declare = self::setDeclareValuesBase($declare, $client, $loggedInUser);
 
         if($declare->getAction() == null) {
             $declare->setAction($actionType);
@@ -137,23 +146,23 @@ class MessageBuilderBase
 
     /**
      * @param DeclareBase $declare
-     * @param Client $person
+     * @param Client $client
      * @param Person $loggedInUser
      * @return DeclareBase
      */
-    public static function setStandardBaseRetrieveValues($declare, $person, $loggedInUser)
+    public static function setStandardBaseRetrieveValues($declare, $client, $loggedInUser)
     {
-        return self::setDeclareValuesBase($declare, $person, $loggedInUser);
+        return self::setDeclareValuesBase($declare, $client, $loggedInUser);
     }
 
 
     /**
      * @param DeclareBase $declare
-     * @param Client $person
+     * @param Client $client
      * @param Person $loggedInUser
      * @return DeclareBase
      */
-    private static function setDeclareValuesBase($declare, $person, $loggedInUser)
+    private static function setDeclareValuesBase($declare, $client, $loggedInUser)
     {
         if ($declare->getRequestId()== null) {
             $declare->setRequestId(self::getNewRequestId());
@@ -162,7 +171,7 @@ class MessageBuilderBase
         $declare->setLogDate(new \DateTime());
         $declare->setRequestState(RequestStateType::OPEN);
 
-        $relationNumberKeeper = ($person instanceof Client) ? $person->getRelationNumberKeeper() : null;
+        $relationNumberKeeper = ($client instanceof Client) ? $client->getRelationNumberKeeper() : null;
         $declare->setRelationNumberKeeper($relationNumberKeeper);
 
         if($loggedInUser instanceof Person) {

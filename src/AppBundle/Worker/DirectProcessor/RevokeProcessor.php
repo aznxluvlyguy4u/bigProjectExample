@@ -4,10 +4,12 @@
 namespace AppBundle\Worker\DirectProcessor;
 
 
+use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\BasicRvoDeclareInterface;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareAnimalDataInterface;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareDepart;
@@ -16,6 +18,7 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\RevokeDeclarationResponse;
 use AppBundle\Entity\Tag;
@@ -25,7 +28,7 @@ use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInterface
 {
 
-    function revokeArrival(DeclareArrival $arrival): RevokeDeclaration
+    function revokeArrival(DeclareArrival $arrival, Client $client, Person $actionBy): RevokeDeclaration
     {
         $animal = $this->getAnimalFromDeclare($arrival);
         $animal->setTransferredTransferState();
@@ -37,7 +40,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
         $this->clearLivestockCacheForLocationPrioritizedByActiveUbn($arrival->getUbnPreviousOwner());
         $this->getCacheService()->clearLivestockCacheForLocation($arrival->getLocation());
 
-        $revoke = $this->createRevokeDeclaration($arrival);
+        $revoke = $this->createRevokeDeclaration($arrival, $client, $actionBy);
 
         $arrival->setRevokedRequestState();
         $this->getManager()->persist($animal);
@@ -49,7 +52,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
     }
 
 
-    function revokeExport(DeclareExport $export): RevokeDeclaration
+    function revokeExport(DeclareExport $export, Client $client, Person $actionBy): RevokeDeclaration
     {
         $location = $export->getLocation();
 
@@ -61,7 +64,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $location->addAnimal($animal);
 
-        $revoke = $this->createRevokeDeclaration($export);
+        $revoke = $this->createRevokeDeclaration($export, $client, $actionBy);
 
         $export->setRevokedRequestState();
         $this->getManager()->persist($location);
@@ -76,7 +79,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
     }
 
 
-    function revokeDepart(DeclareDepart $depart): RevokeDeclaration
+    function revokeDepart(DeclareDepart $depart, Client $client, Person $actionBy): RevokeDeclaration
     {
         $location = $depart->getLocation();
 
@@ -88,7 +91,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $location->addAnimal($animal);
 
-        $revoke = $this->createRevokeDeclaration($depart);
+        $revoke = $this->createRevokeDeclaration($depart, $client, $actionBy);
 
         $this->reopenClosedResidenceOnLocationByEndDate($location, $animal, $depart->getDepartDate());
 
@@ -106,7 +109,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
     }
 
 
-    function revokeImport(DeclareImport $import): RevokeDeclaration
+    function revokeImport(DeclareImport $import, Client $client, Person $actionBy): RevokeDeclaration
     {
         $location = $import->getLocation();
 
@@ -126,7 +129,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
             $this->getManager()->remove($animal);
         }
 
-        $revoke = $this->createRevokeDeclaration($import);
+        $revoke = $this->createRevokeDeclaration($import, $client, $actionBy);
         $import->setRevokedRequestState();
 
         $this->getManager()->persist($import);
@@ -138,7 +141,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
     }
 
 
-    function revokeLoss(DeclareLoss $loss): RevokeDeclaration
+    function revokeLoss(DeclareLoss $loss, Client $client, Person $actionBy): RevokeDeclaration
     {
         $location = $loss->getLocation();
 
@@ -148,7 +151,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $this->reopenClosedResidenceOnLocationByEndDate($location, $animal, $loss->getDateOfDeath());
 
-        $revoke = $this->createRevokeDeclaration($loss);
+        $revoke = $this->createRevokeDeclaration($loss, $client, $actionBy);
 
         $loss->setRevokedRequestState();
         $this->getManager()->persist($animal);
@@ -161,7 +164,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
     }
 
 
-    function revokeTagReplace(DeclareTagReplace $tagReplace): RevokeDeclaration
+    function revokeTagReplace(DeclareTagReplace $tagReplace, Client $client, Person $actionBy): RevokeDeclaration
     {
         $location = $tagReplace->getLocation();
 
@@ -191,7 +194,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
         $animal->setUlnNumber($tagReplace->getUlnNumberToReplace());
         $animal->setAnimalOrderNumber($tagReplace->getAnimalOrderNumberToReplace());
 
-        $revoke = $this->createRevokeDeclaration($tagReplace);
+        $revoke = $this->createRevokeDeclaration($tagReplace, $client, $actionBy);
 
         $tagReplace->setRevokedRequestState();
         $this->getManager()->persist($animal);
@@ -206,19 +209,29 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
     /**
      * @param BasicRvoDeclareInterface $declare
+     * @param Client $client
+     * @param Person $actionBy
      * @return RevokeDeclaration
      */
-    private function createRevokeDeclaration(BasicRvoDeclareInterface $declare): RevokeDeclaration
+    private function createRevokeDeclaration(BasicRvoDeclareInterface $declare,
+                                             Client $client, Person $actionBy): RevokeDeclaration
     {
+        $isRvoMessage = $declare->getLocation() ? $declare->getLocation()->isDutchLocation() : false;
         $revokeDeclaration = new RevokeDeclaration();
-        $revokeDeclaration->setMessageId($declare->getMessageId());
-        $revokeDeclaration->setRequestId($declare->getRequestId());
 
+        $actionType = MessageBuilderBase::getActionTypeByEnvironment($this->getEnvironment());
+        $revokeDeclaration = MessageBuilderBase::setStandardDeclareBaseValues(
+            $revokeDeclaration, $client,$actionBy, $actionType, $isRvoMessage);
+
+        $revokeDeclaration->setRequestIdToRevoke($declare->getMessageId());
+        $revokeDeclaration->setRequestIdToRevoke($declare->getRequestId());
         $revokeDeclaration->setRequestTypeToRevoke(Utils::getClassName($declare));
-        // For simplicity, it is assumed that the revoking client is similar to the declaring client
-        $revokeDeclaration->setRelationNumberKeeper($declare->getRelationNumberKeeper());
+
+        $revokeDeclaration->setMessageNumber(MessageBuilderBase::getRandomNonRvoMessageNumber());
+
         $revokeDeclaration->setUbn($declare->getUbn());
         $revokeDeclaration->setLocation($declare->getLocation());
+
         $declare->setRevoke($revokeDeclaration);
         $revokeDeclaration->setFinishedRequestState();
 

@@ -21,6 +21,25 @@ use AppBundle\Util\StringUtil;
 
 class DeclareProcessorBase extends ControllerServiceBase
 {
+    /** @var string */
+    private $environment;
+
+    /**
+     * @param string $environment
+     */
+    public function setEnvironment(string $environment): void
+    {
+        $this->environment = $environment;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEnvironment(): string
+    {
+        return $this->environment;
+    }
+
     /**
      * @param DeclareBase $messageObject
      * @param bool $isUpdate
