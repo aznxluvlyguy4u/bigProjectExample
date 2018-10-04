@@ -8,6 +8,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Country;
 use AppBundle\Entity\Location;
@@ -83,6 +84,7 @@ class TagsService extends ControllerServiceBase
 
         $tagRepository = $this->getManager()->getRepository(Tag::class);
         $currentTags = $tagRepository->findByUlnPartsArray($ulnPartsArray);
+        $this->validateIfUlnsAreAlreadyUsedByAnimal($ulnPartsArray);
 
         $hasUpdatedCurrentTags = $this->updateTagsByFoundCurrentTags($client, $location, $currentTags);
         $hasInsertedNewTags = $this->insertNewTags($ulnPartsArray, $currentTags, $client, $location);
@@ -162,6 +164,50 @@ class TagsService extends ControllerServiceBase
         }
 
         return array_values($ulnPartsArray);
+    }
+
+
+    private function validateIfUlnsAreAlreadyUsedByAnimal(array $ulnParts)
+    {
+        if (empty($ulnParts)) {
+            return [];
+        }
+
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $qb
+            ->select('a')
+            ->from (Animal::class, 'a')
+        ;
+
+        foreach ($ulnParts as $ulnPart) {
+            $ulnCountryCode = $ulnPart[JsonInputConstant::ULN_COUNTRY_CODE];
+            $ulnNumber = $ulnPart[JsonInputConstant::ULN_NUMBER];
+            $qb->orWhere(
+                $qb->expr()->andX(
+                    $qb->expr()->eq('a.ulnCountryCode', "'".$ulnCountryCode."'"),
+                    $qb->expr()->eq('a.ulnNumber', "'".$ulnNumber."'")
+                )
+            );
+        }
+
+        $query = $qb->getQuery();
+        $query->useQueryCache(true);
+        $query->setCacheable(true);
+
+        $animals = $query->getResult();
+
+        if (empty($animals)) {
+            return;
+        }
+
+        $blockedUlns = array_map(function(Animal $animal) {
+                return $animal->getUln();
+            }, $animals);
+
+        throw new PreconditionFailedHttpException($this->translateUcFirstLower(
+            'THE FOLLOWING ULNS ARE ALREADY IN USE BY OTHER ANIMALS').': '.implode(', ', $blockedUlns)
+        );
     }
 
 
