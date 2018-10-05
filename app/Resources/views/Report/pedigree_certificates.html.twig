@@ -24,7 +24,7 @@
         {% set breederPostalCodeAndCity = x.postalCodeBreeder ~ ' ' ~ x.addressBreeder.city %} {#only used in the old version of the twig#}
         {% set breederPostalCode = x.postalCodeBreeder %}
         {% set breederCity = x.addressBreeder.city %}
-        {% set breederNumber = x.breederNumber %}
+        {% set breederNumber = '' %}
         
         {# Animals, 'animals' #}
 
@@ -45,7 +45,7 @@
         {% set cProduction = x.animals['c'].production %}
         {% set cLitterCount = x.animals['c'].litterCount %}
         {% set cBreederName = x.animals['c'].breederName %}
-        {% set cPedigreeRegisterName = x.pedigreeRegister.fullName %}
+        {% set cPedigreeRegisterName = '' %}
 
         {# Measurements #}
         {% set cSkull = x.animals['c'].skull %}

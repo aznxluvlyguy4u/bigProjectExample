@@ -24,6 +24,7 @@ use AppBundle\Util\TwigOutputUtil;
 use AppBundle\Validation\UlnValidatorInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Bundle\SnappyBundle\Snappy\Response\PdfResponse;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
@@ -428,7 +429,14 @@ class ReportServiceBase
      */
     protected function getPdfReportBase($twigFile, $data, $isLandscape = true)
     {
-        $html = $this->renderView($twigFile, ['variables' => $data]);
+        $html = $this->renderView($twigFile, [
+        	'variables' => $data,
+	        'logo' => FilesystemUtil::getImagesDirectory($this->rootDir).'/nsfo-logo.png',
+	        'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/css/bootstrap.min.css',
+	        'bootstrap_js' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/js/bootstrap.min.js',
+//	        'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/css/bootstrap417/bootstrap.min.css',
+//	        'bootstrap_js' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/js/bootstrap417/bootstrap.min.js',
+        ]);
 
         if ($this->displayReportPdfOutputAsHtml) {
             $response = new Response($html);
@@ -439,6 +447,19 @@ class ReportServiceBase
         $this->extension = FileType::PDF;
 
         $pdfOptions = $isLandscape ? TwigOutputUtil::pdfLandscapeOptions() : TwigOutputUtil::pdfPortraitOptions();
+
+        $pdfOptions = [
+	        'orientation'=>'Portrait',
+	        'default-header'=>false,
+	        'disable-smart-shrinking'=>true,
+//	        'viewport-size' => '1024x768',
+//          'viewport-size' => '794 × 1122',
+	        'page-size' => 'A4',
+	        'margin-top'    => 6,
+	        'margin-right'  => 8,
+	        'margin-bottom' => 4,
+	        'margin-left'   => 8,
+        ];
 
         if($this->outputReportsToCacheFolderForLocalTesting) {
             //Save pdf in local cache

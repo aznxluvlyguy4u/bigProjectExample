@@ -84,7 +84,7 @@ class ReportAPIController extends APIController {
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("/pedigree-certificates")
-   * @Method("POST")
+   * @Method("GET")
    */
   public function getPedigreeCertificates(Request $request)
   {

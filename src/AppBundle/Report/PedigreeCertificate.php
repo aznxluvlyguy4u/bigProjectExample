@@ -88,7 +88,7 @@ class PedigreeCertificate
 
         $this->translator = $translator;
 
-        $this->useTestData = $useTestData && ($environment === Environment::DEV || $environment === Environment::STAGE);
+        $this->useTestData = $useTestData && ($environment === Environment::DEV || $environment === Environment::STAGE || $environment === Environment::LOCAL);
     }
 
 

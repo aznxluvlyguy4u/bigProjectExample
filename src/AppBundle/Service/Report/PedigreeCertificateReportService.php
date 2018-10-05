@@ -18,7 +18,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 class PedigreeCertificateReportService extends ReportServiceBase
 {
     const TITLE = 'pedigree certificates report';
-    const TWIG_FILE = 'Report/pedigree_certificates.html.twig';
+    const TWIG_FILE = 'Report/pedigree_certificates2.html.twig';
     const TWIG_FILE_BETA = 'Report/pedigree_certificates_beta.html.twig';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
@@ -63,6 +63,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
 
         $this->pedigreeCertificatesGenerator->generate($actionBy, $content, $client, $location);
 
+//dump($this->pedigreeCertificatesGenerator->getReports());die();
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
         }
@@ -77,7 +78,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
     {
         //Or use... $this->getCurrentEnvironment() == Environment::PROD;
         $twigFile = ReportAPIController::IS_USE_PROD_VERSION_OUTPUT ? self::TWIG_FILE : self::TWIG_FILE_BETA;
-        return $this->getPdfReportBase($twigFile, $this->pedigreeCertificatesGenerator->getReports(), true);
+        return $this->getPdfReportBase($twigFile, $this->pedigreeCertificatesGenerator->getReports(), false);
     }
 
 
