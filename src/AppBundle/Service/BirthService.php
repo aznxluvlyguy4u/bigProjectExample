@@ -223,6 +223,10 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             $this->updateLitterStatus($litter, $location->isDutchLocation());
             $this->updateResultTableValuesByBirthRequests($requestMessages, $location->isDutchLocation());
 
+            if (!$location->isDutchLocation()) {
+                $this->directlyUpdateResultTableValuesByAnimalIds($litter->getAllAnimalIds());
+            }
+
             //Clear cache for this location, to reflect changes on the livestock
             $this->clearLivestockCacheForLocation($location);
         }
@@ -531,7 +535,9 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         }
 
 
-        $this->updateResultTableValuesByWorkerMessageBodyLitter($workerMessageBodyForRevoke, $location->isDutchLocation());
+        $this->updateResultTableValuesByWorkerMessageBodyLitter($workerMessageBodyForRevoke,
+            $location->isDutchLocation(), true
+        );
 
         //Clear cache for this location, to reflect changes on the livestock.
         $this->clearLivestockCacheForLocation($location);
@@ -1120,9 +1126,10 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     /**
      * @param WorkerMessageBodyLitter $workerMessageBodyLitter
      * @param bool $isRvoMessage
+     * @param bool $onlyUpdateParents
      */
     private function updateResultTableValuesByWorkerMessageBodyLitter(WorkerMessageBodyLitter $workerMessageBodyLitter,
-                                                                     bool $isRvoMessage)
+                                                                     bool $isRvoMessage, bool $onlyUpdateParents)
     {
         if ($isRvoMessage) {
             //Send workerTask to update productionValues of parents
@@ -1130,7 +1137,11 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             return;
         }
 
-        $this->directlyUpdateResultTableValuesByAnimalIds($workerMessageBodyLitter->getParentIds());
+        if ($onlyUpdateParents) {
+            $this->directlyUpdateResultTableValuesByAnimalIds($workerMessageBodyLitter->getParentIds());
+        } else {
+            $this->directlyUpdateResultTableValuesByAnimalIds($workerMessageBodyLitter->getAllAnimalIds());
+        }
     }
 
 

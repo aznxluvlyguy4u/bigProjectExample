@@ -464,7 +464,7 @@ class Litter extends DeclareNsfoBase
     /**
      * Get children
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection|Animal[]
      */
     public function getChildren()
     {
@@ -778,4 +778,26 @@ class Litter extends DeclareNsfoBase
         $this->setRequestState(RequestStateType::IMPORTED);
     }
 
+
+    /**
+     * @return array
+     */
+    public function getAllAnimalIds(): array
+    {
+        $animalIds = [];
+        if ($this->getAnimalFather() && $this->getAnimalFather()->getId()) {
+            $animalIds[] = $this->getAnimalFather()->getId();
+        }
+
+        if ($this->getAnimalMother() && $this->getAnimalMother()->getId()) {
+            $animalIds[] = $this->getAnimalMother()->getId();
+        }
+
+        foreach ($this->getChildren() as $child) {
+            if ($child->getId()) {
+                $animalIds[] = $child->getId();
+            }
+        }
+        return $animalIds;
+    }
 }
