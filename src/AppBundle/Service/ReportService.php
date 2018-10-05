@@ -13,6 +13,7 @@ use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -21,12 +22,14 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\UlnValidatorInterface;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Enqueue\Client\ProducerInterface;
 use Enqueue\Util\JSON;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
 class ReportService
@@ -211,16 +214,17 @@ class ReportService
 
     /**
      * @param Request $request
+     * @param  $content
      * @return JsonResponse
      * @throws \Exception
      */
-    private function createPedigreeCertificatesWithoutWorker(Request $request)
+    private function createPedigreeCertificatesWithoutWorker(Request $request, $content = null)
     {
         $person = $this->userService->getUser();
         $location = $this->userService->getSelectedLocation($request);
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
-        $content = RequestUtil::getContentAsArray($request);
+        $content = empty($content) ? RequestUtil::getContentAsArray($request) : $content;
 
         $report = $this->pedigreeCertificateReportService->getReport($person, $location, $fileType, $content, $language);
         if ($report instanceof Response) {
@@ -686,5 +690,46 @@ class ReportService
     {
         $this->logger->error($exception->getMessage());
         $this->logger->error($exception->getTraceAsString());
+    }
+
+
+    /**
+     * @param Request $request
+     * @param $reportType
+     * @param $base64encodedBody
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function testReportTemplate(Request $request, $reportType, $base64encodedBody)
+    {
+        $this->userService->validateDevToken($request);
+        $body = base64_decode($base64encodedBody);
+
+        $content = new ArrayCollection(json_decode($body, true));
+
+        switch ($reportType) {
+            case ReportType::PEDIGREE_CERTIFICATE:
+                return $this->createPedigreeCertificatesWithoutWorker($request, $content);
+            default:
+                throw new PreconditionFailedHttpException('INVALID REPORT TYPE'
+                    .'. '.$this->getValidTestReportTypesErrorMessage());
+        }
+    }
+
+    /**
+     * @return string
+     */
+    private function getValidTestReportTypesErrorMessage(): string
+    {
+
+        $allReportTypes = ReportType::getConstants();
+        $validReportTypePairs = array_filter($allReportTypes, function ($reportTypeEnum) {
+                return in_array($reportTypeEnum, [
+                        ReportType::PEDIGREE_CERTIFICATE,
+                    ]
+                );
+        }, ARRAY_FILTER_USE_BOTH);
+
+        return 'VALID REPORT TYPES: '. ArrayUtil::implode($validReportTypePairs);
     }
 }

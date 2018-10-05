@@ -638,4 +638,34 @@ class ReportAPIController extends APIController {
     {
         return $this->get('app.report.vwa.ubns_overview')->getUbnsOverviewReport($request);
     }
+
+
+    /**
+     * Generate HTML output of report for easy testing in browser.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate HTML output of report for easy testing in browser."
+     * )
+     * @param Request $request the request object
+     * @param string $base64encodedBody
+     * @param string $reportType
+     * @return JsonResponse
+     * @Route("/test-template/{reportType}/{base64encodedBody}")
+     * @Method("GET")
+     * @throws \Exception
+     */
+    public function testReportTemplate(Request $request, string $reportType, string $base64encodedBody)
+    {
+        return $this->get(ReportService::class)->testReportTemplate($request, $reportType, $base64encodedBody);
+    }
 }
