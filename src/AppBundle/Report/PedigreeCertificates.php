@@ -10,6 +10,7 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -49,12 +50,13 @@ class PedigreeCertificates extends ReportBase
      * Create the data for the PedigreeCertificate.
      * Before this is run, it is assumed all the ulns have been verified.
      *
+     * @param Person $actionBy
      * @param Collection $content containing the ulns of multiple animals
      * @param Client $client
      * @param Location $location
      * @throws \Exception
      */
-    public function generate(Collection $content, $client, $location)
+    public function generate(Person $actionBy, Collection $content, $client, $location)
     {
         $this->reports = array();
         $this->client = $client;
@@ -81,7 +83,7 @@ class PedigreeCertificates extends ReportBase
 
         foreach ($animalIds as $animalId) {
             $this->reports[$this->animalCount] = $this->generator
-                ->generate($ubn, $animalId, $trimmedCompanyName, $ownerEmailAddress, $companyAddress,
+                ->generate($actionBy, $ubn, $animalId, $trimmedCompanyName, $ownerEmailAddress, $companyAddress,
                     $breedValuesLastGenerationDate, $breedValueResultTableColumnNamesSets);
 
             $this->animalCount++;

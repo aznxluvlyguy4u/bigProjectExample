@@ -15,6 +15,8 @@ use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Entity\Person;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Enumerator\RequestStateType;
@@ -27,6 +29,7 @@ use AppBundle\Util\StarValueUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Util\Validator;
+use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -90,6 +93,7 @@ class PedigreeCertificate
 
 
     /**
+     * @param Person $actionBy
      * @param string $ubn
      * @param int $animalId
      * @param string $trimmedClientName
@@ -99,11 +103,16 @@ class PedigreeCertificate
      * @param array $breedValueResultTableColumnNamesSets
      * @return array
      */
-    public function generate($ubn, $animalId, $trimmedClientName, $ownerEmailAddress, $companyAddress,
+    public function generate($actionBy, $ubn, $animalId, $trimmedClientName, $ownerEmailAddress, $companyAddress,
                                 $breedValuesLastGenerationDate, $breedValueResultTableColumnNamesSets)
     {
         $this->data = array();
         $this->breedValueResultTableColumnNamesSets = $breedValueResultTableColumnNamesSets;
+
+        $this->data[ReportLabel::ACTION_BY_FULL_NAME] =
+            ($actionBy ? $actionBy->getFullName() : self::GENERAL_NULL_FILLER);
+        $this->data[ReportLabel::ACTION_BY_IS_SUPER_ADMIN] =
+            AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN);
 
         //Set Default Owner details
         $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName != null ? $trimmedClientName: self::GENERAL_NULL_FILLER;

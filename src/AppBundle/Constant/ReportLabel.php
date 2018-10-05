@@ -21,6 +21,8 @@ class ReportLabel
     const ACCURACY = 'accuracy';
 
     //Person
+    const ACTION_BY_FULL_NAME = 'action_by_full_name';
+    const ACTION_BY_IS_SUPER_ADMIN = 'action_by_is_super_admin';
     const OWNER_NAME = "ownerName";
     const OWNER = 'owner';
     const OWNER_EMAIL_ADDRESS = 'ownerEmailAddress';
