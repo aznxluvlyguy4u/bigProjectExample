@@ -30,6 +30,7 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -201,20 +202,15 @@ class CompanyService extends AuthServiceBase
         // Create Location
         $locations = new ArrayCollection();
         $contentLocations = $content->get('locations');
-        $repository = $this->getManager()->getRepository(Location::class);
 
         foreach ($contentLocations as $contentLocation) {
-            $location = $repository->findOneBy(array('ubn' => $contentLocation['ubn'], 'isActive' => true));
+            $ubn = $contentLocation['ubn'];
+
+            $this->validateUbnFormat($ubn);
+            $location = $this->findActiveLocationByUbn($ubn);
 
             if($location) {
-                return new JsonResponse(
-                    array(
-                        Constant::CODE_NAMESPACE => 400,
-                        Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
-                        'data' => $contentLocation['ubn']
-                    ),
-                    400
-                );
+                throw new PreconditionFailedHttpException($this->translateUcFirstLower('THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.').' '.$ubn);
             }
 
             // Create Location Address
@@ -238,7 +234,7 @@ class CompanyService extends AuthServiceBase
             $locationAddress->setCountryDetails($this->getCountryByName($locationAddressCountry));
 
             $location = new Location();
-            $location->setUbn($contentLocation['ubn']);
+            $location->setUbn($ubn);
             $location->setAddress($locationAddress);
             $location->setCompany($company);
             $location->setIsActive(true);
@@ -470,41 +466,26 @@ class CompanyService extends AuthServiceBase
 
         // Updated Locations
         $contentLocations = $content->get('locations');
-        $repository = $this->getManager()->getRepository(Location::class);
         foreach($contentLocations as $contentLocation) {
             $ubn = trim($contentLocation['ubn']);
+            $locationId = ArrayUtil::get('location_id', $contentLocation);
 
-            if (!ctype_digit($ubn) && !is_int($ubn)) {
-                return new JsonResponse(
-                    array(
-                        Constant::CODE_NAMESPACE => 400,
-                        Constant::MESSAGE_NAMESPACE => $this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn,
-                        'data' => $ubn
-                    ),
-                    400
-                );
+            $this->validateUbnFormat($ubn);
+            $locationByUbn = $this->findActiveLocationByUbn($ubn);
+            $location = $this->findLocationByLocationId($locationId);
+
+            if ($locationByUbn && $location &&
+                $locationByUbn->getLocationId() !== $location->getLocationId()
+            ) {
+                if ($locationByUbn->getOwner()->getId() !== $location->getOwner()->getId()) {
+                    throw new PreconditionFailedHttpException($this->translateUcFirstLower('THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.').' '.$ubn);
+                } else {
+                    throw new PreconditionFailedHttpException($this->translateUcFirstLower('SWITCHING UBN NUMBERS BETWEEN TWO LOCATIONS IS NOT ALLOWED').'.');
+                }
             }
 
-            $location = $repository->findOneBy(array('ubn' => $ubn, 'isActive' => true));
+            if($location) {
 
-            /**
-             * @var Location $location
-             */
-            if(isset($contentLocation['location_id'])) {
-                $contentLocationId = $contentLocation['location_id'];
-
-                if($location && $location->getLocationId() != $contentLocationId) {
-                    return new JsonResponse(
-                        array(
-                            Constant::CODE_NAMESPACE => 400,
-                            Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
-                            'data' => $ubn
-                        ),
-                        400
-                    );
-                }
-
-                $location = $repository->findOneByLocationId($contentLocationId);
                 $location->setUbn($ubn);
                 $locationAddress = $location->getAddress();
                 $contentLocationAddress = $contentLocation['address'];
@@ -530,16 +511,6 @@ class CompanyService extends AuthServiceBase
                 $this->getManager()->persist($location);
                 $this->getManager()->flush();
             } else {
-                if($location) {
-                    return new JsonResponse(
-                        array(
-                            Constant::CODE_NAMESPACE => 400,
-                            Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
-                            'data' => $ubn
-                        ),
-                        400
-                    );
-                }
 
                 $contentLocationAddress = $contentLocation['address'];
 
@@ -645,6 +616,46 @@ class CompanyService extends AuthServiceBase
         $this->getCacheService()->delete(UbnService::getAllUbnCacheIds());
 
         return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
+    }
+
+
+    /**
+     * @param $ubn
+     */
+    private function validateUbnFormat($ubn): void
+    {
+        if (!Validator::hasValidUbnFormat($ubn)) {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn);
+        }
+    }
+
+
+    /**
+     * @param string $ubn
+     * @return Location|null
+     */
+    private function findActiveLocationByUbn($ubn): ?Location
+    {
+        return $this->getManager()->getRepository(Location::class)
+            ->findOneBy(['ubn' => $ubn, 'isActive' => true]);
+    }
+
+
+    /**
+     * @param string $locationId
+     * @return Location|null
+     */
+    private function findLocationByLocationId($locationId): ?Location
+    {
+        if (empty($locationId)) {
+            return null;
+        }
+
+        $location = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $locationId]);
+        if (!$location) {
+            throw new PreconditionFailedHttpException('NO LOCATION FOUND FOR LOCATION_ID: '.$locationId);
+        }
+        return $location;
     }
 
 

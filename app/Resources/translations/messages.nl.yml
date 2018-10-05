@@ -442,6 +442,7 @@ DECLARE HAS ALREADY BEEN REVOKED: Melding is al ingetrokken
 DECLARE IS BEING REVOKED: Melding wordt op dit moment ingetrokken
 A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED: Een melding met deze status kan niet worden ingetrokken
 ANIMAL IS ALREADY DEAD: Dier is al dood
+SWITCHING UBN NUMBERS BETWEEN LOCATIONS IS NOT ALLOWED: Wisselen van UBN nummers tussen locaties is niet toegestaan
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen
