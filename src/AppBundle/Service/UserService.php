@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Component\Authentication\TokenAuthenticator;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
@@ -18,6 +19,7 @@ use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HeaderValidation;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class UserService
@@ -211,5 +213,25 @@ class UserService
     public static function isGhostLogin(Request $request)
     {
         return $request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
+    }
+
+
+    /**
+     * @param Request $request
+     */
+    public function validateDevToken(Request $request): void
+    {
+        if (AdminValidator::isAdmin($this->getUser(), AccessLevelType::DEVELOPER)) {
+            return;
+        }
+
+        if ($request->headers->has(TokenAuthenticator::DEV_TOKEN_HEADER_NAMESPACE)) {
+            $tokenCode = $request->headers->get(TokenAuthenticator::DEV_TOKEN_HEADER_NAMESPACE);
+            if ($this->personRepository->findOneByAccessTokenCode($tokenCode) !== null) {
+                return;
+            }
+        }
+
+        throw AdminValidator::standardException();
     }
 }
