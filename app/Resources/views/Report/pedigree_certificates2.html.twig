@@ -765,9 +765,10 @@
                 <div class="col-xs-6">
 
                     <div class="px-3">
+
+                        {# FIRST GENERATEON FATHER #}
                         <div class="row">
                             <div class="col-xs-12 mb-4">
-
                                 <div class="row">
                                     <div class="col-xs-12 bg-green rounded-top bordered">
                                         1e GENERATIE-VADER-{{ certificate.animals.f.section_type }}
@@ -1272,14 +1273,718 @@
                                                     </div>
                                                 </div>
                                             </div>
-
-
-
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+
+                        {# SECOND GENERATEON FATHERs FATHER #}
+                        <div class="row">
+                            <div class="col-xs-12 bg-green rounded-top bordered">
+                                2e GENERATIE-VADERS VADER-{{ certificate.animals.ff.section_type }}
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-xs-12 bordered rounded-bottom">
+                                <div class="px-1 py-1">
+                                    <div class="row mb-1">
+                                        <div class="col-xs-6">
+                                            <div class="pr-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Uniek levensnr.</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.ff.uln }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="pl-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Stamboeknr.</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.ff.pedigree }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-1">
+                                        <div class="col-xs-6">
+                                            <div class="pr-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Geboren als</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.ff.nLing }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="pl-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Productie</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.ff.production }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        {# SECOND GENERATEON FATHERs MOTHER #}
+                        <div class="row">
+                            <div class="col-xs-12 bg-green rounded-top bordered">
+                                2e GENERATIE-VADERS MOEDER-{{ certificate.animals.fm.section_type }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12 bordered rounded-bottom">
+                                <div class="px-1 py-1">
+                                    <div class="row mb-1">
+                                        <div class="col-xs-6">
+                                            <div class="pr-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Uniek levensnr.</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.fm.uln }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="pl-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Stamboeknr.</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.fm.pedigree }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-1">
+                                        <div class="col-xs-6">
+                                            <div class="pr-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Geboren als</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.fm.nLing }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="pl-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Productie</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.fm.production }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        {# FIRST GENERATEON MOTHER #}
+                        <div class="row">
+                            <div class="col-xs-12 mb-4">
+                                <div class="row">
+                                    <div class="col-xs-12 bg-green rounded-top bordered">
+                                        1e GENERATIE-MOEDER-{{ certificate.animals.m.section_type }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-12 bordered rounded-bottom">
+                                        <div class="px-1 py-1">
+
+                                            {# First block #}
+                                            <div class="row bg-white  mb-1">
+                                                <div class="col-xs-4">Uniek levensnr.</div>
+                                                <div class="col-xs-8">{{ certificate.animals.m.uln }}</div>
+                                            </div>
+                                            <div class="row bg-white  mb-1">
+                                                <div class="col-xs-4">Stamboeknr.</div>
+                                                <div class="col-xs-8">{{ certificate.animals.m.pedigree }}</div>
+                                            </div>
+                                            <div class="row bg-white  mb-1">
+                                                <div class="col-xs-4">Fokker</div>
+                                                <div class="col-xs-8">{{ certificate.animals.m.breederName }}</div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6">Ras</div>
+                                                            <div class="col-xs-6">{{ certificate.animals.m.breedCode }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6">Productie</div>
+                                                            <div class="col-xs-6">{{ certificate.animals.m.production }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6">Rasstatus</div>
+                                                            <div class="col-xs-6">{{ certificate.animals.m.breedType }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6">Blindfactor</div>
+                                                            <div class="col-xs-6">{{ certificate.animals.m.blindnessFactor }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6">Geb.datum</div>
+                                                            <div class="col-xs-6">{{ certificate.animals.m.dateOfBirth }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6">Predicaat</div>
+                                                            <div class="col-xs-6">{{ certificate.animals.m.predicate }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6">Geboren als</div>
+                                                            <div class="col-xs-6">{{ certificate.animals.m.nLing }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6">Scrapiegenotype</div>
+                                                            <div class="col-xs-6">{{ certificate.animals.m.scrapie }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {# SECOND block #}
+                                            <div class="row bg-success mb-1">
+                                                <div class="col-xs-12">
+                                                    <b>FOKWAARDEN / NAUWKEURIGHEID</b>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-4">Vaderindex</div>
+                                                            {% if not certificate.animals.m.indexes.indexFather.isEmpty %}
+                                                                <div class="col-xs-8">
+                                                                    {% for output in certificate.animals.m.indexes.indexFather.stars_output %}
+                                                                        {% if output == 'FULL' %}
+                                                                            <span><i class="fas fa-star"></i></span>
+                                                                        {% elseif output == 'HALF' %}
+                                                                            <span><i class="fas fa-star-half-alt"></i></span>
+                                                                        {% elseif output == 'EMPTY' %}
+                                                                            <span><i class="far fa-star"></i></span>
+                                                                        {% endif %}
+                                                                    {% endfor %}
+                                                                    {{ '  '~certificate.animals.m.indexes.indexFather.value~' / '~certificate.animals.m.indexes.indexFather.accuracy~'%' }}
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-4">Exterieurindex</div>
+                                                            {% if not certificate.animals.m.indexes.indexExterior.isEmpty %}
+                                                                <div class="col-xs-8">
+                                                                    {% for output in certificate.animals.m.indexes.indexExterior.stars_output %}
+                                                                        {% if output == 'FULL' %}
+                                                                            <span><i class="fas fa-star"></i></span>
+                                                                        {% elseif output == 'HALF' %}
+                                                                            <span><i class="fas fa-star-half-alt"></i></span>
+                                                                        {% elseif output == 'EMPTY' %}
+                                                                            <span><i class="far fa-star"></i></span>
+                                                                        {% endif %}
+                                                                    {% endfor %}
+                                                                    {{ '  '~certificate.animals.m.indexes.indexExterior.value~' / '~certificate.animals.m.indexes.indexExterior.accuracy~'%' }}
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-4">Moederindex</div>
+                                                            {% if not certificate.animals.m.indexes.indexMother.isEmpty %}
+                                                                <div class="col-xs-8">
+                                                                    {% for output in certificate.animals.m.indexes.indexMother.stars_output %}
+                                                                        {% if output == 'FULL' %}
+                                                                            <span><i class="fas fa-star"></i></span>
+                                                                        {% elseif output == 'HALF' %}
+                                                                            <span><i class="fas fa-star-half-alt"></i></span>
+                                                                        {% elseif output == 'EMPTY' %}
+                                                                            <span><i class="far fa-star"></i></span>
+                                                                        {% endif %}
+                                                                    {% endfor %}
+                                                                    {{ '  '~certificate.animals.m.indexes.indexMother.value~' / '~certificate.animals.m.indexes.indexMother.accuracy~'%' }}
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-4">Rasindex</div>
+                                                            {% if not certificate.animals.m.indexes.indexBreed.isEmpty %}
+                                                                <div class="col-xs-8">
+                                                                    {% for output in certificate.animals.m.indexes.indexBreed.stars_output %}
+                                                                        {% if output == 'FULL' %}
+                                                                            <span><i class="fas fa-star"></i></span>
+                                                                        {% elseif output == 'HALF' %}
+                                                                            <span><i class="fas fa-star-half-alt"></i></span>
+                                                                        {% elseif output == 'EMPTY' %}
+                                                                            <span><i class="far fa-star"></i></span>
+                                                                        {% endif %}
+                                                                    {% endfor %}
+                                                                    {{ '  '~certificate.animals.m.indexes.indexBreed.value~' / '~certificate.animals.m.indexes.indexBreed.accuracy~'%' }}
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {# THIRD block EXTERIEURKEURING #}
+                                            <div class="row bg-success mb-1">
+                                                <div class="col-xs-12">
+                                                    <b>EXTERIEURKEURING</b> {{ 'KEURDATUM '~certificate.animals.m.inspectionDate }}
+                                                </div>
+                                            </div>
+
+                                            <div class="row bg-success mb-1">
+                                                <div class="col-xs-12">
+                                                    <div class="row">
+                                                        <div class="col-xs-1">
+                                                            <b>KOP</b>
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            <b>ONT</b>
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            <b>BES</b>
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            <b>EVE</b>
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            <b>TYP</b>
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            <b>BEE</b>
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            <b>VAC</b>
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            <b>ALG</b>
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            <b>SHT</b>
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            <b>LGT</b>
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            <b>BDP</b>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row bg-white mb-1">
+                                                <div class="col-xs-12">
+                                                    <div class="row">
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.skull }}
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.development }}
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.muscularity }}
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.proportion }}
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.type }}
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.legWork }}
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.fur }}
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.generalAppearance }}
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.height }}
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.torsoLength }}
+                                                        </div>
+                                                        <div class="col-xs-1">
+                                                            {{ certificate.animals.m.breastDepth }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {# FOURTH block FOKWAARDEN #}
+                                            <div class="row bg-success mb-1">
+                                                <div class="col-xs-12">
+                                                    <b>FOKWAARDEN / NAUWKEURIGHEID</b>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Totaal geb. p. worp</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.total_born.value~' / '~ certificate.animals.m.breedValues.total_born.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Vetdikte 20 weken</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.fat_thickness3.value~' / '~ certificate.animals.m.breedValues.fat_thickness3.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Doodgeb. p. worp</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.still_born.value~' / '~ certificate.animals.m.breedValues.still_born.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {# skull = ? #}
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Kop</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.still_born.value~' / '~ certificate.animals.m.breedValues.still_born.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Vroegrijpheid</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.early_fertility.value~' / '~ certificate.animals.m.breedValues.early_fertility.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {# MISSING (progress?) #}
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Ontwikkeling</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.still_born.value~' / '~ certificate.animals.m.breedValues.still_born.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Tussenlamtijd</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.birth_interval.value~' / '~ certificate.animals.m.breedValues.birth_interval.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {# MISSING (muscularity?) #}
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Bespiering</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.muscle_thickness.value~' / '~ certificate.animals.m.breedValues.muscle_thickness.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Aflamgemak</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.birth_delivery_progress.value~' / '~ certificate.animals.m.breedValues.birth_delivery_progress.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {# MISSING (proportion?) #}
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Evenredigheid</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.muscle_thickness.value~' / '~ certificate.animals.m.breedValues.muscle_thickness.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Geboortegewicht</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.birth_weight.value~' / '~ certificate.animals.m.breedValues.birth_weight.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {# MISSING (type?) #}
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Type</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.muscle_thickness.value~' / '~ certificate.animals.m.breedValues.muscle_thickness.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Geboortegemak</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.birth_progress.value~' / '~ certificate.animals.m.breedValues.birth_progress.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {# MISSING (leg_work?) #}
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Beenwerk</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.muscle_thickness.value~' / '~ certificate.animals.m.breedValues.muscle_thickness.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">8-weken gewicht</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.weight_at8weeks.value~' / '~ certificate.animals.m.breedValues.weight_at8weeks.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Wormresistentie</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.odin_bc.value~' / '~ certificate.animals.m.breedValues.odin_bc.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">20-weken gewicht</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.weight_at20weeks.value~' / '~ certificate.animals.m.breedValues.weight_at20weeks.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Staartlengte</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.tail_length.value~' / '~ certificate.animals.m.breedValues.tail_length.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Spierdikte 20 wkn</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.muscle_thickness.value~' / '~ certificate.animals.m.breedValues.muscle_thickness.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-7">Datum evaluatie</div>
+                                                            <div class="col-xs-5">{{ certificate.animals.m.breedValues.tail_length.value~' / '~ certificate.animals.m.breedValues.tail_length.accuracy~'%' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        {# SECOND GENERATEON MOTHERS FATHER #}
+                        <div class="row">
+                            <div class="col-xs-12 bg-green rounded-top bordered">
+                                2e GENERATIE-MOEDERS VADER-{{ certificate.animals.mf.section_type }}
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-xs-12 bordered rounded-bottom">
+                                <div class="px-1 py-1">
+                                    <div class="row mb-1">
+                                        <div class="col-xs-6">
+                                            <div class="pr-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Uniek levensnr.</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.mf.uln }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="pl-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Stamboeknr.</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.mf.pedigree }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-1">
+                                        <div class="col-xs-6">
+                                            <div class="pr-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Geboren als</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.mf.nLing }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="pl-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Productie</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.mf.production }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        {# SECOND GENERATEON MOTHERS MOTHER #}
+                        <div class="row">
+                            <div class="col-xs-12 bg-green rounded-top bordered">
+                                2e GENERATIE-MOEDERS MOEDER-{{ certificate.animals.mm.section_type }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12 bordered rounded-bottom">
+                                <div class="px-1 py-1">
+                                    <div class="row mb-1">
+                                        <div class="col-xs-6">
+                                            <div class="pr-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Uniek levensnr.</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.mm.uln }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="pl-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Stamboeknr.</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.mm.pedigree }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-1">
+                                        <div class="col-xs-6">
+                                            <div class="pr-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Geboren als</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.mm.nLing }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="pl-1">
+                                                <div class="row bg-white">
+                                                    <div class="col-xs-6">Productie</div>
+                                                    <div class="col-xs-6">{{ certificate.animals.mm.production }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+
                     </div>
                 </div>
             </div>
