@@ -4,19 +4,27 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Cache\BreedValuesResultTableUpdater;
+use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Constant\BreedValueTypeConstant;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Criteria\BreedValueTypeCriteria;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\BreedValueType;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\JsonFormat\BreedValueChartDataJsonFormat;
 use AppBundle\Service\Report\BreedValuesReportQueryGenerator;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\NumberUtil;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 
 class BreedValuesOutput extends OutputServiceBase
 {
+    const ACCURACY_SUFFIX = '_accuracy';
+    const DF_SUFFIX = '_df';
+
     /** @var BreedValueType[]|ArrayCollection $breedValueTypes */
     private $breedValueTypes;
 
@@ -25,6 +33,180 @@ class BreedValuesOutput extends OutputServiceBase
 
     /** @var array|float[] */
     private $normalizedBreedValues;
+
+    /** @var string */
+    private $breedValuesLastGenerationDate;
+
+    /** @var array */
+    private $breedValueResultTableColumnNamesSets;
+
+    /** @var array */
+    private $resultTableValueVariables;
+
+    /** @var array */
+    private $exteriorKeysWithSuffixes;
+
+    /**
+     * @param string $nullFiller
+     * @return null|string
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getBreedValuesLastGenerationDate($nullFiller = null): ?string
+    {
+        if (empty($this->breedValuesLastGenerationDate)) {
+            $breedValuesLastGenerationDate = $this->getManager()->getRepository(BreedValue::class)
+                ->getBreedValueLastGenerationDate();
+            $this->breedValuesLastGenerationDate =
+                $breedValuesLastGenerationDate ? $breedValuesLastGenerationDate : $nullFiller;
+        }
+        return $this->breedValuesLastGenerationDate;
+    }
+
+
+    /**
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getBreedValueResultTableColumnNamesSets(): array
+    {
+        if (empty($this->breedValueResultTableColumnNamesSets)) {
+            $this->breedValueResultTableColumnNamesSets =
+                BreedValuesResultTableUpdater::getResultTableVariables($this->getManager()->getConnection());
+        }
+        return $this->breedValueResultTableColumnNamesSets;
+    }
+
+    /**
+     * @return array
+     */
+    public function initializeResultTableValueVariables(): array
+    {
+        if (empty($this->resultTableValueVariables)) {
+            $this->resultTableValueVariables = [];
+            foreach ($this->getExteriorBreedValueTypes() as $exteriorBreedValueType) {
+                $resultTableValueVariable = $exteriorBreedValueType->getResultTableValueVariable();
+                if (!StringUtil::containsSubstring(self::DF_SUFFIX, $resultTableValueVariable)) {
+                    continue;
+                }
+
+                $base = strtr($resultTableValueVariable, [self::DF_SUFFIX => '']);
+                $this->resultTableValueVariables[] = $base;
+            }
+        }
+        return $this->resultTableValueVariables;
+    }
+
+    /**
+     * @param array $breedGradesSqlResults
+     * @param bool $formatOutput
+     * @return array
+     */
+    public function getForPedigreeCertificate(array $breedGradesSqlResults, $formatOutput = true)
+    {
+        $breedValues = [];
+        foreach ($this->initializeResultTableValueVariables() as $resultTableValueVariableBase) {
+
+            // default values
+            $breedValues[$resultTableValueVariableBase][ReportLabel::VALUE] =
+                $formatOutput ? self::getFormattedBreedValue(null) : null;
+            $breedValues[$resultTableValueVariableBase][ReportLabel::ACCURACY] =
+                $formatOutput ? self::getFormattedBreedValueAccuracy(null) : null;
+            $breedValues[$resultTableValueVariableBase][ReportLabel::IS_EMPTY] = true;
+
+            foreach ([ // check the variables in this order
+                         self::DF_SUFFIX,
+                         '_vg_m',
+                         '_vg_v'
+                     ] as $suffix) {
+
+                $resultTableValueVariable = $resultTableValueVariableBase.$suffix;
+                $resultTableAccuracyVariable = $resultTableValueVariable.self::ACCURACY_SUFFIX;
+
+                $value = ArrayUtil::get($resultTableValueVariable, $breedGradesSqlResults);
+                $accuracy = ArrayUtil::get($resultTableAccuracyVariable, $breedGradesSqlResults);
+
+                if (!empty($value) || !empty($accuracy)) {
+                    $breedValues[$resultTableValueVariableBase][ReportLabel::VALUE] =
+                        $formatOutput ? self::getFormattedBreedValue($value) : $value;
+                    $breedValues[$resultTableValueVariableBase][ReportLabel::ACCURACY] =
+                        $formatOutput ? self::getFormattedBreedValueAccuracy($accuracy) : $accuracy;
+                    $breedValues[$resultTableValueVariableBase][ReportLabel::IS_EMPTY] = false;
+                    break;
+                }
+            }
+        }
+
+        return $breedValues;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getExteriorKeysWithSuffixes(): array
+    {
+        if (empty($this->exteriorKeysWithSuffixes)) {
+            $this->exteriorKeysWithSuffixes = [];
+            foreach ($this->initializeResultTableValueVariables() as $resultTableValueVariableBase) {
+                foreach ([ // check the variables in this order
+                             self::DF_SUFFIX,
+                             '_vg_m',
+                             '_vg_v'
+                         ] as $suffix) {
+
+                    $this->exteriorKeysWithSuffixes[] = $resultTableValueVariableBase.$suffix;
+                    $this->exteriorKeysWithSuffixes[] = $resultTableValueVariableBase.$suffix.self::ACCURACY_SUFFIX;
+                }
+            }
+        }
+
+        return $this->exteriorKeysWithSuffixes;
+    }
+
+
+    /**
+     * @param $value
+     * @return null|string
+     */
+    public static function getFormattedBreedValue($value): ?string
+    {
+        return $value ? NumberUtil::getPlusSignIfNumberIsPositive($value) . BreedFormat::formatBreedValueValue($value) : BreedFormat::EMPTY_BREED_SINGLE_VALUE;
+    }
+
+    /**
+     * @param $accuracy
+     * @return null|string
+     */
+    public static function getFormattedBreedValueAccuracy($accuracy): ?string
+    {
+        return $accuracy ? BreedFormat::formatAccuracyForDisplay($accuracy) : BreedFormat::EMPTY_BREED_SINGLE_VALUE;
+    }
+
+
+    private function initializeBreedValueTypes(): void
+    {
+        if (empty($this->breedValueTypes)) {
+            $this->breedValueTypes = new ArrayCollection(
+                $this->getManager()->getRepository(BreedValueType::class)->findAll()
+            );
+        }
+    }
+
+
+    public function clearPrivateValues()
+    {
+        $this->breedValueTypes = null;
+        $this->breedValuesAndAccuracies = null;
+        $this->normalizedBreedValues = null;
+
+        $this->breedValueResultTableColumnNamesSets = null;
+        $this->breedValuesLastGenerationDate = null;
+
+        $this->resultTableValueVariables = null;
+
+        $this->exteriorKeysWithSuffixes = null;
+    }
+
 
     /**
      * @param Animal $animal
@@ -36,17 +218,14 @@ class BreedValuesOutput extends OutputServiceBase
             return [];
         }
 
-        /** @var BreedValueType[] $breedValueTypes */
-        $this->breedValueTypes = new ArrayCollection($this->getManager()->getRepository(BreedValueType::class)->findAll());
+        $this->initializeBreedValueTypes();
         $this->breedValuesAndAccuracies = $this->getSerializer()->normalizeResultTableToArray($animal->getLatestBreedGrades());
         $this->normalizedBreedValues = $this->getSerializer()->normalizeResultTableToArray($animal->getLatestNormalizedBreedGrades());
 
         $breedValueSets = $this->getGeneralBreedValues();
         $breedValueSets = $this->addExteriorBreedValues($breedValueSets);
 
-        $this->breedValueTypes = null;
-        $this->breedValuesAndAccuracies = null;
-        $this->normalizedBreedValues = null;
+        $this->clearPrivateValues();
 
         ksort($breedValueSets);
 
@@ -82,6 +261,7 @@ class BreedValuesOutput extends OutputServiceBase
      */
     private function getExteriorBreedValueTypes()
     {
+        $this->initializeBreedValueTypes();
         if ($this->breedValueTypes === null) {
             return [];
         }
@@ -100,24 +280,9 @@ class BreedValuesOutput extends OutputServiceBase
      */
     private function addExteriorBreedValues(array $breedValueSets = [])
     {
-        $exteriorBreedValueTypes = $this->getExteriorBreedValueTypes();
-
-        $dfSuffix = '_df';
-
-        $resultTableValueVariables = [];
-        foreach ($exteriorBreedValueTypes as $exteriorBreedValueType) {
-            $resultTableValueVariable = $exteriorBreedValueType->getResultTableValueVariable();
-            if (!StringUtil::containsSubstring($dfSuffix, $resultTableValueVariable)) {
-                continue;
-            }
-
-            $base = strtr($resultTableValueVariable, [$dfSuffix => '']);
-            $resultTableValueVariables[] = $base;
-        }
-
-        foreach ($resultTableValueVariables as $resultTableValueVariableBase) {
+        foreach ($this->initializeResultTableValueVariables() as $resultTableValueVariableBase) {
             foreach ([ // check the variables in this order
-                        $dfSuffix,
+                         self::DF_SUFFIX,
                         '_vg_m',
                          '_vg_v'
                      ] as $suffix) {
@@ -219,7 +384,7 @@ class BreedValuesOutput extends OutputServiceBase
     {
         $accuracy = ArrayUtil::get($breedValueType->getResultTableAccuracyVariable(), $this->breedValuesAndAccuracies, null);
         if ($accuracy === null) {
-            $keyVersion2 = strtr($breedValueType->getResultTableAccuracyVariable(), ['accuracy' => '_accuracy']);
+            $keyVersion2 = strtr($breedValueType->getResultTableAccuracyVariable(), ['accuracy' => self::ACCURACY_SUFFIX]);
             $accuracy = ArrayUtil::get($keyVersion2, $this->breedValuesAndAccuracies, null);
         }
         return $accuracy !== null ? round($accuracy * 100) : null;
