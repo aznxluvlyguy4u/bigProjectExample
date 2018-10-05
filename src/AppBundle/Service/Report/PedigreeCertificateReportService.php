@@ -37,24 +37,24 @@ class PedigreeCertificateReportService extends ReportServiceBase
     }
 
     /**
-     * @param Person $person
+     * @param Person $actionBy
      * @param Location|null $selectedLocation
      * @param $fileType
      * @param ArrayCollection $content
      * @param $locale
      * @return JsonResponse
      */
-    public function getReport(Person $person, $selectedLocation, $fileType, ArrayCollection $content, $locale)
+    public function getReport(Person $actionBy, $selectedLocation, $fileType, ArrayCollection $content, $locale)
     {
         $client = null;
         $location = null;
-        if(!AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
+        if(!AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN)) {
             $location = $selectedLocation;
-            $client = $person;
+            $client = $actionBy;
         }
 
         $company = $selectedLocation ? $selectedLocation->getCompany() : null;
-        $this->ulnValidator->pedigreeCertificateUlnsInputValidation($content, $person, $company);
+        $this->ulnValidator->pedigreeCertificateUlnsInputValidation($content, $actionBy, $company);
 
         $this->filename = $this->translate(self::FILENAME);
         $this->folderName = self::FOLDER_NAME;
