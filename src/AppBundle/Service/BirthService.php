@@ -574,6 +574,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $childrenToRemove = null;
         $stillbornsToRemove = null;
+        $customResponse = null;
 
         if($succeeded) {
             $litter->setRevokedStatus();
@@ -628,21 +629,21 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
             ActionLogWriter::revokeLitter($this->getManager(), $litter, $loggedInUser, $client);
 
-            $this->updateResultTableValuesByWorkerMessageBodyLitter($workerMessageBodyForRevoke,
-                $location->isDutchLocation(), true
-            );
-
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => [
+            $customResponse = new JsonResponse(array(Constant::RESULT_NAMESPACE => [
                 'code' => $statusCode,
                 'revokes' => $revokeMessages,
                 'message' => $message,
             ]), $statusCode);
         }
 
-        if (!$location->isDutchLocation()) {
-            $this->updateResultTableValuesByWorkerMessageBodyLitter($workerMessageBodyForRevoke,
-                $location->isDutchLocation(), true
-            );
+        $this->removeAnimalCacheOfRemovedChildren($workerMessageBodyForRevoke);
+
+        $this->updateResultTableValuesByWorkerMessageBodyLitter($workerMessageBodyForRevoke,
+            $location->isDutchLocation(), true
+        );
+
+        if ($customResponse instanceof JsonResponse) {
+            return $customResponse;
         }
 
         return ResultUtil::errorResult("Failed to revoke and remove all child and stillborn animals", $statusCode);
@@ -1169,5 +1170,15 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     private function directlyUpdateResultTableValuesByAnimalIds(array $animalIds)
     {
         AnimalCacher::cacheByAnimalIds($this->getConnection(), $animalIds);
+    }
+
+
+    /**
+     * @param WorkerMessageBodyLitter $workerMessageBodyLitter
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function removeAnimalCacheOfRemovedChildren(WorkerMessageBodyLitter $workerMessageBodyLitter)
+    {
+        AnimalCacher::removeOrphanedRecordsByAnimalIds($this->getConnection(), $workerMessageBodyLitter->getChildrenIds());
     }
 }
