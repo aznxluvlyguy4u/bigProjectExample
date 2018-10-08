@@ -75,7 +75,7 @@ class AnimalCacher
         $cmdUtil->writeln($updateCount.' tailLength animalCache records updated' );
 
         $updateCount = AnimalGradesCacher::updateAllDutchBreedStatuses($conn);
-        $cmdUtil->writeln($updateCount.' tailLength animalCache records updated' );
+        $cmdUtil->writeln($updateCount.' dutchBreedStatus animalCache records updated' );
     }
 
 

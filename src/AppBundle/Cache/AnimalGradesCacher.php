@@ -39,7 +39,10 @@ class AnimalGradesCacher
                 return $updateCount;
             }
             else {
-                $animalIdFilterString = implode(',',$animalIds);
+                $animalIdFilterString = " AND
+                        a.id IN (
+                          implode(',',$animalIds)
+                        ) ";
             }
         } elseif($animalIds != null) {
             return $updateCount;
@@ -58,11 +61,7 @@ class AnimalGradesCacher
                   WHERE (
                           (c.dutch_breed_status ISNULL AND a_breed_types.dutch_first_letter NOTNULL) OR
                           c.dutch_breed_status <> a_breed_types.dutch_first_letter
-                        )
-                        AND
-                        a.id IN (
-                          $animalIdFilterString
-                        )
+                        ) $animalIdFilterString
                 ) AS v(cache_id, new_dutch_breed_status) WHERE animal_cache.id = v.cache_id
                 ";
         return SqlUtil::updateWithCount($conn, $sql);
