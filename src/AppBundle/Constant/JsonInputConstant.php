@@ -16,6 +16,8 @@ class JsonInputConstant
     const SELECTED = 'selected';
     const ARRAY = 'array';
     const JSON = 'json';
+    const IS_VALID = 'is_valid';
+    const KEY = 'key';
 
     //Admins
     const ADMINS = 'admins';
