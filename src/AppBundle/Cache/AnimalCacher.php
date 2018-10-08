@@ -14,6 +14,7 @@ use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\DoctrineUtil;
@@ -24,6 +25,7 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use \Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class AnimalCacher
@@ -493,11 +495,11 @@ class AnimalCacher
     }
 
     /**
-     * @param ObjectManager $em
+     * @param EntityManagerInterface $em
      * @param Animal $animal
      * @param bool $flush
      */
-    public static function cacheByAnimal(ObjectManager $em, Animal $animal, $flush = true) {
+    public static function cacheByAnimal(EntityManagerInterface $em, Animal $animal, $flush = true) {
 
         $animalId = $animal->getId();
         if($animalId != null) {
@@ -635,6 +637,30 @@ class AnimalCacher
 
 
     /**
+     * @param Connection $conn
+     * @param array $animalIds
+     * @throws \Exception
+     */
+    public static function cacheByAnimalIds(Connection $conn, $animalIds)
+    {
+        self::insertBlankResultTableRecordIfEmpty($conn, $animalIds, []);
+
+        /*
+         *  NOTE!
+         *
+         *  Predicate is not set nor used
+         *  pmsg is not set nor used
+         */
+
+        AnimalGradesCacher::updateDutchBreedStatus($conn, $animalIds);
+        NLingCacher::updateNLingValues($conn, $animalIds);
+        ProductionCacher::updateProductionValues($conn, $animalIds);
+        WeightCacher::updateWeights($conn, $animalIds);
+        ExteriorCacher::updateExteriors($conn, $animalIds);
+    }
+
+
+    /**
      * @param ObjectManager $em
      * @param CommandUtil $cmdUtil
      */
@@ -731,11 +757,11 @@ class AnimalCacher
 
 
     /**
-     * @param ObjectManager $em
+     * @param EntityManagerInterface $em
      * @param Animal $animal
      * @param boolean $flush
      */
-    private static function cacheLitterOfBirthByAnimal(ObjectManager $em, Animal $animal, $flush = true)
+    private static function cacheLitterOfBirthByAnimal(EntityManagerInterface $em, Animal $animal, $flush = true)
     {
         $animalId = $animal->getId();
         /** @var AnimalCacheRepository $repository */
@@ -876,6 +902,41 @@ class AnimalCacher
         $litterSize = $litterRepository->getLitterSize($animalId);
         return DisplayUtil::parseNLingString($litterSize);
     }
+
+
+    /**
+     * @param Connection $connection
+     * @param array $animalIds
+     * @param array $locationIds
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function insertBlankResultTableRecordIfEmpty(Connection $connection, $animalIds = [], $locationIds = [])
+    {
+        $filterString = SqlUtil::filterStringByAnimalIdsAndLocationIds($animalIds, $locationIds, 'a.id', 'l.id');
+        if (empty($filterString)) {
+            return 0;
+        }
+
+        $sql = "SELECT
+                  a.id as ".JsonInputConstant::ANIMAL_ID."
+                FROM animal a
+                  LEFT JOIN animal_cache c ON c.animal_id = a.id
+                WHERE c.id ISNULL AND ".$filterString;
+        $result = $connection->query($sql)->fetchAll();
+
+        if (empty($result)) {
+            return 0;
+        }
+
+        $animalIdsToUpdate = array_map(function ($set) {
+            return $set[JsonInputConstant::ANIMAL_ID];
+        }, $result);
+
+        $updateSql = 'INSERT INTO animal_cache (animal_id) VALUES '.SqlUtil::valueString($animalIdsToUpdate,false);
+        return SqlUtil::updateWithCount($connection, $updateSql);
+    }
+
 
 
 }
