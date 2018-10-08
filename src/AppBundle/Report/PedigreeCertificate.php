@@ -20,6 +20,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Output\BreedValuesOutput;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\NullChecker;
@@ -75,6 +76,10 @@ class PedigreeCertificate
     /** @var array */
     private $breedValueResultTableColumnNamesSets;
 
+    /** @var BreedValuesOutput */
+    private $breedValuesOutput;
+
+
     public function __construct(EntityManagerInterface $em,
                                 TranslatorInterface $translator,
                                 $useTestData,
@@ -91,6 +96,16 @@ class PedigreeCertificate
         $this->useTestData = $useTestData && ($environment === Environment::DEV || $environment === Environment::STAGE || $environment === Environment::LOCAL);
     }
 
+    /**
+     * @required
+     *
+     * @param BreedValuesOutput $breedValuesOutput
+     */
+    public function setBreedValuesOutput(BreedValuesOutput $breedValuesOutput)
+    {
+        $this->breedValuesOutput = $breedValuesOutput;
+    }
+
 
     /**
      * @param Person $actionBy
@@ -99,15 +114,12 @@ class PedigreeCertificate
      * @param string $trimmedClientName
      * @param string $ownerEmailAddress
      * @param CompanyAddress $companyAddress
-     * @param string $breedValuesLastGenerationDate
-     * @param array $breedValueResultTableColumnNamesSets
      * @return array
+     * @throws \Exception
      */
-    public function generate($actionBy, $ubn, $animalId, $trimmedClientName, $ownerEmailAddress, $companyAddress,
-                                $breedValuesLastGenerationDate, $breedValueResultTableColumnNamesSets)
+    public function generate($actionBy, $ubn, $animalId, $trimmedClientName, $ownerEmailAddress, $companyAddress)
     {
         $this->data = array();
-        $this->breedValueResultTableColumnNamesSets = $breedValueResultTableColumnNamesSets;
 
         $this->data[ReportLabel::ACTION_BY_FULL_NAME] =
             ($actionBy ? $actionBy->getFullName() : self::GENERAL_NULL_FILLER);
@@ -133,7 +145,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::PEDIGREE_REGISTER] = $pedigreeRegister;
 
         // Add shared data
-        $this->data[ReportLabel::BREED_VALUES_EVALUATION_DATE] = ($breedValuesLastGenerationDate ? $breedValuesLastGenerationDate: self::GENERAL_NULL_FILLER);
+        $this->data[ReportLabel::BREED_VALUES_EVALUATION_DATE] = $this->breedValuesOutput->getBreedValuesLastGenerationDate(self::GENERAL_NULL_FILLER);
 
         $keyAnimal = ReportLabel::CHILD_KEY;
 
@@ -582,7 +594,10 @@ class PedigreeCertificate
 
     private function addBreedValuesSet($key, $breedGrades)
     {
-        foreach ($this->breedValueResultTableColumnNamesSets as $set)
+        $exteriorBreedValuesOutput = $this->breedValuesOutput->getForPedigreeCertificate($breedGrades);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES] = $exteriorBreedValuesOutput;
+
+        foreach ($this->breedValuesOutput->getBreedValueResultTableColumnNamesSets() as $set)
         {
             $resultTableValueVariable = $set['result_table_value_variable'];
             $resultTableAccuracyVariable = $set['result_table_accuracy_variable'];
@@ -590,22 +605,25 @@ class PedigreeCertificate
             $value = ArrayUtil::get($resultTableValueVariable, $breedGrades);
             $accuracy = ArrayUtil::get($resultTableAccuracyVariable, $breedGrades);
 
-            $formattedValue = $value ? NumberUtil::getPlusSignIfNumberIsPositive($value) . BreedFormat::formatBreedValueValue($value) : BreedFormat::EMPTY_BREED_SINGLE_VALUE;
-            $formattedAccuracy = $accuracy ? BreedFormat::formatAccuracyForDisplay($accuracy) : BreedFormat::EMPTY_BREED_SINGLE_VALUE;
-
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][$resultTableValueVariable] = [
-                ReportLabel::VALUE => $formattedValue,
-                ReportLabel::ACCURACY => $formattedAccuracy,
+                ReportLabel::VALUE => BreedValuesOutput::getFormattedBreedValue($value),
+                ReportLabel::ACCURACY => BreedValuesOutput::getFormattedBreedValueAccuracy($accuracy),
                 ReportLabel::IS_EMPTY => empty($value) || empty($accuracy),
             ];
         }
+
+        foreach ($this->breedValuesOutput->getExteriorKeysWithSuffixes() as $exteriorKey)
+        {
+            unset($this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][$exteriorKey]);
+        }
+
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][ReportLabel::IS_EMPTY] = false;
     }
 
 
     private function addEmptyBreedValuesSet($key)
     {
-        foreach ($this->breedValueResultTableColumnNamesSets as $set)
+        foreach ($this->breedValuesOutput->getBreedValueResultTableColumnNamesSets() as $set)
         {
             $resultTableValueVariable = $set['result_table_value_variable'];
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][$resultTableValueVariable] = [

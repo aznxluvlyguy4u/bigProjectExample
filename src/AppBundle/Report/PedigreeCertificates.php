@@ -11,6 +11,7 @@ use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
+use AppBundle\Output\BreedValuesOutput;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -32,10 +33,23 @@ class PedigreeCertificates extends ReportBase
     /** @var PedigreeCertificate */
     private $generator;
 
+    /** @var BreedValuesOutput */
+    private $breedValuesOutput;
+
     public function __construct(EntityManagerInterface $em, PedigreeCertificate $generator)
     {
         parent::__construct($em, null, self::FILE_NAME_REPORT_TYPE);
         $this->generator = $generator;
+    }
+
+    /**
+     * @required
+     *
+     * @param BreedValuesOutput $breedValuesOutput
+     */
+    public function setBreedValuesOutput(BreedValuesOutput $breedValuesOutput)
+    {
+        $this->breedValuesOutput = $breedValuesOutput;
     }
 
     /**
@@ -78,16 +92,13 @@ class PedigreeCertificates extends ReportBase
             $ubn = $location->getUbn();
         }
 
-        $breedValuesLastGenerationDate = $this->em->getRepository(BreedValue::class)->getBreedValueLastGenerationDate();
-        $breedValueResultTableColumnNamesSets = BreedValuesResultTableUpdater::getResultTableVariables($this->conn);
-
         foreach ($animalIds as $animalId) {
             $this->reports[$this->animalCount] = $this->generator
-                ->generate($actionBy, $ubn, $animalId, $trimmedCompanyName, $ownerEmailAddress, $companyAddress,
-                    $breedValuesLastGenerationDate, $breedValueResultTableColumnNamesSets);
+                ->generate($actionBy, $ubn, $animalId, $trimmedCompanyName, $ownerEmailAddress, $companyAddress);
 
             $this->animalCount++;
         }
+        $this->breedValuesOutput->clearPrivateValues();
     }
 
 

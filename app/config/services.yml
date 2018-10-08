@@ -522,6 +522,10 @@ services:
             - '@translator'
             - '%use_test_data%'
             - '%environment%'
+        calls:
+          - method: setBreedValuesOutput
+            arguments:
+              - '@AppBundle\Output\BreedValuesOutput'
         lazy: true
 
     AppBundle\Report\PedigreeCertificates:
@@ -530,6 +534,9 @@ services:
             - '@AppBundle\Report\PedigreeCertificate'
         calls:
           - method: initializeConstants
+          - method: setBreedValuesOutput
+            arguments:
+              - '@AppBundle\Output\BreedValuesOutput'
         lazy: true
 
     app.writer.csv_from_sql_results:
