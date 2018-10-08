@@ -43,6 +43,7 @@ use AppBundle\Util\LitterUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AscendantValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -157,6 +158,8 @@ class NsfoMainCommand extends ContainerAwareCommand
             '11: '.strtolower(CommandTitle::MIXBLUP), "\n",
             '-----------------------------------------------', "\n",
             '12: '.strtolower(CommandTitle::DEPART_INTERNAL_WORKER), "\n",
+            '-----------------------------------------------', "\n",
+            '13: '.strtolower(CommandTitle::CALCULATIONS_AND_ALGORITHMS), "\n",
             '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
@@ -175,6 +178,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 10: $this->dataMigrationOptions(); break;
             case 11: $this->runMixblupCliOptions($this->cmdUtil); break;
             case 12: $this->getContainer()->get('app.cli.internal_worker.depart')->run($this->cmdUtil); break;
+            case 13: $this->calculationsAndAlgorithmsOptions(); break;
 
             default: return;
         }
@@ -913,6 +917,39 @@ class NsfoMainCommand extends ContainerAwareCommand
             $this->getContainer()->get(BreedValuesResultTableUpdater::class)->updateAllBreedValueNormalDistributions($overwriteExistingValues);
         }
 
+    }
+
+
+
+    public function calculationsAndAlgorithmsOptions()
+    {
+        $this->initializeMenu(self::LITTER_GENE_DIVERSITY_TITLE);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '1: Validate UBN', "\n",
+            "\n",
+            'other: exit submenu', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+
+            case 1: $this->validateUbn(); break;
+            default: $this->writeLn('Exit menu'); return;
+        }
+        $this->calculationsAndAlgorithmsOptions();
+    }
+
+
+    private function validateUbn()
+    {
+        do {
+            $ubn = $this->cmdUtil->generateQuestion('insert ubn (default: '.self::DEFAULT_UBN.')', self::DEFAULT_UBN);
+            $isUbnValid = Validator::hasValidUbnFormat($ubn);
+            $this->writeLn('UBN '.strval($ubn).' is '.($isUbnValid ? 'VALID' : 'NOT VALID'));
+
+            $retry = $this->cmdUtil->generateConfirmationQuestion('Test another UBN?', true, false);
+        } while($retry);
     }
 
 
