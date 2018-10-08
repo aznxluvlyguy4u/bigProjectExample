@@ -285,4 +285,30 @@ class ArrayUtil
             throw new \Exception('Array is missing the following keys: '.implode(', ', $missingKeys));
         }
     }
+
+
+    /**
+     * @param array $array
+     * @return bool
+     */
+    public static function containsOnlyDigits(array $array = []): bool
+    {
+        $checkArray = array_map(function($value) {
+            return !is_int($value) && !ctype_digit($value);
+        }, $array);
+        return !in_array(true, $checkArray);
+    }
+
+
+    /**
+     * Count occurrences of value in array
+     *
+     * @param $needle
+     * @param array $haystack
+     * @return int
+     */
+    public static function countIf($needle, array $haystack = []): int
+    {
+        return count(array_keys($haystack, $needle));
+    }
 }
