@@ -47,6 +47,9 @@ class AnimalCacher
      */
     public static function cacheAllAnimalsBySqlBatchQueries(Connection $conn, CommandUtil $cmdUtil = null)
     {
+        $removed = self::removeAllOrphanedRecords($conn);
+        $cmdUtil->writeLn((empty($removed) ? 'No' : $removed).' orphaned animalCache records removed');
+
         DoctrineUtil::updateTableSequence($conn, ['animal_cache']);
         $sql = "INSERT INTO animal_cache (animal_id)
                   SELECT a.id FROM animal a
@@ -69,6 +72,9 @@ class AnimalCacher
         $cmdUtil->writeln($updateCount.' weight animalCache records updated' );
 
         $updateCount = TailLengthCacher::updateAll($conn);
+        $cmdUtil->writeln($updateCount.' tailLength animalCache records updated' );
+
+        $updateCount = AnimalGradesCacher::updateAllDutchBreedStatuses($conn);
         $cmdUtil->writeln($updateCount.' tailLength animalCache records updated' );
     }
 
