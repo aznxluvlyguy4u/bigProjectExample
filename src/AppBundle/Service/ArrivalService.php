@@ -131,6 +131,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     public function getArrivalById(Request $request, $Id)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
         $arrival = $this->getManager()->getRepository(DeclareArrival::class)->getArrivalByRequestId($location, $Id);
         return new JsonResponse($arrival, 200);
     }
@@ -144,6 +145,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     {
         $location = $this->getSelectedLocation($request);
         $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
+        $this->nullCheckLocation($location);
 
         if(!$stateExists) {
             $declareArrivals = $this->getManager()->getRepository(DeclareArrival::class)->getArrivals($location);
@@ -192,6 +194,9 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
 
         $arrivalOrImportLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
@@ -293,6 +298,9 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $actionLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
         //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
@@ -368,6 +376,9 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $loggedInUser = $this->getUser();
         $content->set(Constant::LOCATION_NAMESPACE, $location);
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         //verify requestId for arrivals
         $messageObject = $this->getManager()->getRepository(DeclareArrival::class)->getArrivalByRequestId($location, $requestId);
 
@@ -433,6 +444,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     public function getArrivalErrors(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
+
         $declareArrivals = $this->getManager()->getRepository(DeclareArrivalResponse::class)->getArrivalsWithLastErrorResponses($location);
         $declareImports = $this->getManager()->getRepository(DeclareImportResponse::class)->getImportsWithLastErrorResponses($location);
 
@@ -447,6 +460,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     public function getArrivalHistory(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
+
         $declareArrivals = $this->getManager()->getRepository(DeclareArrivalResponse::class)->getArrivalsWithLastHistoryResponses($location);
         $declareImports = $this->getManager()->getRepository(DeclareImportResponse::class)->getImportsWithLastHistoryResponses($location);
 

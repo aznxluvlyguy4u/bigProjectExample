@@ -106,6 +106,7 @@ class DepartService extends DeclareControllerServiceBase
     public function getDepartById(Request $request, $Id)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
         $depart = $this->getManager()->getRepository(DeclareDepart::class)->getDepartureByRequestId($location, $Id);
         return new JsonResponse($depart, 200);
     }
@@ -118,6 +119,8 @@ class DepartService extends DeclareControllerServiceBase
     public function getDepartures(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
+
         $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
         $repository = $this->getManager()->getRepository(DeclareDepart::class);
 
@@ -165,6 +168,10 @@ class DepartService extends DeclareControllerServiceBase
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $sendToRvo = $location->isDutchLocation();
 
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
@@ -265,6 +272,9 @@ class DepartService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
         $arrivalLog = null;
 
@@ -319,6 +329,9 @@ class DepartService extends DeclareControllerServiceBase
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
 
         //NOTE!!! Don't try to verify any animals directly. Because they will have the isDeparted=true state.
         //Verify this request using the requestId
@@ -375,6 +388,7 @@ class DepartService extends DeclareControllerServiceBase
     public function getDepartErrors(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $repository = $this->getManager()->getRepository(DeclareDepartResponse::class);
         $declareDeparts = $repository->getDeparturesWithLastErrorResponses($location);
@@ -393,6 +407,7 @@ class DepartService extends DeclareControllerServiceBase
     public function getDepartHistory(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $repository = $this->getManager()->getRepository(DeclareDepartResponse::class);
         $declareDeparts = $repository->getDeparturesWithLastHistoryResponses($location);

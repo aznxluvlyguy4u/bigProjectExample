@@ -50,9 +50,8 @@ class TagReplaceService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
-        if(!$client) {
-            return new JsonResponse("CLIENT NOT FOUND", 428);
-        }
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
 
         $log = ActionLogWriter::declareTagReplacePost($this->getManager(), $client, $loggedInUser, $content);
 
@@ -134,8 +133,8 @@ class TagReplaceService extends DeclareControllerServiceBase
      */
     public function getTagReplaceHistory(Request $request)
     {
-        $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $em = $this->getManager();
         $sql = "SELECT
@@ -173,8 +172,8 @@ class TagReplaceService extends DeclareControllerServiceBase
      */
     public function getTagReplaceErrors(Request $request)
     {
-        $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $em = $this->getManager();
         $sql = "SELECT

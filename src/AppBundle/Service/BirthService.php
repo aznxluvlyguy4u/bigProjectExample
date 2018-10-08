@@ -142,6 +142,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     public function getHistoryBirths(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $sql = "SELECT 
                     declare_nsfo_base.id AS id,
@@ -180,6 +181,9 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
 
         $requestMessages = $this->requestMessageBuilder
             ->build(RequestType::DECLARE_BIRTH_ENTITY,
@@ -282,6 +286,9 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $loggedInUser = $this->getUser();
         $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
         $litterId = null;
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
 
         if (!key_exists('litter_id', $content->toArray())) {
             return new JsonResponse(

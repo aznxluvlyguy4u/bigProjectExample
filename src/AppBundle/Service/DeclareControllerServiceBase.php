@@ -334,8 +334,9 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      * @param Client $client
      * @param array $animalArray
      */
-    protected function verifyIfClientOwnsAnimal(Client $client, array $animalArray): void
+    protected function verifyIfClientOwnsAnimal(?Client $client, array $animalArray): void
     {
+        $this->nullCheckClient($client);
         $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)
             ->verifyIfClientOwnsAnimal($client, $animalArray);
 

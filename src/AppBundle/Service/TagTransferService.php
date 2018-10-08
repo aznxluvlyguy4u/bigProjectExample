@@ -44,6 +44,9 @@ class TagTransferService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $log = ActionLogWriter::declareTagTransferPost($this->getManager(), $client, $loggedInUser, $content);
 
         $this->validateIfLocationIsDutch($location,DeclareTagsTransfer::class);
@@ -124,6 +127,9 @@ class TagTransferService extends DeclareControllerServiceBase
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $tagTransfers = $this->getManager()->getRepository(TagTransferItemResponse::class)
             ->getTagTransferItemRequestsWithLastErrorResponses($client, $location);
 
@@ -139,6 +145,10 @@ class TagTransferService extends DeclareControllerServiceBase
     {
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $tagTransfers = $this->getManager()->getRepository(TagTransferItemResponse::class)->getTagTransferItemRequestsWithLastHistoryResponses($client, $location);
 
         return ResultUtil::successResult($tagTransfers);

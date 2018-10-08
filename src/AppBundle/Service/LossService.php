@@ -44,6 +44,8 @@ class LossService extends DeclareControllerServiceBase
     public function getLossById(Request $request, $Id)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
+
         $repository = $this->getManager()->getRepository(DeclareLoss::class);
 
         $loss = $repository->getLossByRequestId($location, $Id);
@@ -59,6 +61,8 @@ class LossService extends DeclareControllerServiceBase
     public function getLosses(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
+
         $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
         $repository = $this->getManager()->getRepository(DeclareLoss::class);
 
@@ -98,9 +102,9 @@ class LossService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
-        $log = ActionLogWriter::declareLossPost($this->getManager(), $client, $loggedInUser, $location, $content);
-
         $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
+
+        $log = ActionLogWriter::declareLossPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $messageObject = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
@@ -145,6 +149,9 @@ class LossService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Convert the array into an object and add the mandatory values retrieved from the database
@@ -180,6 +187,7 @@ class LossService extends DeclareControllerServiceBase
     public function getLossErrors(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $declareLosses = $this->getManager()->getRepository(DeclareLossResponse::class)->getLossesWithLastErrorResponses($location);
 
@@ -194,6 +202,7 @@ class LossService extends DeclareControllerServiceBase
     public function getLossHistory(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $declareLosses = $this->getManager()->getRepository(DeclareLossResponse::class)
             ->getLossesWithLastHistoryResponses($location);

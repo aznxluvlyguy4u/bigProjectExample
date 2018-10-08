@@ -77,6 +77,8 @@ class TagsService extends ControllerServiceBase
         $this->validateAnimalsByPlainTextInputRequest($request);
 
         $client = $this->getAccountOwner($request);
+        $this->nullCheckClient($client);
+
         $location = $this->getSelectedLocation($request);
         $content = RequestUtil::getContentAsArray($request);
 
@@ -102,6 +104,8 @@ class TagsService extends ControllerServiceBase
     public function deleteTag(Request $request, Tag $tag)
     {
         $client = $this->getAccountOwner($request);
+        $this->nullCheckClient($client);
+
         if (!$tag->getOwnerId() === $client->getId()) {
             throw new PreconditionFailedHttpException($this->translator->trans('TAG DOES NOT BELONG TO YOU'));
         }
@@ -343,6 +347,8 @@ class TagsService extends ControllerServiceBase
     private function createTagsOutputByRequest(Request $request)
     {
         $client = $this->getAccountOwner($request);
+        $this->nullCheckClient($client);
+
         $location = $this->getSelectedLocation($request);
         $tagStatus = $this->getTagStatusQueryParam($request);
 
