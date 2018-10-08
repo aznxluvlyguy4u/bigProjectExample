@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Cache\NLingCacher;
 use AppBundle\Cache\ProductionCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
@@ -1157,7 +1158,6 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
      */
     private function directlyUpdateResultTableValuesByAnimalIds(array $animalIds)
     {
-        ProductionCacher::updateProductionValues($this->getConnection(), $animalIds);
-        NLingCacher::updateNLingValues($this->getConnection(), $animalIds);
+        AnimalCacher::cacheByAnimalIds($this->getConnection(), $animalIds);
     }
 }
