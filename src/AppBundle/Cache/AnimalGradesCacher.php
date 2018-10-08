@@ -41,7 +41,7 @@ class AnimalGradesCacher
             else {
                 $animalIdFilterString = " AND
                         a.id IN (
-                          implode(',',$animalIds)
+                          ".implode(',',$animalIds)."
                         ) ";
             }
         } elseif($animalIds != null) {
