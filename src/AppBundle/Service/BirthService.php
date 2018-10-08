@@ -628,11 +628,21 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
             ActionLogWriter::revokeLitter($this->getManager(), $litter, $loggedInUser, $client);
 
+            $this->updateResultTableValuesByWorkerMessageBodyLitter($workerMessageBodyForRevoke,
+                $location->isDutchLocation(), true
+            );
+
             return new JsonResponse(array(Constant::RESULT_NAMESPACE => [
                 'code' => $statusCode,
                 'revokes' => $revokeMessages,
                 'message' => $message,
             ]), $statusCode);
+        }
+
+        if (!$location->isDutchLocation()) {
+            $this->updateResultTableValuesByWorkerMessageBodyLitter($workerMessageBodyForRevoke,
+                $location->isDutchLocation(), true
+            );
         }
 
         return ResultUtil::errorResult("Failed to revoke and remove all child and stillborn animals", $statusCode);
