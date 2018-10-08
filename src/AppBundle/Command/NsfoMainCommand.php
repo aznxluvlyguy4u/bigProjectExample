@@ -211,7 +211,8 @@ class NsfoMainCommand extends ContainerAwareCommand
             '22: BatchUpdate all Incongruent weight values', "\n",
             '23: BatchUpdate all Incongruent tailLength values', "\n",
             '-------------------------', "\n",
-            '24: BatchInsert empty animal_cache records and BatchUpdate all Incongruent values', "\n\n",
+            '24: BatchInsert empty animal_cache records and BatchUpdate all Incongruent values', "\n",
+            '25: Remove all orphaned animal_cache records', "\n",
             '', "\n",
             '--- Helper Commands ---', "\n",
             '99: Get locationId from UBN', "\n",
@@ -348,6 +349,11 @@ class NsfoMainCommand extends ContainerAwareCommand
                 break;
 
             case 24: AnimalCacher::cacheAllAnimalsBySqlBatchQueries($this->conn, $this->cmdUtil); break;
+
+            case 25:
+                $updateCount = AnimalCacher::removeAllOrphanedRecords($this->conn);
+                $this->writeLn((empty($updateCount) ? 'No' : $updateCount).' orphaned animalCache records removed');
+                break;
 
             case 99:
                 $this->printLocationIdFromGivenUbn();

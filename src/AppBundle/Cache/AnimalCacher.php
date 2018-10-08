@@ -27,6 +27,7 @@ use \Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class AnimalCacher
 {
@@ -938,5 +939,55 @@ class AnimalCacher
     }
 
 
+    /**
+     * @param Connection $conn
+     * @param array $animalIds
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function removeOrphanedRecordsByAnimalIds(Connection $conn, $animalIds = []): int
+    {
+        if (empty($animalIds)) {
+            return 0;
+        }
+
+        if (!ArrayUtil::containsOnlyDigits($animalIds)) {
+            throw new PreconditionFailedHttpException('animalIds input only allows numbers');
+        }
+
+        $filterString = ' animal_cache.animal_id IN ('.implode(',',$animalIds).') AND ';
+
+        return self::removeOrphanedRecords($conn, $filterString);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function removeAllOrphanedRecords(Connection $conn): int
+    {
+        return self::removeOrphanedRecords($conn, '');
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $filterString
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private static function removeOrphanedRecords(Connection $conn, $filterString = ''): int
+    {
+        $sql = "DELETE FROM animal_cache WHERE id IN (
+                  SELECT
+                    c.id as cache_id
+                  FROM animal_cache c
+                    LEFT JOIN animal a ON a.id = c.animal_id
+                  WHERE ".$filterString." a.id ISNULL
+                )";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
 
 }
