@@ -481,7 +481,7 @@ class Utils
         if(!($residenceToUpdate instanceof AnimalResidence)) {
             //create a new animalResidence, if no animalResidences found
             //the startDate will likely not be available
-            $residenceToUpdate = new animalResidence();
+            $residenceToUpdate = new animalResidence($location->getCountryCode(),true);
             $residenceToUpdate->setLocation($location);
             $residenceToUpdate->setAnimal($animal);
             $residenceToUpdate->setStartDate($alternativeStartDate);
