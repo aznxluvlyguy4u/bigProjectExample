@@ -205,12 +205,12 @@ class DepartService extends DeclareControllerServiceBase
             $arrival->setRecoveryIndicator(RecoveryIndicatorType::N);
             $arrival->setIsArrivedFromOtherNsfoClient(true);
 
-            $arrivalMessage = new ArrivalMessageBuilder($this->getManager(), $this->environment);
-            $arrivalMessageObject = $arrivalMessage->buildMessage($arrival, $arrivalOwner, $loggedInUser, $arrivalLocation);
-            $this->persist($arrivalMessageObject);
+            $arrivalMessageBuilder = new ArrivalMessageBuilder($this->getManager(), $this->environment);
+            $arrival = $arrivalMessageBuilder->buildMessage($arrival, $arrivalOwner, $loggedInUser, $arrivalLocation);
+            $this->persist($arrival);
 
             if ($sendToRvo) {
-                $this->sendMessageObjectToQueue($arrivalMessageObject);
+                $this->sendMessageObjectToQueue($arrival);
             } else {
                 $this->arrivalProcessor->process($arrival);
             }

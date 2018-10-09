@@ -198,6 +198,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
+        $sendToRvo = $location->isDutchLocation();
+
         $arrivalOrImportLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
         //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
@@ -238,21 +240,31 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             $depart->setUbnNewOwner($location->getUbn());
             $depart->setRecoveryIndicator(RecoveryIndicatorType::N);
 
-            $departMessage = new DepartMessageBuilder($this->getManager() , $this->environment);
-            $departMessageObject = $departMessage->buildMessage($depart, $departOwner, $loggedInUser, $departLocation);
-            $this->persist($departMessageObject);
+            $departMessageBuilder = new DepartMessageBuilder($this->getManager() , $this->environment);
+            $depart = $departMessageBuilder->buildMessage($depart, $departOwner, $loggedInUser, $departLocation);
 
-            $this->sendMessageObjectToQueue($departMessageObject);
+            if ($sendToRvo) {
+                $this->persist($depart);
+            } else {
+                $this->departProcessor->process($depart);
+            }
+
+            $this->sendMessageObjectToQueue($depart);
 
             $departLog = ActionLogWriter::declareDepart($depart, $departOwner, true);
         }
 
-        //Send it to the queue and persist/update any changed state to the database
-        $this->sendMessageObjectToQueue($arrival);
-        $arrival->setAnimal(null);
+        if ($sendToRvo) {
+            //Send it to the queue and persist/update any changed state to the database
+            $outputArray = $this->sendMessageObjectToQueue($arrival);
+            $arrival->setAnimal(null);
 
-        //Persist message without animal. That is done after a successful response
-        $this->persist($arrival);
+            //Persist message without animal. That is done after a successful response
+            $this->persist($arrival);
+
+        } else {
+            $outputArray = $this->arrivalProcessor->process($arrival);
+        }
 
         // Create Message for Receiving Owner
         if($departLocation) {
@@ -285,7 +297,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->clearLivestockCacheForLocation($location);
 
-        return new JsonResponse(array("status"=>"ok"), 200);
+        return $outputArray;
     }
 
 
