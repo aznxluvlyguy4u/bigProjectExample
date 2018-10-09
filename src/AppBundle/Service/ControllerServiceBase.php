@@ -147,8 +147,10 @@ abstract class ControllerServiceBase
      * @param Location $location
      * @param Animal | Ewe | Ram | Neuter $animal
      */
-    protected function clearLivestockCacheForLocation(Location $location = null, $animal = null) {
-        $this->cacheService->clearLivestockCacheForLocation($location, $animal);
+    protected function clearLivestockCacheForLocation(?Location $location = null, $animal = null) {
+        if ($location || $animal) {
+            $this->cacheService->clearLivestockCacheForLocation($location, $animal);
+        }
     }
 
 
