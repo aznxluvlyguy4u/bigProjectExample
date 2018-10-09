@@ -308,9 +308,10 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      * @param Location $destination
      */
     protected function validateIfOriginAndDestinationAreInSameCountry(string $declareClazz,
-                                                                      Location $origin, Location $destination)
+                                                                      ?Location $origin, ?Location $destination)
     {
-        if ($origin->getCountryCode() !== $destination->getCountryCode()){
+        if ($origin && $destination &&
+            $origin->getCountryCode() !== $destination->getCountryCode()){
             throw new DeclareToOtherCountryHttpException($this->translator, $declareClazz, $destination, $origin);
         }
     }
