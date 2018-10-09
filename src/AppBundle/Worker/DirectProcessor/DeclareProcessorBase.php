@@ -72,6 +72,52 @@ class DeclareProcessorBase extends ControllerServiceBase
 
     /**
      * @param Animal $animal
+     * @param Location $origin
+     * @return bool
+     */
+    protected function animalResidenceOnPreviousLocationHasBeenFinalized(Animal $animal, Location $origin): bool
+    {
+        $animalResidence = $this->getManager()->getRepository(AnimalResidence::class)
+            ->getLastResidenceOnLocation($origin, $animal);
+        return $animalResidence && $animalResidence->getEndDate() !== null;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param Location $location
+     * @param \DateTime $startDate
+     * @param bool $isPending
+     * @return AnimalResidence
+     */
+    protected function createNewAnimalResidenceIfNotExistsYet(Animal $animal, Location $location,
+                                                              \DateTime $startDate, bool $isPending): AnimalResidence
+    {
+        $currentAnimalResidence = $this->getManager()->getRepository(AnimalResidence::class)
+            ->getLastResidenceOnLocation($location, $animal);
+        if ($currentAnimalResidence) {
+            if ($currentAnimalResidence->isPending() !== $isPending) {
+                $currentAnimalResidence->setIsPending($isPending);
+                $this->getManager()->persist($currentAnimalResidence);
+            }
+            return $currentAnimalResidence;
+        }
+
+        $newAnimalResidence = new AnimalResidence(
+            $location->getCountryCode(),
+            $isPending
+        );
+        $newAnimalResidence->setAnimal($animal);
+        $newAnimalResidence->setLocation($location);
+        $newAnimalResidence->setStartDate($startDate);
+        $this->getManager()->persist($newAnimalResidence);
+
+        return $newAnimalResidence;
+    }
+
+
+    /**
+     * @param Animal $animal
      * @param Location $destination
      */
     protected function finalizeAnimalTransferAndAnimalResidenceDestination(Animal $animal, Location $destination)
