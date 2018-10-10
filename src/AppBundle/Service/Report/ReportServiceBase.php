@@ -15,6 +15,7 @@ use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\CsvFromSqlResultsWriterService;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
@@ -421,22 +422,24 @@ class ReportServiceBase
     }
 
 
-    /**
-     * @param string $twigFile
-     * @param array|object $data
-     * @param boolean $isLandscape
-     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
-     */
-    protected function getPdfReportBase($twigFile, $data, $isLandscape = true)
+		/**
+		 * @param string $twigFile
+		 * @param array|object $data
+		 * @param boolean $isLandscape
+		 * @param array $additionalData
+		 * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+		 */
+    protected function getPdfReportBase($twigFile, $data, $isLandscape = true, $additionalData = [])
     {
-        $html = $this->renderView($twigFile, [
-        	'variables' => $data,
-	        'logo' => FilesystemUtil::getImagesDirectory($this->rootDir).'/nsfo-logo.png',
-	        'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/css/bootstrap.min.css',
-	        'bootstrap_js' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/js/bootstrap.min.js',
-//	        'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/css/bootstrap417/bootstrap.min.css',
-//	        'bootstrap_js' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/js/bootstrap417/bootstrap.min.js',
-        ]);
+    	  $twigInput = ArrayUtil::concatArrayValues(
+    	  	[
+			      ['variables' => $data],
+			      $additionalData
+		      ],
+		      false
+	      );
+
+        $html = $this->renderView($twigFile, $twigInput);
 
         if ($this->displayReportPdfOutputAsHtml) {
             $response = new Response($html);
@@ -451,14 +454,14 @@ class ReportServiceBase
         $pdfOptions = [
 	        'orientation'=>'Portrait',
 	        'default-header'=>false,
-	        'disable-smart-shrinking'=>true,
+//	        'disable-smart-shrinking'=>true,
 //	        'viewport-size' => '1024x768',
 //          'viewport-size' => '794 × 1122',
 	        'page-size' => 'A4',
-	        'margin-top'    => 6,
-	        'margin-right'  => 8,
+	        'margin-top'    => 4,
+	        'margin-right'  => 4,
 	        'margin-bottom' => 4,
-	        'margin-left'   => 8,
+	        'margin-left'   => 4,
         ];
 
         if($this->outputReportsToCacheFolderForLocalTesting) {

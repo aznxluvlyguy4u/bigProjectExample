@@ -12,6 +12,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Report\PedigreeCertificates;
+use AppBundle\Util\FilesystemUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -78,7 +79,15 @@ class PedigreeCertificateReportService extends ReportServiceBase
     {
         //Or use... $this->getCurrentEnvironment() == Environment::PROD;
         $twigFile = ReportAPIController::IS_USE_PROD_VERSION_OUTPUT ? self::TWIG_FILE : self::TWIG_FILE_BETA;
-        return $this->getPdfReportBase($twigFile, $this->pedigreeCertificatesGenerator->getReports(), false);
+        $data = $this->pedigreeCertificatesGenerator->getReports();
+        $additionalData = [
+	        'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/css/bootstrap.min.css',
+	        'bootstrap_js' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/js/bootstrap.min.js',
+	        'images_dir' => FilesystemUtil::getImagesDirectory($this->rootDir),
+	        'fonts_dir' => FilesystemUtil::getAssetsDirectory(($this->rootDir)). '/fonts'
+        ];
+
+        return $this->getPdfReportBase($twigFile, $data, false, $additionalData);
     }
 
 
