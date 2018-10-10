@@ -1175,7 +1175,7 @@
                                             {# SECOND block #}
                                             <div class="row bg-success mb-1">
                                                 <div class="col-xs-12">
-                                                    <b>FOKWAARDEN / NAUWKEURIGHEID</b>
+                                                    <b>INDEX / NAUWKEURIGHEID</b>
                                                 </div>
                                             </div>
 
@@ -1372,8 +1372,8 @@
 
                                             {# FOURTH block FOKWAARDEN #}
                                             <div class="row bg-success mb-1">
-                                                <div class="col-xs-12">
-                                                    <b>FOKWAARDEN / NAUWKEURIGHEID</b>
+                                                <div class="col-xs-12 blockHeader">
+                                                    <h3 class="display-inline"><b>FOKWAARDEN / NAUWKEURIGHEID</b></h3>
                                                 </div>
                                             </div>
 
@@ -1381,37 +1381,24 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Totaal geb. p. worp</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.total_born.value~' / '~ certificate.animals.f.breedValues.total_born.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">Totaal geb. p. worp</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
+                                                                {% if not certificate.animals.f.breedValues.total_born.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.total_born.value~' / '~ certificate.animals.f.breedValues.total_born.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Vetdikte 20 weken</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.fat_thickness3.value~' / '~ certificate.animals.f.breedValues.fat_thickness3.accuracy~'%' }}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="row mb-1">
-                                                <div class="col-xs-6">
-                                                    <div class="pr-1">
-                                                        <div class="row bg-white">
-                                                            <div class="col-xs-7">Doodgeb. p. worp</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.still_born.value~' / '~ certificate.animals.f.breedValues.still_born.accuracy~'%' }}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {# skull = ? #}
-                                                <div class="col-xs-6">
-                                                    <div class="pl-1">
-                                                        <div class="row bg-white">
-                                                            <div class="col-xs-7">Kop</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.still_born.value~' / '~ certificate.animals.f.breedValues.still_born.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">Vetdikte 20 weken</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.fat_thickness3.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.fat_thickness3.value~' / '~ certificate.animals.f.breedValues.fat_thickness3.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1421,18 +1408,25 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Vroegrijpheid</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.early_fertility.value~' / '~ certificate.animals.f.breedValues.early_fertility.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">Doodgeb. p. worp</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
+                                                                {% if not certificate.animals.f.breedValues.still_born.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.still_born.value~' / '~ certificate.animals.f.breedValues.still_born.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                {# MISSING (progress?) #}
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Ontwikkeling</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.still_born.value~' / '~ certificate.animals.f.breedValues.still_born.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Kop</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.skull.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.skull.value~' / '~ certificate.animals.f.breedValues.skull.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1442,18 +1436,25 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Tussenlamtijd</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.birth_interval.value~' / '~ certificate.animals.f.breedValues.birth_interval.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Vroegrijpheid</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.early_fertility.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.early_fertility.value~' / '~ certificate.animals.f.breedValues.early_fertility.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                {# MISSING (muscularity?) #}
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Bespiering</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.muscle_thickness.value~' / '~ certificate.animals.f.breedValues.muscle_thickness.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Ontwikkeling</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.progress.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.progress.value~' / '~ certificate.animals.f.breedValues.progress.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1463,18 +1464,25 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Aflamgemak</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.birth_delivery_progress.value~' / '~ certificate.animals.f.breedValues.birth_delivery_progress.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Tussenlamtijd</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.birth_interval.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.birth_interval.value~' / '~ certificate.animals.f.breedValues.birth_interval.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                {# MISSING (proportion?) #}
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Evenredigheid</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.muscle_thickness.value~' / '~ certificate.animals.f.breedValues.muscle_thickness.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Bespiering</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.muscularity.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.muscularity.value~' / '~ certificate.animals.f.breedValues.muscularity.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1484,18 +1492,25 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Geboortegewicht</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.birth_weight.value~' / '~ certificate.animals.f.breedValues.birth_weight.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Aflamgemak</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.birth_delivery_progress.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.birth_delivery_progress.value~' / '~ certificate.animals.f.breedValues.birth_delivery_progress.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                {# MISSING (type?) #}
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Type</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.muscle_thickness.value~' / '~ certificate.animals.f.breedValues.muscle_thickness.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Evenredigheid</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.proportion.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.proportion.value~' / '~ certificate.animals.f.breedValues.proportion.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1505,18 +1520,25 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Geboortegemak</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.birth_progress.value~' / '~ certificate.animals.f.breedValues.birth_progress.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Geboortegewicht</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.birth_weight.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.birth_weight.value~' / '~ certificate.animals.f.breedValues.birth_weight.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                {# MISSING (leg_work?) #}
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Beenwerk</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.muscle_thickness.value~' / '~ certificate.animals.f.breedValues.muscle_thickness.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Type</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.exterior_type.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.exterior_type.value~' / '~ certificate.animals.f.breedValues.exterior_type.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1526,8 +1548,12 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">8-weken gewicht</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.weight_at8weeks.value~' / '~ certificate.animals.f.breedValues.weight_at8weeks.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Geboortegemak</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.birth_progress.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.birth_progress.value~' / '~ certificate.animals.f.breedValues.birth_progress.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1535,8 +1561,12 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Wormresistentie</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.odin_bc.value~' / '~ certificate.animals.f.breedValues.odin_bc.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Beenwerk</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.leg_work.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.leg_work.value~' / '~ certificate.animals.f.breedValues.leg_work.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1546,8 +1576,12 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">20-weken gewicht</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.weight_at20weeks.value~' / '~ certificate.animals.f.breedValues.weight_at20weeks.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">8-weken gewicht</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.weight_at8weeks.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.weight_at8weeks.value~' / '~ certificate.animals.f.breedValues.weight_at8weeks.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1555,8 +1589,12 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Staartlengte</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.tail_length.value~' / '~ certificate.animals.f.breedValues.tail_length.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Wormresistentie</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.odin_bc.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.odin_bc.value~' / '~ certificate.animals.f.breedValues.odin_bc.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1566,8 +1604,12 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Spierdikte 20 wkn</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.muscle_thickness.value~' / '~ certificate.animals.f.breedValues.muscle_thickness.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">20-weken gewicht</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.weight_at20weeks.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.weight_at20weeks.value~' / '~ certificate.animals.f.breedValues.weight_at20weeks.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1575,8 +1617,40 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-7">Datum evaluatie</div>
-                                                            <div class="col-xs-5">{{ certificate.animals.f.breedValues.tail_length.value~' / '~ certificate.animals.f.breedValues.tail_length.accuracy~'%' }}</div>
+                                                            <div class="col-xs-6 fieldName">Staartlengte</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.tail_length.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.tail_length.value~' / '~ certificate.animals.f.breedValues.tail_length.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-5">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Spierdikte 20 wkn</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.muscle_thickness.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.muscle_thickness.value~' / '~ certificate.animals.f.breedValues.muscle_thickness.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Datum evaluatie</div>
+                                                            <div class="col-xs-6 fieldValue">
+                                                                {% if not certificate.animals.f.breedValues.tail_length.isEmpty %}
+                                                                    {{ certificate.animals.f.breedValues.tail_length.value~' / '~ certificate.animals.f.breedValues.tail_length.accuracy~'%' }}
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
