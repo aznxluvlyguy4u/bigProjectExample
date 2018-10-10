@@ -163,6 +163,7 @@
         }
 
         h3 {
+            /*margin-top: -2px;*/
             font-family: 'brandonGrotesqueMedium';
             font-size: 13px;
             color: #009E66;
@@ -182,13 +183,13 @@
         .fieldName {
             padding-left: 7px;
             font-family: 'crimson-text-roman';
-            font-size: 12px;
+            font-size: 11.5px;
             color: #009E66;
         }
 
         .fieldValue {
             font-family: 'opensans';
-            font-size: 12px;
+            font-size: 11.5px;
             color: black;
         }
 
@@ -379,22 +380,22 @@
                                     {# First block #}
                                     <div class="row bg-white mb-1">
                                         <div class="col-xs-3 fieldName text-nowrap">Uniek levensnr.</div>
-                                        <div class="col-xs-9 fieldValue"><b>{{ certificate.animals.c.uln~'    (Oormerk)' }}</b></div>
+                                        <div class="col-xs-9 fieldValue text-nowrap"><b>{{ certificate.animals.c.uln~'    (Oormerk)' }}</b></div>
                                     </div>
 
                                     <div class="row bg-white  mb-1">
-                                        <div class="col-xs-3 fieldName">Stamboeknr.</div>
-                                        <div class="col-xs-9 fieldValue"><b>{{ certificate.animals.c.pedigree }}</b></div>
+                                        <div class="col-xs-3 fieldName text-nowrap">Stamboeknr.</div>
+                                        <div class="col-xs-9 fieldValue text-nowrap"><b>{{ certificate.animals.c.pedigree }}</b></div>
                                     </div>
 
                                     <div class="row bg-white  mb-1">
-                                        <div class="col-xs-3 fieldName">Naam</div>
-                                        <div class="col-xs-9 fieldValue"><b>{{ certificate.animals.c.name }}</b></div>
+                                        <div class="col-xs-3 fieldName text-nowrap">Naam</div>
+                                        <div class="col-xs-9 fieldValue text-nowrap"><b>{{ certificate.animals.c.name }}</b></div>
                                     </div>
 
                                     <div class="row bg-white  mb-3">
-                                        <div class="col-xs-3 fieldName">Diersoort</div>
-                                        <div class="col-xs-9 fieldValue"><b>{{ certificate.animals.c.animalType }} ({{ certificate.animals.c.animalTypeInLatin }})</b></div>
+                                        <div class="col-xs-3 fieldName text-nowrap">Diersoort</div>
+                                        <div class="col-xs-9 fieldValue text-nowrap"><b>{{ certificate.animals.c.animalType }} ({{ certificate.animals.c.animalTypeInLatin }})</b></div>
                                     </div>
 
                                     {# Second block #}
@@ -402,16 +403,16 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Geslacht</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.c.gender }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Geslacht</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.c.gender }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Geboren als</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.c.nLing }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Geboren als</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.c.nLing }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -421,16 +422,16 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Ras</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.c.breedCode }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Ras</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.c.breedCode }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Productie</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.c.production }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Productie</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.c.production }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -440,16 +441,16 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Rasstatus/Klasse</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.c.breedType }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Rasstatus/Klasse</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.c.breedType }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Blindfactor</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.c.blindnessFactor }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Blindfactor</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.c.blindnessFactor }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -459,16 +460,16 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Geboortedatum</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.c.dateOfBirth }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Geboortedatum</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.c.dateOfBirth }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Predicaat</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.c.predicate }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Predicaat</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.c.predicate }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -478,16 +479,16 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Geboorteland</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.c.countryOfBirth }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Geboorteland</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.c.countryOfBirth }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Scrapiegenotype</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.c.scrapie }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Scrapiegenotype</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.c.scrapie }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -517,7 +518,7 @@
                                             <div class="pl-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Vetdikte 20 weken</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.fat_thickness3.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.fat_thickness3.value~' / '~ certificate.animals.c.breedValues.fat_thickness3.accuracy~'%' }}
                                                         {% endif %}
@@ -544,8 +545,8 @@
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Kop</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Kop</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.skull.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.skull.value~' / '~ certificate.animals.c.breedValues.skull.accuracy~'%' }}
                                                         {% endif %}
@@ -559,8 +560,8 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Vroegrijpheid</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Vroegrijpheid</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.early_fertility.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.early_fertility.value~' / '~ certificate.animals.c.breedValues.early_fertility.accuracy~'%' }}
                                                         {% endif %}
@@ -572,8 +573,8 @@
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Ontwikkeling</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Ontwikkeling</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.progress.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.progress.value~' / '~ certificate.animals.c.breedValues.progress.accuracy~'%' }}
                                                         {% endif %}
@@ -587,8 +588,8 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Tussenlamtijd</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Tussenlamtijd</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.birth_interval.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.birth_interval.value~' / '~ certificate.animals.c.breedValues.birth_interval.accuracy~'%' }}
                                                         {% endif %}
@@ -600,8 +601,8 @@
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Bespiering</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Bespiering</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.muscularity.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.muscularity.value~' / '~ certificate.animals.c.breedValues.muscularity.accuracy~'%' }}
                                                         {% endif %}
@@ -615,8 +616,8 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Aflamgemak</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Aflamgemak</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.birth_delivery_progress.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.birth_delivery_progress.value~' / '~ certificate.animals.c.breedValues.birth_delivery_progress.accuracy~'%' }}
                                                         {% endif %}
@@ -628,8 +629,8 @@
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Evenredigheid</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Evenredigheid</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.proportion.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.proportion.value~' / '~ certificate.animals.c.breedValues.proportion.accuracy~'%' }}
                                                         {% endif %}
@@ -643,8 +644,8 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Geboortegewicht</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Geboortegewicht</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.birth_weight.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.birth_weight.value~' / '~ certificate.animals.c.breedValues.birth_weight.accuracy~'%' }}
                                                         {% endif %}
@@ -656,8 +657,8 @@
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Type</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Type</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.exterior_type.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.exterior_type.value~' / '~ certificate.animals.c.breedValues.exterior_type.accuracy~'%' }}
                                                         {% endif %}
@@ -671,8 +672,8 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Geboortegemak</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Geboortegemak</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.birth_progress.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.birth_progress.value~' / '~ certificate.animals.c.breedValues.birth_progress.accuracy~'%' }}
                                                         {% endif %}
@@ -684,8 +685,8 @@
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Beenwerk</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Beenwerk</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.leg_work.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.leg_work.value~' / '~ certificate.animals.c.breedValues.leg_work.accuracy~'%' }}
                                                         {% endif %}
@@ -700,7 +701,7 @@
                                             <div class="pr-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">8-weken gewicht</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.weight_at8weeks.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.weight_at8weeks.value~' / '~ certificate.animals.c.breedValues.weight_at8weeks.accuracy~'%' }}
                                                         {% endif %}
@@ -712,8 +713,8 @@
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Wormresistentie</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Wormresistentie</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.odin_bc.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.odin_bc.value~' / '~ certificate.animals.c.breedValues.odin_bc.accuracy~'%' }}
                                                         {% endif %}
@@ -728,7 +729,7 @@
                                             <div class="pr-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">20-weken gewicht</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.weight_at20weeks.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.weight_at20weeks.value~' / '~ certificate.animals.c.breedValues.weight_at20weeks.accuracy~'%' }}
                                                         {% endif %}
@@ -740,8 +741,8 @@
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6 fieldName">Staartlengte</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldName text-nowrap">Staartlengte</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.tail_length.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.tail_length.value~' / '~ certificate.animals.c.breedValues.tail_length.accuracy~'%' }}
                                                         {% endif %}
@@ -756,7 +757,7 @@
                                             <div class="pr-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Spierdikte 20 wkn</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.muscle_thickness.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.muscle_thickness.value~' / '~ certificate.animals.c.breedValues.muscle_thickness.accuracy~'%' }}
                                                         {% endif %}
@@ -769,7 +770,7 @@
                                             <div class="pl-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Datum evaluatie</div>
-                                                    <div class="col-xs-6 fieldValue">
+                                                    <div class="col-xs-6 fieldValue text-nowrap">
                                                         {% if not certificate.animals.c.breedValues.tail_length.isEmpty %}
                                                             {{ certificate.animals.c.breedValues.tail_length.value~' / '~ certificate.animals.c.breedValues.tail_length.accuracy~'%' }}
                                                         {% endif %}
@@ -787,9 +788,9 @@
                                     </div>
 
                                     <div class="row bg-white mb-1 mh-15">
-                                        <div class="col-xs-3 fieldName">Vaderindex</div>
+                                        <div class="col-xs-3 fieldName text-nowrap">Vaderindex</div>
                                         {% if not certificate.animals.c.indexes.indexFather.isEmpty %}
-                                            <div class="col-xs-4 fieldValue stars">
+                                            <div class="col-xs-4 fieldValue stars text-nowrap">
                                                 {% for output in certificate.animals.c.indexes.indexFather.stars_output %}
                                                     {% if output == "FULL" %}
                                                         <img src="{{ fullStar }}" class="star" alt="">
@@ -800,16 +801,16 @@
                                                     {% endif %}
                                                 {% endfor %}
                                             </div>
-                                            <div class="col-xs-4 fieldValue">
+                                            <div class="col-xs-4 fieldValue text-nowrap">
                                                 {{ certificate.animals.c.indexes.indexFather.value~' / '~certificate.animals.c.indexes.indexFather.accuracy~'%' }}
                                             </div>
                                         {% endif %}
                                     </div>
 
                                     <div class="row bg-white mb-1 mh-15">
-                                        <div class="col-xs-3 fieldName">Moederindex</div>
+                                        <div class="col-xs-3 fieldName text-nowrap">Moederindex</div>
                                         {% if not certificate.animals.c.indexes.indexMother.isEmpty %}
-                                            <div class="col-xs-4 fieldValue stars">
+                                            <div class="col-xs-4 fieldValue stars text-nowrap">
                                                 {% for output in certificate.animals.c.indexes.indexMother.stars_output %}
                                                     {% if output == "FULL" %}
                                                         <img src="{{ fullStar }}" class="star" alt="">
@@ -820,16 +821,16 @@
                                                     {% endif %}
                                                 {% endfor %}
                                             </div>
-                                            <div class="col-xs-4 fieldValue">
+                                            <div class="col-xs-4 fieldValue text-nowrap">
                                                 {{ certificate.animals.c.indexes.indexMother.value~' / '~certificate.animals.c.indexes.indexMother.accuracy~'%' }}
                                             </div>
                                         {% endif %}
                                     </div>
 
                                     <div class="row bg-white mb-1 mh-15">
-                                        <div class="col-xs-3 fieldName">Exterieurindex</div>
+                                        <div class="col-xs-3 fieldName text-nowrap">Exterieurindex</div>
                                         {% if not certificate.animals.c.indexes.indexExterior.isEmpty %}
-                                            <div class="col-xs-4 fieldValue stars">
+                                            <div class="col-xs-4 fieldValue stars text-nowrap">
                                                 {% for output in certificate.animals.c.indexes.indexExterior.stars_output %}
                                                     {% if output == "FULL" %}
                                                         <img src="{{ fullStar }}" class="star" alt="">
@@ -840,16 +841,16 @@
                                                     {% endif %}
                                                 {% endfor %}
                                             </div>
-                                            <div class="col-xs-4 fieldValue">
+                                            <div class="col-xs-4 fieldValue text-nowrap">
                                                 {{ certificate.animals.c.indexes.indexExterior.value~' / '~certificate.animals.c.indexes.indexExterior.accuracy~'%' }}
                                             </div>
                                         {% endif %}
                                     </div>
 
                                     <div class="row bg-white mb-4 mh-15">
-                                        <div class="col-xs-3 fieldName">Rasindex</div>
+                                        <div class="col-xs-3 fieldName text-nowrap">Rasindex</div>
                                         {% if not certificate.animals.c.indexes.indexBreed.isEmpty %}
-                                            <div class="col-xs-4 fieldValue stars">
+                                            <div class="col-xs-4 fieldValue stars text-nowrap">
                                                 {% for output in certificate.animals.c.indexes.indexBreed.stars_output %}
                                                     {% if output == "FULL" %}
                                                         <img src="{{ fullStar }}" class="star" alt="">
@@ -860,7 +861,7 @@
                                                     {% endif %}
                                                 {% endfor %}
                                             </div>
-                                            <div class="col-xs-4 fieldValue">
+                                            <div class="col-xs-4 fieldValue text-nowrap">
                                                 {{ certificate.animals.c.indexes.indexBreed.value~' / '~certificate.animals.c.indexes.indexBreed.accuracy~'%' }}
                                             </div>
                                         {% endif %}
@@ -1102,49 +1103,31 @@
 
                                             {# First block #}
                                             <div class="row bg-white  mb-1">
-                                                <div class="col-xs-3 fieldName">Uniek levensnr.</div>
-                                                <div class="col-xs-9 fieldValue">{{ certificate.animals.f.uln }}</div>
+                                                <div class="col-xs-3 fieldName text-nowrap">Uniek levensnr.</div>
+                                                <div class="col-xs-9 fieldValue text-nowrap">{{ certificate.animals.f.uln }}</div>
                                             </div>
                                             <div class="row bg-white  mb-1">
-                                                <div class="col-xs-3 fieldName">Stamboeknr.</div>
-                                                <div class="col-xs-9 fieldValue">{{ certificate.animals.f.pedigree }}</div>
+                                                <div class="col-xs-3 fieldName text-nowrap">Stamboeknr.</div>
+                                                <div class="col-xs-9 fieldValue text-nowrap">{{ certificate.animals.f.pedigree }}</div>
                                             </div>
                                             <div class="row bg-white  mb-1">
-                                                <div class="col-xs-3 fieldName">Fokker</div>
-                                                <div class="col-xs-9 fieldValue">{{ certificate.animals.f.breederName }}</div>
+                                                <div class="col-xs-3 fieldName text-nowrap">Fokker</div>
+                                                <div class="col-xs-9 fieldValue text-nowrap">{{ certificate.animals.f.breederName }}</div>
                                             </div>
                                             <div class="row mb-1">
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Ras</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.f.breedCode }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">Ras</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.f.breedCode }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Productie</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.f.production }}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row mb-1">
-                                                <div class="col-xs-6">
-                                                    <div class="pr-1">
-                                                        <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Rasstatus</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.f.breedType }}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-xs-6">
-                                                    <div class="pl-1">
-                                                        <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Blindfactor</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.f.blindnessFactor }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">Productie</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.f.production }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1153,16 +1136,16 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Geb.datum</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.f.dateOfBirth }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">Rasstatus</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.f.breedType }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Predicaat</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.f.predicate }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">Blindfactor</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.f.blindnessFactor }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1171,16 +1154,34 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Geboren als</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.f.nLing }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">Geb.datum</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.f.dateOfBirth }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Scrapiegenotype</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.f.scrapie }}</div>
+                                                            <div class="col-xs-6 fieldName text-nowrap">Predicaat</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.f.predicate }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col-xs-6">
+                                                    <div class="pr-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Geboren als</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.f.nLing }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-6">
+                                                    <div class="pl-1">
+                                                        <div class="row bg-white">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Scrapiegenotype</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.f.scrapie }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1197,7 +1198,7 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white mh-15">
-                                                            <div class="col-xs-4 fieldName">Vaderindex</div>
+                                                            <div class="col-xs-4 fieldName text-nowrap">Vaderindex</div>
                                                             {% if not certificate.animals.f.indexes.indexFather.isEmpty %}
                                                                 <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
                                                                     {% for output in certificate.animals.f.indexes.indexFather.stars_output %}
@@ -1220,7 +1221,7 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white mh-15">
-                                                            <div class="col-xs-4 fieldName">Exterieurindex</div>
+                                                            <div class="col-xs-4 fieldName text-nowrap">Exterieurindex</div>
                                                             {% if not certificate.animals.f.indexes.indexExterior.isEmpty %}
                                                                 <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
                                                                     {% for output in certificate.animals.f.indexes.indexExterior.stars_output %}
@@ -1262,7 +1263,7 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white mh-15">
-                                                            <div class="col-xs-4 fieldName">Moederindex</div>
+                                                            <div class="col-xs-4 fieldName text-nowrap">Moederindex</div>
                                                             {% if not certificate.animals.f.indexes.indexMother.isEmpty %}
                                                                 <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
                                                                     {% for output in certificate.animals.f.indexes.indexMother.stars_output %}
@@ -1285,7 +1286,7 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white mh-15">
-                                                            <div class="col-xs-4 fieldName">Rasindex</div>
+                                                            <div class="col-xs-4 fieldName text-nowrap">Rasindex</div>
                                                             {% if not certificate.animals.f.indexes.indexBreed.isEmpty %}
                                                                 <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
                                                                     {% for output in certificate.animals.f.indexes.indexBreed.stars_output %}
@@ -1418,7 +1419,7 @@
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Vetdikte 20 weken</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.fat_thickness3.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.fat_thickness3.value~' / '~ certificate.animals.f.breedValues.fat_thickness3.accuracy~'%' }}
                                                                 {% endif %}
@@ -1445,8 +1446,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Kop</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Kop</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.skull.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.skull.value~' / '~ certificate.animals.f.breedValues.skull.accuracy~'%' }}
                                                                 {% endif %}
@@ -1460,8 +1461,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Vroegrijpheid</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Vroegrijpheid</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.early_fertility.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.early_fertility.value~' / '~ certificate.animals.f.breedValues.early_fertility.accuracy~'%' }}
                                                                 {% endif %}
@@ -1473,8 +1474,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Ontwikkeling</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Ontwikkeling</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.progress.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.progress.value~' / '~ certificate.animals.f.breedValues.progress.accuracy~'%' }}
                                                                 {% endif %}
@@ -1488,8 +1489,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Tussenlamtijd</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Tussenlamtijd</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.birth_interval.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.birth_interval.value~' / '~ certificate.animals.f.breedValues.birth_interval.accuracy~'%' }}
                                                                 {% endif %}
@@ -1501,8 +1502,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Bespiering</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Bespiering</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.muscularity.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.muscularity.value~' / '~ certificate.animals.f.breedValues.muscularity.accuracy~'%' }}
                                                                 {% endif %}
@@ -1516,8 +1517,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Aflamgemak</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Aflamgemak</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.birth_delivery_progress.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.birth_delivery_progress.value~' / '~ certificate.animals.f.breedValues.birth_delivery_progress.accuracy~'%' }}
                                                                 {% endif %}
@@ -1529,8 +1530,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Evenredigheid</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Evenredigheid</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.proportion.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.proportion.value~' / '~ certificate.animals.f.breedValues.proportion.accuracy~'%' }}
                                                                 {% endif %}
@@ -1544,8 +1545,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Geboortegewicht</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Geboortegewicht</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.birth_weight.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.birth_weight.value~' / '~ certificate.animals.f.breedValues.birth_weight.accuracy~'%' }}
                                                                 {% endif %}
@@ -1557,8 +1558,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Type</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Type</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.exterior_type.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.exterior_type.value~' / '~ certificate.animals.f.breedValues.exterior_type.accuracy~'%' }}
                                                                 {% endif %}
@@ -1572,8 +1573,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Geboortegemak</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Geboortegemak</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.birth_progress.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.birth_progress.value~' / '~ certificate.animals.f.breedValues.birth_progress.accuracy~'%' }}
                                                                 {% endif %}
@@ -1585,8 +1586,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Beenwerk</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Beenwerk</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.leg_work.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.leg_work.value~' / '~ certificate.animals.f.breedValues.leg_work.accuracy~'%' }}
                                                                 {% endif %}
@@ -1601,7 +1602,7 @@
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">8-weken gewicht</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.weight_at8weeks.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.weight_at8weeks.value~' / '~ certificate.animals.f.breedValues.weight_at8weeks.accuracy~'%' }}
                                                                 {% endif %}
@@ -1613,8 +1614,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Wormresistentie</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Wormresistentie</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.odin_bc.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.odin_bc.value~' / '~ certificate.animals.f.breedValues.odin_bc.accuracy~'%' }}
                                                                 {% endif %}
@@ -1629,7 +1630,7 @@
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">20-weken gewicht</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.weight_at20weeks.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.weight_at20weeks.value~' / '~ certificate.animals.f.breedValues.weight_at20weeks.accuracy~'%' }}
                                                                 {% endif %}
@@ -1641,8 +1642,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Staartlengte</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Staartlengte</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.tail_length.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.tail_length.value~' / '~ certificate.animals.f.breedValues.tail_length.accuracy~'%' }}
                                                                 {% endif %}
@@ -1657,7 +1658,7 @@
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Spierdikte 20 wkn</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.muscle_thickness.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.muscle_thickness.value~' / '~ certificate.animals.f.breedValues.muscle_thickness.accuracy~'%' }}
                                                                 {% endif %}
@@ -1670,7 +1671,7 @@
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Datum evaluatie</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.f.breedValues.tail_length.isEmpty %}
                                                                     {{ certificate.animals.f.breedValues.tail_length.value~' / '~ certificate.animals.f.breedValues.tail_length.accuracy~'%' }}
                                                                 {% endif %}
@@ -1702,7 +1703,7 @@
                                             <div class="pr-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Uniek levensnr.</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.ff.uln }}</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.ff.uln }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1710,7 +1711,7 @@
                                             <div class="pl-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Stamboeknr.</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.ff.pedigree }}</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.ff.pedigree }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1720,7 +1721,7 @@
                                             <div class="pr-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Geboren als</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.ff.nLing }}</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.ff.nLing }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1728,7 +1729,7 @@
                                             <div class="pl-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Productie</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.ff.production }}</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.ff.production }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1752,7 +1753,7 @@
                                             <div class="pr-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Uniek levensnr.</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.fm.uln }}</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.fm.uln }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1760,7 +1761,7 @@
                                             <div class="pl-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Stamboeknr.</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.fm.pedigree }}</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.fm.pedigree }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1770,7 +1771,7 @@
                                             <div class="pr-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Geboren als</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.fm.nLing }}</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.fm.nLing }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1778,7 +1779,7 @@
                                             <div class="pl-1">
                                                 <div class="row bg-white">
                                                     <div class="col-xs-6 fieldName text-nowrap">Productie</div>
-                                                    <div class="col-xs-6 fieldValue">{{ certificate.animals.fm.production }}</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.fm.production }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1804,22 +1805,22 @@
                                             {# First block #}
                                             <div class="row bg-white mb-1">
                                                 <div class="col-xs-3 fieldName text-nowrap">Uniek levensnr.</div>
-                                                <div class="col-xs-9 fieldValue">{{ certificate.animals.m.uln }}</div>
+                                                <div class="col-xs-9 fieldValue text-nowrap">{{ certificate.animals.m.uln }}</div>
                                             </div>
                                             <div class="row bg-white mb-1">
                                                 <div class="col-xs-3 fieldName text-nowrap">Stamboeknr.</div>
-                                                <div class="col-xs-9 fieldValue">{{ certificate.animals.m.pedigree }}</div>
+                                                <div class="col-xs-9 fieldValue text-nowrap">{{ certificate.animals.m.pedigree }}</div>
                                             </div>
                                             <div class="row bg-white mb-1">
                                                 <div class="col-xs-3 fieldName text-nowrap">Fokker</div>
-                                                <div class="col-xs-9 fieldValue">{{ certificate.animals.m.breederName }}</div>
+                                                <div class="col-xs-9 fieldValue text-nowrap">{{ certificate.animals.m.breederName }}</div>
                                             </div>
                                             <div class="row mb-1">
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Ras</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.m.breedCode }}</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.m.breedCode }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1827,7 +1828,7 @@
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Productie</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.m.production }}</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.m.production }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1837,7 +1838,7 @@
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Rasstatus</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.m.breedType }}</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.m.breedType }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1845,7 +1846,7 @@
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Blindfactor</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.m.blindnessFactor }}</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.m.blindnessFactor }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1855,7 +1856,7 @@
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Geb.datum</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.m.dateOfBirth }}</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.m.dateOfBirth }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1863,7 +1864,7 @@
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Predicaat</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.m.predicate }}</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.m.predicate }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1873,7 +1874,7 @@
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Geboren als</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.m.nLing }}</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.m.nLing }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1881,7 +1882,7 @@
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Scrapiegenotype</div>
-                                                            <div class="col-xs-6 fieldValue">{{ certificate.animals.m.scrapie }}</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.m.scrapie }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1898,7 +1899,7 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white mh-15">
-                                                            <div class="col-xs-4 fieldName">Vaderindex</div>
+                                                            <div class="col-xs-4 fieldName text-nowrap">Vaderindex</div>
                                                             {% if not certificate.animals.m.indexes.indexFather.isEmpty %}
                                                                 <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
                                                                     {% for output in certificate.animals.m.indexes.indexFather.stars_output %}
@@ -1921,7 +1922,7 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white mh-15">
-                                                            <div class="col-xs-4 fieldName">Exterieurindex</div>
+                                                            <div class="col-xs-4 fieldName text-nowrap">Exterieurindex</div>
                                                             {% if not certificate.animals.m.indexes.indexExterior.isEmpty %}
                                                                 <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
                                                                     {% for output in certificate.animals.m.indexes.indexExterior.stars_output %}
@@ -1947,7 +1948,7 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white mh-15">
-                                                            <div class="col-xs-4 fieldName">Moederindex</div>
+                                                            <div class="col-xs-4 fieldName text-nowrap">Moederindex</div>
                                                             {% if not certificate.animals.m.indexes.indexMother.isEmpty %}
                                                                 <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
                                                                     {% for output in certificate.animals.m.indexes.indexMother.stars_output %}
@@ -1970,7 +1971,7 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white mh-15">
-                                                            <div class="col-xs-4 fieldName">Rasindex</div>
+                                                            <div class="col-xs-4 fieldName text-nowrap">Rasindex</div>
                                                             {% if not certificate.animals.m.indexes.indexBreed.isEmpty %}
                                                                 <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
                                                                     {% for output in certificate.animals.m.indexes.indexBreed.stars_output %}
@@ -2103,7 +2104,7 @@
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Vetdikte 20 weken</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.fat_thickness3.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.fat_thickness3.value~' / '~ certificate.animals.m.breedValues.fat_thickness3.accuracy~'%' }}
                                                                 {% endif %}
@@ -2130,8 +2131,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Kop</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Kop</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.skull.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.skull.value~' / '~ certificate.animals.m.breedValues.skull.accuracy~'%' }}
                                                                 {% endif %}
@@ -2145,8 +2146,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Vroegrijpheid</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Vroegrijpheid</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.early_fertility.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.early_fertility.value~' / '~ certificate.animals.m.breedValues.early_fertility.accuracy~'%' }}
                                                                 {% endif %}
@@ -2158,8 +2159,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Ontwikkeling</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Ontwikkeling</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.progress.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.progress.value~' / '~ certificate.animals.m.breedValues.progress.accuracy~'%' }}
                                                                 {% endif %}
@@ -2173,8 +2174,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Tussenlamtijd</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Tussenlamtijd</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.birth_interval.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.birth_interval.value~' / '~ certificate.animals.m.breedValues.birth_interval.accuracy~'%' }}
                                                                 {% endif %}
@@ -2186,8 +2187,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Bespiering</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Bespiering</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.muscularity.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.muscularity.value~' / '~ certificate.animals.m.breedValues.muscularity.accuracy~'%' }}
                                                                 {% endif %}
@@ -2201,8 +2202,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Aflamgemak</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Aflamgemak</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.birth_delivery_progress.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.birth_delivery_progress.value~' / '~ certificate.animals.m.breedValues.birth_delivery_progress.accuracy~'%' }}
                                                                 {% endif %}
@@ -2214,8 +2215,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Evenredigheid</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Evenredigheid</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.proportion.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.proportion.value~' / '~ certificate.animals.m.breedValues.proportion.accuracy~'%' }}
                                                                 {% endif %}
@@ -2229,8 +2230,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Geboortegewicht</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Geboortegewicht</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.birth_weight.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.birth_weight.value~' / '~ certificate.animals.m.breedValues.birth_weight.accuracy~'%' }}
                                                                 {% endif %}
@@ -2242,8 +2243,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Type</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Type</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.exterior_type.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.exterior_type.value~' / '~ certificate.animals.m.breedValues.exterior_type.accuracy~'%' }}
                                                                 {% endif %}
@@ -2257,8 +2258,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Geboortegemak</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Geboortegemak</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.birth_progress.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.birth_progress.value~' / '~ certificate.animals.m.breedValues.birth_progress.accuracy~'%' }}
                                                                 {% endif %}
@@ -2270,8 +2271,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Beenwerk</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Beenwerk</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.leg_work.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.leg_work.value~' / '~ certificate.animals.m.breedValues.leg_work.accuracy~'%' }}
                                                                 {% endif %}
@@ -2286,7 +2287,7 @@
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">8-weken gewicht</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.weight_at8weeks.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.weight_at8weeks.value~' / '~ certificate.animals.m.breedValues.weight_at8weeks.accuracy~'%' }}
                                                                 {% endif %}
@@ -2314,7 +2315,7 @@
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">20-weken gewicht</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.weight_at20weeks.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.weight_at20weeks.value~' / '~ certificate.animals.m.breedValues.weight_at20weeks.accuracy~'%' }}
                                                                 {% endif %}
@@ -2326,8 +2327,8 @@
                                                 <div class="col-xs-6">
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
-                                                            <div class="col-xs-6 fieldName">Staartlengte</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldName text-nowrap">Staartlengte</div>
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.tail_length.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.tail_length.value~' / '~ certificate.animals.m.breedValues.tail_length.accuracy~'%' }}
                                                                 {% endif %}
@@ -2342,7 +2343,7 @@
                                                     <div class="pr-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Spierdikte 20 wkn</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.muscle_thickness.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.muscle_thickness.value~' / '~ certificate.animals.m.breedValues.muscle_thickness.accuracy~'%' }}
                                                                 {% endif %}
@@ -2355,7 +2356,7 @@
                                                     <div class="pl-1">
                                                         <div class="row bg-white">
                                                             <div class="col-xs-6 fieldName text-nowrap">Datum evaluatie</div>
-                                                            <div class="col-xs-6 fieldValue">
+                                                            <div class="col-xs-6 fieldValue text-nowrap">
                                                                 {% if not certificate.animals.m.breedValues.tail_length.isEmpty %}
                                                                     {{ certificate.animals.m.breedValues.tail_length.value~' / '~ certificate.animals.m.breedValues.tail_length.accuracy~'%' }}
                                                                 {% endif %}
@@ -2377,8 +2378,8 @@
 
                         {# SECOND GENERATEON MOTHERS FATHER #}
                         <div class="row">
-                            <div class="col-xs-12 bg-green rounded-top bordered">
-                                2e GENERATIE-MOEDERS VADER-{{ certificate.animals.mf.section_type }}
+                            <div class="col-xs-12 bg-green rounded-top">
+                                <h2 class="display-inline"><b>2e GENERATIE-MOEDERS VADER - </b></h2><h4 class="display-inline">{{ certificate.animals.mf.section_type }}</h4>
                             </div>
                         </div>
                         <div class="row mb-4">
@@ -2388,16 +2389,16 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6">Uniek levensnr.</div>
-                                                    <div class="col-xs-6">{{ certificate.animals.mf.uln }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Uniek levensnr.</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.mf.uln }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6">Stamboeknr.</div>
-                                                    <div class="col-xs-6">{{ certificate.animals.mf.pedigree }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Stamboeknr.</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.mf.pedigree }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -2406,16 +2407,16 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6">Geboren als</div>
-                                                    <div class="col-xs-6">{{ certificate.animals.mf.nLing }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Geboren als</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.mf.nLing }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6">Productie</div>
-                                                    <div class="col-xs-6">{{ certificate.animals.mf.production }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Productie</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.mf.production }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -2427,27 +2428,27 @@
 
                         {# SECOND GENERATEON MOTHERS MOTHER #}
                         <div class="row">
-                            <div class="col-xs-12 bg-green rounded-top bordered">
-                                2e GENERATIE-MOEDERS MOEDER-{{ certificate.animals.mm.section_type }}
+                            <div class="col-xs-12 bg-green rounded-top">
+                                <h2 class="display-inline"><b>2e GENERATIE-MOEDERS MOEDER - </b></h2><h4 class="display-inline">{{ certificate.animals.mm.section_type }}</h4>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row mb-4">
                             <div class="col-xs-12 bordered rounded-bottom">
                                 <div class="px-1 py-1">
                                     <div class="row mb-1">
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6">Uniek levensnr.</div>
-                                                    <div class="col-xs-6">{{ certificate.animals.mm.uln }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Uniek levensnr.</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.mm.uln }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6">Stamboeknr.</div>
-                                                    <div class="col-xs-6">{{ certificate.animals.mm.pedigree }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Stamboeknr.</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.mm.pedigree }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -2456,16 +2457,16 @@
                                         <div class="col-xs-6">
                                             <div class="pr-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6">Geboren als</div>
-                                                    <div class="col-xs-6">{{ certificate.animals.mm.nLing }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Geboren als</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.mm.nLing }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-xs-6">
                                             <div class="pl-1">
                                                 <div class="row bg-white">
-                                                    <div class="col-xs-6">Productie</div>
-                                                    <div class="col-xs-6">{{ certificate.animals.mm.production }}</div>
+                                                    <div class="col-xs-6 fieldName text-nowrap">Productie</div>
+                                                    <div class="col-xs-6 fieldValue text-nowrap">{{ certificate.animals.mm.production }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -2473,12 +2474,6 @@
                                 </div>
                             </div>
                         </div>
-
-
-
-
-
-
 
 
                     </div>
