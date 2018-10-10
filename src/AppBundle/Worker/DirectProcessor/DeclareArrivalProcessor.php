@@ -75,7 +75,7 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
         $this->clearCache = null;
         $this->origin = null;
 
-        return $this->getDeclareMessageArrayAndJsonMessage($arrival, false);
+        return $this->getDeclareMessageArray($arrival, false);
     }
 
 

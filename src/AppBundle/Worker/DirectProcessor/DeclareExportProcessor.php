@@ -61,7 +61,7 @@ class DeclareExportProcessor extends DeclareProcessorBase implements DeclareExpo
         $this->response = null;
         $this->animal = null;
 
-        return $this->getDeclareMessageArrayAndJsonMessage($export, false);
+        return $this->getDeclareMessageArray($export, false);
     }
 
     private function processSuccessLogic()

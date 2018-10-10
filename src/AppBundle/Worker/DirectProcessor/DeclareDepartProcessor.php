@@ -70,7 +70,7 @@ class DeclareDepartProcessor extends DeclareProcessorBase implements DeclareDepa
         $this->clearCache = null;
         $this->newLocation = null;
 
-        return $this->getDeclareMessageArrayAndJsonMessage($depart, false);
+        return $this->getDeclareMessageArray($depart, false);
     }
 
     private function getRequestStateAndSetResponseData()

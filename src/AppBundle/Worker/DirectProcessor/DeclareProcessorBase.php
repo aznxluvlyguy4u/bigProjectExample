@@ -4,6 +4,7 @@
 namespace AppBundle\Worker\DirectProcessor;
 
 
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\DeclareBase;
@@ -48,10 +49,10 @@ class DeclareProcessorBase extends ControllerServiceBase
      * @param array $jmsGroups
      * @return array
      */
-    protected function getDeclareMessageArrayAndJsonMessage($messageObject, bool $isUpdate, $jmsGroups = [JmsGroup::RVO]): array
+    protected function getDeclareMessageArray($messageObject, bool $isUpdate, $jmsGroups = [JmsGroup::RVO]): ?array
     {
         return DeclareControllerServiceBase::staticGetDeclareMessageArrayAndJsonMessage($this->getManager(), $this->getBaseSerializer(),
-            $messageObject, $isUpdate, $jmsGroups);
+            $messageObject, $isUpdate, $jmsGroups)[JsonInputConstant::ARRAY];
     }
 
 

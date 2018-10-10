@@ -84,7 +84,7 @@ class DeclareImportProcessor extends DeclareProcessorBase implements DeclareImpo
         $this->animalIsOnLocationOfClient = null;
         $this->animalIsOnAnotherLocation = null;
 
-        return $this->getDeclareMessageArrayAndJsonMessage($import, false);
+        return $this->getDeclareMessageArray($import, false);
     }
 
     /**

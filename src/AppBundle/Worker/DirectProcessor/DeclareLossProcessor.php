@@ -65,7 +65,7 @@ class DeclareLossProcessor extends DeclareProcessorBase implements DeclareLossPr
         $this->errorMessage = null;
         $this->errorCode = null;
 
-        return $this->getDeclareMessageArrayAndJsonMessage($loss, false);
+        return $this->getDeclareMessageArray($loss, false);
     }
 
 
