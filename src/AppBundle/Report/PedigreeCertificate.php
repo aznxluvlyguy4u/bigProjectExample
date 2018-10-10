@@ -623,16 +623,7 @@ class PedigreeCertificate
 
     private function addEmptyBreedValuesSet($key)
     {
-        foreach ($this->breedValuesOutput->getBreedValueResultTableColumnNamesSets() as $set)
-        {
-            $resultTableValueVariable = $set['result_table_value_variable'];
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][$resultTableValueVariable] = [
-                ReportLabel::VALUE => BreedFormat::EMPTY_BREED_SINGLE_VALUE,
-                ReportLabel::ACCURACY => BreedFormat::EMPTY_BREED_SINGLE_VALUE,
-                ReportLabel::IS_EMPTY => true,
-            ];
-        }
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][ReportLabel::IS_EMPTY] = true;
+        $this->addBreedValuesSet($key, []);
     }
 
 
