@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
@@ -178,6 +179,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
             $this->getManager()->persist($newAnimal);
             $this->getManager()->flush();
+
+            AnimalCacher::cacheByAnimalIds($this->getConnection(), [$newAnimal->getId()]);
         }
         catch(\Exception $e) {
             $this->logExceptionAsError($e);
