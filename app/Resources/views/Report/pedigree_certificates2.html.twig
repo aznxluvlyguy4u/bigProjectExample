@@ -1,16 +1,16 @@
 {% extends 'base.html.twig' %}
 
 {% block bootstrap %}
-    <link rel="stylesheet" href="{{ bootstrap_css }}">
-    {#<link rel="stylesheet" href='{{ asset('assets/bootstrap-3.3.7-dist/css/bootstrap.min.css') }}'>#}
+    {#<link rel="stylesheet" href="{{ bootstrap_css }}">#}
+    <link rel="stylesheet" href='{{ asset('assets/bootstrap-3.3.7-dist/css/bootstrap.min.css') }}'>
     {#<link href="{{ fonts_dir~'/fontawesome-free-5.3.1-web/css/all.css' }}" rel="stylesheet"> <!--load all styles -->#}
     {#<link rel="stylesheet" href="https://use.fontawesome.com/releases/v4.7.0/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">#}
     {#<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">#}
 {% endblock %}
 
 {% block javascripts %}
-    <script src="{{  bootstrap_js }}"></script>
-    {#<script src="{{  asset('assets/bootstrap-3.3.7-dist/js/bootstrap.min.js') }}"></script>#}
+    {#<script src="{{  bootstrap_js }}"></script>#}
+    <script src="{{  asset('assets/bootstrap-3.3.7-dist/js/bootstrap.min.js') }}"></script>
 {% endblock %}
 
 {% block stylesheets %}
@@ -223,6 +223,30 @@
 
         .mh-15 {
             max-height: 15px;
+        }
+
+        .ontop-3 {
+            position: absolute;
+            height: 9px;
+            width: 6px;
+            top: -9px;
+            left: 50%;
+            -webkit-transform: translateX(-50%);
+            -ms-transform: translateX(-50%);
+            transform: translateX(-50%);
+            background-color: #009E66;
+        }
+
+        .ontop-4 {
+            position: absolute;
+            height: 12px;
+            width: 6px;
+            top: -12px;
+            left: 50%;
+            -webkit-transform: translateX(-50%);
+            -ms-transform: translateX(-50%);
+            transform: translateX(-50%);
+            background-color: #009E66;
         }
 
         @font-face {
