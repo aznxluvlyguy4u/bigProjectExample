@@ -64,7 +64,7 @@ class DeclareProcessorBase extends ControllerServiceBase
     {
         $animalResidence = $this->getManager()->getRepository(AnimalResidence::class)
             ->getLastOpenResidenceOnLocation($location, $animal);
-        if ($animalResidence->isPending()) {
+        if ($animalResidence && $animalResidence->isPending()) {
             $animalResidence->setIsPending(false);
             $this->getManager()->persist($animalResidence);
         }
