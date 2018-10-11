@@ -1552,6 +1552,22 @@ abstract class Animal
 
 
     /**
+     * @return array
+     */
+    public function getParentIds(): array
+    {
+        $ids = [];
+        if ($this->getParentMotherId()) {
+            $ids[] = $this->getParentMotherId();
+        }
+        if ($this->getParentFatherId()) {
+            $ids[] = $this->getParentFatherId();
+        }
+        return $ids;
+    }
+
+
+    /**
      * @param Ram|Ewe $parent
      * @return Animal
      * @throws \Exception
