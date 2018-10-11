@@ -1,0 +1,597 @@
+<div class="row">
+    <div class="col-xs-12 mb-4">
+        <div class="row">
+            <div class="col-xs-12 bg-green rounded-top">
+                <h2 class="display-inline"><b>{{ title }} - </b></h2><h4 class="display-inline">{{ animal.section_type }}</h4>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 bordered rounded-bottom">
+                <div class="px-2 py-2">
+
+                    {# First block #}
+                    <div class="row bg-white-stripe  mb-1">
+                        <div class="col-xs-3 fieldName text-nowrap">Uniek levensnr.</div>
+                        <div class="col-xs-9 fieldValue text-nowrap">{{ animal.uln }}</div>
+                    </div>
+                    <div class="row bg-white-stripe  mb-1">
+                        <div class="col-xs-3 fieldName text-nowrap">Stamboeknr.</div>
+                        <div class="col-xs-9 fieldValue text-nowrap">{{ animal.pedigree }}</div>
+                    </div>
+                    <div class="row bg-white-stripe  mb-1">
+                        <div class="col-xs-3 fieldName text-nowrap">Fokker</div>
+                        <div class="col-xs-9 fieldValue text-nowrap">{{ animal.breederName }}</div>
+                    </div>
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Ras</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">{{ animal.breedCode }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Productie</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">{{ animal.production }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Rasstatus</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">{{ animal.breedType }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Blindfactor</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">{{ animal.blindnessFactor }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Geb.datum</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">{{ animal.dateOfBirth }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Predicaat</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">{{ animal.predicate }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Geboren als</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">{{ animal.nLing }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Scrapiegenotype</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">{{ animal.scrapie }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# SECOND block #}
+                    <div class="row bg-success mb-1">
+                        <div class="col-xs-12 blockHeader">
+                            <h3 class="display-inline"><b>INDEX / NAUWKEURIGHEID</b></h3>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe mh-15">
+                                    <div class="col-xs-4 fieldName text-nowrap">Vaderindex</div>
+                                    {% if not animal.indexes.indexFather.isEmpty %}
+                                        <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
+                                            {% for output in animal.indexes.indexFather.stars_output %}
+                                                {% if output == "FULL" %}
+                                                    <img src="{{ fullStar }}" class="star-compact" alt="">
+                                                {% elseif output == "HALF" %}
+                                                    <img src="{{ halfStar }}" class="star-compact" alt="">
+                                                {% elseif output == "EMPTY" %}
+                                                    <img src="{{ emptyStar }}" class="star-compact" alt="">
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <div class="col-xs-3 fieldValue text-nowrap">
+                                            {{ animal.indexes.indexFather.value~'/'~animal.indexes.indexFather.accuracy }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe mh-15">
+                                    <div class="col-xs-4 fieldName text-nowrap">Exterieurindex</div>
+                                    {% if not animal.indexes.indexExterior.isEmpty %}
+                                        <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
+                                            {% for output in animal.indexes.indexExterior.stars_output %}
+                                                {% if output == "FULL" %}
+                                                    <img src="{{ fullStar }}" class="star-compact" alt="">
+                                                {% elseif output == "HALF" %}
+                                                    <img src="{{ halfStar }}" class="star-compact" alt="">
+                                                {% elseif output == "EMPTY" %}
+                                                    <img src="{{ emptyStar }}" class="star-compact" alt="">
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <div class="col-xs-3 fieldValue text-nowrap">
+                                            {{ animal.indexes.indexExterior.value~'/'~animal.indexes.indexExterior.accuracy }}
+                                        </div>
+                                    {% endif %}
+                                    {#{% if not certificate.animals.c.indexes.indexBreed.isEmpty %}#}
+                                    {#<div class="col-xs-5 pl-5 fieldValue stars text-nowrap">#}
+                                    {#{% for output in certificate.animals.c.indexes.indexBreed.stars_output %}#}
+                                    {#{% if output == "FULL" %}#}
+                                    {#<img src="{{ fullStar }}" class="star-compact" alt="">#}
+                                    {#{% elseif output == "HALF" %}#}
+                                    {#<img src="{{ halfStar }}" class="star-compact" alt="">#}
+                                    {#{% elseif output == "EMPTY" %}#}
+                                    {#<img src="{{ emptyStar }}" class="star-compact" alt="">#}
+                                    {#{% endif %}#}
+                                    {#{% endfor %}#}
+                                    {#</div>#}
+                                    {#<div class="col-xs-3 fieldValue text-nowrap">#}
+                                    {#{{ certificate.animals.c.indexes.indexBreed.value~'/'~certificate.animals.c.indexes.indexBreed.accuracy }}#}
+                                    {#</div>#}
+                                    {#{% endif %}#}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe mh-15">
+                                    <div class="col-xs-4 fieldName text-nowrap">Moederindex</div>
+                                    {% if not animal.indexes.indexMother.isEmpty %}
+                                        <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
+                                            {% for output in animal.indexes.indexMother.stars_output %}
+                                                {% if output == "FULL" %}
+                                                    <img src="{{ fullStar }}" class="star-compact" alt="">
+                                                {% elseif output == "HALF" %}
+                                                    <img src="{{ halfStar }}" class="star-compact" alt="">
+                                                {% elseif output == "EMPTY" %}
+                                                    <img src="{{ emptyStar }}" class="star-compact" alt="">
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <div class="col-xs-3 fieldValue text-nowrap">
+                                            {{ animal.indexes.indexMother.value~'/'~animal.indexes.indexMother.accuracy }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe mh-15">
+                                    <div class="col-xs-4 fieldName text-nowrap">Rasindex</div>
+                                    {% if not animal.indexes.indexBreed.isEmpty %}
+                                        <div class="col-xs-5 pl-5 fieldValue stars text-nowrap">
+                                            {% for output in animal.indexes.indexBreed.stars_output %}
+                                                {% if output == "FULL" %}
+                                                    <img src="{{ fullStar }}" class="star-compact" alt="">
+                                                {% elseif output == "HALF" %}
+                                                    <img src="{{ halfStar }}" class="star-compact" alt="">
+                                                {% elseif output == "EMPTY" %}
+                                                    <img src="{{ emptyStar }}" class="star-compact" alt="">
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <div class="col-xs-3 fieldValue text-nowrap">
+                                            {{ animal.indexes.indexBreed.value~'/'~animal.indexes.indexBreed.accuracy }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# THIRD block EXTERIEURKEURING #}
+                    <div class="row mb-1">
+                        <div class="col-xs-12 blockHeader">
+                            <h3 class="display-inline"><b>EXTERIEURKEURING  </b></h3><p class="fieldValue display-inline">{{ 'KEURDATUM '~certificate.animals.c.inspectionDate }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-12">
+                            <div class="row blockHeader">
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>KOP</b></h3>
+                                </div>
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>ONT</b></h3>
+                                </div>
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>BES</b></h3>
+                                </div>
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>EVE</b></h3>
+                                </div>
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>TYP</b></h3>
+                                </div>
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>BEE</b></h3>
+                                </div>
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>VAC</b></h3>
+                                </div>
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>ALG</b></h3>
+                                </div>
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>SHT</b></h3>
+                                </div>
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>LGT</b></h3>
+                                </div>
+                                <div class="col-xs-1">
+                                    <h3 class="display-inline"><b>BDP</b></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row bg-white-stripe mb-1">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.skull }}
+                                </div>
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.development }}
+                                </div>
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.muscularity }}
+                                </div>
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.proportion }}
+                                </div>
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.type }}
+                                </div>
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.legWork }}
+                                </div>
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.fur }}
+                                </div>
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.generalAppearance }}
+                                </div>
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.height }}
+                                </div>
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.torsoLength }}
+                                </div>
+                                <div class="col-xs-1 fieldValue">
+                                    {{ animal.breastDepth }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# FOURTH block FOKWAARDEN #}
+                    <div class="row bg-success mb-1">
+                        <div class="col-xs-12 blockHeader">
+                            <h3 class="display-inline"><b>FOKWAARDEN / NAUWKEURIGHEID</b></h3>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Totaal geb. p. worp</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.total_born.isEmpty %}
+                                            {{ animal.breedValues.total_born.value~' / '~ animal.breedValues.total_born.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Vetdikte 20 weken</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.fat_thickness3.isEmpty %}
+                                            {{ animal.breedValues.fat_thickness3.value~' / '~ animal.breedValues.fat_thickness3.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Doodgeb. p. worp</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.still_born.isEmpty %}
+                                            {{ animal.breedValues.still_born.value~' / '~ animal.breedValues.still_born.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Kop</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.skull.isEmpty %}
+                                            {{ animal.breedValues.skull.value~' / '~ animal.breedValues.skull.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Vroegrijpheid</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.early_fertility.isEmpty %}
+                                            {{ animal.breedValues.early_fertility.value~' / '~ animal.breedValues.early_fertility.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Ontwikkeling</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.progress.isEmpty %}
+                                            {{ animal.breedValues.progress.value~' / '~ animal.breedValues.progress.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Tussenlamtijd</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.birth_interval.isEmpty %}
+                                            {{ animal.breedValues.birth_interval.value~' / '~ animal.breedValues.birth_interval.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Bespiering</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.muscularity.isEmpty %}
+                                            {{ animal.breedValues.muscularity.value~' / '~ animal.breedValues.muscularity.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Aflamgemak</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.birth_delivery_progress.isEmpty %}
+                                            {{ animal.breedValues.birth_delivery_progress.value~' / '~ animal.breedValues.birth_delivery_progress.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Evenredigheid</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.proportion.isEmpty %}
+                                            {{ animal.breedValues.proportion.value~' / '~ animal.breedValues.proportion.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Geboortegewicht</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.birth_weight.isEmpty %}
+                                            {{ animal.breedValues.birth_weight.value~' / '~ animal.breedValues.birth_weight.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Type</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.exterior_type.isEmpty %}
+                                            {{ animal.breedValues.exterior_type.value~' / '~ animal.breedValues.exterior_type.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Geboortegemak</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.birth_progress.isEmpty %}
+                                            {{ animal.breedValues.birth_progress.value~' / '~ animal.breedValues.birth_progress.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Beenwerk</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.leg_work.isEmpty %}
+                                            {{ animal.breedValues.leg_work.value~' / '~ animal.breedValues.leg_work.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">8-weken gewicht</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.weight_at8weeks.isEmpty %}
+                                            {{ animal.breedValues.weight_at8weeks.value~' / '~ animal.breedValues.weight_at8weeks.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Wormresistentie</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.odin_bc.isEmpty %}
+                                            {{ animal.breedValues.odin_bc.value~' / '~ animal.breedValues.odin_bc.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">20-weken gewicht</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.weight_at20weeks.isEmpty %}
+                                            {{ animal.breedValues.weight_at20weeks.value~' / '~ animal.breedValues.weight_at20weeks.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Staartlengte</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.tail_length.isEmpty %}
+                                            {{ animal.breedValues.tail_length.value~' / '~ animal.breedValues.tail_length.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="pr-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Spierdikte 20 wkn</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.muscle_thickness.isEmpty %}
+                                            {{ animal.breedValues.muscle_thickness.value~' / '~ animal.breedValues.muscle_thickness.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-6">
+                            <div class="pl-1">
+                                <div class="row bg-white-stripe">
+                                    <div class="col-xs-6 fieldName text-nowrap">Datum evaluatie</div>
+                                    <div class="col-xs-6 fieldValue text-nowrap">
+                                        {% if not animal.breedValues.tail_length.isEmpty %}
+                                            {{ animal.breedValues.tail_length.value~' / '~ animal.breedValues.tail_length.accuracy~'%' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
