@@ -161,16 +161,16 @@ class ReportService
      */
     public function createPedigreeCertificates(Request $request)
     {
-//        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArray($request);
 
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
-//        if ($processAsWorkerTask) {
-//            $location = $this->userService->getSelectedLocation($request);
-//            $company = $location ? $location->getCompany() : null;
-//            $this->ulnValidator->pedigreeCertificateUlnsInputValidation($content, $this->userService->getUser(), $company);
-//            return $this->createPedigreeCertificatesAsWorkerTask($request);
-//        }
+        if ($processAsWorkerTask) {
+            $location = $this->userService->getSelectedLocation($request);
+            $company = $location ? $location->getCompany() : null;
+            $this->ulnValidator->pedigreeCertificateUlnsInputValidation($content, $this->userService->getUser(), $company);
+            return $this->createPedigreeCertificatesAsWorkerTask($request);
+        }
 
         return $this->createPedigreeCertificatesWithoutWorker($request);
     }

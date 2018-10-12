@@ -429,11 +429,14 @@ class ReportServiceBase
 		 * @param array $additionalData
 		 * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
 		 */
-    protected function getPdfReportBase($twigFile, $data, $isLandscape = true, $additionalData = [])
+    protected function getPdfReportBase($twigFile, $data, $isLandscape = true, $additionalData = [], $customPdfOptions = null)
     {
     	  $twigInput = ArrayUtil::concatArrayValues(
     	  	[
-			      ['variables' => $data],
+			      [
+			      	'variables' => $data,
+				      'displayReportPdfOutputAsHtml' => $this->displayReportPdfOutputAsHtml
+			      ],
 			      $additionalData
 		      ],
 		      false
@@ -450,19 +453,7 @@ class ReportServiceBase
         $this->extension = FileType::PDF;
 
         $pdfOptions = $isLandscape ? TwigOutputUtil::pdfLandscapeOptions() : TwigOutputUtil::pdfPortraitOptions();
-
-        $pdfOptions = [
-	        'orientation'=>'Portrait',
-	        'default-header'=>false,
-//	        'disable-smart-shrinking'=>true,
-//	        'viewport-size' => '1024x768',
-//          'viewport-size' => '794 × 1122',
-	        'page-size' => 'A4',
-	        'margin-top'    => 4,
-	        'margin-right'  => 4,
-	        'margin-bottom' => 4,
-	        'margin-left'   => 4,
-        ];
+        $pdfOptions = $customPdfOptions ? $customPdfOptions : $pdfOptions;
 
         if($this->outputReportsToCacheFolderForLocalTesting) {
             //Save pdf in local cache

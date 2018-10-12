@@ -86,8 +86,17 @@ class PedigreeCertificateReportService extends ReportServiceBase
 	        'images_dir' => FilesystemUtil::getImagesDirectory($this->rootDir),
 	        'fonts_dir' => FilesystemUtil::getAssetsDirectory(($this->rootDir)). '/fonts'
         ];
+        $customPdfOptions = [
+	        'orientation'=>'Portrait',
+	        'default-header'=>false,
+	        'page-size' => 'A4',
+	        'margin-top'    => 3,
+	        'margin-right'  => 4,
+	        'margin-bottom' => 3,
+	        'margin-left'   => 4,
+        ];
 
-        return $this->getPdfReportBase($twigFile, $data, false, $additionalData);
+        return $this->getPdfReportBase($twigFile, $data, false, $additionalData, $customPdfOptions);
     }
 
 

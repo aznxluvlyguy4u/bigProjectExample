@@ -1,17 +1,298 @@
 {% extends 'base.html.twig' %}
 
 {% block bootstrap %}
-    <link rel="stylesheet" href="{{ bootstrap_css }}">
-    {#<link rel="stylesheet" href='{{ asset('assets/bootstrap-3.3.7-dist/css/bootstrap.min.css') }}'>#}
-    {#<link href="{{ fonts_dir~'/fontawesome-free-5.3.1-web/css/all.css' }}" rel="stylesheet"> <!--load all styles -->#}
-    {#<link rel="stylesheet" href="https://use.fontawesome.com/releases/v4.7.0/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">#}
-    {#<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">#}
+    {% if displayReportPdfOutputAsHtml %}
+        <link rel="stylesheet" href='{{ asset('assets/bootstrap-3.3.7-dist/css/bootstrap.min.css') }}'>
+    {% else %}
+        <link rel="stylesheet" href="{{ bootstrap_css }}">
+    {% endif %}
 {% endblock %}
 
-{% block javascripts %}
-    <script src="{{  bootstrap_js }}"></script>
-    {#<script src="{{  asset('assets/bootstrap-3.3.7-dist/js/bootstrap.min.js') }}"></script>#}
+{% block body %}
+
+    {% if displayReportPdfOutputAsHtml %}
+        {% set fullStar = asset('assets/images/baseline-star-24px.svg') %}
+        {% set halfStar = asset('assets/images/baseline-star_half-24px.svg') %}
+        {% set emptyStar = asset('assets/images/baseline-star_border-24px.svg') %}
+        {% set logoPath = asset('assets/images/nsfo-logo@2x.png') %}
+    {% else %}
+        {% set fullStar = images_dir~'/baseline-star-24px.svg' %}
+        {% set halfStar = images_dir~'/baseline-star_half-24px.svg' %}
+        {% set emptyStar = images_dir~'/baseline-star_border-24px.svg' %}
+        {% set logoPath = images_dir~'/nsfo-logo@2x.png' %}
+    {% endif %}
+
+
+
+    {% for certificate in variables %}
+
+        <div class="container mb-4 bg-gray">
+            <div class="row pt-4">
+
+                {# LEFT HALF #}
+                <div class="col-xs-6">
+                    <div class="pl-3 pr-2">
+
+                        {# FIRST TAB#}
+                        <div class="row">
+                            <div class="col-xs-8">
+                                <img class="img-responsive"  src="{{ logoPath }}" alt="">
+                                <h1>AFSTAMMINGSBEWIJS</h1>
+                            </div>
+
+                            {# MAIN ANIMAL DETAIL #}
+                            {% set vars = {
+                                'animal' : certificate.animals.c,
+                                'title' : 'DIER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/main_animal_detail.html.twig" with vars %}
+                            {% endembed %}
+
+                            {# BREEDER DETAIL #}
+                            {% set vars = {
+                                'certificate' : certificate,
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/breeder_detail.html.twig" with vars %}
+                            {% endembed %}
+
+                            {# EXPLANATION DETAIL #}
+                            {% set vars = {
+                                'certificate' : certificate,
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/explanations_detail.html.twig" with vars %}
+                            {% endembed %}
+
+                        </div>
+                    </div>
+
+                </div>
+
+                {# RIGHT HALF #}
+                <div class="col-xs-6">
+
+                    <div class="pl-2 pr-3">
+
+                        {# FIRST GENERATEON FATHER #}
+                        {% set vars = {
+                            'animal' : certificate.animals.f,
+                            'title' : '1e GENERATIE-VADER'
+                        } %}
+                        {% embed "/Report/pedigree_certificates2_parts/1e_generation_animal_detail.html.twig" with vars %}
+                        {% endembed %}
+
+
+                        {# SECOND GENERATEON FATHERs FATHER #}
+                        {% set vars = {
+                            'animal' : certificate.animals.ff,
+                            'title' : '2e GENERATIE-VADERS VADER'
+                        } %}
+                        {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
+                        {% endembed %}
+
+
+                        {# SECOND GENERATEON FATHERs MOTHER #}
+                        {% set vars = {
+                            'animal' : certificate.animals.fm,
+                            'title' : '2e GENERATIE-VADERS MOEDER'
+                        } %}
+                        {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
+                        {% endembed %}
+
+
+                        {# FIRST GENERATEON MOTHER #}
+                        {% set vars = {
+                            'animal' : certificate.animals.m,
+                            'title' : '1e GENERATIE-MOEDER'
+                        } %}
+                        {% embed "/Report/pedigree_certificates2_parts/1e_generation_animal_detail.html.twig" with vars %}
+                        {% endembed %}
+
+
+                        {# SECOND GENERATEON MOTHERS FATHER #}
+                        {% set vars = {
+                            'animal' : certificate.animals.mf,
+                            'title' : '2e GENERATIE-MOEDERS VADER'
+                        } %}
+                        {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
+                        {% endembed %}
+
+
+                        {# SECOND GENERATEON MOTHERS MOTHER #}
+                        {% set vars = {
+                            'animal' : certificate.animals.mm,
+                            'title' : '2e GENERATIE-MOEDERS MOEDER'
+                        } %}
+                        {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
+                        {% endembed %}
+
+
+                    </div>
+                </div>
+            </div>
+
+            {# footer #}
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="fieldName pull-right">BLAD 1 VAN 2 {% if certificate.animals.c.name != '-' %}{{ certificate.animals.c.name~'-' }}{% endif %}{% if certificate.animals.c.gender != '-' %}{{ certificate.animals.c.gender~'-' }}{% endif %}{% if certificate.animals.c.pedigree != '-' %}{{ 'STAMBOEKNR.'~certificate.animals.c.pedigree~'-' }}{% endif %}{{ 'UNIEK LEVERSNR.'~certificate.animals.c.uln }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="page-break-after: always"></div>
+
+
+
+        {# SECOND PAGE #}
+
+        <div class="container">
+
+            <div class="row" style="position:relative">
+                <div class="cross">
+                    <div class="cross-wrapper">
+                        <div class="cross-verticle"></div>
+                        <div class="cross-horizontal"></div>
+                    </div>
+                </div>
+                {# LEFT HALF #}
+                <div class="col-xs-6">
+                    <div class="row pl-3 pr-2">
+                        <div class=" col-xs-12 bg-gray mb-5">
+                            {# 2e GENERATEON FATHERs FATHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.ff,
+                                'title' : '2e GENERATIE-VADERS VADER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+
+                            {# 3e GENERATEON FATHERs FATHER FATHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.fff,
+                                'title' : '3e GENERATIE-VADERS VADER VADER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+
+                            {# 3e GENERATEON FATHERs FATHER MOTHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.ffm,
+                                'title' : '3e GENERATIE-VADERS VADER MOEDER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+                        </div>
+
+                        <div class=" col-xs-12 bg-gray">
+                            {# 2e GENERATEON MOTHERs FATHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.mf,
+                                'title' : '2e GENERATIE-MOEDERS VADER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+
+                            {# 3e GENERATEON MOTHERs FATHER FATHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.mff,
+                                'title' : '3e GENERATIE-MOEDERS VADER VADER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+
+                            {# 3e GENERATEON MOTHERs FATHER MOTHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.mfm,
+                                'title' : '3e GENERATIE-MOEDERS VADER MOEDER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+                        </div>
+                    </div>
+                </div>
+
+
+                {# RIGHT HALF #}
+                <div class="col-xs-6">
+                    <div class="row pl-2 pr-3">
+
+                        <div class=" col-xs-12 bg-gray mb-5">
+                            {# 2e GENERATEON FATHERs MOTHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.fm,
+                                'title' : '2e GENERATIE-VADERS MOEDER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+
+                            {# 3e GENERATEON FATHERs MOTHER FATHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.fmf,
+                                'title' : '3e GENERATIE-VADERS MOEDER VADER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+
+                            {# 3e GENERATEON FATHERs MOTHER MOTHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.fmm,
+                                'title' : '3e GENERATIE-VADERS MOEDER MOEDER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+                        </div>
+
+                        <div class=" col-xs-12 bg-gray">
+                            {# 2e GENERATION MOTHERS MOTHER #}
+                            {% set vars = {
+                                'animal' : certificate.animals.mm,
+                                'title' : '2e GENERATIE - MOEDERS MOEDER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with vars %}
+                            {% endembed %}
+
+                            {# 3e GENERATEON MOTHERs MOTHER FATHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.mmf,
+                                'title' : '3e GENERATIE-MOEDERS MOEDER VADER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+
+                            {# 3e GENERATEON MOTHERS MOTHER MOTHER #}
+                            {% set data = {
+                                'animal' : certificate.animals.mmm,
+                                'title' : '3e GENERATIE-MOEDERS MOEDER MOEDER'
+                            } %}
+                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
+                            {% endembed %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# footer #}
+            <div class="row">
+                <div class="col-xs-12 pt-4">
+                    <div class="fieldName pull-right">BLAD 2 VAN 2 {% if certificate.animals.c.name != '-' %}{{ certificate.animals.c.name~'-' }}{% endif %}{% if certificate.animals.c.gender != '-' %}{{ certificate.animals.c.gender~'-' }}{% endif %}{% if certificate.animals.c.pedigree != '-' %}{{ 'STAMBOEKNR.'~certificate.animals.c.pedigree~'-' }}{% endif %}{{ 'UNIEK LEVERSNR.'~certificate.animals.c.uln }}</div>
+                </div>
+            </div>
+
+        </div>
+        <div style="page-break-after: always"></div>
+
+    {% endfor %}
+
 {% endblock %}
+
+
+{% block javascripts %}
+    {% if displayReportPdfOutputAsHtml %}
+        <script src="{{  asset('assets/bootstrap-3.3.7-dist/js/bootstrap.min.js') }}"></script>
+    {% else %}
+        <script src="{{  bootstrap_js }}"></script>
+    {% endif %}
+{% endblock %}
+
 
 {% block stylesheets %}
     <style>
@@ -61,6 +342,10 @@
         .py-4 {
             padding-top: 12px !important;
             padding-bottom: 20px !important;
+        }
+
+        .pt-4 {
+            padding-top: 12px !important;
         }
 
         .pr-1 {
@@ -140,11 +425,11 @@
         }
 
         .rounded-top {
-            border-radius: 5px 5px 0px 0px !important;
+            border-radius: 5px 5px 0 0 !important;
         }
 
         .rounded-bottom {
-            border-radius: 0px 0px 5px 5px !important;
+            border-radius: 0 0 5px 5px !important;
         }
 
         .bordered {
@@ -161,7 +446,7 @@
 
         h1 {
             font-family: 'opensans';
-            font-size: 18px;
+            font-size: 20px;
             color: #009E66;
         }
 
@@ -217,11 +502,7 @@
         .cross {
             position: absolute;
             top: 48%;
-            /*top: 900px;*/
             left: 50%;
-            /*-webkit-transform: translateY(-50%);*/
-            /*-ms-transform: translateY(-50%);*/
-            /*transform: translateY(-50%);*/
             background-color: #009E66;
         }
 
@@ -244,8 +525,6 @@
         .cross-verticle {
             width: 2px;
             height: 50px;
-            /*top: 10px;*/
-            /*left: 55px;*/
             position: absolute;
             left: 50%;
             -webkit-transform: translateX(-50%);
@@ -290,6 +569,62 @@
             background-color: #009E66;
         }
 
+        {% if displayReportPdfOutputAsHtml %}
+        @font-face {
+            font-family: 'brandonGrotesqueBlack';
+            src:url({{ asset('assets/fonts/brandonGrotesque/brandongrotesque-black-webfont.woff2') }}) format('woff2'),
+            url({{ asset('assets/fonts/brandonGrotesque/brandongrotesque-black-webfont.woff') }}) format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'brandonGrotesqueMedium';
+            src:url({{ asset('assets/fonts/brandonGrotesque/brandongrotesque-medium-webfont.woff2') }}) format('woff2'),
+            url({{ asset('assets/fonts/brandonGrotesque/brandongrotesque-medium-webfont.woff') }}) format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'opensans';
+            src:url({{ asset('assets/fonts/opensans/opensans-webfont.woff2') }}) format('woff2'),
+            url({{ asset('assets/fonts/opensans/opensans-webfont.woff') }}) format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'opensans';
+            src:url({{ asset('assets/fonts/opensans/opensans-bold-webfont.woff2') }}) format('woff2'),
+            url({{ asset('assets/fonts/opensans/opensans-bold-webfont.woff') }}) format('woff');
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'crimson-text-roman';
+            src:url({{ asset('assets/fonts/crimsonTextRoman/CrimsonText-Roman.ttf') }}) format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Myriad Pro';
+            src: url({{ asset('assets/fonts/myriadPro/MyriadPro-Bold.woff2') }}) format('woff2'),
+            url({{ asset('assets/fonts/myriadPro/MyriadPro-Bold.woff') }}) format('woff');
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Myriad Pro';
+            src: url({{ asset('assets/fonts/myriadPro/MyriadPro-BlackSemiCn.woff2') }}) format('woff2'),
+            url({{ asset('assets/fonts/myriadPro/MyriadPro-BlackSemiCn.woff') }}) format('woff');
+            font-weight: 900;
+            font-style: normal;
+        }
+        {% else %}
         @font-face {
             font-family: 'brandonGrotesqueBlack';
             src:url({{ fonts_dir~'/brandonGrotesque/brandongrotesque-black-webfont.woff2' }}) format('woff2'),
@@ -302,7 +637,7 @@
             font-family: 'brandonGrotesqueMedium';
             src:url({{ fonts_dir~'/brandonGrotesque/brandongrotesque-medium-webfont.woff2' }}) format('woff2'),
             url({{ fonts_dir~'/brandonGrotesque/brandongrotesque-medium-webfont.woff' }}) format('woff');
-            url({{ fonts_dir~'/brandonGrotesque/brandongrotesque-medium-webfont.ttf' }}) format('truetype');
+        url({{ fonts_dir~'/brandonGrotesque/brandongrotesque-medium-webfont.ttf' }}) format('truetype');
             font-weight: normal;
             font-style: normal;
         }
@@ -319,93 +654,34 @@
             font-family: 'opensans';
             src:url({{ fonts_dir~'/opensans/opensans-bold-webfont.woff2' }}) format('woff2'),
             url({{ fonts_dir~'/opensans/opensans-bold-webfont.woff' }}) format('woff');
-            url({{ fonts_dir~'/opensans/opensans-bold-webfont.ttf' }}) format('truetype');
+        url({{ fonts_dir~'/opensans/opensans-bold-webfont.ttf' }}) format('truetype');
             font-weight: bold;
             font-style: normal;
         }
 
         @font-face {
             font-family: 'crimson-text-roman';
-            src:url({{ fonts_dir~'/CrimsonText-Roman.ttf' }}) format('truetype');
+            src:url({{ fonts_dir~'/crimsonTextRoman/CrimsonText-Roman.ttf' }}) format('truetype');
             font-weight: normal;
             font-style: normal;
         }
 
         @font-face {
             font-family: 'Myriad Pro';
-            src: url({{ fonts_dir~'/MyriadPro-Bold.woff2' }}) format('woff2'),
-            url({{ fonts_dir~'/MyriadPro-Bold.woff' }}) format('woff');
+            src: url({{ fonts_dir~'/myriadPro/MyriadPro-Bold.woff2' }}) format('woff2'),
+            url({{ fonts_dir~'/myriadPro/MyriadPro-Bold.woff' }}) format('woff');
             font-weight: bold;
             font-style: normal;
         }
 
         @font-face {
             font-family: 'Myriad Pro';
-            src: url({{ fonts_dir~'/MyriadPro-BlackSemiCn.woff2' }}) format('woff2'),
-            url({{ fonts_dir~'/MyriadPro-BlackSemiCn.woff' }}) format('woff');
+            src: url({{ fonts_dir~'/myriadPro/MyriadPro-BlackSemiCn.woff2' }}) format('woff2'),
+            url({{ fonts_dir~'/myriadPro/MyriadPro-BlackSemiCn.woff' }}) format('woff');
             font-weight: 900;
             font-style: normal;
         }
-
-
-        /**/
-        {#@font-face {#}
-            {#font-family: 'brandonGrotesqueBlack';#}
-            {#src:url({{ asset('assets/fonts/brandongrotesque-black-webfont.woff2') }}) format('woff2'),#}
-            {#url({{ asset('assets/fonts/brandongrotesque-black-webfont.woff') }}) format('woff');#}
-            {#font-weight: normal;#}
-            {#font-style: normal;#}
-        {#}#}
-
-        {#@font-face {#}
-            {#font-family: 'brandonGrotesqueMedium';#}
-            {#src:url({{ asset('assets/fonts/brandongrotesque-medium-webfont.woff2') }}) format('woff2'),#}
-            {#url({{ asset('assets/fonts/brandongrotesque-medium-webfont.woff') }}) format('woff');#}
-            {#/*url('../../../../web/assets/fonts/brandonGrotesque/brandongrotesque-medium-webfont.ttf')  format('truetype');*/#}
-            {#font-weight: normal;#}
-            {#font-style: normal;#}
-        {#}#}
-
-        {#@font-face {#}
-            {#font-family: 'opensans';#}
-            {#src:url({{ asset('assets/fonts/opensans-webfont.woff2') }}) format('woff2'),#}
-            {#url({{ asset('assets/fonts/opensans-webfont.woff') }}) format('woff');#}
-            {#font-weight: normal;#}
-            {#font-style: normal;#}
-        {#}#}
-
-        {#@font-face {#}
-            {#font-family: 'opensans';#}
-            {#src:url({{ asset('assets/fonts/opensans-bold-webfont.woff2') }}) format('woff2'),#}
-            {#url({{ asset('assets/fonts/opensans-bold-webfont.woff') }}) format('woff');#}
-            {#/*url('../../../../web/assets/fonts/opensans/opensans-bold-webfont.ttf') format('truetype');*/#}
-            {#font-weight: bold;#}
-            {#font-style: normal;#}
-        {#}#}
-
-        {#@font-face {#}
-            {#font-family: 'crimson-text-roman';#}
-            {#src:url({{ asset('assets/fonts/CrimsonText-Roman.ttf') }}) format('truetype');#}
-            {#font-weight: normal;#}
-            {#font-style: normal;#}
-        {#}#}
-
-        {#@font-face {#}
-            {#font-family: 'Myriad Pro';#}
-            {#src: url({{ asset('assets/fonts/MyriadPro-Bold.woff2') }}) format('woff2'),#}
-            {#url({{ asset('assets/fonts/MyriadPro-Bold.woff') }}) format('woff');#}
-            {#font-weight: bold;#}
-            {#font-style: normal;#}
-        {#}#}
-
-        {#@font-face {#}
-            {#font-family: 'Myriad Pro';#}
-            {#src: url({{ asset('assets/fonts/MyriadPro-BlackSemiCn.woff2') }}) format('woff2'),#}
-            {#url({{ asset('assets/fonts/MyriadPro-BlackSemiCn.woff') }}) format('woff');#}
-            {#font-weight: 900;#}
-            {#font-style: normal;#}
-        {#}#}
-
+        {% endif %}
 
         /* Always insert a page break after each <footer> element (when printing) */
         /*@media print {*/
@@ -414,260 +690,3 @@
 
     </style>
 {% endblock %}
-
-{% block body %}
-
-    {% set fullStar = images_dir~'/baseline-star-24px.svg' %}
-    {% set halfStar = images_dir~'/baseline-star_half-24px.svg' %}
-    {% set emptyStar = images_dir~'/baseline-star_border-24px.svg' %}
-
-    {#{% set fullStar = asset('assets/images/baseline-star-24px.svg') %}#}
-    {#{% set halfStar = asset('assets/images/baseline-star_half-24px.svg') %}#}
-    {#{% set emptyStar = asset('assets/images/baseline-star_border-24px.svg') %}#}
-
-    {% for certificate in variables %}
-
-        <div class="container mb-4 bg-gray">
-            <div class="row py-4">
-                <div class="col-xs-6">
-                    <div class="pl-3 pr-2">
-
-                        {# FIRST TAB#}
-                        <div class="row">
-                            <div class="col-xs-8">
-                                <img class="img-responsive"  src="{{ images_dir~'/nsfo-logo@2x.png' }}" alt="">
-                                <h1><b>AFSTAMMINGSBEWIJS</b></h1>
-                            </div>
-
-                            {#<div class="col-xs-8">#}
-                                {#<img class="img-responsive"  src="{{ asset('assets/images/nsfo-logo@2x.png') }}" alt="">#}
-                                {#<h1><b>AFSTAMMINGSBEWIJS</b></h1>#}
-                            {#</div>#}
-
-                            {# MAIN ANIMAL DETAIL #}
-                            {% set vars = {
-                                'animal' : certificate.animals.c,
-                                'title' : 'DIER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/main_animal_detail.html.twig" with vars %}
-                            {% endembed %}
-
-                            {# BREEDER DETAIL #}
-                            {% set vars = {
-                                'certificate' : certificate,
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/breeder_detail.html.twig" with vars %}
-                            {% endembed %}
-
-                            {# EXPLANATION DETAIL #}
-                            {% set vars = {
-                                'certificate' : certificate,
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/explanations_detail.html.twig" with vars %}
-                            {% endembed %}
-
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="col-xs-6">
-
-                    <div class="pl-2 pr-3">
-
-                        {# FIRST GENERATEON FATHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.f,
-                            'title' : '1e GENERATIE-VADER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2/1e_generation_animal_detail.html.twig" with vars %}
-                        {% endembed %}
-
-
-                        {# SECOND GENERATEON FATHERs FATHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.ff,
-                            'title' : '2e GENERATIE-VADERS VADER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2/2e_generation_animal_minified.html.twig" with vars %}
-                        {% endembed %}
-
-
-                        {# SECOND GENERATEON FATHERs MOTHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.fm,
-                            'title' : '2e GENERATIE-VADERS MOEDER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2/2e_generation_animal_minified.html.twig" with vars %}
-                        {% endembed %}
-
-
-                        {# FIRST GENERATEON MOTHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.m,
-                            'title' : '1e GENERATIE-MOEDER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2/1e_generation_animal_detail.html.twig" with vars %}
-                        {% endembed %}
-
-
-                        {# SECOND GENERATEON MOTHERS FATHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.mf,
-                            'title' : '2e GENERATIE-MOEDERS VADER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2/2e_generation_animal_minified.html.twig" with vars %}
-                        {% endembed %}
-
-
-                        {# SECOND GENERATEON MOTHERS MOTHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.mm,
-                            'title' : '2e GENERATIE-MOEDERS MOEDER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2/2e_generation_animal_minified.html.twig" with vars %}
-                        {% endembed %}
-
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div style="page-break-after: always"></div>
-
-
-
-        {# SECOND PAGE #}
-
-        <div class="container">
-
-            <div class="row" style="position:relative">
-                <div class="cross">
-                    <div class="cross-wrapper">
-                        <div class="cross-verticle"></div>
-                        <div class="cross-horizontal"></div>
-                    </div>
-                </div>
-                {# LEFT HALF #}
-                <div class="col-xs-6">
-                    <div class="row pl-3 pr-2">
-                        <div class=" col-xs-12 bg-gray mb-5">
-                            {# 2e GENERATEON FATHERs FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.ff,
-                                'title' : '2e GENERATIE-VADERS VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/2e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON FATHERs FATHER FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.fff,
-                                'title' : '3e GENERATIE-VADERS VADER VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON FATHERs FATHER MOTHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.ffm,
-                                'title' : '3e GENERATIE-VADERS VADER MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-                        </div>
-
-                        <div class=" col-xs-12 bg-gray">
-                            {# 2e GENERATEON MOTHERs FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.mf,
-                                'title' : '2e GENERATIE-MOEDERS VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/2e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON MOTHERs FATHER FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.mff,
-                                'title' : '3e GENERATIE-MOEDERS VADER VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON MOTHERs FATHER MOTHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.mfm,
-                                'title' : '3e GENERATIE-MOEDERS VADER MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-                        </div>
-                    </div>
-                </div>
-
-
-                {# RIGHT HALF #}
-                <div class="col-xs-6">
-                    <div class="row pl-2 pr-3">
-
-                        <div class=" col-xs-12 bg-gray mb-5">
-                            {# 2e GENERATEON FATHERs MOTHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.fm,
-                                'title' : '2e GENERATIE-VADERS MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/2e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON FATHERs MOTHER FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.fmf,
-                                'title' : '3e GENERATIE-VADERS MOEDER VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON FATHERs MOTHER MOTHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.fmm,
-                                'title' : '3e GENERATIE-VADERS MOEDER MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-                        </div>
-
-                        <div class=" col-xs-12 bg-gray">
-                            {# 2e GENERATION MOTHERS MOTHER #}
-                            {% set vars = {
-                                'animal' : certificate.animals.mm,
-                                'title' : '2e GENERATIE - MOEDERS MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/2e_generation_animal_detail.html.twig" with vars %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON MOTHERs MOTHER FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.mmf,
-                                'title' : '3e GENERATIE-MOEDERS MOEDER VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON MOTHERS MOTHER MOTHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.mmm,
-                                'title' : '3e GENERATIE-MOEDERS MOEDER MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div style="page-break-after: always"></div>
-
-    {% endfor %}
-
-{% endblock %}
-
