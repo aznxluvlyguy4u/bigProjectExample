@@ -503,9 +503,9 @@ abstract class ControllerServiceBase
 
 
     /**
-     * @param Client $client
+     * @param Client|null $client
      */
-    protected function nullCheckClient(Client $client)
+    protected function nullCheckClient(?Client $client)
     {
         if ($client === null) {
             throw new PreconditionFailedHttpException('Client cannot be empty');
