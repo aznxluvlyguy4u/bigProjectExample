@@ -186,6 +186,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
+        $useRvoLogic = $location->isDutchLocation();
+
         $requestMessages = $this->requestMessageBuilder
             ->build(RequestType::DECLARE_BIRTH_ENTITY,
                 $content,
@@ -222,13 +224,17 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             }
         }
 
+        if (!empty($result) && !$useRvoLogic) {
+            $this->getManager()->flush();
+        }
+
         if ($litter) {
             $this->saveNewestDeclareVersion($content, $litter);
 
-            $this->updateLitterStatus($litter, $location->isDutchLocation());
-            $this->updateResultTableValuesByBirthRequests($requestMessages, $location->isDutchLocation());
+            $this->updateLitterStatus($litter, $useRvoLogic);
+            $this->updateResultTableValuesByBirthRequests($requestMessages, $useRvoLogic);
 
-            if (!$location->isDutchLocation()) {
+            if (!$useRvoLogic) {
                 $this->directlyUpdateResultTableValuesByAnimalIds($litter->getAllAnimalIds());
             }
 
