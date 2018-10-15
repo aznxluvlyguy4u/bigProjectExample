@@ -8,6 +8,7 @@ use AppBundle\Cache\NLingCacher;
 use AppBundle\Cache\ProductionCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\RequestMessageBuilder;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\BirthAPIControllerInterface;
@@ -37,10 +38,13 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\ExceptionUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Util\WorkerTaskUtil;
@@ -231,7 +235,13 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         }
 
         if (!empty($result) && !$useRvoLogic) {
-            $this->getManager()->flush();
+            try {
+                $this->getManager()->flush();
+            } catch (\Exception $exception) {
+                //Roll back tag and animal changes
+                $this->rollBackCreateBirth($requestMessages, $litter, $client->getId(), $location->getId());
+                throw $exception;
+            }
         }
 
         if ($litter) {
@@ -251,6 +261,32 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         ActionLogWriter::completeActionLog($this->getManager(), $logs);
 
         return new JsonResponse($result, 200);
+    }
+
+
+    /**
+     * @param DeclareBirth[] $requestMessages
+     * @param Litter $litter
+     * @param int $clientId
+     * @param int $locationId
+     */
+    private function rollBackCreateBirth($requestMessages, ?Litter $litter, $clientId, $locationId)
+    {
+        $animalIds = [];
+        $litterId = $litter ? $litter->getId() : null;
+        $reservedTagUlns = [];
+        foreach ($requestMessages as $requestMessage) {
+            if ($requestMessage->getAnimal() && $requestMessage->getAnimal()->getId()) {
+                $animalIds[] = $requestMessage->getAnimal()->getId();
+            }
+            if (!empty($requestMessage->getUln())) {
+                $reservedTagUlns[] = $requestMessage->getUln();
+            }
+        }
+
+        $this->rollBackTags($reservedTagUlns, $clientId, $locationId);
+        $this->removeAnimals($animalIds);
+        $this->removeLitter($litterId);
     }
 
 
@@ -1192,5 +1228,109 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     private function removeAnimalCacheOfRemovedChildren(WorkerMessageBodyLitter $workerMessageBodyLitter)
     {
         AnimalCacher::removeOrphanedRecordsByAnimalIds($this->getConnection(), $workerMessageBodyLitter->getChildrenIds());
+    }
+
+    /**
+     * Using sql queries, because the EntityManager is closed after an Exception.
+     * It is also possible to just create a new EntityManager.
+     *
+     * @param array $reservedTagUlns
+     * @param int $clientId
+     * @param int $locationId
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function rollBackTags(array $reservedTagUlns, int $clientId, int $locationId)
+    {
+        if (empty($reservedTagUlns)) {
+            return;
+        }
+
+        $idKey = JsonInputConstant::ID;
+        $ulnKey = JsonInputConstant::ULN;
+        $sql = "SELECT $idKey, CONCAT(uln_country_code, uln_number) as $ulnKey FROM tag WHERE CONCAT(uln_country_code,uln_number) IN (
+                     ".SqlUtil::getFilterListString($reservedTagUlns, true)."
+                )";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        $tagIds = empty($results) ? [] :
+            SqlUtil::getSingleValueGroupedSqlResults($idKey, $results,true,true);
+
+        if (!empty($tagIds)) {
+            $sql = "UPDATE tag SET tag_status = 'UNASSIGNED'
+                WHERE id IN (
+                    ".SqlUtil::getFilterListString($tagIds, false)."
+                )";
+            SqlUtil::updateWithCount($this->getConnection(), $sql);
+        }
+
+        $ulnsOfExistingTags = empty($results) ? [] :
+            SqlUtil::getSingleValueGroupedSqlResults($ulnKey, $results,false,true);
+
+        $ulnsOfTagsToInsert = [];
+        foreach ($reservedTagUlns as $reservedTagUln) {
+            if (!key_exists($reservedTagUln, $ulnsOfExistingTags)) {
+                $ulnsOfTagsToInsert[] = $reservedTagUln;
+            }
+        }
+
+        if (!empty($ulnsOfTagsToInsert)) {
+            DoctrineUtil::updateTableSequence($this->getConnection(), [Tag::getTableName()]);
+
+            $prefix = '';
+            $insertValuesString = '';
+            foreach ($ulnsOfTagsToInsert as $ulnOfTagToInsert) {
+                $ulnParts = Utils::getUlnFromString($ulnOfTagToInsert);
+                $ulnNumber = $ulnParts[JsonInputConstant::ULN_NUMBER];
+                $ulnCountryCode =  $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE];
+                $animalOrderNumber = StringUtil::getLast5CharactersFromString($ulnNumber);
+
+                $insertValuesString .= $prefix."(".$clientId
+                    . ",'" . TagStateType::UNASSIGNED . "'"
+                    . ",'" . $animalOrderNumber . "'"
+                    .',NOW()'
+                    .",'".$ulnCountryCode."'"
+                    .",'".$ulnNumber."'"
+                    .",".$locationId.")"
+                ;
+                $prefix = ',';
+            }
+
+            $sql = "INSERT INTO tag 
+                    (owner_id, tag_status, animal_order_number, order_date, uln_country_code, uln_number, location_id)
+                    VALUES ".$insertValuesString;
+            SqlUtil::updateWithCount($this->getConnection(), $sql);
+        }
+    }
+
+
+    /**
+     * Using sql queries, because the EntityManager is closed after an Exception.
+     * It is also possible to just create a new EntityManager.
+     *
+     * @param array $animalIds
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function removeAnimals(array $animalIds)
+    {
+        if (empty($animalIds) || !ArrayUtil::containsOnlyDigits($animalIds)) {
+            return;
+        }
+        $sql = "DELETE FROM animal WHERE id IN (".SqlUtil::getFilterListString($animalIds, false).")";
+        SqlUtil::updateWithCount($this->getConnection(), $sql);
+    }
+
+    /**
+     * Using sql queries, because the EntityManager is closed after an Exception.
+     * It is also possible to just create a new EntityManager.
+     *
+     * @param $litterId
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function removeLitter($litterId)
+    {
+        if (empty($litterId)) {
+            return;
+        }
+        $sql = "DELETE FROM declare_nsfo_base WHERE id = ".$litterId;
+        SqlUtil::updateWithCount($this->getConnection(), $sql);
     }
 }
