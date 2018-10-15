@@ -32,7 +32,7 @@ class DeclareBirthResponse extends DeclareBaseResponse
 
     /**
      * @ORM\ManyToOne(targetEntity="Animal", cascade={"persist"})
-     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;
