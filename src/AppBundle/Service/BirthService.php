@@ -37,6 +37,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\ExceptionUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
@@ -208,6 +209,11 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         //Creating request succeeded, send to Queue
 
         $litter = null;
+
+        if (!$useRvoLogic) {
+            DoctrineUtil::updateTableSequence($this->getConnection(), [DeclareBaseResponse::getTableName()]);
+        }
+
         /** @var DeclareBirth $requestMessage */
         foreach ($requestMessages as $requestMessage) {
             //First persist requestmessage, before sending it to the queue
