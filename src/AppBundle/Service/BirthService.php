@@ -57,6 +57,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
 class BirthService extends DeclareControllerServiceBase implements BirthAPIControllerInterface
 {
@@ -360,13 +361,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $this->nullCheckLocation($location);
 
         if (!key_exists('litter_id', $content->toArray())) {
-            return new JsonResponse(
-                array (
-                    Constant::RESULT_NAMESPACE => array (
-                        'code' => $statusCode,
-                        "message" => "Mandatory Litter Id not given.",
-                    )
-                ), $statusCode);
+            throw new PreconditionRequiredHttpException("Mandatory Litter Id not given.");
         }
 
         $litterId = $content['litter_id'];
@@ -374,13 +369,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $litter = $this->getManager()->getRepository(Litter::class)->findOneBy(array ('id' => $litterId));
 
         if (!$litter) {
-            return new JsonResponse(
-                array (
-                    Constant::RESULT_NAMESPACE => array (
-                        'code' => $statusCode,
-                        "message" => "No litter was not found.",
-                    )
-                ), $statusCode);
+            throw new PreconditionRequiredHttpException("No litter was found");
         }
 
         $childrenToRemove = [];
@@ -395,14 +384,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 $dateInterval = $child->getDateOfBirth()->diff(new \DateTime());
 
                 if($dateInterval->y > 0 || $dateInterval->m > self::REVOKE_MAX_MONTH_INTERVAL) {
-                    return new JsonResponse(
-                        array (
-                            Constant::RESULT_NAMESPACE => array (
-                                'code' => $statusCode,
-                                "message" => $child->getUlnCountryCode() .$child->getUlnNumber() . " heeft een geregistreerde geboortedatum dat langer dan "
-                                    .self::REVOKE_MAX_MONTH_INTERVAL ." maand geleden is, zodoende is het niet geoorloofd om de melding in te trekken en daarmee de geboorte van het dier ongedaan te maken.",
-                            )
-                        ), $statusCode);
+                    throw new PreconditionRequiredHttpException($child->getUlnCountryCode() .$child->getUlnNumber() . " heeft een geregistreerde geboortedatum dat langer dan "
+                        .self::REVOKE_MAX_MONTH_INTERVAL ." maand geleden is, zodoende is het niet geoorloofd om de melding in te trekken en daarmee de geboorte van het dier ongedaan te maken.");
                 }
             }
         }
@@ -509,7 +492,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                                 $declareType = 'gewichtmelding';
                             }
 
-                            return Validator::createJsonResponse('Er bestaat nog een '.$declareType.' die niet is ingetrokken voor dit dier '.$child->getUln().' op ubn: '.$declareToRemove->getUbn(), $statusCode);
+                            throw new PreconditionRequiredHttpException('Er bestaat nog een '.$declareType.' die niet is ingetrokken voor dit dier '.$child->getUln().' op ubn: '.$declareToRemove->getUbn());
                         }
                     }
                 }
@@ -611,7 +594,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 $errorMessage = $errorMessage.' De referentie tabel = '.$referenceTable.'.';
             }
 
-            return ResultUtil::errorResult($errorMessage, $statusCode);
+            throw new PreconditionRequiredHttpException($errorMessage);
         }
 
 
