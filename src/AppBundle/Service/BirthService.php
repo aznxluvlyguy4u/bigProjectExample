@@ -386,20 +386,24 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $childrenToRemove = [];
         $stillbornsToRemove = [];
 
-        //Check if birth registration is within a time span of maxMonthInterval from now,
-        //then, and only then, the revoke and thus deletion of child animal is allowed
-        foreach ($litter->getChildren() as $child) {
-            $dateInterval = $child->getDateOfBirth()->diff(new \DateTime());
+        $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::ADMIN);
 
-            if($dateInterval->y > 0 || $dateInterval->m > self::REVOKE_MAX_MONTH_INTERVAL) {
-                return new JsonResponse(
-                    array (
-                        Constant::RESULT_NAMESPACE => array (
-                            'code' => $statusCode,
-                            "message" => $child->getUlnCountryCode() .$child->getUlnNumber() . " heeft een geregistreerde geboortedatum dat langer dan "
-                                .self::REVOKE_MAX_MONTH_INTERVAL ." maand geleden is, zodoende is het niet geoorloofd om de melding in te trekken en daarmee de geboorte van het dier ongedaan te maken.",
-                        )
-                    ), $statusCode);
+        if (!$isAdmin) {
+            //Check if birth registration is within a time span of maxMonthInterval from now,
+            //then, and only then, the revoke and thus deletion of child animal is allowed
+            foreach ($litter->getChildren() as $child) {
+                $dateInterval = $child->getDateOfBirth()->diff(new \DateTime());
+
+                if($dateInterval->y > 0 || $dateInterval->m > self::REVOKE_MAX_MONTH_INTERVAL) {
+                    return new JsonResponse(
+                        array (
+                            Constant::RESULT_NAMESPACE => array (
+                                'code' => $statusCode,
+                                "message" => $child->getUlnCountryCode() .$child->getUlnNumber() . " heeft een geregistreerde geboortedatum dat langer dan "
+                                    .self::REVOKE_MAX_MONTH_INTERVAL ." maand geleden is, zodoende is het niet geoorloofd om de melding in te trekken en daarmee de geboorte van het dier ongedaan te maken.",
+                            )
+                        ), $statusCode);
+                }
             }
         }
 
