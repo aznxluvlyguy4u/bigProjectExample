@@ -561,7 +561,7 @@ services:
         arguments:
           - '@app.serializer.base'
           - '@app.cache'
-          - '@doctrine.orm.entity_manager'
+          - '@doctrine'
           - '@app.user'
           - '@translator'
           - '@logger'

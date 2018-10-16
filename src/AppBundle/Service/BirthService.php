@@ -52,6 +52,7 @@ use AppBundle\Validation\AdminValidator;
 use AppBundle\Worker\Task\WorkerMessageBodyLitter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
@@ -59,6 +60,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class BirthService extends DeclareControllerServiceBase implements BirthAPIControllerInterface
 {
+    const PERSIST_MAX_RETRIES = 10;
+
     const SHOW_OTHER_CANDIDATE_MOTHERS = false;
     const SHOW_OTHER_SURROGATE_MOTHERS = false;
 
@@ -214,33 +217,50 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $litter = null;
 
-        if (!$useRvoLogic) {
-            DoctrineUtil::updateTableSequence($this->getConnection(), [DeclareBaseResponse::getTableName()]);
-        }
+        try {
+            /** @var DeclareBirth $requestMessage */
+            foreach ($requestMessages as $requestMessage) {
+                //First persist requestmessage, before sending it to the queue
+                $this->persist($requestMessage);
 
-        /** @var DeclareBirth $requestMessage */
-        foreach ($requestMessages as $requestMessage) {
-            //First persist requestmessage, before sending it to the queue
-            $this->persist($requestMessage);
-
-            $result[] = $this->runDeclareBirthWorkerLogic($requestMessage);
-
-            if ($litter === null &&
-                ($requestMessage instanceof DeclareBirth || $requestMessage instanceof Stillborn)) {
-                if ($requestMessage->getLitter()) {
+                if ($litter === null &&
+                    ($requestMessage instanceof DeclareBirth || $requestMessage instanceof Stillborn) &&
+                    $requestMessage->getLitter()
+                ) {
                     //All these births belong to the same litter
                     $litter = $requestMessage->getLitter();
                 }
             }
+            $this->getManager()->flush();
+        } catch (\Exception $exception) {
+            //Roll back tag and animal changes
+            $this->rollBackCreateBirth($requestMessages, $litter, $client->getId(), $location->getId());
+            throw $exception;
         }
 
-        if (!empty($result) && !$useRvoLogic) {
-            try {
-                $this->getManager()->flush();
-            } catch (\Exception $exception) {
-                //Roll back tag and animal changes
+
+        /** @var DeclareBirth $requestMessage */
+        foreach ($requestMessages as $requestMessage) {
+            $retryCount = 0;
+            $successfulFlush = false;
+            $uniqueConstraintViolationException = null;
+
+            do {
+                try {
+                    $result[] = $this->runDeclareBirthWorkerLogic($requestMessage);
+                    $this->getManager()->flush();
+                    $successfulFlush = true;
+                } catch (UniqueConstraintViolationException $uniqueConstraintViolationException) {
+                    $this->resetManager();
+                }
+            } while (!$successfulFlush && +$retryCount <= self::PERSIST_MAX_RETRIES);
+
+            if (!$successfulFlush) {
                 $this->rollBackCreateBirth($requestMessages, $litter, $client->getId(), $location->getId());
-                throw $exception;
+                throw $uniqueConstraintViolationException ? $uniqueConstraintViolationException :
+                    new \Exception($this->translateUcFirstLower(
+                        $this->translateUcFirstLower('SOMETHING WENT WRONG')
+                    ));
             }
         }
 

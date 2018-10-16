@@ -42,6 +42,7 @@ use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
@@ -65,13 +66,15 @@ abstract class ControllerServiceBase
     private $logger;
     /** @var SqlViewManagerInterface */
     private $sqlViewManager;
+    /** @var RegistryInterface */
+    private $doctrine;
 
     /** @var string */
     private $actionLogEditMessage;
 
     public function __construct(BaseSerializer $baseSerializer,
                                 CacheService $cacheService,
-                                EntityManagerInterface $manager,
+                                RegistryInterface $doctrine,
                                 UserService $userService,
                                 TranslatorInterface $translator,
                                 Logger $logger,
@@ -80,7 +83,8 @@ abstract class ControllerServiceBase
     {
         $this->baseSerializer = $baseSerializer;
         $this->cacheService = $cacheService;
-        $this->manager = $manager;
+        $this->doctrine = $doctrine;
+        $this->manager = $doctrine->getManager();
         $this->userService = $userService;
         $this->translator = $translator;
         $this->logger = $logger;
@@ -94,6 +98,12 @@ abstract class ControllerServiceBase
     public function getManager()
     {
         return $this->manager;
+    }
+
+
+    public function resetManager(): void
+    {
+        $this->doctrine->resetManager();
     }
 
     /**
