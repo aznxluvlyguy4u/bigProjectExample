@@ -64,7 +64,6 @@ class PedigreeCertificateReportService extends ReportServiceBase
 
         $this->pedigreeCertificatesGenerator->generate($actionBy, $content, $client, $location);
 
-//dump($this->pedigreeCertificatesGenerator->getReports());die();
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
         }
@@ -91,9 +90,9 @@ class PedigreeCertificateReportService extends ReportServiceBase
 	        'default-header'=>false,
 	        'page-size' => 'A4',
 	        'margin-top'    => 3,
-	        'margin-right'  => 4,
+	        'margin-right'  => 3,
 	        'margin-bottom' => 3,
-	        'margin-left'   => 4,
+	        'margin-left'   => 3,
         ];
 
         return $this->getPdfReportBase($twigFile, $data, false, $additionalData, $customPdfOptions);

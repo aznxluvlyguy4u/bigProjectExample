@@ -37,7 +37,7 @@
                         <div class="row">
                             <div class="col-xs-8">
                                 <img class="img-responsive"  src="{{ logoPath }}" alt="">
-                                <h1>AFSTAMMINGSBEWIJS</h1>
+                                <h1 class="mt-2 mb-4"><b>AFSTAMMINGSBEWIJS</b></h1>
                             </div>
 
                             {# MAIN ANIMAL DETAIL #}
@@ -75,7 +75,7 @@
                         {# FIRST GENERATEON FATHER #}
                         {% set vars = {
                             'animal' : certificate.animals.f,
-                            'title' : '1e GENERATIE-VADER'
+                            'title' : '1<sup>e</sup> GENERATIE-VADER'
                         } %}
                         {% embed "/Report/pedigree_certificates2_parts/1e_generation_animal_detail.html.twig" with vars %}
                         {% endembed %}
@@ -84,7 +84,7 @@
                         {# SECOND GENERATEON FATHERs FATHER #}
                         {% set vars = {
                             'animal' : certificate.animals.ff,
-                            'title' : '2e GENERATIE-VADERS VADER'
+                            'title' : '2<sup>e</sup> GENERATIE-VADERS VADER'
                         } %}
                         {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
                         {% endembed %}
@@ -93,7 +93,7 @@
                         {# SECOND GENERATEON FATHERs MOTHER #}
                         {% set vars = {
                             'animal' : certificate.animals.fm,
-                            'title' : '2e GENERATIE-VADERS MOEDER'
+                            'title' : '2<sup>e</sup> GENERATIE-VADERS MOEDER'
                         } %}
                         {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
                         {% endembed %}
@@ -102,7 +102,7 @@
                         {# FIRST GENERATEON MOTHER #}
                         {% set vars = {
                             'animal' : certificate.animals.m,
-                            'title' : '1e GENERATIE-MOEDER'
+                            'title' : '1<sup>e</sup> GENERATIE-MOEDER'
                         } %}
                         {% embed "/Report/pedigree_certificates2_parts/1e_generation_animal_detail.html.twig" with vars %}
                         {% endembed %}
@@ -111,7 +111,7 @@
                         {# SECOND GENERATEON MOTHERS FATHER #}
                         {% set vars = {
                             'animal' : certificate.animals.mf,
-                            'title' : '2e GENERATIE-MOEDERS VADER'
+                            'title' : '2<sup>e</sup> GENERATIE-MOEDERS VADER'
                         } %}
                         {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
                         {% endembed %}
@@ -120,7 +120,7 @@
                         {# SECOND GENERATEON MOTHERS MOTHER #}
                         {% set vars = {
                             'animal' : certificate.animals.mm,
-                            'title' : '2e GENERATIE-MOEDERS MOEDER'
+                            'title' : '2<sup>e</sup> GENERATIE-MOEDERS MOEDER'
                         } %}
                         {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
                         {% endembed %}
@@ -133,7 +133,7 @@
             {# footer #}
             <div class="row">
                 <div class="col-xs-12">
-                    <div class="fieldName pull-right">BLAD 1 VAN 2 {% if certificate.animals.c.name != '-' %}{{ certificate.animals.c.name~'-' }}{% endif %}{% if certificate.animals.c.gender != '-' %}{{ certificate.animals.c.gender~'-' }}{% endif %}{% if certificate.animals.c.pedigree != '-' %}{{ 'STAMBOEKNR.'~certificate.animals.c.pedigree~'-' }}{% endif %}{{ 'UNIEK LEVERSNR.'~certificate.animals.c.uln }}</div>
+                    <div class="fieldName pull-right">BLAD 1 VAN 2&nbsp;&nbsp;&nbsp;{% if certificate.animals.c.name != '-' %}{{ certificate.animals.c.name }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.gender != '-' %}{{ certificate.animals.c.gender | upper }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.pedigree != '-' %}{{ 'STAMBOEKNR. '~certificate.animals.c.pedigree }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{{ 'UNIEK LEVERSNR. '~certificate.animals.c.uln }}</div>
                 </div>
             </div>
         </div>
@@ -160,7 +160,7 @@
                             {# 2e GENERATEON FATHERs FATHER #}
                             {% set data = {
                                 'animal' : certificate.animals.ff,
-                                'title' : '2e GENERATIE-VADERS VADER'
+                                'title' : '2<sup>e</sup> GENERATIE-VADERS VADER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -168,7 +168,7 @@
                             {# 3e GENERATEON FATHERs FATHER FATHER #}
                             {% set data = {
                                 'animal' : certificate.animals.fff,
-                                'title' : '3e GENERATIE-VADERS VADER VADER'
+                                'title' : '3<sup>e</sup> GENERATIE-VADERS VADER VADER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -176,7 +176,7 @@
                             {# 3e GENERATEON FATHERs FATHER MOTHER #}
                             {% set data = {
                                 'animal' : certificate.animals.ffm,
-                                'title' : '3e GENERATIE-VADERS VADER MOEDER'
+                                'title' : '3<sup>e</sup> GENERATIE-VADERS VADER MOEDER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -186,7 +186,7 @@
                             {# 2e GENERATEON MOTHERs FATHER #}
                             {% set data = {
                                 'animal' : certificate.animals.mf,
-                                'title' : '2e GENERATIE-MOEDERS VADER'
+                                'title' : '2<sup>e</sup> GENERATIE-MOEDERS VADER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -194,7 +194,7 @@
                             {# 3e GENERATEON MOTHERs FATHER FATHER #}
                             {% set data = {
                                 'animal' : certificate.animals.mff,
-                                'title' : '3e GENERATIE-MOEDERS VADER VADER'
+                                'title' : '3<sup>e</sup> GENERATIE-MOEDERS VADER VADER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -202,7 +202,7 @@
                             {# 3e GENERATEON MOTHERs FATHER MOTHER #}
                             {% set data = {
                                 'animal' : certificate.animals.mfm,
-                                'title' : '3e GENERATIE-MOEDERS VADER MOEDER'
+                                'title' : '3<sup>e</sup> GENERATIE-MOEDERS VADER MOEDER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -219,7 +219,7 @@
                             {# 2e GENERATEON FATHERs MOTHER #}
                             {% set data = {
                                 'animal' : certificate.animals.fm,
-                                'title' : '2e GENERATIE-VADERS MOEDER'
+                                'title' : '2<sup>e</sup> GENERATIE-VADERS MOEDER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -227,7 +227,7 @@
                             {# 3e GENERATEON FATHERs MOTHER FATHER #}
                             {% set data = {
                                 'animal' : certificate.animals.fmf,
-                                'title' : '3e GENERATIE-VADERS MOEDER VADER'
+                                'title' : '3<sup>e</sup> GENERATIE-VADERS MOEDER VADER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -235,7 +235,7 @@
                             {# 3e GENERATEON FATHERs MOTHER MOTHER #}
                             {% set data = {
                                 'animal' : certificate.animals.fmm,
-                                'title' : '3e GENERATIE-VADERS MOEDER MOEDER'
+                                'title' : '3<sup>e</sup> GENERATIE-VADERS MOEDER MOEDER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -245,7 +245,7 @@
                             {# 2e GENERATION MOTHERS MOTHER #}
                             {% set vars = {
                                 'animal' : certificate.animals.mm,
-                                'title' : '2e GENERATIE - MOEDERS MOEDER'
+                                'title' : '2<sup>e</sup> GENERATIE - MOEDERS MOEDER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with vars %}
                             {% endembed %}
@@ -253,7 +253,7 @@
                             {# 3e GENERATEON MOTHERs MOTHER FATHER #}
                             {% set data = {
                                 'animal' : certificate.animals.mmf,
-                                'title' : '3e GENERATIE-MOEDERS MOEDER VADER'
+                                'title' : '3<sup>e</sup> GENERATIE-MOEDERS MOEDER VADER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -261,7 +261,7 @@
                             {# 3e GENERATEON MOTHERS MOTHER MOTHER #}
                             {% set data = {
                                 'animal' : certificate.animals.mmm,
-                                'title' : '3e GENERATIE-MOEDERS MOEDER MOEDER'
+                                'title' : '3<sup>e</sup> GENERATIE-MOEDERS MOEDER MOEDER'
                             } %}
                             {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
                             {% endembed %}
@@ -273,7 +273,7 @@
             {# footer #}
             <div class="row">
                 <div class="col-xs-12 pt-4">
-                    <div class="fieldName pull-right">BLAD 2 VAN 2 {% if certificate.animals.c.name != '-' %}{{ certificate.animals.c.name~'-' }}{% endif %}{% if certificate.animals.c.gender != '-' %}{{ certificate.animals.c.gender~'-' }}{% endif %}{% if certificate.animals.c.pedigree != '-' %}{{ 'STAMBOEKNR.'~certificate.animals.c.pedigree~'-' }}{% endif %}{{ 'UNIEK LEVERSNR.'~certificate.animals.c.uln }}</div>
+                    <div class="fieldName pull-right">BLAD 2 VAN 2&nbsp;&nbsp;&nbsp;{% if certificate.animals.c.name != '-' %}{{ certificate.animals.c.name }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.gender != '-' %}{{ certificate.animals.c.gender | upper }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.pedigree != '-' %}{{ 'STAMBOEKNR. '~certificate.animals.c.pedigree }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{{ 'UNIEK LEVERSNR. '~certificate.animals.c.uln }}</div>
                 </div>
             </div>
 
@@ -307,6 +307,11 @@
 
         .bg-gray {
             background-color: #EDEDEE;
+        }
+
+        .col-25 {
+            width: 24%;
+            float: left;
         }
 
         .px-1 {
@@ -364,6 +369,10 @@
             padding-left: 5px !important;
         }
 
+        .pl-7px {
+            padding-left: 7px !important;
+        }
+
         .pl-2 {
             padding-left: 10px !important;
         }
@@ -400,8 +409,20 @@
             margin-bottom: 15px !important;
         }
 
+        .mb-6 {
+            margin-bottom: 18px !important;
+        }
+
+        .mb-7 {
+            margin-bottom: 21px !important;
+        }
+
         .mb-8 {
-            margin-bottom: 40px !important;
+            margin-bottom: 24px !important;
+        }
+
+        .mt-2 {
+            margin-top: 6px !important;
         }
 
         .mt-3 {
@@ -421,15 +442,15 @@
         }
 
         .rounded {
-            border-radius: 5px !important;
+            border-radius: 8px !important;
         }
 
         .rounded-top {
-            border-radius: 5px 5px 0 0 !important;
+            border-radius: 8px 8px 0 0 !important;
         }
 
         .rounded-bottom {
-            border-radius: 0 0 5px 5px !important;
+            border-radius: 0 0 8px 8px !important;
         }
 
         .bordered {
@@ -446,7 +467,7 @@
 
         h1 {
             font-family: 'opensans';
-            font-size: 20px;
+            font-size: 25px;
             color: #009E66;
         }
 
@@ -469,7 +490,15 @@
         }
 
         .blockHeader {
-            /*padding-left: 7px;*/
+            padding-left: 7px;
+            background-color: #AFDECB;
+            max-height: 16px;
+            font-family: 'brandonGrotesqueMedium';
+            font-size: 13px;
+            color: #009E66;
+        }
+
+        .blockHeader-alt {
             background-color: #AFDECB;
             max-height: 16px;
             font-family: 'brandonGrotesqueMedium';
@@ -488,6 +517,13 @@
             font-family: 'opensans';
             font-size: 11.3px;
             color: black;
+        }
+
+        .explanationsText {
+            padding-left: 7px;
+            font-family: 'crimson-text-roman';
+            font-size: 13px;
+            color: #009E66;
         }
 
         .star {
