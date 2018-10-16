@@ -15,6 +15,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Security\Core\Exception\InsufficientAuthenticationException;
@@ -120,7 +121,8 @@ class ExceptionListener
             case $exception instanceof InsufficientAuthenticationException: return Response::HTTP_UNAUTHORIZED;
             case $exception instanceof TooManyRequestsHttpException: return Response::HTTP_TOO_MANY_REQUESTS;
             case $exception instanceof UnauthorizedHttpException: return Response::HTTP_UNAUTHORIZED;
-            case $exception instanceof PreconditionFailedHttpException: return Response::HTTP_PRECONDITION_REQUIRED;
+            case $exception instanceof PreconditionFailedHttpException: return Response::HTTP_PRECONDITION_FAILED;
+            case $exception instanceof PreconditionRequiredHttpException: return Response::HTTP_PRECONDITION_REQUIRED;
             case $exception instanceof BadRequestHttpException: return Response::HTTP_BAD_REQUEST;
             default: return empty($exception->getCode()) || $exception->getCode() === Response::HTTP_OK
                 ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
