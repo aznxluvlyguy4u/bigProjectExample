@@ -1104,9 +1104,11 @@ class PedigreeCertificate
                   INNER JOIN mate m ON m.stud_ewe_id = a.id
                   INNER JOIN declare_nsfo_base dnb on m.id = dnb.id
                   INNER JOIN animal r ON r.id = m.stud_ram_id
+                  LEFT JOIN litter l ON l.mate_id = m.id
                 WHERE (dnb.request_state = '".RequestStateType::FINISHED."' 
                     OR dnb.request_state = '".RequestStateType::FINISHED_WITH_WARNING."') AND
                   a.id = $animalId
+                    AND l.id ISNULL
                 ORDER BY end_date DESC, start_date DESC LIMIT 1";
         $result = $this->em->getConnection()->query($sql)->fetch();
 
