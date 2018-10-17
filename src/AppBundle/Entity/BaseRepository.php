@@ -359,4 +359,18 @@ class BaseRepository extends EntityRepository
     {
         return count($results) === 0 ? null : array_shift($results);
     }
+
+
+    /**
+     * @param array|DeclareBaseInterface[] $entities
+     * @return array|DeclareBaseInterface[]
+     */
+    public function setPrimaryKeysAsArrayKeys(array $entities): array
+    {
+        $result = [];
+        foreach ($entities as $entity) {
+            $result[$entity->getId()] = $entity;
+        }
+        return $result;
+    }
 }
