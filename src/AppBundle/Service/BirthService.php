@@ -251,13 +251,14 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $litterId = $litter->getId();
 
         /** @var DeclareBirth $requestMessage */
-        foreach ($requestMessagesByPrimaryKeys as $requestMessage) {
+        foreach ($birthIds as $primaryKey) {
             $retryCount = 0;
             $successfulFlush = false;
             $uniqueConstraintViolationException = null;
 
             do {
                 try {
+                    $requestMessage = $requestMessagesByPrimaryKeys[$primaryKey];
                     $result[] = $this->runDeclareBirthWorkerLogic($requestMessage);
                     $this->getManager()->flush();
                     $successfulFlush = true;
