@@ -129,10 +129,14 @@ class HealthUpdaterService
     {
         //Get the latest values
         $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($location, $this->entityManager);
-        /** @var MaediVisna $previousMaediVisnaDestination */
+        /** @var MaediVisna $latestMaediVisna */
         $latestMaediVisna = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
-        /** @var Scrapie $previousScrapieDestination */
+        $latestMaediVisnaStatus = ($latestMaediVisna ? $latestMaediVisna->getStatus() : null);
+        $latestMaediVisnaEndDate = ($latestMaediVisna ? $latestMaediVisna->getEndDate() : null);
+        /** @var Scrapie $latestScrapie */
         $latestScrapie = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
+        $latestScrapieStatus = ($latestScrapie ? $latestScrapie->getStatus() : null);
+        $latestScrapieEndDate = ($latestScrapie ? $latestScrapie->getEndDate() : null);
 
         if ($location->getLocationHealth() === null) {
             LocationHealthUpdater::persistNewLocationHealthWithInitialValues($this->entityManager, $location, new \DateTime('today'));
@@ -141,23 +145,23 @@ class HealthUpdaterService
         $locationHealth = $location->getLocationHealth();
 
         $anyValueChanged = false;
-        if ($locationHealth->getCurrentScrapieStatus() !== $latestScrapie->getStatus()) {
-            $locationHealth->setCurrentScrapieStatus($latestScrapie->getStatus());
+        if ($locationHealth->getCurrentScrapieStatus() !== $latestScrapieStatus) {
+            $locationHealth->setCurrentScrapieStatus($latestScrapieStatus);
             $anyValueChanged = true;
         }
 
-        if ($locationHealth->getCurrentMaediVisnaStatus() !== $latestMaediVisna->getStatus()) {
-            $locationHealth->setCurrentMaediVisnaStatus($latestMaediVisna->getStatus());
+        if ($locationHealth->getCurrentMaediVisnaStatus() !== $latestMaediVisnaStatus) {
+            $locationHealth->setCurrentMaediVisnaStatus($latestMaediVisnaStatus);
             $anyValueChanged = true;
         }
 
-        if ($locationHealth->getCurrentScrapieEndDate() !== $latestScrapie->getEndDate()) {
-            $locationHealth->setCurrentScrapieEndDate($latestScrapie->getEndDate());
+        if ($locationHealth->getCurrentScrapieEndDate() !== $latestScrapieEndDate) {
+            $locationHealth->setCurrentScrapieEndDate($latestScrapieEndDate);
             $anyValueChanged = true;
         }
 
-        if ($locationHealth->getCurrentMaediVisnaEndDate() !== $latestMaediVisna->getEndDate()) {
-            $locationHealth->setCurrentMaediVisnaEndDate($latestMaediVisna->getEndDate());
+        if ($locationHealth->getCurrentMaediVisnaEndDate() !== $latestMaediVisnaEndDate) {
+            $locationHealth->setCurrentMaediVisnaEndDate($latestMaediVisnaEndDate);
             $anyValueChanged = true;
         }
 

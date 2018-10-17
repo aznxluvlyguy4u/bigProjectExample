@@ -129,4 +129,18 @@ class DeclareImportResponse extends DeclareBaseResponse
     {
         return $this->gender;
     }
+
+    /**
+     * @param DeclareImport $import
+     * @return DeclareImportResponse
+     */
+    public function setDeclareImportIncludingAllValues(DeclareImport $import): DeclareImportResponse
+    {
+        $this->setDeclareBaseValues($import);
+        $this->setDeclareImportRequestMessage($import);
+        $this->setImportDate($import->getImportDate());
+        $this->setAnimalCountryOrigin($import->getAnimalCountryOrigin());
+        return $this;
+    }
+
 }

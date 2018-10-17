@@ -216,4 +216,21 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
     {
         return $this->declareTagReplaceRequestMessage;
     }
+
+
+    /**
+     * @param DeclareTagReplace $tagReplace
+     * @return DeclareTagReplaceResponse
+     */
+    public function setDeclareTagReplaceIncludingAllValues(DeclareTagReplace $tagReplace): DeclareTagReplaceResponse
+    {
+        $this->setDeclareBaseValues($tagReplace);
+        $this->setDeclareTagReplaceRequestMessage($tagReplace);
+        $this->setReplaceDate($tagReplace->getReplaceDate());
+        $this->setUlnCountryCodeToReplace($tagReplace->getUlnCountryCodeToReplace());
+        $this->setUlnNumberToReplace($tagReplace->getUlnNumberToReplace());
+        $this->setUlnCountryCodeReplacement($tagReplace->getUlnCountryCodeReplacement());
+        $this->setUlnNumberReplacement($tagReplace->getUlnNumberReplacement());
+        return $this;
+    }
 }

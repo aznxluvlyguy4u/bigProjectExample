@@ -258,7 +258,7 @@ class InvoiceSenderDetails
             $this->getAddress()->getStreetName() !== null &&
             $this->getAddress()->getPostalCode() !== null &&
             $this->getAddress()->getCity() !== null &&
-            $this->getAddress()->getCountry() !== null &&
+            $this->getAddress()->getCountryName() !== null &&
             $this->getName() !== '' &&
             $this->getIban() !== '' &&
             $this->getChamberOfCommerceNumber() !== '' &&
@@ -268,7 +268,7 @@ class InvoiceSenderDetails
             $this->getAddress()->getStreetName() !== '' &&
             $this->getAddress()->getPostalCode() !== '' &&
             $this->getAddress()->getCity() !== '' &&
-            $this->getAddress()->getCountry() !== ''
+            $this->getAddress()->getCountryName() !== ''
         ;
     }
 
@@ -328,8 +328,8 @@ class InvoiceSenderDetails
                 $this->getAddress()->getCity() === '') {
                 $vars[] = 'CITY';
             }
-            if ($this->getAddress()->getCountry() === null ||
-                $this->getAddress()->getCountry() === '') {
+            if ($this->getAddress()->getCountryName() === null ||
+                $this->getAddress()->getCountryName() === '') {
                 $vars[] = 'COUNTRY';
             }
         }

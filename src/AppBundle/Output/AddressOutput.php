@@ -19,7 +19,7 @@ class AddressOutput
             'address_number_suffix' => $address->getAddressNumberSuffix(),
             'postal_code' => $address->getPostalCode(),
             'city' => $address->getCity(),
-            'country' => $address->getCountry()
+            'country' => $address->getCountryName()
         );
     }
 }

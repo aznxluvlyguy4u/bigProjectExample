@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalTypeInLatin;
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
@@ -1552,6 +1553,22 @@ abstract class Animal
 
 
     /**
+     * @return array
+     */
+    public function getParentIds(): array
+    {
+        $ids = [];
+        if ($this->getParentMotherId()) {
+            $ids[] = $this->getParentMotherId();
+        }
+        if ($this->getParentFatherId()) {
+            $ids[] = $this->getParentFatherId();
+        }
+        return $ids;
+    }
+
+
+    /**
      * @param Ram|Ewe $parent
      * @return Animal
      * @throws \Exception
@@ -3071,5 +3088,61 @@ abstract class Animal
                 $this->tagReplacements->toArray()
             )
         );
+    }
+
+
+    public function setTransferringTransferState(): void
+    {
+        $this->setTransferState(AnimalTransferStatus::TRANSFERRING);
+    }
+
+
+    public function setTransferredTransferState(): void
+    {
+        $this->setTransferState(AnimalTransferStatus::TRANSFERRED);
+    }
+
+
+    /**
+     * @param Location $location
+     * @return bool
+     */
+    public function isOnLocation(Location $location): bool
+    {
+        if (!$this->getLocation() || !$location
+        || (
+                (!$this->getLocation()->getId() && !$location->getId()) &&
+                (!$this->getLocation()->getLocationId() && !$location->getLocationId())
+            )
+        ) {
+            return false;
+        }
+
+        return (
+                $this->getLocation()->getId() === $location->getId() &&
+                $location->getId() !== null
+            )  ||
+            (
+                $this->getLocation()->getLocationId() === $location->getLocationId() &&
+                $location->getLocationId() !== null
+            );
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isDeclaredDead(): bool
+    {
+        return !$this->getIsAlive() && $this->getDateOfDeath();
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function hasLocation(): bool
+    {
+        return $this->getLocation() !== null;
     }
 }

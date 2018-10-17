@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;
@@ -34,5 +35,19 @@ class CountryRepository extends BaseRepository {
         }
         return $countries;
     }
+
+
+    /**
+     * @param string $countryName
+     * @return Country|null
+     */
+    function getCountryByName($countryName): ?Country
+    {
+        if (!is_string($countryName)) {
+            return null;
+        }
+        return $this->findOneBy(['name' => trim($countryName)]);
+    }
+
 
 }

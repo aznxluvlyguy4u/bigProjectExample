@@ -121,7 +121,7 @@ class RequestMessageBuilder
                 //TODO: only add the mininum required fields for this Message Type
                 return $declareAnimalFlag;
             case RequestType::DECLARE_ARRIVAL_ENTITY:
-                $declareArrivalRequest = $this->irSerializer->parseDeclareArrival($contentArray, $person, $isEditMessage);
+                $declareArrivalRequest = $this->irSerializer->parseDeclareArrival($contentArray, $person, $location, $isEditMessage);
                 if($isEditMessage) { return $declareArrivalRequest; }
                 return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_BIRTH_ENTITY:
@@ -138,19 +138,19 @@ class RequestMessageBuilder
                 }
                 return $result;
             case RequestType::DECLARE_DEPART_ENTITY:
-                $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray, $person, $isEditMessage);
+                $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray, $person, $location, $isEditMessage);
                 return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_TAGS_TRANSFER_ENTITY:
-                $declareTagsTransferRequest = $this->irSerializer->parseDeclareTagsTransfer($contentArray, $person, $isEditMessage);
+                $declareTagsTransferRequest = $this->irSerializer->parseDeclareTagsTransfer($contentArray, $person, $location, $isEditMessage);
                 return $this->tagTransferMessageBuilder->buildMessage($declareTagsTransferRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_TAG_REPLACE:
-                $declareTagReplaceRequest = $this->irSerializer->parseDeclareTagReplace($contentArray, $person, $isEditMessage);
+                $declareTagReplaceRequest = $this->irSerializer->parseDeclareTagReplace($contentArray, $person, $location, $isEditMessage);
                 return $this->tagReplaceMessageBuilder->buildMessage($declareTagReplaceRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_LOSS_ENTITY:
-                $declareLossRequest = $this->irSerializer->parseDeclareLoss($contentArray, $person, $isEditMessage);
+                $declareLossRequest = $this->irSerializer->parseDeclareLoss($contentArray, $person, $location, $isEditMessage);
                 return $this->lossMessageBuilder->buildMessage($declareLossRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_EXPORT_ENTITY:
-                $declareExportRequest = $this->irSerializer->parseDeclareExport($contentArray, $person, $isEditMessage);
+                $declareExportRequest = $this->irSerializer->parseDeclareExport($contentArray, $person, $location, $isEditMessage);
                 return $this->exportMessageBuilder->buildMessage($declareExportRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_IMPORT_ENTITY:
                 $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray, $person, $location, $isEditMessage);

@@ -22,7 +22,7 @@ use AppBundle\Entity\DeclareImportResponse;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareImport extends DeclareBase
+class DeclareImport extends DeclareBase implements DeclareAnimalDataInterface, BasicRvoDeclareInterface
 {
     use EntityClassInfo;
 
@@ -282,14 +282,14 @@ class DeclareImport extends DeclareBase
     /**
      * Set location
      *
-     * @param \AppBundle\Entity\Location $location
+     * @param Location $location
      *
      * @return DeclareImport
      */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
+    public function setLocation(Location $location = null)
     {
         $this->location = $location;
-        $this->setUbn($location->getUbn());
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }
@@ -372,7 +372,7 @@ class DeclareImport extends DeclareBase
     /**
      * @param RevokeDeclaration $revoke
      */
-    public function setRevoke($revoke = null)
+    public function setRevoke(RevokeDeclaration $revoke = null)
     {
         $this->revoke = $revoke;
     }

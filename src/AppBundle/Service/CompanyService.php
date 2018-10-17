@@ -12,6 +12,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\CompanyNote;
+use AppBundle\Entity\Country;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\PedigreeRegisterRegistration;
@@ -29,6 +30,7 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -36,6 +38,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 
 class CompanyService extends AuthServiceBase
@@ -56,14 +59,17 @@ class CompanyService extends AuthServiceBase
         // Get all companies
         $em = $this->getManager();
         $query = $em->createQuery(
-            'SELECT c,a,u,l,o,i,b         
+            'SELECT c,a,u,l,o,i,b,la,lc         
             FROM AppBundle:Company c 
             LEFT JOIN c.locations l 
             LEFT JOIN c.owner o 
             LEFT JOIN c.companyUsers u 
             LEFT JOIN c.address a
             LEFT JOIN c.billingAddress b
-            LEFT JOIN c.invoices i'
+            LEFT JOIN c.invoices i
+            LEFT JOIN l.address la
+            LEFT JOIN la.countryDetails lc
+            '
         );
         $companies = $query->getResult(Query::HYDRATE_ARRAY);
 
@@ -71,6 +77,20 @@ class CompanyService extends AuthServiceBase
         $result = CompanyOutput::createCompaniesOverview($companies);
 
         return ResultUtil::successResult($result);
+    }
+
+
+    /**
+     * company_relation_number
+     * @param $companyRelationNumber
+     */
+    private function validateIfRelationNumberKeeperIsNotNull($companyRelationNumber)
+    {
+        if (empty(trim($companyRelationNumber))) {
+            throw new PreconditionFailedHttpException($this->translator->trans(
+                'COMPANY RELATION NUMBER CANNOT BE EMPTY'
+            ));
+        }
     }
 
 
@@ -106,7 +126,11 @@ class CompanyService extends AuthServiceBase
         $owner->setFirstName($contentOwner['first_name']);
         $owner->setLastName($contentOwner['last_name']);
         $owner->setEmailAddress($contentOwner['email_address']);
-        $owner->setRelationNumberKeeper($content->get('company_relation_number'));
+
+        $companyRelationNumber = $content->get('company_relation_number');
+        $this->validateIfRelationNumberKeeperIsNotNull($companyRelationNumber);
+        $owner->setRelationNumberKeeper($companyRelationNumber);
+
         $owner->setObjectType('Client');
         $owner->setIsActive(true);
 
@@ -129,7 +153,7 @@ class CompanyService extends AuthServiceBase
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState(ArrayUtil::get('state', $contentAddress));
-        $address->setCountry($addressCountry);
+        $address->setCountryDetails($this->getCountryByName($addressCountry));
 
         // Create Billing Address
         $contentBillingAddress = $content->get('billing_address');
@@ -149,13 +173,13 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
-        $billingAddress->setCountry($billingAddressCountry);
+        $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
 
         // Create Company
         $company = new Company();
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
-        $company->setCompanyRelationNumber($content->get('company_relation_number'));
+        $company->setCompanyRelationNumber($companyRelationNumber);
 
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
@@ -178,20 +202,15 @@ class CompanyService extends AuthServiceBase
         // Create Location
         $locations = new ArrayCollection();
         $contentLocations = $content->get('locations');
-        $repository = $this->getManager()->getRepository(Location::class);
 
         foreach ($contentLocations as $contentLocation) {
-            $location = $repository->findOneBy(array('ubn' => $contentLocation['ubn'], 'isActive' => true));
+            $ubn = $contentLocation['ubn'];
+
+            $this->validateUbnFormat($ubn);
+            $location = $this->findActiveLocationByUbn($ubn);
 
             if($location) {
-                return new JsonResponse(
-                    array(
-                        Constant::CODE_NAMESPACE => 400,
-                        Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
-                        'data' => $contentLocation['ubn']
-                    ),
-                    400
-                );
+                throw new PreconditionFailedHttpException($this->translateUcFirstLower('THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.').' '.$ubn);
             }
 
             // Create Location Address
@@ -212,10 +231,10 @@ class CompanyService extends AuthServiceBase
             $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
             $locationAddress->setCity($contentLocationAddress['city']);
             $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
-            $locationAddress->setCountry($locationAddressCountry);
+            $locationAddress->setCountryDetails($this->getCountryByName($locationAddressCountry));
 
             $location = new Location();
-            $location->setUbn($contentLocation['ubn']);
+            $location->setUbn($ubn);
             $location->setAddress($locationAddress);
             $location->setCompany($company);
             $location->setIsActive(true);
@@ -376,7 +395,8 @@ class CompanyService extends AuthServiceBase
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState(ArrayUtil::get('state', $contentAddress));
-        $address->setCountry(ArrayUtil::get('country', $contentAddress, $addressCountry));
+        $countryName = ArrayUtil::get('country', $contentAddress, $addressCountry);
+        $address->setCountryDetails($this->getCountryByName($countryName));
 
         // Update Billing Address
         $billingAddress = $company->getBillingAddress();
@@ -398,12 +418,15 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
-        $billingAddress->setCountry($billingAddressCountry);
+        $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
 
         // Update Company
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
-        $company->setCompanyRelationNumber($content->get('company_relation_number'));
+
+        $companyRelationNumber = $content->get('company_relation_number');
+        $this->validateIfRelationNumberKeeperIsNotNull($companyRelationNumber);
+        $company->setCompanyRelationNumber($companyRelationNumber);
 
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
@@ -422,7 +445,7 @@ class CompanyService extends AuthServiceBase
             $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
         }
 
-        $company->getOwner()->setRelationNumberKeeper($content->get('company_relation_number'));
+        $company->getOwner()->setRelationNumberKeeper($companyRelationNumber);
 
         // Update Location
 
@@ -443,41 +466,26 @@ class CompanyService extends AuthServiceBase
 
         // Updated Locations
         $contentLocations = $content->get('locations');
-        $repository = $this->getManager()->getRepository(Location::class);
         foreach($contentLocations as $contentLocation) {
             $ubn = trim($contentLocation['ubn']);
+            $locationId = ArrayUtil::get('location_id', $contentLocation);
 
-            if (!ctype_digit($ubn) && !is_int($ubn)) {
-                return new JsonResponse(
-                    array(
-                        Constant::CODE_NAMESPACE => 400,
-                        Constant::MESSAGE_NAMESPACE => $this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn,
-                        'data' => $ubn
-                    ),
-                    400
-                );
+            $this->validateUbnFormat($ubn);
+            $locationByUbn = $this->findActiveLocationByUbn($ubn);
+            $location = $this->findLocationByLocationId($locationId);
+
+            if ($locationByUbn && $location &&
+                $locationByUbn->getLocationId() !== $location->getLocationId()
+            ) {
+                if ($locationByUbn->getOwner()->getId() !== $location->getOwner()->getId()) {
+                    throw new PreconditionFailedHttpException($this->translateUcFirstLower('THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.').' '.$ubn);
+                } else {
+                    throw new PreconditionFailedHttpException($this->translateUcFirstLower('SWITCHING UBN NUMBERS BETWEEN TWO LOCATIONS IS NOT ALLOWED').'.');
+                }
             }
 
-            $location = $repository->findOneBy(array('ubn' => $ubn, 'isActive' => true));
+            if($location) {
 
-            /**
-             * @var Location $location
-             */
-            if(isset($contentLocation['location_id'])) {
-                $contentLocationId = $contentLocation['location_id'];
-
-                if($location && $location->getLocationId() != $contentLocationId) {
-                    return new JsonResponse(
-                        array(
-                            Constant::CODE_NAMESPACE => 400,
-                            Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
-                            'data' => $ubn
-                        ),
-                        400
-                    );
-                }
-
-                $location = $repository->findOneByLocationId($contentLocationId);
                 $location->setUbn($ubn);
                 $locationAddress = $location->getAddress();
                 $contentLocationAddress = $contentLocation['address'];
@@ -498,21 +506,11 @@ class CompanyService extends AuthServiceBase
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
-                $locationAddress->setCountry($locationAddressCountry);
+                $locationAddress->setCountryDetails($this->getCountryByName($locationAddressCountry));
 
                 $this->getManager()->persist($location);
                 $this->getManager()->flush();
             } else {
-                if($location) {
-                    return new JsonResponse(
-                        array(
-                            Constant::CODE_NAMESPACE => 400,
-                            Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
-                            'data' => $ubn
-                        ),
-                        400
-                    );
-                }
 
                 $contentLocationAddress = $contentLocation['address'];
 
@@ -531,7 +529,7 @@ class CompanyService extends AuthServiceBase
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState(ArrayUtil::get('state', $contentLocationAddress));
-                $locationAddress->setCountry($locationAddressCountry);
+                $locationAddress->setCountryDetails($this->getCountryByName($locationAddressCountry));
 
                 $location = new Location();
                 $location->setUbn($ubn);
@@ -618,6 +616,46 @@ class CompanyService extends AuthServiceBase
         $this->getCacheService()->delete(UbnService::getAllUbnCacheIds());
 
         return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
+    }
+
+
+    /**
+     * @param $ubn
+     */
+    private function validateUbnFormat($ubn): void
+    {
+        if (!Validator::hasValidUbnFormat($ubn)) {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn);
+        }
+    }
+
+
+    /**
+     * @param string $ubn
+     * @return Location|null
+     */
+    private function findActiveLocationByUbn($ubn): ?Location
+    {
+        return $this->getManager()->getRepository(Location::class)
+            ->findOneBy(['ubn' => $ubn, 'isActive' => true]);
+    }
+
+
+    /**
+     * @param string $locationId
+     * @return Location|null
+     */
+    private function findLocationByLocationId($locationId): ?Location
+    {
+        if (empty($locationId)) {
+            return null;
+        }
+
+        $location = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $locationId]);
+        if (!$location) {
+            throw new PreconditionFailedHttpException('NO LOCATION FOUND FOR LOCATION_ID: '.$locationId);
+        }
+        return $location;
     }
 
 
@@ -777,5 +815,5 @@ class CompanyService extends AuthServiceBase
         $companies = $qb->getQuery()->getResult();
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
     }
-    
+
 }

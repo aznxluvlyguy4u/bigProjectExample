@@ -2,11 +2,12 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\ErrorKindIndicator;
+use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \DateTime;
 
 /**
  * Class DeclareBaseResponse
@@ -153,6 +154,16 @@ abstract class DeclareBaseResponse
      * @JMS\Type("Person")
      */
     protected $actionBy;
+
+    /**
+     * DeclareBaseResponse constructor.
+     */
+    public function __construct()
+    {
+        $this->logDate = new \DateTime();
+        $this->setIsRemovedByUser(false);
+    }
+
 
     /**
      * Get id
@@ -394,4 +405,59 @@ abstract class DeclareBaseResponse
         $this->actionBy = $actionBy;
     }
 
+
+    /**
+     * @param DeclareBase $declareBase
+     * @return DeclareBaseResponse
+     */
+    protected function setDeclareBaseValues(DeclareBase $declareBase)
+    {
+        $this->setActionBy($declareBase->getActionBy());
+        $this->setRequestId($declareBase->getRequestId());
+        $this->setMessageId($declareBase->getMessageId());
+        return $this;
+    }
+
+
+    /**
+     * @return DeclareBaseResponse
+     */
+    public function setSuccessValues()
+    {
+        $this->setSuccessIndicator(SuccessIndicator::J);
+        $this->setErrorKindIndicator(null);
+        $this->setErrorMessage(null);
+        $this->setErrorCode(null);
+        return $this;
+    }
+
+
+    /**
+     * @param string $errorMessage
+     * @param string $errorCode
+     * @return DeclareBaseResponse
+     */
+    public function setFailedValues($errorMessage, $errorCode)
+    {
+        $this->setSuccessIndicator(SuccessIndicator::N);
+        $this->setErrorKindIndicator(ErrorKindIndicator::F);
+        $this->setErrorMessage($errorMessage);
+        $this->setErrorCode($errorCode);
+        return $this;
+    }
+
+
+    /**
+     * @param string $errorMessage
+     * @param string $errorCode
+     * @return DeclareBaseResponse
+     */
+    public function setWarningValues($errorMessage, $errorCode)
+    {
+        $this->setSuccessIndicator(SuccessIndicator::J);
+        $this->setErrorKindIndicator(ErrorKindIndicator::W);
+        $this->setErrorMessage($errorMessage);
+        $this->setErrorCode($errorCode);
+        return $this;
+    }
 }

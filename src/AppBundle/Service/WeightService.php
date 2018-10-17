@@ -31,6 +31,9 @@ class WeightService extends ControllerServiceBase
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $log = ActionLogWriter::createDeclareWeight($this->getManager(), $client, $loggedInUser, $content);
 
         $weightValidator = new DeclareWeightValidator($this->getManager(), $content, $client);
@@ -62,6 +65,9 @@ class WeightService extends ControllerServiceBase
         $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
         $location = $this->getSelectedLocation($request);
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $log = ActionLogWriter::editDeclareWeight($this->getManager(), $client, $loggedInUser, $content);
 
         $isPost = false;
@@ -89,6 +95,7 @@ class WeightService extends ControllerServiceBase
     public function getDeclareWeightHistory(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
         $declareWeights = $this->getManager()->getRepository(DeclareWeight::class)->getDeclareWeightsHistoryOutput($location);
         return ResultUtil::successResult($declareWeights);
     }

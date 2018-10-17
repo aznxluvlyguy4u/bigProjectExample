@@ -14,6 +14,26 @@ use Doctrine\Common\Collections\Criteria;
  */
 class AnimalResidenceRepository extends BaseRepository {
 
+
+    /**
+     * @param Location $location
+     * @param Animal $animal
+     * @param \DateTime $endDate
+     * @return null|AnimalResidence
+     */
+    public function getByEndDate(Location $location, Animal $animal, \DateTime $endDate)
+    {
+        if (!$location || !$animal || !$endDate) {
+            return;
+        }
+
+        return $this->findOneBy([
+            'location' => $location,
+            'animal' => $animal,
+            'endDate' => $endDate
+        ]);
+    }
+
     public function getLastByNullEndDate(Animal $animal)
     {
         $repository = $this->getManager()->getRepository(Constant::ANIMAL_RESIDENCE_REPOSITORY);

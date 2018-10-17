@@ -9,11 +9,25 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 
 class ExportService extends DeclareControllerServiceBase
 {
+    /** @var DeclareExportProcessorInterface */
+    private $exportProcessor;
+
+    /**
+     * @required
+     *
+     * @param DeclareExportProcessorInterface $exportProcessor
+     */
+    public function setExportProcessor(DeclareExportProcessorInterface $exportProcessor): void
+    {
+        $this->exportProcessor = $exportProcessor;
+    }
+
     /**
      * @param Request $request
      * @param $Id

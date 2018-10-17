@@ -14,6 +14,10 @@ class JsonInputConstant
     const SUCCESSFUL_UPDATE_RESULT_TABLE_VALUES = 'successful_update_result_table_values';
     const FULL_OUTPUT = 'full_output';
     const SELECTED = 'selected';
+    const ARRAY = 'array';
+    const JSON = 'json';
+    const IS_VALID = 'is_valid';
+    const KEY = 'key';
 
     //Admins
     const ADMINS = 'admins';
@@ -34,6 +38,8 @@ class JsonInputConstant
     const CHILDREN = 'children';
     const COUNTRY_OF_BIRTH = 'country_of_birth';
     const LITTERS = 'litters';
+    const COUNTRY = 'country';
+    const COUNTRY_CODE = 'country_code';
     const ULN_COUNTRY_CODE = 'uln_country_code';
     const ULN_NUMBER = 'uln_number';
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
@@ -312,4 +318,7 @@ class JsonInputConstant
     const CLASS_CARLA_IGA_NZ = 'class_carla_iga_nz';
     const SAMPLE_PERIOD = 'sample_period';
     const YEAR = 'year';
+
+    // User
+    const USE_RVO_LOGIC = 'use_rvo_logic';
 }

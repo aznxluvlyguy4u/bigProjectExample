@@ -20,6 +20,8 @@ class RevokeDeclaration extends DeclareBase
 {
     use EntityClassInfo;
 
+    const MESSAGE_NUMBER_MAX_COUNT = 15;
+
     /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="revokes", cascade={"persist"})

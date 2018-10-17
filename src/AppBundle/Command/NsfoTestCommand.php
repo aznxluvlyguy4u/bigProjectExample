@@ -14,9 +14,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class NsfoTestCommand extends ContainerAwareCommand
@@ -71,7 +69,6 @@ class NsfoTestCommand extends ContainerAwareCommand
         $this->locationRepository = $em->getRepository(Location::class);
         $this->animalRepository = $em->getRepository(Animal::class);
         $this->databaseName = $this->conn->getDatabase();
-        
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));

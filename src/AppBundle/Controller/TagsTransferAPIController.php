@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 
+use AppBundle\Service\TagTransferService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -41,7 +42,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    */
   public function createTagsTransfer(Request $request)
   {
-      return $this->get('app.tag.transfer')->createTagsTransfer($request);
+      return $this->get(TagTransferService::class)->createTagsTransfer($request);
   }
 
 
@@ -70,7 +71,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    */
   public function getTagTransferItemErrors(Request $request)
   {
-      return $this->get('app.tag.transfer')->getTagTransferItemErrors($request);
+      return $this->get(TagTransferService::class)->getTagTransferItemErrors($request);
   }
 
 
@@ -100,6 +101,6 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    */
   public function getTagTransferItemHistory(Request $request)
   {
-      return $this->get('app.tag.transfer')->getTagTransferItemHistory($request);
+      return $this->get(TagTransferService::class)->getTagTransferItemHistory($request);
   }
 }

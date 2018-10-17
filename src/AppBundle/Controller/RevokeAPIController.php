@@ -11,6 +11,7 @@ use AppBundle\Entity\DeclareWeight;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\Output;
+use AppBundle\Service\RevokeService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\Validator;
@@ -56,7 +57,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      */
     public function createRevoke(Request $request)
     {
-        return $this->get('app.declare.revoke')->createRevoke($request);
+        return $this->get(RevokeService::class)->createRevoke($request);
     }
 
 
@@ -85,7 +86,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      */
     public function revokeNsfoDeclaration(Request $request, $messageId)
     {
-        return $this->get('app.declare.revoke')->revokeNsfoDeclaration($request, $messageId);
+        return $this->get(RevokeService::class)->revokeNsfoDeclaration($request, $messageId);
     }
 
 }

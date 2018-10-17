@@ -132,6 +132,16 @@ class Validator
 
 
     /**
+     * @param $postalCode
+     * @return bool
+     */
+    public static function hasValidDutchPostalCodeFormat($postalCode): bool
+    {
+        return is_string($postalCode) && boolval(preg_match(Regex::dutchPostalCode(), $postalCode));
+    }
+
+
+    /**
      * @param $animalOrderNumber
      * @return bool
      */
@@ -559,13 +569,39 @@ class Validator
         else if(is_string($ubn)) {  if(!ctype_digit($ubn)) { return false; }}
         else { return false; }
 
+        return self::isValidSevenTestNumber($ubn) || self::hasValidNonNlUbnFormat($ubn);
+    }
+
+
+    /**
+     * @param string|int $ubn
+     * @return bool
+     */
+    private static function hasValidNonNlUbnFormat($ubn): bool
+    {
+        //Verify type, ensure ubn is a string
+        if(is_int($ubn)) { $ubn = (string)$ubn; }
+        else if(is_string($ubn)) {  if(!ctype_digit($ubn)) { return false; }}
+        else { return false; }
+
+        return substr($ubn,0,1) === '9';
+    }
+
+
+    public static function isValidSevenTestNumber($number): bool
+    {
+        //Verify type, ensure ubn is a string
+        if(is_int($number)) { $number = (string)$number; }
+        else if(is_string($number)) {  if(!ctype_digit($number)) { return false; }}
+        else { return false; }
+
         $maxLength = 7;
         $minLength = 2;
-        $length = strlen($ubn);
+        $length = strlen($number);
 
         if($length < $minLength || $length > $maxLength) { return false; }
 
-        $ubnReversed = strrev(str_pad($ubn, $maxLength, 0, STR_PAD_LEFT));
+        $ubnReversed = strrev(str_pad($number, $maxLength, 0, STR_PAD_LEFT));
         $ubnDigits = str_split($ubnReversed, 1);
         $weights = [1, 3, 7, 1, 3, 7, 1];
 

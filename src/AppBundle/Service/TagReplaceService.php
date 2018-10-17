@@ -19,12 +19,26 @@ use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 
 class TagReplaceService extends DeclareControllerServiceBase
 {
+    /** @var DeclareTagReplaceProcessorInterface */
+    private $tagReplaceProcessor;
+
+    /**
+     * @required
+     *
+     * @param DeclareTagReplaceProcessorInterface $tagReplaceProcessor
+     */
+    public function setTagReplaceProcessor(DeclareTagReplaceProcessorInterface $tagReplaceProcessor): void
+    {
+        $this->tagReplaceProcessor = $tagReplaceProcessor;
+    }
+
     /**
      * @param Request $request
      * @return JsonResponse
@@ -36,19 +50,12 @@ class TagReplaceService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
-        if(!$client) {
-            return new JsonResponse("CLIENT NOT FOUND", 428);
-        }
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
 
         $log = ActionLogWriter::declareTagReplacePost($this->getManager(), $client, $loggedInUser, $content);
-        $animal = $content->get(Constant::ANIMAL_NAMESPACE);
 
-        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)->verifyIfClientOwnsAnimal($client, $animal);
-
-        //Check if uln is valid
-        if(!$isAnimalOfClient) {
-            return new JsonResponse("ANIMAL DOES NOT BELONG TO THIS ACCOUNT", 428);
-        }
+        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Check if tag replacement is unassigned and in the database, else don't send any TagReplace
         $tagContent = $content->get(Constant::TAG_NAMESPACE);
@@ -126,8 +133,8 @@ class TagReplaceService extends DeclareControllerServiceBase
      */
     public function getTagReplaceHistory(Request $request)
     {
-        $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $em = $this->getManager();
         $sql = "SELECT
@@ -165,8 +172,8 @@ class TagReplaceService extends DeclareControllerServiceBase
      */
     public function getTagReplaceErrors(Request $request)
     {
-        $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $em = $this->getManager();
         $sql = "SELECT

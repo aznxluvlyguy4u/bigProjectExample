@@ -9,17 +9,30 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\TagTransferItemResponse;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessorInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 
 class TagTransferService extends DeclareControllerServiceBase
 {
+    /** @var DeclareTagTransferProcessorInterface */
+    private $tagTransferProcessor;
+
+    /**
+     * @required
+     *
+     * @param DeclareTagTransferProcessorInterface $tagTransferProcessor
+     */
+    public function setTagTransferProcessor(DeclareTagTransferProcessorInterface $tagTransferProcessor): void
+    {
+        $this->tagTransferProcessor = $tagTransferProcessor;
+    }
+
     /**
      * @param Request $request
      * @return JsonResponse
@@ -31,16 +44,16 @@ class TagTransferService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $log = ActionLogWriter::declareTagTransferPost($this->getManager(), $client, $loggedInUser, $content);
 
+        $this->validateIfLocationIsDutch($location,DeclareTagsTransfer::class);
+
         //Validate if ubn is in database and retrieve the relationNumberKeeper owning that ubn
-        $ubnVerification = $this->isUbnNewOwnerValid($content->get(Constant::UBN_NEW_OWNER_NAMESPACE), $location);
-        if(!$ubnVerification['isValid']) {
-            $code = $ubnVerification[Constant::CODE_NAMESPACE];
-            $message = $ubnVerification[Constant::MESSAGE_NAMESPACE];
-            return new JsonResponse(array("code" => $code, "message" => $message), $code);
-        }
-        $content->set("relation_number_acceptant", $ubnVerification['relationNumberKeeper']);
+        $locationNewOwner = $this->getValidatedLocationNewOwner($content->get(Constant::UBN_NEW_OWNER_NAMESPACE), $location);
+        $content->set('relation_number_acceptant', $locationNewOwner->getOwner()->getRelationNumberKeeper());
 
         //TODO Phase 2, with history and error tab in front-end, we can do a less strict filter. And only remove the incorrect tags and process the rest. However for proper feedback to the client we need to show the successful and failed TagTransfer history.
 
@@ -70,43 +83,38 @@ class TagTransferService extends DeclareControllerServiceBase
     /**
      * @param string $ubnNewOwner
      * @param Location $loggedInLocation
-     * @return array
+     * @return Location
      */
-    public function isUbnNewOwnerValid($ubnNewOwner, Location $loggedInLocation)
+    public function getValidatedLocationNewOwner($ubnNewOwner, Location $loggedInLocation)
     {
-        //Default values
-        $isValid = false;
-        $relationNumberKeeper = null;
-        $code = 428;
-        $message = ucfirst(strtolower($this->translator->trans('THE UBN IS NOT REGISTERED AT NSFO')));
+        $errorMessage = '';
 
         $locationNewOwner = $this->getManager()->getRepository(Location::class)->findOneByActiveUbn($ubnNewOwner);
 
-        if ($locationNewOwner != null) {
+        if (!$locationNewOwner) {
+            $errorMessage .= ucfirst(strtolower($this->translator->trans('THE UBN IS NOT REGISTERED AT NSFO'))).'. ';
 
-            $isValid = true;
-            if ($loggedInLocation && $loggedInLocation->getUbn()) {
-                if ($loggedInLocation->getUbn() === $locationNewOwner->getUbn()) {
-                    $isValid = false;
-                    $message = ucfirst(strtolower($this->translator->trans('UBN NEW OWNER CANNOT BE SAME AS LOGGED IN UBN')));
-                }
+        } else {
+            if ($loggedInLocation && $loggedInLocation->getUbn()
+            && $loggedInLocation->getUbn() === $locationNewOwner->getUbn())
+            {
+                $errorMessage .= ucfirst(strtolower($this->translator->trans('UBN NEW OWNER CANNOT BE SAME AS LOGGED IN UBN'))).'. ';
             }
 
-            if ($isValid) {
+            $this->validateIfOriginAndDestinationAreInSameCountry(DeclareTagsTransfer::class,
+                $loggedInLocation, $locationNewOwner);
+
+            if (!$locationNewOwner->getOwner() || empty($locationNewOwner->getOwner()->getRelationNumberKeeper())) {
                 //'relationNumberKeeper' is an obligatory field in Client, so no need to verify if that field exists or not.
-                $relationNumberKeeper = $locationNewOwner->getCompany()->getOwner()->getRelationNumberKeeper();
-                $code = 200;
-                $message = 'UBN IS VALID';
+                $errorMessage .= ucfirst(strtolower($this->translator->trans('THE NEW OWNER HAS NO RELATION NUMBER KEEPER IN THE NSFO SYSTEM'))).'. ';
             }
+        }
 
-        } //else just use the default values
+        if (!empty($errorMessage)) {
+            throw new PreconditionFailedHttpException($errorMessage);
+        }
 
-        return array('isValid' => $isValid,
-            'relationNumberKeeper' => $relationNumberKeeper,
-            Constant::MESSAGE_NAMESPACE => $message,
-            Constant::CODE_NAMESPACE => $code
-        );
-
+        return $locationNewOwner;
     }
 
 
@@ -118,6 +126,9 @@ class TagTransferService extends DeclareControllerServiceBase
     {
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
 
         $tagTransfers = $this->getManager()->getRepository(TagTransferItemResponse::class)
             ->getTagTransferItemRequestsWithLastErrorResponses($client, $location);
@@ -134,6 +145,10 @@ class TagTransferService extends DeclareControllerServiceBase
     {
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $tagTransfers = $this->getManager()->getRepository(TagTransferItemResponse::class)->getTagTransferItemRequestsWithLastHistoryResponses($client, $location);
 
         return ResultUtil::successResult($tagTransfers);

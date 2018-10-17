@@ -21,7 +21,7 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareDepart extends DeclareBase
+class DeclareDepart extends DeclareBase implements DeclareAnimalDataInterface, BasicRvoDeclareInterface
 {
     use EntityClassInfo;
 
@@ -329,14 +329,14 @@ class DeclareDepart extends DeclareBase
     }
 
     /**
-     * @param \AppBundle\Entity\Location $location
+     * @param Location $location
      *
      * @return \AppBundle\Entity\DeclareDepart
      */
-    public function setLocation($location)
+    public function setLocation(Location $location)
     {
         $this->location = $location;
-        $this->setUbn($this->location->getUbn());
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }
@@ -352,7 +352,7 @@ class DeclareDepart extends DeclareBase
     /**
      * @param RevokeDeclaration $revoke
      */
-    public function setRevoke($revoke = null)
+    public function setRevoke(RevokeDeclaration $revoke = null)
     {
         $this->revoke = $revoke;
     }

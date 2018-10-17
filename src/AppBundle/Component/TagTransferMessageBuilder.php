@@ -43,7 +43,7 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
   public function buildMessage(DeclareTagsTransfer $messageObject, $person, $loggedInUser, $location)
   {
     $this->person = $person;
-    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
+    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser, $location);
     $completeMessageObject = $this->addDeclareEartagsTransferData($baseMessageObject, $location);
 
     return $completeMessageObject;

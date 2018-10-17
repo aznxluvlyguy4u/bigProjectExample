@@ -7,6 +7,7 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\InvoiceSenderDetailsAPIControllerInterface;
 use AppBundle\Entity\BillingAddress;
+use AppBundle\Entity\Country;
 use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\ArrayUtil;
@@ -61,7 +62,7 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
 
         $country = ArrayUtil::get('country', $contentAddress);
         if ($country !== null && $country !== '') {
-            $address->setCountry($country);
+            $address->setCountryDetails($this->getCountryByName($country));
         }
 
         $details->setName($content->get('name'));
@@ -127,7 +128,7 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
 
         $country = ArrayUtil::get('country', $contentAddress);
         if ($country !== null && $country !== '') {
-            $temporaryAddress->setCountry($country);
+            $temporaryAddress->setCountryDetails($this->getCountryByName($country));
         }
 
         $temporaryInvoiceSenderDetails->setName($content->get('name'));

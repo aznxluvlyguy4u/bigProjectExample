@@ -9,11 +9,25 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 
 class ImportService extends DeclareControllerServiceBase
 {
+    /** @var DeclareImportProcessorInterface */
+    private $importProcessor;
+
+    /**
+     * @required
+     *
+     * @param DeclareImportProcessorInterface $importProcessor
+     */
+    public function setImportProcessor(DeclareImportProcessorInterface $importProcessor): void
+    {
+        $this->importProcessor = $importProcessor;
+    }
+
     /**
      * @param Request $request
      * @param $Id

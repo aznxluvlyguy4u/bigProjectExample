@@ -78,7 +78,7 @@ class WorkerMessageBodyLitter extends WorkerMessageBody
      */
     public function getChildrenIds()
     {
-        return $this->childrenIds;
+        return $this->childrenIds ? $this->childrenIds : [];
     }
 
     /**
@@ -90,5 +90,28 @@ class WorkerMessageBodyLitter extends WorkerMessageBody
     }
 
 
-    
+    /**
+     * @return array
+     */
+    public function getAllAnimalIds(): array
+    {
+        return array_merge($this->getChildrenIds(), $this->getParentIds());
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getParentIds(): array
+    {
+        $ids = [];
+        if ($this->fatherId) {
+            $ids[] = $this->fatherId;
+        }
+
+        if ($this->motherId) {
+            $ids[] = $this->motherId;
+        }
+        return $ids;
+    }
 }

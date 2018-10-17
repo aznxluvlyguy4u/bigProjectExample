@@ -40,7 +40,7 @@ class LossMessageBuilder extends MessageBuilderBase
     public function buildMessage(DeclareLoss $messageObject, $person, $loggedInUser, $location)
     {
         $this->person = $person;
-        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
+        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser, $location);
         $completeMessageObject = $this->addDeclareLossData($baseMessageObject, $location);
 
         return $completeMessageObject;

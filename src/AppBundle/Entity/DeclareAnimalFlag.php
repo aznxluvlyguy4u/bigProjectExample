@@ -152,13 +152,14 @@ class DeclareAnimalFlag extends DeclareBase
     /**
      * Set location
      *
-     * @param \AppBundle\Entity\Location $location
+     * @param Location $location
      *
      * @return DeclareAnimalFlag
      */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
+    public function setLocation(Location $location = null)
     {
         $this->location = $location;
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }

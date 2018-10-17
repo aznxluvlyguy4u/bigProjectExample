@@ -10,6 +10,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Country;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -41,8 +42,10 @@ use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
 /**
@@ -63,13 +66,15 @@ abstract class ControllerServiceBase
     private $logger;
     /** @var SqlViewManagerInterface */
     private $sqlViewManager;
+    /** @var RegistryInterface */
+    private $doctrine;
 
     /** @var string */
     private $actionLogEditMessage;
 
     public function __construct(BaseSerializer $baseSerializer,
                                 CacheService $cacheService,
-                                EntityManagerInterface $manager,
+                                RegistryInterface $doctrine,
                                 UserService $userService,
                                 TranslatorInterface $translator,
                                 Logger $logger,
@@ -78,7 +83,8 @@ abstract class ControllerServiceBase
     {
         $this->baseSerializer = $baseSerializer;
         $this->cacheService = $cacheService;
-        $this->manager = $manager;
+        $this->doctrine = $doctrine;
+        $this->manager = $doctrine->getManager();
         $this->userService = $userService;
         $this->translator = $translator;
         $this->logger = $logger;
@@ -92,6 +98,12 @@ abstract class ControllerServiceBase
     public function getManager()
     {
         return $this->manager;
+    }
+
+
+    public function resetManager(): void
+    {
+        $this->doctrine->resetManager();
     }
 
     /**
@@ -145,8 +157,10 @@ abstract class ControllerServiceBase
      * @param Location $location
      * @param Animal | Ewe | Ram | Neuter $animal
      */
-    protected function clearLivestockCacheForLocation(Location $location = null, $animal = null) {
-        $this->cacheService->clearLivestockCacheForLocation($location, $animal);
+    protected function clearLivestockCacheForLocation(?Location $location = null, $animal = null) {
+        if ($location || $animal) {
+            $this->cacheService->clearLivestockCacheForLocation($location, $animal);
+        }
     }
 
 
@@ -480,5 +494,44 @@ abstract class ControllerServiceBase
     protected function getEditTypeByEnum(int $editTypeEnum): ?EditType
     {
         return $this->getManager()->getRepository(EditType::class)->getEditType($editTypeEnum);
+    }
+
+
+    /**
+     * @param string $countryName
+     * @return Country
+     */
+    protected function getCountryByName($countryName): Country
+    {
+        $country = $this->getManager()->getRepository(Country::class)->getCountryByName($countryName);
+        if (!$country) {
+            throw new PreconditionFailedHttpException(
+                $this->translator->trans('COUNTRY DOES NOT EXIST IN THE DATABASE').
+                ': '.strval($country)
+            );
+        }
+        return $country;
+    }
+
+
+    /**
+     * @param Client|null $client
+     */
+    protected function nullCheckClient(?Client $client)
+    {
+        if ($client === null) {
+            throw new PreconditionFailedHttpException('Client cannot be empty');
+        }
+    }
+
+
+    /**
+     * @param Location $location
+     */
+    protected function nullCheckLocation(Location $location)
+    {
+        if ($location === null) {
+            throw new PreconditionFailedHttpException('Location cannot be empty');
+        }
     }
 }

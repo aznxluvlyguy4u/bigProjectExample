@@ -23,11 +23,13 @@ use Enqueue\Util\JSON;
 use Interop\Queue\PsrContext;
 use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProcessor;
-use Symfony\Component\Debug\Exception\FatalThrowableError;
+use Monolog\Logger;
 use Symfony\Component\HttpFoundation\Response;
 
 class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 {
+    const ERROR_LOG_HEADER = '===== SYMFONY WORKER =====';
+
     /**
      * @var AnnualActiveLivestockReportService
      */
@@ -83,6 +85,11 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      */
     private $liveStockReportService;
 
+    /**
+     * @var Logger
+     */
+    private $logger;
+
     public function __construct(
         AnnualActiveLivestockReportService $annualActiveLivestockReportService,
         AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService,
@@ -94,9 +101,12 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         PedigreeRegisterOverviewReportService $pedigreeRegisterOverviewReportService,
         PedigreeCertificateReportService $pedigreeCertificateReportService,
         LiveStockReportService $liveStockReportService,
-        EntityManager $em)
+        EntityManager $em,
+        Logger $logger
+    )
     {
         $this->em = $em;
+        $this->logger = $logger;
         $this->livestockReport = $annualActiveLivestockReportService;
         $this->annualTe = $annualTe100UbnProductionReportService;
         $this->fertilizerAccounting = $accountingReport;
@@ -215,6 +225,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                 $worker->setErrorCode(Response::HTTP_INTERNAL_SERVER_ERROR);
                 $worker->setErrorMessage('SOMETHING WENT WRONG');
             }
+            $this->logException($e);
         }
 
         try {
@@ -226,6 +237,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         }
         catch (\Exception $e) {
             //Database Exception
+            $this->logException($e);
         }
         return self::ACK;
     }
@@ -233,5 +245,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     public static function getSubscribedCommand()
     {
         return WorkerAction::GENERATE_REPORT;
+    }
+
+
+    private function logException(\Throwable $exception)
+    {
+        $this->logger->error(self::ERROR_LOG_HEADER);
+        $this->logger->error($exception->getMessage());
+        $this->logger->error($exception->getTraceAsString());
     }
 }

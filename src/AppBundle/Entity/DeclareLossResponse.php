@@ -6,7 +6,6 @@ use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\DeclareLoss;
 
 /**
  * Class DeclareLossResponse
@@ -203,6 +202,20 @@ class DeclareLossResponse extends DeclareBaseResponse
         $this->ubnDestructor = $ubnDestructor;
     }
 
-
+    /**
+     * @param DeclareLoss $loss
+     * @return DeclareLossResponse
+     */
+    public function setDeclareLossIncludingAllValues(DeclareLoss $loss): DeclareLossResponse
+    {
+        $this->setDeclareBaseValues($loss);
+        $this->setDeclareLossRequestMessage($loss);
+        $this->setDateOfDeath($loss->getDateOfDeath());
+        $this->setUbnDestructor($loss->getUbnDestructor());
+        $this->setReasonOfLoss($loss->getReasonOfLoss());
+        $this->setUlnCountryCode($loss->getUlnCountryCode());
+        $this->setUlnNumber($loss->getUlnNumber());
+        return $this;
+    }
 
 }

@@ -8,6 +8,7 @@ use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -19,26 +20,26 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareTagsTransfer;
-use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Person;
-use AppBundle\Entity\Ram;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
-use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Exception\DeclareToOtherCountryHttpException;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
 abstract class DeclareControllerServiceBase extends ControllerServiceBase
 {
@@ -89,19 +90,10 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     protected function sendMessageObjectToQueue($messageObject, $isUpdate = false, $jmsGroups = [JmsGroup::RVO]) {
 
         $requestId = $messageObject->getRequestId();
-        //$repository = $this->getManager()->getRepository(Utils::getRepositoryNameSpace($messageObject));
 
-        //create array and jsonMessage
-        $messageArray = RequestMessageOutputBuilder::createOutputArray($this->getManager(), $messageObject, $isUpdate);
-
-        if($messageArray == null) {
-            //These objects do not have a customized minimal json output for the queue yet
-            $jsonMessage = $this->irSerializer->serializeToJSON($messageObject, $jmsGroups);
-            $messageArray = json_decode($jsonMessage, true);
-        } else {
-            //Use the minimized custom output
-            $jsonMessage = $this->irSerializer->serializeToJSON($messageArray);
-        }
+        $declareOutputs = $this->getDeclareMessageArrayAndJsonMessage($messageObject, $isUpdate, $jmsGroups);
+        $messageArray = $declareOutputs[JsonInputConstant::ARRAY];
+        $jsonMessage = $declareOutputs[JsonInputConstant::JSON];
 
         //Send serialized message to Queue
         $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
@@ -121,6 +113,57 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         }
 
         return $messageArray;
+    }
+
+
+    /**
+     * @param DeclareBase $messageObject
+     * @param bool $isUpdate
+     * @param array $jmsGroups
+     * @return mixed
+     */
+    protected function getDeclareMessageArray($messageObject, bool $isUpdate, $jmsGroups = [JmsGroup::RVO])
+    {
+        return $this->getDeclareMessageArrayAndJsonMessage($messageObject, $isUpdate, $jmsGroups)[JsonInputConstant::ARRAY];
+    }
+
+
+    /**
+     * @param DeclareBase $messageObject
+     * @param bool $isUpdate
+     * @param array $jmsGroups
+     * @return array
+     */
+    protected function getDeclareMessageArrayAndJsonMessage($messageObject, bool $isUpdate, $jmsGroups = [JmsGroup::RVO]): array
+    {
+        return self::staticGetDeclareMessageArrayAndJsonMessage($this->getManager(), $this->irSerializer,
+            $messageObject, $isUpdate, $jmsGroups);
+    }
+
+
+    public static function staticGetDeclareMessageArrayAndJsonMessage(
+        EntityManagerInterface $em,
+        BaseSerializer $serializer,
+        $messageObject,
+        bool $isUpdate,
+        $jmsGroups = [JmsGroup::RVO]
+    ): array
+    {
+        $messageArray = RequestMessageOutputBuilder::createOutputArray($em, $messageObject, $isUpdate);
+
+        if($messageArray == null) {
+            //These objects do not have a customized minimal json output for the queue yet
+            $jsonMessage = $serializer->serializeToJSON($messageObject, $jmsGroups);
+            $messageArray = json_decode($jsonMessage, true);
+        } else {
+            //Use the minimized custom output
+            $jsonMessage = $serializer->serializeToJSON($messageArray);
+        }
+
+        return [
+            JsonInputConstant::ARRAY => $messageArray,
+            JsonInputConstant::JSON => $jsonMessage,
+        ];
     }
 
 
@@ -170,17 +213,6 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
 
     /**
-     * @param Animal|Ram|Ewe|Neuter $animal
-     */
-    public function persistAnimalTransferringStateAndFlush($animal)
-    {
-        $animal->setTransferState(AnimalTransferStatus::TRANSFERRING);
-        $this->getManager()->persist($animal);
-        $this->getManager()->flush();
-    }
-
-
-    /**
      * @param $messageClassNameSpace
      * @param ArrayCollection $contentArray
      * @param $user
@@ -191,11 +223,8 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      */
     protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
     {
-        $isEditMessage = true;
-        $messageObject = $this->requestMessageBuilder
-            ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
-
-        return $messageObject;
+        return $this->requestMessageBuilder
+            ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, true);
     }
 
 
@@ -210,11 +239,8 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      */
     protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
     {
-        $isEditMessage = false;
-        $messageObject = $this->requestMessageBuilder
-            ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
-
-        return $messageObject;
+        return $this->requestMessageBuilder
+            ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, false);
     }
 
 
@@ -276,4 +302,66 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     }
 
 
+    /**
+     * @param string $declareClazz
+     * @param Location $origin
+     * @param Location $destination
+     */
+    protected function validateIfOriginAndDestinationAreInSameCountry(string $declareClazz,
+                                                                      ?Location $origin, ?Location $destination)
+    {
+        if ($origin && $destination &&
+            $origin->getCountryCode() !== $destination->getCountryCode()){
+            throw new DeclareToOtherCountryHttpException($this->translator, $declareClazz, $destination, $origin);
+        }
+    }
+
+
+    /**
+     * @param Location $location
+     * @param string $declareClazz
+     */
+    protected function validateIfLocationIsDutch(Location $location, string $declareClazz)
+    {
+        if (!$location->isDutchLocation()) {
+            $message = ucfirst($this->translator->trans(StringUtil::getDeclareTranslationKey($declareClazz, true)))
+            .' '.$this->translator->trans('ARE ONLY ALLOWED FOR DUTCH UBNS');
+            throw new PreconditionFailedHttpException($message);
+        }
+    }
+
+
+    /**
+     * @param Client $client
+     * @param array $animalArray
+     */
+    protected function verifyIfClientOwnsAnimal(?Client $client, array $animalArray): void
+    {
+        $this->nullCheckClient($client);
+        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)
+            ->verifyIfClientOwnsAnimal($client, $animalArray);
+
+        if(!$isAnimalOfClient) {
+            throw new PreconditionFailedHttpException("Animal doesn't belong to this account.");
+        }
+    }
+
+
+    /**
+     * @param string $requestId
+     * @return DeclareBase
+     */
+    protected function getRequestByRequestId($requestId): DeclareBase
+    {
+        if (empty($requestId)) {
+            throw new PreconditionRequiredHttpException('RequestId is empty');
+        }
+
+        $declareBase = $this->getManager()->getRepository(DeclareBase::class)->getByRequestId($requestId);
+        if (!$declareBase) {
+            throw new PreconditionRequiredHttpException('Declare was not found for requestId '.$requestId);
+        }
+
+        return $declareBase;
+    }
 }

@@ -32,7 +32,7 @@ class DeclareBirthResponse extends DeclareBaseResponse
 
     /**
      * @ORM\ManyToOne(targetEntity="Animal", cascade={"persist"})
-     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;
@@ -424,4 +424,26 @@ class DeclareBirthResponse extends DeclareBaseResponse
     }
 
 
+    /**
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     * @return DeclareBirthResponse
+     */
+    public function setDeclareBirthIncludingAllValues(DeclareBirth $birth): DeclareBirthResponse
+    {
+        $this->setDeclareBaseValues($birth);
+
+        $this->setDeclareBirthRequestMessage($birth);
+        $this->setDateOfBirth($birth->getDateOfBirth());
+        $this->setGender($birth->getGender());
+        $this->setUlnCountryCode($birth->getUlnCountryCode());
+        $this->setUlnNumber($birth->getUlnNumber());
+        $this->setUlnCountryCodeMother($birth->getUlnCountryCodeMother());
+        $this->setUlnMother($birth->getUlnMother());
+        $this->setUlnFather($birth->getUlnFather());
+        $this->setUlnCountryCodeFather($birth->getUlnCountryCodeFather());
+        $this->setUlnCountryCodeSurrogate($birth->getUlnCountryCodeSurrogate());
+        $this->setUlnSurrogate($birth->getUlnSurrogate());
+        $this->setAnimal($birth->getAnimal());
+        return $this;
+    }
 }

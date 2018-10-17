@@ -588,7 +588,7 @@ services:
         arguments:
           - '@app.serializer.base'
           - '@app.cache'
-          - '@doctrine.orm.entity_manager'
+          - '@doctrine'
           - '@app.user'
           - '@translator'
           - '@logger'
@@ -626,6 +626,7 @@ services:
           - '@app.report.pedigree_certificates'
           - '@app.report.livestock'
           - '@doctrine.orm.entity_manager'
+          - '@logger'
         tags:
           - {name: 'enqueue.client.processor'}
 
@@ -684,10 +685,18 @@ services:
             arguments:
               - '@validator'
 
-    app.arrival:
+    AppBundle\Service\ArrivalService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\ArrivalService
         calls:
+          - method: setArrivalProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface'
+          - method: setDepartProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface'
+          - method: setImportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface'
           - method: setFireBaseService
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
@@ -701,9 +710,8 @@ services:
             arguments:
               - '%kernel.environment%'
 
-    app.birth:
+    AppBundle\Service\BirthService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\BirthService
         calls:
           - method: setEntityGetter
             arguments:
@@ -752,23 +760,38 @@ services:
         class: AppBundle\Service\DashboardService
 
 
-    app.depart:
+    AppBundle\Service\DepartService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\DepartService
         calls:
+          - method: setArrivalProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface'
+          - method: setDepartProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface'
+          - method: setExportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface'
           - method: setEnvironment
             arguments:
               - '%kernel.environment%'
           - method: setFireBaseService
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
-    app.export:
-        parent: app.abstract_base.declare
-        class: AppBundle\Service\ExportService
 
-    app.import:
+    AppBundle\Service\ExportService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\ImportService
+        calls:
+          - method: setExportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface'
+
+    AppBundle\Service\ImportService:
+        parent: app.abstract_base.declare
+        calls:
+          - method: setImportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface'
 
     app.invoice:
         parent: app.abstract_base.controller
@@ -818,9 +841,12 @@ services:
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
 
-    app.loss:
+    AppBundle\Service\LossService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\LossService
+        calls:
+          - method: setLossProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareLossProcessorInterface'
 
     app.health.location:
         parent: app.abstract_base.controller
@@ -858,21 +884,21 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\PedigreeRegisterService
 
-    app.profile:
+    AppBundle\Service\ProfileService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\ProfileService
 
-    app.declare.revoke:
+    AppBundle\Service\RevokeService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\RevokeService
         calls:
           - method: setEntityGetter
             arguments:
               - '@app.doctrine.entitygetter'
+          - method: setRevokeProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\RevokeProcessorInterface'
 
-    app.queue_dashboard:
+    AppBundle\Service\QueueDashboardService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\QueueDashboardService
         calls:
           - method: setExternalQueueService
             arguments:
@@ -881,33 +907,34 @@ services:
             arguments:
               - '@app.aws.queueservice.internal'
 
-    app.tag.replace:
+    AppBundle\Service\TagReplaceService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\TagReplaceService
+        calls:
+          - method: setTagReplaceProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessorInterface'
 
-    app.tag.sync:
+    AppBundle\Service\TagSyncService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\TagSyncService
 
-    app.tag.transfer:
+    AppBundle\Service\TagTransferService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\TagTransferService
+        calls:
+          - method: setTagTransferProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessorInterface'
 
-    app.tags:
+    AppBundle\Service\TagsService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\TagsService
 
-    app.ubn:
+    AppBundle\Service\UbnService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\UbnService
 
-    app.vwa.employee:
+    AppBundle\Service\VwaEmployeeService:
         parent: app.abstract_base.auth
-        class: AppBundle\Service\VwaEmployeeService
 
-    app.weight:
+    AppBundle\Service\WeightService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\WeightService
 
     AppBundle\Service\PedigreeDataGenerator:
         arguments:
@@ -1026,6 +1053,48 @@ services:
           - '@translator'
         lazy: true
 
+
+    app.abstract_base.direct_processor:
+        abstract: true
+        parent: app.abstract_base.controller
+        calls:
+          - method: setEnvironment
+            arguments:
+              - '%kernel.environment%'
+
+    AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareDepartProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareExportProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareImportProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareLossProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareLossProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\RevokeProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\RevokeProcessor
+        parent: app.abstract_base.direct_processor
+
+
     # Listeners
     AppBundle\EventListener\ViewListener:
         tags:
@@ -1033,6 +1102,7 @@ services:
 
     AppBundle\EventListener\ExceptionListener:
         arguments:
+            - '@logger'
             - '%environment%'
         tags:
             - { name: kernel.event_listener, event: kernel.exception }

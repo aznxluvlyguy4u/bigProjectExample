@@ -673,7 +673,8 @@ class PedigreeCertificate
                     a.parent_father_id as father_id, a.parent_mother_id as mother_id, a.blindness_factor, c.company_name, d.city,
                     a.nickname,
                     cache.production_age, cache.litter_count, cache.total_offspring_count,
-                    cache.born_alive_offspring_count, cache.gave_birth_as_one_year_old
+                    cache.born_alive_offspring_count, cache.gave_birth_as_one_year_old,
+                    cache.n_ling
                 FROM animal a
                     LEFT JOIN location l ON a.location_of_birth_id = l.id
                     LEFT JOIN company c ON l.company_id = c.id
@@ -725,6 +726,9 @@ class PedigreeCertificate
             $totalOffSpringCount = intval($animalData['total_offspring_count']);
             $bornAliveOffspringCount = intval($animalData['born_alive_offspring_count']);
             $addProductionAsterisk = boolval($animalData['gave_birth_as_one_year_old']);
+
+            // nLing
+            $nLing = $nLing === self::GENERAL_NULL_FILLER || empty($nLing) ? $animalData['n_ling'] : $nLing;
 
             //These ids are only used only inside this class and not in the twig file
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = $animalData[ReportLabel::MOTHER_ID];

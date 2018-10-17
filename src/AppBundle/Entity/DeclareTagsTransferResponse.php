@@ -48,4 +48,16 @@ class DeclareTagsTransferResponse extends DeclareBaseResponse
     {
         return $this->declareTagsTransferRequestMessage;
     }
+
+
+    /**
+     * @param DeclareTagsTransfer $tagReplace
+     * @return DeclareTagsTransferResponse
+     */
+    public function setDeclareTagTransferIncludingAllValues(DeclareTagsTransfer $tagReplace): DeclareTagsTransferResponse
+    {
+        $this->setDeclareBaseValues($tagReplace);
+        $this->setDeclareTagsTransferRequestMessage($tagReplace);
+        return $this;
+    }
 }

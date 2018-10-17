@@ -222,7 +222,7 @@ class DeclareTagsTransfer extends DeclareBase
     public function setLocation(\AppBundle\Entity\Location $location = null)
     {
         $this->location = $location;
-        $this->setUbn($location->getUbn());
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }

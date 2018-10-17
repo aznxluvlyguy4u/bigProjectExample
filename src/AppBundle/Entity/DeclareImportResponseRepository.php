@@ -46,7 +46,7 @@ class DeclareImportResponseRepository extends BaseRepository {
                                    SELECT request_id, MAX(log_date) as log_date
                                    FROM declare_base_response
                                    GROUP BY request_id
-                                 ) z ON z.log_date = y.log_date
+                                 ) z ON z.log_date = y.log_date AND z.request_id = y.request_id
                     )r ON r.request_id = b.request_id
                 WHERE (request_state = '".RequestStateType::OPEN."' OR
                       request_state = '".RequestStateType::REVOKING."' OR
@@ -81,7 +81,7 @@ class DeclareImportResponseRepository extends BaseRepository {
                                    SELECT request_id, MAX(log_date) as log_date
                                    FROM declare_base_response
                                    GROUP BY request_id
-                                 ) z ON z.log_date = y.log_date
+                                 ) z ON z.log_date = y.log_date AND z.request_id = y.request_id
                     )r ON r.request_id = b.request_id
                 WHERE request_state = '".RequestStateType::FAILED."' 
                 AND location_id = ".$locationId." ORDER BY b.log_date DESC";

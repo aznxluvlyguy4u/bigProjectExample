@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\LossService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -39,7 +40,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossById(Request $request, $Id)
   {
-      return $this->get('app.loss')->getLossById($request, $Id);
+      return $this->get(LossService::class)->getLossById($request, $Id);
   }
 
 
@@ -81,7 +82,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLosses(Request $request)
   {
-      return $this->get('app.loss')->getLosses($request);
+      return $this->get(LossService::class)->getLosses($request);
   }
 
 
@@ -109,7 +110,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function createLoss(Request $request)
   {
-      return $this->get('app.loss')->createLoss($request);
+      return $this->get(LossService::class)->createLoss($request);
   }
 
 
@@ -137,7 +138,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
      */
     public function resendCreateLoss(Request $request)
     {
-        return $this->get('app.loss')->resendCreateLoss($request);
+        return $this->get(LossService::class)->resendCreateLoss($request);
     }
 
 
@@ -166,7 +167,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function editLoss(Request $request, $Id)
   {
-      return $this->get('app.loss')->editLoss($request, $Id);
+      return $this->get(LossService::class)->editLoss($request, $Id);
   }
 
 
@@ -195,7 +196,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossErrors(Request $request)
   {
-      return $this->get('app.loss')->getLossErrors($request);
+      return $this->get(LossService::class)->getLossErrors($request);
   }
 
 
@@ -224,6 +225,6 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossHistory(Request $request)
   {
-      return $this->get('app.loss')->getLossHistory($request);
+      return $this->get(LossService::class)->getLossHistory($request);
   }
 }

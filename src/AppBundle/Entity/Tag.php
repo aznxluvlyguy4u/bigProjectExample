@@ -127,6 +127,7 @@ class Tag
     private $animal;
 
     /**
+     * @var Client
      * @ORM\ManyToOne(targetEntity="Client", inversedBy="tags", cascade={"persist"})
      * @ORM\JoinColumn(name="owner_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Client")
@@ -347,7 +348,14 @@ class Tag
         return $this->ulnNumber;
     }
 
-    
+
+    /**
+     * @return string
+     */
+    public function getUln()
+    {
+        return $this->ulnCountryCode . $this->ulnNumber;
+    }
 
 
     public function removeAnimal()
@@ -432,6 +440,14 @@ class Tag
     public function getOwner()
     {
         return $this->owner;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getOwnerId()
+    {
+        return $this->owner ? $this->owner->getId() : null;
     }
 
     /**

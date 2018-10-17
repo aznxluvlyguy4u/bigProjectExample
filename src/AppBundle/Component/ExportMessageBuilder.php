@@ -35,7 +35,7 @@ class ExportMessageBuilder extends MessageBuilderBase
   public function buildMessage(DeclareExport $messageObject, $person, $loggedInUser, $location)
   {
     $this->person = $person;
-    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
+    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser, $location);
     $completeMessageObject = $this->addDeclareExportData($baseMessageObject, $location);
 
     return $completeMessageObject;

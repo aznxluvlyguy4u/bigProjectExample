@@ -40,7 +40,7 @@ class ImportMessageBuilder extends MessageBuilderBase
   public function buildMessage(DeclareImport $messageObject, $person, $loggedInUser, $location)
   {
     $this->person = $person;
-    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
+    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser, $location);
     $completeMessageObject = $this->addDeclareImportData($baseMessageObject, $location);
 
     return $completeMessageObject;

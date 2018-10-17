@@ -45,7 +45,7 @@ class RevokeMessageBuilder extends MessageBuilderBase
     public function buildMessage(RevokeDeclaration $messageObject, $person, $loggedInUser, $location)
     {
         $this->person = $person;
-        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
+        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser, $location);
         $completeMessageObject = $this->addRevokeDeclarationData($baseMessageObject, $person, $location);
 
         return $completeMessageObject;
