@@ -12,6 +12,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\BirthAPIControllerInterface;
+use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\DeclareArrival;
@@ -220,6 +221,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         //Creating request succeeded, send to Queue
 
         $litter = null;
+        $logIds = [];
 
         try {
             /** @var DeclareBirth $requestMessage */
@@ -236,6 +238,11 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 }
             }
             $this->getManager()->flush();
+
+            $logIds = array_map(function(ActionLog $actionLog) {
+                return $actionLog->getId();
+            }, $logs);
+
         } catch (\Exception $exception) {
             //Roll back tag and animal changes
             $this->rollBackCreateBirth($requestMessages, $litter, $clientId, $locationId);
@@ -269,6 +276,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                         ->findByIds($birthIds);
                     $litter = $this->getManager()->getRepository(Litter::class)->find($litterId);
                     $location = $this->getManager()->getRepository(Location::class)->find($locationId);
+                    $logs = $this->getManager()->getRepository(ActionLog::class)->findByIds($logIds);
                 }
             } while (!$successfulFlush && +$retryCount <= self::PERSIST_MAX_RETRIES);
 

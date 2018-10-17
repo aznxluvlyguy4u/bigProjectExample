@@ -2,8 +2,10 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Util\CommandUtil;
@@ -72,6 +74,9 @@ class NsfoTestCommand extends ContainerAwareCommand
         $this->animalRepository = $em->getRepository(Animal::class);
         $this->databaseName = $this->conn->getDatabase();
         
+
+        $b = $em->getRepository(ActionLog::class)->findByIds([30715]);
+        dump($b);die;
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
