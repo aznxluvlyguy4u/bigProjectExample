@@ -18,6 +18,8 @@ class ReportLabel
     const MONTHS = 'months';
     const TOTALS = 'totals';
     const VALUE = 'value';
+    const VALUES = 'values';
+    const HAS_ANY_VALUES = 'hasAnyValues';
     const ACCURACY = 'accuracy';
 
     //Person

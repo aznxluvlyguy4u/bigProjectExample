@@ -98,19 +98,23 @@ class BreedValuesOutput extends OutputServiceBase
 
     /**
      * @param array $breedGradesSqlResults
+     * @param string $nullFiller
      * @param bool $formatOutput
      * @return array
      */
-    public function getForPedigreeCertificate(array $breedGradesSqlResults, $formatOutput = true)
+    public function getForPedigreeCertificate(array $breedGradesSqlResults,
+                                              $nullFiller = BreedFormat::EMPTY_BREED_SINGLE_VALUE,
+                                              $formatOutput = true)
     {
         $breedValues = [];
+        $hasAnyValues = false;
         foreach ($this->initializeResultTableValueVariables() as $resultTableValueVariableBase) {
 
             // default values
             $breedValues[$resultTableValueVariableBase][ReportLabel::VALUE] =
-                $formatOutput ? self::getFormattedBreedValue(null) : null;
+                $formatOutput ? self::getFormattedBreedValue(null, $nullFiller) : null;
             $breedValues[$resultTableValueVariableBase][ReportLabel::ACCURACY] =
-                $formatOutput ? self::getFormattedBreedValueAccuracy(null) : null;
+                $formatOutput ? self::getFormattedBreedValueAccuracy(null, $nullFiller) : null;
             $breedValues[$resultTableValueVariableBase][ReportLabel::IS_EMPTY] = true;
 
             foreach ([ // check the variables in this order
@@ -127,16 +131,20 @@ class BreedValuesOutput extends OutputServiceBase
 
                 if (!empty($value) || !empty($accuracy)) {
                     $breedValues[$resultTableValueVariableBase][ReportLabel::VALUE] =
-                        $formatOutput ? self::getFormattedBreedValue($value) : $value;
+                        $formatOutput ? self::getFormattedBreedValue($value, $nullFiller) : $value;
                     $breedValues[$resultTableValueVariableBase][ReportLabel::ACCURACY] =
-                        $formatOutput ? self::getFormattedBreedValueAccuracy($accuracy) : $accuracy;
+                        $formatOutput ? self::getFormattedBreedValueAccuracy($accuracy, $nullFiller) : $accuracy;
                     $breedValues[$resultTableValueVariableBase][ReportLabel::IS_EMPTY] = false;
+                    $hasAnyValues = true;
                     break;
                 }
             }
         }
 
-        return $breedValues;
+        return [
+            ReportLabel::VALUES => $breedValues,
+            ReportLabel::HAS_ANY_VALUES => $hasAnyValues
+        ];
     }
 
 
@@ -166,20 +174,22 @@ class BreedValuesOutput extends OutputServiceBase
 
     /**
      * @param $value
+     * @param $nullFiller
      * @return null|string
      */
-    public static function getFormattedBreedValue($value): ?string
+    public static function getFormattedBreedValue($value, $nullFiller = BreedFormat::EMPTY_BREED_SINGLE_VALUE): ?string
     {
-        return $value ? NumberUtil::getPlusSignIfNumberIsPositive($value) . BreedFormat::formatBreedValueValue($value) : BreedFormat::EMPTY_BREED_SINGLE_VALUE;
+        return $value ? NumberUtil::getPlusSignIfNumberIsPositive($value) . BreedFormat::formatBreedValueValue($value) : $nullFiller;
     }
 
     /**
      * @param $accuracy
+     * @param $nullFiller
      * @return null|string
      */
-    public static function getFormattedBreedValueAccuracy($accuracy): ?string
+    public static function getFormattedBreedValueAccuracy($accuracy, $nullFiller = BreedFormat::EMPTY_BREED_SINGLE_VALUE): ?string
     {
-        return $accuracy ? BreedFormat::formatAccuracyForDisplay($accuracy) : BreedFormat::EMPTY_BREED_SINGLE_VALUE;
+        return $accuracy ? BreedFormat::formatAccuracyForDisplay($accuracy) : $nullFiller;
     }
 
 
