@@ -7,6 +7,8 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Query\Expr\Join;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraints\DateTime;
 
@@ -274,15 +276,26 @@ class DeclareBirthRepository extends BaseRepository {
 
       $qb = $this->getManager()->createQueryBuilder();
 
-      $qb->select('b')
+      $qb->select('b','animal','actionBy', 'litter')
           ->from(DeclareBirth::class, 'b')
+          ->innerJoin('b.animal', 'animal', Join::WITH, $qb->expr()->eq('b.animal', 'animal.id'))
+          ->innerJoin('b.actionBy', 'actionBy', Join::WITH, $qb->expr()->eq('b.actionBy', 'actionBy.id'))
+          ->innerJoin('b.litter', 'litter', Join::WITH, $qb->expr()->eq('b.litter', 'litter.id'))
       ;
 
       foreach ($primaryKeys as $primaryKey) {
           $qb->orWhere($qb->expr()->eq('b.id', $primaryKey));
       }
 
-      $births = $qb->getQuery()->getResult();
+      $query = $qb->getQuery();
+
+      $query->setFetchMode(Person::class, 'actionBy', ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Animal::class, 'animal', ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Litter::class, 'litter', ClassMetadata::FETCH_EAGER);
+
+      $births = $query->getResult();
+
+
       return $setPrimaryKeysAsArrayKeys ? $this->setPrimaryKeysAsArrayKeys($births) : $births;
   }
 
