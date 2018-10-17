@@ -63,7 +63,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
         $this->setLocale($locale);
 
         $this->pedigreeCertificatesGenerator->generate($actionBy, $content, $client, $location);
-dump($this->pedigreeCertificatesGenerator->getReports());die;
+
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
         }
