@@ -90,6 +90,7 @@ class ReportLabel
     const BREED = 'breed';
     const BREED_TYPE = 'breedType';
     const BREED_CODE = 'breedCode';
+    const BREED_CODES = 'breedCodes';
     const BREED_CODE_LETTERS = 'breedCodeLetters';
     const BREED_CODE_FULLNAME = 'breedCodeFullname';
     const BREED_VALUES = 'breedValues';

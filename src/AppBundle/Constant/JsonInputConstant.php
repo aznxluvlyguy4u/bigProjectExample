@@ -64,6 +64,7 @@ class JsonInputConstant
     const SCRAPIE_GENOTYPE = 'scrapie_genotype';
     const BREED = 'breed';
     const BREED_CODE = 'breed_code';
+    const BREED_CODES = 'breed_codes';
     const BREED_CODE_LETTERS = 'breed_code_letters';
     const BREED_CODE_FULLNAME = 'breed_code_fullname';
     const BREED_CODE_MOTHER = 'breed_code_mother';

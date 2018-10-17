@@ -14,6 +14,7 @@ use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\LocationAddress;
+use AppBundle\Entity\PedigreeCode;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
@@ -22,6 +23,7 @@ use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\BreedValuesOutput;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\NumberUtil;
@@ -73,14 +75,14 @@ class PedigreeCertificate
     private $translator;
     /** @var boolean */
     private $useTestData;
-    /** @var array */
-    private $breedValueResultTableColumnNamesSets;
 
     /** @var BreedValuesOutput */
     private $breedValuesOutput;
 
     /** @var string */
     private $breedValuesLastGenerationDate;
+    /** @var array */
+    private $breedFullNamesByCodes;
 
     public function __construct(EntityManagerInterface $em,
                                 TranslatorInterface $translator,
@@ -106,6 +108,25 @@ class PedigreeCertificate
     public function setBreedValuesOutput(BreedValuesOutput $breedValuesOutput)
     {
         $this->breedValuesOutput = $breedValuesOutput;
+    }
+
+
+    /**
+     * @return array
+     */
+    private function getBreedFullnamesByCodes(): array
+    {
+        if (empty($this->breedFullNamesByCodes)) {
+            $this->breedFullNamesByCodes = $this->em->getRepository(PedigreeCode::class)
+                ->getFullNamesByCodes();
+        }
+        return $this->breedFullNamesByCodes;
+    }
+
+
+    private function clearPrivateVariables()
+    {
+        $this->breedFullNamesByCodes = null;
     }
 
 
@@ -155,6 +176,8 @@ class PedigreeCertificate
         $generation = 0;
         $this->addAnimalValues($keyAnimal, $animalId, $generation);
         $this->addParents($animalId, $keyAnimal, $generation);
+
+        $this->clearPrivateVariables();
 
         return $this->getData();
     }
@@ -402,8 +425,9 @@ class PedigreeCertificate
                 $stn = $animalData[JsonInputConstant::STN];
                 $breed = $animalData[JsonInputConstant::BREED];
                 $breedCode = $animalData[JsonInputConstant::BREED_CODE];
-                $breedCodeLetters = $animalData[JsonInputConstant::BREED_CODE_LETTERS];
-                $breedCodeFullname = $animalData[JsonInputConstant::BREED_CODE_FULLNAME];
+
+                $breedCodeLettersAndFullNameSets = $this->extractBreedCodeLettersAndFullNameSets($breedCode);
+
                 $countryOfBirth = $animalData[JsonInputConstant::COUNTRY_OF_BIRTH];
                 $breedType = $animalData[JsonInputConstant::BREED_TYPE];
                 $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
@@ -456,8 +480,7 @@ class PedigreeCertificate
                 $scrapieGenotype = null;
                 $gender = null;
                 $animalTypeInLatin = null;
-                $breedCodeLetters = null;
-                $breedCodeFullname = null;
+                $breedCodeLettersAndFullNameSets = [];
                 $countryOfBirth = null;
                 $nickname = null;
                 $predicate = self::GENERAL_NULL_FILLER;
@@ -548,8 +571,9 @@ class PedigreeCertificate
             );
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ANIMAL_TYPE_IN_LATIN] = $animalTypeInLatin ?? self::GENERAL_NULL_FILLER;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ANIMAL_TYPE] = $animalType ?? self::GENERAL_NULL_FILLER;
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE_LETTERS] = $breedCodeLetters ?? self::GENERAL_NULL_FILLER;
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE_FULLNAME] = $breedCodeFullname ?? self::GENERAL_NULL_FILLER;
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODES] = $breedCodeLettersAndFullNameSets ?? [];
+
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::COUNTRY_OF_BIRTH] = $countryOfBirth ?? self::GENERAL_NULL_FILLER;
 
             /* variables translated to Dutch */
@@ -577,6 +601,33 @@ class PedigreeCertificate
             $this->addAnimalValuesBySql($key, $animalId, $generation);
         }
 
+    }
+
+
+    private function extractBreedCodeLettersAndFullNameSets($breedCode): array
+    {
+        if (empty($breedCode) || $breedCode === self::GENERAL_NULL_FILLER) {
+            return [];
+        }
+
+        $fullNamesByCodes = $this->getBreedFullnamesByCodes();
+
+        $breedCodeNameAndCodeSets = [];
+        $parts = BreedCodeUtil::getBreedCodePartsFromBreedCodeString($breedCode);
+
+        // ksort($parts); SORT ALPHABETICALLY
+
+        foreach ($parts as $code => $value) {
+            $fullName = ArrayUtil::get($code, $fullNamesByCodes);
+            if ($fullName) {
+                $breedCodeNameAndCodeSets[] = [
+                    ReportLabel::BREED_CODE_LETTERS => $code,
+                    ReportLabel::BREED_CODE_FULLNAME => $fullName,
+                ];
+            }
+        }
+
+        return $breedCodeNameAndCodeSets;
     }
 
 
