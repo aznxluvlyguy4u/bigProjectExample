@@ -195,6 +195,9 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
+        $clientId = $client->getId();
+        $locationId = $location->getId();
+
         $useRvoLogic = $location->isDutchLocation();
 
         $requestMessages = $this->requestMessageBuilder
@@ -235,13 +238,20 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             $this->getManager()->flush();
         } catch (\Exception $exception) {
             //Roll back tag and animal changes
-            $this->rollBackCreateBirth($requestMessages, $litter, $client->getId(), $location->getId());
+            $this->rollBackCreateBirth($requestMessages, $litter, $clientId, $locationId);
             throw $exception;
         }
 
+        // Prepare data in case of Entity Manager reset
+        $requestMessagesByPrimaryKeys = $this->getManager()->getRepository(DeclareBirth::class)
+            ->refreshBirthsAndAddPrimaryKeysAsArrayKey($requestMessages);
+        $birthIds = array_keys($requestMessagesByPrimaryKeys);
+
+        $this->getManager()->refresh($litter);
+        $litterId = $litter->getId();
 
         /** @var DeclareBirth $requestMessage */
-        foreach ($requestMessages as $requestMessage) {
+        foreach ($requestMessagesByPrimaryKeys as $requestMessage) {
             $retryCount = 0;
             $successfulFlush = false;
             $uniqueConstraintViolationException = null;
@@ -253,11 +263,16 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                     $successfulFlush = true;
                 } catch (UniqueConstraintViolationException $uniqueConstraintViolationException) {
                     $this->resetManager();
+                    // Retrieve all entities
+                    $requestMessagesByPrimaryKeys = $this->getManager()->getRepository(DeclareBirth::class)
+                        ->findByIds($birthIds);
+                    $litter = $this->getManager()->getRepository(Litter::class)->find($litterId);
+                    $location = $this->getManager()->getRepository(Location::class)->find($locationId);
                 }
             } while (!$successfulFlush && +$retryCount <= self::PERSIST_MAX_RETRIES);
 
             if (!$successfulFlush) {
-                $this->rollBackCreateBirth($requestMessages, $litter, $client->getId(), $location->getId());
+                $this->rollBackCreateBirth($requestMessagesByPrimaryKeys, $litter, $clientId, $locationId);
                 throw $uniqueConstraintViolationException ? $uniqueConstraintViolationException :
                     new \Exception($this->translateUcFirstLower(
                         $this->translateUcFirstLower('SOMETHING WENT WRONG')
@@ -269,7 +284,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             $this->saveNewestDeclareVersion($content, $litter);
 
             $this->updateLitterStatus($litter, $useRvoLogic);
-            $this->updateResultTableValuesByBirthRequests($requestMessages, $useRvoLogic);
+            $this->updateResultTableValuesByBirthRequests($requestMessagesByPrimaryKeys, $useRvoLogic);
 
             if (!$useRvoLogic) {
                 $this->directlyUpdateResultTableValuesByAnimalIds($litter->getAllAnimalIds());
