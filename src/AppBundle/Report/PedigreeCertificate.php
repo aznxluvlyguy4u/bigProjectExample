@@ -166,9 +166,12 @@ class PedigreeCertificate
     private function setOwnerDataFromAnimalIdBySql($animalId)
     {
         if(is_string($animalId) || is_int($animalId)) {
-            $sql = "SElECT l.ubn, c.company_name, d.street_name, d.address_number, d.address_number_suffix, d.postal_code, d.city FROM animal a
+            $sql = "SElECT l.ubn, c.company_name, d.street_name, d.address_number, d.address_number_suffix,
+                    d.postal_code, d.city, owner.email_address
+                FROM animal a
                 INNER JOIN location l ON a.location_id = l.id
                 INNER JOIN company c ON l.company_id = c.id
+                INNER JOIN person owner ON c.owner_id = owner.id
                 INNER JOIN address d ON d.id = c.address_id
                 WHERE a.id = ".intval($animalId);
             $result = $this->em->getConnection()->query($sql)->fetch();
@@ -181,6 +184,7 @@ class PedigreeCertificate
             } elseif($currentUbnOfAnimal == null) {
                 //Set all owner values as empty
                 $this->data[ReportLabel::OWNER_NAME] = self::GENERAL_NULL_FILLER;
+                $this->data[ReportLabel::OWNER_EMAIL_ADDRESS] = self::GENERAL_NULL_FILLER;
                 $this->data[ReportLabel::ADDRESS] = $this->getEmptyLocationAddress();
                 $this->data[ReportLabel::POSTAL_CODE] = self::GENERAL_NULL_FILLER;
                 $this->data[ReportLabel::UBN] = self::GENERAL_NULL_FILLER;
@@ -194,6 +198,7 @@ class PedigreeCertificate
                 $rawPostalCode = Utils::getNullCheckedArrayValue('postal_code', $result);
                 $postalCode = $this->nullFillString($rawPostalCode);
                 $city = $this->nullFillString(Utils::getNullCheckedArrayValue('city', $result));
+                $ownerEmailAddress = ArrayUtil::get('email_address', $result);
 
                 $address = new LocationAddress();
                 $address->setStreetName($streetName);
@@ -203,6 +208,9 @@ class PedigreeCertificate
                 $address->setCity($city);
 
                 $this->data[ReportLabel::OWNER_NAME] = StringUtil::trimStringWithAddedEllipsis($companyName, PedigreeCertificates::MAX_LENGTH_FULL_NAME);
+                $this->data[ReportLabel::OWNER_EMAIL_ADDRESS] = Validator::getFillerCheckedEmailAddress(
+                    $ownerEmailAddress, self::GENERAL_NULL_FILLER
+                );
                 $this->data[ReportLabel::ADDRESS] = $address;
                 $this->data[ReportLabel::POSTAL_CODE] = StringUtil::addSpaceInDutchPostalCode($rawPostalCode, self::GENERAL_NULL_FILLER);
                 $this->data[ReportLabel::UBN] = $currentUbnOfAnimal;
