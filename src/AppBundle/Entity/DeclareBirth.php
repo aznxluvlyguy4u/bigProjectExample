@@ -23,7 +23,7 @@ class DeclareBirth extends DeclareBase implements BasicRvoDeclareInterface
     use EntityClassInfo;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births")
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births", cascade={"refresh"})
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @JMS\Groups({
@@ -132,7 +132,7 @@ class DeclareBirth extends DeclareBase implements BasicRvoDeclareInterface
 
     /**
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Location", inversedBy="births", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="births", cascade={"persist","refresh"})
      * @JMS\Type("AppBundle\Entity\Location")
      */
     private $location;

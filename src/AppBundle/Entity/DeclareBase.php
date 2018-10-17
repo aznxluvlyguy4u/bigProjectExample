@@ -188,7 +188,7 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
     /**
      * @var Person
      *
-     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\ManyToOne(targetEntity="Person", cascade={"refresh"})
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
      * @JMS\Groups({
      *     "ERROR_DETAILS",
@@ -226,7 +226,7 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
 
     /**
      * @var DeclareBase
-     * @ORM\ManyToOne(targetEntity="DeclareBase")
+     * @ORM\ManyToOne(targetEntity="DeclareBase", cascade={"refresh"})
      * @ORM\JoinColumn(name="newest_version_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\DeclareBase")
      */
