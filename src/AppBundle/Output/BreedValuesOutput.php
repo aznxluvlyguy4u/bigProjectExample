@@ -7,6 +7,7 @@ namespace AppBundle\Output;
 use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Constant\BreedValueTypeConstant;
+use AppBundle\Constant\ReportFormat;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Criteria\BreedValueTypeCriteria;
 use AppBundle\Entity\Animal;
@@ -190,6 +191,30 @@ class BreedValuesOutput extends OutputServiceBase
     public static function getFormattedBreedValueAccuracy($accuracy, $nullFiller = BreedFormat::EMPTY_BREED_SINGLE_VALUE): ?string
     {
         return $accuracy ? BreedFormat::formatAccuracyForDisplay($accuracy) : $nullFiller;
+    }
+
+
+    /**
+     * @param $value
+     * @param $nullFiller
+     * @return null|string
+     */
+    public static function getFormattedBreedIndex($value, $nullFiller = BreedFormat::EMPTY_BREED_SINGLE_VALUE): ?string
+    {
+        return $value ?
+            number_format($value, 0, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR)
+            : $nullFiller;
+    }
+
+    /**
+     * @param $accuracy
+     * @param $nullFiller
+     * @return null|string
+     */
+    public static function getFormattedBreedIndexAccuracy($accuracy, $nullFiller = BreedFormat::EMPTY_BREED_SINGLE_VALUE): ?string
+    {
+        return $accuracy ? number_format($accuracy, 0, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR)
+            : $nullFiller;
     }
 
 

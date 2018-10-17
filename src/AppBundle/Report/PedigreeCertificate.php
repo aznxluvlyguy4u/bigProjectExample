@@ -655,6 +655,16 @@ class PedigreeCertificate
     }
 
 
+    /**
+     * @param $resultTableValueVariable
+     * @return bool
+     */
+    private function useBreedIndexFormatForBreedValue($resultTableValueVariable): bool
+    {
+        return $resultTableValueVariable === 'odin_bc';
+    }
+
+
     private function addBreedValuesSet($key, $breedGrades)
     {
         $exteriorBreedValuesOutput = $this->breedValuesOutput->getForPedigreeCertificate($breedGrades, self::GENERAL_NULL_FILLER);
@@ -671,9 +681,17 @@ class PedigreeCertificate
 
             $isEmpty = empty($value) || empty($accuracy);
 
+            if ($this->useBreedIndexFormatForBreedValue($resultTableValueVariable)) {
+                $formattedValue = BreedValuesOutput::getFormattedBreedIndex($value, self::GENERAL_NULL_FILLER);
+                $formattedAccuracy = BreedValuesOutput::getFormattedBreedIndexAccuracy($accuracy, self::GENERAL_NULL_FILLER);
+            } else {
+                $formattedValue = BreedValuesOutput::getFormattedBreedValue($value, self::GENERAL_NULL_FILLER);
+                $formattedAccuracy = BreedValuesOutput::getFormattedBreedValueAccuracy($accuracy, self::GENERAL_NULL_FILLER);
+            }
+
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][$resultTableValueVariable] = [
-                ReportLabel::VALUE => BreedValuesOutput::getFormattedBreedValue($value, self::GENERAL_NULL_FILLER),
-                ReportLabel::ACCURACY => BreedValuesOutput::getFormattedBreedValueAccuracy($accuracy, self::GENERAL_NULL_FILLER),
+                ReportLabel::VALUE => $formattedValue,
+                ReportLabel::ACCURACY => $formattedAccuracy,
                 ReportLabel::IS_EMPTY => $isEmpty,
             ];
 
