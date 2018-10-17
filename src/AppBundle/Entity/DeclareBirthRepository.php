@@ -4,8 +4,10 @@ namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
@@ -236,4 +238,52 @@ class DeclareBirthRepository extends BaseRepository {
 
       return $results;
   }
+
+
+    /**
+     * @param DeclareBirth[] $births
+     * @return array|DeclareBirth[]
+     */
+  public function refreshBirthsAndAddPrimaryKeysAsArrayKey($births)
+  {
+      $birthsByPrimaryKey = [];
+      foreach ($births as $birth) {
+          $this->getManager()->refresh($birth);
+          $birthsByPrimaryKey[$birth->getId()] = $birth;
+      }
+      return $birthsByPrimaryKey;
+  }
+
+
+    /**
+     * @param array|int[] $primaryKeys
+     * @param bool $setPrimaryKeysAsArrayKeys
+     * @return DeclareBirth[]|array
+     * @throws \Exception
+     */
+  public function findByIds(array $primaryKeys, $setPrimaryKeysAsArrayKeys = true): array
+  {
+      if (!$primaryKeys) {
+          return [];
+      }
+
+      if (!ArrayUtil::containsOnlyDigits($primaryKeys)) {
+          throw new \Exception('Array contains non integers: '.implode(',', $primaryKeys),
+              Response::HTTP_PRECONDITION_FAILED);
+      }
+
+      $qb = $this->getManager()->createQueryBuilder();
+
+      $qb->select('b')
+          ->from(DeclareBirth::class, 'b')
+      ;
+
+      foreach ($primaryKeys as $primaryKey) {
+          $qb->orWhere($qb->expr()->eq('b.id', $primaryKey));
+      }
+
+      $births = $qb->getQuery()->getResult();
+      return $setPrimaryKeysAsArrayKeys ? $this->setPrimaryKeysAsArrayKeys($births) : $births;
+  }
+
 }
