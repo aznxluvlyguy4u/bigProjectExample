@@ -13,13 +13,19 @@ class SectionUtil
 
     /**
      * @param string $breedType
+     * @param string $nullFiller
      * @return string
      */
-    public static function getSectionType($breedType)
+    public static function getSectionType($breedType, $nullFiller = '')
     {
-        if ($breedType === BreedType::SECONDARY_REGISTER || $breedType === BreedType::UNDETERMINED) {
+        if ($breedType === BreedType::PURE_BRED) {
+            return self::MAIN_SECTION;
+        }
+
+        if ($breedType === BreedType::SECONDARY_REGISTER || $breedType === BreedType::BLIND_FACTOR) {
             return self::COMPLEMENTARY_SECTION;
         }
-        return self::MAIN_SECTION;
+
+        return $nullFiller;
     }
 }

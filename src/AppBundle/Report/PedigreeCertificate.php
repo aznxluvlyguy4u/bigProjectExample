@@ -521,7 +521,7 @@ class PedigreeCertificate
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_SIZE] = $litterSize;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::N_LING] = $nLing;
 
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = SectionUtil::getSectionType($breedType);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = SectionUtil::getSectionType($breedType, self::GENERAL_NULL_FILLER);
 
             //Offspring
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount, self::GENERAL_NULL_FILLER);
@@ -832,7 +832,7 @@ class PedigreeCertificate
             $latestExteriorArray[JsonInputConstant::KIND], $inspectionDateDateTime, self::GENERAL_NULL_FILLER
         );
 
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = SectionUtil::getSectionType($breedType);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = SectionUtil::getSectionType($breedType, self::GENERAL_NULL_FILLER);
 
         /* variables translated to Dutch */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($gender);
