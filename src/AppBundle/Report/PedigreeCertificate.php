@@ -166,7 +166,8 @@ class PedigreeCertificate
 
         /** @var PedigreeRegister $pedigreeRegister */
         $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)->getByAnimalId($animalId);
-        $this->data[ReportLabel::PEDIGREE_REGISTER] = $pedigreeRegister;
+        $this->data[ReportLabel::PEDIGREE_REGISTER] = $pedigreeRegister
+            ? $pedigreeRegister->getPedigreeRegisterForCertification() : null;
 
         // Add shared data
         $this->breedValuesLastGenerationDate = $this->breedValuesOutput->getBreedValuesLastGenerationDate(self::GENERAL_NULL_FILLER);
