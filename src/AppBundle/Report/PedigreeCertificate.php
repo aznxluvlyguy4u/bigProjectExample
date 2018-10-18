@@ -265,6 +265,7 @@ class PedigreeCertificate
                 $this->data[ReportLabel::BREEDER_EMAIL_ADDRESS] = self::GENERAL_NULL_FILLER;
                 $this->data[ReportLabel::ADDRESS_BREEDER] = $this->getEmptyLocationAddress();
                 $this->data[ReportLabel::POSTAL_CODE_BREEDER] = self::GENERAL_NULL_FILLER;
+                $this->data[ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
             } else {
                 $ubnOfBreeder = $this->getNullCheckedArrayValue('ubn_of_birth', $result);
 
