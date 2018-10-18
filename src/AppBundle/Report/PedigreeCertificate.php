@@ -199,7 +199,7 @@ class PedigreeCertificate
                 WHERE a.id = ".intval($animalId);
             $result = $this->em->getConnection()->query($sql)->fetch();
 
-            $currentUbnOfAnimal = is_array($result) ? Utils::getNullCheckedArrayValue('ubn', $result) : null;
+            $currentUbnOfAnimal = is_array($result) ? ArrayUtil::get('ubn', $result, null): null;
 
             if($currentUbnOfAnimal == $this->data[ReportLabel::UBN]) {
                 return; //just use current default values
@@ -214,13 +214,13 @@ class PedigreeCertificate
 
             } else {
                 //Use currentOwner values
-                $companyName = $this->nullFillString(Utils::getNullCheckedArrayValue('company_name', $result));
-                $streetName = $this->nullFillString(Utils::getNullCheckedArrayValue('street_name', $result));
-                $addressNumber = $this->nullFillString(Utils::getNullCheckedArrayValue('address_number', $result));
-                $addressNumberSuffix = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number_suffix', $result), '');
-                $rawPostalCode = Utils::getNullCheckedArrayValue('postal_code', $result);
+                $companyName = $this->getNullCheckedArrayValue('company_name', $result);
+                $streetName = $this->getNullCheckedArrayValue('street_name', $result);
+                $addressNumber = $this->getNullCheckedArrayValue('address_number', $result);
+                $addressNumberSuffix = $this->getNullCheckedArrayValue('address_number_suffix', $result, '');
+                $rawPostalCode = $this->getNullCheckedArrayValue('postal_code', $result);
                 $postalCode = $this->nullFillString($rawPostalCode);
-                $city = $this->nullFillString(Utils::getNullCheckedArrayValue('city', $result));
+                $city = $this->getNullCheckedArrayValue('city', $result);
                 $ownerEmailAddress = ArrayUtil::get('email_address', $result);
 
                 $address = new LocationAddress();
@@ -266,17 +266,16 @@ class PedigreeCertificate
                 $this->data[ReportLabel::ADDRESS_BREEDER] = $this->getEmptyLocationAddress();
                 $this->data[ReportLabel::POSTAL_CODE_BREEDER] = self::GENERAL_NULL_FILLER;
             } else {
-                $ubnOfBreeder = Utils::getNullCheckedArrayValue('ubn_of_birth', $result);
-                $ubnOfBreeder = empty($ubnOfBreeder) ? self::GENERAL_NULL_FILLER : $ubnOfBreeder;
+                $ubnOfBreeder = $this->getNullCheckedArrayValue('ubn_of_birth', $result);
 
                 //Use currentOwner values
-                $companyName = $this->nullFillString(Utils::getNullCheckedArrayValue('company_name', $result));
-                $streetName = $this->nullFillString(Utils::getNullCheckedArrayValue('street_name', $result));
-                $addressNumber = $this->nullFillString(Utils::getNullCheckedArrayValue('address_number', $result));
-                $addressNumberSuffix = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number_suffix', $result), '');
-                $rawPostalCode = Utils::getNullCheckedArrayValue('postal_code', $result);
+                $companyName = $this->getNullCheckedArrayValue('company_name', $result);
+                $streetName = $this->getNullCheckedArrayValue('street_name', $result);
+                $addressNumber = $this->getNullCheckedArrayValue('address_number', $result);
+                $addressNumberSuffix = $this->getNullCheckedArrayValue('address_number_suffix', $result, '');
+                $rawPostalCode = $this->getNullCheckedArrayValue('postal_code', $result);
                 $postalCode = $this->nullFillString($rawPostalCode);
-                $city = $this->nullFillString(Utils::getNullCheckedArrayValue('city', $result));
+                $city = $this->getNullCheckedArrayValue('city', $result);
 
                 $address = new LocationAddress();
                 $address->setStreetName($streetName);
@@ -286,7 +285,7 @@ class PedigreeCertificate
                 $address->setCity($city);
 
                 $this->data[ReportLabel::BREEDER_EMAIL_ADDRESS] = Validator::getFillerCheckedEmailAddress(
-                    Utils::getNullCheckedArrayValue('email_address', $result),
+                    $this->getNullCheckedArrayValue('email_address', $result),
                     self::GENERAL_NULL_FILLER
                 );
 
@@ -1115,6 +1114,17 @@ class PedigreeCertificate
 
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LAST_MATE] = $result;
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LAST_MATE][ReportLabel::IS_EMPTY] = empty($result);
+    }
+
+    /**
+     * @param $key
+     * @param $array
+     * @param string $nullFiller
+     * @return string|null
+     */
+    private function getNullCheckedArrayValue($key, $array, $nullFiller = self::GENERAL_NULL_FILLER)
+    {
+        return ArrayUtil::get($key, $array, $nullFiller);
     }
 
     /**
