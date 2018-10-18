@@ -557,14 +557,7 @@ class PedigreeCertificate
             $sectionType = SectionUtil::getSectionType($breedType, self::GENERAL_NULL_FILLER);
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = $sectionType;
 
-            if ($key === ReportLabel::CHILD_KEY) {
-                $displayZooTechnicalData =
-                    $sectionType === SectionUtil::MAIN_SECTION &&
-                    $breedType === BreedType::PURE_BRED &&
-                    $this->data[ReportLabel::ACTION_BY_IS_SUPER_ADMIN] // This value should be set in the beginning!
-                ;
-                $this->data[ReportLabel::DISPLAY_ZOO_TECHNICAL_DATA] = $displayZooTechnicalData;
-            }
+            $this->setDisplayZooTechnicalData($key, $sectionType);
 
             //Offspring
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount, self::GENERAL_NULL_FILLER);
@@ -921,7 +914,9 @@ class PedigreeCertificate
             $latestExteriorArray[JsonInputConstant::KIND], $inspectionDateDateTime, self::GENERAL_NULL_FILLER
         );
 
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = SectionUtil::getSectionType($breedType, self::GENERAL_NULL_FILLER);
+        $sectionType = SectionUtil::getSectionType($breedType, self::GENERAL_NULL_FILLER);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = $sectionType;
+        $this->setDisplayZooTechnicalData($key, $sectionType);
 
         /* variables translated to Dutch */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($gender);
@@ -1156,4 +1151,28 @@ class PedigreeCertificate
     {
         return Utils::fillZeroFloat($value,self::GENERAL_NULL_FILLER);
     }
+
+
+    /**
+     * @param $animalKey
+     * @param $sectionType
+     */
+    private function setDisplayZooTechnicalData($animalKey, $sectionType)
+    {
+        if ($animalKey === ReportLabel::CHILD_KEY) {
+            // These values should be set in the beginning!
+            /** @var PedigreeRegister $pedigreeRegister */
+            $pedigreeRegister = $this->data[ReportLabel::PEDIGREE_REGISTER];
+            $isOfficiallyRecognizedPedigreeRegister = $pedigreeRegister && $pedigreeRegister->isOfficiallyRecognized();
+            $actionByIsSuperAdmin = $this->data[ReportLabel::ACTION_BY_IS_SUPER_ADMIN];
+
+            $displayZooTechnicalData =
+                $actionByIsSuperAdmin &&
+                $isOfficiallyRecognizedPedigreeRegister &&
+                $sectionType === SectionUtil::MAIN_SECTION
+            ;
+            $this->data[ReportLabel::DISPLAY_ZOO_TECHNICAL_DATA] = $displayZooTechnicalData;
+        }
+    }
+
 }
