@@ -20,6 +20,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\AnimalTypeInLatin;
+use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\BreedValuesOutput;
 use AppBundle\Util\ArrayUtil;
@@ -553,7 +554,17 @@ class PedigreeCertificate
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_SIZE] = $litterSize;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::N_LING] = $nLing;
 
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = SectionUtil::getSectionType($breedType, self::GENERAL_NULL_FILLER);
+            $sectionType = SectionUtil::getSectionType($breedType, self::GENERAL_NULL_FILLER);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = $sectionType;
+
+            if ($key === ReportLabel::CHILD_KEY) {
+                $displayZooTechnicalData =
+                    $sectionType === SectionUtil::MAIN_SECTION &&
+                    $breedType === BreedType::PURE_BRED &&
+                    $this->data[ReportLabel::ACTION_BY_IS_SUPER_ADMIN] // This value should be set in the beginning!
+                ;
+                $this->data[ReportLabel::DISPLAY_ZOO_TECHNICAL_DATA] = $displayZooTechnicalData;
+            }
 
             //Offspring
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount, self::GENERAL_NULL_FILLER);

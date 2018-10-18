@@ -157,4 +157,6 @@ class ReportLabel
     const AVERAGE_YEARLY_ANIMAL_COUNT = 'average_yearly_animal_count';
     const NITROGEN = 'nitrogen';
     const PHOSPHATE = 'phosphate';
+
+    const DISPLAY_ZOO_TECHNICAL_DATA = 'displayZooTechnicalData';
 }
