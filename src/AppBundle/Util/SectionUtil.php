@@ -28,6 +28,7 @@ class SectionUtil
 
         if (
             $breedType === BreedType::SECONDARY_REGISTER // Hulpboek
+         || $breedType === BreedType::UNDETERMINED       // Onbepaald
         ) {
             return self::COMPLEMENTARY_SECTION;
         }
