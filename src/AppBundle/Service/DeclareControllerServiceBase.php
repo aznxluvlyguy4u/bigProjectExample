@@ -34,6 +34,7 @@ use AppBundle\Exception\DeclareToOtherCountryHttpException;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -343,6 +344,18 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
         if(!$isAnimalOfClient) {
             throw new PreconditionFailedHttpException("Animal doesn't belong to this account.");
+        }
+    }
+
+
+    /**
+     * @param $ubn
+     * @param bool $isDutchLocation
+     */
+    protected function verifyUbnFormat($ubn, bool $isDutchLocation)
+    {
+        if (!Validator::hasValidUbnFormatByLocationType($ubn, $isDutchLocation)) {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn);
         }
     }
 

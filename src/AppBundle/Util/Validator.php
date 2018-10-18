@@ -558,17 +558,38 @@ class Validator
 
 
     /**
+     * @param $number
+     * @return bool
+     */
+    public static function containsOnlyDigits($number): bool
+    {
+        return is_int($number) ||
+            (is_string($number) && ctype_digit($number));
+    }
+
+
+    /**
+     * @param string|int $ubn
+     * @param bool $isDutchLocation
+     * @return bool
+     */
+    public static function hasValidUbnFormatByLocationType($ubn, bool $isDutchLocation)
+    {
+        return self::containsOnlyDigits($ubn) && (
+                $isDutchLocation ? self::hasValidDutchUbnFormat($ubn) : self::hasValidNonNlUbnFormat($ubn)
+            );
+    }
+
+
+    /**
      * @param string|int $ubn
      * @return bool
      */
     public static function hasValidUbnFormat($ubn)
     {
-        //Verify type, ensure ubn is a string
-        if(is_int($ubn)) { $ubn = (string)$ubn; }
-        else if(is_string($ubn)) {  if(!ctype_digit($ubn)) { return false; }}
-        else { return false; }
-
-        return self::isValidSevenTestNumber($ubn) || self::hasValidNonNlUbnFormat($ubn);
+        return self::containsOnlyDigits($ubn) && (
+               self::hasValidDutchUbnFormat($ubn) || self::hasValidNonNlUbnFormat($ubn)
+            );
     }
 
 
@@ -578,21 +599,30 @@ class Validator
      */
     private static function hasValidNonNlUbnFormat($ubn): bool
     {
-        //Verify type, ensure ubn is a string
-        if(is_int($ubn)) { $ubn = (string)$ubn; }
-        else if(is_string($ubn)) {  if(!ctype_digit($ubn)) { return false; }}
-        else { return false; }
-
+        if (!self::containsOnlyDigits($ubn)) {
+            return false;
+        }
+        $ubn = (string)$ubn;
         return substr($ubn,0,1) === '9';
+    }
+
+
+    /**
+     * @param $ubn
+     * @return bool
+     */
+    public static function hasValidDutchUbnFormat($ubn): bool
+    {
+        return self::isValidSevenTestNumber($ubn);
     }
 
 
     public static function isValidSevenTestNumber($number): bool
     {
-        //Verify type, ensure ubn is a string
-        if(is_int($number)) { $number = (string)$number; }
-        else if(is_string($number)) {  if(!ctype_digit($number)) { return false; }}
-        else { return false; }
+        if (!self::containsOnlyDigits($number)) {
+            return false;
+        }
+        $number = (string)$number;
 
         $maxLength = 7;
         $minLength = 2;
