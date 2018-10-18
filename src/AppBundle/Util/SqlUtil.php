@@ -18,6 +18,7 @@ use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
 class SqlUtil
@@ -817,4 +818,32 @@ class SqlUtil
     {
         return ' (open_residence.animal_id NOTNULL OR closed_residence.animal_id NOTNULL) ';
     }
+
+
+    /**
+     * @param array $columnLabels
+     * @param string $tableAlias
+     * @return string
+     */
+    public static function columnNotNullCountQueryPart(array $columnLabels,
+                                                       string $tableAlias = ''): string
+    {
+        if (empty($columnLabels)) {
+            throw new PreconditionRequiredHttpException('Column Labels cannot be empty');
+        }
+
+
+        $columnLabelsWithTableAlias = empty($tableAlias) ? $columnLabels :
+            array_map(function(string $columnLabel) use ($tableAlias) {
+                return $tableAlias.'.'.$columnLabel;
+            }, $columnLabels);
+
+        $firstPart = ' (CASE WHEN ';
+        $lastPart = ' NOTNULL THEN 1 ELSE 0 END) ';
+        $connector = ' + ';
+        $glue = $lastPart . $connector . $firstPart;
+
+        return $firstPart . implode($glue, $columnLabelsWithTableAlias) . $lastPart;
+    }
+
 }

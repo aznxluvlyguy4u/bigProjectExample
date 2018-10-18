@@ -6,6 +6,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
+use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
@@ -80,6 +81,7 @@ class NsfoTestCommand extends ContainerAwareCommand
             '2: Delete animal and all related records', "\n",
             '3: Purge worker test queues', "\n",
             '4: Get uln test data', "\n",
+            '5: Find animals with most breedValues', "\n",
             'DEFAULT: Custom test', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -100,6 +102,7 @@ class NsfoTestCommand extends ContainerAwareCommand
                 $this->cmdUtil->writeln('Internal test queue messages purged: '.$purgeCount);
                 break;
             case 4: $this->getUlnTestData(); break;
+            case 5: $this->getBreedValuesRankingData(); break;
             default:
                 $this->customTest();
                 break;
@@ -154,5 +157,17 @@ class NsfoTestCommand extends ContainerAwareCommand
             $prefix = ',';
         }
         $this->output->writeln($string);
+    }
+
+
+    private function getBreedValuesRankingData()
+    {
+        $limit = $this->cmdUtil->questionForIntChoice(10, 'Result count');
+        $locationId = $this->cmdUtil->questionForIntChoice(0, 'locationId (0 = all locations)');
+
+//        $locationId = abs(intval($this->cmdUtil->questionForIntChoice('LocationId (0 = all locations)', 0)));
+        $results = $this->em->getRepository(ResultTableBreedGrades::class)
+            ->retrieveAnimalsWithMostBreedValues($limit, $locationId);
+        $this->cmdUtil->writeln($results);
     }
 }
