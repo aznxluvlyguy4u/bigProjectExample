@@ -213,7 +213,7 @@ class BreedValuesOutput extends OutputServiceBase
      */
     public static function getFormattedBreedIndexAccuracy($accuracy, $nullFiller = BreedFormat::EMPTY_BREED_SINGLE_VALUE): ?string
     {
-        return $accuracy ? number_format($accuracy, 0, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR)
+        return $accuracy ? number_format($accuracy*100, 0, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR)
             : $nullFiller;
     }
 
