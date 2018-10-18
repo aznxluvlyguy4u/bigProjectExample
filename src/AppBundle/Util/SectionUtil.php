@@ -18,11 +18,17 @@ class SectionUtil
      */
     public static function getSectionType($breedType, $nullFiller = '')
     {
-        if ($breedType === BreedType::PURE_BRED) {
+        if (
+            $breedType === BreedType::PURE_BRED     // Volbloed
+         || $breedType === BreedType::REGISTER      // Register
+         || $breedType === BreedType::BLIND_FACTOR  // Blindfactor
+        ) {
             return self::MAIN_SECTION;
         }
 
-        if ($breedType === BreedType::SECONDARY_REGISTER || $breedType === BreedType::BLIND_FACTOR) {
+        if (
+            $breedType === BreedType::SECONDARY_REGISTER // Hulpboek
+        ) {
             return self::COMPLEMENTARY_SECTION;
         }
 

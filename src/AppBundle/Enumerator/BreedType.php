@@ -9,14 +9,14 @@ class BreedType
 {
     use EnumInfo;
 
-    const BLIND_FACTOR = "BLIND_FACTOR";
-    const MEAT_LAMB_FATHER = "MEAT_LAMB_FATHER";
-    const MEAT_LAMB_MOTHER = "MEAT_LAMB_MOTHER";
-    const PARENT_ANIMAL = "PARENT_ANIMAL";
-    const PURE_BRED = "PURE_BRED";
-    const REGISTER = "REGISTER";
-    const SECONDARY_REGISTER = "SECONDARY_REGISTER";
-    const UNDETERMINED = "UNDETERMINED";
+    const BLIND_FACTOR = "BLIND_FACTOR";             // Blindfactor
+    const MEAT_LAMB_FATHER = "MEAT_LAMB_FATHER";     // Vleeslamvaderdier
+    const MEAT_LAMB_MOTHER = "MEAT_LAMB_MOTHER";     // Vleeslammoederdier
+    const PARENT_ANIMAL = "PARENT_ANIMAL";           // Ouderdier
+    const PURE_BRED = "PURE_BRED";                   // Volbloed
+    const REGISTER = "REGISTER";                     // Register
+    const SECONDARY_REGISTER = "SECONDARY_REGISTER"; // Hulpboek
+    const UNDETERMINED = "UNDETERMINED";             // Onbepaald
     const EN_MANAGEMENT = "EN_MANAGEMENT";
     const EN_BASIS = "EN_BASIS";
 
