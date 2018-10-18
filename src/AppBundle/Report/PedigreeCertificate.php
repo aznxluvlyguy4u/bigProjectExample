@@ -267,6 +267,7 @@ class PedigreeCertificate
                 $this->data[ReportLabel::POSTAL_CODE_BREEDER] = self::GENERAL_NULL_FILLER;
             } else {
                 $ubnOfBreeder = Utils::getNullCheckedArrayValue('ubn_of_birth', $result);
+                $ubnOfBreeder = empty($ubnOfBreeder) ? self::GENERAL_NULL_FILLER : $ubnOfBreeder;
 
                 //Use currentOwner values
                 $companyName = $this->nullFillString(Utils::getNullCheckedArrayValue('company_name', $result));
