@@ -23,11 +23,18 @@
             </p>
         {% endif %}
 
-        {% if certificate.action_by_is_super_admin %}
+
+        {% if certificate.displayZooTechnicalData %}
             <p>
                 Zoötechnisch certificaat overeenkomstig Verordening (EU) 2016/1012 voor de handel in raszuivere fokschapen (Ovis aries)<br>
             </p>
+        {% else %}
+            <p>
+                Dit document is door de houder van het dier gegenereerd en daarom geen officieel zoötechnisch certificaat krachtens art. 30 van Verordening (EU) 2016 / 1012 van het Europees Parlement en de Raad<br>
+            </p>
+        {% endif %}
 
+        {% if certificate.action_by_is_super_admin %}
             <div class="row">
                 <div class="col-xs-4">
                     Ondergetekende
@@ -52,9 +59,6 @@
                 </div>
             </div>
         {% else %}
-            <p>
-                Dit document is door de houder van het dier gegenereerd en daarom geen officieel zoötechnisch certificaat krachtens art. 30 van Verordening (EU) 2016 / 1012 van het Europees Parlement en de Raad<br>
-            </p>
             <div class="row">
                 <div class="col-xs-4">
                     Datum afgifte
