@@ -9,6 +9,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareDepart;
@@ -178,6 +179,7 @@ class DepartService extends DeclareControllerServiceBase
         $arrivalLog = null;
 
         $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
+        $this->verifyUbnFormat($content->get(JsonInputConstant::UBN_NEW_OWNER), $location->isDutchLocation());
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $depart = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);
@@ -332,6 +334,8 @@ class DepartService extends DeclareControllerServiceBase
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
+
+        $this->verifyUbnFormat($content->get(JsonInputConstant::UBN_NEW_OWNER), $location->isDutchLocation());
 
         //NOTE!!! Don't try to verify any animals directly. Because they will have the isDeparted=true state.
         //Verify this request using the requestId

@@ -34,6 +34,7 @@ use AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIControllerInterface
@@ -203,7 +204,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $arrivalOrImportLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
         //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
-        $pedigreeValidation = $this->validateArrivalPost($content);
+        $pedigreeValidation = $this->validateArrivalPost($content, $location->isDutchLocation());
         if(!$pedigreeValidation->get(Constant::IS_VALID_NAMESPACE)) {
             return $pedigreeValidation->get(Constant::RESPONSE);
         }
@@ -316,7 +317,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $actionLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
         //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
-        $pedigreeValidation = $this->validateArrivalPost($content);
+        $pedigreeValidation = $this->validateArrivalPost($content, $location->isDutchLocation());
         if(!$pedigreeValidation->get(Constant::IS_VALID_NAMESPACE)) {
             return $pedigreeValidation->get(Constant::RESPONSE);
         }
@@ -483,11 +484,13 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
     /**
      * @param ArrayCollection $content
-     * @param int $errorCode
+     * @param bool $isDutchLocation
      * @return ArrayCollection
      */
-    private function validateArrivalPost(ArrayCollection $content, $errorCode = 428)
+    private function validateArrivalPost(ArrayCollection $content, $isDutchLocation)
     {
+        $errorCode = Response::HTTP_PRECONDITION_REQUIRED;
+
         //Default values
         $result = new ArrayCollection();
         $jsonErrorResponse = null;
@@ -499,6 +502,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
         $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
         $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+        $this->verifyUbnFormat($content->get(JsonInputConstant::UBN_PREVIOUS_OWNER), $isDutchLocation);
 
         //Don't check if uln was chosen instead of pedigree
         $pedigreeCodeExists = $pedigreeCountryCode != null && $pedigreeNumber != null;

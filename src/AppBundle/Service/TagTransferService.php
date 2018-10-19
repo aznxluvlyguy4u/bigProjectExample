@@ -89,6 +89,9 @@ class TagTransferService extends DeclareControllerServiceBase
     {
         $errorMessage = '';
 
+        $isNewUbnDutchLocation = $loggedInLocation->isDutchLocation(); // International tag transfers not allowed
+        $this->verifyUbnFormat($ubnNewOwner, $isNewUbnDutchLocation);
+
         $locationNewOwner = $this->getManager()->getRepository(Location::class)->findOneByActiveUbn($ubnNewOwner);
 
         if (!$locationNewOwner) {
