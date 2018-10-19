@@ -168,7 +168,8 @@ class PedigreeCertificate
         $this->setBreederDataFromAnimalIdBySql($animalId);
 
         /** @var PedigreeRegister $pedigreeRegister */
-        $this->mainPedigreeRegister = $this->em->getRepository(PedigreeRegister::class)->getByAnimalId($animalId);
+        $this->mainPedigreeRegister = $this->em->getRepository(PedigreeRegister::class)
+            ->getByAnimalId($animalId, false);
         $this->data[ReportLabel::PEDIGREE_REGISTER] = $this->mainPedigreeRegister
             ? $this->mainPedigreeRegister->getPedigreeRegisterForCertification() : null;
 
