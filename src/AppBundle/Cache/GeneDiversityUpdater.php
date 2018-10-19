@@ -343,6 +343,7 @@ class GeneDiversityUpdater
         $updateString = '';
         $updateStringPrefix = '';
         $idsUpdateArray = [];
+        $idsToFillWithGeneDiversityNullValues = [];
 
         $totalCount = count($results);
         $loopCount = 0;
@@ -367,36 +368,48 @@ class GeneDiversityUpdater
             if($geneDiversityValues != null) {
                 $heterosisValue = ArrayUtil::get(ReportLabel::HETEROSIS, $geneDiversityValues);
                 $recombinationValue = ArrayUtil::get(ReportLabel::RECOMBINATION, $geneDiversityValues);
+                $updateWithNullValues = false;
             } elseif($isPureBred) {
                 $heterosisValue = 0;
                 $recombinationValue = 0;
+                $updateWithNullValues = false;
             } else {
                 $heterosisValue = 'NULL';
                 $recombinationValue = 'NULL';
+                $updateWithNullValues = true;
                 $currentAndNewAreAllNull = $currentHeterosis === null && $currentRecombination === null;
             }
 
             $numbersAreEqual = NumberUtil::areFloatsEqual($currentHeterosis, $heterosisValue) && NumberUtil::areFloatsEqual($currentRecombination, $recombinationValue);
 
             if($numbersAreEqual || $currentAndNewAreAllNull) {
-                $idsUpdateArray[] = $id;
-                $toUpdateCount++;
                 $unchangedValueCount++;
             } else {
-                $updateString = $updateString.$updateStringPrefix.'('.$id.','.$heterosisValue.','.$recombinationValue.')';
-                $updateStringPrefix = ',';
+                if ($updateWithNullValues) {
+                    $idsToFillWithGeneDiversityNullValues[] = $id;
+                } else {
+                    /*
+                     * These values should not be NULL but 0.0 if empty.
+                     * Or else the Batch update query will fail.
+                     */
+                    $updateString = $updateString.$updateStringPrefix.'('.$id.','.$heterosisValue.','.$recombinationValue.')';
+                    $updateStringPrefix = ',';
+                }
+                $idsUpdateArray[] = $id;
                 $toUpdateCount++;
                 $newValueCount++;
             }
 
             if($toUpdateCount >= self::BATCH_SIZE || $loopCount >= $totalCount) {
                 $updatedCount += self::updateGeneticDiversityValuesByUpdateString($conn, $tableName, $updateString);
+                $updatedCount += self::updateWithNullGeneticDiversityValuesByAnimalIds($conn, $tableName, $idsToFillWithGeneDiversityNullValues);
                 $updatedCount += self::setGeneticDiversityIsTrueByAnimalIds($conn, $tableName, $idsUpdateArray);
                 //Reset values
                 $toUpdateCount = 0;
                 $updateString = '';
                 $updateStringPrefix = '';
                 $idsUpdateArray = [];
+                $idsToFillWithGeneDiversityNullValues = [];
 
                 if($cmdUtil) { $cmdUtil->advanceProgressBar(1, $updatedCount.'/'.$totalCount.' '.$tableName.'s have updated heterosis and recombination values, new|unchanged: '
                     .$newValueCount.'|'.$unchangedValueCount); }
@@ -429,6 +442,26 @@ class GeneDiversityUpdater
                         updated_gene_diversity = TRUE
 						FROM ( VALUES ".$updateString."
 							 ) as v(id, heterosis, recombination) WHERE $tableName.id = v.id";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $tableName
+     * @param array $animalIds
+     * @return int
+     */
+    private static function updateWithNullGeneticDiversityValuesByAnimalIds(Connection $conn, $tableName, array $animalIds): int
+    {
+        if(empty($animalIds) || !is_array($animalIds)) { return 0; }
+        if(!is_string($tableName)) { return 0; }
+
+        $idsString = SqlUtil::getFilterListString($animalIds,false);
+
+        $sql = "UPDATE $tableName SET heterosis = NULL, recombination = NULL,
+                        updated_gene_diversity = TRUE
+				        WHERE $tableName.id IN ( $idsString )";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 
