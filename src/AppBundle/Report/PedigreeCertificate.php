@@ -84,6 +84,8 @@ class PedigreeCertificate
     private $breedValuesLastGenerationDate;
     /** @var array */
     private $breedFullNamesByCodes;
+    /** @var PedigreeRegister */
+    private $mainPedigreeRegister;
 
     public function __construct(EntityManagerInterface $em,
                                 TranslatorInterface $translator,
@@ -128,6 +130,7 @@ class PedigreeCertificate
     private function clearPrivateVariables()
     {
         $this->breedFullNamesByCodes = null;
+        $this->mainPedigreeRegister = null;
     }
 
 
@@ -165,9 +168,9 @@ class PedigreeCertificate
         $this->setBreederDataFromAnimalIdBySql($animalId);
 
         /** @var PedigreeRegister $pedigreeRegister */
-        $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)->getByAnimalId($animalId);
-        $this->data[ReportLabel::PEDIGREE_REGISTER] = $pedigreeRegister
-            ? $pedigreeRegister->getPedigreeRegisterForCertification() : null;
+        $this->mainPedigreeRegister = $this->em->getRepository(PedigreeRegister::class)->getByAnimalId($animalId);
+        $this->data[ReportLabel::PEDIGREE_REGISTER] = $this->mainPedigreeRegister
+            ? $this->mainPedigreeRegister->getPedigreeRegisterForCertification() : null;
 
         // Add shared data
         $this->breedValuesLastGenerationDate = $this->breedValuesOutput->getBreedValuesLastGenerationDate(self::GENERAL_NULL_FILLER);
@@ -1163,8 +1166,8 @@ class PedigreeCertificate
         if ($animalKey === ReportLabel::CHILD_KEY) {
             // These values should be set in the beginning!
             /** @var PedigreeRegister $pedigreeRegister */
-            $pedigreeRegister = $this->data[ReportLabel::PEDIGREE_REGISTER];
-            $isOfficiallyRecognizedPedigreeRegister = $pedigreeRegister && $pedigreeRegister->isOfficiallyRecognized();
+            $isOfficiallyRecognizedPedigreeRegister = $this->mainPedigreeRegister &&
+                $this->mainPedigreeRegister->isOfficiallyRecognized();
             $actionByIsSuperAdmin = $this->data[ReportLabel::ACTION_BY_IS_SUPER_ADMIN];
 
             $displayZooTechnicalData =
