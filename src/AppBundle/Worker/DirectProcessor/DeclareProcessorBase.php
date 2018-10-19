@@ -21,6 +21,7 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Service\ControllerServiceBase;
 use AppBundle\Service\DeclareControllerServiceBase;
 use AppBundle\Util\StringUtil;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
 class DeclareProcessorBase extends ControllerServiceBase
 {
@@ -60,8 +61,12 @@ class DeclareProcessorBase extends ControllerServiceBase
      * @param Animal $animal
      * @param Location $location
      */
-    protected function resetOriginPendingStateAnimalResidence(Animal $animal, Location $location)
+    protected function resetOriginPendingStateAnimalResidence(?Animal $animal, ?Location $location)
     {
+        if (!$location || !$animal) {
+            return;
+        }
+
         $animalResidence = $this->getManager()->getRepository(AnimalResidence::class)
             ->getLastOpenResidenceOnLocation($location, $animal);
         if ($animalResidence && $animalResidence->isPending()) {
@@ -76,8 +81,13 @@ class DeclareProcessorBase extends ControllerServiceBase
      * @param Location $origin
      * @return bool
      */
-    protected function animalResidenceOnPreviousLocationHasBeenFinalized(Animal $animal, Location $origin): bool
+    protected function animalResidenceOnPreviousLocationHasBeenFinalized(?Animal $animal, ?Location $origin): bool
     {
+        if (!$origin || !$animal) {
+            // If previous location does not exist in the database, finalize transaction
+            return true;
+        }
+
         $animalResidence = $this->getManager()->getRepository(AnimalResidence::class)
             ->getLastResidenceOnLocation($origin, $animal);
         return $animalResidence && $animalResidence->getEndDate() !== null;
@@ -91,9 +101,13 @@ class DeclareProcessorBase extends ControllerServiceBase
      * @param bool $isPending
      * @return AnimalResidence
      */
-    protected function createNewAnimalResidenceIfNotExistsYet(Animal $animal, Location $location,
+    protected function createNewAnimalResidenceIfNotExistsYet(Animal $animal, ?Location $location,
                                                               \DateTime $startDate, bool $isPending): AnimalResidence
     {
+        if (!$location) {
+            throw new PreconditionRequiredHttpException('Destination location missing');
+        }
+
         $currentAnimalResidence = $this->getManager()->getRepository(AnimalResidence::class)
             ->getLastResidenceOnLocation($location, $animal);
         if ($currentAnimalResidence) {
@@ -121,7 +135,7 @@ class DeclareProcessorBase extends ControllerServiceBase
      * @param Animal $animal
      * @param Location $destination
      */
-    protected function finalizeAnimalTransferAndAnimalResidenceDestination(Animal $animal, Location $destination)
+    protected function finalizeAnimalTransferAndAnimalResidenceDestination(?Animal $animal, ?Location $destination)
     {
         if (!$destination || !$animal) {
             return;
@@ -150,9 +164,9 @@ class DeclareProcessorBase extends ControllerServiceBase
      * @param Location $location
      * @param \DateTime $endDate
      */
-    protected function closeLastOpenAnimalResidence(Animal $animal, Location $location, $endDate)
+    protected function closeLastOpenAnimalResidence(Animal $animal, ?Location $location, $endDate)
     {
-        if (!$endDate) {
+        if (!$endDate || !$location) {
             return;
         }
 
