@@ -597,13 +597,14 @@ class Validator
      * @param string|int $ubn
      * @return bool
      */
-    private static function hasValidNonNlUbnFormat($ubn): bool
+    public static function hasValidNonNlUbnFormat($ubn): bool
     {
         if (!self::containsOnlyDigits($ubn)) {
             return false;
         }
         $ubn = (string)$ubn;
-        return substr($ubn,0,1) === '9';
+        $startsWithANine = substr($ubn,0,1) === '9';
+        return $startsWithANine || self::isValidSevenTestNumber($ubn);
     }
 
 
