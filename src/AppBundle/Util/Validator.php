@@ -48,6 +48,9 @@ class Validator
     const MIN_ULN_NUMBER_LENGTH = 6;
     const ULN_COUNTRY_CODE_LENGTH = 2;
 
+    const UBN_MIN_LENGTH = 2;
+    const UBN_MAX_LENGTH = 7;
+
     /** @var array */
     private static $validBreedTypes = [];
     /** @var array */
@@ -599,7 +602,7 @@ class Validator
      */
     public static function hasValidNonNlUbnFormat($ubn): bool
     {
-        if (!self::containsOnlyDigits($ubn)) {
+        if (!self::containsOnlyDigits($ubn) || !self::hasValidUbnLength($ubn)) {
             return false;
         }
         $ubn = (string)$ubn;
@@ -614,6 +617,9 @@ class Validator
      */
     public static function hasValidDutchUbnFormat($ubn): bool
     {
+        if (!self::hasValidUbnLength($ubn)) {
+            return false;
+        }
         return self::isValidSevenTestNumber($ubn);
     }
 
@@ -625,22 +631,34 @@ class Validator
         }
         $number = (string)$number;
 
-        $maxLength = 7;
-        $minLength = 2;
-        $length = strlen($number);
+        if (!self::hasValidUbnLength($number)) {
+            return false;
+        }
 
-        if($length < $minLength || $length > $maxLength) { return false; }
-
-        $ubnReversed = strrev(str_pad($number, $maxLength, 0, STR_PAD_LEFT));
+        $ubnReversed = strrev(str_pad($number, self::UBN_MAX_LENGTH, 0, STR_PAD_LEFT));
         $ubnDigits = str_split($ubnReversed, 1);
         $weights = [1, 3, 7, 1, 3, 7, 1];
 
         $sum = 0;
-        for($i=0; $i < $maxLength; $i++) {
+        for($i=0; $i < self::UBN_MAX_LENGTH; $i++) {
             $sum += intval($ubnDigits[$i]) * $weights[$i];
         }
 
         return $sum%10 == 0;
+    }
+
+
+    /**
+     * @param $number
+     * @return bool
+     */
+    public static function hasValidUbnLength($number): bool
+    {
+        if (empty($number)) {
+            return false;
+        }
+        $length = strlen(strval($number));
+        return self::UBN_MIN_LENGTH <= $length && $length <= self::UBN_MAX_LENGTH;
     }
 
 
