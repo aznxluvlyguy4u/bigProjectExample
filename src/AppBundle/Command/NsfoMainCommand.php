@@ -19,6 +19,7 @@ use AppBundle\Entity\ScrapieGenotypeSource;
 use AppBundle\Entity\TagSyncErrorLog;
 use AppBundle\Entity\TagSyncErrorLogRepository;
 use AppBundle\Enumerator\CommandTitle;
+use AppBundle\Enumerator\Country;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
@@ -933,29 +934,76 @@ class NsfoMainCommand extends ContainerAwareCommand
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '1: Validate UBN', "\n",
+            '1: Validate UBN, all types', "\n",
+            '2: Validate UBN, Dutch format only', "\n",
+            '3: Validate UBN, non-Dutch format only', "\n",
+            '4: Validate UBN format of all active locations', "\n",
             "\n",
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
 
-            case 1: $this->validateUbn(); break;
+            case 1: $this->validateUbn(1); break;
+            case 2: $this->validateUbn(2); break;
+            case 3: $this->validateUbn(3); break;
+            case 4: $this->validataUbnsOfAllActiveLocations(); break;
             default: $this->writeLn('Exit menu'); return;
         }
         $this->calculationsAndAlgorithmsOptions();
     }
 
 
-    private function validateUbn()
+    private function validateUbn(int $option)
     {
+
         do {
             $ubn = $this->cmdUtil->generateQuestion('insert ubn (default: '.self::DEFAULT_UBN.')', self::DEFAULT_UBN);
-            $isUbnValid = Validator::hasValidUbnFormat($ubn);
+
+            switch ($option) {
+                case 1: $isUbnValid = Validator::hasValidUbnFormat($ubn); break;
+                case 2: $isUbnValid = Validator::hasValidDutchUbnFormat($ubn); break;
+                case 3: $isUbnValid = Validator::hasValidNonNlUbnFormat($ubn); break;
+                default: $isUbnValid = Validator::hasValidUbnFormat($ubn); break;
+            }
+
             $this->writeLn('UBN '.strval($ubn).' is '.($isUbnValid ? 'VALID' : 'NOT VALID'));
 
             $retry = $this->cmdUtil->generateConfirmationQuestion('Test another UBN?', true, false);
         } while($retry);
+    }
+
+
+    private function validataUbnsOfAllActiveLocations()
+    {
+        $nlCountryCode = Country::NL;
+        $sql = "SELECT
+                  l.ubn,
+                  country.code,
+                  country.code = '$nlCountryCode' as is_dutch_location
+                FROM location l
+                INNER JOIN company c ON c.id = l.company_id
+                INNER JOIN address a ON l.address_id = a.id
+                INNER JOIN country ON country.id = a.country_details_id
+                WHERE l.is_active AND c.is_active";
+        $sqlResults = $this->conn->query($sql)->fetchAll();
+
+        $invalidUbns = [];
+        foreach ($sqlResults as $sqlResult) {
+            $ubn = $sqlResult['ubn'];
+            $isDutchLocation = $sqlResult['is_dutch_location'];
+            $isValid = Validator::hasValidUbnFormatByLocationType($ubn, $isDutchLocation);
+            if (!$isValid) {
+                $invalidUbns[$ubn] = $sqlResult['code'];
+            }
+        }
+
+        if (empty($invalidUbns)) {
+            $this->writeLn('All ACTIVE UBNs have a valid format!');
+        } else {
+            $this->writeLn(count($invalidUbns).' INVALID ACTIVE UBNS FOUND!');
+            $this->writeLn($invalidUbns);
+        }
     }
 
 
