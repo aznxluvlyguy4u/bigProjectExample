@@ -55,8 +55,9 @@ class DeclareLossProcessor extends DeclareProcessorBase implements DeclareLossPr
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
+        $this->persistResponseInSeparateTransaction($this->response);
+
         $this->getManager()->persist($this->loss);
-        $this->getManager()->persist($this->response);
         $this->getManager()->flush();
 
         $this->loss = null;

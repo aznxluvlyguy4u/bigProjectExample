@@ -73,8 +73,9 @@ class DeclareImportProcessor extends DeclareProcessorBase implements DeclareImpo
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
+        $this->persistResponseInSeparateTransaction($this->response);
+
         $this->getManager()->persist($this->import);
-        $this->getManager()->persist($this->response);
         $this->getManager()->flush();
 
         $this->import = null;

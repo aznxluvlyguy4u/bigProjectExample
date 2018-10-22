@@ -252,10 +252,8 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
         $response = new RevokeDeclarationResponse();
         $response->setRevokeDeclarationIncludingAllValues($revoke);
         $response->setSuccessValues();
-        $revoke->addResponse($response);
 
-        $this->getManager()->persist($response);
-        $this->getManager()->persist($revoke);
+        $this->persistResponseInSeparateTransaction($response);
     }
 
 

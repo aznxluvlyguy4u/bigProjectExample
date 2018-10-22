@@ -1028,6 +1028,10 @@ services:
           - method: setEnvironment
             arguments:
               - '%kernel.environment%'
+        calls:
+          - method: setInternalQueueService
+            arguments:
+              - '@AppBundle\Service\AwsInternalQueueService'
 
     AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor

@@ -54,8 +54,8 @@ class DeclareDepartProcessor extends DeclareProcessorBase implements DeclareDepa
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
-        $this->depart->addResponse($this->response);
-        $this->getManager()->persist($this->response);
+        $this->persistResponseInSeparateTransaction($this->response);
+
         $this->getManager()->persist($this->depart);
         $this->getManager()->flush();
 

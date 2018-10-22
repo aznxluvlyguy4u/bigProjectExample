@@ -53,8 +53,9 @@ class DeclareExportProcessor extends DeclareProcessorBase implements DeclareExpo
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
+        $this->persistResponseInSeparateTransaction($this->response);
+
         $this->getManager()->persist($this->export);
-        $this->getManager()->persist($this->response);
         $this->getManager()->flush();
 
         $this->export = null;

@@ -18,15 +18,38 @@ use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Service\AwsInternalQueueService;
 use AppBundle\Service\ControllerServiceBase;
 use AppBundle\Service\DeclareControllerServiceBase;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\WorkerTaskUtil;
 use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
 class DeclareProcessorBase extends ControllerServiceBase
 {
+    /** @var AwsInternalQueueService */
+    private $internalQueueService;
+
     /** @var string */
     private $environment;
+
+
+    /**
+     * @return AwsInternalQueueService
+     */
+    protected function getInternalQueueService(): AwsInternalQueueService
+    {
+        return $this->internalQueueService;
+    }
+
+    /**
+     * @param AwsInternalQueueService $internalQueueService
+     */
+    public function setInternalQueueService(AwsInternalQueueService $internalQueueService): void
+    {
+        $this->internalQueueService = $internalQueueService;
+    }
+
 
     /**
      * @param string $environment
@@ -43,6 +66,27 @@ class DeclareProcessorBase extends ControllerServiceBase
     {
         return $this->environment;
     }
+
+
+    /**
+     * @param DeclareBaseResponse $response
+     * @return bool|array|null
+     */
+    public function persistResponseInSeparateTransaction(DeclareBaseResponse $response)
+    {
+        if($response == null) { return false; }
+
+        $workerMessageBody = WorkerTaskUtil::createResponseToPersistBody($response);
+        $jsonMessage = $this->getBaseSerializer()->serializeToJSON($workerMessageBody, JmsGroup::RESPONSE_PERSISTENCE);
+
+        //Send  message to Queue
+        $sendToQresult = $this->getInternalQueueService()
+            ->send($jsonMessage, $workerMessageBody->getTaskType(), 1);
+
+        //If send to Queue, failed, it needs to be resend, set state to failed
+        return $sendToQresult['statusCode'] == '200';
+    }
+
 
     /**
      * @param DeclareBase $messageObject

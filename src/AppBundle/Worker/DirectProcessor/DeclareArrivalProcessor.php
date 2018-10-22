@@ -59,8 +59,8 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
-        $this->arrival->addResponse($this->response);
-        $this->getManager()->persist($this->response);
+        $this->persistResponseInSeparateTransaction($this->response);
+
         $this->getManager()->persist($this->arrival);
         $this->getManager()->flush();
 
