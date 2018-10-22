@@ -224,7 +224,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $arrival = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
 
         $departLog = null;
-        if($departLocation) {
+        if ($departLocation) {
             $departOwner = $departLocation->getCompany()->getOwner();
 
             //DeclareDepart

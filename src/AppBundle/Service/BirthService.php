@@ -249,6 +249,12 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             throw $exception;
         }
 
+        // If litter is null it must a finalized litter only containing stillborns
+        if (!$litter) {
+            ActionLogWriter::completeActionLog($this->getManager(), $logs);
+            return new JsonResponse($result, 200);
+        }
+
         // Prepare data in case of Entity Manager reset
         $requestMessagesByPrimaryKeys = $this->getManager()->getRepository(DeclareBirth::class)
             ->refreshBirthsAndAddPrimaryKeysAsArrayKey($requestMessages);
@@ -289,19 +295,17 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             }
         }
 
-        if ($litter) {
-            $this->saveNewestDeclareVersion($content, $litter);
+        $this->saveNewestDeclareVersion($content, $litter);
 
-            $this->updateLitterStatus($litter, $useRvoLogic);
-            $this->updateResultTableValuesByBirthRequests($requestMessagesByPrimaryKeys, $useRvoLogic);
+        $this->updateLitterStatus($litter, $useRvoLogic);
+        $this->updateResultTableValuesByBirthRequests($requestMessagesByPrimaryKeys, $useRvoLogic);
 
-            if (!$useRvoLogic) {
-                $this->directlyUpdateResultTableValuesByAnimalIds($litter->getAllAnimalIds());
-            }
-
-            //Clear cache for this location, to reflect changes on the livestock
-            $this->clearLivestockCacheForLocation($location);
+        if (!$useRvoLogic) {
+            $this->directlyUpdateResultTableValuesByAnimalIds($litter->getAllAnimalIds());
         }
+
+        //Clear cache for this location, to reflect changes on the livestock
+        $this->clearLivestockCacheForLocation($location);
 
         ActionLogWriter::completeActionLog($this->getManager(), $logs);
 
