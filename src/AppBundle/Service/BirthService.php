@@ -403,6 +403,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $childrenToRemove = [];
         $stillbornsToRemove = [];
 
+        $useRvoLogic = $location->isDutchLocation();
+
         $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::ADMIN);
 
         if (!$isAdmin) {
@@ -703,8 +705,11 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
             $missingMessages = $declareBirthCount-$declareBirthResponseCount;
             if ($declareBirthCount > $declareBirthResponseCount) {
-                $message = 'There are '.$declareBirthCount.' declareBirths found for the litter, which are missing '.$missingMessages.' responses';
-                $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
+                if ($useRvoLogic) {
+                    $message = 'There are '.$declareBirthCount.' declareBirths found for the litter, which are missing '.$missingMessages.' responses';
+                    $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
+                }
+                // A non-RVO birth-litter might be revoked, before the response has been processed
             } elseif($declareBirthCount == 0 && $litter->getBornAliveCount() != 0) {
                 $message = 'The litter does not contain any declareBirths';
                 $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
