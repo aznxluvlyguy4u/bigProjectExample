@@ -2788,6 +2788,14 @@ abstract class Animal
     }
 
     /**
+     * @return int|null
+     */
+    public function getLocationOfBirthId(): ?int
+    {
+        return $this->locationOfBirth ? $this->locationOfBirth->getId() : null;
+    }
+
+    /**
      * @param Location $locationOfBirth
      */
     public function setLocationOfBirth($locationOfBirth)

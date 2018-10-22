@@ -202,8 +202,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     private function setLocationOfBirth(Animal $animal): Animal
     {
         $setEmptyLocationOfBirth = true;
-        if ($animal->getLocation() && $animal->getLocationOfBirth()->getLocationId()) {
-            $locationOfBirth = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $animal->getLocationOfBirth()->getLocationId()]);
+        if ($animal->getLocationOfBirthId()) {
+            $locationOfBirth = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $animal->getLocationOfBirthId()]);
             if ($locationOfBirth) {
                 $animal->setLocationOfBirth($locationOfBirth);
                 $setEmptyLocationOfBirth = false;
