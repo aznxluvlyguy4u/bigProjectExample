@@ -45,6 +45,7 @@ use \DateTime;
  *     "MINIMAL",
  *     "MIXBLUP",
  *     "PARENT_DATA",
+ *     "RESPONSE_PERSISTENCE",
  *     "USER_MEASUREMENT"
  * })
  *
@@ -72,6 +73,7 @@ abstract class Animal
      *     "ERROR_DETAILS",
      *     "MIXBLUP",
      *     "PARENT_DATA",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "USER_MEASUREMENT"
      * })
@@ -201,6 +203,7 @@ abstract class Animal
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE"
      * })
      */
@@ -238,6 +241,7 @@ abstract class Animal
      *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
+     *     "RESPONSE_PERSISTENCE",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -455,6 +459,7 @@ abstract class Animal
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "PARENT_DATA",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "USER_MEASUREMENT"
@@ -481,6 +486,7 @@ abstract class Animal
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "PARENT_DATA",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "USER_MEASUREMENT"

@@ -21,6 +21,9 @@ class DeclareTagsTransferResponse extends DeclareBaseResponse
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="DeclareTagsTransfer", cascade={"persist"}, inversedBy="responses")
    * @JMS\Type("AppBundle\Entity\DeclareTagsTransfer")
+   * @JMS\Groups({
+   *     "RESPONSE_PERSISTENCE"
+   * })
    */
   private $declareTagsTransferRequestMessage;
 

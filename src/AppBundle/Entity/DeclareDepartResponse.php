@@ -20,6 +20,9 @@ class DeclareDepartResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCode;
 
@@ -27,6 +30,9 @@ class DeclareDepartResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnNumber;
 
@@ -34,6 +40,9 @@ class DeclareDepartResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $pedigreeCountryCode;
 
@@ -41,6 +50,9 @@ class DeclareDepartResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $pedigreeNumber;
 
@@ -52,6 +64,9 @@ class DeclareDepartResponse extends DeclareBaseResponse
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $departDate;
 
@@ -61,6 +76,9 @@ class DeclareDepartResponse extends DeclareBaseResponse
      * @Assert\Length(max = 10)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ubnNewOwner;
 
@@ -68,6 +86,9 @@ class DeclareDepartResponse extends DeclareBaseResponse
      * @var boolean
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $isExportAnimal;
 
@@ -75,12 +96,18 @@ class DeclareDepartResponse extends DeclareBaseResponse
      * @var boolean
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $isDepartedAnimal;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $reasonOfDepart;
 
@@ -90,6 +117,9 @@ class DeclareDepartResponse extends DeclareBaseResponse
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="DeclareDepart", cascade={"persist"}, inversedBy="responses")
      * @JMS\Type("AppBundle\Entity\DeclareDepart")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $declareDepartRequestMessage;
 

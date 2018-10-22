@@ -26,6 +26,9 @@ class RevokeDeclaration extends DeclareBase
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="revokes", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      * @Expose
      *
      */

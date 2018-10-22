@@ -28,6 +28,10 @@ class Tag
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $id;
 
@@ -36,6 +40,9 @@ class Tag
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      * @Expose
      */
     private $tagStatus;
@@ -100,6 +107,9 @@ class Tag
      * @Assert\Length(max = 2)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      * @Expose
      */
     private $ulnCountryCode;
@@ -113,6 +123,9 @@ class Tag
      * @Assert\Regex("/([0-9]{12})\b/")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      * @Expose
      */
     private $ulnNumber;
@@ -139,6 +152,9 @@ class Tag
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="tags", cascade={"persist"})
      * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $location;
 
@@ -147,6 +163,9 @@ class Tag
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="DeclareTagsTransfer", cascade={"persist"}, inversedBy="tags")
      * @JMS\Type("AppBundle\Entity\DeclareTagsTransfer")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $declareTagsTransferRequestMessage;
 

@@ -25,6 +25,10 @@ class TagTransferItemRequest
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $id;
 
@@ -33,6 +37,9 @@ class TagTransferItemRequest
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $requestId;
 
@@ -41,6 +48,9 @@ class TagTransferItemRequest
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $messageId;
 
@@ -49,7 +59,8 @@ class TagTransferItemRequest
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $ulnCountryCode;
@@ -59,7 +70,8 @@ class TagTransferItemRequest
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $ulnNumber;
@@ -69,7 +81,8 @@ class TagTransferItemRequest
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $animalType;
@@ -79,7 +92,8 @@ class TagTransferItemRequest
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $ubnNewOwner;
@@ -91,7 +105,8 @@ class TagTransferItemRequest
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $relationNumberAcceptant;
@@ -101,6 +116,9 @@ class TagTransferItemRequest
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $logDate;
 
@@ -109,7 +127,8 @@ class TagTransferItemRequest
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $requestState;
@@ -117,6 +136,9 @@ class TagTransferItemRequest
     /**
      * @var Tag
      * @JMS\Type("AppBundle\Entity\Tag")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $tag;
 
@@ -135,6 +157,9 @@ class TagTransferItemRequest
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $actionBy;
 

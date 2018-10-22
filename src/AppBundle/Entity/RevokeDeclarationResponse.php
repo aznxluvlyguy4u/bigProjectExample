@@ -23,6 +23,9 @@ class RevokeDeclarationResponse extends DeclareBaseResponse
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="RevokeDeclaration", cascade={"persist"}, inversedBy="responses")
    * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+   * @JMS\Groups({
+   *     "RESPONSE_PERSISTENCE"
+   * })
    */
   private $revokeDeclarationRequestMessage;
 //JColumn(name="revoke_declaration_request_message_id", referencedColumnName="id")

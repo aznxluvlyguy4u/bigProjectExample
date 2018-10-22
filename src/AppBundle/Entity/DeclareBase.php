@@ -68,6 +68,7 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO"
      * })
      */
@@ -91,6 +92,7 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO"
      * })
      */
@@ -105,6 +107,7 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
      *     "ADMIN_HIDDEN_STATUS",
      *     "ERROR_DETAILS",
      *     "HIDDEN_STATUS",
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO"
      * })
      */

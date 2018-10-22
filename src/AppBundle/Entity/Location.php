@@ -32,6 +32,7 @@ class Location
    * @JMS\Groups({
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
+   *     "RESPONSE_PERSISTENCE",
    *     "RVO"
    * })
    *
@@ -51,6 +52,7 @@ class Location
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
      *     "MINIMAL",
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO",
      *     "DOSSIER"
      * })
@@ -74,6 +76,7 @@ class Location
    *     "INVOICE_NO_COMPANY",
    *     "LIVESTOCK",
    *     "MINIMAL",
+   *     "RESPONSE_PERSISTENCE",
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "TREATMENT_TEMPLATE_MIN",

@@ -36,6 +36,7 @@ use JMS\Serializer\Annotation\Expose;
  *     "ERROR_DETAILS",
  *     "GHOST_LOGIN",
  *     "INVOICE",
+ *     "RESPONSE_PERSISTENCE",
  *     "RVO",
  *     "TREATMENT_TEMPLATE",
  *     "UBN",
@@ -55,6 +56,10 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
+   * @JMS\Type("integer")
+   * @JMS\Groups({
+   *     "RESPONSE_PERSISTENCE"
+   * })
    * @Expose
    */
   protected $id;
@@ -70,6 +75,7 @@ abstract class Person implements UserInterface
    *     "GHOST_LOGIN",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
+   *     "RESPONSE_PERSISTENCE",
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
