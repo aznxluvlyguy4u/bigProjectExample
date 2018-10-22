@@ -294,7 +294,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         if ($animal->getParentFatherId()) {
             $father = $this->getManager()->getRepository(Animal::class)->find($animal->getParentFatherId());
             if ($father) {
-                if ($mother->getDateOfBirth() > $animal->getDateOfBirth()) {
+                if ($father->getDateOfBirth() > $animal->getDateOfBirth()) {
                     $isFatherYoungerThanChild = true;
                 } else {
                     $animal->setParentFather($father);
