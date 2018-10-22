@@ -46,10 +46,10 @@ services:
           - '%kernel.root_dir%'
           - '%kernel.cache_dir%'
           - '%redis_host%'
-          - '@app.aws.queueservice.external'
-          - '@app.aws.queueservice.internal'
-          - '@app.aws.queueservice.mixblup_input'
-          - '@app.aws.queueservice.mixblup_output'
+          - '@AppBundle\Service\AwsExternalQueueService'
+          - '@AppBundle\Service\AwsInternalQueueService'
+          - '@AppBundle\Service\MixBlupInputQueueService'
+          - '@AppBundle\Service\MixBlupOutputQueueService'
 
 
     app.request.message_builder:
@@ -73,33 +73,27 @@ services:
           - '%kernel.environment%'
           - true
 
-    app.aws.queueservice.external:
-        class: AppBundle\Service\AwsExternalQueueService
+    AppBundle\Service\AwsExternalQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%' }
 
-    app.aws.queueservice.external.test:
-        class: AppBundle\Service\AwsExternalTestQueueService
+    AppBundle\Service\AwsExternalTestQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
-    app.aws.queueservice.internal:
-        class: AppBundle\Service\AwsInternalQueueService
+    AppBundle\Service\AwsInternalQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%' }
 
-    app.aws.queueservice.internal.test:
-        class: AppBundle\Service\AwsInternalTestQueueService
+    AppBundle\Service\AwsInternalTestQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
-    app.aws.queueservice.mixblup_input:
-        class: AppBundle\Service\MixBlupInputQueueService
+    AppBundle\Service\MixBlupInputQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_mixblup_input_prefix%', index_7: false }
 
-    app.aws.queueservice.mixblup_output:
-        class: AppBundle\Service\MixBlupOutputQueueService
+    AppBundle\Service\MixBlupOutputQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_mixblup_output_prefix%', index_7: false }
 
@@ -162,7 +156,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.aws.storageservice'
-          - '@app.aws.queueservice.mixblup_input'
+          - '@AppBundle\Service\MixBlupInputQueueService'
           - '%environment%'
           - '%kernel.cache_dir%'
           - '@logger'
@@ -171,7 +165,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.aws.storageservice'
-          - '@app.aws.queueservice.mixblup_output'
+          - '@AppBundle\Service\MixBlupOutputQueueService'
           - '@AppBundle\Service\BreedIndexService'
           - '@AppBundle\Service\BreedValueService'
           - '@AppBundle\Cache\BreedValuesResultTableUpdater'
@@ -645,7 +639,7 @@ services:
               - '@app.serializer.ir'
           - method: setExternalQueueService
             arguments:
-              - '@app.aws.queueservice.external'
+              - '@AppBundle\Service\AwsExternalQueueService'
 
     app.animal:
         parent: app.abstract_base.declare
@@ -694,7 +688,7 @@ services:
               - '@logger'
           - method: setInternalQueueService
             arguments:
-              - '@app.aws.queueservice.internal'
+              - '@AppBundle\Service\AwsInternalQueueService'
 
     app.breed_type:
         parent: app.abstract_base.controller
@@ -875,10 +869,10 @@ services:
         calls:
           - method: setExternalQueueService
             arguments:
-              - '@app.aws.queueservice.external'
+              - '@AppBundle\Service\AwsExternalQueueService'
           - method: setInternalQueueService
             arguments:
-              - '@app.aws.queueservice.internal'
+              - '@AppBundle\Service\AwsInternalQueueService'
 
     AppBundle\Service\TagReplaceService:
         parent: app.abstract_base.declare

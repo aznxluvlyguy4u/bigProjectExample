@@ -14,7 +14,7 @@ use Aws\Credentials\Credentials;
  * Class AWSQueueServiceBase
  * @package AppBundle\Service
  */
-abstract class AwsQueueServiceBase
+abstract class AwsQueueServiceBase implements QueueServiceInterface
 {
     const TaskType = 'TaskType';
     const MessageId = 'MessageId';

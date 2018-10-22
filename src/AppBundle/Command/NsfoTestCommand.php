@@ -7,6 +7,8 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\ResultTableBreedGrades;
+use AppBundle\Service\AwsExternalTestQueueService;
+use AppBundle\Service\AwsInternalTestQueueService;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
@@ -96,9 +98,9 @@ class NsfoTestCommand extends ContainerAwareCommand
                 $this->getContainer()->get('app.datafix.animals.exterminator')->deleteAnimalsByCliInput($this->cmdUtil);
                 break;
             case 3:
-                $purgeCount = $this->getContainer()->get('app.aws.queueservice.external.test')->purgeQueue();
+                $purgeCount = $this->getContainer()->get(AwsExternalTestQueueService::class)->purgeQueue();
                 $this->cmdUtil->writeln('External test queue messages purged: '.$purgeCount);
-                $purgeCount = $this->getContainer()->get('app.aws.queueservice.internal.test')->purgeQueue();
+                $purgeCount = $this->getContainer()->get(AwsInternalTestQueueService::class)->purgeQueue();
                 $this->cmdUtil->writeln('Internal test queue messages purged: '.$purgeCount);
                 break;
             case 4: $this->getUlnTestData(); break;
