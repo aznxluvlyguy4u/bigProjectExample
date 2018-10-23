@@ -43,6 +43,8 @@ class DeclareProcessorBase extends ControllerServiceBase
     }
 
     /**
+     * @required
+     *
      * @param AwsInternalQueueService $internalQueueService
      */
     public function setInternalQueueService(AwsInternalQueueService $internalQueueService): void

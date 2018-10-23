@@ -1028,7 +1028,6 @@ services:
           - method: setEnvironment
             arguments:
               - '%kernel.environment%'
-        calls:
           - method: setInternalQueueService
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
