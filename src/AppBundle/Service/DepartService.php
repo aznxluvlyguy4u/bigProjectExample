@@ -214,7 +214,7 @@ class DepartService extends DeclareControllerServiceBase
             if ($sendToRvo) {
                 $this->sendMessageObjectToQueue($arrival);
             } else {
-                $this->arrivalProcessor->process($arrival);
+                $this->arrivalProcessor->process($arrival, $location);
             }
 
             $arrivalLog = ActionLogWriter::declareArrival($arrival, $arrivalOwner, true);
@@ -237,7 +237,7 @@ class DepartService extends DeclareControllerServiceBase
             $this->clearLivestockCacheForLocation($location);
 
         } else {
-            $messageArray = $this->departProcessor->process($depart);
+            $messageArray = $this->departProcessor->process($depart, $arrivalLocation);
         }
 
         // Create Message for Receiving Owner

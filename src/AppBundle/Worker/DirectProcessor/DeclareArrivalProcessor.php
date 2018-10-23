@@ -31,12 +31,14 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
 
     /**
      * @param DeclareArrival $arrival
+     * @param Location $origin
      * @return array
      */
-    function process(DeclareArrival $arrival)
+    function process(DeclareArrival $arrival, ?Location $origin)
     {
         $this->arrival = $arrival;
         $this->animal = $arrival->getAnimal();
+        $this->origin = $origin;
 
         $this->response = new DeclareArrivalResponse();
         $this->response->setDeclareArrivalIncludingAllValues($arrival);
@@ -106,8 +108,6 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
 
     private function processSuccessLogic()
     {
-        $ubnPreviousOwner = $this->arrival->getUbnPreviousOwner();
-        $this->origin = $this->getManager()->getRepository(Location::class)->findOnePrioritizedByActiveUbn($ubnPreviousOwner);
         if ($this->origin) {
             $finalizeTransaction = $this->animalResidenceOnPreviousLocationHasBeenFinalized($this->animal, $this->origin);
         } else {

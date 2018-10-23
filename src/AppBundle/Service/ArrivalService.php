@@ -246,11 +246,10 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
             if ($sendToRvo) {
                 $this->persist($depart);
+                $this->sendMessageObjectToQueue($depart);
             } else {
-                $this->departProcessor->process($depart);
+                $this->departProcessor->process($depart, $location);
             }
-
-            $this->sendMessageObjectToQueue($depart);
 
             $departLog = ActionLogWriter::declareDepart($depart, $departOwner, true);
         }
@@ -264,7 +263,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             $this->persist($arrival);
 
         } else {
-            $outputArray = $this->arrivalProcessor->process($arrival);
+            $outputArray = $this->arrivalProcessor->process($arrival, $departLocation);
         }
 
         // Create Message for Receiving Owner
