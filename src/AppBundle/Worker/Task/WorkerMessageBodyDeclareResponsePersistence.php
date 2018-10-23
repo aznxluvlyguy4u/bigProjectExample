@@ -23,8 +23,6 @@ use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class WorkerMessageBodyDeclareResponsePersistence extends WorkerMessageBody
 {
-    /** @var DeclareBaseResponse */
-
     /**
      * @var DeclareBaseResponse
      * @JMS\Groups({
