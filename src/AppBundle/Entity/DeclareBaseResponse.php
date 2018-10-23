@@ -166,7 +166,7 @@ abstract class DeclareBaseResponse
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
-     * @JMS\Type("Person")
+     * @JMS\Type("AppBundle\Entity\Person")
      * @JMS\Groups({
      *     "RESPONSE_PERSISTENCE"
      * })
