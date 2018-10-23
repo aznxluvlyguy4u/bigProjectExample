@@ -18,11 +18,20 @@ use AppBundle\Entity\RevokeDeclarationResponse;
 use AppBundle\Enumerator\WorkerLevelType;
 use AppBundle\Enumerator\WorkerTaskScope;
 use AppBundle\Enumerator\WorkerTaskType;
+use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class WorkerMessageBodyDeclareResponsePersistence extends WorkerMessageBody
 {
     /** @var DeclareBaseResponse */
+
+    /**
+     * @var DeclareBaseResponse
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
+     * @JMS\Type("AppBundle\Entity\DeclareBaseResponse")
+     */
     private $response;
 
     /**
