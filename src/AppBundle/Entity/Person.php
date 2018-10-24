@@ -335,6 +335,18 @@ abstract class Person implements UserInterface
      */
     private $workers;
 
+    /**
+     * @var LanguageOption|null
+     *
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\LanguageOption")
+     * @ORM\JoinColumn(name="language_preference_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
+     * @Expose
+     */
+    private $languagePreference;
+
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
   {
@@ -863,6 +875,24 @@ abstract class Person implements UserInterface
      */
     public function setEmailChangeToken($token){
         $this->emailChangeToken = $token;
+        return $this;
+    }
+
+    /**
+     * @return LanguageOption|null
+     */
+    public function getLanguagePreference(): ?LanguageOption
+    {
+        return $this->languagePreference;
+    }
+
+    /**
+     * @param LanguageOption|null $languagePreference
+     * @return Person
+     */
+    public function setLanguagePreference(?LanguageOption $languagePreference): Person
+    {
+        $this->languagePreference = $languagePreference;
         return $this;
     }
 
