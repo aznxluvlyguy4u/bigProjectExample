@@ -43,7 +43,8 @@ use JMS\Serializer\Annotation as JMS;
  *      "DeclareTagReplaceResponse" : "AppBundle\Entity\DeclareTagReplaceResponse",
  *      "RevokeDeclarationResponse" : "AppBundle\Entity\RevokeDeclarationResponse"},
  *     groups = {
- *     "DECLARE"
+ *     "DECLARE",
+ *     "RESPONSE_PERSISTENCE"
  * })
  *
  * @package AppBundle\Entity\DeclareBaseResponse
