@@ -54,6 +54,7 @@ use \DateTime;
  *     "ERROR_DETAILS",
  *     "ADMIN_HIDDEN_STATUS",
  *     "HIDDEN_STATUS",
+ *     "RESPONSE_PERSISTENCE",
  *     "RVO"
  * })
  *
@@ -67,6 +68,7 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
      * @JMS\Groups({
      *     "RESPONSE_PERSISTENCE",
      *     "RVO"
