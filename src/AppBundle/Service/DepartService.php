@@ -179,7 +179,9 @@ class DepartService extends DeclareControllerServiceBase
         $arrivalLog = null;
 
         $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
-        $this->verifyUbnFormat($content->get(JsonInputConstant::UBN_NEW_OWNER), $location->isDutchLocation());
+        $ubnNewOwner = $content->get(JsonInputConstant::UBN_NEW_OWNER);
+        $this->verifyUbnFormat($ubnNewOwner, $location->isDutchLocation());
+        $this->verifyIfDepartureAndArrivalUbnAreIdentical($location->getUbn(), $ubnNewOwner);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $depart = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);

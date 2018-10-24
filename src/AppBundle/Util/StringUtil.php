@@ -694,6 +694,17 @@ class StringUtil
 
 
     /**
+     * @param string $ubn
+     * @return string
+     */
+    public static function preformatUbn($ubn): string
+    {
+        return !empty($ubn) && (is_int($ubn) || ctype_digit($ubn))
+            ? ltrim(trim(strval($ubn)), '0') : '';
+    }
+
+
+    /**
      * @param string|null $string
      * @return null|string
      */

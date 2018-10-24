@@ -649,6 +649,26 @@ class Validator
 
 
     /**
+     * @param string $ubn1 a valid ubn
+     * @param string $ubn2 a valid ubn
+     * @param bool $areIdenticalIfBothAreEmpty
+     * @return bool
+     */
+    public static function areUbnsIdentical($ubn1, $ubn2, $areIdenticalIfBothAreEmpty = true): bool
+    {
+        if (empty($ubn1) && empty($ubn2)) {
+            return $areIdenticalIfBothAreEmpty;
+        }
+
+        if (empty($ubn1) || empty($ubn2)) { // at least one is empty
+            return false;
+        }
+
+        return StringUtil::preformatUbn($ubn1) === StringUtil::preformatUbn($ubn2);
+    }
+
+
+    /**
      * @param $number
      * @return bool
      */

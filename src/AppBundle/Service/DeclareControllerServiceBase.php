@@ -361,6 +361,20 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
 
     /**
+     * @param $ubnOfDeparture
+     * @param $ubnOfArrival
+     */
+    protected function verifyIfDepartureAndArrivalUbnAreIdentical($ubnOfDeparture, $ubnOfArrival): void
+    {
+        if (Validator::areUbnsIdentical($ubnOfArrival, $ubnOfDeparture)) {
+            throw new PreconditionFailedHttpException(
+                $this->translator->trans('UBN OF DEPARTURE AND ARRIVAL ARE IDENTICAL')
+            );
+        }
+    }
+
+
+    /**
      * @param string $requestId
      * @return DeclareBase
      */

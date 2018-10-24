@@ -595,6 +595,9 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             return null;
         }
 
+        self::verifyIfDepartureAndArrivalUbnAreIdentical($locationOfDestination->getUbn(), $ubnOfPreviousOwner);
+        $ubnOfPreviousOwner = StringUtil::preformatUbn($ubnOfPreviousOwner);
+
         /** @var Location $departLocation */
         $departLocation = $this->getManager()->getRepository(Location::class)
             ->findOneBy(['ubn' => $ubnOfPreviousOwner, 'isActive' => true]);
