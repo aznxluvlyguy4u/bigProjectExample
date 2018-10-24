@@ -178,6 +178,15 @@ class DeclareArrival extends DeclareBase implements DeclareAnimalDataInterface, 
     private $locationHealthQueue;
 
     /**
+     * @var DepartArrivalTransaction|null
+     * @ORM\OneToOne(targetEntity="DepartArrivalTransaction",
+     *     inversedBy="arrival", cascade={"persist","refresh"})
+     * @ORM\JoinColumn(name="transaction_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\DepartArrivalTransaction")
+     */
+    private $transaction;
+
+    /**
      * DeclareArrival constructor.
      */
     public function __construct() {
@@ -561,4 +570,24 @@ class DeclareArrival extends DeclareBase implements DeclareAnimalDataInterface, 
     {
         $this->locationHealthQueue = $locationHealthQueue;
     }
+
+    /**
+     * @return DepartArrivalTransaction|null
+     */
+    public function getTransaction(): ?DepartArrivalTransaction
+    {
+        return $this->transaction;
+    }
+
+    /**
+     * @param DepartArrivalTransaction|null $transaction
+     * @return DeclareArrival
+     */
+    public function setTransaction(?DepartArrivalTransaction $transaction): DeclareArrival
+    {
+        $this->transaction = $transaction;
+        return $this;
+    }
+
+
 }

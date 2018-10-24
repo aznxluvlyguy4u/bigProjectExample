@@ -177,6 +177,15 @@ class DeclareDepart extends DeclareBase implements DeclareAnimalDataInterface, B
     private $revoke;
 
     /**
+     * @var DepartArrivalTransaction|null
+     * @ORM\OneToOne(targetEntity="DepartArrivalTransaction",
+     *     inversedBy="depart", cascade={"persist","refresh"})
+     * @ORM\JoinColumn(name="transaction_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\DepartArrivalTransaction")
+     */
+    private $transaction;
+
+    /**
      * DeclareDepart constructor.
      */
     public function __construct() {
@@ -501,6 +510,22 @@ class DeclareDepart extends DeclareBase implements DeclareAnimalDataInterface, B
         $this->reasonOfDepart = $reasonOfDepart;
     }
 
+    /**
+     * @return DepartArrivalTransaction|null
+     */
+    public function getTransaction(): ?DepartArrivalTransaction
+    {
+        return $this->transaction;
+    }
 
+    /**
+     * @param DepartArrivalTransaction|null $transaction
+     * @return DeclareDepart
+     */
+    public function setTransaction(?DepartArrivalTransaction $transaction): DeclareDepart
+    {
+        $this->transaction = $transaction;
+        return $this;
+    }
 
 }
