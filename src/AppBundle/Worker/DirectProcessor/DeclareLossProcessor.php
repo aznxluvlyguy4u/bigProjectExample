@@ -30,6 +30,10 @@ class DeclareLossProcessor extends DeclareProcessorBase implements DeclareLossPr
 
     function process(DeclareLoss $loss)
     {
+        $this->getManager()->persist($loss);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($loss);
+
         $this->loss = $loss;
         $this->animal = $loss->getAnimal();
 

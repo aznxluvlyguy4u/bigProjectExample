@@ -36,6 +36,10 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
      */
     function process(DeclareArrival $arrival, ?Location $origin)
     {
+        $this->getManager()->persist($arrival);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($arrival);
+
         $this->arrival = $arrival;
         $this->animal = $arrival->getAnimal();
         $this->origin = $origin;

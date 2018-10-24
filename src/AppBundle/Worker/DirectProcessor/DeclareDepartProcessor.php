@@ -35,6 +35,10 @@ class DeclareDepartProcessor extends DeclareProcessorBase implements DeclareDepa
      */
     function process(DeclareDepart $depart, ?Location $destination)
     {
+        $this->getManager()->persist($depart);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($depart);
+
         $this->depart = $depart;
         $this->animal = $depart->getAnimal();
         $this->destination = $destination;

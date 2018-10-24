@@ -35,6 +35,10 @@ class DeclareImportProcessor extends DeclareProcessorBase implements DeclareImpo
 
     function process(DeclareImport $import)
     {
+        $this->getManager()->persist($import);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($import);
+
         $this->import = $import;
 
         $this->response = new DeclareImportResponse();

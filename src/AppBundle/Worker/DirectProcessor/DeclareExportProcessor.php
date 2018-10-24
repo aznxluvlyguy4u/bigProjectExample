@@ -24,6 +24,10 @@ class DeclareExportProcessor extends DeclareProcessorBase implements DeclareExpo
 
     public function process(DeclareExport $export): array
     {
+        $this->getManager()->persist($export);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($export);
+
         $this->export = $export;
         $this->animal = $export->getAnimal();
 

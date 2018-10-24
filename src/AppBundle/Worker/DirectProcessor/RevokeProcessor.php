@@ -40,15 +40,13 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
         $this->clearLivestockCacheForLocationPrioritizedByActiveUbn($arrival->getUbnPreviousOwner());
         $this->getCacheService()->clearLivestockCacheForLocation($arrival->getLocation());
 
-        $revoke = $this->createRevokeDeclaration($arrival, $client, $actionBy);
-
         $arrival->setRevokedRequestState();
         $this->getManager()->persist($animal);
         $this->getManager()->persist($arrival);
 
         $this->getManager()->flush();
 
-        return $revoke;
+        return $this->createRevokeDeclaration($arrival, $client, $actionBy);
     }
 
 
@@ -64,14 +62,14 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $location->addAnimal($animal);
 
-        $revoke = $this->createRevokeDeclaration($export, $client, $actionBy);
-
         $export->setRevokedRequestState();
         $this->getManager()->persist($location);
         $this->getManager()->persist($animal);
         $this->getManager()->persist($export);
 
         $this->getManager()->flush();
+
+        $revoke = $this->createRevokeDeclaration($export, $client, $actionBy);
 
         $this->getCacheService()->clearLivestockCacheForLocation($location);
 
@@ -91,8 +89,6 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $location->addAnimal($animal);
 
-        $revoke = $this->createRevokeDeclaration($depart, $client, $actionBy);
-
         $this->reopenClosedResidenceOnLocationByEndDate($location, $animal, $depart->getDepartDate());
 
         $depart->setRevokedRequestState();
@@ -101,6 +97,8 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
         $this->getManager()->persist($depart);
 
         $this->getManager()->flush();
+
+        $revoke = $this->createRevokeDeclaration($depart, $client, $actionBy);
 
         $this->getCacheService()->clearLivestockCacheForLocation($location);
         $this->getCacheService()->clearLivestockCacheForLocation($currentLocation);
@@ -129,12 +127,13 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
             $this->getManager()->remove($animal);
         }
 
-        $revoke = $this->createRevokeDeclaration($import, $client, $actionBy);
         $import->setRevokedRequestState();
 
         $this->getManager()->persist($import);
-
         $this->getManager()->flush();
+
+        $revoke = $this->createRevokeDeclaration($import, $client, $actionBy);
+
         $this->getCacheService()->clearLivestockCacheForLocation($location);
 
         return $revoke;
@@ -151,13 +150,13 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $this->reopenClosedResidenceOnLocationByEndDate($location, $animal, $loss->getDateOfDeath());
 
-        $revoke = $this->createRevokeDeclaration($loss, $client, $actionBy);
-
         $loss->setRevokedRequestState();
         $this->getManager()->persist($animal);
         $this->getManager()->persist($loss);
-
         $this->getManager()->flush();
+
+        $revoke = $this->createRevokeDeclaration($loss, $client, $actionBy);
+
         $this->getCacheService()->clearLivestockCacheForLocation($location);
 
         return $revoke;
@@ -194,13 +193,13 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
         $animal->setUlnNumber($tagReplace->getUlnNumberToReplace());
         $animal->setAnimalOrderNumber($tagReplace->getAnimalOrderNumberToReplace());
 
-        $revoke = $this->createRevokeDeclaration($tagReplace, $client, $actionBy);
-
         $tagReplace->setRevokedRequestState();
         $this->getManager()->persist($animal);
         $this->getManager()->persist($tagReplace);
-
         $this->getManager()->flush();
+
+        $revoke = $this->createRevokeDeclaration($tagReplace, $client, $actionBy);
+
         $this->getCacheService()->clearLivestockCacheForLocation($location);
 
         return $revoke;
@@ -235,10 +234,12 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
         $declare->setRevoke($revokeDeclaration);
         $revokeDeclaration->setFinishedRequestState();
 
-        $this->createRevokeSuccessResponse($revokeDeclaration);
-
         $this->getManager()->persist($revokeDeclaration);
         $this->getManager()->persist($declare);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($revokeDeclaration);
+
+        $this->createRevokeSuccessResponse($revokeDeclaration);
 
         return $revokeDeclaration;
     }
