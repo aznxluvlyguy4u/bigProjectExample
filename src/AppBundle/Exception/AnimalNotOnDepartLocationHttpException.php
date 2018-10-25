@@ -11,7 +11,7 @@ use Symfony\Component\Translation\TranslatorInterface;
 class AnimalNotOnDepartLocationHttpException extends PreconditionFailedHttpException
 {
     /**
-     * DeclareToOtherCountryHttpException constructor.
+     * AnimalNotOnDepartLocationHttpException constructor.
      * @param TranslatorInterface $translator
      * @param Animal|null $animal
      * @param \Exception|null $previous

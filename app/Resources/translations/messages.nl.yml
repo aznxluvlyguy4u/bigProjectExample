@@ -450,6 +450,7 @@ ANIMAL IS ON AN UBN IN ANOTHER COUNTRY: Dier staat op een UBN in het buitenland
 ANIMAL IS ALREADY ON THE LIVESTOCK LIST: Dier staat al op de stallijst
 ANIMAL IS NOT ON LOCATION OF DEPART: Dier staat niet op locatie van afvoer
 ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Aanvoermeldingen zijn alleen toegestaan tussen UBNs in hetzelfde land
+THIS FEATURE IS NOT AVAILABLE YET: Deze functie is nog niet beschikbaar
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen

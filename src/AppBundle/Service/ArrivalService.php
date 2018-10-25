@@ -24,6 +24,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Exception\AnimalNotOnDepartLocationHttpException;
 use AppBundle\Exception\DeadAnimalHttpException;
+use AppBundle\Exception\FeatureNotAvailableHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
@@ -323,6 +324,11 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
+
+        $useRvoLogic = $location->isDutchLocation();
+        if (!$useRvoLogic) {
+            throw new FeatureNotAvailableHttpException($this->translator, 'DECLARE_IMPORTS');
+        }
 
         $actionLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 

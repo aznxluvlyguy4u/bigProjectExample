@@ -442,6 +442,7 @@ ANIMAL IS ON AN UBN IN ANOTHER COUNTRY: Animal is on an UBN in another country
 ANIMAL IS ALREADY ON THE LIVESTOCK LIST: Animal is already on the livestock list
 ANIMAL IS NOT ON LOCATION OF DEPART: Animal is not on location of depart
 ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Arrivals are only allowed between UBNS from the same country
+THIS FEATURE IS NOT AVAILABLE YET: This feature is not available yet
 
 #Declares
 DECLARE_ARRIVALS: arrivals

@@ -11,7 +11,7 @@ use Symfony\Component\Translation\TranslatorInterface;
 class DeadAnimalHttpException extends PreconditionFailedHttpException
 {
     /**
-     * DeclareToOtherCountryHttpException constructor.
+     * DeadAnimalHttpException constructor.
      * @param TranslatorInterface $translator
      * @param string|null $uln
      * @param \Exception|null $previous
