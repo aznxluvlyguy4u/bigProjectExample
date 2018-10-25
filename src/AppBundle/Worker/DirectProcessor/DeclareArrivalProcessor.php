@@ -130,6 +130,7 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
         $this->animal->setTransferState(null);
         $this->animal->setIsExportAnimal(false);
         $this->animal->setIsDepartedAnimal(false);
+        $this->animal->setIsAlive(true);
 
         $this->animal->setLocation($destination);
 
@@ -151,8 +152,18 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
 
     private function processSuccessWithWarning()
     {
+        $updateAnimal = false;
         if ($this->animal->getIsExportAnimal()) {
             $this->animal->setIsExportAnimal(false);
+            $updateAnimal = true;
+        }
+
+        if (!$this->animal->getIsAlive()) {
+            $this->animal->setIsAlive(true);
+            $updateAnimal = true;
+        }
+
+        if ($updateAnimal) {
             $this->getManager()->persist($this->animal);
         }
 
