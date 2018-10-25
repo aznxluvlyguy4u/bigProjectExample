@@ -151,6 +151,9 @@ class DepartArrivalTransaction
     public function setArrival(?DeclareArrival $arrival): DepartArrivalTransaction
     {
         $this->arrival = $arrival;
+        if ($arrival) {
+            $arrival->setTransaction($this);
+        }
         return $this;
     }
 
@@ -169,6 +172,9 @@ class DepartArrivalTransaction
     public function setDepart(?DeclareDepart $depart): DepartArrivalTransaction
     {
         $this->depart = $depart;
+        if ($depart) {
+            $depart->setTransaction($this);
+        }
         return $this;
     }
 
@@ -227,4 +233,20 @@ class DepartArrivalTransaction
     }
 
 
+    /**
+     * @return Client|null
+     */
+    public function getArrivalOwner(): ?Client
+    {
+        return $this->arrival->getLocation() ? $this->arrival->getLocation()->getOwner() : null;
+    }
+
+
+    /**
+     * @return Client|null
+     */
+    public function getDepartOwner(): ?Client
+    {
+        return $this->depart->getLocation() ? $this->depart->getLocation()->getOwner() : null;
+    }
 }
