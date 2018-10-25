@@ -20,6 +20,7 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\DepartArrivalTransaction;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
@@ -390,5 +391,41 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         }
 
         return $declareBase;
+    }
+
+
+    /**
+     * @param DeclareArrival|null $arrival
+     * @param DeclareDepart|null $depart
+     * @param Person $actionBy
+     * @param bool $useRvoLogic
+     * @param bool $isArrivalInitiated
+     */
+    protected function createDepartArrivalTransaction(?DeclareArrival $arrival,
+                                                      ?DeclareDepart $depart,
+                                                      Person $actionBy,
+                                                      bool $useRvoLogic,
+                                                      bool $isArrivalInitiated)
+    {
+        if ($isArrivalInitiated) {
+            if (!$arrival) {
+                throw new PreconditionRequiredHttpException('ARRIVAL cannot be NULL if leading');
+            }
+        } else {
+            if (!$depart) {
+                throw new PreconditionRequiredHttpException('DEPART cannot be NULL if leading');
+            }
+        }
+
+        $transaction = new DepartArrivalTransaction();
+        $transaction
+            ->setArrival($arrival)
+            ->setDepart($depart)
+            ->setActionBy($actionBy)
+            ->setIsRvoMessage($useRvoLogic)
+            ->setIsArrivalInitiated($isArrivalInitiated)
+        ;
+
+        $this->getManager()->persist($transaction);
     }
 }

@@ -173,7 +173,7 @@ class DepartService extends DeclareControllerServiceBase
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
-        $sendToRvo = $location->isDutchLocation();
+        $useRvoLogic = $location->isDutchLocation();
 
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
         $arrivalLog = null;
@@ -192,6 +192,7 @@ class DepartService extends DeclareControllerServiceBase
 
         $this->validateIfOriginAndDestinationAreInSameCountry(DeclareDepart::class, $location, $arrivalLocation);
 
+        $arrival = null;
         if($arrivalLocation) {
             $arrivalOwner = $arrivalLocation->getCompany()->getOwner();
 
@@ -213,7 +214,7 @@ class DepartService extends DeclareControllerServiceBase
             $arrival = $arrivalMessageBuilder->buildMessage($arrival, $arrivalOwner, $loggedInUser, $arrivalLocation);
             $this->persist($arrival);
 
-            if ($sendToRvo) {
+            if ($useRvoLogic) {
                 $this->sendMessageObjectToQueue($arrival);
             } else {
                 $this->arrivalProcessor->process($arrival, $location);
@@ -222,7 +223,7 @@ class DepartService extends DeclareControllerServiceBase
             $arrivalLog = ActionLogWriter::declareArrival($arrival, $arrivalOwner, true);
         }
 
-        if ($sendToRvo) {
+        if ($useRvoLogic) {
             //Send it to the queue and persist/update any changed state to the database
             $messageArray = $this->sendMessageObjectToQueue($depart);
 
@@ -241,6 +242,9 @@ class DepartService extends DeclareControllerServiceBase
         } else {
             $messageArray = $this->departProcessor->process($depart, $arrivalLocation);
         }
+
+        $this->createDepartArrivalTransaction($arrival, $depart, $loggedInUser, $useRvoLogic,false);
+        $this->getManager()->flush();
 
         // Create Message for Receiving Owner
         if($arrivalLocation) {

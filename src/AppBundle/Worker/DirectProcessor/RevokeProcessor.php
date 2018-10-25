@@ -28,12 +28,33 @@ use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInterface
 {
 
-    function revokeArrival(DeclareArrival $arrival, Client $client, Person $actionBy): RevokeDeclaration
+    function revokeArrival(DeclareArrival $arrival, Client $client, Person $actionBy,
+                           bool $isReverseSideAutoRevoke = false): RevokeDeclaration
     {
+        /*
+         * Always revoke the Depart BEFORE the Arrival for nonRVO declares
+         */
+        $declareArrivalTransaction = $arrival->getTransaction();
+        $depart = null;
+        if ($declareArrivalTransaction && !$declareArrivalTransaction->isRvoMessage()) {
+            $depart = $declareArrivalTransaction->getDepart();
+            $departOwner = $declareArrivalTransaction->getDepartOwner();
+            if ($depart && $departOwner && !$isReverseSideAutoRevoke) {
+                $this->revokeDepart($depart, $departOwner, $actionBy, true);
+            }
+        }
+
         $animal = $this->getAnimalFromDeclare($arrival);
-        $animal->setTransferredTransferState();
-        $animal->setLocation(null);
         $animal->setIsDepartedAnimal(false);
+
+        if ($depart) {
+            $animal->setLocation($depart->getLocation());
+            $animal->setTransferState(null);
+        } else {
+            // If no reverseSide depart exists put the animal in the TRANSFERRED state
+            $animal->setTransferredTransferState();
+            $animal->setLocation(null);
+        }
 
         $this->removeLastOpenResidenceOnLocation($arrival->getLocation(), $animal);
 
@@ -77,7 +98,8 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
     }
 
 
-    function revokeDepart(DeclareDepart $depart, Client $client, Person $actionBy): RevokeDeclaration
+    function revokeDepart(DeclareDepart $depart, Client $client, Person $actionBy,
+                          bool $isReverseSideAutoRevoke = false): RevokeDeclaration
     {
         $location = $depart->getLocation();
 
@@ -102,6 +124,20 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $this->getCacheService()->clearLivestockCacheForLocation($location);
         $this->getCacheService()->clearLivestockCacheForLocation($currentLocation);
+
+        /*
+         * Always revoke the Depart BEFORE the Arrival for nonRVO declares
+         */
+        if (!$isReverseSideAutoRevoke) {
+            $declareArrivalTransaction = $depart->getTransaction();
+            if ($declareArrivalTransaction && !$declareArrivalTransaction->isRvoMessage()) {
+                $arrival = $declareArrivalTransaction->getArrival();
+                $arrivalOwner = $declareArrivalTransaction->getArrivalOwner();
+                if ($arrival && $arrivalOwner) {
+                    $this->revokeArrival($arrival, $arrivalOwner, $actionBy, true);
+                }
+            }
+        }
 
         return $revoke;
     }

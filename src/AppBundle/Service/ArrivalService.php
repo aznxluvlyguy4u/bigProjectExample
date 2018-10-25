@@ -15,6 +15,7 @@ use AppBundle\Entity\DeclareArrivalResponse;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareImportResponse;
+use AppBundle\Entity\DepartArrivalTransaction;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Message;
 use AppBundle\Enumerator\MessageType;
@@ -199,7 +200,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
-        $sendToRvo = $location->isDutchLocation();
+        $useRvoLogic = $location->isDutchLocation();
 
         $arrivalOrImportLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
@@ -224,6 +225,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $arrival = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
 
         $departLog = null;
+        $depart = null;
         if ($departLocation) {
             $departOwner = $departLocation->getCompany()->getOwner();
 
@@ -244,7 +246,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             $departMessageBuilder = new DepartMessageBuilder($this->getManager() , $this->environment);
             $depart = $departMessageBuilder->buildMessage($depart, $departOwner, $loggedInUser, $departLocation);
 
-            if ($sendToRvo) {
+            if ($useRvoLogic) {
                 $this->persist($depart);
                 $this->sendMessageObjectToQueue($depart);
             } else {
@@ -254,7 +256,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             $departLog = ActionLogWriter::declareDepart($depart, $departOwner, true);
         }
 
-        if ($sendToRvo) {
+        if ($useRvoLogic) {
             //Send it to the queue and persist/update any changed state to the database
             $outputArray = $this->sendMessageObjectToQueue($arrival);
             $arrival->setAnimal(null);
@@ -265,6 +267,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         } else {
             $outputArray = $this->arrivalProcessor->process($arrival, $departLocation);
         }
+
+        $this->createDepartArrivalTransaction($arrival, $depart, $loggedInUser, $useRvoLogic,true);
 
         // Create Message for Receiving Owner
         if($departLocation) {

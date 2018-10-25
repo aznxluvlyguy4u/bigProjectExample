@@ -13,6 +13,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\RevokeAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\BasicRvoDeclareInterface;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\DeclareDepart;
@@ -23,6 +24,7 @@ use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Mate;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -121,7 +123,7 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
     /**
      * @param Request $request
-     * @return array
+     * @return array|bool
      */
     private function processNonRvoRevoke(Request $request)
     {
@@ -131,30 +133,44 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
         $requestId = $content->get(JsonInputConstant::REQUEST_ID);
         $declare = $this->getRequestByRequestId($requestId);
-        $this->validateDeclareForRevoke($declare);
+        $isAlreadyRevoked = $declare instanceof BasicRvoDeclareInterface && $declare->isRevoked();
 
         switch (true) {
             case $declare instanceof DeclareArrival:
-                $revoke = $this->revokeProcessor->revokeArrival($declare, $client, $loggedInUser);
+                if ($isAlreadyRevoked) {
+                    $revoke = $this->getAlreadyRevokedResponse($declare);
+                } else {
+                    $this->validateDeclareForRevoke($declare);
+                    $revoke = $this->revokeProcessor->revokeArrival($declare, $client, $loggedInUser);
+                }
                 break;
 
             case $declare instanceof DeclareDepart:
-                $revoke = $this->revokeProcessor->revokeDepart($declare, $client, $loggedInUser);
+                if ($isAlreadyRevoked) {
+                    $revoke = $this->getAlreadyRevokedResponse($declare);
+                } else {
+                    $this->validateDeclareForRevoke($declare);
+                    $revoke = $this->revokeProcessor->revokeDepart($declare, $client, $loggedInUser);
+                }
                 break;
 
             case $declare instanceof DeclareExport:
+                $this->validateDeclareForRevoke($declare);
                 $revoke = $this->revokeProcessor->revokeExport($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareImport:
+                $this->validateDeclareForRevoke($declare);
                 $revoke = $this->revokeProcessor->revokeImport($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareLoss:
+                $this->validateDeclareForRevoke($declare);
                 $revoke = $this->revokeProcessor->revokeLoss($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareTagReplace:
+                $this->validateDeclareForRevoke($declare);
                 $revoke = $this->revokeProcessor->revokeTagReplace($declare, $client, $loggedInUser);
                 break;
 
@@ -162,9 +178,11 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
                 'Non-NL revoke is not allowed for this declare type: '.Utils::getClassName($declare));
         }
 
-        ActionLogWriter::nonRvoRevoke($this->getManager(), $client, $loggedInUser, $revoke);
+        if ($isAlreadyRevoked) {
+            ActionLogWriter::nonRvoRevoke($this->getManager(), $client, $loggedInUser, $revoke);
+        }
 
-        return $this->getDeclareMessageArray($revoke,false);
+        return is_bool($revoke) ? $revoke : $this->getDeclareMessageArray($revoke,false);
     }
 
 
@@ -265,5 +283,18 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
             $this->translator->trans('A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED').': '.
             $this->translator->trans($requestState)
         );
+    }
+
+
+    /**
+     * @param DeclareBase $declare
+     * @return RevokeDeclaration|true
+     */
+    public function getAlreadyRevokedResponse(DeclareBase $declare)
+    {
+        if ($declare instanceof BasicRvoDeclareInterface && $declare->getRevoke()) {
+            return $declare->getRevoke();
+        }
+        return true;
     }
 }
