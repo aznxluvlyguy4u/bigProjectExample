@@ -103,7 +103,7 @@ class DeclareDepartProcessor extends DeclareProcessorBase implements DeclareDepa
             return RequestStateType::FAILED;
         }
 
-        if ($this->animal->isDeclaredDead() && $animalIsOnOriginLocation) {
+        if ($this->animal->isDead() && $animalIsOnOriginLocation) {
             $this->response->setFailedValues(
                 $this->translator->trans('ANIMAL IS ALREADY DEAD'),
                 Response::HTTP_PRECONDITION_REQUIRED

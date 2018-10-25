@@ -3135,9 +3135,9 @@ abstract class Animal
     /**
      * @return bool
      */
-    public function isDeclaredDead(): bool
+    public function isDead(): bool
     {
-        return !$this->getIsAlive() && $this->getDateOfDeath();
+        return !$this->getIsAlive();
     }
 
 

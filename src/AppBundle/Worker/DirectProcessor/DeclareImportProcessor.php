@@ -98,7 +98,7 @@ class DeclareImportProcessor extends DeclareProcessorBase implements DeclareImpo
     private function getRequestState(): string
     {
         if (
-            $this->animal->isDeclaredDead() ||
+            $this->animal->isDead() ||
             $this->animalIsOnAnotherLocation
         ) {
             return RequestStateType::FAILED;
@@ -165,7 +165,7 @@ class DeclareImportProcessor extends DeclareProcessorBase implements DeclareImpo
         $this->import->setFailedRequestState();
 
         $errorMessages = [];
-        if ($this->animal->isDeclaredDead()) {
+        if ($this->animal->isDead()) {
             $errorMessages[] = $this->translator->trans('ANIMAL HAS ALREADY BEEN DECLARED DEAD').'. '
                 .$this->translator->trans('DATE_OF_DEATH').': '.$this->animal->getDateOfDeathString(DateTimeFormats::DAY_MONTH_YEAR);
         }

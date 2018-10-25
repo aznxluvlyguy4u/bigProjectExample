@@ -87,7 +87,7 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
 
     private function getRequestStateAndSetResponseData()
     {
-        if ($this->animal->isDeclaredDead()) {
+        if ($this->animal->isDead()) {
             $this->response->setFailedValues(
                 $this->translator->trans('ANIMAL IS ALREADY DEAD'),
                 Response::HTTP_PRECONDITION_REQUIRED

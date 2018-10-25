@@ -649,7 +649,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $ulnData = ' ULN: '.$animal->getUln();
 
         // Animal must be alive
-        if ($animal->isDeclaredDead()) {
+        if ($animal->isDead()) {
             throw new DeadAnimalHttpException($this->translator, $animal->getUln());
         }
 
