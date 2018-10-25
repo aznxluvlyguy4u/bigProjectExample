@@ -8,6 +8,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Environment;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\ResultUtil;
+use Doctrine\ORM\ORMException;
+use Doctrine\ORM\ORMInvalidArgumentException;
 use Monolog\Logger;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
@@ -43,8 +45,7 @@ class ExceptionListener
         $this->logger->error($exception->getTraceAsString());
 
         $code = self::getHttpResponseCodeFromException($exception);
-        $errorMessage = empty($exception->getMessage())
-        || $exception instanceof \Doctrine\DBAL\DBALException // Prevent leaking of database schema
+        $errorMessage = empty($exception->getMessage()) || self::isSensitiveException($exception)
             ? self::getDefaultErrorMessage($code) : $exception->getMessage();
         $errorData = $this->environment !== Environment::PROD ? self::nestErrorTrace($exception) : null;
         $errorResponse = $this->errorResult($errorMessage, $code, $errorData);
@@ -130,4 +131,16 @@ class ExceptionListener
     }
 
 
+    /**
+     * @param $exception
+     * @return bool
+     */
+    private static function isSensitiveException($exception): bool
+    {
+        return !$exception
+                || $exception instanceof \Doctrine\DBAL\DBALException // Prevent leaking of database schema
+                || $exception instanceof ORMInvalidArgumentException
+                || $exception instanceof ORMException
+            ;
+    }
 }
