@@ -444,6 +444,11 @@ A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED: Een melding met deze status
 ANIMAL IS ALREADY DEAD: Dier is al dood
 SWITCHING UBN NUMBERS BETWEEN LOCATIONS IS NOT ALLOWED: Wisselen van UBN nummers tussen locaties is niet toegestaan
 UBN OF DEPARTURE AND ARRIVAL ARE IDENTICAL: UBN van vertrek en aankomst zijn identiek
+ANIMAL DOES NOT EXIST IN THE DATABASE: Dier bestaat niet in de database
+ANIMAL IS ON AN UBN IN ANOTHER COUNTRY: Dier staat op een UBN in het buitenland
+ANIMAL IS ALREADY ON THE LIVESTOCK LIST: Dier staat al op de stallijst
+ANIMAL IS NOT ON LOCATION OF DEPART: Dier staat niet op locatie van afvoer
+ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Aanvoermeldingen zijn alleen toegestaan tussen UBNs in hetzelfde land
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen

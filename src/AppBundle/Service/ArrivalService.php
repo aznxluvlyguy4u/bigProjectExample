@@ -37,6 +37,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
 class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIControllerInterface
 {
@@ -223,6 +224,10 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         //Convert the array into an object and add the mandatory values retrieved from the database
         $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, true);
         $arrival = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
+
+        if (!$useRvoLogic) {
+            $this->validateNonRvoSpecificConditions($arrival, $departLocation);
+        }
 
         $departLog = null;
         $depart = null;
@@ -619,5 +624,60 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         }
 
         return $departLocation;
+    }
+
+
+    /**
+     * @param DeclareArrival $arrival
+     * @param Location|null $origin
+     */
+    private function validateNonRvoSpecificConditions(DeclareArrival $arrival, ?Location $origin)
+    {
+        // Animal should already exist in the database
+        $animalDoesNotExistInDatabase = empty($arrival->getAnimalId());
+        if ($animalDoesNotExistInDatabase) {
+            $uln = $arrival->getAnimal() && $arrival->getAnimal()->getUln() ? $arrival->getAnimal()->getUln() : null;
+            $ulnData = $uln ? ' ULN: ' . $uln : '';
+            throw new PreconditionRequiredHttpException(
+                $this->translator->trans('ANIMAL DOES NOT EXIST IN THE DATABASE').'.'.$ulnData
+            );
+        }
+
+        $animal = $arrival->getAnimal();
+        $currentAnimalLocation = $animal->getLocation();
+        $ulnData = ' ULN: '.$animal->getUln();
+        $declareUbn = $arrival->getLocation() ? $arrival->getLocation()->getUbn() : null;
+
+        // Animal must be alive
+        if ($animal->isDeclaredDead()) {
+            throw new PreconditionRequiredHttpException(
+                $this->translator->trans('ANIMAL IS ALREADY DEAD'). '.' . $ulnData
+            );
+        }
+
+        // Animal should not already be on the livestock list
+        if ($animal->getUbn() === $declareUbn) {
+            throw new PreconditionRequiredHttpException(
+                $this->translator->trans('ANIMAL IS ALREADY ON THE LIVESTOCK LIST'). '.' . $ulnData
+            );
+        }
+
+        $currentCountryCode = $currentAnimalLocation->getCountryCode();
+        $currentUbnData = ' '.$this->translateUcFirstLower('CURRENT_UBN').': ' . $currentAnimalLocation->getUbn(). ' ('. $currentCountryCode .')';
+
+        // De location of origin should be in the same country
+        $this->validateIfOriginAndDestinationAreInSameCountry(DeclareArrival::class, $origin, $arrival->getLocation());
+
+        // If location of origin is also an NSFO location, the animal should be on that location during the declare
+        if ($origin) {
+            $animalIsOnOrigin = $currentAnimalLocation && $currentAnimalLocation->getUbn() === $origin->getUbn();
+            if (!$animalIsOnOrigin) {
+                throw new PreconditionRequiredHttpException(
+                    $this->translator->trans('ANIMAL IS NOT ON LOCATION OF DEPART'). '.'
+                    . $ulnData .', '.$currentUbnData
+                );
+            }
+        }
+
     }
 }

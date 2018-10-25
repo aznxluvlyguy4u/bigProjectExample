@@ -436,6 +436,11 @@ A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED: A declare with this request
 ANIMAL IS ALREADY DEAD: Animal is already dead
 SWITCHING UBN NUMBERS BETWEEN LOCATIONS IS NOT ALLOWED: Switching UBN numbers between locations is not allowed
 UBN OF DEPARTURE AND ARRIVAL ARE IDENTICAL: UBN of departure and arrival are identical
+ANIMAL DOES NOT EXIST IN THE DATABASE: Animal does not exist in the database
+ANIMAL IS ON AN UBN IN ANOTHER COUNTRY: Animal is on an UBN in another country
+ANIMAL IS ALREADY ON THE LIVESTOCK LIST: Animal is already on the livestock list
+ANIMAL IS NOT ON LOCATION OF DEPART: Animal is not on location of depart
+ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Arrivals are only allowed between UBNS from the same country
 
 #Declares
 DECLARE_ARRIVALS: arrivals

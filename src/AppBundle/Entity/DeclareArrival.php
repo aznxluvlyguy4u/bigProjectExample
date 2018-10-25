@@ -27,6 +27,7 @@ class DeclareArrival extends DeclareBase implements DeclareAnimalDataInterface, 
     use EntityClassInfo;
 
     /**
+     * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="arrivals")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
@@ -392,6 +393,16 @@ class DeclareArrival extends DeclareBase implements DeclareAnimalDataInterface, 
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Get Animal.id
+     *
+     * @return int
+     */
+    public function getAnimalId(): ?int
+    {
+        return $this->animal ? $this->animal->getId() : null;
     }
 
     /**
