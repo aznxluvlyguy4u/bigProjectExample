@@ -83,6 +83,8 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $location->addAnimal($animal);
 
+        $this->reopenClosedResidenceOnLocationByEndDate($location, $animal, $export->getExportDate());
+
         $export->setRevokedRequestState();
         $this->getManager()->persist($location);
         $this->getManager()->persist($animal);
