@@ -22,6 +22,8 @@ use AppBundle\Enumerator\MessageType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Exception\AnimalNotOnDepartLocationHttpException;
+use AppBundle\Exception\DeadAnimalHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
@@ -644,38 +646,28 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         }
 
         $animal = $arrival->getAnimal();
-        $currentAnimalLocation = $animal->getLocation();
         $ulnData = ' ULN: '.$animal->getUln();
-        $declareUbn = $arrival->getLocation() ? $arrival->getLocation()->getUbn() : null;
 
         // Animal must be alive
         if ($animal->isDeclaredDead()) {
-            throw new PreconditionRequiredHttpException(
-                $this->translator->trans('ANIMAL IS ALREADY DEAD'). '.' . $ulnData
-            );
+            throw new DeadAnimalHttpException($this->translator, $animal->getUln());
         }
 
         // Animal should not already be on the livestock list
-        if ($animal->getUbn() === $declareUbn) {
+        if ($animal->getUbn() === $arrival->getUbn()) {
             throw new PreconditionRequiredHttpException(
                 $this->translator->trans('ANIMAL IS ALREADY ON THE LIVESTOCK LIST'). '.' . $ulnData
             );
         }
-
-        $currentCountryCode = $currentAnimalLocation->getCountryCode();
-        $currentUbnData = ' '.$this->translateUcFirstLower('CURRENT_UBN').': ' . $currentAnimalLocation->getUbn(). ' ('. $currentCountryCode .')';
 
         // De location of origin should be in the same country
         $this->validateIfOriginAndDestinationAreInSameCountry(DeclareArrival::class, $origin, $arrival->getLocation());
 
         // If location of origin is also an NSFO location, the animal should be on that location during the declare
         if ($origin) {
-            $animalIsOnOrigin = $currentAnimalLocation && $currentAnimalLocation->getUbn() === $origin->getUbn();
+            $animalIsOnOrigin = $animal->getUbn() === $origin->getUbn();
             if (!$animalIsOnOrigin) {
-                throw new PreconditionRequiredHttpException(
-                    $this->translator->trans('ANIMAL IS NOT ON LOCATION OF DEPART'). '.'
-                    . $ulnData .', '.$currentUbnData
-                );
+                throw new AnimalNotOnDepartLocationHttpException($this->translator, $animal);
             }
         }
 
