@@ -22,6 +22,8 @@ use AppBundle\Enumerator\MessageType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Exception\AnimalNotOnDepartLocationHttpException;
+use AppBundle\Exception\DeadAnimalHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
@@ -191,6 +193,10 @@ class DepartService extends DeclareControllerServiceBase
         $arrivalLocation = $repository->findOneBy(['ubn' => $depart->getUbnNewOwner(), 'isActive' => true]);
 
         $this->validateIfOriginAndDestinationAreInSameCountry(DeclareDepart::class, $location, $arrivalLocation);
+
+        if (!$useRvoLogic) {
+            $this->validateNonRvoSpecificConditions($depart);
+        }
 
         $arrival = null;
         if($arrivalLocation) {
@@ -426,5 +432,22 @@ class DepartService extends DeclareControllerServiceBase
         $declareExports = $repository->getExportsWithLastHistoryResponses($location);
 
         return ResultUtil::successResult(['departs' => $declareDeparts, 'exports' => $declareExports]);
+    }
+
+
+    private function validateNonRvoSpecificConditions(DeclareDepart $depart)
+    {
+        $animal = $depart->getAnimal();
+        if (!$animal) {
+            return;
+        }
+
+        if ($animal->getUbn() !== $depart->getUbn()) {
+            throw new AnimalNotOnDepartLocationHttpException($this->translator, $animal);
+        }
+
+        if (!$animal->getIsAlive()) {
+            throw new DeadAnimalHttpException($this->translator, $animal->getUln());
+        }
     }
 }
