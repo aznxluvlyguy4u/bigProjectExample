@@ -684,4 +684,12 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
     {
         $this->setRequestState(RequestStateType::REVOKED);
     }
+
+    /**
+     * @return bool
+     */
+    public function isRevoked(): bool
+    {
+        return $this->getRequestState() === RequestStateType::REVOKED;
+    }
 }
