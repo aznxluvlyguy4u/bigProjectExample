@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\TagStateType;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints\DateTime;
@@ -489,4 +490,13 @@ class Tag
         return get_called_class();
     }
 
+
+    /**
+     * @return Tag
+     */
+    public function unassignTag(): Tag
+    {
+        $this->setTagStatus(TagStateType::UNASSIGNED);
+        return $this;
+    }
 }
