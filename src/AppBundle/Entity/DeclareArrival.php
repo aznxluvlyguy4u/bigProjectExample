@@ -22,7 +22,7 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareArrival extends DeclareBase implements DeclareAnimalDataInterface, BasicRvoDeclareInterface
+class DeclareArrival extends DeclareBase implements RelocationDeclareInterface
 {
     use EntityClassInfo;
 

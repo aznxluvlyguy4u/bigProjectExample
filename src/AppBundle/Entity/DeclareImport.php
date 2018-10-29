@@ -22,7 +22,7 @@ use AppBundle\Entity\DeclareImportResponse;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareImport extends DeclareBase implements DeclareAnimalDataInterface, BasicRvoDeclareInterface
+class DeclareImport extends DeclareBase implements RelocationDeclareInterface
 {
     use EntityClassInfo;
 

@@ -18,7 +18,7 @@ use JMS\Serializer\Annotation\Expose;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareExportRepository")
  * @package AppBundle\Entity
  */
-class DeclareExport extends DeclareBase implements DeclareAnimalDataInterface, BasicRvoDeclareInterface
+class DeclareExport extends DeclareBase implements RelocationDeclareInterface
 {
     use EntityClassInfo;
 

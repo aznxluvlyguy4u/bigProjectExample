@@ -21,7 +21,7 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareDepart extends DeclareBase implements DeclareAnimalDataInterface, BasicRvoDeclareInterface
+class DeclareDepart extends DeclareBase implements RelocationDeclareInterface
 {
     use EntityClassInfo;
 
