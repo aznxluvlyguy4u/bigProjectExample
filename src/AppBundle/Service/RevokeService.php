@@ -6,7 +6,6 @@ namespace AppBundle\Service;
 
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -27,24 +26,18 @@ use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Mate;
 use AppBundle\Entity\RelocationDeclareInterface;
 use AppBundle\Entity\RevokeDeclaration;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Exception\DeadAnimalHttpException;
 use AppBundle\Output\Output;
 use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
 use AppBundle\Worker\DirectProcessor\RevokeProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
-use Symfony\Component\Translation\TranslatorInterface;
 
 
 class RevokeService extends DeclareControllerServiceBase implements RevokeAPIControllerInterface

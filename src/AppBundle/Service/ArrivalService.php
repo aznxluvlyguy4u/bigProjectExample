@@ -677,5 +677,6 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             }
         }
 
+        $this->validateIfEventDateIsNotBeforeDateOfBirth($animal, $arrival->getArrivalDate());
     }
 }

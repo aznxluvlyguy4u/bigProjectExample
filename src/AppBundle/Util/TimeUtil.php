@@ -99,6 +99,17 @@ class TimeUtil
 
 
     /**
+     * @param \DateTime|null $date1
+     * @param \DateTime|null $date2
+     * @return bool
+     */
+    public static function isDate1BeforeDate2(?\DateTime $date1, ?\DateTime $date2): bool
+    {
+        return $date1 && $date2 && self::getAgeInDays($date1, $date2) > 0;
+    }
+
+
+    /**
      * @param \DateTime $dateOfBirth
      * @param \DateTime $measurementDate
      * @return int

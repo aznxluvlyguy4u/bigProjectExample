@@ -102,22 +102,31 @@ class LossService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
+        $useRvoLogic = $location->isDutchLocation();
+
         $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
 
         $log = ActionLogWriter::declareLossPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
-        $messageObject = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
+        $loss = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
+
+        if (!$useRvoLogic) {
+            $this->validateNonRvoLoss($loss);
+        }
 
         //First Persist object to Database, before sending it to the queue
-        $this->persist($messageObject);
-        $messageObject->getAnimal()->setTransferringTransferState();
-        $this->getManager()->persist($messageObject->getAnimal());
+        $this->persist($loss);
+        $loss->getAnimal()->setTransferringTransferState();
+        $this->getManager()->persist($loss->getAnimal());
         $this->getManager()->flush();
 
-        $messageArray = $this->runDeclareLossWorkerLogic($messageObject);
+        $messageArray = $this->runDeclareLossWorkerLogic($loss);
 
-        $this->saveNewestDeclareVersion($content, $messageObject);
+        $this->saveNewestDeclareVersion($content, $loss);
 
         $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
@@ -259,5 +268,14 @@ class LossService extends DeclareControllerServiceBase
         }
 
         return new JsonResponse(['DeclareLoss' => ['found open declares' => $openCount, 'open declares resent' => $resentCount]], 200);
+    }
+
+
+    /**
+     * @param DeclareLoss $loss
+     */
+    private function validateNonRvoLoss(DeclareLoss $loss)
+    {
+        $this->validateIfEventDateIsNotBeforeDateOfBirth($loss->getAnimal(), $loss->getDateOfDeath());
     }
 }

@@ -228,5 +228,8 @@ class TagReplaceService extends DeclareControllerServiceBase
         if ($animalWithReplacementTagUln) {
             throw new PreconditionRequiredHttpException('AN ANIMAL ALREADY EXISTS WITH THIS ULN');
         }
+
+        $this->validateIfEventDateIsNotBeforeDateOfBirth($declareTagReplace->getAnimal(),
+            $declareTagReplace->getReplaceDate());
     }
 }

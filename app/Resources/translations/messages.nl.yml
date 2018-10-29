@@ -287,6 +287,7 @@ YEAR2PLUS: JAAR2PLUS
 DATEFORMAT: d-m-Y
 TRUE: waar
 FALSE: onwaar
+EVENT DATE: gebeurtenisdatum
 
 #Chart labels
 CHART_LABEL_TOTAL_BORN: Totaal geb. per worp
@@ -452,6 +453,7 @@ ANIMAL IS NOT ON LOCATION OF DEPART: Dier staat niet op locatie van afvoer
 ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Aanvoermeldingen zijn alleen toegestaan tussen UBNs in hetzelfde land
 THIS FEATURE IS NOT AVAILABLE YET: Deze functie is nog niet beschikbaar
 AN ANIMAL ALREADY EXISTS WITH THIS ULN: Een dier met dit ULN bestaat al
+THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: De gebeurtenisdatum kan niet voor de geboortedatum zijn
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen

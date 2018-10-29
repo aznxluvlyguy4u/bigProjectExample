@@ -287,6 +287,7 @@ YEAR2PLUS: YEAR2PLUS
 DATEFORMAT: Y-m-d
 TRUE: true
 FALSE: false
+EVENT DATE: event date
 
 #Chart labels
 CHART_LABEL_TOTAL_BORN: Total born per litter
@@ -444,6 +445,7 @@ ANIMAL IS NOT ON LOCATION OF DEPART: Animal is not on location of depart
 ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Arrivals are only allowed between UBNS from the same country
 THIS FEATURE IS NOT AVAILABLE YET: This feature is not available yet
 AN ANIMAL ALREADY EXISTS WITH THIS ULN: An animal already exists with this ULN
+THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: The event date cannot be before the date of birth
 
 #Declares
 DECLARE_ARRIVALS: arrivals

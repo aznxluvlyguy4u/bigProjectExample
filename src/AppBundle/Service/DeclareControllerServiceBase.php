@@ -33,9 +33,11 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Exception\DeclareToOtherCountryHttpException;
+use AppBundle\Exception\EventDateBeforeDateOfBirthHttpException;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -428,5 +430,23 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         ;
 
         $this->getManager()->persist($transaction);
+    }
+
+
+
+
+    /**
+     * @param Animal|null $animal
+     * @param \DateTime|null $eventDate
+     */
+    protected function validateIfEventDateIsNotBeforeDateOfBirth(?Animal $animal, $eventDate)
+    {
+        if ($animal && $animal->getDateOfBirth() && !empty($eventDate) && $eventDate instanceof \DateTime
+            && TimeUtil::isDate1BeforeDate2($eventDate, $animal->getDateOfBirth())
+        ) {
+            throw new EventDateBeforeDateOfBirthHttpException(
+                $this->translator, $animal->getDateOfBirth(), $eventDate
+            );
+        }
     }
 }

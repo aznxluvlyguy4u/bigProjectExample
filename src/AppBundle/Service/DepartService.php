@@ -195,7 +195,7 @@ class DepartService extends DeclareControllerServiceBase
         $this->validateIfOriginAndDestinationAreInSameCountry(DeclareDepart::class, $location, $arrivalLocation);
 
         if (!$useRvoLogic) {
-            $this->validateNonRvoSpecificConditions($depart);
+            $this->validateNonRvoSpecificDepartConditions($depart);
         }
 
         $arrival = null;
@@ -289,15 +289,21 @@ class DepartService extends DeclareControllerServiceBase
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
+        $useRvoLogic = $location->isDutchLocation();
+
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
         $arrivalLog = null;
 
         $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Convert the array into an object and add the mandatory values retrieved from the database
-        $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
+        $export = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
 
-        $messageArray = $this->runDeclareExportWorkerLogic($messageObject, $content);
+        if (!$useRvoLogic) {
+            $this->validateNonRvoSpecificExportConditions($export);
+        }
+
+        $messageArray = $this->runDeclareExportWorkerLogic($export, $content);
 
         if ($arrivalLog) { $this->persist($arrivalLog); }
         ActionLogWriter::completeActionLog($this->getManager(), $departOrExportLog);
@@ -435,7 +441,7 @@ class DepartService extends DeclareControllerServiceBase
     }
 
 
-    private function validateNonRvoSpecificConditions(DeclareDepart $depart)
+    private function validateNonRvoSpecificDepartConditions(DeclareDepart $depart)
     {
         $animal = $depart->getAnimal();
         if (!$animal) {
@@ -449,5 +455,22 @@ class DepartService extends DeclareControllerServiceBase
         if (!$animal->getIsAlive()) {
             throw new DeadAnimalHttpException($this->translator, $animal->getUln());
         }
+
+        $this->validateIfEventDateIsNotBeforeDateOfBirth($animal, $depart->getDepartDate());
+    }
+
+
+    private function validateNonRvoSpecificExportConditions(DeclareExport $export)
+    {
+        $animal = $export->getAnimal();
+        if (!$animal) {
+            return;
+        }
+
+        if (!$animal->getIsAlive()) {
+            throw new DeadAnimalHttpException($this->translator, $animal->getUln());
+        }
+
+        $this->validateIfEventDateIsNotBeforeDateOfBirth($animal, $export->getExportDate());
     }
 }
