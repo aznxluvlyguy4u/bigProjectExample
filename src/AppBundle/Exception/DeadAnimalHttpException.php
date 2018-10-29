@@ -4,7 +4,6 @@
 namespace AppBundle\Exception;
 
 
-use AppBundle\Entity\Animal;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
