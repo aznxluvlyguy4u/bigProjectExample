@@ -50,6 +50,7 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Util\WorkerTaskUtil;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\DirectProcessor\DeclareProcessorBase;
 use AppBundle\Worker\Task\WorkerMessageBodyLitter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
@@ -683,7 +684,13 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
                     if ($declareBirthResponse) {
                         $declareBirthResponseCount++;
-                        //Only successful RVO responses contain messageNumbers and can be revoked by a RevokeDeclare
+                        /*
+                         * Only successful RVO responses contain messageNumbers and can be revoked by a RevokeDeclare
+                         *
+                         * DO NOT persist a response here in case of for example a non-RVO revoke.
+                         * This will cause a duplicate key violation on the declare_base_response table.
+                         * Send a response a json to the worker instead, to be persisted in the worker.
+                         */
                         if ($declareBirth->isRvoMessage() &&
                             $declareBirthResponse->getMessageNumber() != null
                         ) {
@@ -1140,12 +1147,16 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $response = new DeclareBirthResponse();
         $response->setDeclareBirthIncludingAllValues($birth);
         $response->setSuccessValues();
-        $birth->addResponse($response);
+
+        DeclareProcessorBase::sendResponseToWorkerQueue(
+            $this->getBaseSerializer(),
+            $this->internalQueueService,
+            $response
+        );
 
         $birth->setFinishedRequestState();
         $this->removeReservedTag($birth);
 
-        $this->getManager()->persist($response);
         $this->getManager()->persist($birth);
 
         return $this->getDeclareMessageArray($birth, false);
