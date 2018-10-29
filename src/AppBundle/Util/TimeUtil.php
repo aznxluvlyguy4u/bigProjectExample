@@ -105,7 +105,7 @@ class TimeUtil
      */
     public static function isDate1BeforeDate2(?\DateTime $date1, ?\DateTime $date2): bool
     {
-        return $date1 && $date2 && self::getDaysBetween($date1, $date2) < 0;
+        return $date1 && $date2 && self::getDaysBetween($date1, $date2) > 0;
     }
 
 
