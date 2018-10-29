@@ -17,4 +17,9 @@ interface BasicRvoDeclareInterface extends DeclareBaseInterface
      */
     function getRevoke();
     function setRevoke(RevokeDeclaration $revoke);
+
+    /**
+     * @return \DateTime
+     */
+    function getEventDate();
 }
