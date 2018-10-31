@@ -27,6 +27,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Bundle\SnappyBundle\Snappy\Response\PdfResponse;
 use Knp\Snappy\GeneratorInterface;
+use Knp\Snappy\Pdf;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -46,6 +47,7 @@ class ReportServiceBase
     const DEFAULT_EXTENSION = FileType::PDF;
     const FILENAME = 'NFSO_Report';
     const FOLDER_NAME = ReportServiceBase::FILENAME;
+    const WKHTMLTOPDF_V125_PATH = '/usr/bin/wkhtmltopdfV125';
 
     /** @var EntityManagerInterface */
     protected $em;
@@ -63,6 +65,10 @@ class ReportServiceBase
     protected $templating;
     /** @var TranslatorInterface */
     protected $translator;
+		/** @var GeneratorInterface */
+		protected $knpGeneratorV124;
+		/** @var Pdf */
+		protected $knpGeneratorV125;
     /** @var GeneratorInterface */
     protected $knpGenerator;
     /** @var Logger */
@@ -100,6 +106,8 @@ class ReportServiceBase
     private $isTranslateHeaderActive;
     /** @var array */
     private static $translationSet;
+    /** @var boolean */
+    private $useWkhtmltopdf125;
 
     public function __construct(EntityManagerInterface $em, ExcelService $excelService, Logger $logger,
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
@@ -120,7 +128,9 @@ class ReportServiceBase
         $this->userService = $userService;
         $this->templating = $templating;
         $this->translator = $translator;
-        $this->knpGenerator = $knpGenerator;
+        $this->knpGeneratorV124 = $knpGenerator;
+        $this->knpGeneratorV125 = new Pdf(self::WKHTMLTOPDF_V125_PATH);
+        $this->knpGenerator = $this->knpGeneratorV124;
         $this->ulnValidator = $ulnValidator;
         $this->cacheDir = $cacheDir;
         $this->rootDir = $rootDir;
@@ -427,9 +437,11 @@ class ReportServiceBase
 		 * @param array|object $data
 		 * @param boolean $isLandscape
 		 * @param array $additionalData
+		 * @param null $customPdfOptions
+		 * @param bool $useWkhtmltopdfV125
 		 * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
 		 */
-    protected function getPdfReportBase($twigFile, $data, $isLandscape = true, $additionalData = [], $customPdfOptions = null)
+    protected function getPdfReportBase($twigFile, $data, $isLandscape = true, $additionalData = [], $customPdfOptions = null, $useWkhtmltopdfV125 = false)
     {
     	  $twigInput = ArrayUtil::concatArrayValues(
     	  	[
@@ -455,6 +467,11 @@ class ReportServiceBase
         $pdfOptions = $isLandscape ? TwigOutputUtil::pdfLandscapeOptions() : TwigOutputUtil::pdfPortraitOptions();
         $pdfOptions = $customPdfOptions ? $customPdfOptions : $pdfOptions;
 
+        // Switch to wkhtmltopdf v0.12.5
+        if ($useWkhtmltopdfV125) {
+	          $this->knpGenerator = $this->knpGeneratorV125;
+        }
+
         if($this->outputReportsToCacheFolderForLocalTesting) {
             //Save pdf in local cache
             return ResultUtil::successResult($this->saveFileLocally($this->getCacheDirFilename(), $html, $pdfOptions));
@@ -463,6 +480,11 @@ class ReportServiceBase
         $pdfOutput = $this->knpGenerator->getOutputFromHtml($html, $pdfOptions);
 
         $url = $this->storageService->uploadPdf($pdfOutput, $this->getS3Key());
+
+	      // Switch back to wkhtmltopdf v0.12.4
+        if ($useWkhtmltopdfV125) {
+        	  $this->knpGenerator = $this->knpGeneratorV124;
+        }
 
         return ResultUtil::successResult($url);
     }
