@@ -1,0 +1,81 @@
+<div class="col-xs-12 bordered rounded">
+    <div class="px-1 py-2 explanationsText">
+        <p>
+            * = als 1 jarig geworpen<br>
+            Verklaring productie: leeftijd/aantal worpen/totaal geboren/levend geboren<br>
+            {% set prefix = '' %}
+            Verklaring rasbalk: {% for breedeCode in certificate.animals.c.breedCodes %}
+                {{ prefix~breedeCode.breedCodeLetters~' is '~breedeCode.breedCodeFullname }}{% set prefix = ', ' %}
+            {% endfor %}<br>
+        </p>
+
+        {% if not certificate.animals.c.lastMate.isEmpty %}
+            <p>
+                {% if certificate.animals.c.lastMate.ki %}Inseminatie{% else %}Paring{% endif %}: {{ certificate.animals.c.lastMate.start_date | date("d-m-Y")}}{% if not certificate.animals.c.lastMate.is_single_date %}{{ '  -  '~certificate.animals.c.lastMate.end_date | date("d-m-Y") }}{% endif %}<br>
+                Identificatie van het bevruchtende mannelijke dier: {{ certificate.animals.c.lastMate.uln_stud_ram }}<br>
+            </p>
+        {% endif %}
+
+        {% if certificate.pedigreeRegister %}
+            <p>
+                {{ certificate.pedigreeRegister.fullName }}<br>
+                p/a Postbus 160 - 5300 AD - Zaltbommel&nbsp;&nbsp;&nbsp; {{ certificate.pedigreeRegister.url }}<br>
+            </p>
+        {% endif %}
+
+
+        {% if certificate.displayZooTechnicalData %}
+            <p>
+                Zoötechnisch certificaat overeenkomstig Verordening (EU) 2016/1012 voor de handel in raszuivere fokschapen (Ovis aries)<br>
+            </p>
+        {% else %}
+            {% if certificate.action_by_is_super_admin %}
+                <p>
+                    Het dier staat niet in de hoofdsectie van een erkend stamboek. Dit document is daarom geen
+                    officieel zoötechnisch certificaat krachtens art. 30 van Verordening (EU)
+                    2016 / 1012 van het Europees Parlement en de Raad<br>
+                </p>
+            {% else %}
+                <p>
+                    Dit document is door de houder van het dier gegenereerd en daarom geen officieel zoötechnisch certificaat krachtens art. 30 van Verordening (EU) 2016 / 1012 van het Europees Parlement en de Raad<br>
+                </p>
+            {% endif %}
+        {% endif %}
+
+        {% if certificate.action_by_is_super_admin %}
+            <div class="row">
+                <div class="col-xs-4">
+                    Ondergetekende
+                </div>
+                <div class="col-xs-8 bg-white-stripe fieldValue">
+                    {{ certificate.action_by_full_name }}, medewerker NSFO
+                </div>
+            </div>
+            <div class="row mb-1">
+                <div class="col-xs-4">
+                </div>
+                <div class="col-xs-8 bg-white-stripe fieldValue">
+                    Zaltbommel
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-4">
+                    Datum afgifte
+                </div>
+                <div class="col-xs-8 bg-white-stripe fieldValue">
+                    {{ 'now' | date('d-m-Y') }}<br>
+                </div>
+            </div>
+        {% else %}
+            <div class="row">
+                <div class="col-xs-4">
+                    Datum afgifte
+                </div>
+                <div class="col-xs-8 bg-white-stripe fieldValue">
+                    {{ 'now' | date('d-m-Y') }}<br>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>

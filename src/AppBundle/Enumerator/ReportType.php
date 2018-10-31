@@ -4,8 +4,12 @@
 namespace AppBundle\Enumerator;
 
 
+use AppBundle\Traits\EnumInfo;
+
 class ReportType
 {
+    use EnumInfo;
+
     const ANNUAL_ACTIVE_LIVE_STOCK = 1;
     const ANNUAL_TE_100 = 2;
     const FERTILIZER_ACCOUNTING = 3;

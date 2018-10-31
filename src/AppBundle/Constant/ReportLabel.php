@@ -9,6 +9,7 @@ class ReportLabel
     const COLUMN_HEADERS = 'columnHeaders';
     const ENTITY = 'entity';
     const IS_PROD_ENV = 'isProdEnv';
+    const IS_EMPTY = 'isEmpty';
     const IMAGES_DIRECTORY = 'imagesDirectory';
     const DATE = 'date';
     const FOOTNOTE = 'footnote';
@@ -16,30 +17,33 @@ class ReportLabel
     const INVALID = 'invalid';
     const MONTHS = 'months';
     const TOTALS = 'totals';
+    const VALUE = 'value';
+    const VALUES = 'values';
+    const HAS_ANY_VALUES = 'hasAnyValues';
+    const ACCURACY = 'accuracy';
 
     //Person
+    const ACTION_BY_FULL_NAME = 'action_by_full_name';
+    const ACTION_BY_IS_SUPER_ADMIN = 'action_by_is_super_admin';
     const OWNER_NAME = "ownerName";
     const OWNER = 'owner';
+    const OWNER_EMAIL_ADDRESS = 'ownerEmailAddress';
 
     //Breeder
     const BREEDER = 'breeder';
     const BREEDER_NAME = "breederName";
     const BREEDER_NAME_CROPPED = "breederNameCropped";
     const BREEDER_NUMBER = 'breederNumber';
+    const BREEDER_EMAIL_ADDRESS = 'breederEmailAddress';
 
-    //BreedIndexStars
-    const BREEDER_INDEX_STARS = 'breederIndexStars';
-    const M_BREEDER_INDEX_STARS = 'mBreederIndexStars'; //Mother
-    const F_BREEDER_INDEX_STARS = 'fBreederIndexStars'; //Father
-    const EXT_INDEX_STARS = 'extIndexStars'; //exteriorIndex
-    const VL_INDEX_STARS = 'vlIndexStars'; //vleesLamIndex
-
-    //BreedIndex number/accuracy like 128/78
-    const BREEDER_INDEX_NO_ACC = 'breederIndexNoAcc';
-    const M_BREEDER_INDEX_NO_ACC = 'mBreederIndexNoAcc';
-    const F_BREEDER_INDEX_NO_ACC = 'fBreederIndexNoAcc';
-    const EXT_INDEX_NO_ACC = 'extIndexNoAcc';
-    const VL_INDEX_NO_ACC = 'vlIndexNoAcc';
+    //Breed Index
+    const INDEXES = 'indexes';
+    const STARS_VALUE = 'stars_value';
+    const STARS_OUTPUT = 'stars_output';
+    const INDEX_FATHER = 'indexFather';
+    const INDEX_MOTHER = 'indexMother';
+    const INDEX_EXTERIOR = 'indexExterior';
+    const INDEX_BREED = 'indexBreed';
     
     //Breed values
     const INBREEDING_COEFFICIENT = 'inbreedingCoefficient';
@@ -57,6 +61,8 @@ class ReportLabel
     const ANIMALS = 'animals';
     const ANIMAL_COUNT = 'animalCount';
     const ANIMAL_CATEGORY = 'animalCategory';
+    const ANIMAL_TYPE = 'animalType';
+    const ANIMAL_TYPE_IN_LATIN = 'animalTypeInLatin';
     const RAM = 'ram';
     const EWE = 'ewe';
     const EWES = 'ewes';
@@ -68,7 +74,9 @@ class ReportLabel
     const PEDIGREE_COUNTRY_CODE = 'pedigreeCountryCode';
     const PEDIGREE_NUMBER = 'pedigreeNumber';
     const PEDIGREE = 'pedigree';
+    const LAST_MATE = 'lastMate';
     const NAME = 'name';
+    const COUNTRY_OF_BIRTH = 'countryOfBirth';
     const DATE_OF_BIRTH = 'dateOfBirth';
     const LITTER_SIZE = 'litterSize'; //litter animal was born in
     const LITTER_GROUP = 'litterGroup'; //litter animal was born in
@@ -77,14 +85,20 @@ class ReportLabel
     const N_LING = 'nLing';
     const NICKNAME = 'nickname';
     const SCRAPIE = 'scrapie';
+    const SECTION_TYPE = 'section_type';
     const PRODUCTION = 'production';
     const BREED = 'breed';
     const BREED_TYPE = 'breedType';
     const BREED_CODE = 'breedCode';
+    const BREED_CODES = 'breedCodes';
+    const BREED_CODE_LETTERS = 'breedCodeLetters';
+    const BREED_CODE_FULLNAME = 'breedCodeFullname';
+    const BREED_VALUES = 'breedValues';
+    const BREED_VALUES_EVALUATION_DATE = 'breedValuesEvaluationDate';
     const INSPECTION_DATE = 'inspectionDate';
     const PREDICATE = 'predicate';
     const BLINDNESS_FACTOR = 'blindnessFactor';
-    const PEDIGREE_REGISTER_NAME = 'pedigreeRegisterName';
+    const PEDIGREE_REGISTER = 'pedigreeRegister';
     const LIVESTOCK = 'livestock';
     const IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS = 'is_user_allowed_to_access_animal_details';
 
@@ -116,10 +130,6 @@ class ReportLabel
     const MARKINGS = 'markings';
 
 
-    const MUSCLE_THICKNESS = 'muscleThickness';
-    const BODY_FAT = 'bodyFat';
-    const TAIL_LENGTH = 'tailLength';
-
     //Pedrigree / Bloodline
     const CHILD_KEY = 'c';
     const FATHER_KEY = 'f';
@@ -147,4 +157,6 @@ class ReportLabel
     const AVERAGE_YEARLY_ANIMAL_COUNT = 'average_yearly_animal_count';
     const NITROGEN = 'nitrogen';
     const PHOSPHATE = 'phosphate';
+
+    const DISPLAY_ZOO_TECHNICAL_DATA = 'displayZooTechnicalData';
 }

@@ -11,25 +11,29 @@ use Doctrine\ORM\Query\Expr\Join;
 class PedigreeRegisterRepository extends BaseRepository {
 
     /**
-     * @param int $animalId
-     * @param boolean $onlyIncludeIfRegisteredWithNsfo TODO
-     * @return string
+     * @param $animalId
+     * @param bool $onlyIncludeIfOfficiallyRecognized
+     * @return PedigreeRegister
      */
-    public function getFullnameByAnimalId($animalId, $onlyIncludeIfRegisteredWithNsfo = true)
+    public function getByAnimalId($animalId, $onlyIncludeIfOfficiallyRecognized = true)
     {
         if(!is_int($animalId)) { return null; }
 
-        $filter = ' ';
-        if($onlyIncludeIfRegisteredWithNsfo) {
-            $filter = ' AND pedigree_register.is_registered_with_nsfo = TRUE ';
+        $qb = $this->getManager()->createQueryBuilder();
+        $qb->select('a', 'pr')
+            ->from(Animal::class, 'a', 'a.id')
+            ->innerJoin('a.pedigreeRegister', 'pr', Join::WITH, $qb->expr()->eq('a.pedigreeRegister', 'pr.id'))
+            ->where($qb->expr()->eq('a.id', $animalId))
+            ->getFirstResult()
+        ;
+
+        if ($onlyIncludeIfOfficiallyRecognized) {
+            $qb->andWhere($qb->expr()->eq('pr.isOfficiallyRecognized', 'true'));
         }
 
-        $sql = "SELECT pedigree_register.full_name FROM animal
-                  INNER JOIN pedigree_register ON animal.pedigree_register_id = pedigree_register.id 
-                WHERE animal.id = ".$animalId.' '.$filter;
-        $result = $this->getConnection()->query($sql)->fetch();
-        
-        return $result == false ? null : $result['full_name'];
+        /** @var Animal[] $animals */
+        $animals = $qb->getQuery()->getResult();
+        return $animals ? array_pop($animals)->getPedigreeRegister(): null;
     }
 
 

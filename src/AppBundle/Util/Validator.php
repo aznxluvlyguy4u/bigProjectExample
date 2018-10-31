@@ -24,6 +24,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\BlindnessFactorType;
 use AppBundle\Enumerator\BreedType;
+use AppBundle\Enumerator\EmailPrefix;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
@@ -970,5 +971,36 @@ class Validator
     public static function unauthorizedException(): UnauthorizedHttpException
     {
         return new UnauthorizedHttpException(null, self::UNAUTHORIZED,null);
+    }
+
+
+    /**
+     * @param string $emailAddress
+     * @return bool
+     */
+    public static function isFillerEmailAddress($emailAddress): bool
+    {
+        $emailDomainWithAt = '@nsfo.nl';
+        $domainLength = strlen($emailDomainWithAt);
+
+        return empty($emailAddress) ||
+            $emailAddress === 'BLANK' ||
+            !is_string($emailAddress) ||
+            (
+                substr($emailAddress, 0, 8) === EmailPrefix::INVALID_PREFIX &&
+                substr($emailAddress, -$domainLength, $domainLength) === $emailDomainWithAt
+            )
+        ;
+    }
+
+
+    /**
+     * @param string $emailAddress
+     * @param null $nullFiller
+     * @return mixed
+     */
+    public static function getFillerCheckedEmailAddress($emailAddress, $nullFiller = null)
+    {
+        return self::isFillerEmailAddress($emailAddress) ? $nullFiller : $emailAddress;
     }
 }
