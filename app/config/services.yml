@@ -443,6 +443,7 @@ services:
           - '%kernel.root_dir%'
           - '%output_reports_to_cache_folder_for_local_testing%'
           - '%display_report_pdf_output_as_html%'
+          - '%wkhtmltopdf_v125_path%'
 
     app.report.breedvalues.base:
         abstract: true
@@ -463,6 +464,7 @@ services:
           - '%kernel.root_dir%'
           - '%output_reports_to_cache_folder_for_local_testing%'
           - '%display_report_pdf_output_as_html%'
+          - '%wkhtmltopdf_v125_path%'
 
     app.report.livestock:
         parent: app.report.breedvalues.base

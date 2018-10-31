@@ -47,7 +47,6 @@ class ReportServiceBase
     const DEFAULT_EXTENSION = FileType::PDF;
     const FILENAME = 'NFSO_Report';
     const FOLDER_NAME = ReportServiceBase::FILENAME;
-    const WKHTMLTOPDF_V125_PATH = '/usr/bin/wkhtmltopdfV125';
 
     /** @var EntityManagerInterface */
     protected $em;
@@ -106,8 +105,6 @@ class ReportServiceBase
     private $isTranslateHeaderActive;
     /** @var array */
     private static $translationSet;
-    /** @var boolean */
-    private $useWkhtmltopdf125;
 
     public function __construct(EntityManagerInterface $em, ExcelService $excelService, Logger $logger,
                                 AWSSimpleStorageService $storageService, CsvWriter $csvWriter,
@@ -117,7 +114,8 @@ class ReportServiceBase
                                 UlnValidatorInterface $ulnValidator,
                                 $cacheDir, $rootDir,
                                 $outputReportsToCacheFolderForLocalTesting,
-                                $displayReportPdfOutputAsHtml
+                                $displayReportPdfOutputAsHtml,
+																$wkhtmltopdfV125Path
     )
     {
         $this->em = $em;
@@ -129,7 +127,7 @@ class ReportServiceBase
         $this->templating = $templating;
         $this->translator = $translator;
         $this->knpGeneratorV124 = $knpGenerator;
-        $this->knpGeneratorV125 = new Pdf(self::WKHTMLTOPDF_V125_PATH);
+        $this->knpGeneratorV125 = new Pdf($wkhtmltopdfV125Path);
         $this->knpGenerator = $this->knpGeneratorV124;
         $this->ulnValidator = $ulnValidator;
         $this->cacheDir = $cacheDir;
