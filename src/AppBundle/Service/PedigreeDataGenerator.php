@@ -339,7 +339,7 @@ class PedigreeDataGenerator
         }
 
         if (!(is_string($foundRegistration->getBreederNumber()) && strlen($foundRegistration->getBreederNumber()) === 5)) {
-            $this->logError('INVALID BREEDER NUMBER: '.$foundRegistration->getBreederNumber(), $animal);
+            $this->logError('INVALID BREEDER NUMBER: '.$foundRegistration->getBreederNumber());
             return null;
         }
 
