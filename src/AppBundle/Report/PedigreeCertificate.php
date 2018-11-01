@@ -765,8 +765,8 @@ class PedigreeCertificate
                   r.*,
                   rn.odin_bc as odin_bc".$normalizedSuffix."
                 FROM animal 
-                LEFT JOIN result_table_breed_grades r ON r.animal_id = animal.id  
-                LEFT JOIN result_table_normalized_breed_grades rn ON rn.animal_id = c.animal_id
+                LEFT JOIN result_table_breed_grades r ON r.animal_id = animal.id
+                LEFT JOIN result_table_normalized_breed_grades rn ON rn.animal_id = animal.id
                 WHERE animal.id = ".$animalId;
                 $breedGrades = $this->conn->query($sql)->fetch();
             } else {
