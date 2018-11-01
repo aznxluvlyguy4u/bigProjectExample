@@ -120,8 +120,8 @@ class CacheService
      * @param Location $location
      * @param Animal | Ewe | Ram | Neuter $animal
      */
-    public function clearLivestockCacheForLocation(Location $location = null, $animal = null) {
-        if(!$location) {
+    public function clearLivestockCacheForLocation(?Location $location = null, $animal = null) {
+        if(!$location && $animal) {
             /** @var Location $location */
             $location = $animal->getLocation();
         }

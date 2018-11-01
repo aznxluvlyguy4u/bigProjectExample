@@ -6,7 +6,6 @@ use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\DeclareArrival;
 
 /**
  * Class DeclareArrivalResponse
@@ -23,6 +22,9 @@ class DeclareArrivalResponse extends DeclareBaseResponse
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="DeclareArrival", cascade={"persist"}, inversedBy="responses")
    * @JMS\Type("AppBundle\Entity\DeclareArrival")
+   * @JMS\Groups({
+   *     "RESPONSE_PERSISTENCE"
+   * })
    */
   private $declareArrivalRequestMessage;
 
@@ -33,6 +35,9 @@ class DeclareArrivalResponse extends DeclareBaseResponse
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $arrivalDate;
 
@@ -40,12 +45,18 @@ class DeclareArrivalResponse extends DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 10)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ubnPreviousOwner;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $gender;
 
@@ -164,5 +175,22 @@ class DeclareArrivalResponse extends DeclareBaseResponse
     public function getGender()
     {
         return $this->gender;
+    }
+
+
+    /**
+     * @param DeclareArrival $arrival
+     * @return DeclareArrivalResponse
+     */
+    public function setDeclareArrivalIncludingAllValues(DeclareArrival $arrival): DeclareArrivalResponse
+    {
+        $this->setDeclareBaseValues($arrival);
+        $this->setDeclareArrivalRequestMessage($arrival);
+        $this->setArrivalDate($arrival->getArrivalDate());
+        $this->setUbnPreviousOwner($arrival->getUbnPreviousOwner());
+        if ($arrival->getAnimal()) {
+            $this->setGender($arrival->getAnimal()->getGender());
+        }
+        return $this;
     }
 }

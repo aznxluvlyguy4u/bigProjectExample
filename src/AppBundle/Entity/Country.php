@@ -23,7 +23,8 @@ class Country {
    * @ORM\Column(type="integer")
    * @ORM\GeneratedValue(strategy="IDENTITY")
    * @JMS\Groups({
-   *     "BASIC"
+   *     "BASIC",
+   *     "DETAILS"
    * })
    */
   private $id;
@@ -37,7 +38,8 @@ class Country {
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "BASIC"
+   *     "BASIC",
+   *     "DETAILS"
    * })
    */
   private $code;
@@ -49,7 +51,8 @@ class Country {
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "BASIC"
+   *     "BASIC",
+   *     "DETAILS"
    * })
    */
   private $name;
@@ -60,7 +63,8 @@ class Country {
    * @ORM\Column(type="string")
    * @JMS\Type("string")
    * @JMS\Groups({
-   *     "BASIC"
+   *     "BASIC",
+   *     "DETAILS"
    * })
    */
   private $continent;

@@ -22,11 +22,12 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareArrival extends DeclareBase
+class DeclareArrival extends DeclareBase implements RelocationDeclareInterface
 {
     use EntityClassInfo;
 
     /**
+     * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="arrivals")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
@@ -178,6 +179,15 @@ class DeclareArrival extends DeclareBase
     private $locationHealthQueue;
 
     /**
+     * @var DepartArrivalTransaction|null
+     * @ORM\OneToOne(targetEntity="DepartArrivalTransaction",
+     *     inversedBy="arrival", cascade={"persist","refresh"})
+     * @ORM\JoinColumn(name="transaction_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\DepartArrivalTransaction")
+     */
+    private $transaction;
+
+    /**
      * DeclareArrival constructor.
      */
     public function __construct() {
@@ -280,14 +290,14 @@ class DeclareArrival extends DeclareBase
     /**
      * Set location
      *
-     * @param \AppBundle\Entity\Location $location
+     * @param Location $location
      *
      * @return DeclareArrival
      */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
+    public function setLocation(Location $location = null)
     {
         $this->location = $location;
-        $this->setUbn($this->location->getUbn());
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }
@@ -386,6 +396,16 @@ class DeclareArrival extends DeclareBase
     }
 
     /**
+     * Get Animal.id
+     *
+     * @return int
+     */
+    public function getAnimalId(): ?int
+    {
+        return $this->animal ? $this->animal->getId() : null;
+    }
+
+    /**
      * Set ubn
      *
      * @param string $ubn
@@ -420,7 +440,7 @@ class DeclareArrival extends DeclareBase
     /**
      * @param RevokeDeclaration $revoke
      */
-    public function setRevoke($revoke = null)
+    public function setRevoke(RevokeDeclaration $revoke = null)
     {
         $this->revoke = $revoke;
     }
@@ -561,4 +581,24 @@ class DeclareArrival extends DeclareBase
     {
         $this->locationHealthQueue = $locationHealthQueue;
     }
+
+    /**
+     * @return DepartArrivalTransaction|null
+     */
+    public function getTransaction(): ?DepartArrivalTransaction
+    {
+        return $this->transaction;
+    }
+
+    /**
+     * @param DepartArrivalTransaction|null $transaction
+     * @return DeclareArrival
+     */
+    public function setTransaction(?DepartArrivalTransaction $transaction): DeclareArrival
+    {
+        $this->transaction = $transaction;
+        return $this;
+    }
+
+
 }

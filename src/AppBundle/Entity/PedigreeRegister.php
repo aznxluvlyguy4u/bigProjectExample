@@ -34,6 +34,19 @@ class PedigreeRegister
     private $id;
 
     /**
+     * @var PedigreeRegister
+     * @ORM\ManyToOne(targetEntity="PedigreeRegister")
+     * @ORM\JoinColumn(name="certifying_pedigree_register_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\PedigreeRegister")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
+     *     "USER_MEASUREMENT"
+     * })
+     */
+    protected $certifyingPedigreeRegister;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="string")
@@ -455,8 +468,32 @@ class PedigreeRegister
         return $this;
     }
 
+    /**
+     * @return PedigreeRegister
+     */
+    public function getCertifyingPedigreeRegister(): PedigreeRegister
+    {
+        return $this->certifyingPedigreeRegister;
+    }
+
+    /**
+     * @param PedigreeRegister $certifyingPedigreeRegister
+     * @return PedigreeRegister
+     */
+    public function setCertifyingPedigreeRegister(PedigreeRegister $certifyingPedigreeRegister): PedigreeRegister
+    {
+        $this->certifyingPedigreeRegister = $certifyingPedigreeRegister;
+        return $this;
+    }
 
 
+    /**
+     * @return PedigreeRegister
+     */
+    public function getPedigreeRegisterForCertification(): PedigreeRegister
+    {
+        return $this->certifyingPedigreeRegister ? $this->certifyingPedigreeRegister : $this;
+    }
 
 
 }

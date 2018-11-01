@@ -21,7 +21,7 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareDepart extends DeclareBase
+class DeclareDepart extends DeclareBase implements RelocationDeclareInterface
 {
     use EntityClassInfo;
 
@@ -177,6 +177,15 @@ class DeclareDepart extends DeclareBase
     private $revoke;
 
     /**
+     * @var DepartArrivalTransaction|null
+     * @ORM\OneToOne(targetEntity="DepartArrivalTransaction",
+     *     inversedBy="depart", cascade={"persist","refresh"})
+     * @ORM\JoinColumn(name="transaction_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\DepartArrivalTransaction")
+     */
+    private $transaction;
+
+    /**
      * DeclareDepart constructor.
      */
     public function __construct() {
@@ -329,14 +338,14 @@ class DeclareDepart extends DeclareBase
     }
 
     /**
-     * @param \AppBundle\Entity\Location $location
+     * @param Location $location
      *
      * @return \AppBundle\Entity\DeclareDepart
      */
-    public function setLocation($location)
+    public function setLocation(Location $location)
     {
         $this->location = $location;
-        $this->setUbn($this->location->getUbn());
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }
@@ -352,7 +361,7 @@ class DeclareDepart extends DeclareBase
     /**
      * @param RevokeDeclaration $revoke
      */
-    public function setRevoke($revoke = null)
+    public function setRevoke(RevokeDeclaration $revoke = null)
     {
         $this->revoke = $revoke;
     }
@@ -501,6 +510,22 @@ class DeclareDepart extends DeclareBase
         $this->reasonOfDepart = $reasonOfDepart;
     }
 
+    /**
+     * @return DepartArrivalTransaction|null
+     */
+    public function getTransaction(): ?DepartArrivalTransaction
+    {
+        return $this->transaction;
+    }
 
+    /**
+     * @param DepartArrivalTransaction|null $transaction
+     * @return DeclareDepart
+     */
+    public function setTransaction(?DepartArrivalTransaction $transaction): DeclareDepart
+    {
+        $this->transaction = $transaction;
+        return $this;
+    }
 
 }

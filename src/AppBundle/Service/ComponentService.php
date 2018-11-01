@@ -22,7 +22,7 @@ class ComponentService extends ControllerServiceBase
         $client = $this->getAccountOwner($request);
         if($client == null) { return ResultUtil::errorResult('Client cannot be null', 428); }
 
-        $output = MenuBarOutput::create($client);
+        $output = MenuBarOutput::create($this->getManager(), $client);
         return ResultUtil::successResult($output);
     }
 

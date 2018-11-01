@@ -69,15 +69,16 @@ class BreedValuesResultTableUpdater
 
 
     /**
+     * @param Connection $connection
      * @return array
-     * @throws \Exception
+     * @throws \Doctrine\DBAL\DBALException
      */
-    private function getResultTableVariables()
+    public static function getResultTableVariables(Connection $connection)
     {
         $sql = "SELECT column_name
                 FROM information_schema.columns
-                WHERE table_name = '".$this->resultTableName."'";
-        $existingColumnNameResults = $this->conn->query($sql)->fetchAll();
+                WHERE table_name = '".ResultTableBreedGrades::getTableName()."'";
+        $existingColumnNameResults = $connection->query($sql)->fetchAll();
 
         $existingColumnNames = array_keys(SqlUtil::createSearchArrayByKey('column_name', $existingColumnNameResults));
 
@@ -88,7 +89,7 @@ class BreedValuesResultTableUpdater
                   a.nl as analysis_type_nl
                 FROM breed_value_type b
                   LEFT JOIN mix_blup_analysis_type a ON b.analysis_type_id = a.id";
-        $variableResults = $this->conn->query($sql)->fetchAll();
+        $variableResults = $connection->query($sql)->fetchAll();
 
         $searchArray = [];
         foreach ($variableResults as $result)
@@ -146,7 +147,7 @@ class BreedValuesResultTableUpdater
      */
     private function updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues($analysisTypes)
     {
-        $results = $this->getResultTableVariables();
+        $results = self::getResultTableVariables($this->conn, $this->resultTableName);
 
         $totalBreedValueUpdateCount = 0;
         $totalNormalizedBreedValueUpdateCount = 0;

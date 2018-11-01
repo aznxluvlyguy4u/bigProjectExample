@@ -24,6 +24,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\BlindnessFactorType;
 use AppBundle\Enumerator\BreedType;
+use AppBundle\Enumerator\EmailPrefix;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
@@ -47,6 +48,9 @@ class Validator
     const MAX_ULN_NUMBER_LENGTH = 12;
     const MIN_ULN_NUMBER_LENGTH = 6;
     const ULN_COUNTRY_CODE_LENGTH = 2;
+
+    const UBN_MIN_LENGTH = 2;
+    const UBN_MAX_LENGTH = 7;
 
     /** @var array */
     private static $validBreedTypes = [];
@@ -127,6 +131,16 @@ class Validator
         return preg_match($pregMatch,$ulnNumber)
             && self::MIN_ULN_NUMBER_LENGTH <= strlen($ulnNumber)
             && strlen($ulnNumber) <= self::MAX_ULN_NUMBER_LENGTH;
+    }
+
+
+    /**
+     * @param $postalCode
+     * @return bool
+     */
+    public static function hasValidDutchPostalCodeFormat($postalCode): bool
+    {
+        return is_string($postalCode) && boolval(preg_match(Regex::dutchPostalCode(), $postalCode));
     }
 
 
@@ -548,32 +562,124 @@ class Validator
 
 
     /**
+     * @param $number
+     * @return bool
+     */
+    public static function containsOnlyDigits($number): bool
+    {
+        return is_int($number) ||
+            (is_string($number) && ctype_digit($number));
+    }
+
+
+    /**
+     * @param string|int $ubn
+     * @param bool $isDutchLocation
+     * @return bool
+     */
+    public static function hasValidUbnFormatByLocationType($ubn, bool $isDutchLocation)
+    {
+        return self::containsOnlyDigits($ubn) && (
+                $isDutchLocation ? self::hasValidDutchUbnFormat($ubn) : self::hasValidNonNlUbnFormat($ubn)
+            );
+    }
+
+
+    /**
      * @param string|int $ubn
      * @return bool
      */
     public static function hasValidUbnFormat($ubn)
     {
-        //Verify type, ensure ubn is a string
-        if(is_int($ubn)) { $ubn = (string)$ubn; }
-        else if(is_string($ubn)) {  if(!ctype_digit($ubn)) { return false; }}
-        else { return false; }
+        return self::containsOnlyDigits($ubn) && (
+               self::hasValidDutchUbnFormat($ubn) || self::hasValidNonNlUbnFormat($ubn)
+            );
+    }
 
-        $maxLength = 7;
-        $minLength = 2;
-        $length = strlen($ubn);
 
-        if($length < $minLength || $length > $maxLength) { return false; }
+    /**
+     * @param string|int $ubn
+     * @return bool
+     */
+    public static function hasValidNonNlUbnFormat($ubn): bool
+    {
+        if (!self::containsOnlyDigits($ubn) || !self::hasValidUbnLength($ubn)) {
+            return false;
+        }
+        $ubn = (string)$ubn;
+        $startsWithANine = substr($ubn,0,1) === '9';
+        return $startsWithANine || self::isValidSevenTestNumber($ubn);
+    }
 
-        $ubnReversed = strrev(str_pad($ubn, $maxLength, 0, STR_PAD_LEFT));
+
+    /**
+     * @param $ubn
+     * @return bool
+     */
+    public static function hasValidDutchUbnFormat($ubn): bool
+    {
+        if (!self::hasValidUbnLength($ubn)) {
+            return false;
+        }
+        return self::isValidSevenTestNumber($ubn);
+    }
+
+
+    public static function isValidSevenTestNumber($number): bool
+    {
+        if (!self::containsOnlyDigits($number)) {
+            return false;
+        }
+        $number = (string)$number;
+
+        if (!self::hasValidUbnLength($number)) {
+            return false;
+        }
+
+        $ubnReversed = strrev(str_pad($number, self::UBN_MAX_LENGTH, 0, STR_PAD_LEFT));
         $ubnDigits = str_split($ubnReversed, 1);
         $weights = [1, 3, 7, 1, 3, 7, 1];
 
         $sum = 0;
-        for($i=0; $i < $maxLength; $i++) {
+        for($i=0; $i < self::UBN_MAX_LENGTH; $i++) {
             $sum += intval($ubnDigits[$i]) * $weights[$i];
         }
 
         return $sum%10 == 0;
+    }
+
+
+    /**
+     * @param string $ubn1 a valid ubn
+     * @param string $ubn2 a valid ubn
+     * @param bool $areIdenticalIfBothAreEmpty
+     * @return bool
+     */
+    public static function areUbnsIdentical($ubn1, $ubn2, $areIdenticalIfBothAreEmpty = true): bool
+    {
+        if (empty($ubn1) && empty($ubn2)) {
+            return $areIdenticalIfBothAreEmpty;
+        }
+
+        if (empty($ubn1) || empty($ubn2)) { // at least one is empty
+            return false;
+        }
+
+        return StringUtil::preformatUbn($ubn1) === StringUtil::preformatUbn($ubn2);
+    }
+
+
+    /**
+     * @param $number
+     * @return bool
+     */
+    public static function hasValidUbnLength($number): bool
+    {
+        if (empty($number)) {
+            return false;
+        }
+        $length = strlen(strval($number));
+        return self::UBN_MIN_LENGTH <= $length && $length <= self::UBN_MAX_LENGTH;
     }
 
 
@@ -865,5 +971,36 @@ class Validator
     public static function unauthorizedException(): UnauthorizedHttpException
     {
         return new UnauthorizedHttpException(null, self::UNAUTHORIZED,null);
+    }
+
+
+    /**
+     * @param string $emailAddress
+     * @return bool
+     */
+    public static function isFillerEmailAddress($emailAddress): bool
+    {
+        $emailDomainWithAt = '@nsfo.nl';
+        $domainLength = strlen($emailDomainWithAt);
+
+        return empty($emailAddress) ||
+            $emailAddress === 'BLANK' ||
+            !is_string($emailAddress) ||
+            (
+                substr($emailAddress, 0, 8) === EmailPrefix::INVALID_PREFIX &&
+                substr($emailAddress, -$domainLength, $domainLength) === $emailDomainWithAt
+            )
+        ;
+    }
+
+
+    /**
+     * @param string $emailAddress
+     * @param null $nullFiller
+     * @return mixed
+     */
+    public static function getFillerCheckedEmailAddress($emailAddress, $nullFiller = null)
+    {
+        return self::isFillerEmailAddress($emailAddress) ? $nullFiller : $emailAddress;
     }
 }

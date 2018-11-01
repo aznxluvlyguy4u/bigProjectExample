@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Constant\DeclareLogMessage;
 use AppBundle\Enumerator\Language;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\Translation;
 use Doctrine\ORM\Mapping as ORM;
@@ -53,12 +54,13 @@ use \DateTime;
  *     "ERROR_DETAILS",
  *     "ADMIN_HIDDEN_STATUS",
  *     "HIDDEN_STATUS",
+ *     "RESPONSE_PERSISTENCE",
  *     "RVO"
  * })
  *
  * @package AppBundle\Entity\DeclareBase
  */
-abstract class DeclareBase implements DeclareLogInterface
+abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
 {
     use EntityClassInfo;
 
@@ -66,7 +68,9 @@ abstract class DeclareBase implements DeclareLogInterface
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
      * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO"
      * })
      */
@@ -90,6 +94,7 @@ abstract class DeclareBase implements DeclareLogInterface
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO"
      * })
      */
@@ -104,6 +109,7 @@ abstract class DeclareBase implements DeclareLogInterface
      *     "ADMIN_HIDDEN_STATUS",
      *     "ERROR_DETAILS",
      *     "HIDDEN_STATUS",
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO"
      * })
      */
@@ -187,7 +193,7 @@ abstract class DeclareBase implements DeclareLogInterface
     /**
      * @var Person
      *
-     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\ManyToOne(targetEntity="Person", cascade={"refresh"})
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
      * @JMS\Groups({
      *     "ERROR_DETAILS",
@@ -225,7 +231,7 @@ abstract class DeclareBase implements DeclareLogInterface
 
     /**
      * @var DeclareBase
-     * @ORM\ManyToOne(targetEntity="DeclareBase")
+     * @ORM\ManyToOne(targetEntity="DeclareBase", cascade={"refresh"})
      * @ORM\JoinColumn(name="newest_version_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\DeclareBase")
      */
@@ -659,5 +665,31 @@ abstract class DeclareBase implements DeclareLogInterface
     }
 
 
+    public function setFinishedRequestState()
+    {
+        $this->setRequestState(RequestStateType::FINISHED);
+    }
 
+    public function setFinishedWithWarningRequestState()
+    {
+        $this->setRequestState(RequestStateType::FINISHED_WITH_WARNING);
+    }
+
+    public function setFailedRequestState()
+    {
+        $this->setRequestState(RequestStateType::FAILED);
+    }
+
+    public function setRevokedRequestState()
+    {
+        $this->setRequestState(RequestStateType::REVOKED);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRevoked(): bool
+    {
+        return $this->getRequestState() === RequestStateType::REVOKED;
+    }
 }

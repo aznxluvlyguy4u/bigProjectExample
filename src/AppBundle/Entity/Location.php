@@ -32,6 +32,7 @@ class Location
    * @JMS\Groups({
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
+   *     "RESPONSE_PERSISTENCE",
    *     "RVO"
    * })
    *
@@ -51,6 +52,7 @@ class Location
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
      *     "MINIMAL",
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO",
      *     "DOSSIER"
      * })
@@ -74,6 +76,7 @@ class Location
    *     "INVOICE_NO_COMPANY",
    *     "LIVESTOCK",
    *     "MINIMAL",
+   *     "RESPONSE_PERSISTENCE",
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "TREATMENT_TEMPLATE_MIN",
@@ -1213,5 +1216,29 @@ class Location
     public function getAnimalHealthSubscription()
     {
         return $this->company ? $this->company->getAnimalHealthSubscription() : false;
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isDutchLocation(): bool
+    {
+        if ($this->getAddress()) {
+            return $this->getAddress()->isDutchAddress();
+        }
+        return Address::IS_DUTCH_COUNTRY_DEFAULT_BOOLEAN;
+    }
+
+
+    /**
+     * @return null|string
+     */
+    public function getCountryCode(): ?string
+    {
+        if ($this->getAddress()) {
+            return $this->getAddress()->getCountryCode();
+        }
+        return null;
     }
 }

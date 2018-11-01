@@ -5,8 +5,11 @@ namespace AppBundle\Entity;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Query\Expr\Join;
 
 /**
  * Class ActionLogRepository
@@ -93,5 +96,45 @@ class ActionLogRepository extends BaseRepository
         $cacheService->set(self::ACTION_LOG_PERSONS_CACHE_ID, $output);
 
         return $output;
+    }
+
+
+    /**
+     * @param array|int[] $primaryKeys
+     * @param bool $setPrimaryKeysAsArrayKeys
+     * @return ActionLog[]|array
+     * @throws \Exception
+     */
+    public function findByIds(array $primaryKeys, $setPrimaryKeysAsArrayKeys = true): array
+    {
+        if (!$primaryKeys) {
+            return [];
+        }
+
+        if (!ArrayUtil::containsOnlyDigits($primaryKeys)) {
+            throw new \Exception('Array contains non integers: '.implode(',', $primaryKeys),
+                Response::HTTP_PRECONDITION_FAILED);
+        }
+
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $qb->select('a','actionBy', 'userAccount')
+            ->from(ActionLog::class, 'a')
+            ->innerJoin('a.actionBy', 'actionBy', Join::WITH, $qb->expr()->eq('a.actionBy', 'actionBy.id'))
+            ->innerJoin('a.userAccount', 'userAccount', Join::WITH, $qb->expr()->eq('a.userAccount', 'userAccount.id'))
+        ;
+
+        foreach ($primaryKeys as $primaryKey) {
+            $qb->orWhere($qb->expr()->eq('a.id', $primaryKey));
+        }
+
+        $query = $qb->getQuery();
+
+        $query->setFetchMode(Person::class, 'actionBy', ClassMetadata::FETCH_EAGER);
+        $query->setFetchMode(Person::class, 'userAccount', ClassMetadata::FETCH_EAGER);
+
+        $births = $query->getResult();
+
+        return $setPrimaryKeysAsArrayKeys ? $this->setPrimaryKeysAsArrayKeys($births) : $births;
     }
 }

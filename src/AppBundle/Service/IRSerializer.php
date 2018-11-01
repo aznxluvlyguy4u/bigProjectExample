@@ -187,7 +187,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray, Client $client, $isEditMessage)
+    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray, Client $client, Location $location, $isEditMessage)
     {
         $declareArrivalContentArray["type"] = RequestType::DECLARE_ARRIVAL_ENTITY;
 
@@ -469,11 +469,9 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $litter->setIsPseudoPregnancy($isPseudoPregnancy);
 
         if ($isAborted || $isPseudoPregnancy || $litterSize == $stillbornCount) {
-            $litter->setStatus('COMPLETED');
-            $litter->setRequestState(RequestStateType::FINISHED);
+            $litter->setFinishedStatus();
         } else {
-            $litter->setStatus('INCOMPLETE');
-            $litter->setRequestState(RequestStateType::OPEN);
+            $litter->setOpenStatus();
         }
 
         $litter->setActionBy($loggedInUser);
@@ -623,10 +621,8 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 }
 
                 //Create new residence
-                $animalResidence = new AnimalResidence();
+                $animalResidence = new AnimalResidence($tagToReserve->getUlnCountryCode(), false);
                 $animalResidence->setAnimal($child);
-                $animalResidence->setCountry($tagToReserve->getUlnCountryCode());
-                $animalResidence->setIsPending(false);
                 $animalResidence->setLocation($location);
                 $animalResidence->setStartDate($dateOfBirth);
                 $child->addAnimalResidenceHistory($animalResidence);
@@ -797,7 +793,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareDepart(ArrayCollection $declareDepartContentArray, Client $client,$isEditMessage)
+    function parseDeclareDepart(ArrayCollection $declareDepartContentArray, Client $client, Location $location, $isEditMessage)
     {
         $declareDepartContentArray["type"] = RequestType::DECLARE_DEPART_ENTITY;
         $isExportAnimal = $declareDepartContentArray['is_export_animal'];
@@ -833,7 +829,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareTagsTransfer(ArrayCollection $contentArray, Client $client, $isEditMessage)
+    function parseDeclareTagsTransfer(ArrayCollection $contentArray, Client $client, Location $location, $isEditMessage)
     {
         $contentArray["type"] = RequestType::DECLARE_TAGS_TRANSFER_ENTITY;
 
@@ -875,7 +871,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareTagReplace(ArrayCollection $contentArray, Client $client, $isEditMessage)
+    function parseDeclareTagReplace(ArrayCollection $contentArray, Client $client, Location $location, $isEditMessage)
     {
         $contentArray["type"] = RequestType::DECLARE_TAG_REPLACE_ENTITY;
 
@@ -929,7 +925,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareLoss(ArrayCollection $declareLossContentArray, Client $client,$isEditMessage)
+    function parseDeclareLoss(ArrayCollection $declareLossContentArray, Client $client, Location $location, $isEditMessage)
     {
         $declareLossContentArray["type"] = RequestType::DECLARE_LOSS_ENTITY;
 
@@ -970,7 +966,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareExport(ArrayCollection $declareExportContentArray, Client $client,$isEditMessage)
+    function parseDeclareExport(ArrayCollection $declareExportContentArray, Client $client, Location $location, $isEditMessage)
     {
         $declareExportContentArray["type"] = RequestType::DECLARE_EXPORT_ENTITY;
 

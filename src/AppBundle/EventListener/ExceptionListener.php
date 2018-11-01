@@ -8,12 +8,16 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Environment;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\ResultUtil;
+use Doctrine\ORM\ORMException;
+use Doctrine\ORM\ORMInvalidArgumentException;
+use Monolog\Logger;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Security\Core\Exception\InsufficientAuthenticationException;
@@ -23,8 +27,12 @@ class ExceptionListener
     /** @var string */
     private $environment;
 
-    public function __construct($environment)
+    /** @var Logger */
+    private $logger;
+
+    public function __construct(Logger $logger, $environment)
     {
+        $this->logger = $logger;
         $this->environment = $environment;
     }
 
@@ -33,25 +41,28 @@ class ExceptionListener
         // You get the exception object from the received event
         $exception = $event->getException();
 
+        $this->logger->error($exception->getMessage());
+        $this->logger->error($exception->getTraceAsString());
+
         $code = self::getHttpResponseCodeFromException($exception);
-        $errorMessage = empty($exception->getMessage())
-        || $exception instanceof \Doctrine\DBAL\DBALException // Prevent leaking of database schema
+        $errorMessage = empty($exception->getMessage()) || self::isSensitiveException($exception)
             ? self::getDefaultErrorMessage($code) : $exception->getMessage();
-        $errorData = $this->environment !== Environment::PROD ? self::nestErrorTrace($exception->getTraceAsString()) : null;
+        $errorData = $this->environment !== Environment::PROD ? self::nestErrorTrace($exception) : null;
         $errorResponse = $this->errorResult($errorMessage, $code, $errorData);
         $event->setResponse($errorResponse);
     }
 
 
     /**
-     * @param string $traceAsString
+     * @param \Exception $exception
      * @return array
      */
-    private static function nestErrorTrace($traceAsString): array
+    private static function nestErrorTrace($exception): array
     {
         $nestedErrorTrace = [];
+        $nestedErrorTrace[] = $exception->getMessage();
 
-        foreach (explode('#',$traceAsString) as $line) {
+        foreach (explode('#',$exception->getTraceAsString()) as $line) {
             $nestedErrorTrace[] = explode(': ', $line);
         }
 
@@ -111,7 +122,8 @@ class ExceptionListener
             case $exception instanceof InsufficientAuthenticationException: return Response::HTTP_UNAUTHORIZED;
             case $exception instanceof TooManyRequestsHttpException: return Response::HTTP_TOO_MANY_REQUESTS;
             case $exception instanceof UnauthorizedHttpException: return Response::HTTP_UNAUTHORIZED;
-            case $exception instanceof PreconditionFailedHttpException: return Response::HTTP_PRECONDITION_REQUIRED;
+            case $exception instanceof PreconditionFailedHttpException: return Response::HTTP_PRECONDITION_FAILED;
+            case $exception instanceof PreconditionRequiredHttpException: return Response::HTTP_PRECONDITION_REQUIRED;
             case $exception instanceof BadRequestHttpException: return Response::HTTP_BAD_REQUEST;
             default: return empty($exception->getCode()) || $exception->getCode() === Response::HTTP_OK
                 ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
@@ -119,4 +131,16 @@ class ExceptionListener
     }
 
 
+    /**
+     * @param $exception
+     * @return bool
+     */
+    private static function isSensitiveException($exception): bool
+    {
+        return !$exception
+                || $exception instanceof \Doctrine\DBAL\DBALException // Prevent leaking of database schema
+                || $exception instanceof ORMInvalidArgumentException
+                || $exception instanceof ORMException
+            ;
+    }
 }

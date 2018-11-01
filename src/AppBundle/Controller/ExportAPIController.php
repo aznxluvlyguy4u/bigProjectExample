@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\ExportService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -39,7 +40,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    */
   public function getExportById(Request $request, $Id)
   {
-      return $this->get('app.export')->getExportById($request, $Id);
+      return $this->get(ExportService::class)->getExportById($request, $Id);
   }
 
   /**
@@ -80,7 +81,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    */
   public function getExports(Request $request)
   {
-      return $this->get('app.export')->getExports($request);
+      return $this->get(ExportService::class)->getExports($request);
   }
 
 

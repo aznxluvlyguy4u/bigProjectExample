@@ -19,12 +19,27 @@ use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
 
 class TagReplaceService extends DeclareControllerServiceBase
 {
+    /** @var DeclareTagReplaceProcessorInterface */
+    private $tagReplaceProcessor;
+
+    /**
+     * @required
+     *
+     * @param DeclareTagReplaceProcessorInterface $tagReplaceProcessor
+     */
+    public function setTagReplaceProcessor(DeclareTagReplaceProcessorInterface $tagReplaceProcessor): void
+    {
+        $this->tagReplaceProcessor = $tagReplaceProcessor;
+    }
+
     /**
      * @param Request $request
      * @return JsonResponse
@@ -36,19 +51,14 @@ class TagReplaceService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
-        if(!$client) {
-            return new JsonResponse("CLIENT NOT FOUND", 428);
-        }
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
+        $useRvoLogic = $location->isDutchLocation();
 
         $log = ActionLogWriter::declareTagReplacePost($this->getManager(), $client, $loggedInUser, $content);
-        $animal = $content->get(Constant::ANIMAL_NAMESPACE);
 
-        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)->verifyIfClientOwnsAnimal($client, $animal);
-
-        //Check if uln is valid
-        if(!$isAnimalOfClient) {
-            return new JsonResponse("ANIMAL DOES NOT BELONG TO THIS ACCOUNT", 428);
-        }
+        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Check if tag replacement is unassigned and in the database, else don't send any TagReplace
         $tagContent = $content->get(Constant::TAG_NAMESPACE);
@@ -75,11 +85,21 @@ class TagReplaceService extends DeclareControllerServiceBase
         //Convert the array into an object and add the mandatory values retrieved from the database
         $declareTagReplace = $this->buildMessageObject(RequestType::DECLARE_TAG_REPLACE, $content, $client, $loggedInUser, $location);
 
+        if ($useRvoLogic) {
+            $this->validateNonRvoTagReplace($declareTagReplace);
+        }
+
         //First Persist object to Database, before sending it to the queue
         $this->persist($declareTagReplace);
 
-        //Send it to the queue and persist/update any changed state to the database
-        $messageArray = $this->sendMessageObjectToQueue($declareTagReplace);
+
+        if ($useRvoLogic) {
+            //Send it to the queue and persist/update any changed state to the database
+            $messageArray = $this->sendMessageObjectToQueue($declareTagReplace);
+
+        } else {
+            $messageArray = $this->tagReplaceProcessor->process($declareTagReplace);
+        }
 
         $this->saveNewestDeclareVersion($content, $declareTagReplace);
 
@@ -126,8 +146,8 @@ class TagReplaceService extends DeclareControllerServiceBase
      */
     public function getTagReplaceHistory(Request $request)
     {
-        $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $em = $this->getManager();
         $sql = "SELECT
@@ -165,8 +185,8 @@ class TagReplaceService extends DeclareControllerServiceBase
      */
     public function getTagReplaceErrors(Request $request)
     {
-        $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
 
         $em = $this->getManager();
         $sql = "SELECT
@@ -191,5 +211,25 @@ class TagReplaceService extends DeclareControllerServiceBase
         $results = DeclareReplaceTagsOutput::createHistoryArray($results);
 
         return ResultUtil::successResult($results);
+    }
+
+
+    /**
+     * @param DeclareTagReplace $declareTagReplace
+     */
+    private function validateNonRvoTagReplace(DeclareTagReplace $declareTagReplace)
+    {
+        $animalWithReplacementTagUln = $this->getManager()->getRepository(Animal::class)
+            ->findByUlnCountryCodeAndNumber(
+                $declareTagReplace->getUlnCountryCodeReplacement(),
+                $declareTagReplace->getUlnNumberReplacement()
+            );
+
+        if ($animalWithReplacementTagUln) {
+            throw new PreconditionRequiredHttpException('AN ANIMAL ALREADY EXISTS WITH THIS ULN');
+        }
+
+        $this->validateIfEventDateIsNotBeforeDateOfBirth($declareTagReplace->getAnimal(),
+            $declareTagReplace->getReplaceDate());
     }
 }

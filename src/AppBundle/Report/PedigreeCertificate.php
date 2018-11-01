@@ -5,6 +5,7 @@ namespace AppBundle\Report;
 
 use AppBundle\Component\BreedGrading\BreedFormat;
 use AppBundle\Component\Utils;
+use AppBundle\Constant\Environment;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\CompanyAddress;
@@ -13,16 +14,30 @@ use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\LocationAddress;
+use AppBundle\Entity\PedigreeCode;
 use AppBundle\Entity\PedigreeRegister;
-use AppBundle\Entity\PedigreeRegisterRepository;
+use AppBundle\Entity\Person;
+use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\AnimalTypeInLatin;
+use AppBundle\Enumerator\BreedType;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Output\BreedValuesOutput;
+use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\NumberUtil;
+use AppBundle\Util\SectionUtil;
 use AppBundle\Util\StarValueUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
-use AppBundle\Util\TwigOutputUtil;
+use AppBundle\Util\Validator;
+use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class PedigreeCertificate
 {
@@ -32,17 +47,19 @@ class PedigreeCertificate
     const MAX_LENGTH_FULL_NAME = 30;
     const MAX_LENGTH_CITY_NAME = 16;
     const MISSING_PEDIGREE_REGISTER = '';
-    const EMPTY_DATE_OF_BIRTH = '-';
-    const GENERAL_NULL_FILLER = '-';
+    const EMPTY_DATE_OF_BIRTH = '';
+    const GENERAL_NULL_FILLER = '';
 
     const LITTER_SIZE = 'litterSize';
     const LITTER_GROUP = 'litterGroup';
     const N_LING = 'nLing';
 
     const STARS_NULL_VALUE = null;
-    const EMPTY_SCRAPIE_GENOTYPE = '-/-';
+    const EMPTY_SCRAPIE_GENOTYPE = '';
 
     const GENERATION_OF_ASCENDANTS = 3;
+
+    const LAST_MATE_MAX_DAYS_BEFORE_TODAY = 160;
 
     /** @var array */
     private $data;
@@ -55,15 +72,25 @@ class PedigreeCertificate
     /** @var ExteriorRepository */
     private $exteriorRepository;
 
-    /**
-     * PedigreeCertificate constructor.
-     * @param ObjectManager $em
-     * @param string $ubn
-     * @param int $animalId
-     * @param string $trimmedClientName
-     * @param CompanyAddress $companyAddress
-     */
-    public function __construct(ObjectManager $em, $ubn, $animalId, $trimmedClientName, $companyAddress)
+    /** @var TranslatorInterface */
+    private $translator;
+    /** @var boolean */
+    private $useTestData;
+
+    /** @var BreedValuesOutput */
+    private $breedValuesOutput;
+
+    /** @var string */
+    private $breedValuesLastGenerationDate;
+    /** @var array */
+    private $breedFullNamesByCodes;
+    /** @var PedigreeRegister */
+    private $mainPedigreeRegister;
+
+    public function __construct(EntityManagerInterface $em,
+                                TranslatorInterface $translator,
+                                $useTestData,
+                                $environment)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -71,10 +98,66 @@ class PedigreeCertificate
         $this->litterRepository = $em->getRepository(Litter::class);
         $this->exteriorRepository = $em->getRepository(Exterior::class);
 
+        $this->translator = $translator;
+
+        $this->useTestData = $useTestData && ($environment === Environment::DEV || $environment === Environment::STAGE || $environment === Environment::LOCAL);
+    }
+
+    /**
+     * @required
+     *
+     * @param BreedValuesOutput $breedValuesOutput
+     */
+    public function setBreedValuesOutput(BreedValuesOutput $breedValuesOutput)
+    {
+        $this->breedValuesOutput = $breedValuesOutput;
+    }
+
+
+    /**
+     * @return array
+     */
+    private function getBreedFullnamesByCodes(): array
+    {
+        if (empty($this->breedFullNamesByCodes)) {
+            $this->breedFullNamesByCodes = $this->em->getRepository(PedigreeCode::class)
+                ->getFullNamesByCodes();
+        }
+        return $this->breedFullNamesByCodes;
+    }
+
+
+    private function clearPrivateVariables()
+    {
+        $this->breedFullNamesByCodes = null;
+        $this->mainPedigreeRegister = null;
+    }
+
+
+    /**
+     * @param Person $actionBy
+     * @param string $ubn
+     * @param int $animalId
+     * @param string $trimmedClientName
+     * @param string $ownerEmailAddress
+     * @param CompanyAddress $companyAddress
+     * @return array
+     * @throws \Exception
+     */
+    public function generate($actionBy, $ubn, $animalId, $trimmedClientName, $ownerEmailAddress, $companyAddress)
+    {
         $this->data = array();
+
+        $this->data[ReportLabel::ACTION_BY_FULL_NAME] =
+            ($actionBy ? $actionBy->getFullName() : self::GENERAL_NULL_FILLER);
+        $this->data[ReportLabel::ACTION_BY_IS_SUPER_ADMIN] =
+            AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN);
 
         //Set Default Owner details
         $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName != null ? $trimmedClientName: self::GENERAL_NULL_FILLER;
+        $this->data[ReportLabel::OWNER_EMAIL_ADDRESS] = Validator::getFillerCheckedEmailAddress(
+            $ownerEmailAddress, self::GENERAL_NULL_FILLER
+        );
         $this->data[ReportLabel::ADDRESS] = $companyAddress != null ? $companyAddress : $this->getEmptyLocationAddress();
         $postalCode = $companyAddress != null ? StringUtil::addSpaceInDutchPostalCode($companyAddress->getPostalCode(), self::GENERAL_NULL_FILLER) : self::GENERAL_NULL_FILLER;
         $this->data[ReportLabel::POSTAL_CODE] = $postalCode;
@@ -82,19 +165,27 @@ class PedigreeCertificate
         //Set CurrentOwner Details!
         $this->setOwnerDataFromAnimalIdBySql($animalId);
 
-        //TODO Phase 2: Add breeder information
-        $this->data[ReportLabel::BREEDER] = null; //TODO delete this from twig file
         $this->setBreederDataFromAnimalIdBySql($animalId);
 
-        /** @var PedigreeRegisterRepository $pedigreeRegisterRepository */
-        $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
-        $this->data[ReportLabel::PEDIGREE_REGISTER_NAME] = $this->parsePedigreeRegisterText($pedigreeRegisterRepository->getFullnameByAnimalId($animalId));
+        /** @var PedigreeRegister $pedigreeRegister */
+        $this->mainPedigreeRegister = $this->em->getRepository(PedigreeRegister::class)
+            ->getByAnimalId($animalId, false);
+        $this->data[ReportLabel::PEDIGREE_REGISTER] = $this->mainPedigreeRegister
+            ? $this->mainPedigreeRegister->getPedigreeRegisterForCertification() : null;
+
+        // Add shared data
+        $this->breedValuesLastGenerationDate = $this->breedValuesOutput->getBreedValuesLastGenerationDate(self::GENERAL_NULL_FILLER);
+        $this->data[ReportLabel::BREED_VALUES_EVALUATION_DATE] = $this->breedValuesLastGenerationDate;
 
         $keyAnimal = ReportLabel::CHILD_KEY;
 
         $generation = 0;
         $this->addAnimalValues($keyAnimal, $animalId, $generation);
         $this->addParents($animalId, $keyAnimal, $generation);
+
+        $this->clearPrivateVariables();
+
+        return $this->getData();
     }
 
 
@@ -104,14 +195,17 @@ class PedigreeCertificate
     private function setOwnerDataFromAnimalIdBySql($animalId)
     {
         if(is_string($animalId) || is_int($animalId)) {
-            $sql = "SElECT l.ubn, c.company_name, d.street_name, d.address_number, d.address_number_suffix, d.postal_code, d.city FROM animal a
+            $sql = "SElECT l.ubn, c.company_name, d.street_name, d.address_number, d.address_number_suffix,
+                    d.postal_code, d.city, owner.email_address
+                FROM animal a
                 INNER JOIN location l ON a.location_id = l.id
                 INNER JOIN company c ON l.company_id = c.id
+                INNER JOIN person owner ON c.owner_id = owner.id
                 INNER JOIN address d ON d.id = c.address_id
                 WHERE a.id = ".intval($animalId);
             $result = $this->em->getConnection()->query($sql)->fetch();
 
-            $currentUbnOfAnimal = is_array($result) ? Utils::getNullCheckedArrayValue('ubn', $result) : null;
+            $currentUbnOfAnimal = is_array($result) ? ArrayUtil::get('ubn', $result, null): null;
 
             if($currentUbnOfAnimal == $this->data[ReportLabel::UBN]) {
                 return; //just use current default values
@@ -119,19 +213,21 @@ class PedigreeCertificate
             } elseif($currentUbnOfAnimal == null) {
                 //Set all owner values as empty
                 $this->data[ReportLabel::OWNER_NAME] = self::GENERAL_NULL_FILLER;
+                $this->data[ReportLabel::OWNER_EMAIL_ADDRESS] = self::GENERAL_NULL_FILLER;
                 $this->data[ReportLabel::ADDRESS] = $this->getEmptyLocationAddress();
                 $this->data[ReportLabel::POSTAL_CODE] = self::GENERAL_NULL_FILLER;
                 $this->data[ReportLabel::UBN] = self::GENERAL_NULL_FILLER;
 
             } else {
                 //Use currentOwner values
-                $companyName = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('company_name', $result), self::GENERAL_NULL_FILLER);
-                $streetName = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('street_name', $result), self::GENERAL_NULL_FILLER);
-                $addressNumber = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number', $result), self::GENERAL_NULL_FILLER);
-                $addressNumberSuffix = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number_suffix', $result), '');
-                $rawPostalCode = Utils::getNullCheckedArrayValue('postal_code', $result);
-                $postalCode = Utils::fillNullOrEmptyString($rawPostalCode, self::GENERAL_NULL_FILLER);
-                $city = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('city', $result), self::GENERAL_NULL_FILLER);
+                $companyName = $this->getNullCheckedArrayValue('company_name', $result);
+                $streetName = $this->getNullCheckedArrayValue('street_name', $result);
+                $addressNumber = $this->getNullCheckedArrayValue('address_number', $result);
+                $addressNumberSuffix = $this->getNullCheckedArrayValue('address_number_suffix', $result, '');
+                $rawPostalCode = $this->getNullCheckedArrayValue('postal_code', $result);
+                $postalCode = $this->nullFillString($rawPostalCode);
+                $city = $this->getNullCheckedArrayValue('city', $result);
+                $ownerEmailAddress = ArrayUtil::get('email_address', $result);
 
                 $address = new LocationAddress();
                 $address->setStreetName($streetName);
@@ -141,6 +237,9 @@ class PedigreeCertificate
                 $address->setCity($city);
 
                 $this->data[ReportLabel::OWNER_NAME] = StringUtil::trimStringWithAddedEllipsis($companyName, PedigreeCertificates::MAX_LENGTH_FULL_NAME);
+                $this->data[ReportLabel::OWNER_EMAIL_ADDRESS] = Validator::getFillerCheckedEmailAddress(
+                    $ownerEmailAddress, self::GENERAL_NULL_FILLER
+                );
                 $this->data[ReportLabel::ADDRESS] = $address;
                 $this->data[ReportLabel::POSTAL_CODE] = StringUtil::addSpaceInDutchPostalCode($rawPostalCode, self::GENERAL_NULL_FILLER);
                 $this->data[ReportLabel::UBN] = $currentUbnOfAnimal;
@@ -155,11 +254,13 @@ class PedigreeCertificate
     private function setBreederDataFromAnimalIdBySql($animalId)
     {
         if(is_string($animalId) || is_int($animalId)) {
-            $sql = "SElECT l.ubn, c.company_name, d.street_name, d.address_number, d.address_number_suffix, d.postal_code, d.city, n.breeder_number, n.source, a.ubn_of_birth FROM animal a
+            $sql = "SElECT l.ubn, c.company_name, d.street_name, d.address_number, d.address_number_suffix, d.postal_code, d.city,            n.breeder_number, n.source, a.ubn_of_birth, p.email_address
+                    FROM animal a
                       INNER JOIN location l ON a.location_of_birth_id = l.id
                       LEFT JOIN company c ON l.company_id = c.id
                       LEFT JOIN address d ON d.id = c.address_id
                       LEFT JOIN breeder_number n ON n.ubn_of_birth = a.ubn_of_birth
+                      LEFT JOIN person p ON p.id = c.owner_id
                     WHERE a.id = ".intval($animalId)."
                     ORDER BY n.source DESC LIMIT 1";
             $result = $this->em->getConnection()->query($sql)->fetch();
@@ -167,21 +268,21 @@ class PedigreeCertificate
             if(!is_array($result)) {
                 //Set all breeder values as empty
                 $this->data[ReportLabel::BREEDER_NAME] = self::GENERAL_NULL_FILLER;
+                $this->data[ReportLabel::BREEDER_EMAIL_ADDRESS] = self::GENERAL_NULL_FILLER;
                 $this->data[ReportLabel::ADDRESS_BREEDER] = $this->getEmptyLocationAddress();
                 $this->data[ReportLabel::POSTAL_CODE_BREEDER] = self::GENERAL_NULL_FILLER;
                 $this->data[ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
             } else {
-                $ubnOfBreeder = Utils::getNullCheckedArrayValue('ubn_of_birth', $result);
+                $ubnOfBreeder = $this->getNullCheckedArrayValue('ubn_of_birth', $result);
 
                 //Use currentOwner values
-                $breederNumber = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('breeder_number', $result), self::GENERAL_NULL_FILLER);
-                $companyName = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('company_name', $result), self::GENERAL_NULL_FILLER);
-                $streetName = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('street_name', $result), self::GENERAL_NULL_FILLER);
-                $addressNumber = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number', $result), self::GENERAL_NULL_FILLER);
-                $addressNumberSuffix = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number_suffix', $result), '');
-                $rawPostalCode = Utils::getNullCheckedArrayValue('postal_code', $result);
-                $postalCode = Utils::fillNullOrEmptyString($rawPostalCode, self::GENERAL_NULL_FILLER);
-                $city = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('city', $result), self::GENERAL_NULL_FILLER);
+                $companyName = $this->getNullCheckedArrayValue('company_name', $result);
+                $streetName = $this->getNullCheckedArrayValue('street_name', $result);
+                $addressNumber = $this->getNullCheckedArrayValue('address_number', $result);
+                $addressNumberSuffix = $this->getNullCheckedArrayValue('address_number_suffix', $result, '');
+                $rawPostalCode = $this->getNullCheckedArrayValue('postal_code', $result);
+                $postalCode = $this->nullFillString($rawPostalCode);
+                $city = $this->getNullCheckedArrayValue('city', $result);
 
                 $address = new LocationAddress();
                 $address->setStreetName($streetName);
@@ -189,6 +290,11 @@ class PedigreeCertificate
                 $address->setAddressNumberSuffix($addressNumberSuffix);
                 $address->setPostalCode($postalCode);
                 $address->setCity($city);
+
+                $this->data[ReportLabel::BREEDER_EMAIL_ADDRESS] = Validator::getFillerCheckedEmailAddress(
+                    $this->getNullCheckedArrayValue('email_address', $result),
+                    self::GENERAL_NULL_FILLER
+                );
 
                 $this->data[ReportLabel::BREEDER_NAME] = StringUtil::trimStringWithAddedEllipsis($companyName, PedigreeCertificates::MAX_LENGTH_FULL_NAME);
                 $this->data[ReportLabel::ADDRESS_BREEDER] = $address;
@@ -205,11 +311,11 @@ class PedigreeCertificate
     private function getEmptyLocationAddress()
     {
         $emptyAddress = new LocationAddress();
-        $emptyAddress->setStreetName('-');
-        $emptyAddress->setAddressNumber('-');
+        $emptyAddress->setStreetName(self::GENERAL_NULL_FILLER);
+        $emptyAddress->setAddressNumber(self::GENERAL_NULL_FILLER);
         $emptyAddress->setAddressNumberSuffix('');
-        $emptyAddress->setCity('-');
-        $emptyAddress->setPostalCode('-');
+        $emptyAddress->setCity(self::GENERAL_NULL_FILLER);
+        $emptyAddress->setPostalCode(self::GENERAL_NULL_FILLER);
         return $emptyAddress;
     }
     
@@ -293,22 +399,37 @@ class PedigreeCertificate
      */
     private function addAnimalValues($key, $animalId, $generation)
     {
-        $sql = "SELECT * FROM animal_cache c
+        $normalizedSuffix = $this->getNormalizedSuffix();
+        $sql = "SELECT
+                  c.*,
+                  r.*,
+                  rn.odin_bc as odin_bc".$normalizedSuffix."
+                FROM animal_cache c
                   LEFT JOIN result_table_breed_grades r ON r.animal_id = c.animal_id
+                  LEFT JOIN result_table_normalized_breed_grades rn ON rn.animal_id = c.animal_id
                 WHERE c.animal_id = ".$animalId;
         $animalCache = $this->conn->query($sql)->fetch();
 
         if($animalCache) {
 
+            $animalTypeInLatin = null;
+            $animalType = null;
+
             if($animalId != null) {
                 $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
                     scrapie_genotype, breed, breed_type, breed_code, date_of_birth, gender, predicate, predicate_score,
                     parent_father_id as father_id, parent_mother_id as mother_id, blindness_factor, c.company_name, d.city,
-                    a.nickname
+                    a.nickname,
+                    a.animal_type,
+                    birth_address.country as country_of_birth,
+                    pedigree_code.code as breed_code_letters,
+                    pedigree_code.full_name as breed_code_fullname
                 FROM animal a
                     LEFT JOIN location l ON a.location_of_birth_id = l.id
                     LEFT JOIN company c ON l.company_id = c.id
                     LEFT JOIN address d ON d.id = c.address_id
+                    LEFT JOIN address birth_address ON l.address_id = birth_address.id
+                    LEFT JOIN pedigree_code ON pedigree_code.code = substring(a.breed_code, 1, 2)
                 WHERE a.id = ".$animalId;
                 $animalData = $this->conn->query($sql)->fetch();
 
@@ -317,9 +438,19 @@ class PedigreeCertificate
                 $stn = $animalData[JsonInputConstant::STN];
                 $breed = $animalData[JsonInputConstant::BREED];
                 $breedCode = $animalData[JsonInputConstant::BREED_CODE];
+
+                $breedCodeLettersAndFullNameSets = $this->extractBreedCodeLettersAndFullNameSets($breedCode);
+
+                $countryOfBirth = $animalData[JsonInputConstant::COUNTRY_OF_BIRTH];
                 $breedType = $animalData[JsonInputConstant::BREED_TYPE];
                 $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
                 $gender = $animalData[JsonInputConstant::GENDER];
+
+                $animalTypeDatabaseIntValue = $animalData[JsonInputConstant::ANIMAL_TYPE];
+                if ($animalTypeDatabaseIntValue) {
+                    $animalTypeInLatin = AnimalTypeInLatin::getByDatabaseEnum($animalTypeDatabaseIntValue);
+                    $animalType = strtoupper($this->translator->trans(AnimalType::getByDatabaseEnum($animalTypeDatabaseIntValue)));
+                }
 
                 $nickname = null;
                 if(self::SHOW_NICKNAME) {
@@ -361,6 +492,9 @@ class PedigreeCertificate
                 $breedType = null;
                 $scrapieGenotype = null;
                 $gender = null;
+                $animalTypeInLatin = null;
+                $breedCodeLettersAndFullNameSets = [];
+                $countryOfBirth = null;
                 $nickname = null;
                 $predicate = self::GENERAL_NULL_FILLER;
                 $blindnessFactor = self::GENERAL_NULL_FILLER;
@@ -382,7 +516,8 @@ class PedigreeCertificate
             $totalOffSpringCount = intval($animalCache['total_offspring_count']);
             $bornAliveOffspringCount = intval($animalCache['born_alive_offspring_count']);
             $addProductionAsterisk = boolval($animalCache['gave_birth_as_one_year_old']);
-            $production = DisplayUtil::parseProductionStringFromGivenParts($productionAge, $litterCount, $totalOffSpringCount, $bornAliveOffspringCount, $addProductionAsterisk);
+            $production = DisplayUtil::parseProductionStringFromGivenParts($productionAge, $litterCount,
+                $totalOffSpringCount, $bornAliveOffspringCount, $addProductionAsterisk, self::GENERAL_NULL_FILLER);
 
             $nLing = $animalCache['n_ling'];
             $nLingPart = explode('-', $nLing);
@@ -413,38 +548,49 @@ class PedigreeCertificate
             //Note the BreedValues and LambMeatIndex values are already set above
 
             //Exterior
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SKULL] = Utils::fillZeroFloat($animalCache[JsonInputConstant::SKULL]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = Utils::fillZeroFloat($animalCache[JsonInputConstant::PROGRESS]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCULARITY] = Utils::fillZeroFloat($animalCache[JsonInputConstant::MUSCULARITY]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PROPORTION] = Utils::fillZeroFloat($animalCache[JsonInputConstant::PROPORTION]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TYPE] = Utils::fillZeroFloat($animalCache[JsonInputConstant::EXTERIOR_TYPE]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LEGWORK] = Utils::fillZeroFloat($animalCache[JsonInputConstant::LEG_WORK]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FUR] = Utils::fillZeroFloat($animalCache[JsonInputConstant::FUR]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENERAL_APPEARANCE] = Utils::fillZeroFloat($animalCache[JsonInputConstant::GENERAL_APPEARANCE]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::HEIGHT] = Utils::fillZeroFloat($animalCache[JsonInputConstant::HEIGHT]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TORSO_LENGTH] = Utils::fillZeroFloat($animalCache[JsonInputConstant::TORSO_LENGTH]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREAST_DEPTH] = Utils::fillZeroFloat($animalCache[JsonInputConstant::BREAST_DEPTH]);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MARKINGS] = Utils::fillZeroFloat($animalCache[JsonInputConstant::MARKINGS]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SKULL] = $this->fillZeroFloat($animalCache[JsonInputConstant::SKULL]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = $this->fillZeroFloat($animalCache[JsonInputConstant::PROGRESS]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCULARITY] = $this->fillZeroFloat($animalCache[JsonInputConstant::MUSCULARITY]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PROPORTION] = $this->fillZeroFloat($animalCache[JsonInputConstant::PROPORTION]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TYPE] = $this->fillZeroFloat($animalCache[JsonInputConstant::EXTERIOR_TYPE]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LEGWORK] = $this->fillZeroFloat($animalCache[JsonInputConstant::LEG_WORK]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FUR] = $this->fillZeroFloat($animalCache[JsonInputConstant::FUR]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENERAL_APPEARANCE] = $this->fillZeroFloat($animalCache[JsonInputConstant::GENERAL_APPEARANCE]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::HEIGHT] = $this->fillZeroFloat($animalCache[JsonInputConstant::HEIGHT]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TORSO_LENGTH] = $this->fillZeroFloat($animalCache[JsonInputConstant::TORSO_LENGTH]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREAST_DEPTH] = $this->fillZeroFloat($animalCache[JsonInputConstant::BREAST_DEPTH]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MARKINGS] = $this->fillZeroFloat($animalCache[JsonInputConstant::MARKINGS]);
 
             //Litter
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_SIZE] = $litterSize;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::N_LING] = $nLing;
 
-            //Offspring
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount);
+            $sectionType = SectionUtil::getSectionType($breedType, self::GENERAL_NULL_FILLER);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = $sectionType;
 
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ULN] = Utils::fillNullOrEmptyString($uln);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($stn);
+            $this->setDisplayZooTechnicalData($key, $sectionType);
+
+            //Offspring
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount, self::GENERAL_NULL_FILLER);
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ULN] = $this->nullFillString($uln);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = $this->nullFillString($stn);
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($scrapieGenotype, self::EMPTY_SCRAPIE_GENOTYPE);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED] = Utils::fillNullOrEmptyString($breed);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::getDutchUcFirst($breedType));
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($breedCode);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED] = $this->nullFillString($breed);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = $this->nullFillString(Translation::getDutchUcFirst($breedType));
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = $this->nullFillString($breedCode);
             /* Dates. The null checks for dates are done here including the formatting */
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = Utils::fillNullOrEmptyString($dateOfBirthString, self::EMPTY_DATE_OF_BIRTH);
             //NOTE measurementDate and inspectionDate are identical!
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = self::getTypeAndInspectionDateByDateTime(
                 $animalCache[JsonInputConstant::KIND], $exteriorMeasurementDate, self::GENERAL_NULL_FILLER
             );
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ANIMAL_TYPE_IN_LATIN] = $animalTypeInLatin ?? self::GENERAL_NULL_FILLER;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ANIMAL_TYPE] = $animalType ?? self::GENERAL_NULL_FILLER;
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODES] = $breedCodeLettersAndFullNameSets ?? [];
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::COUNTRY_OF_BIRTH] = $countryOfBirth ?? self::GENERAL_NULL_FILLER;
 
             /* variables translated to Dutch */
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($gender);
@@ -463,10 +609,41 @@ class PedigreeCertificate
                 $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = self::GENERAL_NULL_FILLER;
             }
 
+            if ($generation === 0) {
+                $this->setLastMate($animalId, $key);
+            }
+
         } else {
             $this->addAnimalValuesBySql($key, $animalId, $generation);
         }
 
+    }
+
+
+    private function extractBreedCodeLettersAndFullNameSets($breedCode): array
+    {
+        if (empty($breedCode) || $breedCode === self::GENERAL_NULL_FILLER) {
+            return [];
+        }
+
+        $fullNamesByCodes = $this->getBreedFullnamesByCodes();
+
+        $breedCodeNameAndCodeSets = [];
+        $parts = BreedCodeUtil::getBreedCodePartsFromBreedCodeString($breedCode);
+
+        // ksort($parts); SORT ALPHABETICALLY
+
+        foreach ($parts as $code => $value) {
+            $fullName = ArrayUtil::get($code, $fullNamesByCodes);
+            if ($fullName) {
+                $breedCodeNameAndCodeSets[] = [
+                    ReportLabel::BREED_CODE_LETTERS => $code,
+                    ReportLabel::BREED_CODE_FULLNAME => $fullName,
+                ];
+            }
+        }
+
+        return $breedCodeNameAndCodeSets;
     }
 
 
@@ -476,42 +653,92 @@ class PedigreeCertificate
      */
     private function addBreedValuesToArrayFromSqlResult($key, $breedGrades)
     {
-        if(is_array($breedGrades)) {
-            $muscleThickness = BreedFormat::formatMuscleThicknessBreedValue($breedGrades['muscle_thickness'], $breedGrades['muscle_thickness_accuracy']);
-            $bodyFat = BreedFormat::formatFatThickness3BreedValue($breedGrades['fat_thickness3'], $breedGrades['fat_thickness3accuracy']);
-            $growth = BreedFormat::formatGrowthBreedValue($breedGrades['growth'], $breedGrades['growth_accuracy']);
-            $litterSizeBreedValue = BreedFormat::formatBreedValue($breedGrades['total_born'], $breedGrades['total_born_accuracy']);
-            $tailLength = BreedFormat::formatBreedValue($breedGrades['tail_length'], $breedGrades['tail_length_accuracy']);
-
-            $lambMeatIndex = BreedFormat::getJoinedLambMeatIndex($breedGrades['lamb_meat_index'], $breedGrades['lamb_meat_accuracy']);
-            $lambMeatIndexWithoutAccuracy = $breedGrades['lamb_meat_index'];
-        } else {
-            $muscleThickness = BreedFormat::EMPTY_BREED_VALUE;
-            $bodyFat = BreedFormat::EMPTY_BREED_VALUE;
-            $growth = BreedFormat::EMPTY_BREED_VALUE;
-            $litterSizeBreedValue = BreedFormat::EMPTY_BREED_VALUE;
-            $tailLength = BreedFormat::EMPTY_BREED_VALUE;
-
-            $lambMeatIndex = BreedFormat::EMPTY_INDEX_VALUE;
-            $lambMeatIndexWithoutAccuracy = null;
+        if(!is_array($breedGrades)) {
+            $this->addEmptyBreedIndexes($key);
+            $this->addEmptyBreedValuesSet($key);
+            return;
         }
 
-        // Set values in result array
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $muscleThickness;
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $bodyFat;
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $growth;
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = $litterSizeBreedValue;
-
-        //NOTE this value is not used in the pdf, but it must be fill so there is no null pointer exception
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
-
-        //LambMeatIndex with Accuracy
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = $lambMeatIndex;
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = $tailLength;
-
-        if($key == ReportLabel::CHILD_KEY) {
-            $this->addBreedIndex($lambMeatIndexWithoutAccuracy);
+        $isFirstGeneration = strlen($key) <= 1;
+        if ($key == ReportLabel::CHILD_KEY || $isFirstGeneration) {
+            $this->addBreedValuesSet($key, $breedGrades);
         }
+
+        $isFirstOrSecondGeneration = strlen($key) <= 2;
+        if($key == ReportLabel::CHILD_KEY || $isFirstOrSecondGeneration) {
+            $this->addBreedIndexes($key, $breedGrades);
+        }
+    }
+
+
+    /**
+     * @param $resultTableValueVariable
+     * @return bool
+     */
+    private function useBreedIndexFormatForBreedValue($resultTableValueVariable): bool
+    {
+        return $resultTableValueVariable === 'odin_bc';
+    }
+
+
+    private function addBreedValuesSet($key, $breedGrades)
+    {
+        $exteriorBreedValuesOutput = $this->breedValuesOutput->getForPedigreeCertificate($breedGrades, self::GENERAL_NULL_FILLER);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES] = $exteriorBreedValuesOutput[ReportLabel::VALUES];
+        $normalizedSuffix = $this->getNormalizedSuffix();
+
+        $hasAnyBreedValues = $exteriorBreedValuesOutput[ReportLabel::HAS_ANY_VALUES];
+        foreach ($this->breedValuesOutput->getBreedValueResultTableColumnNamesSets() as $set)
+        {
+            $resultTableValueVariable = $set['result_table_value_variable'];
+            $resultTableAccuracyVariable = $set['result_table_accuracy_variable'];
+
+            $accuracy = ArrayUtil::get($resultTableAccuracyVariable, $breedGrades);
+
+            if ($this->useBreedIndexFormatForBreedValue($resultTableValueVariable)) {
+                $value = ArrayUtil::get($resultTableValueVariable.$normalizedSuffix, $breedGrades);
+                $formattedValue = BreedValuesOutput::getFormattedBreedIndex($value, self::GENERAL_NULL_FILLER);
+                $formattedAccuracy = BreedValuesOutput::getFormattedBreedIndexAccuracy($accuracy, self::GENERAL_NULL_FILLER);
+            } else {
+                $value = ArrayUtil::get($resultTableValueVariable, $breedGrades);
+                $formattedValue = BreedValuesOutput::getFormattedBreedValue($value, self::GENERAL_NULL_FILLER);
+                $formattedAccuracy = BreedValuesOutput::getFormattedBreedValueAccuracy($accuracy, self::GENERAL_NULL_FILLER);
+            }
+
+            $isEmpty = empty($value) || empty($accuracy);
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][$resultTableValueVariable] = [
+                ReportLabel::VALUE => $formattedValue,
+                ReportLabel::ACCURACY => $formattedAccuracy,
+                ReportLabel::IS_EMPTY => $isEmpty,
+            ];
+
+            if (!$isEmpty) {
+                $hasAnyBreedValues = true;
+            }
+        }
+
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES_EVALUATION_DATE] =
+            $hasAnyBreedValues ? $this->breedValuesLastGenerationDate : self::GENERAL_NULL_FILLER;
+
+        foreach ($this->breedValuesOutput->getExteriorKeysWithSuffixes() as $exteriorKey)
+        {
+            unset($this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][$exteriorKey]);
+        }
+
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][ReportLabel::IS_EMPTY] = false;
+    }
+
+
+    private function addEmptyBreedValuesSet($key)
+    {
+        $this->addBreedValuesSet($key, []);
+    }
+
+
+    private function getNormalizedSuffix(): string
+    {
+        return '_'.JsonInputConstant::NORMALIZED;
     }
 
 
@@ -522,8 +749,9 @@ class PedigreeCertificate
      */
     private function addAnimalValuesBySql($key, $animalId, $generation)
     {
-        $exteriorReplacementString = null;
+        $exteriorReplacementString = self::GENERAL_NULL_FILLER;
         $latestExteriorArray = $this->exteriorRepository->getLatestExteriorBySql($animalId, $exteriorReplacementString);
+        $normalizedSuffix = $this->getNormalizedSuffix();
 
         if($generation < self::GENERATION_OF_ASCENDANTS - 1) {
             //Only retrieve the breedValues and lambMeatIndices for the child, parents and grandparents.
@@ -533,8 +761,12 @@ class PedigreeCertificate
             if(ctype_digit($animalId) || is_int($animalId)) {
                 //Use a LEFT JOIN, so the necessary keys will always be returned,
                 //even if the result_table_breed_grades record does not exist.
-                $sql = "SELECT r.* FROM animal 
-                LEFT JOIN result_table_breed_grades r ON r.animal_id = animal.id  
+                $sql = "SELECT 
+                  r.*,
+                  rn.odin_bc as odin_bc".$normalizedSuffix."
+                FROM animal 
+                LEFT JOIN result_table_breed_grades r ON r.animal_id = animal.id
+                LEFT JOIN result_table_normalized_breed_grades rn ON rn.animal_id = animal.id
                 WHERE animal.id = ".$animalId;
                 $breedGrades = $this->conn->query($sql)->fetch();
             } else {
@@ -561,7 +793,8 @@ class PedigreeCertificate
                     a.parent_father_id as father_id, a.parent_mother_id as mother_id, a.blindness_factor, c.company_name, d.city,
                     a.nickname,
                     cache.production_age, cache.litter_count, cache.total_offspring_count,
-                    cache.born_alive_offspring_count, cache.gave_birth_as_one_year_old
+                    cache.born_alive_offspring_count, cache.gave_birth_as_one_year_old,
+                    cache.n_ling
                 FROM animal a
                     LEFT JOIN location l ON a.location_of_birth_id = l.id
                     LEFT JOIN company c ON l.company_id = c.id
@@ -614,6 +847,9 @@ class PedigreeCertificate
             $bornAliveOffspringCount = intval($animalData['born_alive_offspring_count']);
             $addProductionAsterisk = boolval($animalData['gave_birth_as_one_year_old']);
 
+            // nLing
+            $nLing = $nLing === self::GENERAL_NULL_FILLER || empty($nLing) ? $animalData['n_ling'] : $nLing;
+
             //These ids are only used only inside this class and not in the twig file
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = $animalData[ReportLabel::MOTHER_ID];
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = $animalData[ReportLabel::FATHER_ID];
@@ -659,24 +895,25 @@ class PedigreeCertificate
             //$inspectionDateString = $inspectionDateDateTime->format('d-m-Y');
         }
 
-        $production = DisplayUtil::parseProductionStringFromGivenParts($productionAge, $litterCount, $totalOffSpringCount, $bornAliveOffspringCount, $addProductionAsterisk);
+        $production = DisplayUtil::parseProductionStringFromGivenParts($productionAge, $litterCount,
+            $totalOffSpringCount, $bornAliveOffspringCount, $addProductionAsterisk, self::GENERAL_NULL_FILLER);
 
         /* Set values into array */
         //Note the BreedValues and LambMeatIndex values are already set above
 
         //Exterior
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SKULL] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::SKULL]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::PROGRESS]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCULARITY] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::MUSCULARITY]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PROPORTION] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::PROPORTION]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TYPE] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::EXTERIOR_TYPE]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LEGWORK] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::LEG_WORK]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FUR] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::FUR]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENERAL_APPEARANCE] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::GENERAL_APPEARANCE]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::HEIGHT] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::HEIGHT]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TORSO_LENGTH] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::TORSO_LENGTH]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREAST_DEPTH] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::BREAST_DEPTH]);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MARKINGS] = Utils::fillZeroFloat($latestExteriorArray[JsonInputConstant::MARKINGS]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SKULL] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::SKULL]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::PROGRESS]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCULARITY] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::MUSCULARITY]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PROPORTION] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::PROPORTION]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TYPE] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::EXTERIOR_TYPE]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LEGWORK] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::LEG_WORK]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FUR] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::FUR]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENERAL_APPEARANCE] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::GENERAL_APPEARANCE]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::HEIGHT] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::HEIGHT]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TORSO_LENGTH] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::TORSO_LENGTH]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREAST_DEPTH] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::BREAST_DEPTH]);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MARKINGS] = $this->fillZeroFloat($latestExteriorArray[JsonInputConstant::MARKINGS]);
 
         //Litter
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_SIZE] = $litterSize;
@@ -686,20 +923,24 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $production;
 
         //Offspring
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount,self::GENERAL_NULL_FILLER);
 
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ULN] = Utils::fillNullOrEmptyString($uln);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($stn);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ULN] = $this->nullFillString($uln);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = $this->nullFillString($stn);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($scrapieGenotype, self::EMPTY_SCRAPIE_GENOTYPE);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED] = Utils::fillNullOrEmptyString($breed);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::getDutchUcFirst($breedType));
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($breedCode);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED] = $this->nullFillString($breed);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = $this->nullFillString(Translation::getDutchUcFirst($breedType));
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = $this->nullFillString($breedCode);
         /* Dates. The null checks for dates are done here including the formatting */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = Utils::fillNullOrEmptyString($dateOfBirthString, self::EMPTY_DATE_OF_BIRTH);
         //NOTE measurementDate and inspectionDate are identical!
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = self::getTypeAndInspectionDateByDateTime(
             $latestExteriorArray[JsonInputConstant::KIND], $inspectionDateDateTime, self::GENERAL_NULL_FILLER
         );
+
+        $sectionType = SectionUtil::getSectionType($breedType, self::GENERAL_NULL_FILLER);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SECTION_TYPE] = $sectionType;
+        $this->setDisplayZooTechnicalData($key, $sectionType);
 
         /* variables translated to Dutch */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($gender);
@@ -721,28 +962,136 @@ class PedigreeCertificate
 
 
     /**
-     * @param float $lambMeatIndex
+     * @param string $animalKey
+     * @param array $breedGrades
      */
-    private function addBreedIndex($lambMeatIndex)
+    private function addBreedIndexes($animalKey, $breedGrades)
     {
-        //Empty
-        $breederStarCount = 0;
-        $motherBreederStarCount = 0;
-        $fatherBreederStarCount = 0;
-        $exteriorStarCount = 0;
-        
-        $lambMeatStarCount = StarValueUtil::getStarValue($lambMeatIndex);
+//        $unformattedIndexValue = $breedGrades['lamb_meat_index'];
+//        $accuracy = $breedGrades['lamb_meat_accuracy'];
 
-        $this->data[ReportLabel::BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($breederStarCount);
-        $this->data[ReportLabel::M_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($motherBreederStarCount);
-        $this->data[ReportLabel::F_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($fatherBreederStarCount);
-        $this->data[ReportLabel::EXT_INDEX_STARS] = TwigOutputUtil::createStarsIndex($exteriorStarCount);
-        $this->data[ReportLabel::VL_INDEX_STARS] = TwigOutputUtil::createStarsIndex($lambMeatStarCount);
+        if ($this->useTestData) {
 
-        $this->data[ReportLabel::BREEDER_INDEX_NO_ACC] = 'ab/acc';
-        $this->data[ReportLabel::M_BREEDER_INDEX_NO_ACC] = 'mb/acc';
-        $this->data[ReportLabel::F_BREEDER_INDEX_NO_ACC] = 'fb/acc';
-        $this->data[ReportLabel::EXT_INDEX_NO_ACC] = 'ex/acc';
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_FATHER,
+                -8,
+                0.5
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_MOTHER,
+                -1,
+                0.9
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_EXTERIOR,
+                0,
+                0.5
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_BREED,
+                3,
+                0.44
+            );
+
+        } else {
+
+            // TODO use real values when indexes are available
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_FATHER,
+                0,
+                0
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_MOTHER,
+                0,
+                0
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_EXTERIOR,
+                0,
+                0
+            );
+
+            $this->addBreedIndex(
+                $animalKey,
+                ReportLabel::INDEX_BREED,
+                0,
+                0
+            );
+        }
+    }
+
+
+    /**
+     * @param string $animalKey
+     * @param array $breedGrades
+     */
+    private function addEmptyBreedIndexes($animalKey)
+    {
+        $this->addBreedIndex(
+            $animalKey,
+            ReportLabel::INDEX_FATHER,
+            0,
+            0
+        );
+
+        $this->addBreedIndex(
+            $animalKey,
+            ReportLabel::INDEX_MOTHER,
+            0,
+            0
+        );
+
+        $this->addBreedIndex(
+            $animalKey,
+            ReportLabel::INDEX_EXTERIOR,
+            0,
+            0
+        );
+
+        $this->addBreedIndex(
+            $animalKey,
+            ReportLabel::INDEX_BREED,
+            0,
+            0
+        );
+    }
+
+
+    /**
+     * @param string $animalKey
+     * @param string $indexType
+     * @param float $unformattedIndexValue
+     * @param float $accuracy
+     */
+    private function addBreedIndex($animalKey, $indexType, $unformattedIndexValue, $accuracy)
+    {
+        $isIndexEmpty = BreedFormat::isIndexEmpty($unformattedIndexValue, $accuracy);
+        $formattedIndexValue = BreedFormat::getFormattedIndexValue($unformattedIndexValue, $accuracy);
+        $formattedIndexAccuracy = BreedFormat::getFormattedIndexAccuracy($unformattedIndexValue, $accuracy);
+        $starsValue = StarValueUtil::getStarValue(($isIndexEmpty ? null : $unformattedIndexValue));
+        $starsOutput = StarValueUtil::getStarsOutput($starsValue);
+
+        $this->data[ReportLabel::ANIMALS][$animalKey][ReportLabel::INDEXES][$indexType] = [
+            ReportLabel::IS_EMPTY => $isIndexEmpty,
+            ReportLabel::VALUE => $formattedIndexValue,
+            ReportLabel::ACCURACY => $formattedIndexAccuracy,
+            ReportLabel::STARS_VALUE => $starsValue,
+            ReportLabel::STARS_OUTPUT => $starsOutput,
+        ];
     }
 
 
@@ -770,19 +1119,84 @@ class PedigreeCertificate
     }
 
 
+    private function setLastMate($animalId, $key)
+    {
+        $maxDays = self::LAST_MATE_MAX_DAYS_BEFORE_TODAY;
+        $sql = "SELECT
+                  m.ki,
+                  CONCAT(r.uln_country_code, r.uln_number) as uln_stud_ram,
+                  r.uln_country_code as uln_country_code_stud_ram,
+                  r.uln_number as uln_number_stud_ram,
+                  m.start_date,
+                  m.end_date,
+                  (m.start_date = m.end_date) as is_single_date,
+                  DATE_PART('day', NOW() - m.end_date) <= $maxDays as display_last_mate_info
+                FROM animal a
+                  INNER JOIN mate m ON m.stud_ewe_id = a.id
+                  INNER JOIN declare_nsfo_base dnb on m.id = dnb.id
+                  INNER JOIN animal r ON r.id = m.stud_ram_id
+                  LEFT JOIN litter l ON l.mate_id = m.id
+                WHERE (dnb.request_state = '".RequestStateType::FINISHED."' 
+                    OR dnb.request_state = '".RequestStateType::FINISHED_WITH_WARNING."') AND
+                  a.id = $animalId
+                    AND l.id ISNULL
+                ORDER BY end_date DESC, start_date DESC LIMIT 1";
+        $result = $this->em->getConnection()->query($sql)->fetch();
+
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LAST_MATE] = $result;
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LAST_MATE][ReportLabel::IS_EMPTY] = empty($result);
+    }
+
     /**
-     * @param string $registerName
+     * @param $key
+     * @param $array
+     * @param string $nullFiller
+     * @return string|null
+     */
+    private function getNullCheckedArrayValue($key, $array, $nullFiller = self::GENERAL_NULL_FILLER)
+    {
+        return ArrayUtil::get($key, $array, $nullFiller);
+    }
+
+    /**
+     * @param $value
      * @return string
      */
-    private function parsePedigreeRegisterText($registerName)
+    private function nullFillString($value)
     {
-        if($registerName != null && $registerName != '') {
-            return 'Namens: '.$registerName;
-        } else {
-            return self::MISSING_PEDIGREE_REGISTER;
-        }
+        return Utils::fillNullOrEmptyString($value, self::GENERAL_NULL_FILLER);
+    }
+
+    /**
+     * @param $value
+     * @return string
+     */
+    private function fillZeroFloat($value)
+    {
+        return Utils::fillZeroFloat($value,self::GENERAL_NULL_FILLER);
     }
 
 
+    /**
+     * @param $animalKey
+     * @param $sectionType
+     */
+    private function setDisplayZooTechnicalData($animalKey, $sectionType)
+    {
+        if ($animalKey === ReportLabel::CHILD_KEY) {
+            // These values should be set in the beginning!
+            /** @var PedigreeRegister $pedigreeRegister */
+            $isOfficiallyRecognizedPedigreeRegister = $this->mainPedigreeRegister &&
+                $this->mainPedigreeRegister->isOfficiallyRecognized();
+            $actionByIsSuperAdmin = $this->data[ReportLabel::ACTION_BY_IS_SUPER_ADMIN];
+
+            $displayZooTechnicalData =
+                $actionByIsSuperAdmin &&
+                $isOfficiallyRecognizedPedigreeRegister &&
+                $sectionType === SectionUtil::MAIN_SECTION
+            ;
+            $this->data[ReportLabel::DISPLAY_ZOO_TECHNICAL_DATA] = $displayZooTechnicalData;
+        }
+    }
 
 }

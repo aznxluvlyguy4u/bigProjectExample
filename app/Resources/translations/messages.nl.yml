@@ -56,6 +56,8 @@ SCRAPIE: SCRAPIE
 SCRAPIE_GENOTYPE: SCRAPIEGENOTYPE
 STN: STN
 ULN: ULN
+SHEEP: schaap
+GOAT: geit
 
 #BreedType
 BLIND_FACTOR: BLINDFACTOR
@@ -189,6 +191,7 @@ BREEDER: FOKKER
 BREEDER UBN: FOKKER UBN
 BREEDER UBN HOLDER: FOKKER UBN HOUDER
 CURRENT_UBN: UBN HOUDER
+CURRENT UBN: UBN houder
 UBN_OF_BIRTH: UBN FOKKER
 UBN_OF_BIRTH_TEXT_VALUE: UBN FOKKER TEXT WAARDE
 ACTIVE UBN AT REFERENCE DATE: ACTIEF UBN OP PEILDATUM
@@ -286,6 +289,7 @@ YEAR2PLUS: JAAR2PLUS
 DATEFORMAT: d-m-Y
 TRUE: waar
 FALSE: onwaar
+EVENT DATE: gebeurtenisdatum
 
 #Chart labels
 CHART_LABEL_TOTAL_BORN: Totaal geb. per worp
@@ -320,6 +324,16 @@ ANNUAL_ACTIVE_LIVESTOCK_RAM_MATES_REPORT: JAARLIJKSE ACTIEVE STALLIJST RAM DEKKI
 ANNUAL_TE100_UBN_PRODUCTION: JAARLIJKSE TE100 UBN PRODUCTIE
 FERTILIZER_ACCOUNTING: MESTBOEKHOUDING
 OFFSPRING_REPORT: NAKOMELINGEN RAPPORTAGE
+
+#Tag
+ASSIGNED: Toegewezen
+ASSIGNING: Wordt toegewezen
+UNASSIGNED: Vrij
+TRANSFERRING_TO_NEW_OWNER: Wordt overgedragen naar nieuwe eigenaar
+TRANSFERRED_TO_NEW_OWNER: Overgedragen naar nieuwe eigenaar
+REPLACING: Wordt omgenummered
+REPLACED: Omgenummered
+RESERVED: Gereserveerd
 
 #ErrorMessages
 'STUD RAM: NO ULN OR PEDIGREE GIVEN': ER IS GEEN DEKRAM OPGEGEVEN
@@ -378,6 +392,7 @@ THE START DATE OVERLAPS A REGISTERED MATING PERIOD: DE START DATUM OVERLAPT MET 
 THE END DATE OVERLAPS A REGISTERED MATING PERIOD: DE EINDDATUM OVERLAPT MET EEN GEREGISTREERDE DEKKINGSPERIODE
 THE LAST BIRTH AND THE CURRENT MATE PERIOD ARE LESS THAN 6 WEEKS: DE LAATSTE GEBOORTE EN HUIDIGE DEKKINGSPERIODE ZIJN KORTER DAN 6 WEKEN
 ANIMAL WAS NOT FOUND: Dier was niet gevonden
+ANIMAL WAS NOT FOUND ON UBN: Dier was niet gevonden op UBN
 NO ANIMAL WAS NOT FOUND FOR ID: Geen dier was gevonden voor id
 ANIMAL IS NOT ALLOWED TO BE CHANGED: Dier mag niet worden veranderd
 DESCRIPTION CANNOT BE EMPTY: BESCHRIJVING MAG NIET LEEG ZIJN
@@ -412,10 +427,60 @@ START DATE IS MISSING: Startdatum ontbreekt
 END DATE CANNOT BE BEFORE START DATE: Einddatum mag niet voor de startdatum zijn
 IS PENDING MUST BE A BOOLEAN: In behandeling moet een boolean zijn
 THE FOLLOWING ULNS ARE BLOCKED FOR YOU: De volgende ulns zijn voor u geblokkeerd
+INVALID INPUT: Ongeldige invoer
+IS ALREADY OWNED BY ANOTHER USER: Is al in het bezit van een andere gebruiker
+COUNTRY CODE DOES NOT MATCH COUNTRY CODE OF UBN: Landcode komt niet overeen met de landcode van de opgegeven UBN
+YOU ALREADY OWN TAGS WITH THE FOLLOWING ULNS: Je bezit al oormerken met de volgende ULNs
+TAG DOES NOT BELONG TO YOU: U bent niet in bezit van het oormerk
+NL TAGS CANNOT BE MANUALLY DELETED: NL oormerken kunnen niet handmatig worden verwijderd
+COUNTRY DOES NOT EXIST IN THE DATABASE: Land bestaat niet in de database
+ANIMAL ALREADY HAS A DIFFERENT DATE OF DEATH: Dier heeft al een verschillende sterftedatum
+ANIMAL HAS ALREADY BEEN DECLARED DEAD: Dier is al dood gemeld
+ANIMAL IS STILL ON A DIFFERENT LOCATION: Dier is nog steeds op een andere locatie
+ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: zijn alleen toegestaan tussen UBNs binnen hetzelfde land
+ARE ONLY ALLOWED FOR DUTCH UBNS: zijn alleen toegestaan voor Nederlandse UBNs
+COMPANY RELATION NUMBER CANNOT BE EMPTY: BRS-nummer mag niet leeg zijn
+THE NEW OWNER HAS NO RELATION NUMBER KEEPER IN THE NSFO SYSTEM: De nieuwe eigenaar heeft geen relatienummerhouder in het NSFO systeem
+NO ANIMAL WAS LINKED TO THIS DECLARE: Geen dier was gelinkt aan deze melding
+DECLARE HAS ALREADY BEEN REVOKED: Melding is al ingetrokken
+DECLARE IS BEING REVOKED: Melding wordt op dit moment ingetrokken
+A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED: Een melding met deze status kan niet worden ingetrokken
+ANIMAL IS ALREADY DEAD: Dier is al dood
+SWITCHING UBN NUMBERS BETWEEN LOCATIONS IS NOT ALLOWED: Wisselen van UBN nummers tussen locaties is niet toegestaan
+UBN OF DEPARTURE AND ARRIVAL ARE IDENTICAL: UBN van vertrek en aankomst zijn identiek
+ANIMAL DOES NOT EXIST IN THE DATABASE: Dier bestaat niet in de database
+ANIMAL IS ON AN UBN IN ANOTHER COUNTRY: Dier staat op een UBN in het buitenland
+ANIMAL IS ALREADY ON THE LIVESTOCK LIST: Dier staat al op de stallijst
+ANIMAL IS NOT ON LOCATION OF DEPART: Dier staat niet op locatie van afvoer
+ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Aanvoermeldingen zijn alleen toegestaan tussen UBNs in hetzelfde land
+THIS FEATURE IS NOT AVAILABLE YET: Deze functie is nog niet beschikbaar
+AN ANIMAL ALREADY EXISTS WITH THIS ULN: Een dier met dit ULN bestaat al
+THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: De gebeurtenisdatum kan niet voor de geboortedatum zijn
+
+#Declares
+DECLARE_ARRIVALS: aanvoermeldingen
+DECLARE_DEPARTS: afvoermeldingen
+DECLARE_IMPORTS: importmeldingen
+DECLARE_EXPORTS: exportmeldingen
+DECLARE_LOSSES: sterftemeldingen
+DECLARE_TAGS_TRANSFERS: oormerkoverdrachten
+DECLARE_TAG_REPLACEMENTS: omnummeringen
 
 #Messages
-DECLARE_ARRIVAL: Automatisch een aanvoer melding uitgevoerd
-DECLARE_DEPART: Automatisch een afvoer melding uitgevoerd
-NEW_INVOICE: U heeft een nieuwe factuur ontvangen
+DECLARE_ARRIVAL_NOTIFICATION_MESSAGE: Automatisch een aanvoer melding uitgevoerd
+DECLARE_DEPART_NOTIFICATION_MESSAGE: Automatisch een afvoer melding uitgevoerd
+NEW_INVOICE_NOTIFICATION_MESSAGE: U heeft een nieuwe factuur ontvangen
 A SIMILAR REPORT IS ALREADY BEING GENERATED: Een identieke rapportage wordt al gegenereerd
 THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7: De volgende n-ling waarden moeten zitten tussen 0 en 7
+SHOULD BE: moet zijn
+
+# Request states
+FINISHED: Afgerond
+FINISHED_WITH_WARNING: Afgerond met waarschuwing
+CANCELLED: Geannuleerd
+OPEN: In behandeling
+FAILED: Mislukt
+REVOKED: Ingetrokken
+REVOKING: Wordt ingetrokken
+PROCESSING: In Behandeling
+AVAILABLE: Beschikbaar

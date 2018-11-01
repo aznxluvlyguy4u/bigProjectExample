@@ -30,6 +30,9 @@ class MateService extends ControllerServiceBase
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $log = ActionLogWriter::createMate($this->getManager(), $client, $loggedInUser, $location, $content);
 
         $validateEweGender = true;
@@ -66,6 +69,9 @@ class MateService extends ControllerServiceBase
         $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
         $location = $this->getSelectedLocation($request);
 
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
         $log = ActionLogWriter::editMate($this->getManager(), $client, $loggedInUser, $location, $content);
 
         $validateEweGender = true;
@@ -98,6 +104,7 @@ class MateService extends ControllerServiceBase
     public function getMateHistory(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
         $matings = $this->getManager()->getRepository(Mate::class)->getMatingsHistoryOutput($location);
         return ResultUtil::successResult($matings);
     }
@@ -110,6 +117,7 @@ class MateService extends ControllerServiceBase
     public function getMateErrors(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
         $matings = $this->getManager()->getRepository(Mate::class)->getMatingsErrorOutput($location);
         return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
     }
@@ -122,6 +130,8 @@ class MateService extends ControllerServiceBase
     public function getMatingsToBeVerified(Request $request)
     {
         $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
+
         $matings = $this->getManager()->getRepository(Mate::class)->getMatingsStudRamOutput($location);
         return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
     }

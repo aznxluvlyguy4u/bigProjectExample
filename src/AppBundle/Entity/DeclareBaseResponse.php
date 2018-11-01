@@ -2,11 +2,12 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\ErrorKindIndicator;
+use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \DateTime;
 
 /**
  * Class DeclareBaseResponse
@@ -42,7 +43,8 @@ use \DateTime;
  *      "DeclareTagReplaceResponse" : "AppBundle\Entity\DeclareTagReplaceResponse",
  *      "RevokeDeclarationResponse" : "AppBundle\Entity\RevokeDeclarationResponse"},
  *     groups = {
- *     "DECLARE"
+ *     "DECLARE",
+ *     "RESPONSE_PERSISTENCE"
  * })
  *
  * @package AppBundle\Entity\DeclareBaseResponse
@@ -63,6 +65,9 @@ abstract class DeclareBaseResponse
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $requestId;
 
@@ -71,6 +76,9 @@ abstract class DeclareBaseResponse
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $messageId;
 
@@ -79,7 +87,8 @@ abstract class DeclareBaseResponse
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     protected $messageNumber;
@@ -90,7 +99,8 @@ abstract class DeclareBaseResponse
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     protected $logDate;
@@ -100,7 +110,8 @@ abstract class DeclareBaseResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $errorCode;
@@ -110,7 +121,8 @@ abstract class DeclareBaseResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $errorMessage;
@@ -121,7 +133,8 @@ abstract class DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $errorKindIndicator;
@@ -132,7 +145,8 @@ abstract class DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $successIndicator;
@@ -142,6 +156,9 @@ abstract class DeclareBaseResponse
      *
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $isRemovedByUser;
 
@@ -150,9 +167,22 @@ abstract class DeclareBaseResponse
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
-     * @JMS\Type("Person")
+     * @JMS\Type("AppBundle\Entity\Person")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $actionBy;
+
+    /**
+     * DeclareBaseResponse constructor.
+     */
+    public function __construct()
+    {
+        $this->logDate = new \DateTime();
+        $this->setIsRemovedByUser(false);
+    }
+
 
     /**
      * Get id
@@ -394,4 +424,59 @@ abstract class DeclareBaseResponse
         $this->actionBy = $actionBy;
     }
 
+
+    /**
+     * @param DeclareBase $declareBase
+     * @return DeclareBaseResponse
+     */
+    protected function setDeclareBaseValues(DeclareBase $declareBase)
+    {
+        $this->setActionBy($declareBase->getActionBy());
+        $this->setRequestId($declareBase->getRequestId());
+        $this->setMessageId($declareBase->getMessageId());
+        return $this;
+    }
+
+
+    /**
+     * @return DeclareBaseResponse
+     */
+    public function setSuccessValues()
+    {
+        $this->setSuccessIndicator(SuccessIndicator::J);
+        $this->setErrorKindIndicator(null);
+        $this->setErrorMessage(null);
+        $this->setErrorCode(null);
+        return $this;
+    }
+
+
+    /**
+     * @param string $errorMessage
+     * @param string $errorCode
+     * @return DeclareBaseResponse
+     */
+    public function setFailedValues($errorMessage, $errorCode)
+    {
+        $this->setSuccessIndicator(SuccessIndicator::N);
+        $this->setErrorKindIndicator(ErrorKindIndicator::F);
+        $this->setErrorMessage($errorMessage);
+        $this->setErrorCode($errorCode);
+        return $this;
+    }
+
+
+    /**
+     * @param string $errorMessage
+     * @param string $errorCode
+     * @return DeclareBaseResponse
+     */
+    public function setWarningValues($errorMessage, $errorCode)
+    {
+        $this->setSuccessIndicator(SuccessIndicator::J);
+        $this->setErrorKindIndicator(ErrorKindIndicator::W);
+        $this->setErrorMessage($errorMessage);
+        $this->setErrorCode($errorCode);
+        return $this;
+    }
 }

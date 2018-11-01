@@ -384,4 +384,13 @@ class Message
     {
         $this->creationDate = $creationDate;
     }
+
+
+    /**
+     * @return string
+     */
+    public function getNotificationMessageTranslationKey(): string
+    {
+        return empty($this->getType()) ? '' :  $this->getType() . MessageType::NOTIFICATION_MESSAGE_SUFFIX;
+    }
 }

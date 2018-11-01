@@ -491,6 +491,29 @@ class ActionLogWriter
 
 
     /**
+     * @param EntityManagerInterface $em
+     * @param Client $client
+     * @param Person $actionBy
+     * @param RevokeDeclaration $revoke
+     * @return ActionLog
+     */
+    public static function nonRvoRevoke(EntityManagerInterface $em, $client, $actionBy, RevokeDeclaration $revoke)
+    {
+        $userActionType = UserActionType::REVOKE_DECLARATION;
+
+        $description = 'revoking: '.$revoke->getRequestTypeToRevoke()
+            .' with requestId: '.$revoke->getRequestIdToRevoke().'.';
+
+        $log = new ActionLog($client, $actionBy, $userActionType, true, $description,
+            true,false);
+        $log->setIsRvoMessage(false);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
      * @param ObjectManager $om
      * @param Person $loggedInUser
      * @param Client $client
@@ -1191,6 +1214,42 @@ class ActionLogWriter
 
         if ($cmdUtil) { $cmdUtil->writeln($countString . ' records updated'); }
         return $updateCount;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param $client
+     * @param $loggedInUser
+     * @param array $ulnPartsArray
+     */
+    public static function createTags(EntityManagerInterface $em, $client, $loggedInUser, array $ulnPartsArray)
+    {
+        $userActionType = UserActionType::CREATE_TAGS;
+
+        $description = '';
+        $prefix = '';
+        foreach ($ulnPartsArray as $ulnParts)
+        {
+            $description .= $prefix . $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE].$ulnParts[JsonInputConstant::ULN_NUMBER];
+            $prefix = ', ';
+        }
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, true, $description);
+        DoctrineUtil::persistAndFlush($em, $log);
+    }
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param $client
+     * @param $loggedInUser
+     * @param string $uln
+     */
+    public static function deleteTag(EntityManagerInterface $em, $client, $loggedInUser, $uln)
+    {
+        $userActionType = UserActionType::DELETE_TAG;
+        $log = new ActionLog($client, $loggedInUser, $userActionType, true, $uln);
+        DoctrineUtil::persistAndFlush($em, $log);
     }
 
 }

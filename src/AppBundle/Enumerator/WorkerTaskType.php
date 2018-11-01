@@ -6,5 +6,6 @@ namespace AppBundle\Enumerator;
 
 class WorkerTaskType
 {
+    const DECLARE_RESPONSE_PERSISTENCE = 'DECLARE_RESPONSE_PERSISTENCE';
     const GENERATE_RESULT_TABLE_RECORDS = 'GENERATE_RESULT_TABLE_RECORDS';
 }

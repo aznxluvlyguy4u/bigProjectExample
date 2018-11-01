@@ -39,7 +39,7 @@ class TagReplaceMessageBuilder extends MessageBuilderBase {
    */
   public function buildMessage(DeclareTagReplace $messageObject, $person, $loggedInUser, $location) {
     $this->person = $person;
-    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
+    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser, $location);
     $completeMessageObject = $this->addDeclareTagReplaceData($baseMessageObject, $location);
 
     return $completeMessageObject;

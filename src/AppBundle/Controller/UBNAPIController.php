@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\UbnService;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -38,7 +39,7 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
    */
   function getUBNDetails(Request $request)
   {
-      return $this->get('app.ubn')->getUBNDetails($request);
+      return $this->get(UbnService::class)->getUBNDetails($request);
   }
 
 
@@ -67,7 +68,7 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
    */
   public function getUbnProcessors(Request $request)
   {
-      return $this->get('app.ubn')->getUbnProcessors($request);
+      return $this->get(UbnService::class)->getUbnProcessors($request);
   }
 
 
@@ -105,7 +106,7 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
      */
     public function getAll(Request $request)
     {
-        return $this->get('app.ubn')->getAll($request);
+        return $this->get(UbnService::class)->getAll($request);
     }
 
 }

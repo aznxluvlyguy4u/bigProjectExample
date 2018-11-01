@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\TagStateType;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints\DateTime;
@@ -28,6 +29,10 @@ class Tag
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $id;
 
@@ -36,6 +41,9 @@ class Tag
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      * @Expose
      */
     private $tagStatus;
@@ -100,6 +108,9 @@ class Tag
      * @Assert\Length(max = 2)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      * @Expose
      */
     private $ulnCountryCode;
@@ -113,6 +124,9 @@ class Tag
      * @Assert\Regex("/([0-9]{12})\b/")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      * @Expose
      */
     private $ulnNumber;
@@ -127,6 +141,7 @@ class Tag
     private $animal;
 
     /**
+     * @var Client
      * @ORM\ManyToOne(targetEntity="Client", inversedBy="tags", cascade={"persist"})
      * @ORM\JoinColumn(name="owner_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Client")
@@ -138,6 +153,9 @@ class Tag
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="tags", cascade={"persist"})
      * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $location;
 
@@ -146,6 +164,9 @@ class Tag
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="DeclareTagsTransfer", cascade={"persist"}, inversedBy="tags")
      * @JMS\Type("AppBundle\Entity\DeclareTagsTransfer")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $declareTagsTransferRequestMessage;
 
@@ -347,7 +368,14 @@ class Tag
         return $this->ulnNumber;
     }
 
-    
+
+    /**
+     * @return string
+     */
+    public function getUln()
+    {
+        return $this->ulnCountryCode . $this->ulnNumber;
+    }
 
 
     public function removeAnimal()
@@ -435,6 +463,14 @@ class Tag
     }
 
     /**
+     * @return int|null
+     */
+    public function getOwnerId()
+    {
+        return $this->owner ? $this->owner->getId() : null;
+    }
+
+    /**
      * @return Location
      */
     public function getLocation()
@@ -454,4 +490,13 @@ class Tag
         return get_called_class();
     }
 
+
+    /**
+     * @return Tag
+     */
+    public function unassignTag(): Tag
+    {
+        $this->setTagStatus(TagStateType::UNASSIGNED);
+        return $this;
+    }
 }

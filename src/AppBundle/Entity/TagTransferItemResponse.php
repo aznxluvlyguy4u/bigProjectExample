@@ -22,6 +22,10 @@ class TagTransferItemResponse
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $id;
 
@@ -29,6 +33,9 @@ class TagTransferItemResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnNumber;
 
@@ -36,6 +43,9 @@ class TagTransferItemResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCode;
 
@@ -43,6 +53,9 @@ class TagTransferItemResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ubnNewOwner;
 
@@ -50,6 +63,9 @@ class TagTransferItemResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $relationNumberAcceptant;
 
@@ -57,6 +73,9 @@ class TagTransferItemResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $animalOrderNumber;
 
@@ -65,7 +84,8 @@ class TagTransferItemResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      *
      */
@@ -76,7 +96,8 @@ class TagTransferItemResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $errorMessage;
@@ -87,7 +108,8 @@ class TagTransferItemResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $errorKindIndicator;
@@ -98,7 +120,8 @@ class TagTransferItemResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $successIndicator;
@@ -108,7 +131,8 @@ class TagTransferItemResponse
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $messageNumber;
@@ -119,7 +143,8 @@ class TagTransferItemResponse
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $isRemovedByUser;
@@ -130,7 +155,8 @@ class TagTransferItemResponse
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $logDate;
@@ -140,7 +166,8 @@ class TagTransferItemResponse
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $requestState;
@@ -150,6 +177,9 @@ class TagTransferItemResponse
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="TagTransferItemRequest", cascade={"persist"}, inversedBy="responses")
      * @JMS\Type("AppBundle\Entity\TagTransferItemRequest")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $tagTransferItemRequest;
 
@@ -158,6 +188,9 @@ class TagTransferItemResponse
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $actionBy;
 

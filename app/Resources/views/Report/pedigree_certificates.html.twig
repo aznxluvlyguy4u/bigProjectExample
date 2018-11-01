@@ -24,22 +24,8 @@
         {% set breederPostalCodeAndCity = x.postalCodeBreeder ~ ' ' ~ x.addressBreeder.city %} {#only used in the old version of the twig#}
         {% set breederPostalCode = x.postalCodeBreeder %}
         {% set breederCity = x.addressBreeder.city %}
-        {% set breederNumber = x.breederNumber %}
-
-        {# BreedIndex #}
-
-        {% set breedIndexStars = x.breederIndexStars %}
-        {% set mBreedIndexStars = x.mBreederIndexStars %}
-        {% set fBreedIndexStars = x.fBreederIndexStars %}
-        {% set extIndexStars = x.extIndexStars %}
-        {% set vlIndexStars = x.vlIndexStars %}
-
-        {#number/accuracy like 128/78#}
-        {% set breedIndexNoAcc = x.breederIndexNoAcc %}
-        {% set mBreedIndexNoAcc = x.mBreederIndexNoAcc %}
-        {% set fBreedIndexNoAcc = x.fBreederIndexNoAcc %}
-        {% set extIndexNoAcc = x.extIndexNoAcc %}
-
+        {% set breederNumber = '' %}
+        
         {# Animals, 'animals' #}
 
         {# child, 'c' #}
@@ -53,15 +39,13 @@
         {% set cBreedType = x.animals['c'].breedType %}
         {% set cBreedCode = x.animals['c'].breedCode %}
         {% set cLitterSize = x.animals['c'].litterSize %}
-        {% set cLitterGroup = x.animals['c'].litterGroup %}
         {% set cNLing = x.animals['c'].nLing %}
         {% set cBlf = x.animals['c'].blindnessFactor %}
         {% set cPredicate = x.animals['c'].predicate %}
         {% set cProduction = x.animals['c'].production %}
         {% set cLitterCount = x.animals['c'].litterCount %}
         {% set cBreederName = x.animals['c'].breederName %}
-        {% set cBreederNumber = x.animals['c'].breederNumber %}
-        {% set cPedigreeRegisterName = x.pedigreeRegisterName %}
+        {% set cPedigreeRegisterName = '' %}
 
         {# Measurements #}
         {% set cSkull = x.animals['c'].skull %}
@@ -75,15 +59,8 @@
         {% set cHeight = x.animals['c'].height %}
         {% set cTorsoLength = x.animals['c'].torsoLength %}
         {% set cBreastDepth = x.animals['c'].breastDepth %}
-        {% set cTailLength = x.animals['c'].tailLength %}
 
         {# BreedValues #}
-        {% set cLitterGroup = x.animals['c'].litterGroup %}
-        {% set cGrowth = x.animals['c'].growth %}
-        {% set cMuscleThickness = x.animals['c'].muscleThickness %}
-        {% set cBodyFat = x.animals['c'].bodyFat %}
-        {% set cVl = x.animals['c'].vl %} {# Vleeslamindex #}
-        {% set cSl = x.animals['c'].sl %}
 
         {# dates #}
         {% set cDateOfBirth = x.animals['c'].dateOfBirth %}
@@ -100,14 +77,12 @@
         {% set fBreedType = x.animals['f'].breedType %}
         {% set fBreedCode = x.animals['f'].breedCode %}
         {% set fLitterSize = x.animals['f'].litterSize %}
-        {% set fLitterGroup = x.animals['f'].litterGroup %}
         {% set fNLing = x.animals['f'].nLing %}
         {% set fBlf = x.animals['f'].blindnessFactor %}
         {% set fPredicate = x.animals['f'].predicate %}
         {% set fProduction = x.animals['f'].production %}
         {% set fLitterCount = x.animals['f'].litterCount %}
         {% set fBreederName = x.animals['f'].breederName %}
-        {% set fBreederNumber = x.animals['f'].breederNumber %}
 
         {# Measurements #}
         {% set fSkull = x.animals['f'].skull %}
@@ -121,13 +96,6 @@
         {% set fHeight = x.animals['f'].height %}
         {% set fTorsoLength = x.animals['f'].torsoLength %}
         {% set fBreastDepth = x.animals['f'].breastDepth %}
-        {% set fTailLength = x.animals['f'].tailLength %}
-        {% set fLitterGroup = x.animals['f'].litterGroup %}
-        {% set fGrowth = x.animals['f'].growth %}
-        {% set fMuscleThickness = x.animals['f'].muscleThickness %}
-        {% set fBodyFat = x.animals['f'].bodyFat %}
-        {% set fVl = x.animals['f'].vl %}
-        {% set fSl = x.animals['f'].sl %}
 
         {# dates #}
         {% set fDateOfBirth = x.animals['f'].dateOfBirth %}
@@ -145,14 +113,12 @@
         {% set mBreedType = x.animals['m'].breedType %}
         {% set mBreedCode = x.animals['m'].breedCode %}
         {% set mLitterSize = x.animals['m'].litterSize %}
-        {% set mLitterGroup = x.animals['m'].litterGroup %}
         {% set mNLing = x.animals['m'].nLing %}
         {% set mBlf = x.animals['m'].blindnessFactor %}
         {% set mPredicate = x.animals['m'].predicate %}
         {% set mProduction = x.animals['m'].production %}
         {% set mLitterCount = x.animals['m'].litterCount %}
         {% set mBreederName = x.animals['m'].breederName %}
-        {% set mBreederNumber = x.animals['m'].breederNumber %}
 
         {# Measurements #}
         {% set mSkull = x.animals['m'].skull %}
@@ -166,13 +132,6 @@
         {% set mHeight = x.animals['m'].height %}
         {% set mTorsoLength = x.animals['m'].torsoLength %}
         {% set mBreastDepth = x.animals['m'].breastDepth %}
-        {% set mTailLength = x.animals['m'].tailLength %}
-        {% set mLitterGroup = x.animals['m'].litterGroup %}
-        {% set mGrowth = x.animals['m'].growth %}
-        {% set mMuscleThickness = x.animals['m'].muscleThickness %}
-        {% set mBodyFat = x.animals['m'].bodyFat %}
-        {% set mVl = x.animals['m'].vl %}
-        {% set mSl = x.animals['m'].sl %}
 
         {# dates #}
         {% set mDateOfBirth = x.animals['m'].dateOfBirth %}
@@ -190,14 +149,12 @@
         {% set ffBreedType = x.animals['ff'].breedType %}
         {% set ffBreedCode = x.animals['ff'].breedCode %}
         {% set ffLitterSize = x.animals['ff'].litterSize %}
-        {% set ffLitterGroup = x.animals['ff'].litterGroup %}
         {% set ffNLing = x.animals['ff'].nLing %}
         {% set ffBlf = x.animals['ff'].blindnessFactor %}
         {% set ffPredicate = x.animals['ff'].predicate %}
         {% set ffProduction = x.animals['ff'].production %}
         {% set ffLitterCount = x.animals['ff'].litterCount %}
         {% set ffBreederName = x.animals['ff'].breederName %}
-        {% set ffBreederNumber = x.animals['ff'].breederNumber %}
 
         {# Measurements #}
         {% set ffSkull = x.animals['ff'].skull %}
@@ -211,13 +168,6 @@
         {% set ffHeight = x.animals['ff'].height %}
         {% set ffTorsoLength = x.animals['ff'].torsoLength %}
         {% set ffBreastDepth = x.animals['ff'].breastDepth %}
-        {% set ffTailLength = x.animals['ff'].tailLength %}
-        {% set ffLitterGroup = x.animals['ff'].litterGroup %}
-        {% set ffGrowth = x.animals['ff'].growth %}
-        {% set ffMuscleThickness = x.animals['ff'].muscleThickness %}
-        {% set ffBodyFat = x.animals['ff'].bodyFat %}
-        {% set ffVl = x.animals['ff'].vl %}
-        {% set ffSl = x.animals['ff'].sl %}
 
         {# dates #}
         {% set ffDateOfBirth = x.animals['ff'].dateOfBirth %}
@@ -235,14 +185,12 @@
         {% set fmBreedType = x.animals['fm'].breedType %}
         {% set fmBreedCode = x.animals['fm'].breedCode %}
         {% set fmLitterSize = x.animals['fm'].litterSize %}
-        {% set fmLitterGroup = x.animals['fm'].litterGroup %}
         {% set fmNLing = x.animals['fm'].nLing %}
         {% set fmBlf = x.animals['fm'].blindnessFactor %}
         {% set fmPredicate = x.animals['fm'].predicate %}
         {% set fmProduction = x.animals['fm'].production %}
         {% set fmLitterCount = x.animals['fm'].litterCount %}
         {% set fmBreederName = x.animals['fm'].breederName %}
-        {% set fmBreederNumber = x.animals['fm'].breederNumber %}
 
         {# Measurements #}
         {% set fmSkull = x.animals['fm'].skull %}
@@ -256,13 +204,6 @@
         {% set fmHeight = x.animals['fm'].height %}
         {% set fmTorsoLength = x.animals['fm'].torsoLength %}
         {% set fmBreastDepth = x.animals['fm'].breastDepth %}
-        {% set fmTailLength = x.animals['fm'].tailLength %}
-        {% set fmLitterGroup = x.animals['fm'].litterGroup %}
-        {% set fmGrowth = x.animals['fm'].growth %}
-        {% set fmMuscleThickness = x.animals['fm'].muscleThickness %}
-        {% set fmBodyFat = x.animals['fm'].bodyFat %}
-        {% set fmVl = x.animals['fm'].vl %}
-        {% set fmSl = x.animals['fm'].sl %}
 
         {# dates #}
         {% set fmDateOfBirth = x.animals['fm'].dateOfBirth %}
@@ -280,14 +221,12 @@
         {% set mfBreedType = x.animals['mf'].breedType %}
         {% set mfBreedCode = x.animals['mf'].breedCode %}
         {% set mfLitterSize = x.animals['mf'].litterSize %}
-        {% set mfLitterGroup = x.animals['mf'].litterGroup %}
         {% set mfNLing = x.animals['mf'].nLing %}
         {% set mfBlf = x.animals['mf'].blindnessFactor %}
         {% set mfPredicate = x.animals['mf'].predicate %}
         {% set mfProduction = x.animals['mf'].production %}
         {% set mfLitterCount = x.animals['mf'].litterCount %}
         {% set mfBreederName = x.animals['mf'].breederName %}
-        {% set mfBreederNumber = x.animals['mf'].breederNumber %}
 
         {# Measurements #}
         {% set mfSkull = x.animals['mf'].skull %}
@@ -301,13 +240,6 @@
         {% set mfHeight = x.animals['mf'].height %}
         {% set mfTorsoLength = x.animals['mf'].torsoLength %}
         {% set mfBreastDepth = x.animals['mf'].breastDepth %}
-        {% set mfTailLength = x.animals['mf'].tailLength %}
-        {% set mfLitterGroup = x.animals['mf'].litterGroup %}
-        {% set mfGrowth = x.animals['mf'].growth %}
-        {% set mfMuscleThickness = x.animals['mf'].muscleThickness %}
-        {% set mfBodyFat = x.animals['mf'].bodyFat %}
-        {% set mfVl = x.animals['mf'].vl %}
-        {% set mfSl = x.animals['mf'].sl %}
 
         {# dates #}
         {% set mfDateOfBirth = x.animals['mf'].dateOfBirth %}
@@ -325,14 +257,12 @@
         {% set mmBreedType = x.animals['mm'].breedType %}
         {% set mmBreedCode = x.animals['mm'].breedCode %}
         {% set mmLitterSize = x.animals['mm'].litterSize %}
-        {% set mmLitterGroup = x.animals['mm'].litterGroup %}
         {% set mmNLing = x.animals['mm'].nLing %}
         {% set mmBlf = x.animals['mm'].blindnessFactor %}
         {% set mmPredicate = x.animals['mm'].predicate %}
         {% set mmProduction = x.animals['mm'].production %}
         {% set mmLitterCount = x.animals['mm'].litterCount %}
         {% set mmBreederName = x.animals['mm'].breederName %}
-        {% set mmBreederNumber = x.animals['mm'].breederNumber %}
 
         {# Measurements #}
         {% set mmSkull = x.animals['mm'].skull %}
@@ -346,13 +276,6 @@
         {% set mmHeight = x.animals['mm'].height %}
         {% set mmTorsoLength = x.animals['mm'].torsoLength %}
         {% set mmBreastDepth = x.animals['mm'].breastDepth %}
-        {% set mmTailLength = x.animals['mm'].tailLength %}
-        {% set mmLitterGroup = x.animals['mm'].litterGroup %}
-        {% set mmGrowth = x.animals['mm'].growth %}
-        {% set mmMuscleThickness = x.animals['mm'].muscleThickness %}
-        {% set mmBodyFat = x.animals['mm'].bodyFat %}
-        {% set mmVl = x.animals['mm'].vl %}
-        {% set mmSl = x.animals['mm'].sl %}
 
         {# dates #}
         {% set mmDateOfBirth = x.animals['mm'].dateOfBirth %}
@@ -370,14 +293,12 @@
         {% set fffBreedType = x.animals['fff'].breedType %}
         {% set fffBreedCode = x.animals['fff'].breedCode %}
         {% set fffLitterSize = x.animals['fff'].litterSize %}
-        {% set fffLitterGroup = x.animals['fff'].litterGroup %}
         {% set fffNLing = x.animals['fff'].nLing %}
         {% set fffBlf = x.animals['fff'].blindnessFactor %}
         {% set fffPredicate = x.animals['fff'].predicate %}
         {% set fffProduction = x.animals['fff'].production %}
         {% set fffLitterCount = x.animals['fff'].litterCount %}
         {% set fffBreederName = x.animals['fff'].breederName %}
-        {% set fffBreederNumber = x.animals['fff'].breederNumber %}
 
         {# Measurements #}
         {% set fffSkull = x.animals['fff'].skull %}
@@ -391,7 +312,6 @@
         {% set fffHeight = x.animals['fff'].height %}
         {% set fffTorsoLength = x.animals['fff'].torsoLength %}
         {% set fffBreastDepth = x.animals['fff'].breastDepth %}
-        {% set fffLitterGroup = x.animals['fff'].litterGroup %}
 
         {# dates #}
         {% set fffDateOfBirth = x.animals['fff'].dateOfBirth %}
@@ -409,14 +329,12 @@
         {% set ffmBreedType = x.animals['ffm'].breedType %}
         {% set ffmBreedCode = x.animals['ffm'].breedCode %}
         {% set ffmLitterSize = x.animals['ffm'].litterSize %}
-        {% set ffmLitterGroup = x.animals['ffm'].litterGroup %}
         {% set ffmNLing = x.animals['ffm'].nLing %}
         {% set ffmBlf = x.animals['ffm'].blindnessFactor %}
         {% set ffmPredicate = x.animals['ffm'].predicate %}
         {% set ffmProduction = x.animals['ffm'].production %}
         {% set ffmLitterCount = x.animals['ffm'].litterCount %}
         {% set ffmBreederName = x.animals['ffm'].breederName %}
-        {% set ffmBreederNumber = x.animals['ffm'].breederNumber %}
 
         {# Measurements #}
         {% set ffmSkull = x.animals['ffm'].skull %}
@@ -430,7 +348,6 @@
         {% set ffmHeight = x.animals['ffm'].height %}
         {% set ffmTorsoLength = x.animals['ffm'].torsoLength %}
         {% set ffmBreastDepth = x.animals['ffm'].breastDepth %}
-        {% set ffmLitterGroup = x.animals['ffm'].litterGroup %}
 
         {# dates #}
         {% set ffmDateOfBirth = x.animals['ffm'].dateOfBirth %}
@@ -448,14 +365,12 @@
         {% set fmfBreedType = x.animals['fmf'].breedType %}
         {% set fmfBreedCode = x.animals['fmf'].breedCode %}
         {% set fmfLitterSize = x.animals['fmf'].litterSize %}
-        {% set fmfLitterGroup = x.animals['fmf'].litterGroup %}
         {% set fmfNLing = x.animals['fmf'].nLing %}
         {% set fmfBlf = x.animals['fmf'].blindnessFactor %}
         {% set fmfPredicate = x.animals['fmf'].predicate %}
         {% set fmfProduction = x.animals['fmf'].production %}
         {% set fmfLitterCount = x.animals['fmf'].litterCount %}
         {% set fmfBreederName = x.animals['fmf'].breederName %}
-        {% set fmfBreederNumber = x.animals['fmf'].breederNumber %}
 
         {# Measurements #}
         {% set fmfSkull = x.animals['fmf'].skull %}
@@ -469,7 +384,6 @@
         {% set fmfHeight = x.animals['fmf'].height %}
         {% set fmfTorsoLength = x.animals['fmf'].torsoLength %}
         {% set fmfBreastDepth = x.animals['fmf'].breastDepth %}
-        {% set fmfLitterGroup = x.animals['fmf'].litterGroup %}
 
         {# dates #}
         {% set fmfDateOfBirth = x.animals['fmf'].dateOfBirth %}
@@ -487,14 +401,12 @@
         {% set fmmBreedType = x.animals['fmm'].breedType %}
         {% set fmmBreedCode = x.animals['fmm'].breedCode %}
         {% set fmmLitterSize = x.animals['fmm'].litterSize %}
-        {% set fmmLitterGroup = x.animals['fmm'].litterGroup %}
         {% set fmmNLing = x.animals['fmm'].nLing %}
         {% set fmmBlf = x.animals['fmm'].blindnessFactor %}
         {% set fmmPredicate = x.animals['fmm'].predicate %}
         {% set fmmProduction = x.animals['fmm'].production %}
         {% set fmmLitterCount = x.animals['fmm'].litterCount %}
         {% set fmmBreederName = x.animals['fmm'].breederName %}
-        {% set fmmBreederNumber = x.animals['fmm'].breederNumber %}
 
         {# Measurements #}
         {% set fmmSkull = x.animals['fmm'].skull %}
@@ -508,7 +420,6 @@
         {% set fmmHeight = x.animals['fmm'].height %}
         {% set fmmTorsoLength = x.animals['fmm'].torsoLength %}
         {% set fmmBreastDepth = x.animals['fmm'].breastDepth %}
-        {% set fmmLitterGroup = x.animals['fmm'].litterGroup %}
 
         {# dates #}
         {% set fmmDateOfBirth = x.animals['fmm'].dateOfBirth %}
@@ -526,14 +437,12 @@
         {% set mffBreedType = x.animals['mff'].breedType %}
         {% set mffBreedCode = x.animals['mff'].breedCode %}
         {% set mffLitterSize = x.animals['mff'].litterSize %}
-        {% set mffLitterGroup = x.animals['mff'].litterGroup %}
         {% set mffNLing = x.animals['mff'].nLing %}
         {% set mffBlf = x.animals['mff'].blindnessFactor %}
         {% set mffPredicate = x.animals['mff'].predicate %}
         {% set mffProduction = x.animals['mff'].production %}
         {% set mffLitterCount = x.animals['mff'].litterCount %}
         {% set mffBreederName = x.animals['mff'].breederName %}
-        {% set mffBreederNumber = x.animals['mff'].breederNumber %}
 
         {# Measurements #}
         {% set mffSkull = x.animals['mff'].skull %}
@@ -547,7 +456,6 @@
         {% set mffHeight = x.animals['mff'].height %}
         {% set mffTorsoLength = x.animals['mff'].torsoLength %}
         {% set mffBreastDepth = x.animals['mff'].breastDepth %}
-        {% set mffLitterGroup = x.animals['mff'].litterGroup %}
 
         {# dates #}
         {% set mffDateOfBirth = x.animals['mff'].dateOfBirth %}
@@ -565,14 +473,12 @@
         {% set mfmBreedType = x.animals['mfm'].breedType %}
         {% set mfmBreedCode = x.animals['mfm'].breedCode %}
         {% set mfmLitterSize = x.animals['mfm'].litterSize %}
-        {% set mfmLitterGroup = x.animals['mfm'].litterGroup %}
         {% set mfmNLing = x.animals['mfm'].nLing %}
         {% set mfmBlf = x.animals['mfm'].blindnessFactor %}
         {% set mfmPredicate = x.animals['mfm'].predicate %}
         {% set mfmProduction = x.animals['mfm'].production %}
         {% set mfmLitterCount = x.animals['mfm'].litterCount %}
         {% set mfmBreederName = x.animals['mfm'].breederName %}
-        {% set mfmBreederNumber = x.animals['mfm'].breederNumber %}
 
         {# Measurements #}
         {% set mfmSkull = x.animals['mfm'].skull %}
@@ -586,7 +492,6 @@
         {% set mfmHeight = x.animals['mfm'].height %}
         {% set mfmTorsoLength = x.animals['mfm'].torsoLength %}
         {% set mfmBreastDepth = x.animals['mfm'].breastDepth %}
-        {% set mfmLitterGroup = x.animals['mfm'].litterGroup %}
 
         {# dates #}
         {% set mfmDateOfBirth = x.animals['mfm'].dateOfBirth %}
@@ -604,14 +509,12 @@
         {% set mmfBreedType = x.animals['mmf'].breedType %}
         {% set mmfBreedCode = x.animals['mmf'].breedCode %}
         {% set mmfLitterSize = x.animals['mmf'].litterSize %}
-        {% set mmfLitterGroup = x.animals['mmf'].litterGroup %}
         {% set mmfNLing = x.animals['mmf'].nLing %}
         {% set mmfBlf = x.animals['mmf'].blindnessFactor %}
         {% set mmfPredicate = x.animals['mmf'].predicate %}
         {% set mmfProduction = x.animals['mmf'].production %}
         {% set mmfLitterCount = x.animals['mmf'].litterCount %}
         {% set mmfBreederName = x.animals['mmf'].breederName %}
-        {% set mmfBreederNumber = x.animals['mmf'].breederNumber %}
 
         {# Measurements #}
         {% set mmfSkull = x.animals['mmf'].skull %}
@@ -625,7 +528,6 @@
         {% set mmfHeight = x.animals['mmf'].height %}
         {% set mmfTorsoLength = x.animals['mmf'].torsoLength %}
         {% set mmfBreastDepth = x.animals['mmf'].breastDepth %}
-        {% set mmfLitterGroup = x.animals['mmf'].litterGroup %}
 
         {# dates #}
         {% set mmfDateOfBirth = x.animals['mmf'].dateOfBirth %}
@@ -643,14 +545,12 @@
         {% set mmmBreedType = x.animals['mmm'].breedType %}
         {% set mmmBreedCode = x.animals['mmm'].breedCode %}
         {% set mmmLitterSize = x.animals['mmm'].litterSize %}
-        {% set mmmLitterGroup = x.animals['mmm'].litterGroup %}
         {% set mmmNLing = x.animals['mmm'].nLing %}
         {% set mmmBlf = x.animals['mmm'].blindnessFactor %}
         {% set mmmPredicate = x.animals['mmm'].predicate %}
         {% set mmmProduction = x.animals['mmm'].production %}
         {% set mmmLitterCount = x.animals['mmm'].litterCount %}
         {% set mmmBreederName = x.animals['mmm'].breederName %}
-        {% set mmmBreederNumber = x.animals['mmm'].breederNumber %}
 
         {# Measurements #}
         {% set mmmSkull = x.animals['mmm'].skull %}
@@ -664,7 +564,6 @@
         {% set mmmHeight = x.animals['mmm'].height %}
         {% set mmmTorsoLength = x.animals['mmm'].torsoLength %}
         {% set mmmBreastDepth = x.animals['mmm'].breastDepth %}
-        {% set mmmLitterGroup = x.animals['mmm'].litterGroup %}
 
         {# dates #}
         {% set mmmDateOfBirth = x.animals['mmm'].dateOfBirth %}
@@ -1298,7 +1197,7 @@
                                             <font face="Lato" style="font-size: 9px">&#xA0;</font>
                                         </td>
                                         <td align="center" style="text-align: left">
-                                            <font face="Lato" style="font-size: 9px">{{cLitterGroup}}</font>
+                                            <font face="Lato" style="font-size: 9px"></font>
                                         </td>
                                     </tr>
                                     <tr>
@@ -1311,7 +1210,7 @@
                                             </font>
                                         </td>
                                         <td align="center" style="text-align: left">
-                                            <font face="Lato" style="font-size: 9px">{{cGrowth}}</font>
+                                            <font face="Lato" style="font-size: 9px"></font>
                                         </td>
                                     </tr>
                                     <tr>
@@ -1325,7 +1224,7 @@
                                         </td>
                                         <td align="center" style="text-align: left">
                                             <font face="Lato" style="font-size: 9px">
-                                                <span>{{cMuscleThickness}}
+                                                <span>
                                                 <br/>
                                             </font>
                                         </td>
@@ -1340,7 +1239,7 @@
                                             </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">{{cBodyFat}}
+                                            <font face="Lato" style="font-size: 9px">
                                             </font>
                                         </td>
                                     </tr>
@@ -1354,7 +1253,7 @@
                                             </font>
                                         </td>
                                         <td>
-                                            <span>{{cSl}}
+                                            <span>
                                             <br/>
                                         </td>
                                     </tr>
@@ -1536,7 +1435,7 @@
                                             <br/>
                                         </td>
                                         <td>
-                                            <span>UBN: {{breederNumber}}
+                                            <span>UBN: {{ breederNumber }}
                                             <br/>
                                         </td>
                                     </tr>
@@ -1585,16 +1484,16 @@
                                     <tr>
                                         <td>
                                             <span>6:&#xA0;</span>
-                                            <span>{{fLitterGroup}}
+                                            <span>
                                             <br/>
                                         </td>
-                                        <td>7:&#xA0;<span>{{fGrowth}}
+                                        <td>7:&#xA0;<span>
                                         </td>
-                                        <td style="text-align: left">8:&#xA0;<span>{{fMuscleThickness}}
+                                        <td style="text-align: left">8:&#xA0;<span>
                                         </td>
-                                        <td>9:&#xA0;<span>{{fBodyFat}}
+                                        <td>9:&#xA0;<span>
                                         </td>
-                                        <td>10:&#xA0;<span>{{fSl}}
+                                        <td>10:&#xA0;<span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -1686,8 +1585,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Vleeslamindex:&#xA0;<span>{{fVl}}
-                                        </td>
                                         <td>
                                             <br/>
                                         </td>
@@ -1773,8 +1670,6 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span>Vleeslamindex:&#xA0;</span>
-                                            <span>{{ffVl}}
                                             <br/>
                                         </td>
                                         <td>
@@ -2065,8 +1960,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Vleeslamindex:&#xA0;<span>{{mVl}}
-                                        </td>
                                         <td>
                                             <br/>
                                         </td>
@@ -2235,8 +2128,6 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span>Vleeslamindex:&#xA0;</span>
-                                            <span>{{fmVl}}
                                             <br/>
                                         </td>
                                         <td>
@@ -2403,8 +2294,6 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span>Vleeslamindex:&#xA0;</span>
-                                            <span>{{mfVl}}
                                             <br/>
                                         </td>
                                         <td>
@@ -2570,8 +2459,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Vleeslamindex: {{mmVl}}<br/>
-                                        </td>
                                         <td>
                                             <br/>
                                         </td>
@@ -3648,16 +3535,16 @@
                                     <tr>
                                         <td>
                                             <span>6:&#xA0;</span>
-                                            <span>{{mLitterGroup}}
+                                            <span>
                                             <br/>
                                         </td>
-                                        <td>7:&#xA0;<span>{{mGrowth}}
+                                        <td>7:&#xA0;<span>
                                         </td>
-                                        <td style="text-align: left">8:&#xA0;<span>{{mMuscleThickness}}
+                                        <td style="text-align: left">8:&#xA0;<span>
                                         </td>
-                                        <td>9:&#xA0;<span>{{mBodyFat}}
+                                        <td>9:&#xA0;<span>
                                         </td>
-                                        <td>10:&#xA0;<span>{{mSl}}
+                                        <td>10:&#xA0;<span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -3709,26 +3596,26 @@
                                             <font face="Lato">
                                                 <span>6:&#xA0;</span>
                                             </font>
-                                            <span>{{ffLitterGroup}}
+                                            <span>
                                             <font face="Lato">
                                                 <br/>
                                             </font>
                                         </td>
                                         <td>
                                             <font face="Lato">7:&#xA0;</font>
-                                            <span>{{ffGrowth}}
+                                            <span>
                                         </td>
                                         <td style="text-align: left">
                                             <font face="Lato">8:&#xA0;</font>
-                                            <span>{{ffMuscleThickness}}
+                                            <span>
                                         </td>
                                         <td>
                                             <font face="Lato">9:&#xA0;</font>
-                                            <span>{{ffBodyFat}}
+                                            <span>{
                                         </td>
                                         <td>
                                             <font face="Lato">10:&#xA0;</font>
-                                            <span>{{ffSl}}
+                                            <span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -3787,20 +3674,20 @@
                                     </tr>
                                     <tr>
                                         <td align="center" style="text-align: left">
-                                            <font face="Lato" style="font-size: 8px">6: {{fmLitterGroup}}</font>
+                                            <font face="Lato" style="font-size: 8px">6: </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">7: {{fmGrowth}}</font>
+                                            <font face="Lato" style="font-size: 8px">7: </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">8: {{fmMuscleThickness}}</font>
+                                            <font face="Lato" style="font-size: 8px">8: </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">9: {{fmBodyFat}}</font>
+                                            <font face="Lato" style="font-size: 8px">9: </font>
                                         </td>
                                         <td>
                                             <font face="Lato" style="font-size: 8px">10:&#xA0;</font>
-                                            <span>{{fmSl}}
+                                            <span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -3839,20 +3726,20 @@
                                     </tr>
                                     <tr>
                                         <td align="center" style="text-align: left">
-                                            <font face="Lato" style="font-size: 8px">6: {{mfLitterGroup}}</font>
+                                            <font face="Lato" style="font-size: 8px">6: </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">7: {{mfGrowth}}</font>
+                                            <font face="Lato" style="font-size: 8px">7: </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">8: {{mfMuscleThickness}}</font>
+                                            <font face="Lato" style="font-size: 8px">8}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">9: {{mfBodyFat}}</font>
+                                            <font face="Lato" style="font-size: 8px">9:</font>
                                         </td>
                                         <td>
                                             <font face="Lato">10:&#xA0;</font>
-                                            <span>{{mfSl}}
+                                            <span>
                                             <span>-</span>
                                             <font face="Lato">
                                                 <br/>
@@ -3915,20 +3802,20 @@
                                     </tr>
                                     <tr>
                                         <td align="center" style="text-align: left">
-                                            <font face="Lato" style="font-size: 8px">6: {{mmLitterGroup}}</font>
+                                            <font face="Lato" style="font-size: 8px">6:</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">7: {{mmGrowth}}</font>
+                                            <font face="Lato" style="font-size: 8px">7: </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">8: {{mmMuscleThickness}}</font>
+                                            <font face="Lato" style="font-size: 8px">8: </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">9: {{mmBodyFat}}</font>
+                                            <font face="Lato" style="font-size: 8px">9: </font>
                                         </td>
                                         <td>
                                             <font face="Lato" style="font-size: 8px">10:&#xA0;</font>
-                                            <span>{{mmSl}}
+                                            <span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -3988,33 +3875,6 @@
                     <switch>
                         <foreignObject style="overflow:visible;" pointer-events="all" width="99" height="90" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
                             <div xmlns="http://www.w3.org/1999/xhtml" style="display: inline-block; font-size: 12px; font-family: Lato; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 100px; height: 91px; overflow: hidden; white-space: nowrap;">
-                                <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
-                                    <tbody>
-                                    {#<tr>#}
-                                        {#<td style="text-align: right">#}
-                                            {#<b>#}
-                                                {#<font style="font-size: 14px">Rasindex</font>#}
-                                            {#</b>#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: right">Moederindex</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: right">#}
-                                            {#<font face="Lato">Vaderindex</font>#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: right">#}
-                                            {#<font face="Lato">Exterieurindex</font>#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    <tr>
-                                        <td style="text-align: right">Vleeslamindex</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
                             </div>
                         </foreignObject>
                         <text x="50" y="51" fill="#000000" text-anchor="middle" font-size="12px" font-family="Lato">[Not supported by viewer]</text>
@@ -4026,53 +3886,6 @@
                     <switch>
                         <foreignObject style="overflow:visible;" pointer-events="all" width="144" height="90" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
                             <div xmlns="http://www.w3.org/1999/xhtml" style="display: inline-block; font-size: 12px; font-family: Lato; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 145px; height: 91px; overflow: hidden; white-space: nowrap;">
-                                <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
-                                    <tbody>
-                                    {#<tr>#}
-                                        {#<td style="text-align: center">#}
-                                            {#<font style="font-size: 12px">{{include(template_from_string(breedIndexStars))}}</font>#}
-                                            {#<br/>#}
-                                        {#</td>#}
-                                        {#<td>#}
-                                            {#<span>{{breedIndexNoAcc}}#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: center">#}
-                                            {#<span>{{include(template_from_string(mBreedIndexStars))}}#}
-                                            {#<br/>#}
-                                        {#</td>#}
-                                        {#<td>{{mBreedIndexNoAcc}}#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: center">#}
-                                            {#<span>{{include(template_from_string(fBreedIndexStars))}}#}
-                                            {#<br/>#}
-                                        {#</td>#}
-                                        {#<td>{{fBreedIndexNoAcc}}#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    {#<tr>#}
-                                        {#<td style="text-align: center">#}
-                                            {#<span>{{include(template_from_string(extIndexStars))}}#}
-                                            {#<br/>#}
-                                        {#</td>#}
-                                        {#<td>{{extIndexNoAcc}}#}
-                                        {#</td>#}
-                                    {#</tr>#}
-                                    <tr>
-                                        <td style="text-align: center">
-                                            {{include(template_from_string(vlIndexStars))}}
-                                            <br/>
-                                        </td>
-                                        <td>
-                                            <span>{{cVl}}
-                                            <br/>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
                             </div>
                         </foreignObject>
                         <text x="72" y="51" fill="#000000" text-anchor="middle" font-size="12px" font-family="Lato">[Not supported by viewer]</text>

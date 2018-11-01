@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\ProfileService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -20,11 +21,11 @@ class ProfileAPIController extends APIController implements ProfileAPIController
    * @Route("/company")
    * @param Request $request
    * @Method("GET")
-   * @return jsonResponse
+   * @return array
    */
   public function getCompanyProfile(Request $request)
   {
-      return $this->get('app.profile')->getCompanyProfile($request);
+      return $this->get(ProfileService::class)->getCompanyProfile($request);
   }
 
 
@@ -38,7 +39,7 @@ class ProfileAPIController extends APIController implements ProfileAPIController
    */
   public function getLoginData(Request $request)
   {
-      return $this->get('app.profile')->getLoginData($request);
+      return $this->get(ProfileService::class)->getLoginData($request);
   }
 
   /**
@@ -48,11 +49,11 @@ class ProfileAPIController extends APIController implements ProfileAPIController
    * @Route("/company")
    * @param Request $request
    * @Method("PUT")
-   * @return jsonResponse
+   * @return array
    */
   public function editCompanyProfile(Request $request)
   {
-      return $this->get('app.profile')->editCompanyProfile($request);
+      return $this->get(ProfileService::class)->editCompanyProfile($request);
   }
 
 }

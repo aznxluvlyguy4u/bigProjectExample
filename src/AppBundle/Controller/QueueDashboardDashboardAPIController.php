@@ -3,6 +3,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\QueueDashboardService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Request;
@@ -39,7 +40,7 @@ class QueueDashboardDashboardAPIController extends APIController implements Queu
      */
     function getQueueSizes(Request $request)
     {
-        return $this->get('app.queue_dashboard')->getQueueSizes($request);
+        return $this->get(QueueDashboardService::class)->getQueueSizes($request);
     }
 
 
@@ -66,7 +67,7 @@ class QueueDashboardDashboardAPIController extends APIController implements Queu
      */
     function moveErrorQueueMessages(Request $request)
     {
-        return $this->get('app.queue_dashboard')->moveErrorQueueMessages($request);
+        return $this->get(QueueDashboardService::class)->moveErrorQueueMessages($request);
     }
 
 }

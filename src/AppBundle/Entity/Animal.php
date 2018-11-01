@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\AnimalTypeInLatin;
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
@@ -44,6 +46,7 @@ use \DateTime;
  *     "MINIMAL",
  *     "MIXBLUP",
  *     "PARENT_DATA",
+ *     "RESPONSE_PERSISTENCE",
  *     "USER_MEASUREMENT"
  * })
  *
@@ -71,6 +74,7 @@ abstract class Animal
      *     "ERROR_DETAILS",
      *     "MIXBLUP",
      *     "PARENT_DATA",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "USER_MEASUREMENT"
      * })
@@ -200,6 +204,7 @@ abstract class Animal
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE"
      * })
      */
@@ -237,6 +242,7 @@ abstract class Animal
      *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
+     *     "RESPONSE_PERSISTENCE",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -454,6 +460,7 @@ abstract class Animal
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "PARENT_DATA",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "USER_MEASUREMENT"
@@ -480,6 +487,7 @@ abstract class Animal
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "PARENT_DATA",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "USER_MEASUREMENT"
@@ -1547,6 +1555,22 @@ abstract class Animal
     public function getParentMother()
     {
         return $this->parentMother;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getParentIds(): array
+    {
+        $ids = [];
+        if ($this->getParentMotherId()) {
+            $ids[] = $this->getParentMotherId();
+        }
+        if ($this->getParentFatherId()) {
+            $ids[] = $this->getParentFatherId();
+        }
+        return $ids;
     }
 
 
@@ -2765,6 +2789,14 @@ abstract class Animal
     }
 
     /**
+     * @return int|null
+     */
+    public function getLocationOfBirthId(): ?int
+    {
+        return $this->locationOfBirth ? $this->locationOfBirth->getId() : null;
+    }
+
+    /**
      * @param Location $locationOfBirth
      */
     public function setLocationOfBirth($locationOfBirth)
@@ -3035,6 +3067,16 @@ abstract class Animal
 
 
     /**
+     * @param null|string $nullFiller
+     * @return null|string
+     */
+    public function getAnimalTypeInLatin($nullFiller = null)
+    {
+        return AnimalTypeInLatin::getByDatabaseEnum($this->animalType) ?? $nullFiller;
+    }
+
+
+    /**
      * @return string|null
      */
     public function getBiggestBreedCodePartFromValidatedBreedCodeString()
@@ -3060,5 +3102,61 @@ abstract class Animal
                 $this->tagReplacements->toArray()
             )
         );
+    }
+
+
+    public function setTransferringTransferState(): void
+    {
+        $this->setTransferState(AnimalTransferStatus::TRANSFERRING);
+    }
+
+
+    public function setTransferredTransferState(): void
+    {
+        $this->setTransferState(AnimalTransferStatus::TRANSFERRED);
+    }
+
+
+    /**
+     * @param Location $location
+     * @return bool
+     */
+    public function isOnLocation(Location $location): bool
+    {
+        if (!$this->getLocation() || !$location
+        || (
+                (!$this->getLocation()->getId() && !$location->getId()) &&
+                (!$this->getLocation()->getLocationId() && !$location->getLocationId())
+            )
+        ) {
+            return false;
+        }
+
+        return (
+                $this->getLocation()->getId() === $location->getId() &&
+                $location->getId() !== null
+            )  ||
+            (
+                $this->getLocation()->getLocationId() === $location->getLocationId() &&
+                $location->getLocationId() !== null
+            );
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isDead(): bool
+    {
+        return !$this->getIsAlive();
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function hasLocation(): bool
+    {
+        return $this->getLocation() !== null;
     }
 }

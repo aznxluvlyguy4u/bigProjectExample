@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\TagReplaceService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -39,7 +40,7 @@ class TagsReplaceAPIController extends APIController {
    */
   public function createTagReplaceRequest(Request $request)
   {
-      return $this->get('app.tag.replace')->createTagReplaceRequest($request);
+      return $this->get(TagReplaceService::class)->createTagReplaceRequest($request);
   }
 
 
@@ -67,7 +68,7 @@ class TagsReplaceAPIController extends APIController {
      */
     public function resendOpenTagReplaceRequest(Request $request)
     {
-        return $this->get('app.tag.replace')->resendOpenTagReplaceRequest($request);
+        return $this->get(TagReplaceService::class)->resendOpenTagReplaceRequest($request);
     }
 
 
@@ -79,7 +80,7 @@ class TagsReplaceAPIController extends APIController {
     */
     public function getTagReplaceHistory(Request $request)
     {
-        return $this->get('app.tag.replace')->getTagReplaceHistory($request);
+        return $this->get(TagReplaceService::class)->getTagReplaceHistory($request);
     }
 
     /**
@@ -90,6 +91,6 @@ class TagsReplaceAPIController extends APIController {
      */
     public function getTagReplaceErrors(Request $request)
     {
-        return $this->get('app.tag.replace')->getTagReplaceErrors($request);
+        return $this->get(TagReplaceService::class)->getTagReplaceErrors($request);
     }
 }

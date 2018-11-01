@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
@@ -178,10 +179,16 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
             $this->getManager()->persist($newAnimal);
             $this->getManager()->flush();
+
+            AnimalCacher::cacheByAnimalIds($this->getConnection(), [$newAnimal->getId()]);
         }
         catch(\Exception $e) {
             $this->logExceptionAsError($e);
             return ResultUtil::errorResult('INTERNAL SERVER ERROR', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        if ($newAnimal->getLocation()) {
+            $this->getCacheService()->clearLivestockCacheForLocation($newAnimal->getLocation(), $newAnimal);
         }
 
         $minimizedOutput = AnimalOutput::createAnimalArray($newAnimal, $this->getManager());
@@ -195,8 +202,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     private function setLocationOfBirth(Animal $animal): Animal
     {
         $setEmptyLocationOfBirth = true;
-        if ($animal->getLocation() && $animal->getLocationOfBirth()->getLocationId()) {
-            $locationOfBirth = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $animal->getLocationOfBirth()->getLocationId()]);
+        if ($animal->getLocationOfBirthId()) {
+            $locationOfBirth = $this->getManager()->getRepository(Location::class)->findOneBy(['locationId' => $animal->getLocationOfBirthId()]);
             if ($locationOfBirth) {
                 $animal->setLocationOfBirth($locationOfBirth);
                 $setEmptyLocationOfBirth = false;
@@ -287,7 +294,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         if ($animal->getParentFatherId()) {
             $father = $this->getManager()->getRepository(Animal::class)->find($animal->getParentFatherId());
             if ($father) {
-                if ($mother->getDateOfBirth() > $animal->getDateOfBirth()) {
+                if ($father->getDateOfBirth() > $animal->getDateOfBirth()) {
                     $isFatherYoungerThanChild = true;
                 } else {
                     $animal->setParentFather($father);
@@ -378,7 +385,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         $content = RequestUtil::getContentAsArray($request);
-        $plainTextInput = $content->get(JsonInputConstant::PLAIN_TEXT_INPUT);
+        $plainTextInput = StringUtil::preparePlainTextInput($content->get(JsonInputConstant::PLAIN_TEXT_INPUT));
         $separator = $content->get(JsonInputConstant::SEPARATOR);
 
         $ubns = [];
@@ -692,6 +699,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         if($client == null) { return ResultUtil::errorResult('Client cannot be null', 428); }
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
+
+        if (!$location->isDutchLocation()) {
+            throw new PreconditionFailedHttpException('RVO animal sync cannot be executed for non-NL UBN');
+        }
 
         $isRvoLeading = $content !== null && $content->get(JsonInputConstant::IS_RVO_LEADING) === true;
         if ($isRvoLeading) {

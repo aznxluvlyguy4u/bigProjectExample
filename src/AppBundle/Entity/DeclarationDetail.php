@@ -237,6 +237,7 @@ class DeclarationDetail extends DeclarationBase
     public function setLocation(\AppBundle\Entity\Location $location = null)
     {
         $this->location = $location;
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }

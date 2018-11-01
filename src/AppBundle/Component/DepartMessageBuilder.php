@@ -40,7 +40,7 @@ class DepartMessageBuilder extends MessageBuilderBase
     public function buildMessage(DeclareDepart $messageObject, $person, $loggedInUser, $location)
     {
         $this->person = $person;
-        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
+        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser, $location);
         $completeMessageObject = $this->addDeclareDepartData($baseMessageObject, $location);
 
         return $completeMessageObject;

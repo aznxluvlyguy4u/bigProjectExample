@@ -39,8 +39,7 @@ class BirthMessageBuilder extends MessageBuilderBase
     public function buildMessage(DeclareBirth $messageObject, $person, $loggedInUser, $location)
     {
         $this->person = $person;
-        $messageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
-        return $messageObject;
+        return $this->buildBaseMessageObject($messageObject, $person, $loggedInUser, $location);
     }
 
 }

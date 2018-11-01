@@ -33,6 +33,8 @@ abstract class Address
 {
     use EntityClassInfo;
 
+    const IS_DUTCH_COUNTRY_DEFAULT_BOOLEAN = true;
+
   /**
    * @ORM\Column(type="integer")
    * @ORM\Id
@@ -94,7 +96,6 @@ abstract class Address
    *
    * @ORM\Column(type="string")
    * @Assert\NotBlank
-   * @Assert\Regex("/([0-9]{4}[A-Z]{2})\b/")
    * @Assert\Length(max = 6)
    * @JMS\Type("string")
    * @JMS\Groups({
@@ -149,6 +150,22 @@ abstract class Address
    * })
    */
   private $state;
+
+
+    /**
+     * @var Country
+     *
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Country", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Country")
+     * @JMS\Groups({
+     *     "ADDRESS",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER"
+     * })
+     */
+  private $countryDetails;
 
     /**
      * Get id
@@ -281,13 +298,15 @@ abstract class Address
     }
 
     /**
+     * WARNING THIS IS THE SETTING FOR AN OBSOLETE VARIABLE! Use setCountryDetails instead.
+     *
      * Set country
      *
      * @param string $country
      *
      * @return Address
      */
-    public function setCountry($country)
+    protected function setCountry($country)
     {
         $this->country = trim($country);
 
@@ -295,13 +314,42 @@ abstract class Address
     }
 
     /**
+     * Get country id
+     *
+     * @return int|null
+     */
+    public function getCountryId(): ?int
+    {
+        return $this->countryDetails ? $this->countryDetails->getId() : null;
+    }
+
+    /**
      * Get country
      *
-     * @return string
+     * @return string|null
      */
-    public function getCountry()
+    public function getCountryName(): ?string
     {
-        return $this->country;
+        return $this->countryDetails ? $this->countryDetails->getName() : null;
+    }
+
+    /**
+     * @return Country
+     */
+    public function getCountryDetails(): Country
+    {
+        return $this->countryDetails;
+    }
+
+    /**
+     * @param Country $countryDetails
+     * @return Address
+     */
+    public function setCountryDetails(Country $countryDetails): Address
+    {
+        $this->countryDetails = $countryDetails;
+        $this->setCountry($countryDetails->getName());
+        return $this;
     }
 
     /**
@@ -330,6 +378,25 @@ abstract class Address
     public function getState()
     {
         return $this->state;
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isDutchAddress(): bool
+    {
+        return $this->getCountryCode() ? $this->getCountryCode() === \AppBundle\Enumerator\Country::NL
+            : Address::IS_DUTCH_COUNTRY_DEFAULT_BOOLEAN;
+    }
+
+
+    /**
+     * @return null|string
+     */
+    public function getCountryCode(): ?string
+    {
+        return $this->getCountryDetails() ? $this->getCountryDetails()->getCode() : null;
     }
 
 

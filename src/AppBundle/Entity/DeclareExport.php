@@ -18,7 +18,7 @@ use JMS\Serializer\Annotation\Expose;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareExportRepository")
  * @package AppBundle\Entity
  */
-class DeclareExport extends DeclareBase
+class DeclareExport extends DeclareBase implements RelocationDeclareInterface
 {
     use EntityClassInfo;
 
@@ -224,14 +224,14 @@ class DeclareExport extends DeclareBase
     /**
      * Set location
      *
-     * @param \AppBundle\Entity\Location $location
+     * @param Location $location
      *
      * @return DeclareExport
      */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
+    public function setLocation(Location $location = null)
     {
         $this->location = $location;
-        $this->ubn = $location->getUbn();
+        $this->ubn = $location ? $location->getUbn() : null;
 
         return $this;
     }
@@ -291,7 +291,7 @@ class DeclareExport extends DeclareBase
     /**
      * @param RevokeDeclaration $revoke
      */
-    public function setRevoke($revoke = null)
+    public function setRevoke(RevokeDeclaration $revoke = null)
     {
         $this->revoke = $revoke;
     }

@@ -229,7 +229,7 @@ class InvoiceService extends ControllerServiceBase
             $location = $repository->findOneByActiveUbn($invoice->getUbn());
             $message = $this->createInvoiceCreatedMessage($request, $invoice);
             foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                $title = $this->translator->trans($message->getType());
+                $title = $this->translator->trans($message->getNotificationMessageTranslationKey());
                 $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
             }
         }
@@ -243,7 +243,7 @@ class InvoiceService extends ControllerServiceBase
             $invoice->setCompanyAddressStreetNumber($company->getBillingAddress()->getAddressNumber());
             $invoice->setCompanyAddressPostalCode($company->getBillingAddress()->getPostalCode());
             $invoice->setCompanyAddressCity($company->getBillingAddress()->getCity());
-            $invoice->setCompanyAddressCountry($company->getBillingAddress()->getCountry());
+            $invoice->setCompanyAddressCountry($company->getBillingAddress()->getCountryName());
             if ($company->getBillingAddress()->getAddressNumberSuffix() != null && $company->getBillingAddress()->getAddressNumberSuffix() != "") {
                 $invoice->setCompanyAddressStreetNumberSuffix($company->getBillingAddress()->getAddressNumberSuffix());
             }
@@ -433,7 +433,7 @@ class InvoiceService extends ControllerServiceBase
 
             if ($location) {
                 foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                    $title = $this->translator->trans($message->getType());
+                    $title = $this->translator->trans($message->getNotificationMessageTranslationKey());
                     $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
                 }
             }

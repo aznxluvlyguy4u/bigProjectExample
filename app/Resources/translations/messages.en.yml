@@ -56,6 +56,8 @@ SCRAPIE: SCRAPIE
 SCRAPIE_GENOTYPE: SCRAPIE GENOTYPE
 STN: STN
 ULN: ULN
+SHEEP: sheep
+GOAT: goat
 
 #BreedType
 BLIND_FACTOR: BLIND FACTOR
@@ -217,6 +219,7 @@ BREEDER: BREEDER
 BREEDER UBN: BREEDER UBN
 BREEDER UBN HOLDER: BREEDER UBN HOLDER
 CURRENT_UBN: CURRENT UBN
+CURRENT UBN: current UBN
 UBN_OF_BIRTH: UBN OF BIRTH
 UBN_OF_BIRTH_TEXT_VALUE: UBN OF BIRTH TEXT VALUE
 ACTIVE UBN AT REFERENCE DATE: ACTIVE UBN AT REFERENCE DATE
@@ -286,6 +289,7 @@ YEAR2PLUS: YEAR2PLUS
 DATEFORMAT: Y-m-d
 TRUE: true
 FALSE: false
+EVENT DATE: event date
 
 #Chart labels
 CHART_LABEL_TOTAL_BORN: Total born per litter
@@ -320,6 +324,16 @@ ANNUAL_ACTIVE_LIVESTOCK_RAM_MATES_REPORT: ANNUAL ACTIVE LIVESTOCK RAM MATES REPO
 ANNUAL_TE100_UBN_PRODUCTION: ANNUAL TE100 UBN PRODUCTION
 FERTILIZER_ACCOUNTING: FERTILIZER ACCOUNTING
 OFFSPRING_REPORT: OFFSPRING REPORT
+
+#Tag
+ASSIGNED: Assigned
+ASSIGNING: Assigning
+UNASSIGNED: Unassigned
+TRANSFERRING_TO_NEW_OWNER: Transferring to new owner
+TRANSFERRED_TO_NEW_OWNER: Transferred to new owner
+REPLACING: Replacing
+REPLACED: Replaced
+RESERVED: Reserved
 
 #ErrorMessages
 'STUD RAM: NO ULN OR PEDIGREE GIVEN': NO STUDRAM WAS GIVEN
@@ -370,6 +384,7 @@ THE START DATE OVERLAPS A REGISTERED MATING PERIOD: THE START DATE OVERLAPS A RE
 THE END DATE OVERLAPS A REGISTERED MATING PERIOD: THE END DATE OVERLAPS A REGISTERED MATING PERIOD
 THE LAST BIRTH AND THE CURRENT MATE PERIOD ARE LESS THAN 6 WEEKS: THE LAST BIRTH AND THE CURRENT MATE PERIOD ARE LESS THAN 6 WEEKS
 ANIMAL WAS NOT FOUND: ANIMAL WAS NOT FOUND
+ANIMAL WAS NOT FOUND ON UBN: Animal was not found on UBN
 NO ANIMAL WAS NOT FOUND FOR ID: No animal was found for id
 ANIMAL IS NOT ALLOWED TO BE CHANGED: Animal cannot be changed
 DESCRIPTION CANNOT BE EMPTY: DESCRIPTION CANNOT BE EMPTY
@@ -404,10 +419,60 @@ START DATE IS MISSING: Start date is missing
 END DATE CANNOT BE BEFORE START DATE: End date cannot be before start date
 IS PENDING MUST BE A BOOLEAN: Is pending must be a boolean
 THE FOLLOWING ULNS ARE BLOCKED FOR YOU: The following ulns are blocked for you
+INVALID INPUT: Invalid input
+IS ALREADY OWNED BY ANOTHER USER: Is already owned by another user
+COUNTRY CODE DOES NOT MATCH COUNTRY CODE OF UBN: Country code does not match country code of UBN
+YOU ALREADY OWN TAGS WITH THE FOLLOWING ULNS: You already own tags with the following ulns
+TAG DOES NOT BELONG TO YOU: Tag does not belong to you
+NL TAGS CANNOT BE MANUALLY DELETED: NL tags cannot be manually deleted
+COUNTRY DOES NOT EXIST IN THE DATABASE: Country does not exist in the database
+ANIMAL ALREADY HAS A DIFFERENT DATE OF DEATH: Animal already has a different date of death
+ANIMAL HAS ALREADY BEEN DECLARED DEAD: Animal has already been declared dead
+ANIMAL IS STILL ON A DIFFERENT LOCATION: Animal is still on a different location
+ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: are only allowed between UBNs within the same country
+ARE ONLY ALLOWED FOR DUTCH UBNS: are only allowed for Dutch UBNs
+COMPANY RELATION NUMBER CANNOT BE EMPTY: Company relation number (BRS-number) cannot be empty
+THE NEW OWNER HAS NO RELATION NUMBER KEEPER IN THE NSFO SYSTEM: The new owner has no relation number keeper (BSR-number) in the NSFO system
+NO ANIMAL WAS LINKED TO THIS DECLARE: No animal was linked to this declare
+DECLARE HAS ALREADY BEEN REVOKED: Declare has already been revoked
+DECLARE IS BEING REVOKED: Declare is being revoked
+A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED: A declare with this request state cannot be revoked
+ANIMAL IS ALREADY DEAD: Animal is already dead
+SWITCHING UBN NUMBERS BETWEEN LOCATIONS IS NOT ALLOWED: Switching UBN numbers between locations is not allowed
+UBN OF DEPARTURE AND ARRIVAL ARE IDENTICAL: UBN of departure and arrival are identical
+ANIMAL DOES NOT EXIST IN THE DATABASE: Animal does not exist in the database
+ANIMAL IS ON AN UBN IN ANOTHER COUNTRY: Animal is on an UBN in another country
+ANIMAL IS ALREADY ON THE LIVESTOCK LIST: Animal is already on the livestock list
+ANIMAL IS NOT ON LOCATION OF DEPART: Animal is not on location of depart
+ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Arrivals are only allowed between UBNS from the same country
+THIS FEATURE IS NOT AVAILABLE YET: This feature is not available yet
+AN ANIMAL ALREADY EXISTS WITH THIS ULN: An animal already exists with this ULN
+THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: The event date cannot be before the date of birth
+
+#Declares
+DECLARE_ARRIVALS: arrivals
+DECLARE_DEPARTS: departs
+DECLARE_IMPORTS: imports
+DECLARE_EXPORTS: exports
+DECLARE_LOSSES: losses
+DECLARE_TAGS_TRANSFERS: tag transfers
+DECLARE_TAG_REPLACEMENTS: tag replacements
 
 #Messages
-DECLARE_ARRIVAL: Automatically issued an arrival notification
-DECLARE_DEPART: Automatically issued a departure notification
-NEW_INVOICE: U just received a new invoice
+DECLARE_ARRIVAL_NOTIFICATION_MESSAGE: Automatically issued an arrival notification
+DECLARE_DEPART_NOTIFICATION_MESSAGE: Automatically issued a departure notification
+NEW_INVOICE_NOTIFICATION_MESSAGE: U just received a new invoice
 A SIMILAR REPORT IS ALREADY BEING GENERATED: A similar report is already being generated
 THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7: The following n-lings should have a value between 0 and 7
+SHOULD BE: should be
+
+# Request states
+FINISHED: Finished
+FINISHED_WITH_WARNING: Finished with warning
+CANCELLED: Cancelled
+OPEN: Open
+FAILED: Failed
+REVOKED: Revoked
+REVOKING: Revoking
+PROCESSING: Processing
+AVAILABLE: Available

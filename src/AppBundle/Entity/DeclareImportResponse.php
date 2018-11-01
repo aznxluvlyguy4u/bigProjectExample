@@ -21,6 +21,9 @@ class DeclareImportResponse extends DeclareBaseResponse
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="DeclareImport", cascade={"persist"}, inversedBy="responses")
    * @JMS\Type("AppBundle\Entity\DeclareImport")
+   * @JMS\Groups({
+   *     "RESPONSE_PERSISTENCE"
+   * })
    */
   private $declareImportRequestMessage;
 
@@ -31,6 +34,9 @@ class DeclareImportResponse extends DeclareBaseResponse
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $importDate;
 
@@ -38,12 +44,18 @@ class DeclareImportResponse extends DeclareBaseResponse
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $animalCountryOrigin;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $gender;
 
@@ -129,4 +141,18 @@ class DeclareImportResponse extends DeclareBaseResponse
     {
         return $this->gender;
     }
+
+    /**
+     * @param DeclareImport $import
+     * @return DeclareImportResponse
+     */
+    public function setDeclareImportIncludingAllValues(DeclareImport $import): DeclareImportResponse
+    {
+        $this->setDeclareBaseValues($import);
+        $this->setDeclareImportRequestMessage($import);
+        $this->setImportDate($import->getImportDate());
+        $this->setAnimalCountryOrigin($import->getAnimalCountryOrigin());
+        return $this;
+    }
+
 }

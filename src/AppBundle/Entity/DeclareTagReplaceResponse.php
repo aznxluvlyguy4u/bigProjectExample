@@ -26,6 +26,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="DeclareTagReplace", cascade={"persist"}, inversedBy="responses")
      * @JMS\Type("AppBundle\Entity\DeclareTagReplace")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $declareTagReplaceRequestMessage;
 
@@ -33,6 +36,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCodeToReplace;
 
@@ -40,6 +46,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnNumberToReplace;
 
@@ -47,6 +56,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnNumberReplacement;
 
@@ -54,6 +66,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCodeReplacement;
 
@@ -63,6 +78,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $replaceDate;
 
@@ -215,5 +233,22 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
     public function getDeclareTagReplaceRequestMessage()
     {
         return $this->declareTagReplaceRequestMessage;
+    }
+
+
+    /**
+     * @param DeclareTagReplace $tagReplace
+     * @return DeclareTagReplaceResponse
+     */
+    public function setDeclareTagReplaceIncludingAllValues(DeclareTagReplace $tagReplace): DeclareTagReplaceResponse
+    {
+        $this->setDeclareBaseValues($tagReplace);
+        $this->setDeclareTagReplaceRequestMessage($tagReplace);
+        $this->setReplaceDate($tagReplace->getReplaceDate());
+        $this->setUlnCountryCodeToReplace($tagReplace->getUlnCountryCodeToReplace());
+        $this->setUlnNumberToReplace($tagReplace->getUlnNumberToReplace());
+        $this->setUlnCountryCodeReplacement($tagReplace->getUlnCountryCodeReplacement());
+        $this->setUlnNumberReplacement($tagReplace->getUlnNumberReplacement());
+        return $this;
     }
 }

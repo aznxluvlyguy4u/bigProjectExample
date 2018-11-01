@@ -46,10 +46,10 @@ services:
           - '%kernel.root_dir%'
           - '%kernel.cache_dir%'
           - '%redis_host%'
-          - '@app.aws.queueservice.external'
-          - '@app.aws.queueservice.internal'
-          - '@app.aws.queueservice.mixblup_input'
-          - '@app.aws.queueservice.mixblup_output'
+          - '@AppBundle\Service\AwsExternalQueueService'
+          - '@AppBundle\Service\AwsInternalQueueService'
+          - '@AppBundle\Service\MixBlupInputQueueService'
+          - '@AppBundle\Service\MixBlupOutputQueueService'
 
 
     app.request.message_builder:
@@ -73,33 +73,27 @@ services:
           - '%kernel.environment%'
           - true
 
-    app.aws.queueservice.external:
-        class: AppBundle\Service\AwsExternalQueueService
+    AppBundle\Service\AwsExternalQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%' }
 
-    app.aws.queueservice.external.test:
-        class: AppBundle\Service\AwsExternalTestQueueService
+    AppBundle\Service\AwsExternalTestQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
-    app.aws.queueservice.internal:
-        class: AppBundle\Service\AwsInternalQueueService
+    AppBundle\Service\AwsInternalQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%' }
 
-    app.aws.queueservice.internal.test:
-        class: AppBundle\Service\AwsInternalTestQueueService
+    AppBundle\Service\AwsInternalTestQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
-    app.aws.queueservice.mixblup_input:
-        class: AppBundle\Service\MixBlupInputQueueService
+    AppBundle\Service\MixBlupInputQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_mixblup_input_prefix%', index_7: false }
 
-    app.aws.queueservice.mixblup_output:
-        class: AppBundle\Service\MixBlupOutputQueueService
+    AppBundle\Service\MixBlupOutputQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_mixblup_output_prefix%', index_7: false }
 
@@ -162,7 +156,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.aws.storageservice'
-          - '@app.aws.queueservice.mixblup_input'
+          - '@AppBundle\Service\MixBlupInputQueueService'
           - '%environment%'
           - '%kernel.cache_dir%'
           - '@logger'
@@ -171,7 +165,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.aws.storageservice'
-          - '@app.aws.queueservice.mixblup_output'
+          - '@AppBundle\Service\MixBlupOutputQueueService'
           - '@AppBundle\Service\BreedIndexService'
           - '@AppBundle\Service\BreedValueService'
           - '@AppBundle\Cache\BreedValuesResultTableUpdater'
@@ -443,6 +437,7 @@ services:
           - '%kernel.root_dir%'
           - '%output_reports_to_cache_folder_for_local_testing%'
           - '%display_report_pdf_output_as_html%'
+          - '%wkhtmltopdf_v125_path%'
 
     app.report.breedvalues.base:
         abstract: true
@@ -463,6 +458,7 @@ services:
           - '%kernel.root_dir%'
           - '%output_reports_to_cache_folder_for_local_testing%'
           - '%display_report_pdf_output_as_html%'
+          - '%wkhtmltopdf_v125_path%'
 
     app.report.livestock:
         parent: app.report.breedvalues.base
@@ -489,6 +485,10 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeCertificateReportService
         lazy: true
+        calls:
+          - method: setPedigreeCertificatesGenerator
+            arguments:
+              - '@AppBundle\Report\PedigreeCertificates'
 
     AppBundle\Service\Report\PedigreeRegisterOverviewReportService:
         parent: app.report.base
@@ -511,6 +511,29 @@ services:
     app.report.vwa.ubns_overview:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaUbnsOverviewReportService
+
+    AppBundle\Report\PedigreeCertificate:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@translator'
+            - '%use_test_data%'
+            - '%environment%'
+        calls:
+          - method: setBreedValuesOutput
+            arguments:
+              - '@AppBundle\Output\BreedValuesOutput'
+        lazy: true
+
+    AppBundle\Report\PedigreeCertificates:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@AppBundle\Report\PedigreeCertificate'
+        calls:
+          - method: initializeConstants
+          - method: setBreedValuesOutput
+            arguments:
+              - '@AppBundle\Output\BreedValuesOutput'
+        lazy: true
 
     app.writer.csv_from_sql_results:
         class: AppBundle\Service\CsvFromSqlResultsWriterService
@@ -561,7 +584,7 @@ services:
         arguments:
           - '@app.serializer.base'
           - '@app.cache'
-          - '@doctrine.orm.entity_manager'
+          - '@doctrine'
           - '@app.user'
           - '@translator'
           - '@logger'
@@ -599,6 +622,7 @@ services:
           - '@app.report.pedigree_certificates'
           - '@app.report.livestock'
           - '@doctrine.orm.entity_manager'
+          - '@logger'
         tags:
           - {name: 'enqueue.client.processor'}
 
@@ -644,7 +668,7 @@ services:
               - '@app.serializer.ir'
           - method: setExternalQueueService
             arguments:
-              - '@app.aws.queueservice.external'
+              - '@AppBundle\Service\AwsExternalQueueService'
 
     app.animal:
         parent: app.abstract_base.declare
@@ -657,10 +681,18 @@ services:
             arguments:
               - '@validator'
 
-    app.arrival:
+    AppBundle\Service\ArrivalService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\ArrivalService
         calls:
+          - method: setArrivalProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface'
+          - method: setDepartProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface'
+          - method: setImportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface'
           - method: setFireBaseService
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
@@ -674,9 +706,8 @@ services:
             arguments:
               - '%kernel.environment%'
 
-    app.birth:
+    AppBundle\Service\BirthService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\BirthService
         calls:
           - method: setEntityGetter
             arguments:
@@ -686,7 +717,7 @@ services:
               - '@logger'
           - method: setInternalQueueService
             arguments:
-              - '@app.aws.queueservice.internal'
+              - '@AppBundle\Service\AwsInternalQueueService'
 
     app.breed_type:
         parent: app.abstract_base.controller
@@ -725,23 +756,38 @@ services:
         class: AppBundle\Service\DashboardService
 
 
-    app.depart:
+    AppBundle\Service\DepartService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\DepartService
         calls:
+          - method: setArrivalProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface'
+          - method: setDepartProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface'
+          - method: setExportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface'
           - method: setEnvironment
             arguments:
               - '%kernel.environment%'
           - method: setFireBaseService
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
-    app.export:
-        parent: app.abstract_base.declare
-        class: AppBundle\Service\ExportService
 
-    app.import:
+    AppBundle\Service\ExportService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\ImportService
+        calls:
+          - method: setExportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface'
+
+    AppBundle\Service\ImportService:
+        parent: app.abstract_base.declare
+        calls:
+          - method: setImportProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface'
 
     app.invoice:
         parent: app.abstract_base.controller
@@ -791,9 +837,12 @@ services:
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
 
-    app.loss:
+    AppBundle\Service\LossService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\LossService
+        calls:
+          - method: setLossProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareLossProcessorInterface'
 
     app.health.location:
         parent: app.abstract_base.controller
@@ -831,56 +880,57 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\PedigreeRegisterService
 
-    app.profile:
+    AppBundle\Service\ProfileService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\ProfileService
 
-    app.declare.revoke:
+    AppBundle\Service\RevokeService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\RevokeService
         calls:
           - method: setEntityGetter
             arguments:
               - '@app.doctrine.entitygetter'
+          - method: setRevokeProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\RevokeProcessorInterface'
 
-    app.queue_dashboard:
+    AppBundle\Service\QueueDashboardService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\QueueDashboardService
         calls:
           - method: setExternalQueueService
             arguments:
-              - '@app.aws.queueservice.external'
+              - '@AppBundle\Service\AwsExternalQueueService'
           - method: setInternalQueueService
             arguments:
-              - '@app.aws.queueservice.internal'
+              - '@AppBundle\Service\AwsInternalQueueService'
 
-    app.tag.replace:
+    AppBundle\Service\TagReplaceService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\TagReplaceService
+        calls:
+          - method: setTagReplaceProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessorInterface'
 
-    app.tag.sync:
+    AppBundle\Service\TagSyncService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\TagSyncService
 
-    app.tag.transfer:
+    AppBundle\Service\TagTransferService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\TagTransferService
+        calls:
+          - method: setTagTransferProcessor
+            arguments:
+              - '@AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessorInterface'
 
-    app.tags:
+    AppBundle\Service\TagsService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\TagsService
 
-    app.ubn:
+    AppBundle\Service\UbnService:
         parent: app.abstract_base.declare
-        class: AppBundle\Service\UbnService
 
-    app.vwa.employee:
+    AppBundle\Service\VwaEmployeeService:
         parent: app.abstract_base.auth
-        class: AppBundle\Service\VwaEmployeeService
 
-    app.weight:
+    AppBundle\Service\WeightService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\WeightService
 
     AppBundle\Service\PedigreeDataGenerator:
         arguments:
@@ -999,6 +1049,51 @@ services:
           - '@translator'
         lazy: true
 
+
+    app.abstract_base.direct_processor:
+        abstract: true
+        parent: app.abstract_base.controller
+        calls:
+          - method: setEnvironment
+            arguments:
+              - '%kernel.environment%'
+          - method: setInternalQueueService
+            arguments:
+              - '@AppBundle\Service\AwsInternalQueueService'
+
+    AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareDepartProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareExportProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareImportProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareLossProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareLossProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareTagReplaceProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessor
+        parent: app.abstract_base.direct_processor
+
+    AppBundle\Worker\DirectProcessor\RevokeProcessorInterface:
+        class: AppBundle\Worker\DirectProcessor\RevokeProcessor
+        parent: app.abstract_base.direct_processor
+
+
     # Listeners
     AppBundle\EventListener\ViewListener:
         tags:
@@ -1006,6 +1101,7 @@ services:
 
     AppBundle\EventListener\ExceptionListener:
         arguments:
+            - '@logger'
             - '%environment%'
         tags:
             - { name: kernel.event_listener, event: kernel.exception }

@@ -21,6 +21,9 @@ class DeclareTagsTransferResponse extends DeclareBaseResponse
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="DeclareTagsTransfer", cascade={"persist"}, inversedBy="responses")
    * @JMS\Type("AppBundle\Entity\DeclareTagsTransfer")
+   * @JMS\Groups({
+   *     "RESPONSE_PERSISTENCE"
+   * })
    */
   private $declareTagsTransferRequestMessage;
 
@@ -47,5 +50,17 @@ class DeclareTagsTransferResponse extends DeclareBaseResponse
     public function getDeclareTagsTransferRequestMessage()
     {
         return $this->declareTagsTransferRequestMessage;
+    }
+
+
+    /**
+     * @param DeclareTagsTransfer $tagReplace
+     * @return DeclareTagsTransferResponse
+     */
+    public function setDeclareTagTransferIncludingAllValues(DeclareTagsTransfer $tagReplace): DeclareTagsTransferResponse
+    {
+        $this->setDeclareBaseValues($tagReplace);
+        $this->setDeclareTagsTransferRequestMessage($tagReplace);
+        return $this;
     }
 }

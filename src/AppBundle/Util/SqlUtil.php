@@ -17,6 +17,8 @@ use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
 class SqlUtil
@@ -503,6 +505,85 @@ class SqlUtil
 
 
     /**
+     * @param array $locationIds
+     * @param string $locationKey
+     * @return null|string
+     */
+    public static function filterStringByLocationIds($locationIds = [], $locationKey = 'l.id'): ?string
+    {
+        return self::filterStringByAnimalIdsAndLocationIds([], $locationIds, 'a.id', $locationKey);
+    }
+
+
+    /**
+     * @param array $animalIds
+     * @param string $animalKey
+     * @return null|string
+     */
+    public static function filterStringByAnimalIds($animalIds = [], $animalKey = 'a.id'): ?string
+    {
+        return self::filterStringByAnimalIdsAndLocationIds($animalIds, [], $animalKey, 'l.id');
+    }
+
+
+    /**
+     * @param array $animalIds
+     * @param array $locationIds
+     * @param string $animalKey
+     * @param string $locationKey
+     * @return null|string
+     */
+    public static function filterStringByAnimalIdsAndLocationIds($animalIds = [], $locationIds = [],
+                                                                 $animalKey = 'a.id', $locationKey = 'l.id'): ?string
+    {
+        $hasAnimalIds = !empty($animalIds);
+        $hasLocationIds = !empty($locationIds);
+
+        if (!$hasAnimalIds && !$hasLocationIds) {
+            return null;
+        }
+
+        $idSets = [
+            JsonInputConstant::ANIMALS => [
+                JsonInputConstant::IS_VALID => $hasAnimalIds,
+                JsonInputConstant::ARRAY => $animalIds,
+                JsonInputConstant::KEY => $animalKey,
+            ],
+            JsonInputConstant::LOCATIONS => [
+                JsonInputConstant::IS_VALID => $hasLocationIds,
+                JsonInputConstant::ARRAY => $locationIds,
+                JsonInputConstant::KEY => $locationKey,
+            ],
+        ];
+
+        $activeSetsCount = ArrayUtil::countIf(true,
+            array_map(function($set) {
+                return $set[JsonInputConstant::IS_VALID];
+            }, $idSets)
+        );
+        $doubleWrapFilterString = $activeSetsCount > 1;
+
+        $filterString = $doubleWrapFilterString ? ' (': ' ';
+        $prefix = '';
+
+        foreach ($idSets as $set) {
+            if ($set[JsonInputConstant::IS_VALID]) {
+                $ids = $set[JsonInputConstant::ARRAY];
+                $key = $set[JsonInputConstant::KEY]. ' = ';
+                if (!ArrayUtil::containsOnlyDigits($ids)) {
+                    throw new PreconditionFailedHttpException('animalIds input only allows numbers');
+                }
+                $filterString .= $prefix.'('.$key.implode(' OR '.$key, $ids).')';
+                $prefix = ' OR ';
+            }
+        }
+
+        $filterString .= $doubleWrapFilterString ? ') ' : ' ';
+        return $filterString;
+    }
+
+
+    /**
      * @param array $values
      * @param boolean $valueIsBetweenSingleQuotationMarks
      * @return null|string
@@ -737,4 +818,32 @@ class SqlUtil
     {
         return ' (open_residence.animal_id NOTNULL OR closed_residence.animal_id NOTNULL) ';
     }
+
+
+    /**
+     * @param array $columnLabels
+     * @param string $tableAlias
+     * @return string
+     */
+    public static function columnNotNullCountQueryPart(array $columnLabels,
+                                                       string $tableAlias = ''): string
+    {
+        if (empty($columnLabels)) {
+            throw new PreconditionRequiredHttpException('Column Labels cannot be empty');
+        }
+
+
+        $columnLabelsWithTableAlias = empty($tableAlias) ? $columnLabels :
+            array_map(function(string $columnLabel) use ($tableAlias) {
+                return $tableAlias.'.'.$columnLabel;
+            }, $columnLabels);
+
+        $firstPart = ' (CASE WHEN ';
+        $lastPart = ' NOTNULL THEN 1 ELSE 0 END) ';
+        $connector = ' + ';
+        $glue = $lastPart . $connector . $firstPart;
+
+        return $firstPart . implode($glue, $columnLabelsWithTableAlias) . $lastPart;
+    }
+
 }

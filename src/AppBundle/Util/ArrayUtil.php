@@ -40,6 +40,25 @@ class ArrayUtil
 
 
     /**
+     * @param array $keys
+     * @param array $array
+     * @param null|mixed $nullReplacement
+     * @return array|mixed|null
+     */
+    public static function getNestedValue(array $keys, array $array, $nullReplacement = null)
+    {
+        $subArray = $array;
+        foreach ($keys as $key) {
+            if (!key_exists($key, $subArray)) {
+                return $nullReplacement;
+            }
+            $subArray = $subArray[$key];
+        }
+        return $subArray;
+    }
+
+
+    /**
      * @param array $arrays
      * @param boolean $ignoreAllKeys This prevents overwriting values with identical keys, but you lose the keys.
      * @return array
@@ -265,5 +284,31 @@ class ArrayUtil
         if (count($missingKeys) > 0) {
             throw new \Exception('Array is missing the following keys: '.implode(', ', $missingKeys));
         }
+    }
+
+
+    /**
+     * @param array $array
+     * @return bool
+     */
+    public static function containsOnlyDigits(array $array = []): bool
+    {
+        $checkArray = array_map(function($value) {
+            return !is_int($value) && !ctype_digit($value);
+        }, $array);
+        return !in_array(true, $checkArray);
+    }
+
+
+    /**
+     * Count occurrences of value in array
+     *
+     * @param $needle
+     * @param array $haystack
+     * @return int
+     */
+    public static function countIf($needle, array $haystack = []): int
+    {
+        return count(array_keys($haystack, $needle));
     }
 }

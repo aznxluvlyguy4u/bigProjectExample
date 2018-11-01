@@ -6,6 +6,8 @@ namespace AppBundle\Util;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareLoss;
 use AppBundle\Enumerator\GenderType;
 
 class StringUtil
@@ -92,12 +94,19 @@ class StringUtil
      */
     public static function getLast5CharactersFromString($string)
     {
-        if($string == null) { return null; }
-        else if(strlen($string) < 5) {
-            return $string;
-        } else {
-            return substr($string, strlen($string)-5, strlen($string));
-        }
+        return self::getLastChars($string, 5);
+    }
+
+
+    /**
+     * @param string $string
+     * @param int $charCount
+     * @return bool|null|string
+     */
+    public static function getLastChars($string, $charCount = 1)
+    {
+        if ($string == null) { return null; }
+        return strlen($string) < $charCount ? $string : substr($string, strlen($string)-$charCount, strlen($string));
     }
 
 
@@ -614,6 +623,26 @@ class StringUtil
 
 
     /**
+     * @param $string
+     * @return string
+     */
+    public static function preparePlainTextInput($string): string
+    {
+        if (!is_string($string)) {
+            return '';
+        }
+        // Note strtr does not work for \n, \r and \t
+        // Remove new lines
+        $string = str_replace("\n", "", $string);
+        $string = str_replace("\r", "", $string);
+
+        // remove tabs
+        $string = str_replace("\t", "", $string);
+        return strtr($string, [' ' => '',]);
+    }
+
+
+    /**
      * @param string $string
      * @return string
      */
@@ -665,6 +694,17 @@ class StringUtil
 
 
     /**
+     * @param string $ubn
+     * @return string
+     */
+    public static function preformatUbn($ubn): string
+    {
+        return !empty($ubn) && (is_int($ubn) || ctype_digit($ubn))
+            ? ltrim(trim(strval($ubn)), '0') : '';
+    }
+
+
+    /**
      * @param string|null $string
      * @return null|string
      */
@@ -683,5 +723,31 @@ class StringUtil
             'btw' => 'BTW',
             'kvk' => 'KVK',
         ];
+    }
+
+
+    /**
+     * @param $string
+     * @return string
+     */
+    public static function decamelize(string $string): ?string
+    {
+        return strtolower(preg_replace(['/([a-z\d])([A-Z])/', '/([^_])([A-Z][a-z])/'], '$1_$2', $string));
+    }
+
+
+    /**
+     * @param string $declareClazz
+     * @param bool $isPlural
+     * @return string
+     */
+    public static function getDeclareTranslationKey($declareClazz, bool $isPlural = false): string
+    {
+        if (empty($declareClazz)) {
+            return '';
+        }
+        $upperSnakeCased = strtoupper(self::decamelize(StringUtil::getEntityName($declareClazz)));
+        $suffix = self::getLastChars($upperSnakeCased, 2) == 'SS' ? 'ES' : 'S';
+        return $isPlural ? $upperSnakeCased . $suffix : $upperSnakeCased;
     }
 }

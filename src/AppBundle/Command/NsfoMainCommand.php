@@ -10,6 +10,7 @@ use AppBundle\Cache\NLingCacher;
 use AppBundle\Cache\ProductionCacher;
 use AppBundle\Cache\TailLengthCacher;
 use AppBundle\Cache\WeightCacher;
+use AppBundle\Component\AsciiArt;
 use AppBundle\Component\MixBlup\MixBlupInputFileValidator;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
@@ -18,6 +19,7 @@ use AppBundle\Entity\ScrapieGenotypeSource;
 use AppBundle\Entity\TagSyncErrorLog;
 use AppBundle\Entity\TagSyncErrorLogRepository;
 use AppBundle\Enumerator\CommandTitle;
+use AppBundle\Enumerator\Country;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
@@ -42,6 +44,7 @@ use AppBundle\Util\LitterUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AscendantValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -121,30 +124,7 @@ class NsfoMainCommand extends ContainerAwareCommand
      */
     public function printAsciiArt()
     {
-        $this->cmdUtil->writeln("
-                                            III III                                     
-                                            IIIIIII                                     
-                                             IIIII                                      
-                                              III                                       
-                                    ,,,,,             88888                             
-                                  ,,,,,,,DDD       DDZ8888888                           
-                                DDD,88888             :::::8DDD                         
-              ,,,,,       ,,,,,,,,,,,88888           :::::88888888888$    0888888$      
-          ,,,,,,,,,,,,,,,,,,,,,,,,,,,,88888         :::::8888888888888888888888888888   
-         ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,             88888888888888888888888888888888  
-        ,,,,,,,,,,,,,,,,,,,,,,,,,,,,:,,,               88888888888888888888888888888888 
-        ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                 8888888888888888888888888888888 
-        ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                 8888888888888888888888888888888 
-         ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                 888888888888888888888888888888  
-         ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                   88888888888888888888888888888  
-         :,,,,,,,,,,,,,,,,, ,,,,,,,,,                     888888888D88888888888888888D  
-         ::,,,,,, ,,,,,,,,, ,,,,,::                         DD88888 888888888 888888DD  
-        :::,,,,              ,,,:=                           DD888              8888DDD 
-        :::,,                8 88                             :: :                88DDD 
-         ::,,                8 8                              :: :               888DD  
-         :: ,8              8 Z8                               : ::              :8 DD  
-          8  8I             88 8                               : ::             ::  :   
-                                                              == =              =   =   ");
+        $this->cmdUtil->writeln(AsciiArt::nsfoLogo());
     }
 
 
@@ -179,6 +159,8 @@ class NsfoMainCommand extends ContainerAwareCommand
             '11: '.strtolower(CommandTitle::MIXBLUP), "\n",
             '-----------------------------------------------', "\n",
             '12: '.strtolower(CommandTitle::DEPART_INTERNAL_WORKER), "\n",
+            '-----------------------------------------------', "\n",
+            '13: '.strtolower(CommandTitle::CALCULATIONS_AND_ALGORITHMS), "\n",
             '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
@@ -197,6 +179,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 10: $this->dataMigrationOptions(); break;
             case 11: $this->runMixblupCliOptions($this->cmdUtil); break;
             case 12: $this->getContainer()->get('app.cli.internal_worker.depart')->run($this->cmdUtil); break;
+            case 13: $this->calculationsAndAlgorithmsOptions(); break;
 
             default: return;
         }
@@ -229,7 +212,8 @@ class NsfoMainCommand extends ContainerAwareCommand
             '22: BatchUpdate all Incongruent weight values', "\n",
             '23: BatchUpdate all Incongruent tailLength values', "\n",
             '-------------------------', "\n",
-            '24: BatchInsert empty animal_cache records and BatchUpdate all Incongruent values', "\n\n",
+            '24: BatchInsert empty animal_cache records and BatchUpdate all Incongruent values', "\n",
+            '25: Remove all orphaned animal_cache records', "\n",
             '', "\n",
             '--- Helper Commands ---', "\n",
             '99: Get locationId from UBN', "\n",
@@ -366,6 +350,11 @@ class NsfoMainCommand extends ContainerAwareCommand
                 break;
 
             case 24: AnimalCacher::cacheAllAnimalsBySqlBatchQueries($this->conn, $this->cmdUtil); break;
+
+            case 25:
+                $updateCount = AnimalCacher::removeAllOrphanedRecords($this->conn);
+                $this->writeLn((empty($updateCount) ? 'No' : $updateCount).' orphaned animalCache records removed');
+                break;
 
             case 99:
                 $this->printLocationIdFromGivenUbn();
@@ -935,6 +924,86 @@ class NsfoMainCommand extends ContainerAwareCommand
             $this->getContainer()->get(BreedValuesResultTableUpdater::class)->updateAllBreedValueNormalDistributions($overwriteExistingValues);
         }
 
+    }
+
+
+
+    public function calculationsAndAlgorithmsOptions()
+    {
+        $this->initializeMenu(self::LITTER_GENE_DIVERSITY_TITLE);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '1: Validate UBN, all types', "\n",
+            '2: Validate UBN, Dutch format only', "\n",
+            '3: Validate UBN, non-Dutch format only', "\n",
+            '4: Validate UBN format of all active locations', "\n",
+            "\n",
+            'other: exit submenu', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+
+            case 1: $this->validateUbn(1); break;
+            case 2: $this->validateUbn(2); break;
+            case 3: $this->validateUbn(3); break;
+            case 4: $this->validataUbnsOfAllActiveLocations(); break;
+            default: $this->writeLn('Exit menu'); return;
+        }
+        $this->calculationsAndAlgorithmsOptions();
+    }
+
+
+    private function validateUbn(int $option)
+    {
+
+        do {
+            $ubn = $this->cmdUtil->generateQuestion('insert ubn (default: '.self::DEFAULT_UBN.')', self::DEFAULT_UBN);
+
+            switch ($option) {
+                case 1: $isUbnValid = Validator::hasValidUbnFormat($ubn); break;
+                case 2: $isUbnValid = Validator::hasValidDutchUbnFormat($ubn); break;
+                case 3: $isUbnValid = Validator::hasValidNonNlUbnFormat($ubn); break;
+                default: $isUbnValid = Validator::hasValidUbnFormat($ubn); break;
+            }
+
+            $this->writeLn('UBN '.strval($ubn).' is '.($isUbnValid ? 'VALID' : 'NOT VALID'));
+
+            $retry = $this->cmdUtil->generateConfirmationQuestion('Test another UBN?', true, false);
+        } while($retry);
+    }
+
+
+    private function validataUbnsOfAllActiveLocations()
+    {
+        $nlCountryCode = Country::NL;
+        $sql = "SELECT
+                  l.ubn,
+                  country.code,
+                  country.code = '$nlCountryCode' as is_dutch_location
+                FROM location l
+                INNER JOIN company c ON c.id = l.company_id
+                INNER JOIN address a ON l.address_id = a.id
+                INNER JOIN country ON country.id = a.country_details_id
+                WHERE l.is_active AND c.is_active";
+        $sqlResults = $this->conn->query($sql)->fetchAll();
+
+        $invalidUbns = [];
+        foreach ($sqlResults as $sqlResult) {
+            $ubn = $sqlResult['ubn'];
+            $isDutchLocation = $sqlResult['is_dutch_location'];
+            $isValid = Validator::hasValidUbnFormatByLocationType($ubn, $isDutchLocation);
+            if (!$isValid) {
+                $invalidUbns[$ubn] = $sqlResult['code'];
+            }
+        }
+
+        if (empty($invalidUbns)) {
+            $this->writeLn('All ACTIVE UBNs have a valid format!');
+        } else {
+            $this->writeLn(count($invalidUbns).' INVALID ACTIVE UBNS FOUND!');
+            $this->writeLn($invalidUbns);
+        }
     }
 
 

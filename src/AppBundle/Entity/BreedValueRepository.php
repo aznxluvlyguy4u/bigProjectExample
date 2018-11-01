@@ -2,7 +2,9 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Constant\BreedValueTypeConstant;
+use AppBundle\Enumerator\DateTimeFormats;
 use AppBundle\Setting\BreedGradingSetting;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
 
@@ -50,4 +52,32 @@ class BreedValueRepository extends BaseRepository
         );
     }
 
+    /**
+     * @param bool $useDateMonthYearFormat
+     * @return null|string
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getBreedValueLastGenerationDate($useDateMonthYearFormat = true): ?string
+    {
+        $sql = "SELECT
+                  generation_date
+                FROM breed_value
+                  INNER JOIN (
+                               SELECT
+                                 MAX(id) as max_id
+                               FROM breed_value
+                             )v ON v.max_id = breed_value.id";
+        $result = $this->getConnection()->query($sql)->fetch();
+        if (!$result) {
+            return null;
+        }
+
+        $generationDateString =  ArrayUtil::get('generation_date', $result);
+        if (!$generationDateString) {
+            return null;
+        }
+        return $useDateMonthYearFormat ?
+            (new \DateTime($generationDateString))->format(DateTimeFormats::DAY_MONTH_YEAR)
+            : $generationDateString;
+    }
 }

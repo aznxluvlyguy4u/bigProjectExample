@@ -36,6 +36,7 @@ use JMS\Serializer\Annotation\Expose;
  *     "ERROR_DETAILS",
  *     "GHOST_LOGIN",
  *     "INVOICE",
+ *     "RESPONSE_PERSISTENCE",
  *     "RVO",
  *     "TREATMENT_TEMPLATE",
  *     "UBN",
@@ -55,6 +56,10 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
+   * @JMS\Type("integer")
+   * @JMS\Groups({
+   *     "RESPONSE_PERSISTENCE"
+   * })
    * @Expose
    */
   protected $id;
@@ -70,6 +75,7 @@ abstract class Person implements UserInterface
    *     "GHOST_LOGIN",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
+   *     "RESPONSE_PERSISTENCE",
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "USER_MEASUREMENT",
@@ -328,6 +334,18 @@ abstract class Person implements UserInterface
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Worker>")
      */
     private $workers;
+
+    /**
+     * @var LanguageOption|null
+     *
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\LanguageOption")
+     * @ORM\JoinColumn(name="language_preference_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "DETAILS"
+     * })
+     * @Expose
+     */
+    private $languagePreference;
 
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
@@ -857,6 +875,24 @@ abstract class Person implements UserInterface
      */
     public function setEmailChangeToken($token){
         $this->emailChangeToken = $token;
+        return $this;
+    }
+
+    /**
+     * @return LanguageOption|null
+     */
+    public function getLanguagePreference(): ?LanguageOption
+    {
+        return $this->languagePreference;
+    }
+
+    /**
+     * @param LanguageOption|null $languagePreference
+     * @return Person
+     */
+    public function setLanguagePreference(?LanguageOption $languagePreference): Person
+    {
+        $this->languagePreference = $languagePreference;
         return $this;
     }
 

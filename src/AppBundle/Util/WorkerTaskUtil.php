@@ -5,17 +5,28 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\DeclareBaseResponse;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareBirthResponse;
 use AppBundle\Entity\Litter;
 use AppBundle\Enumerator\WorkerTaskScope;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Worker\Task\WorkerMessageBodyDeclareResponsePersistence;
 use AppBundle\Worker\Task\WorkerMessageBodyLitter;
 use GuzzleHttp\Psr7\Request;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 class WorkerTaskUtil
 {
+
+    public static function createResponseToPersistBody(DeclareBaseResponse $response)
+    {
+        $messageBody = new WorkerMessageBodyDeclareResponsePersistence();
+        $messageBody->setResponseAndScope($response);
+        return $messageBody;
+    }
+
+
     /**
      * @param Litter $litter
      * @return WorkerMessageBodyLitter|null

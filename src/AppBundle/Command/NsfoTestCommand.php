@@ -6,6 +6,9 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
+use AppBundle\Entity\ResultTableBreedGrades;
+use AppBundle\Service\AwsExternalTestQueueService;
+use AppBundle\Service\AwsInternalTestQueueService;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
@@ -14,9 +17,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class NsfoTestCommand extends ContainerAwareCommand
@@ -71,7 +72,6 @@ class NsfoTestCommand extends ContainerAwareCommand
         $this->locationRepository = $em->getRepository(Location::class);
         $this->animalRepository = $em->getRepository(Animal::class);
         $this->databaseName = $this->conn->getDatabase();
-        
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -83,6 +83,7 @@ class NsfoTestCommand extends ContainerAwareCommand
             '2: Delete animal and all related records', "\n",
             '3: Purge worker test queues', "\n",
             '4: Get uln test data', "\n",
+            '5: Find animals with most breedValues', "\n",
             'DEFAULT: Custom test', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -97,12 +98,13 @@ class NsfoTestCommand extends ContainerAwareCommand
                 $this->getContainer()->get('app.datafix.animals.exterminator')->deleteAnimalsByCliInput($this->cmdUtil);
                 break;
             case 3:
-                $purgeCount = $this->getContainer()->get('app.aws.queueservice.external.test')->purgeQueue();
+                $purgeCount = $this->getContainer()->get(AwsExternalTestQueueService::class)->purgeQueue();
                 $this->cmdUtil->writeln('External test queue messages purged: '.$purgeCount);
-                $purgeCount = $this->getContainer()->get('app.aws.queueservice.internal.test')->purgeQueue();
+                $purgeCount = $this->getContainer()->get(AwsInternalTestQueueService::class)->purgeQueue();
                 $this->cmdUtil->writeln('Internal test queue messages purged: '.$purgeCount);
                 break;
             case 4: $this->getUlnTestData(); break;
+            case 5: $this->getBreedValuesRankingData(); break;
             default:
                 $this->customTest();
                 break;
@@ -157,5 +159,17 @@ class NsfoTestCommand extends ContainerAwareCommand
             $prefix = ',';
         }
         $this->output->writeln($string);
+    }
+
+
+    private function getBreedValuesRankingData()
+    {
+        $limit = $this->cmdUtil->questionForIntChoice(10, 'Result count');
+        $locationId = $this->cmdUtil->questionForIntChoice(0, 'locationId (0 = all locations)');
+
+//        $locationId = abs(intval($this->cmdUtil->questionForIntChoice('LocationId (0 = all locations)', 0)));
+        $results = $this->em->getRepository(ResultTableBreedGrades::class)
+            ->retrieveAnimalsWithMostBreedValues($limit, $locationId);
+        $this->cmdUtil->writeln($results);
     }
 }

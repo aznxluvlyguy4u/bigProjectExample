@@ -62,11 +62,14 @@ class DisplayUtil
      * @param $totalOffspringCount
      * @param $bornAliveOffspringCount
      * @param $addProductionAsterisk
+     * @param $nullFiller
      * @return string
      */
-    public static function parseProductionStringFromGivenParts($ageInTheNsfoSystem, $litterCount, $totalOffspringCount, $bornAliveOffspringCount, $addProductionAsterisk)
+    public static function parseProductionStringFromGivenParts($ageInTheNsfoSystem, $litterCount, $totalOffspringCount,
+                                                               $bornAliveOffspringCount, $addProductionAsterisk,
+                                                               $nullFiller = self::EMPTY_PRODUCTION)
     {
-        if($litterCount == null || $totalOffspringCount == null || $litterCount == 0 || $totalOffspringCount == 0) { return self::EMPTY_PRODUCTION; }
+        if($litterCount == null || $totalOffspringCount == null || $litterCount == 0 || $totalOffspringCount == 0) { return $nullFiller; }
 
         $oneYearMark = $addProductionAsterisk ? self::ONE_YEAR_MARK : '';
         if($ageInTheNsfoSystem == null || $ageInTheNsfoSystem == 0) {

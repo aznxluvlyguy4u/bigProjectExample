@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Service\ImportService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -39,7 +40,7 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    */
   public function getImportById(Request $request, $Id)
   {
-      return $this->get('app.import')->getImportById($request, $Id);
+      return $this->get(ImportService::class)->getImportById($request, $Id);
   }
 
   /**
@@ -80,7 +81,7 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    */
   public function getImports(Request $request)
   {
-      return $this->get('app.import')->getImports($request);
+      return $this->get(ImportService::class)->getImports($request);
   }
 
 

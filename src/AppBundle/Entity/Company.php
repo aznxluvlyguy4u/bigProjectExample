@@ -916,4 +916,23 @@ class Company
         }
         return $relationNumberKeeper;
     }
+
+
+    /**
+     * @return int|null
+     */
+    public function getBillingAddressCountryId(): ?int
+    {
+        return $this->getBillingAddress() ? $this->getBillingAddress()->getCountryId() : null;
+    }
+
+
+    /**
+     * @return int|null
+     */
+    public function getAddressCountryId(): ?int
+    {
+        return $this->getAddress() ? $this->getAddress()->getCountryId() : null;
+    }
+
 }

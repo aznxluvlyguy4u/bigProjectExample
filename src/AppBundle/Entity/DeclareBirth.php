@@ -18,12 +18,12 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareBirth extends DeclareBase
+class DeclareBirth extends DeclareBase implements BasicRvoDeclareInterface
 {
     use EntityClassInfo;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births")
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births", cascade={"refresh"})
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @JMS\Groups({
@@ -132,7 +132,7 @@ class DeclareBirth extends DeclareBase
 
     /**
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Location", inversedBy="births", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="births", cascade={"persist","refresh"})
      * @JMS\Type("AppBundle\Entity\Location")
      */
     private $location;
@@ -403,14 +403,14 @@ class DeclareBirth extends DeclareBase
     /**
      * Set location
      *
-     * @param \AppBundle\Entity\Location $location
+     * @param Location $location
      *
      * @return DeclareBirth
      */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
+    public function setLocation(Location $location = null)
     {
         $this->location = $location;
-        $this->setUbn($this->location->getUbn());
+        $this->setUbn($location ? $location->getUbn() : null);
 
         return $this;
     }
@@ -572,7 +572,7 @@ class DeclareBirth extends DeclareBase
     /**
      * @param RevokeDeclaration $revoke
      */
-    public function setRevoke($revoke = null)
+    public function setRevoke(RevokeDeclaration $revoke = null)
     {
         $this->revoke = $revoke;
     }
