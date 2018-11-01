@@ -228,9 +228,9 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             $results[$key]['m_production'] = $this->getProduction($results, $key, 'm');
             $results[$key]['f_production'] = $this->getProduction($results, $key, 'f');
 
-            $results[$key]['a_lamb_meat_index'] = BreedFormat::getJoinedLambMeatIndex($results[$key]['a_lamb_meat_index_value'], $results[$key]['a_lamb_meat_accuracy']);
-            $results[$key]['m_lamb_meat_index'] = BreedFormat::getJoinedLambMeatIndex($results[$key]['m_lamb_meat_index_value'], $results[$key]['m_lamb_meat_accuracy']);
-            $results[$key]['f_lamb_meat_index'] = BreedFormat::getJoinedLambMeatIndex($results[$key]['f_lamb_meat_index_value'], $results[$key]['f_lamb_meat_accuracy']);
+            $results[$key]['a_lamb_meat_index'] = BreedFormat::getJoinedIndex($results[$key]['a_lamb_meat_index_value'], $results[$key]['a_lamb_meat_accuracy']);
+            $results[$key]['m_lamb_meat_index'] = BreedFormat::getJoinedIndex($results[$key]['m_lamb_meat_index_value'], $results[$key]['m_lamb_meat_accuracy']);
+            $results[$key]['f_lamb_meat_index'] = BreedFormat::getJoinedIndex($results[$key]['f_lamb_meat_index_value'], $results[$key]['f_lamb_meat_accuracy']);
 
             $results[$key]['a_breed_value_growth'] = BreedFormat::formatGrowthBreedValue($results[$key]['a_breed_value_growth_value'], $results[$key]['a_breed_value_growth_accuracy']);
             $results[$key]['m_breed_value_growth'] = BreedFormat::formatGrowthBreedValue($results[$key]['m_breed_value_growth_value'], $results[$key]['m_breed_value_growth_accuracy']);

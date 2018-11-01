@@ -15,6 +15,7 @@ use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\CsvFromSqlResultsWriterService;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
@@ -24,7 +25,9 @@ use AppBundle\Util\TwigOutputUtil;
 use AppBundle\Validation\UlnValidatorInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Bundle\SnappyBundle\Snappy\Response\PdfResponse;
 use Knp\Snappy\GeneratorInterface;
+use Knp\Snappy\Pdf;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -61,6 +64,10 @@ class ReportServiceBase
     protected $templating;
     /** @var TranslatorInterface */
     protected $translator;
+		/** @var GeneratorInterface */
+		protected $knpGeneratorV124;
+		/** @var Pdf */
+		protected $knpGeneratorV125;
     /** @var GeneratorInterface */
     protected $knpGenerator;
     /** @var Logger */
@@ -107,7 +114,8 @@ class ReportServiceBase
                                 UlnValidatorInterface $ulnValidator,
                                 $cacheDir, $rootDir,
                                 $outputReportsToCacheFolderForLocalTesting,
-                                $displayReportPdfOutputAsHtml
+                                $displayReportPdfOutputAsHtml,
+																$wkhtmltopdfV125Path
     )
     {
         $this->em = $em;
@@ -118,7 +126,9 @@ class ReportServiceBase
         $this->userService = $userService;
         $this->templating = $templating;
         $this->translator = $translator;
-        $this->knpGenerator = $knpGenerator;
+        $this->knpGeneratorV124 = $knpGenerator;
+        $this->knpGeneratorV125 = new Pdf($wkhtmltopdfV125Path);
+        $this->knpGenerator = $this->knpGeneratorV124;
         $this->ulnValidator = $ulnValidator;
         $this->cacheDir = $cacheDir;
         $this->rootDir = $rootDir;
@@ -420,15 +430,29 @@ class ReportServiceBase
     }
 
 
-    /**
-     * @param string $twigFile
-     * @param array|object $data
-     * @param boolean $isLandscape
-     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
-     */
-    protected function getPdfReportBase($twigFile, $data, $isLandscape = true)
+		/**
+		 * @param string $twigFile
+		 * @param array|object $data
+		 * @param boolean $isLandscape
+		 * @param array $additionalData
+		 * @param null $customPdfOptions
+		 * @param bool $useWkhtmltopdfV125
+		 * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+		 */
+    protected function getPdfReportBase($twigFile, $data, $isLandscape = true, $additionalData = [], $customPdfOptions = null, $useWkhtmltopdfV125 = false)
     {
-        $html = $this->renderView($twigFile, ['variables' => $data]);
+    	  $twigInput = ArrayUtil::concatArrayValues(
+    	  	[
+			      [
+			      	'variables' => $data,
+				      'displayReportPdfOutputAsHtml' => $this->displayReportPdfOutputAsHtml
+			      ],
+			      $additionalData
+		      ],
+		      false
+	      );
+
+        $html = $this->renderView($twigFile, $twigInput);
 
         if ($this->displayReportPdfOutputAsHtml) {
             $response = new Response($html);
@@ -439,6 +463,12 @@ class ReportServiceBase
         $this->extension = FileType::PDF;
 
         $pdfOptions = $isLandscape ? TwigOutputUtil::pdfLandscapeOptions() : TwigOutputUtil::pdfPortraitOptions();
+        $pdfOptions = $customPdfOptions ? $customPdfOptions : $pdfOptions;
+
+        // Switch to wkhtmltopdf v0.12.5
+        if ($useWkhtmltopdfV125) {
+	          $this->knpGenerator = $this->knpGeneratorV125;
+        }
 
         if($this->outputReportsToCacheFolderForLocalTesting) {
             //Save pdf in local cache
@@ -448,6 +478,11 @@ class ReportServiceBase
         $pdfOutput = $this->knpGenerator->getOutputFromHtml($html, $pdfOptions);
 
         $url = $this->storageService->uploadPdf($pdfOutput, $this->getS3Key());
+
+	      // Switch back to wkhtmltopdf v0.12.4
+        if ($useWkhtmltopdfV125) {
+        	  $this->knpGenerator = $this->knpGeneratorV124;
+        }
 
         return ResultUtil::successResult($url);
     }

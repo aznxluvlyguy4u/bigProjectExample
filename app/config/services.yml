@@ -443,6 +443,7 @@ services:
           - '%kernel.root_dir%'
           - '%output_reports_to_cache_folder_for_local_testing%'
           - '%display_report_pdf_output_as_html%'
+          - '%wkhtmltopdf_v125_path%'
 
     app.report.breedvalues.base:
         abstract: true
@@ -463,6 +464,7 @@ services:
           - '%kernel.root_dir%'
           - '%output_reports_to_cache_folder_for_local_testing%'
           - '%display_report_pdf_output_as_html%'
+          - '%wkhtmltopdf_v125_path%'
 
     app.report.livestock:
         parent: app.report.breedvalues.base
@@ -489,6 +491,10 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeCertificateReportService
         lazy: true
+        calls:
+          - method: setPedigreeCertificatesGenerator
+            arguments:
+              - '@AppBundle\Report\PedigreeCertificates'
 
     AppBundle\Service\Report\PedigreeRegisterOverviewReportService:
         parent: app.report.base
@@ -511,6 +517,29 @@ services:
     app.report.vwa.ubns_overview:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaUbnsOverviewReportService
+
+    AppBundle\Report\PedigreeCertificate:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@translator'
+            - '%use_test_data%'
+            - '%environment%'
+        calls:
+          - method: setBreedValuesOutput
+            arguments:
+              - '@AppBundle\Output\BreedValuesOutput'
+        lazy: true
+
+    AppBundle\Report\PedigreeCertificates:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@AppBundle\Report\PedigreeCertificate'
+        calls:
+          - method: initializeConstants
+          - method: setBreedValuesOutput
+            arguments:
+              - '@AppBundle\Output\BreedValuesOutput'
+        lazy: true
 
     app.writer.csv_from_sql_results:
         class: AppBundle\Service\CsvFromSqlResultsWriterService

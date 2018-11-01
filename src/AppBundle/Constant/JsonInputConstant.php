@@ -36,6 +36,7 @@ class JsonInputConstant
     const NEUTER = 'neuter';
     const EWES = 'ewes';
     const CHILDREN = 'children';
+    const COUNTRY_OF_BIRTH = 'country_of_birth';
     const LITTERS = 'litters';
     const COUNTRY = 'country';
     const COUNTRY_CODE = 'country_code';
@@ -63,6 +64,9 @@ class JsonInputConstant
     const SCRAPIE_GENOTYPE = 'scrapie_genotype';
     const BREED = 'breed';
     const BREED_CODE = 'breed_code';
+    const BREED_CODES = 'breed_codes';
+    const BREED_CODE_LETTERS = 'breed_code_letters';
+    const BREED_CODE_FULLNAME = 'breed_code_fullname';
     const BREED_CODE_MOTHER = 'breed_code_mother';
     const BREED_TYPE = 'breed_type';
     const BLINDNESS_FACTOR = 'blindness_factor';

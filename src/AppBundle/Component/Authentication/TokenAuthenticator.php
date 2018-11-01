@@ -29,6 +29,7 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
 
     const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
     const GHOST_TOKEN_HEADER_NAMESPACE = 'GhostToken';
+    const DEV_TOKEN_HEADER_NAMESPACE = 'DevToken';
     const PERSON_SHORT_ENTITY_PATH = 'AppBundle:Person';
 
     /**

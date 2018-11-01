@@ -349,7 +349,11 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::DEVELOPER);
         if(!$isAdmin) { return AdminValidator::getStandardErrorResponse(); }
 
-        $requestMessages = $this->getManager()->getRepository(DeclareBirth::class)->findBy(['requestState' => RequestStateType::OPEN]);
+        $requestMessages = $this->getManager()->getRepository(DeclareBirth::class)->findBy(
+            [
+                'requestState' => RequestStateType::OPEN,
+                'isRvoMessage' => true,
+            ]);
 
         $openCount = count($requestMessages);
         $resentCount = 0;

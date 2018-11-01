@@ -56,11 +56,12 @@ class ReportServiceWithBreedValuesBase extends ReportServiceBase
                                 UlnValidatorInterface $ulnValidator,
                                 BreedValuesReportQueryGenerator $breedValuesReportQueryGenerator,
                                 $cacheDir, $rootDir, $outputReportsToCacheFolderForLocalTesting,
-                                $displayReportPdfOutputAsHtml
+                                $displayReportPdfOutputAsHtml,
+                                $wkhtmltopdfV125Path
     )
     {
         parent::__construct($em, $excelService, $logger, $storageService, $csvWriter, $userService, $templating, $translator,
-            $knpGenerator, $ulnValidator, $cacheDir, $rootDir, $outputReportsToCacheFolderForLocalTesting, $displayReportPdfOutputAsHtml);
+            $knpGenerator, $ulnValidator, $cacheDir, $rootDir, $outputReportsToCacheFolderForLocalTesting, $displayReportPdfOutputAsHtml, $wkhtmltopdfV125Path);
 
         $this->breedValuesReportQueryGenerator = $breedValuesReportQueryGenerator;
     }
