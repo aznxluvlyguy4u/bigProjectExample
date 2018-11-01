@@ -399,8 +399,14 @@ class PedigreeCertificate
      */
     private function addAnimalValues($key, $animalId, $generation)
     {
-        $sql = "SELECT * FROM animal_cache c
+        $normalizedSuffix = $this->getNormalizedSuffix();
+        $sql = "SELECT
+                  c.*,
+                  r.*,
+                  rn.odin_bc as odin_bc".$normalizedSuffix."
+                FROM animal_cache c
                   LEFT JOIN result_table_breed_grades r ON r.animal_id = c.animal_id
+                  LEFT JOIN result_table_normalized_breed_grades rn ON rn.animal_id = c.animal_id
                 WHERE c.animal_id = ".$animalId;
         $animalCache = $this->conn->query($sql)->fetch();
 
@@ -679,6 +685,7 @@ class PedigreeCertificate
     {
         $exteriorBreedValuesOutput = $this->breedValuesOutput->getForPedigreeCertificate($breedGrades, self::GENERAL_NULL_FILLER);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES] = $exteriorBreedValuesOutput[ReportLabel::VALUES];
+        $normalizedSuffix = $this->getNormalizedSuffix();
 
         $hasAnyBreedValues = $exteriorBreedValuesOutput[ReportLabel::HAS_ANY_VALUES];
         foreach ($this->breedValuesOutput->getBreedValueResultTableColumnNamesSets() as $set)
@@ -686,18 +693,19 @@ class PedigreeCertificate
             $resultTableValueVariable = $set['result_table_value_variable'];
             $resultTableAccuracyVariable = $set['result_table_accuracy_variable'];
 
-            $value = ArrayUtil::get($resultTableValueVariable, $breedGrades);
             $accuracy = ArrayUtil::get($resultTableAccuracyVariable, $breedGrades);
 
-            $isEmpty = empty($value) || empty($accuracy);
-
             if ($this->useBreedIndexFormatForBreedValue($resultTableValueVariable)) {
+                $value = ArrayUtil::get($resultTableValueVariable.$normalizedSuffix, $breedGrades);
                 $formattedValue = BreedValuesOutput::getFormattedBreedIndex($value, self::GENERAL_NULL_FILLER);
                 $formattedAccuracy = BreedValuesOutput::getFormattedBreedIndexAccuracy($accuracy, self::GENERAL_NULL_FILLER);
             } else {
+                $value = ArrayUtil::get($resultTableValueVariable, $breedGrades);
                 $formattedValue = BreedValuesOutput::getFormattedBreedValue($value, self::GENERAL_NULL_FILLER);
                 $formattedAccuracy = BreedValuesOutput::getFormattedBreedValueAccuracy($accuracy, self::GENERAL_NULL_FILLER);
             }
+
+            $isEmpty = empty($value) || empty($accuracy);
 
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_VALUES][$resultTableValueVariable] = [
                 ReportLabel::VALUE => $formattedValue,
@@ -728,6 +736,12 @@ class PedigreeCertificate
     }
 
 
+    private function getNormalizedSuffix(): string
+    {
+        return '_'.JsonInputConstant::NORMALIZED;
+    }
+
+
     /**
      * @param string $key
      * @param int $animalId
@@ -737,6 +751,7 @@ class PedigreeCertificate
     {
         $exteriorReplacementString = self::GENERAL_NULL_FILLER;
         $latestExteriorArray = $this->exteriorRepository->getLatestExteriorBySql($animalId, $exteriorReplacementString);
+        $normalizedSuffix = $this->getNormalizedSuffix();
 
         if($generation < self::GENERATION_OF_ASCENDANTS - 1) {
             //Only retrieve the breedValues and lambMeatIndices for the child, parents and grandparents.
@@ -746,7 +761,11 @@ class PedigreeCertificate
             if(ctype_digit($animalId) || is_int($animalId)) {
                 //Use a LEFT JOIN, so the necessary keys will always be returned,
                 //even if the result_table_breed_grades record does not exist.
-                $sql = "SELECT r.* FROM animal 
+                $sql = "SELECT 
+                  r.*,
+                  rn.odin_bc as odin_bc".$normalizedSuffix."
+                FROM animal 
+                LEFT JOIN result_table_breed_grades r ON r.animal_id = animal.id  
                 LEFT JOIN result_table_breed_grades r ON r.animal_id = animal.id  
                 WHERE animal.id = ".$animalId;
                 $breedGrades = $this->conn->query($sql)->fetch();
