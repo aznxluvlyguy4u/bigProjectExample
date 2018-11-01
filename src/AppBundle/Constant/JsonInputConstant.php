@@ -10,6 +10,7 @@ class JsonInputConstant
     const PLAIN_TEXT_INPUT = 'plain_text_input';
     const UPDATED = 'updated';
     const NOT_UPDATED = 'not_updated';
+    const NORMALIZED = 'normalized';
     const SUCCESSFUL_UPDATE_SECONDARY_VALUES = 'successful_update_secondary_values';
     const SUCCESSFUL_UPDATE_RESULT_TABLE_VALUES = 'successful_update_result_table_values';
     const FULL_OUTPUT = 'full_output';
