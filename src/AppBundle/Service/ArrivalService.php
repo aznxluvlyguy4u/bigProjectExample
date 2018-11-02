@@ -523,10 +523,10 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         //Don't check if uln was chosen instead of pedigree
         $pedigreeCodeExists = $pedigreeCountryCode != null && $pedigreeNumber != null;
-        if(!$pedigreeCodeExists) {
+        if (!$pedigreeCodeExists) {
             $uln = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray)
                 . ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $animalArray);
-            $hasValidUlnFormat = Validator::verifyUlnFormat($uln,false);
+            $hasValidUlnFormat = Validator::verifyUlnFormat($uln, false);
             if (!$hasValidUlnFormat) {
                 throw new PreconditionFailedHttpException($this->translator->trans('THE ULN HAS AN INVALID FORMAT'));
             }
@@ -537,21 +537,21 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $isFormatCorrect = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
 
-        if(!$isFormatCorrect) {
+        if (!$isFormatCorrect) {
             $isValid = false;
             //TODO Translate message in English and match it with the translator in the Frontend
-            $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
-                "pedigree" => $pedigreeCountryCode.$pedigreeNumber,
+            $jsonErrorResponse = new JsonResponse(array('code' => $errorCode,
+                "pedigree" => $pedigreeCountryCode . $pedigreeNumber,
                 "message" => "Het stamboeknummer moet deze structuur XXXXX-XXXXX hebben."), $errorCode);
 
         } else {
             $pedigreeInDatabaseVerification = $this->verifyOnlyPedigreeCodeInAnimal($animalArray);
             $isExistsInDatabase = $pedigreeInDatabaseVerification->get('isValid');
 
-            if(!$isExistsInDatabase){
+            if (!$isExistsInDatabase) {
                 $isValid = false;
-                $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
-                    "pedigree" => $pedigreeCountryCode.$pedigreeNumber,
+                $jsonErrorResponse = new JsonResponse(array('code' => $errorCode,
+                    "pedigree" => $pedigreeCountryCode . $pedigreeNumber,
                     "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), $errorCode);
             }
         }
