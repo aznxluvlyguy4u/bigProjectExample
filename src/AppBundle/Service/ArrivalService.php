@@ -27,6 +27,7 @@ use AppBundle\Exception\DeadAnimalHttpException;
 use AppBundle\Exception\FeatureNotAvailableHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
@@ -523,6 +524,13 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         //Don't check if uln was chosen instead of pedigree
         $pedigreeCodeExists = $pedigreeCountryCode != null && $pedigreeNumber != null;
         if(!$pedigreeCodeExists) {
+            $uln = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray)
+                . ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $animalArray);
+            $hasValidUlnFormat = Validator::verifyUlnFormat($uln,false);
+            if (!$hasValidUlnFormat) {
+                throw new PreconditionFailedHttpException($this->translator->trans('THE ULN HAS AN INVALID FORMAT'));
+            }
+
             return $result;
         }
 

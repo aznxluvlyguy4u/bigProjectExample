@@ -456,6 +456,7 @@ ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Aanvoermeldingen z
 THIS FEATURE IS NOT AVAILABLE YET: Deze functie is nog niet beschikbaar
 AN ANIMAL ALREADY EXISTS WITH THIS ULN: Een dier met dit ULN bestaat al
 THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: De gebeurtenisdatum kan niet voor de geboortedatum zijn
+THE ULN HAS AN INVALID FORMAT: Het ULN heeft een ongeldig format
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen
