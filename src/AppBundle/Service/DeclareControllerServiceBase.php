@@ -8,7 +8,6 @@ use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -32,11 +31,13 @@ use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Exception\AnimalNotOnLocationHttpException;
 use AppBundle\Exception\DeclareToOtherCountryHttpException;
 use AppBundle\Exception\EventDateBeforeDateOfBirthHttpException;
 use AppBundle\Exception\InvalidStnHttpException;
 use AppBundle\Exception\InvalidUlnHttpException;
 use AppBundle\Output\RequestMessageOutputBuilder;
+use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
@@ -350,7 +351,11 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
             ->verifyIfAnimalIsOnLocation($location, $animalArray);
 
         if(!$animalIsOnLocation) {
-            throw new PreconditionFailedHttpException("Animal doesn't belong to this account.");
+            $animalData = AnimalArrayReader::readUlnOrPedigree($animalArray);
+            $identifier = $animalData[JsonInputConstant::DATA];
+            $translationKey = $animalData[JsonInputConstant::TRANSLATION_KEY];
+
+            throw new AnimalNotOnLocationHttpException($this->translator, $location->getUbn(), $translationKey, $identifier);
         }
     }
 

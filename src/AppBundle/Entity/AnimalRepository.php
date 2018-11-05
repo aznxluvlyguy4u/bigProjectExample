@@ -253,34 +253,27 @@ class AnimalRepository extends BaseRepository
       $numberToCheck = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
       $countryCodeToCheck = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
+        foreach ($location->getAnimals() as $animal) {
+            if ($animal->getUlnCountryCode() == $countryCodeToCheck && $animal->getUlnNumber() == $numberToCheck) {
+                return $animal->getIsAlive();
+            }
+        }
+        return false;
+
     } else if ($pedigreeExists) {
       $numberToCheck = $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
       $countryCodeToCheck = $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
 
-    } else {
-      return null;
+        foreach ($location->getAnimals() as $animal) {
+            if ($animal->getPedigreeCountryCode() == $countryCodeToCheck && $animal->getPedigreeNumber() == $numberToCheck) {
+                return $animal->getIsAlive();
+            }
+        }
+        return false;
+
     }
 
-      foreach ($location->getAnimals() as $animal) {
-
-          if ($ulnExists) {
-              $ulnNumber = $animal->getUlnNumber();
-              $ulnCountryCode = $animal->getUlnCountryCode();
-              if ($ulnNumber == $numberToCheck && $ulnCountryCode == $countryCodeToCheck) {
-                  return true;
-              }
-
-          } else if ($pedigreeExists) {
-              $pedigreeNumber = $animal->getPedigreeNumber();
-              $pedigreeCountryCode = $animal->getPedigreeCountryCode();
-              if ($pedigreeNumber == $numberToCheck && $pedigreeCountryCode == $countryCodeToCheck) {
-                  return true;
-              }
-          }
-
-      }
-
-    return false;
+    return null;
   }
 
   /**
