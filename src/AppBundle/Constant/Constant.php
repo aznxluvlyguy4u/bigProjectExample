@@ -67,6 +67,7 @@ class Constant
     const ULN_NAMESPACE = 'uln';
     const ULN_NUMBER_NAMESPACE = "uln_number";
     const ULN_COUNTRY_CODE_NAMESPACE = "uln_country_code";
+    const STN_NAMESPACE = 'stn';
     const PEDIGREE_NAMESPACE = 'pedigree';
     const PEDIGREE_NUMBER_NAMESPACE = "pedigree_number";
     const PEDIGREE_SNAKE_CASE_NAMESPACE = "pedigree_number";
