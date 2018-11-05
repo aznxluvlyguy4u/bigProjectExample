@@ -180,7 +180,10 @@ class DepartService extends DeclareControllerServiceBase
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
         $arrivalLog = null;
 
-        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
+        $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
+        $this->verifyUlnOrPedigreeNumberFormatByAnimalArray($animalArray);
+        $this->verifyIfAnimalIsOnLocation($location, $animalArray);
+
         $ubnNewOwner = $content->get(JsonInputConstant::UBN_NEW_OWNER);
         $this->verifyUbnFormat($ubnNewOwner, $location->isDutchLocation());
         $this->verifyIfDepartureAndArrivalUbnAreIdentical($location->getUbn(), $ubnNewOwner);
@@ -294,7 +297,7 @@ class DepartService extends DeclareControllerServiceBase
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
         $arrivalLog = null;
 
-        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
+        $this->verifyIfAnimalIsOnLocation($location, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $export = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);

@@ -34,6 +34,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Exception\DeclareToOtherCountryHttpException;
 use AppBundle\Exception\EventDateBeforeDateOfBirthHttpException;
+use AppBundle\Exception\InvalidStnHttpException;
 use AppBundle\Exception\InvalidUlnHttpException;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Util\ArrayUtil;
@@ -339,16 +340,16 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
 
     /**
-     * @param Client $client
+     * @param Location|null $location
      * @param array $animalArray
      */
-    protected function verifyIfClientOwnsAnimal(?Client $client, array $animalArray): void
+    protected function verifyIfAnimalIsOnLocation(?Location $location, array $animalArray): void
     {
-        $this->nullCheckClient($client);
-        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)
-            ->verifyIfClientOwnsAnimal($client, $animalArray);
+        $this->nullCheckLocation($location);
+        $animalIsOnLocation = $this->getManager()->getRepository(Animal::class)
+            ->verifyIfAnimalIsOnLocation($location, $animalArray);
 
-        if(!$isAnimalOfClient) {
+        if(!$animalIsOnLocation) {
             throw new PreconditionFailedHttpException("Animal doesn't belong to this account.");
         }
     }
@@ -365,6 +366,36 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         }
     }
 
+
+    /**
+     * @param $animalArray
+     */
+    protected function verifyUlnOrPedigreeNumberFormatByAnimalArray($animalArray)
+    {
+        if (!is_array($animalArray)) {
+            throw new InvalidUlnHttpException($this->translator, null);
+        }
+
+        $uln = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray)
+            . ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $animalArray);
+        $uln = is_string($uln) && !empty($uln) ? $uln : null;
+
+        if ($uln) {
+            if (!Validator::verifyUlnFormat($uln, false)) {
+                throw new InvalidUlnHttpException($this->translator, $uln);
+            }
+            return;
+        }
+
+        $stn = ArrayUtil::get(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray)
+            . ArrayUtil::get(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+        $stn = is_string($stn) && !empty($stn) ? $stn : null;
+
+        $stnIsValid = $stn && Validator::verifyPedigreeCountryCodeAndNumberFormat($stn,false);
+        if (!$stnIsValid) {
+            throw new InvalidStnHttpException($this->translator, $stn);
+        }
+    }
 
 
     /**
