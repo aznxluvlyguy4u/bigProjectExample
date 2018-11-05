@@ -43,7 +43,7 @@ class AnimalNotOnDepartLocationHttpException extends PreconditionFailedHttpExcep
 
         if ($animal) {
             if (!empty($animal->getUln())) {
-                $ulnData = $separator.'ULN: '.$animal->getUln();
+                $ulnData = $separator.$translator->trans('ULN').': '.$animal->getUln();
                 $separator = $separatorConstant;
             }
 

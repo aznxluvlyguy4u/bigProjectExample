@@ -10,7 +10,6 @@ use Symfony\Component\Translation\TranslatorInterface;
 class InvalidUlnHttpException extends PreconditionFailedHttpException
 {
     /**
-     * DeadAnimalHttpException constructor.
      * @param TranslatorInterface $translator
      * @param string|null $uln
      * @param \Exception|null $previous
@@ -34,6 +33,7 @@ class InvalidUlnHttpException extends PreconditionFailedHttpException
      */
     private function getMessageFromUln(TranslatorInterface $translator, ?string $uln): string
     {
-        return $translator->trans('THE ULN HAS AN INVALID FORMAT'). '.' . (empty($uln) ? '' : ' ULN: '.$uln);
+        return $translator->trans('THE ULN HAS AN INVALID FORMAT'). '.'
+            . (empty($uln) ? '' : ' '.$translator->trans('ULN').': '.$uln);
     }
 }

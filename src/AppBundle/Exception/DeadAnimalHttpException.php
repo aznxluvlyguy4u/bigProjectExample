@@ -12,16 +12,16 @@ class DeadAnimalHttpException extends PreconditionFailedHttpException
     /**
      * DeadAnimalHttpException constructor.
      * @param TranslatorInterface $translator
-     * @param string|null $uln
+     * @param string|null $stn
      * @param \Exception|null $previous
      * @param int $code
      */
     public function __construct(TranslatorInterface $translator,
-                                ?string $uln,
+                                ?string $stn,
                                 \Exception $previous = null, int $code = 0)
     {
         parent::__construct(
-            $this->getMessageFromUln($translator, $uln),
+            $this->getMessageFromUln($translator, $stn),
             $previous,
             $code
         );
@@ -34,6 +34,7 @@ class DeadAnimalHttpException extends PreconditionFailedHttpException
      */
     private function getMessageFromUln(TranslatorInterface $translator, ?string $uln): string
     {
-        return $translator->trans('ANIMAL IS ALREADY DEAD'). '.' . (empty($uln) ? '' : ' ULN: '.$uln);
+        return $translator->trans('ANIMAL IS ALREADY DEAD'). '.'
+            . (empty($uln) ? '' : ' '.$translator->trans('ULN').': '.$uln);
     }
 }
