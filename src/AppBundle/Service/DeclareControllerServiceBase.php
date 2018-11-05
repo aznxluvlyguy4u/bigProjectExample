@@ -34,7 +34,9 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Exception\DeclareToOtherCountryHttpException;
 use AppBundle\Exception\EventDateBeforeDateOfBirthHttpException;
+use AppBundle\Exception\InvalidUlnHttpException;
 use AppBundle\Output\RequestMessageOutputBuilder;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
@@ -360,6 +362,43 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     {
         if (!Validator::hasValidUbnFormatByLocationType($ubn, $isDutchLocation)) {
             throw new PreconditionFailedHttpException($this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn);
+        }
+    }
+
+
+
+    /**
+     * @param $animalArray
+     */
+    protected function verifyUlnFormatByAnimalArray($animalArray)
+    {
+        $hasValidUlnFormat = false;
+        $uln = null;
+
+        if (is_array($animalArray)) {
+            $uln = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray)
+                . ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $animalArray);
+
+            $hasValidUlnFormat = Validator::verifyUlnFormat($uln, false);
+            $uln = is_string($uln) ? $uln : null;
+        }
+
+        if (!$hasValidUlnFormat) {
+            throw new InvalidUlnHttpException($this->translator, $uln);
+        }
+    }
+
+
+    /**
+     * @param string $uln
+     * @param bool $includeSpaceBetweenCountryCodeAndNumber
+     */
+    protected function verifyUlnFormat($uln, $includeSpaceBetweenCountryCodeAndNumber = false)
+    {
+        $hasValidUlnFormat = Validator::verifyUlnFormat($uln, $includeSpaceBetweenCountryCodeAndNumber);
+        if (!$hasValidUlnFormat) {
+            $uln = is_string($uln) ? $uln : null;
+            throw new InvalidUlnHttpException($this->translator, $uln);
         }
     }
 
