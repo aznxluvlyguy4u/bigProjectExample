@@ -449,6 +449,7 @@ THIS FEATURE IS NOT AVAILABLE YET: This feature is not available yet
 AN ANIMAL ALREADY EXISTS WITH THIS ULN: An animal already exists with this ULN
 THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: The event date cannot be before the date of birth
 THE ULN HAS AN INVALID FORMAT: The ULN has an invalid format
+THE STN HAS AN INVALID FORMAT: The STN has an invalid format
 
 #Declares
 DECLARE_ARRIVALS: arrivals
