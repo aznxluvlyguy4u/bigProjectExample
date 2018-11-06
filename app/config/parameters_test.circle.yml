@@ -36,9 +36,10 @@ parameters:
     web_stage_host_url: ''
     web_prod_host_url: ''
     test_email: ''
-    locale: en
+    locale: nl
     output_reports_to_cache_folder_for_local_testing: false
     display_report_pdf_output_as_html: false
+    use_test_data: false
     worker_queue_dir: ''
     firebase_notifications_project_id: ''
     firebase_notifications_client_id: ''
@@ -48,3 +49,4 @@ parameters:
     external_provider_password: null
     external_provider_organisation: null
     sentry_dns: '%env(sentry_dns)%'
+    wkhtmltopdf_v125_path: '/usr/bin/wkhtmltopdfV125'
