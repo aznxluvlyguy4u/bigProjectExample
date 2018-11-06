@@ -39,7 +39,7 @@ jobs:
       - run: cp app/config/parameters_test.circle.yml app/config/parameters.yml
 
       # download sonar-scanner binary
-      - run: sudo wget https://sonarsource.bintray.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.2.0.1227-linux.zip -P ~/
+      - run: sudo wget https://s3.eu-central-1.amazonaws.com/jvt.maven.repo/nl/jongensvantechniek/sonar/sonar-scanner-cli-3.2.0.1227-linux.zip -P ~/
 
       # unpack binary to root folder
       - run: sudo unzip ~/sonar-scanner-cli-3.2.0.1227-linux.zip -d ~/
