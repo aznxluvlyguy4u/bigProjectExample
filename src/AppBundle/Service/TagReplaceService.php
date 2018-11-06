@@ -58,7 +58,7 @@ class TagReplaceService extends DeclareControllerServiceBase
 
         $log = ActionLogWriter::declareTagReplacePost($this->getManager(), $client, $loggedInUser, $content);
 
-        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
+        $this->verifyIfAnimalIsOnLocation($location, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Check if tag replacement is unassigned and in the database, else don't send any TagReplace
         $tagContent = $content->get(Constant::TAG_NAMESPACE);

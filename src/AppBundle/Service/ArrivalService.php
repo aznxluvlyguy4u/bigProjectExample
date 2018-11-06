@@ -27,6 +27,7 @@ use AppBundle\Exception\DeadAnimalHttpException;
 use AppBundle\Exception\FeatureNotAvailableHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
@@ -522,28 +523,29 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         //Don't check if uln was chosen instead of pedigree
         $pedigreeCodeExists = $pedigreeCountryCode != null && $pedigreeNumber != null;
-        if(!$pedigreeCodeExists) {
+        if (!$pedigreeCodeExists) {
+            $this->verifyUlnFormatByAnimalArray($animalArray);
             return $result;
         }
 
 
         $isFormatCorrect = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
 
-        if(!$isFormatCorrect) {
+        if (!$isFormatCorrect) {
             $isValid = false;
             //TODO Translate message in English and match it with the translator in the Frontend
-            $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
-                "pedigree" => $pedigreeCountryCode.$pedigreeNumber,
+            $jsonErrorResponse = new JsonResponse(array('code' => $errorCode,
+                "pedigree" => $pedigreeCountryCode . $pedigreeNumber,
                 "message" => "Het stamboeknummer moet deze structuur XXXXX-XXXXX hebben."), $errorCode);
 
         } else {
             $pedigreeInDatabaseVerification = $this->verifyOnlyPedigreeCodeInAnimal($animalArray);
             $isExistsInDatabase = $pedigreeInDatabaseVerification->get('isValid');
 
-            if(!$isExistsInDatabase){
+            if (!$isExistsInDatabase) {
                 $isValid = false;
-                $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
-                    "pedigree" => $pedigreeCountryCode.$pedigreeNumber,
+                $jsonErrorResponse = new JsonResponse(array('code' => $errorCode,
+                    "pedigree" => $pedigreeCountryCode . $pedigreeNumber,
                     "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), $errorCode);
             }
         }

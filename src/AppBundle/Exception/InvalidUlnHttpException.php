@@ -7,21 +7,20 @@ namespace AppBundle\Exception;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
-class DeadAnimalHttpException extends PreconditionFailedHttpException
+class InvalidUlnHttpException extends PreconditionFailedHttpException
 {
     /**
-     * DeadAnimalHttpException constructor.
      * @param TranslatorInterface $translator
-     * @param string|null $stn
+     * @param string|null $uln
      * @param \Exception|null $previous
      * @param int $code
      */
     public function __construct(TranslatorInterface $translator,
-                                ?string $stn,
+                                ?string $uln,
                                 \Exception $previous = null, int $code = 0)
     {
         parent::__construct(
-            $this->getMessageFromUln($translator, $stn),
+            $this->getMessageFromUln($translator, $uln),
             $previous,
             $code
         );
@@ -34,7 +33,7 @@ class DeadAnimalHttpException extends PreconditionFailedHttpException
      */
     private function getMessageFromUln(TranslatorInterface $translator, ?string $uln): string
     {
-        return $translator->trans('ANIMAL IS ALREADY DEAD'). '.'
+        return $translator->trans('THE ULN HAS AN INVALID FORMAT'). '.'
             . (empty($uln) ? '' : ' '.$translator->trans('ULN').': '.$uln);
     }
 }

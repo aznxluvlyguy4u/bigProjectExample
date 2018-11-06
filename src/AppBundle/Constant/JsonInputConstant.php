@@ -19,6 +19,7 @@ class JsonInputConstant
     const JSON = 'json';
     const IS_VALID = 'is_valid';
     const KEY = 'key';
+    const TRANSLATION_KEY = 'translation_key';
 
     //Admins
     const ADMINS = 'admins';

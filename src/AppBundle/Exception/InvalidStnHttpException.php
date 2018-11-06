@@ -7,10 +7,9 @@ namespace AppBundle\Exception;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
-class DeadAnimalHttpException extends PreconditionFailedHttpException
+class InvalidStnHttpException extends PreconditionFailedHttpException
 {
     /**
-     * DeadAnimalHttpException constructor.
      * @param TranslatorInterface $translator
      * @param string|null $stn
      * @param \Exception|null $previous
@@ -21,7 +20,7 @@ class DeadAnimalHttpException extends PreconditionFailedHttpException
                                 \Exception $previous = null, int $code = 0)
     {
         parent::__construct(
-            $this->getMessageFromUln($translator, $stn),
+            $this->getMessageFromStn($translator, $stn),
             $previous,
             $code
         );
@@ -29,12 +28,12 @@ class DeadAnimalHttpException extends PreconditionFailedHttpException
 
     /**
      * @param TranslatorInterface $translator
-     * @param string|null $uln
+     * @param string|null $stn
      * @return string
      */
-    private function getMessageFromUln(TranslatorInterface $translator, ?string $uln): string
+    private function getMessageFromStn(TranslatorInterface $translator, ?string $stn): string
     {
-        return $translator->trans('ANIMAL IS ALREADY DEAD'). '.'
-            . (empty($uln) ? '' : ' '.$translator->trans('ULN').': '.$uln);
+        return $translator->trans('THE STN HAS AN INVALID FORMAT'). '.'
+            . (empty($stn) ? '' : ' '.$translator->trans('STN').': '.$stn);
     }
 }

@@ -238,53 +238,42 @@ class AnimalRepository extends BaseRepository
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param array $animalArray
    * @return boolean|null
    */
-  public function verifyIfClientOwnsAnimal(Client $client, $animalArray)
+  public function verifyIfAnimalIsOnLocation(Location $location, $animalArray)
   {
-    $ulnExists = array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray) &&
-        array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray);
-    $pedigreeExists = array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray) &&
-        array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray);
+    $ulnExists = key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalArray) &&
+        key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray);
+    $pedigreeExists = key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalArray) &&
+        key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray);
 
     if ($ulnExists) {
       $numberToCheck = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
       $countryCodeToCheck = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
+        foreach ($location->getAnimals() as $animal) {
+            if ($animal->getUlnCountryCode() == $countryCodeToCheck && $animal->getUlnNumber() == $numberToCheck) {
+                return $animal->getIsAlive();
+            }
+        }
+        return false;
+
     } else if ($pedigreeExists) {
       $numberToCheck = $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
       $countryCodeToCheck = $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
 
-    } else {
-      return null;
-    }
-
-    foreach ($client->getCompanies() as $company) {
-      foreach ($company->getLocations() as $location) {
         foreach ($location->getAnimals() as $animal) {
-
-          if ($ulnExists) {
-            $ulnNumber = $animal->getUlnNumber();
-            $ulnCountryCode = $animal->getUlnCountryCode();
-            if ($ulnNumber == $numberToCheck && $ulnCountryCode == $countryCodeToCheck) {
-              return true;
+            if ($animal->getPedigreeCountryCode() == $countryCodeToCheck && $animal->getPedigreeNumber() == $numberToCheck) {
+                return $animal->getIsAlive();
             }
-
-          } else if ($pedigreeExists) {
-            $pedigreeNumber = $animal->getPedigreeNumber();
-            $pedigreeCountryCode = $animal->getPedigreeCountryCode();
-            if ($pedigreeNumber == $numberToCheck && $pedigreeCountryCode == $countryCodeToCheck) {
-              return true;
-            }
-          }
-
         }
-      }
+        return false;
+
     }
 
-    return false;
+    return null;
   }
 
   /**

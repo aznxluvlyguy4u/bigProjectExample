@@ -689,8 +689,7 @@ class Location
 
     /**
      * Get animals
-     *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection|Animal[]
      */
     public function getAnimals()
     {

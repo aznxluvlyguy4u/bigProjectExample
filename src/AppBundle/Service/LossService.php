@@ -107,7 +107,7 @@ class LossService extends DeclareControllerServiceBase
 
         $useRvoLogic = $location->isDutchLocation();
 
-        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
+        $this->verifyIfAnimalIsOnLocation($location, $content->get(Constant::ANIMAL_NAMESPACE));
 
         $log = ActionLogWriter::declareLossPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
@@ -161,7 +161,9 @@ class LossService extends DeclareControllerServiceBase
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
-        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
+        $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
+        $this->verifyUlnFormatByAnimalArray($animalArray);
+        $this->verifyIfAnimalIsOnLocation($location, $animalArray);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
