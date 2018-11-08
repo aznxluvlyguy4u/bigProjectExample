@@ -36,6 +36,7 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\SqlView\SqlViewManagerInterface;
+use AppBundle\Util\NullChecker;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
@@ -519,19 +520,15 @@ abstract class ControllerServiceBase
      */
     protected function nullCheckClient(?Client $client)
     {
-        if ($client === null) {
-            throw new PreconditionFailedHttpException('Client cannot be empty');
-        }
+        NullChecker::checkClient($client);
     }
 
 
     /**
-     * @param Location $location
+     * @param Location|null $location
      */
-    protected function nullCheckLocation(Location $location)
+    protected function nullCheckLocation(?Location $location)
     {
-        if ($location === null) {
-            throw new PreconditionFailedHttpException('Location cannot be empty');
-        }
+        NullChecker::checkLocation($location);
     }
 }
