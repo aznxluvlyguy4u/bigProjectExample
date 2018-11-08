@@ -290,10 +290,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             $message->setRequestMessage($arrival);
             $message->setData($uln);
             $this->persist($message);
-            foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                $title = $this->translator->trans($message->getNotificationMessageTranslationKey());
-                $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
-            }
+
+            $this->fireBaseService->sendNsfoMessageToUser($location->getOwner(), $message);
         }
 
         $this->getManager()->flush();

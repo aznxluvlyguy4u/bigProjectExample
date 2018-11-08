@@ -22,6 +22,7 @@ use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\MessageType;
 use AppBundle\Serializer\PreSerializer\InvoicePreSerializer;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Service\Invoice\InvoicePdfGeneratorService;
@@ -228,10 +229,8 @@ class InvoiceService extends ControllerServiceBase
             $repository = $this->getManager()->getRepository(Location::class);
             $location = $repository->findOneByActiveUbn($invoice->getUbn());
             $message = $this->createInvoiceCreatedMessage($request, $invoice);
-            foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                $title = $this->translator->trans($message->getNotificationMessageTranslationKey());
-                $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
-            }
+
+            $this->fireBaseService->sendNsfoMessageToUser($location->getOwner(), $message);
         }
 
         /** @var Company $company */
@@ -276,7 +275,7 @@ class InvoiceService extends ControllerServiceBase
         $client = $this->getAccountOwner($request);
         $message = new Message();
         $message->setSender($client);
-        $message->setType(InvoiceMessages::NEW_INVOICE_TYPE);
+        $message->setType(MessageType::NEW_INVOICE);
         $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
         $message->setMessage(InvoiceMessages::NEW_INVOICE_MESSAGE);
         $message->setReceiver($invoice->getCompany()->getOwner());
@@ -432,10 +431,7 @@ class InvoiceService extends ControllerServiceBase
             $this->persistAndFlush($log);
 
             if ($location) {
-                foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                    $title = $this->translator->trans($message->getNotificationMessageTranslationKey());
-                    $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
-                }
+                $this->fireBaseService->sendNsfoMessageToUser($location->getOwner(), $message);
             }
 
             return $this->validateAndSendToTwinfield($invoice);

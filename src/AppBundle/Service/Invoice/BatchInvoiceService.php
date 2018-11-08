@@ -25,6 +25,7 @@ use AppBundle\Enumerator\InvoiceAction;
 use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\InvoiceRuleType;
 use AppBundle\Enumerator\InvoiceStatus;
+use AppBundle\Enumerator\MessageType;
 use AppBundle\Service\ControllerServiceBase;
 use AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService;
 use AppBundle\Service\Google\FireBaseService;
@@ -239,7 +240,7 @@ class BatchInvoiceService extends ControllerServiceBase
                 $invoice->setInvoiceDate(new \DateTime());
                 $client = $this->getAccountOwner($request);
                 $message->setSender($client);
-                $message->setType(InvoiceMessages::NEW_INVOICE_TYPE);
+                $message->setType(MessageType::NEW_INVOICE);
                 $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
                 $message->setMessage(InvoiceMessages::NEW_INVOICE_MESSAGE);
                 $message->setReceiver($invoice->getCompany()->getOwner());
@@ -259,10 +260,8 @@ class BatchInvoiceService extends ControllerServiceBase
             $invoice->setTotal($invoice->getVatBreakdownRecords()->getTotalInclVat());
             if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
                 $this->persist($message);
-                foreach($location->getOwner()->getMobileDevices() as $mobileDevice) {
-                    $title = $this->translator->trans($message->getNotificationMessageTranslationKey());
-                    $this->fireBaseService->sendMessageToDevice($mobileDevice->getRegistrationToken(), $title, $message->getData());
-                }
+
+                $this->fireBaseService->sendNsfoMessageToUser($location->getOwner(), $message);
             }
             $invoiceSet[] = $invoice;
             $this->getManager()->persist($invoice);
