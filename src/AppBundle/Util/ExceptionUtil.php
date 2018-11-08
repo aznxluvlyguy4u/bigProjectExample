@@ -5,6 +5,7 @@ namespace AppBundle\Util;
 
 
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use Psr\Log\LoggerInterface;
 
 class ExceptionUtil
 {
@@ -43,5 +44,16 @@ class ExceptionUtil
             return $referenceTable;
         }
         return $referenceTable;
+    }
+
+
+    /**
+     * @param LoggerInterface $logger
+     * @param \Exception $exception
+     */
+    public static function logException(LoggerInterface $logger, \Exception $exception)
+    {
+        $logger->error($exception->getMessage());
+        $logger->error($exception->getTraceAsString());
     }
 }
