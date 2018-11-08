@@ -328,10 +328,9 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
     function authorize(Request $request)
     {
         $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
-        $credentials = str_replace('Basic ', '', $credentials);
-        $credentials = base64_decode($credentials);
-
-        list($emailAddress, $password) = explode(":", $credentials);
+        $inputValues = AuthService::getCredentialsFromBasicAuthHeader($credentials);
+        $emailAddress = $inputValues[JsonInputConstant::EMAIL_ADDRESS];
+        $password = $inputValues[JsonInputConstant::PASSWORD];
 
         if($emailAddress != null && $password != null) {
             $emailAddress = trim(strtolower($emailAddress));

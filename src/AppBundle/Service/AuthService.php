@@ -14,6 +14,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Enumerator\DashboardType;
 use AppBundle\Output\MenuBarOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\HeaderValidation;
@@ -35,10 +36,9 @@ class AuthService extends AuthServiceBase
 
         //TODO There is no registration page at the moment, so the route below is blocked
         $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
-        $credentials = str_replace('Basic ', '', $credentials);
-        $credentials = base64_decode($credentials);
-
-        list($username, $password) = explode(":", $credentials);
+        $inputValues = AuthService::getCredentialsFromBasicAuthHeader($credentials);
+        $emailAddress = $inputValues[JsonInputConstant::EMAIL_ADDRESS];
+        $password = $inputValues[JsonInputConstant::PASSWORD];
 
         /*
         {
@@ -79,6 +79,25 @@ class AuthService extends AuthServiceBase
 
 
     /**
+     * @param $credentials
+     * @return array
+     */
+    public static function getCredentialsFromBasicAuthHeader($credentials): array
+    {
+        $credentials = str_replace('Basic ', '', $credentials);
+        $credentials = base64_decode($credentials);
+
+        $inputValues = explode(":", $credentials);
+        $inputValues = !$inputValues ? [] : $inputValues;
+
+        return [
+          JsonInputConstant::EMAIL_ADDRESS => ArrayUtil::get(0, $inputValues),
+          JsonInputConstant::PASSWORD => ArrayUtil::get(1, $inputValues),
+        ];
+    }
+
+
+    /**
      * @param Request $request
      * @return JsonResponse
      */
@@ -88,9 +107,9 @@ class AuthService extends AuthServiceBase
         $deviceId = null;
         if($request->getMethod() === 'GET') {
             $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
-            $credentials = str_replace('Basic ', '', $credentials);
-            $credentials = base64_decode($credentials);
-            list($emailAddress, $password) = explode(":", $credentials);
+            $inputValues = AuthService::getCredentialsFromBasicAuthHeader($credentials);
+            $emailAddress = $inputValues[JsonInputConstant::EMAIL_ADDRESS];
+            $password = $inputValues[JsonInputConstant::PASSWORD];
         } else {
             $requestData = RequestUtil::getContentAsArray($request);
 

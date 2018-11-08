@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Employee;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
@@ -23,10 +24,10 @@ class AdminAuthService extends AuthServiceBase
     public function authorizeUser(Request $request)
     {
         $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
-        $credentials = str_replace('Basic ', '', $credentials);
-        $credentials = base64_decode($credentials);
+        $inputValues = AuthService::getCredentialsFromBasicAuthHeader($credentials);
+        $emailAddress = $inputValues[JsonInputConstant::EMAIL_ADDRESS];
+        $password = $inputValues[JsonInputConstant::PASSWORD];
 
-        list($emailAddress, $password) = explode(":", $credentials);
         if($emailAddress != null && $password != null) {
             $emailAddress = strtolower($emailAddress);
 
