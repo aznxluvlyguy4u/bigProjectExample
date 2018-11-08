@@ -15,18 +15,10 @@ class RequestMessageOutputBuilder
 
         switch($entityNameSpace) {
             case RequestType::DECLARATION_DETAIL_ENTITY:
-                if($isUpdate) {
-                    return null; //update Array
-                } else {
-                    return null; //post Array
-                }
+                return null;
 
             case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
-                if($isUpdate) {
-                    return null; //update Array
-                } else {
-                    return null; //post Array
-                }
+                return null;
 
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 if($isUpdate) {
@@ -78,53 +70,25 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::RETRIEVE_TAGS_ENTITY:
-                if($isUpdate) {
-                    return null; //update Array
-                } else {
-                    return null; //post Array
-                }
+                return null;
 
             case RequestType::REVOKE_DECLARATION_ENTITY:
-                if($isUpdate) {
-                    return null; //update Array
-                } else {
-                    return null; //post Array
-                }
+                return null;
 
             case RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY:
-                if($isUpdate) {
-                    return null; //update Array
-                } else {
-                    return null; //post Array
-                }
+                return null;
 
             case RequestType::RETRIEVE_ANIMALS_ENTITY:
-                if($isUpdate) {
-                    return null; //update Array
-                } else {
-                    return null; //post Array
-                }
+                return null;
 
             case RequestType::RETRIEVE_COUNTRIES_ENTITY:
-                if($isUpdate) {
-                    return null; //update Array
-                } else {
-                    return null; //post Array
-                }
+                return null;
 
             case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
-                if($isUpdate) {
-                    return null; //update Array
-                } else {
-                    return null; //post Array
-                }
+                return null;
 
             default:
-                if($isUpdate) {
-                    return null; //update Array
-                } else {
-                    return null; //post Array
-                }
+                return null;
         }
     }
 }
