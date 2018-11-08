@@ -4,6 +4,7 @@
 namespace AppBundle\Criteria;
 
 
+use AppBundle\Constant\Variable;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\Criteria;
@@ -60,7 +61,7 @@ class MateCriteria
     {
         return Criteria::create()
             ->where(
-                Criteria::expr()->eq('isOverwrittenVersion', $isOverwritten)
+                Criteria::expr()->eq(Variable::IS_OVERWRITTEN_VERSION, $isOverwritten)
             );
     }
 
