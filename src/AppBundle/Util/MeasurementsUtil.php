@@ -211,26 +211,24 @@ class MeasurementsUtil
         }
         return $codes;
     }
-    
-    
+
+
     /**
      * @param ObjectManager $em
      * @param Animal $animal
-     * @param string $currentKind
-     * @param boolean $filterByAnimalData
+     * @param string|null $currentKind
+     * @param bool $filterByAnimalData
+     * @param bool $returnAllKinds
      * @return array
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public static function getExteriorKindsOutput(ObjectManager $em, Animal $animal, $currentKind = null, $filterByAnimalData = true)
+    public static function getExteriorKindsOutput(ObjectManager $em, Animal $animal, $currentKind = null,
+                                                  bool $filterByAnimalData = true, bool $returnAllKinds = true)
     {
-        //TODO filter kinds based on previous ACTIVE exteriors AND age on measurementDate. For now just return all exteriorKinds
-        $kindsForOutput = ExteriorKind::getAll();
-
-        sort($kindsForOutput);
-        foreach ($kindsForOutput as $kind) {
-            $output[] = ['code' => $kind];
+        // TODO filter kinds based on previous ACTIVE exteriors AND age on measurementDate. For now just return all exteriorKinds
+        if ($returnAllKinds) {
+            return self::getAllExteriorKindsOutput();
         }
-
-        return $output;
 
         /* */
 
@@ -323,4 +321,19 @@ class MeasurementsUtil
     }
 
 
+    /**
+     * @return array
+     */
+    public static function getAllExteriorKindsOutput(): array
+    {
+        $kindsForOutput = ExteriorKind::getAll();
+        $output = [];
+
+        sort($kindsForOutput);
+        foreach ($kindsForOutput as $kind) {
+            $output[] = ['code' => $kind];
+        }
+
+        return $output;
+    }
 }
