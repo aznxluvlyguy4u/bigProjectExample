@@ -12,6 +12,8 @@ use AppBundle\Entity\Company;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
+use AppBundle\Exception\MissingClientHttpException;
+use AppBundle\Exception\MissingLocationHttpException;
 use Symfony\Component\Filesystem\Filesystem;
 
 class NullChecker
@@ -307,5 +309,29 @@ class NullChecker
         }
         
         return $array;
+    }
+
+
+
+
+    /**
+     * @param Location|null $location
+     */
+    public static function checkLocation(?Location $location)
+    {
+        if ($location === null) {
+            throw new MissingLocationHttpException();
+        }
+    }
+
+
+    /**
+     * @param Client|null $client
+     */
+    public static function checkClient(?Client $client)
+    {
+        if ($client === null) {
+            throw new MissingClientHttpException();
+        }
     }
 }
