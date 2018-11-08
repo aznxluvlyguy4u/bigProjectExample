@@ -11,7 +11,6 @@ use AppBundle\Entity\Litter;
 use AppBundle\Enumerator\WorkerTaskScope;
 use AppBundle\Service\IRSerializer;
 use AppBundle\Worker\Task\WorkerMessageBodyLitter;
-use GuzzleHttp\Psr7\Request;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 class WorkerTaskUtil
@@ -107,10 +106,10 @@ class WorkerTaskUtil
     }
 
 
-
     /**
      * @param SymfonyRequest $request
-     * @return DeclareBirthResponse
+     * @param IRSerializer $irSerializer
+     * @return array|mixed|object
      */
     public static function deserializeMessageToDeclareBirthResponse(SymfonyRequest $request, IRSerializer $irSerializer)
     {
