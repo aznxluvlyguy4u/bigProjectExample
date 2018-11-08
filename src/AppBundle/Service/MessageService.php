@@ -6,7 +6,6 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Message;
-use AppBundle\Enumerator\InvoiceMessages;
 use AppBundle\Enumerator\MessageType;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ResultUtil;
@@ -46,7 +45,7 @@ class MessageService extends ControllerServiceBase
             case MessageType::DECLARE_DEPART: {
                 return 'main/departure/history';
             }
-            case InvoiceMessages::NEW_INVOICE_TYPE: {
+            case MessageType::NEW_INVOICE: {
                 return 'main/invoices/overview';
             }
             default:

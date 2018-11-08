@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Component\MessageBuilderBase;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\MessageType;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
@@ -392,5 +393,39 @@ class Message
     public function getNotificationMessageTranslationKey(): string
     {
         return empty($this->getType()) ? '' :  $this->getType() . MessageType::NOTIFICATION_MESSAGE_SUFFIX;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getDataForFireBase(): ?array
+    {
+        if (empty($this->getData())) {
+            return null;
+        }
+
+        $key = JsonInputConstant::DATA;
+        $value = $this->getData();
+
+        if (
+            $this->getData() === MessageType::DECLARE_ARRIVAL ||
+            $this->getData() === MessageType::DECLARE_DEPART
+        ) {
+            $key = JsonInputConstant::ULN;
+            $value = $this->getData();
+
+
+        } elseif (
+            $this->getData() === MessageType::NEW_INVOICE &&
+            !empty($this->getSubject()) && is_string($this->getSubject()) &&
+            !empty($this->getMessage()) && is_string($this->getMessage())
+        ) {
+            $key = $this->getSubject();
+            $value = $this->getMessage();
+        }
+
+        return [
+            $key => $value
+        ];
     }
 }
