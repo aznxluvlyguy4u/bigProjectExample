@@ -326,49 +326,6 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $manager->persist($nsfoTestAccountScrapie);
     $manager->persist($nsfoTestAccountMaediVisna);
     $manager->flush();
-
-
-
-    //THE DATA BELOW IS NOT USED AT THE MOMENT
-
-    if(false) {
-      $ubnAndreVanDenOuden = '2628260';
-      $ubnHenkVerheul = '297394';
-
-      $emailAndreVanDenOuden = 'kantoor@nsfo.nl';
-      $emailHenkVerheul = 'kantoor@nsfo.nl';
-
-      $passwordAndreVanDenOuden = '12345';
-      $passwordHenkVerheul = '12345';
-
-      $relationNumberKeeperAndreVanDenOuden = '222222222'; //testdata TODO insert real data
-      $relationNumberKeeperHenkVerheul = '333333333'; //testdata TODO insert real data
-
-      //Create mocked data
-      self::$andreVanDenOuden = new Client();
-      self::$andreVanDenOuden->setFirstName("Andre");
-      self::$andreVanDenOuden->setLastName("van den Ouden");
-      self::$andreVanDenOuden->setEmailAddress($emailAndreVanDenOuden);
-      self::$andreVanDenOuden->setRelationNumberKeeper($relationNumberKeeperAndreVanDenOuden);
-      self::$andreVanDenOuden->setUsername('A. van den Ouden');
-      self::$andreVanDenOuden->setPassword($encoder->encodePassword(self::$andreVanDenOuden, $passwordAndreVanDenOuden));
-      self::$andreVanDenOuden->setCellphoneNumber("");
-
-      //Create mocked data
-      self::$henkVerheul = new Client();
-      self::$henkVerheul->setFirstName("Henk");
-      self::$henkVerheul->setLastName("Verheul");
-      self::$henkVerheul->setEmailAddress($emailHenkVerheul);
-      self::$henkVerheul->setRelationNumberKeeper($relationNumberKeeperHenkVerheul);
-      self::$henkVerheul->setUsername('H. Verheul');
-      self::$henkVerheul->setPassword($encoder->encodePassword(self::$henkVerheul, $passwordHenkVerheul));
-      self::$henkVerheul->setCellphoneNumber("");
-
-      //persist data
-      $manager->persist(self::$andreVanDenOuden);
-      $manager->persist(self::$henkVerheul);
-      $manager->flush();
-    }    
   }
 
   /**
