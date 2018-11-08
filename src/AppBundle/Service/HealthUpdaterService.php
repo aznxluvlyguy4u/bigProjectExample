@@ -12,6 +12,7 @@ use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Util\Finder;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -81,10 +82,12 @@ class HealthUpdaterService
      * The issue of LocationHealthMessages without any persisted related illnesses occurs if the LocationHealthUpdate
      * is suddenly aborted halfway.
      *
-     * @param Location $location
+     * @param Location|null $location
      */
-    public function fixLocationHealthMessagesWithNullValues(Location $location)
+    public function fixLocationHealthMessagesWithNullValues(?Location $location)
     {
+        NullChecker::checkLocation($location);
+
         $em = $this->entityManager;
 
         $criteria = Criteria::create()
@@ -123,10 +126,12 @@ class HealthUpdaterService
 
 
     /**
-     * @param Location $location
+     * @param Location|null $location
      */
-    public function fixIncongruentLocationHealthIllnessValues(Location $location)
+    public function fixIncongruentLocationHealthIllnessValues(?Location $location)
     {
+        NullChecker::checkLocation($location);
+
         //Get the latest values
         $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($location, $this->entityManager);
         /** @var MaediVisna $latestMaediVisna */
