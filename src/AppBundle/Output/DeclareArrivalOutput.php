@@ -3,7 +3,6 @@
 namespace AppBundle\Output;
 
 
-use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use Doctrine\Common\Persistence\ObjectManager;
 

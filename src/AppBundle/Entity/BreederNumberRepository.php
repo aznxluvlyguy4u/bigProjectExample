@@ -2,7 +2,6 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Util\SqlUtil;
-use Doctrine\Common\Collections\Criteria;
 
 /**
  * Class BreederNumberRepository

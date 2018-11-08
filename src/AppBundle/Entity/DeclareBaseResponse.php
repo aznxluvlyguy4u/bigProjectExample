@@ -6,8 +6,8 @@ use AppBundle\Enumerator\ErrorKindIndicator;
 use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclareBaseResponse

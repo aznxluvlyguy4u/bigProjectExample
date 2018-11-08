@@ -3,12 +3,7 @@
 namespace AppBundle\Service\Migration;
 
 use AppBundle\Cache\AnimalCacher;
-use AppBundle\Cache\ExteriorCacher;
 use AppBundle\Cache\GeneDiversityUpdater;
-use AppBundle\Cache\NLingCacher;
-use AppBundle\Cache\ProductionCacher;
-use AppBundle\Cache\TailLengthCacher;
-use AppBundle\Cache\WeightCacher;
 use AppBundle\Enumerator\CommandTitle;
 use AppBundle\Service\DataFix\DuplicateAnimalsFixer;
 use AppBundle\Service\DataFix\DuplicateLitterFixer;

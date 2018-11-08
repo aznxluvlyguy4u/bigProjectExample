@@ -5,10 +5,8 @@ namespace AppBundle\Component;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\Location;
-use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\HttpFoundation\Request;
-use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class BirthMessageBuilderAPIController

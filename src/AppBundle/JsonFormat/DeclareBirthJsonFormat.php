@@ -2,13 +2,7 @@
 
 namespace AppBundle\JsonFormat;
 
-use AppBundle\JsonFormat\DeclareBirthJsonFormatChild;
-use AppBundle\JsonFormat\DeclareBirthJsonFormatEwe;
-use AppBundle\JsonFormat\DeclareBirthJsonFormatRam;
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use JMS\Serializer\Annotation as JMS;
-use \DateTime;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**

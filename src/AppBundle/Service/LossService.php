@@ -6,14 +6,12 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareLossResponse;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\DateUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;

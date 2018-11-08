@@ -3,16 +3,12 @@
 namespace AppBundle\Validation;
 
 
-use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareWeight;
-use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Util\NullChecker;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;

@@ -14,7 +14,6 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealthInspection;
-use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Entity\TreatmentType;

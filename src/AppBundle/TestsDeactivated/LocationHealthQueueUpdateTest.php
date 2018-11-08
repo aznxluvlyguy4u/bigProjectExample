@@ -5,23 +5,18 @@ namespace AppBundle\Tests\Controller;
 
 use AppBundle\Component\ArrivalMessageBuilder;
 use AppBundle\Component\ImportMessageBuilder;
-use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrivalRepository;
-use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareImportRepository;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\LocationHealthQueueRepository;
 use AppBundle\Entity\RamRepository;
-use AppBundle\Enumerator\AnimalType;
 use AppBundle\Service\HealthUpdaterService;
 use AppBundle\Service\IRSerializer;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Ram;
 
 /**
  * Class LocationHealthQueueUpdateTest

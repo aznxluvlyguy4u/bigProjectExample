@@ -2,8 +2,8 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Enumerator\AnimalTransferStatus;
+use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
@@ -12,13 +12,13 @@ use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
+use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use Doctrine\Common\Collections\ArrayCollection;
-use \DateTime;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class Animal

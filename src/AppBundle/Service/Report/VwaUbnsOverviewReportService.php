@@ -12,7 +12,6 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use Symfony\Component\HttpFoundation\Request;

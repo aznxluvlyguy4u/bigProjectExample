@@ -4,16 +4,11 @@ namespace AppBundle\Controller;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Constant\Constant;
 use AppBundle\Entity\InvoiceSenderDetails;
-use AppBundle\Entity\BillingAddress;
-use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Validation\AdminValidator;
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
-use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class InvoiceSenderDetailsAPIController

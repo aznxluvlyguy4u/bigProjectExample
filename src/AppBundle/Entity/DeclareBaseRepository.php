@@ -4,9 +4,7 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\TimeUtil;
 

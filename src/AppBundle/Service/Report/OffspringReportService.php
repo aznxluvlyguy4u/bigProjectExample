@@ -9,11 +9,9 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class OffspringReportService extends ReportServiceWithBreedValuesBase

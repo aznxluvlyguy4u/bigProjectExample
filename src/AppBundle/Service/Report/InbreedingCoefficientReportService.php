@@ -8,21 +8,15 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Person;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\Locale;
-use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Report\InbreedingCoefficientReportData;
-use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\NullChecker;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class InbreedingCoefficientReportService extends ReportServiceBase

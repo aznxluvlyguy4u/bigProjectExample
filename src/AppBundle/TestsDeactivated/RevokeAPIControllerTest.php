@@ -3,23 +3,12 @@
 namespace AppBundle\Tests\Controller;
 
 
-use AppBundle\DataFixtures\ORM\MockedDeclareArrival;
-use AppBundle\DataFixtures\ORM\MockedDeclareArrivalResponse;
-use AppBundle\DataFixtures\ORM\MockedTags;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareArrivalResponse;
-use AppBundle\JsonFormat\RevokeDeclarationJsonFormat;
 use AppBundle\Service\IRSerializer;
-use AppBundle\DataFixtures\ORM\MockedAnimal;
-use AppBundle\DataFixtures\ORM\MockedClient;
-use AppBundle\Tests\TestSettings;
-use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Ram;
-use AppBundle\Entity\Ewe;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class RevokeAPIControllerTest

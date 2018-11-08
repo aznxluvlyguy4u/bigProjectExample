@@ -5,7 +5,6 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Util\ResultUtil;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

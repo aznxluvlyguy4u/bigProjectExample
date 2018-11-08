@@ -12,7 +12,6 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\VwaEmployee;
-use AppBundle\Enumerator\Locale;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Translation\TranslatorInterface;
 

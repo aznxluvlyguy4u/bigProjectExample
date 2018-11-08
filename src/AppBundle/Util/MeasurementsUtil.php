@@ -5,13 +5,11 @@ namespace AppBundle\Util;
 
 use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Enumerator\WeightType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
-use Symfony\Component\Validator\Constraints\Time;
 
 class MeasurementsUtil
 {    

@@ -4,7 +4,6 @@
 namespace AppBundle\Component\MixBlup;
 
 
-use AppBundle\Enumerator\MixBlupNullFiller;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Setting\MixBlupInstructionFile;
 use AppBundle\Setting\MixBlupSetting;

@@ -7,7 +7,6 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\EmployeeRepository;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\GenderType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;

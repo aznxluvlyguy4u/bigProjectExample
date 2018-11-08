@@ -3,9 +3,9 @@
 namespace AppBundle\Component;
 
 
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;

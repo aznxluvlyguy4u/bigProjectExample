@@ -2,23 +2,22 @@
 
 namespace AppBundle\DataFixtures\ORM;
 
+use AppBundle\Entity\BillingAddress;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
+use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Country;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
-use AppBundle\Enumerator\LocationHealthStatus;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationAddress;
-use AppBundle\Entity\BillingAddress;
-use AppBundle\Entity\CompanyAddress;
-use AppBundle\Entity\Company;
-use AppBundle\Entity\Client;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

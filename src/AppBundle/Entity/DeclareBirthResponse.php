@@ -5,9 +5,8 @@ namespace AppBundle\Entity;
 use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\DeclareBirth;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclareBirthResponse

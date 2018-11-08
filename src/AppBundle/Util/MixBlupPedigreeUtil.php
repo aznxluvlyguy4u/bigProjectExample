@@ -1,15 +1,14 @@
 <?php
 
 namespace AppBundle\Util;
-use AppBundle\Component\MixBlup\WormResistanceDataFile;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Enumerator\AnimalObjectType;
-use AppBundle\Enumerator\GenderType;
-use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Component\MixBlup\ExteriorDataFile;
 use AppBundle\Component\MixBlup\LambMeatIndexDataFile;
 use AppBundle\Component\MixBlup\MixBlupInstructionFileBase;
 use AppBundle\Component\MixBlup\ReproductionDataFile;
+use AppBundle\Component\MixBlup\WormResistanceDataFile;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Setting\MixBlupSetting;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;

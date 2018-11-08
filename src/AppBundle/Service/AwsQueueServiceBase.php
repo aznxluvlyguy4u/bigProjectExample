@@ -7,8 +7,8 @@ use AppBundle\Constant\Environment;
 use AppBundle\Enumerator\QueueSuffix;
 use AppBundle\Util\ArrayUtil;
 use Aws\Api\AbstractModel;
-use Aws\Sqs\SqsClient;
 use Aws\Credentials\Credentials;
+use Aws\Sqs\SqsClient;
 
 /**
  * Class AWSQueueServiceBase

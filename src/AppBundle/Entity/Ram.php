@@ -7,15 +7,11 @@ use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
-use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\PersistentCollection;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use Doctrine\Common\Collections\ArrayCollection;
-use JMS\Serializer\Annotation\ExclusionPolicy;
-use JMS\Serializer\Annotation\Expose;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class Ram

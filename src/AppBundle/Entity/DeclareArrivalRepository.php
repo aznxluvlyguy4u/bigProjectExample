@@ -1,8 +1,6 @@
 <?php
 
 namespace AppBundle\Entity;
-use AppBundle\Constant\Constant;
-use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**

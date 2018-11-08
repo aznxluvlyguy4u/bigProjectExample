@@ -6,11 +6,9 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\ArrivalMessageBuilder;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareDepartResponse;
@@ -32,7 +30,6 @@ use AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface;
 use AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface;
 use AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 

@@ -2,20 +2,20 @@
 
 namespace AppBundle\Util;
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\GenderHistoryItem;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
-use AppBundle\Entity\Ewe;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
-use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
  * Class GenderChanger

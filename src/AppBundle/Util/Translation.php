@@ -7,7 +7,6 @@ use AppBundle\Enumerator\BirthType;
 use AppBundle\Enumerator\BirthTypeDutch;
 use AppBundle\Enumerator\BlindnessFactorType;
 use AppBundle\Enumerator\BlindnessFactorTypeDutch;
-use AppBundle\Enumerator\BreedTrait;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\GenderType;

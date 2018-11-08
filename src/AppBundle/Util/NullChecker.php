@@ -4,7 +4,6 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;

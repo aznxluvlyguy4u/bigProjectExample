@@ -3,11 +3,9 @@
 namespace AppBundle\Report;
 
 
-use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;

@@ -13,7 +13,6 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Company;
 use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Exterior;

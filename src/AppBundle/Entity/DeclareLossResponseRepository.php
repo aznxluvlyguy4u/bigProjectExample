@@ -1,15 +1,11 @@
 <?php
 
 namespace AppBundle\Entity;
-use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
-use AppBundle\DataFixtures\ORM\MockedDeclareArrivalResponse;
 use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\DeclareArrivalResponseOutput;
 use AppBundle\Output\DeclareLossResponseOutput;
 use Doctrine\Common\Collections\ArrayCollection;
-use AppBundle\Entity\DeclareLoss;
 
 /**
  * Class DeclareLossResponseRepository

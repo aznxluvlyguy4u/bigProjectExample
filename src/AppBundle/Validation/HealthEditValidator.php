@@ -3,16 +3,14 @@
 namespace AppBundle\Validation;
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Person;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
-use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
-use AppBundle\Constant\Constant;
 use Doctrine\Common\Persistence\ObjectManager;
-use \Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Class HealthEditValidator

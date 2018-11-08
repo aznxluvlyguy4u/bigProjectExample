@@ -1,7 +1,6 @@
 <?php
 
 namespace AppBundle\Entity;
-use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\Criteria;
 
 /**

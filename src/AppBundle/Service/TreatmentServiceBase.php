@@ -20,7 +20,6 @@ use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\Validator;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

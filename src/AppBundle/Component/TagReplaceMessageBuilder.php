@@ -5,7 +5,6 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**

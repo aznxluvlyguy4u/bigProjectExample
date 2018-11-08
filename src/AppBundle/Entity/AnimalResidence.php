@@ -3,12 +3,12 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \DateTime;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class AnimalResidence

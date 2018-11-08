@@ -17,7 +17,6 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class LocationHealthEditor

@@ -3,15 +3,12 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Entity\InvoiceRule;
-use AppBundle\Entity\InvoiceRuleSelection;
-use AppBundle\Service\Invoice\BatchInvoiceService;
-use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Entity\Invoice;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use AppBundle\Service\Invoice\BatchInvoiceService;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 
 /**

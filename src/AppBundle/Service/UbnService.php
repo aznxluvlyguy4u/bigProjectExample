@@ -8,14 +8,12 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Processor;
 use AppBundle\Entity\VwaEmployee;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\ProcessorOutput;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 
 

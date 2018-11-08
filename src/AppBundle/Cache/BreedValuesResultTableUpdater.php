@@ -5,10 +5,8 @@ namespace AppBundle\Cache;
 
 
 use AppBundle\Constant\BreedIndexDiscriminatorTypeConstant;
-use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\BreedValueType;
-use AppBundle\Entity\NormalDistribution;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Entity\ResultTableNormalizedBreedGrades;
 use AppBundle\Enumerator\MixBlupType;
@@ -16,7 +14,6 @@ use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValueService;
 use AppBundle\Service\NormalDistributionService;
 use AppBundle\Util\SqlUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;

@@ -14,16 +14,11 @@ use AppBundle\Entity\Inspector;
 use AppBundle\Entity\InspectorAuthorization;
 use AppBundle\Entity\InspectorAuthorizationRepository;
 use AppBundle\Entity\InspectorRepository;
-use AppBundle\Entity\Measurement;
-use AppBundle\Entity\MeasurementRepository;
-use AppBundle\Entity\PedigreeRegister;
-use AppBundle\Entity\Person;
 use AppBundle\JsonFormat\ValidationResults;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 

@@ -3,7 +3,7 @@
 namespace AppBundle\Validation;
 
 use AppBundle\Constant\Constant;
-use \Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Class PasswordValidator

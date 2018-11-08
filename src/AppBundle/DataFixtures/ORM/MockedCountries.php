@@ -3,15 +3,14 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Country;
 use AppBundle\Setting\DataFixtureSetting;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Finder\Finder;
-use AppBundle\Entity\Country;
 
 class MockedCountries implements FixtureInterface, ContainerAwareInterface, OrderedFixtureInterface {
 

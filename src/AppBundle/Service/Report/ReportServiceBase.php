@@ -3,16 +3,13 @@
 
 namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\GenderType;
-use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Service\AWSSimpleStorageService;
-use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\CsvFromSqlResultsWriterService;
+use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\ArrayUtil;
@@ -25,16 +22,14 @@ use AppBundle\Util\TwigOutputUtil;
 use AppBundle\Validation\UlnValidatorInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
-use Knp\Bundle\SnappyBundle\Snappy\Response\PdfResponse;
 use Knp\Snappy\GeneratorInterface;
 use Knp\Snappy\Pdf;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class ReportServiceBase

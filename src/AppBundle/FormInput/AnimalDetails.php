@@ -2,14 +2,10 @@
 
 namespace AppBundle\FormInput;
 
-use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
-use AppBundle\Output\AnimalDetailsOutput;
 use Doctrine\Common\Collections\ArrayCollection;
 
 class AnimalDetails

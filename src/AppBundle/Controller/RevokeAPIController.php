@@ -2,27 +2,12 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Cache\AnimalCacher;
-use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\DeclareNsfoBase;
-use AppBundle\Entity\DeclareWeight;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Enumerator\RequestType;
-use AppBundle\Output\Output;
-use AppBundle\Service\RevokeService;
-use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\RequestUtil;
-use AppBundle\Util\Validator;
-use AppBundle\Validation\DeclareNsfoBaseValidator;
-use Doctrine\Common\Collections\ArrayCollection;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Service\RevokeService;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class RevokeAPIController

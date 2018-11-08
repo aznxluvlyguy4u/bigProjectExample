@@ -2,17 +2,13 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Service\TagSyncService;
-use AppBundle\Util\RequestUtil;
-use AppBundle\Util\Validator;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
-use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Enumerator\RequestType;
-use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use AppBundle\Constant\Constant;
 
 /**
  * @Route("/api/v1/tags-sync")

@@ -2,24 +2,20 @@
 
 namespace AppBundle\Component\Authentication;
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Employee;
-use AppBundle\Entity\Person;
 use AppBundle\Entity\Token;
 use AppBundle\Entity\TokenRepository;
 use AppBundle\Enumerator\TokenType;
-use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\BrowserKit\Tests\ClientTest;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
-use Symfony\Component\Security\Http\HttpUtils;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
-use AppBundle\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Security\Http\HttpUtils;
 
 /**
  * Class TokenAuthenticator

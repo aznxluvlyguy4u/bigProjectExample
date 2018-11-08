@@ -3,10 +3,10 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
-use \DateTime;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class CompanyNote

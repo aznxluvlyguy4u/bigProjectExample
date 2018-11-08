@@ -13,16 +13,12 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\DisplayUtil;
-use AppBundle\Util\FilesystemUtil;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\HttpFoundation\Request;
 
 class LiveStockReportService extends ReportServiceWithBreedValuesBase
 {

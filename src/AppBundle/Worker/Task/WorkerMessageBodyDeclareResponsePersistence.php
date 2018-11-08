@@ -7,7 +7,6 @@ namespace AppBundle\Worker\Task;
 use AppBundle\Entity\DeclareArrivalResponse;
 use AppBundle\Entity\DeclareBaseResponse;
 use AppBundle\Entity\DeclareBirthResponse;
-use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareDepartResponse;
 use AppBundle\Entity\DeclareExportResponse;
 use AppBundle\Entity\DeclareImportResponse;

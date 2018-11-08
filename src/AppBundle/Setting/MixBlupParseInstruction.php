@@ -4,12 +4,11 @@
 namespace AppBundle\Setting;
 
 
-use AppBundle\Component\MixBlup\WormResistanceInstructionFiles;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Constant\MixBlupAnalysis;
 use AppBundle\Component\MixBlup\ExteriorInstructionFiles;
 use AppBundle\Component\MixBlup\LambMeatIndexInstructionFiles;
 use AppBundle\Component\MixBlup\ReproductionInstructionFiles;
+use AppBundle\Component\MixBlup\WormResistanceInstructionFiles;
+use AppBundle\Constant\MixBlupAnalysis;
 
 
 /**

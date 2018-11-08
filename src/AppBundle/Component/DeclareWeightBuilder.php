@@ -3,8 +3,6 @@
 namespace AppBundle\Component;
 
 
-use AppBundle\Component\NsfoBaseBuilder;
-use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;

@@ -2,7 +2,6 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;

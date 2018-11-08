@@ -3,7 +3,6 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareDepartResponse;
 use AppBundle\Service\IRSerializer;
@@ -11,11 +10,9 @@ use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use Liip\FunctionalTestBundle\Test\WebTestCase;
+use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class MockedDeclareDepart implements FixtureInterface, ContainerAwareInterface, OrderedFixtureInterface
 {

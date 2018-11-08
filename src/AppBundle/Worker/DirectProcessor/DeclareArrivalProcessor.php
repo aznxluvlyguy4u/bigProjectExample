@@ -5,7 +5,6 @@ namespace AppBundle\Worker\DirectProcessor;
 
 
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareArrivalResponse;
 use AppBundle\Entity\Location;

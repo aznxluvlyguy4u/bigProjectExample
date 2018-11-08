@@ -4,13 +4,12 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Traits\EntityClassInfo;
-use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\Validator\Constraints\DateTime;
+use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as JMS;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
-use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
-use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class Tag

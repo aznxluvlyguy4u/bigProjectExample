@@ -5,10 +5,9 @@ namespace AppBundle\Component;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\Common\Collections\ArrayCollection;
-use AppBundle\Entity\Person;
 
 /**
  * Class TagTransferMessageBuilder

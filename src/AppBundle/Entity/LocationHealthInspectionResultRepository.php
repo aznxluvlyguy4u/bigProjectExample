@@ -1,7 +1,6 @@
 <?php
 
 namespace AppBundle\Entity;
-use AppBundle\Constant\Constant;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**

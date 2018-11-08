@@ -8,10 +8,6 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
-use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class PersonRepository

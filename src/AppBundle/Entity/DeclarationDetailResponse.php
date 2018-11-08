@@ -3,9 +3,8 @@
 namespace AppBundle\Entity;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
-use \AppBundle\Entity\DeclarationDetail;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclarationDetailResponse

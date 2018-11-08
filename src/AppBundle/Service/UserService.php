@@ -19,7 +19,6 @@ use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HeaderValidation;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class UserService

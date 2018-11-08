@@ -2,9 +2,9 @@
 
 namespace AppBundle\Worker\Task;
 
-use JMS\Serializer\Annotation as JMS;
 use AppBundle\Component\Utils;
 use DateTime;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class WorkerMessageBody

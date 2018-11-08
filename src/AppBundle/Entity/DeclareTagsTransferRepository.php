@@ -5,7 +5,6 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\TagStateType;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class DeclareTagsTransferRepository

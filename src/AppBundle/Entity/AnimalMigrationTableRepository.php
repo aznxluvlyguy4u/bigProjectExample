@@ -1,8 +1,6 @@
 <?php
 
 namespace AppBundle\Entity;
-use AppBundle\Util\StringUtil;
-use AppBundle\Util\Validator;
 
 /**
  * Class AnimalMigrationTableRepository

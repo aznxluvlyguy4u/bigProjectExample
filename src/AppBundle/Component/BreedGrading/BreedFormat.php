@@ -4,7 +4,6 @@
 namespace AppBundle\Component\BreedGrading;
 
 
-use AppBundle\Constant\BreedIndexDiscriminatorTypeConstant;
 use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Constant\ReportFormat;
 use AppBundle\Entity\NormalDistribution;

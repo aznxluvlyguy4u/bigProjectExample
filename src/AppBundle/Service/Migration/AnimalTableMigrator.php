@@ -3,7 +3,6 @@
 namespace AppBundle\Service\Migration;
 
 use AppBundle\Component\MessageBuilderBase;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\AnimalType;
@@ -16,7 +15,6 @@ use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
-use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**

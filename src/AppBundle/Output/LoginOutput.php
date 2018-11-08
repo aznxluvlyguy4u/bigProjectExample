@@ -4,7 +4,6 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Company;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 

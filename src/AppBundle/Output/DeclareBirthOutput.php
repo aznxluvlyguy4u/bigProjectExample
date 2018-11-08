@@ -3,7 +3,6 @@
 namespace AppBundle\Output;
 
 
-use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareBirth;
 
 /**

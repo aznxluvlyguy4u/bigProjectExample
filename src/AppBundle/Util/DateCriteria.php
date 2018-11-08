@@ -5,7 +5,6 @@ namespace AppBundle\Util;
 
 
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Collections\ExpressionBuilder;
 use Doctrine\Common\Collections\Expr\Comparison;
 
 

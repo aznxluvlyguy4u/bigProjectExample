@@ -5,14 +5,11 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\StringUtil;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \DateTime;
-use AppBundle\Entity\Person;
-use AppBundle\Entity\Invoice;
-use AppBundle\Entity\Location;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class Company

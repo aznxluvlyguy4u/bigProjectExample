@@ -6,7 +6,6 @@ namespace AppBundle\Service;
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Constant\ReportLabel;
 use AppBundle\Controller\MeasurementAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Exterior;

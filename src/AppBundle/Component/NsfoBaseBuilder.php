@@ -8,8 +8,6 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\RequestStateType;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * The base for non I&R messages/declarations

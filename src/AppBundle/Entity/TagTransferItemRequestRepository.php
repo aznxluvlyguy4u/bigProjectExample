@@ -1,7 +1,6 @@
 <?php
 
 namespace AppBundle\Entity;
-use Doctrine\ORM\Query\Expr\Base;
 
 /**
  * TagTransferItemRequestRepository

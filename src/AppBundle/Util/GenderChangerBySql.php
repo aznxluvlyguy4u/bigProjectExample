@@ -4,7 +4,6 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Enumerator\GenderType;
-use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\Connection;
 
 /**

@@ -11,7 +11,6 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\MobileDevice;
 use AppBundle\Entity\Person;
-use AppBundle\Enumerator\DashboardType;
 use AppBundle\Output\MenuBarOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;

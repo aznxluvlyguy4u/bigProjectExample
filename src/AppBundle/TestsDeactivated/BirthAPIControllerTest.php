@@ -2,26 +2,14 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\Constant\Constant;
-use AppBundle\DataFixtures\ORM\MockedTags;
-use AppBundle\Entity\DeclareBirth;
-use AppBundle\JsonFormat\DeclareBirthJsonFormat;
-use AppBundle\Entity\Tag;
-use AppBundle\JsonFormat\DeclareBirthJsonFormatChild;
-use AppBundle\JsonFormat\DeclareBirthJsonFormatEwe;
-use AppBundle\JsonFormat\DeclareBirthJsonFormatRam;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Ram;
 use AppBundle\Service\IRSerializer;
-use AppBundle\DataFixtures\ORM\MockedAnimal;
-use AppBundle\DataFixtures\ORM\MockedClient;
-use AppBundle\Tests\TestSettings;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Ram;
-use AppBundle\Entity\Ewe;
-use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class BirthAPIControllerTest

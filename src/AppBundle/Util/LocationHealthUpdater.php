@@ -3,6 +3,7 @@
 namespace AppBundle\Util;
 
 use AppBundle\Component\LocationHealthMessageBuilder;
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
@@ -11,7 +12,6 @@ use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
-use AppBundle\Constant\Constant;
 use AppBundle\Service\EmailService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;

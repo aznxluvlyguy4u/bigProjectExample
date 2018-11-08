@@ -6,7 +6,6 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareWeight;
-use AppBundle\Entity\Person;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Collection;
 

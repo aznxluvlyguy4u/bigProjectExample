@@ -11,7 +11,6 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 

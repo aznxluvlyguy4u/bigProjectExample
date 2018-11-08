@@ -4,7 +4,6 @@ namespace AppBundle\JsonFormat;
 
 
 use AppBundle\Entity\Animal;
-use AppBundle\JsonFormat\JsonFormatAnimalBase;
 
 /**
  * Class DeclareArrivalJsonFormat

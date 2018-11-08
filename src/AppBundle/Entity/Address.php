@@ -6,8 +6,8 @@ use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class Address

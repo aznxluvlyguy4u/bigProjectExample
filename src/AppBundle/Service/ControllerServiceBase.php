@@ -34,7 +34,6 @@ use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\TokenType;
-use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\SqlView\SqlViewManagerInterface;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\RequestUtil;

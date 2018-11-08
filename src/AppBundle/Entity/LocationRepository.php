@@ -3,14 +3,11 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\Country;
 use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Util\DateUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
-use AppBundle\Util\TimeUtil;
-use AppBundle\Enumerator\Country;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Query\Expr\Join;
 

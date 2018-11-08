@@ -7,7 +7,6 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\LitterUtil;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Validator\Constraints\Collection;
 
 /**

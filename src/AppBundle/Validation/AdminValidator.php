@@ -2,20 +2,13 @@
 
 namespace AppBundle\Validation;
 
-use AppBundle\Component\Utils;
-use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Component\HttpFoundation\JsonResponse as AppBundleJsonResponse;
 use AppBundle\Entity\Employee;
-use AppBundle\Entity\Person;
-use AppBundle\Entity\PersonRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\JsonFormat\ValidationResults;
-use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
-use Doctrine\Common\Collections\Collection;
-use AppBundle\Constant\Constant;
-use \Symfony\Component\HttpFoundation\JsonResponse;
-use AppBundle\Component\HttpFoundation\JsonResponse as AppBundleJsonResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 /**

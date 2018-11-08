@@ -5,8 +5,8 @@ namespace AppBundle\Component\ExternalProvider\ApiConnectors;
 use PhpTwinfield\ApiConnectors\BaseApiConnector;
 use PhpTwinfield\Mappers\OfficeMapper;
 use PhpTwinfield\Office;
-use PhpTwinfield\Services\FinderService;
 use PhpTwinfield\Request\Catalog\Office as OfficeRequestDocument;
+use PhpTwinfield\Services\FinderService;
 
 /**
  * A facade to make interaction with the the Twinfield service easier when trying to retrieve or send information about

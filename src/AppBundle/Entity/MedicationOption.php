@@ -2,15 +2,10 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Entity\Employee;
 use AppBundle\Traits\EntityClassInfo;
-use AppBundle\Util\Translation;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use Doctrine\Common\Collections\ArrayCollection;
-use \DateTime;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class MedicationOption
