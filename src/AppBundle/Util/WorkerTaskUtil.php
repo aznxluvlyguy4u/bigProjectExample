@@ -51,7 +51,7 @@ class WorkerTaskUtil
         if(count($birthRequestMessages) == 0) { return null; }
 
         /** @var DeclareBirth $firstBirth */
-        $firstBirth = $birthRequestMessages[0];
+        $firstBirth = ArrayUtil::firstValue($birthRequestMessages);
         $messageBody = self::createResultTableMessageBodyByLitter($firstBirth->getLitter());
         if($messageBody) {
             $messageBody->setScope(WorkerTaskScope::BIRTH);

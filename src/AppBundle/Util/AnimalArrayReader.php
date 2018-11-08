@@ -113,7 +113,7 @@ class AnimalArrayReader
     {
         $count = count($animals);
         if($count == 1) {
-            return $animals[0];
+            return ArrayUtil::firstValue($animals);
 
         } elseif($count > 1) {
 
@@ -129,7 +129,7 @@ class AnimalArrayReader
                 } elseif($animal->getId() == $lowestAnimalId) { return $animal; }
             }
             //By default return the first Animal
-            return $animals[0];
+            return ArrayUtil::firstValue($animals);
 
         } else { //count == 0
             return null;
@@ -145,7 +145,7 @@ class AnimalArrayReader
     {
         if(count($animals) == 0) { return null; }
         /** @var Animal $firstAnimal */
-        $firstAnimal = $animals[0];
+        $firstAnimal = ArrayUtil::firstValue($animals);
         $lowestId = $firstAnimal->getId();
 
         /** @var Animal $animal */
