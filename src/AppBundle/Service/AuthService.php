@@ -33,48 +33,6 @@ class AuthService extends AuthServiceBase
     public function signUpUser(Request $request)
     {
         return ResultUtil::errorResult('no online registration available at the moment', 403);
-
-        //TODO There is no registration page at the moment, so the route below is blocked
-        $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
-        $inputValues = AuthService::getCredentialsFromBasicAuthHeader($credentials);
-        $emailAddress = $inputValues[JsonInputConstant::EMAIL_ADDRESS];
-        $password = $inputValues[JsonInputConstant::PASSWORD];
-
-        /*
-        {
-            "first_name":"Jane",
-            "last_name":"Doe",
-            "ubn":"123",
-            "email_address": "",
-            "postal_code":"1234AB",
-            "home_number":"12"
-        }
-        */
-
-        //Get content to array
-        $content = RequestUtil::getContentAsArray($request);
-
-        $firstName = $content['first_name'];
-        $lastName = $content['lastName'];
-        $ubn = $content['ubn'];
-        $emailAddress = $content['email_address'];
-        $postalCode = $content['postal_code'];
-        $homeNumber = $content['home_number'];
-
-        $client = new Client();
-        $client->setFirstName($firstName);
-        $client->setLastName($lastName);
-        $client->setRelationNumberKeeper(uniqid(mt_rand(0,9999999)));
-        $client->setEmailAddress($emailAddress);
-        $client->setUsername($username);
-
-        $encodedPassword = $this->encoder->encodePassword($client, $password);
-        $client->setPassword($encodedPassword);
-
-        /** @var Client $client */
-        $client = $this->getManager()->getRepository(Client::class)->persist($client);
-
-        return new JsonResponse(array("access_token" => $client->getAccessToken()), 200);
     }
 
 
@@ -245,20 +203,6 @@ class AuthService extends AuthServiceBase
 
         return new JsonResponse(array("code" => 401, "message"=>"Password in database doesn't match new or old password"), 401);
 
-    }
-
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function generatePasswordsForNewClients(Request $request)
-    {
-        return ResultUtil::errorResult('Forbidden', 403);
-
-        $migrationResults = $this->getClientMigratorService()->generateNewPasswordsAndEmailsForMigratedClients(RequestUtil::getContentAsArray($request));
-
-        return ResultUtil::successResult($migrationResults);
     }
 
 

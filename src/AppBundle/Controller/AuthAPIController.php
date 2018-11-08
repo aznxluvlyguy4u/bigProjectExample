@@ -173,21 +173,6 @@ class AuthAPIController extends APIController {
       return $this->get('app.security.auth')->passwordResetRequest($request, DashboardType::CLIENT);
   }
 
-  /**
-   * Generate new passwords for new clients and store them.
-   *
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("/generate-passwords")
-   * @Method("POST")
-   *
-   * @param Request $request
-   */
-  public function generatePasswordsForNewClients(Request $request)
-  {
-      return $this->get('app.security.auth')->generatePasswordsForNewClients($request);
-  }
-
 
   /**
    * Validate whether a ubn in the header is valid or not.
