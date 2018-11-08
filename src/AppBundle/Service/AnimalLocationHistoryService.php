@@ -38,13 +38,19 @@ class AnimalLocationHistoryService
     public static function logAnimalResidenceInEdit($messageObject) {
 
         $animal = $messageObject->getAnimal();
+        if (!$animal) {
+            return null;
+        }
+
         $animalResidence = Utils::returnLastItemFromCollectionByLogDate($animal->getAnimalResidenceHistory());
-        $animalResidence->setIsPending(true);
+        if ($animalResidence) {
+            $animalResidence->setIsPending(true);
 
-        //The Date has to be set by the worker
+            //The Date has to be set by the worker
 
-        self::$entityManager->persist($animalResidence);
-        self::$entityManager->flush();
+            self::$entityManager->persist($animalResidence);
+            self::$entityManager->flush();
+        }
 
         return $animalResidence;
     }
