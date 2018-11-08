@@ -396,7 +396,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                         default: $data = ''; break;
                     }
 
-                    $errorMessage = $this->getParentErrorResponse($newParentId, $parentType, $data);
+                    $errorMessage = $this->getParentErrorResponse($typeKey, $parentType, $data);
 
                     $totalErrorMessage .= $prefix . $errorMessage;
                     $prefix = ' ';
