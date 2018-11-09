@@ -349,7 +349,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     {
         if (
             !$location->getOwner() ||
-            ($location->getOwner() && !empty($location->getOwner()->getRelationNumberKeeper()))
+            ($location->getOwner() && empty($location->getOwner()->getRelationNumberKeeper()))
         ) {
             throw new MissingRelationNumberKeeperOfLocationHttpException($this->translator, $location);
         }
