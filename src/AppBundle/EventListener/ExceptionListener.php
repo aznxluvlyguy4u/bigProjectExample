@@ -41,8 +41,10 @@ class ExceptionListener
         // You get the exception object from the received event
         $exception = $event->getException();
 
-        $this->logger->error($exception->getMessage());
-        $this->logger->error($exception->getTraceAsString());
+        if (self::exceptionShouldBeLogged($exception)) {
+            $this->logger->error($exception->getMessage());
+            $this->logger->error($exception->getTraceAsString());
+        }
 
         $code = self::getHttpResponseCodeFromException($exception);
         $errorMessage = empty($exception->getMessage()) || self::isSensitiveException($exception)
@@ -128,6 +130,21 @@ class ExceptionListener
             default: return empty($exception->getCode()) || $exception->getCode() === Response::HTTP_OK
                 ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
         }
+    }
+
+
+    /**
+     * Ignore logging for general user input validations.
+     *
+     * @param \Exception $exception
+     * @return bool
+     */
+    private static function exceptionShouldBeLogged(\Exception $exception): bool
+    {
+        return !(
+            $exception instanceof PreconditionFailedHttpException ||
+            $exception instanceof PreconditionRequiredHttpException
+        );
     }
 
 
