@@ -35,7 +35,9 @@ class MissingRelationNumberKeeperOfLocationHttpException extends PreconditionFai
      */
     private function getMessageFromLocation(TranslatorInterface $translator, Location $location): string
     {
+        $companyName = $location->getCompanyName(true);
+        $companyNameString = empty($companyName) ? '' : strtolower($translator->trans('COMPANY NAME')).': '.$companyName.', ';
         return $translator->trans('THE LOCATION HAS NO RELATION NUMBER KEEPER IN THE NSFO SYSTEM'). '. '
-            . $translator->trans('UBN').': '.$location->getUbn();
+            . $companyNameString . $translator->trans('UBN').': '.$location->getUbn();
     }
 }

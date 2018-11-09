@@ -1240,4 +1240,15 @@ class Location
         }
         return null;
     }
+
+
+    /**
+     * @param bool $returnEmptyStringAsNull
+     * @return null|string
+     */
+    public function getCompanyName($returnEmptyStringAsNull = false): ?string
+    {
+        $companyName = $this->getCompany() ? $this->getCompany()->getCompanyName() : null;
+        return $returnEmptyStringAsNull && empty($companyName) ? null : $companyName;
+    }
 }
