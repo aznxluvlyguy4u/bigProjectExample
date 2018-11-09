@@ -5,7 +5,6 @@ namespace AppBundle\Service\Google;
 use AppBundle\Entity\Message as NsfoNotificationMessage;
 use AppBundle\Entity\Person;
 use AppBundle\Util\ExceptionUtil;
-use Kreait\Firebase\Exception\MessagingException;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\MessageData;
@@ -111,7 +110,7 @@ class FireBaseService
 
             $this->messaging->send($message);
 
-        } catch(MessagingException $e) {
+        } catch(\Throwable $e) {
             ExceptionUtil::logException($this->logger, $e);
         }
     }
