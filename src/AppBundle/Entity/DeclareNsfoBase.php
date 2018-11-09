@@ -179,7 +179,9 @@ abstract class DeclareNsfoBase implements DeclareLogInterface
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "LAST_MATE",
+     *     "MATINGS"
      * })
      */
     protected $isOverwrittenVersion;
