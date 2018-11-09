@@ -189,6 +189,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
+        $this->validateRelationNumberKeeperOfLocation($location);
 
         $clientId = $client->getId();
         $locationId = $location->getId();

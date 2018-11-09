@@ -200,6 +200,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
+        $this->validateRelationNumberKeeperOfLocation($location);
 
         $useRvoLogic = $location->isDutchLocation();
 
@@ -626,6 +627,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
                 .' => '.$locationOfDestination->getUbn().' ['.$locationOfDestination->getCountryCode().']'
             );
         }
+
+        $this->validateRelationNumberKeeperOfLocation($departLocation);
 
         return $departLocation;
     }

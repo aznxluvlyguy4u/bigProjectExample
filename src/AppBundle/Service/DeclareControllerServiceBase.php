@@ -36,6 +36,7 @@ use AppBundle\Exception\DeclareToOtherCountryHttpException;
 use AppBundle\Exception\EventDateBeforeDateOfBirthHttpException;
 use AppBundle\Exception\InvalidStnHttpException;
 use AppBundle\Exception\InvalidUlnHttpException;
+use AppBundle\Exception\MissingRelationNumberKeeperOfLocationHttpException;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
@@ -337,6 +338,20 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
             $message = ucfirst($this->translator->trans(StringUtil::getDeclareTranslationKey($declareClazz, true)))
             .' '.$this->translator->trans('ARE ONLY ALLOWED FOR DUTCH UBNS');
             throw new PreconditionFailedHttpException($message);
+        }
+    }
+
+
+    /**
+     * @param Location $location
+     */
+    protected function validateRelationNumberKeeperOfLocation(Location $location)
+    {
+        if (
+            !$location->getOwner() ||
+            ($location->getOwner() && !empty($location->getOwner()->getRelationNumberKeeper()))
+        ) {
+            throw new MissingRelationNumberKeeperOfLocationHttpException($this->translator, $location);
         }
     }
 

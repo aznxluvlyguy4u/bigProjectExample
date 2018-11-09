@@ -53,6 +53,7 @@ class TagReplaceService extends DeclareControllerServiceBase
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
+        $this->validateRelationNumberKeeperOfLocation($location);
 
         $useRvoLogic = $location->isDutchLocation();
 

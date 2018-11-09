@@ -173,6 +173,7 @@ class DepartService extends DeclareControllerServiceBase
         $this->nullCheckLocation($location);
 
         $useRvoLogic = $location->isDutchLocation();
+        $this->validateRelationNumberKeeperOfLocation($location);
 
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
         $arrivalLog = null;
@@ -200,6 +201,7 @@ class DepartService extends DeclareControllerServiceBase
 
         $arrival = null;
         if($arrivalLocation) {
+            $this->validateRelationNumberKeeperOfLocation($arrivalLocation);
             $arrivalOwner = $arrivalLocation->getCompany()->getOwner();
 
             //DeclareArrival
@@ -285,6 +287,7 @@ class DepartService extends DeclareControllerServiceBase
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
+        $this->validateRelationNumberKeeperOfLocation($location);
 
         $useRvoLogic = $location->isDutchLocation();
 
