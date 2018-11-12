@@ -146,7 +146,18 @@ nelmio_cors:
 nelmio_api_doc: ~
 
 monolog:
+    channels: [security, non_security]
     handlers:
+        non_security_handler:
+            level:    error
+            type:     stream
+            path:     '%kernel.logs_dir%/%kernel.environment%_non_security_exceptions_only.log'
+            channels: [non_security]
+        security_handler:
+            level:    error
+            type:     stream
+            path:     '%kernel.logs_dir%/%kernel.environment%_security_exceptions_only.log'
+            channels: [security]
         console:
             type: console
             verbosity_levels:

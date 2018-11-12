@@ -1104,6 +1104,8 @@ services:
     AppBundle\EventListener\ExceptionListener:
         arguments:
             - '@logger'
+            - '@monolog.logger.non_security'
+            - '@monolog.logger.security'
             - '%environment%'
         tags:
             - { name: kernel.event_listener, event: kernel.exception }

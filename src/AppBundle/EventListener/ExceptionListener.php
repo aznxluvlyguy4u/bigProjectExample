@@ -7,6 +7,7 @@ namespace AppBundle\EventListener;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Environment;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\ExceptionUtil;
 use AppBundle\Util\ResultUtil;
 use Doctrine\ORM\ORMException;
 use Doctrine\ORM\ORMInvalidArgumentException;
@@ -29,10 +30,19 @@ class ExceptionListener
 
     /** @var Logger */
     private $logger;
+    /** @var Logger */
+    private $nonSecurityOnlyLogger;
+    /** @var Logger */
+    private $securityOnlyLogger;
 
-    public function __construct(Logger $logger, $environment)
+    public function __construct(Logger $logger,
+                                Logger $nonSecurityOnlyLogger,
+                                Logger $securityOnlyLogger,
+                                $environment)
     {
         $this->logger = $logger;
+        $this->nonSecurityOnlyLogger = $nonSecurityOnlyLogger;
+        $this->securityOnlyLogger = $securityOnlyLogger;
         $this->environment = $environment;
     }
 
@@ -42,8 +52,14 @@ class ExceptionListener
         $exception = $event->getException();
 
         if (self::exceptionShouldBeLogged($exception)) {
-            $this->logger->error($exception->getMessage());
-            $this->logger->error($exception->getTraceAsString());
+            ExceptionUtil::logException($this->logger, $exception);
+
+            if (self::isSecurityException($exception)) {
+                ExceptionUtil::logException($this->securityOnlyLogger, $exception);
+            } else {
+                ExceptionUtil::logException($this->nonSecurityOnlyLogger, $exception);
+            }
+
         }
 
         $code = self::getHttpResponseCodeFromException($exception);
@@ -144,6 +160,21 @@ class ExceptionListener
         return !(
             $exception instanceof PreconditionFailedHttpException ||
             $exception instanceof PreconditionRequiredHttpException
+        );
+    }
+
+
+    /**
+     * @param \Exception $exception
+     * @return bool
+     */
+    private static function isSecurityException(\Exception $exception): bool
+    {
+        return (
+            $exception instanceof NotFoundHttpException ||
+            $exception instanceof UnauthorizedHttpException ||
+            $exception instanceof AccessDeniedHttpException ||
+            $exception instanceof InsufficientAuthenticationException
         );
     }
 
