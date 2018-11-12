@@ -94,10 +94,22 @@ class FireBaseService
      * @param string $messageTypeValue
      * @param string $title
      * @param string $body
+     * @param $deactivate bool
      * @param MessageData|array|null $data
      */
-    private function sendMessageBase($messageTypeKey, $messageTypeValue, $title, $body, $data = null)
+    private function sendMessageBase($messageTypeKey, $messageTypeValue, $title, $body, $data = null,
+                                     $deactivate = true)
     {
+        /*
+         * TODO reactivate sending messages on the new server instance
+         * Currently sending the message on the old instance results in exception: "OpenSSL unable to sign data"
+         * So sending notifications will be deactivated until after the migration to the new instance.
+         */
+
+        if ($deactivate) {
+            return;
+        }
+
         try {
             $notification = Notification::create($title, $body);
 
