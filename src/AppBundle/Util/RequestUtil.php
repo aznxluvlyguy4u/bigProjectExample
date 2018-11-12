@@ -30,7 +30,12 @@ class RequestUtil
             }
         }
 
-        return new ArrayCollection(json_decode($content, true));
+        $decodedJson = json_decode($content, true);
+        if ($decodedJson === null || $decodedJson === false) {
+            throw new BadRequestHttpException();
+        }
+
+        return new ArrayCollection($decodedJson);
     }
 
 
