@@ -507,6 +507,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         if (!$pedigreeCodeExists) {
             $this->verifyUlnFormatByAnimalArray($animalArray);
+            return;
         }
 
 
