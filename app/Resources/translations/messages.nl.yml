@@ -461,6 +461,7 @@ THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: De gebeurtenisdatum kan niet 
 THE ULN HAS AN INVALID FORMAT: Het ULN heeft een ongeldig format
 THE STN HAS AN INVALID FORMAT: Het STN heeft een ongeldig format
 THE ANIMAL IS NOT ON THE GIVEN LOCATION: Het dier behoort niet tot de opgegeven locatie
+AN IDENTICAL %requestState% %declare% ALREADY EXISTS: Een identieke %declare% (%requestState%) bestaat al
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen
@@ -470,6 +471,9 @@ DECLARE_EXPORTS: exportmeldingen
 DECLARE_LOSSES: sterftemeldingen
 DECLARE_TAGS_TRANSFERS: oormerkoverdrachten
 DECLARE_TAG_REPLACEMENTS: omnummeringen
+
+DECLARE: melding
+AppBundle\Entity\DeclareArrival: aanvoermelding
 
 #Messages
 DECLARE_ARRIVAL_NOTIFICATION_MESSAGE: Automatisch een aanvoer melding uitgevoerd

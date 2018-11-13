@@ -9,6 +9,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\ArrivalAPIControllerInterface;
+use AppBundle\Criteria\DeclareCriteria;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareArrivalResponse;
 use AppBundle\Entity\DeclareDepart;
@@ -22,6 +23,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Exception\AnimalNotOnDepartLocationHttpException;
 use AppBundle\Exception\DeadAnimalHttpException;
+use AppBundle\Exception\DuplicateDeclareHttpException;
 use AppBundle\Exception\FeatureNotAvailableHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
@@ -35,7 +37,6 @@ use AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface;
 use AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
@@ -206,11 +207,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $arrivalOrImportLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
-        //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
-        $pedigreeValidation = $this->validateArrivalPost($content, $location->isDutchLocation());
-        if(!$pedigreeValidation->get(Constant::IS_VALID_NAMESPACE)) {
-            return $pedigreeValidation->get(Constant::RESPONSE);
-        }
+        $this->validateArrivalPost($content, $location);
 
         $departLocation = $this->getValidatedLocationPreviousOwner($location, $content->get(Constant::UBN_PREVIOUS_OWNER_NAMESPACE));
 
@@ -329,7 +326,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $actionLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
         //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
-        $pedigreeValidation = $this->validateArrivalPost($content, $location->isDutchLocation());
+        $pedigreeValidation = $this->validateArrivalPost($content, $location);
         if(!$pedigreeValidation->get(Constant::IS_VALID_NAMESPACE)) {
             return $pedigreeValidation->get(Constant::RESPONSE);
         }
@@ -496,59 +493,53 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
     /**
      * @param ArrayCollection $content
-     * @param bool $isDutchLocation
-     * @return ArrayCollection
+     * @param Location $location
      */
-    private function validateArrivalPost(ArrayCollection $content, $isDutchLocation)
+    private function validateArrivalPost(ArrayCollection $content, Location $location)
     {
-        $errorCode = Response::HTTP_PRECONDITION_REQUIRED;
-
-        //Default values
-        $result = new ArrayCollection();
-        $jsonErrorResponse = null;
-        $isValid = true;
-        $result->set(Constant::IS_VALID_NAMESPACE, $isValid);
-        $result->set(Constant::RESPONSE, $jsonErrorResponse);
-
-
         $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
         $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
         $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
-        $this->verifyUbnFormat($content->get(JsonInputConstant::UBN_PREVIOUS_OWNER), $isDutchLocation);
+        $this->verifyUbnFormat($content->get(JsonInputConstant::UBN_PREVIOUS_OWNER), $location->isDutchLocation());
 
         //Don't check if uln was chosen instead of pedigree
         $pedigreeCodeExists = $pedigreeCountryCode != null && $pedigreeNumber != null;
+
+        $this->verifyIfArrivalDoesNotExistYet($content, $location, $pedigreeCodeExists);
+
         if (!$pedigreeCodeExists) {
             $this->verifyUlnFormatByAnimalArray($animalArray);
-            return $result;
         }
 
 
         $isFormatCorrect = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
 
+        //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
         if (!$isFormatCorrect) {
-            $isValid = false;
             //TODO Translate message in English and match it with the translator in the Frontend
-            $jsonErrorResponse = new JsonResponse(array('code' => $errorCode,
-                "pedigree" => $pedigreeCountryCode . $pedigreeNumber,
-                "message" => "Het stamboeknummer moet deze structuur XXXXX-XXXXX hebben."), $errorCode);
-
+            throw new PreconditionRequiredHttpException("Het stamboeknummer moet deze structuur XXXXX-XXXXX hebben.");
         } else {
             $pedigreeInDatabaseVerification = $this->verifyOnlyPedigreeCodeInAnimal($animalArray);
             $isExistsInDatabase = $pedigreeInDatabaseVerification->get('isValid');
 
             if (!$isExistsInDatabase) {
-                $isValid = false;
-                $jsonErrorResponse = new JsonResponse(array('code' => $errorCode,
-                    "pedigree" => $pedigreeCountryCode . $pedigreeNumber,
-                    "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), $errorCode);
+                throw new PreconditionRequiredHttpException("PEDIGREE VALUE IS NOT REGISTERED WITH NSFO");
             }
         }
+    }
 
-        $result->set(Constant::IS_VALID_NAMESPACE, $isValid);
-        $result->set(Constant::RESPONSE, $jsonErrorResponse);
 
-        return $result;
+    /**
+     * @param ArrayCollection $content
+     * @param Location $location
+     * @param bool $pedigreeCodeExists
+     */
+    private function verifyIfArrivalDoesNotExistYet(ArrayCollection $content, Location $location,
+                                                    $pedigreeCodeExists = false)
+    {
+        $arrivals = $this->getManager()->getRepository(DeclareArrival::class)
+            ->findByDeclareInput($content, $location, $pedigreeCodeExists);
+        $this->verifyDeclareDoesNotExistYet(DeclareArrival::class, $arrivals);
     }
 
 

@@ -7,6 +7,7 @@ namespace AppBundle\Service;
 use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Criteria\DeclareCriteria;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -33,6 +34,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Exception\AnimalNotOnLocationHttpException;
 use AppBundle\Exception\DeclareToOtherCountryHttpException;
+use AppBundle\Exception\DuplicateDeclareHttpException;
 use AppBundle\Exception\EventDateBeforeDateOfBirthHttpException;
 use AppBundle\Exception\InvalidStnHttpException;
 use AppBundle\Exception\InvalidUlnHttpException;
@@ -538,6 +540,27 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
             throw new EventDateBeforeDateOfBirthHttpException(
                 $this->translator, $animal->getDateOfBirth(), $eventDate
             );
+        }
+    }
+
+
+    /**
+     * @param string $declareClazz
+     * @param ArrayCollection $declares
+     */
+    protected function verifyDeclareDoesNotExistYet(string $declareClazz, ArrayCollection $declares)
+    {
+        if ($declares->isEmpty()) {
+            return;
+        }
+
+        $hasOpenArrivals = $declares->matching(DeclareCriteria::byOpenRequestState())
+                ->count() > 0;
+        $hasFinishedArrivals = $declares->matching(DeclareCriteria::byFinishedOrFinishedWithWarningRequestState())
+                ->count() > 0;
+
+        if ($hasOpenArrivals || $hasFinishedArrivals) {
+            throw new DuplicateDeclareHttpException($this->translator, $declareClazz, $hasOpenArrivals);
         }
     }
 }

@@ -453,6 +453,7 @@ THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: The event date cannot be befo
 THE ULN HAS AN INVALID FORMAT: The ULN has an invalid format
 THE STN HAS AN INVALID FORMAT: The STN has an invalid format
 THE ANIMAL IS NOT ON THE GIVEN LOCATION: The animal is not on the given location
+AN IDENTICAL %requestState% %declare% ALREADY EXISTS: An identical %declare% (%requestState%) already exists
 
 #Declares
 DECLARE_ARRIVALS: arrivals
@@ -462,6 +463,8 @@ DECLARE_EXPORTS: exports
 DECLARE_LOSSES: losses
 DECLARE_TAGS_TRANSFERS: tag transfers
 DECLARE_TAG_REPLACEMENTS: tag replacements
+
+AppBundle\Entity\DeclareArrival: arrival
 
 #Messages
 DECLARE_ARRIVAL_NOTIFICATION_MESSAGE: Automatically issued an arrival notification
