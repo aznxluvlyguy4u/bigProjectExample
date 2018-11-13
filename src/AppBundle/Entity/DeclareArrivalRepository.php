@@ -4,8 +4,8 @@ namespace AppBundle\Entity;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\RequestUtil;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 /**
  * Class DeclareArrivalRepository
@@ -39,7 +39,12 @@ class DeclareArrivalRepository extends BaseRepository
   }
 
 
-
+    /**
+     * @param ArrayCollection $content
+     * @param Location $location
+     * @param bool $pedigreeCodeExists
+     * @return ArrayCollection
+     */
   public function findByDeclareInput(ArrayCollection $content, Location $location,
                                      $pedigreeCodeExists = false)
   {
@@ -47,12 +52,7 @@ class DeclareArrivalRepository extends BaseRepository
       $ubnPreviousOwner = $content->get(JsonInputConstant::UBN_PREVIOUS_OWNER);
       $ubnDestination = $location->getUbn();
 
-      $arrivalDateString = $content->get(JsonInputConstant::ARRIVAL_DATE);
-      if (empty($arrivalDateString)) {
-          throw new PreconditionFailedHttpException('Missing key: '.JsonInputConstant::ARRIVAL_DATE);
-      }
-
-      $arrivalDate = new \DateTime($arrivalDateString);
+      $arrivalDate = RequestUtil::getDateTimeFromContent($content, JsonInputConstant::ARRIVAL_DATE);
 
       if ($pedigreeCodeExists) {
           $pedigreeCountryCode = ArrayUtil::get(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);

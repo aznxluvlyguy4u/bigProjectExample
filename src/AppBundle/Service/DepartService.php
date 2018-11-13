@@ -185,6 +185,7 @@ class DepartService extends DeclareControllerServiceBase
         $ubnNewOwner = $content->get(JsonInputConstant::UBN_NEW_OWNER);
         $this->verifyUbnFormat($ubnNewOwner, $location->isDutchLocation());
         $this->verifyIfDepartureAndArrivalUbnAreIdentical($location->getUbn(), $ubnNewOwner);
+        $this->verifyIfDepartDoesNotExistYet($content, $location);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $depart = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);
@@ -472,5 +473,17 @@ class DepartService extends DeclareControllerServiceBase
         }
 
         $this->validateIfEventDateIsNotBeforeDateOfBirth($animal, $export->getExportDate());
+    }
+
+
+    /**
+     * @param ArrayCollection $content
+     * @param Location $location
+     */
+    private function verifyIfDepartDoesNotExistYet(ArrayCollection $content, Location $location)
+    {
+        $departs = $this->getManager()->getRepository(DeclareDepart::class)
+            ->findByDeclareInput($content, $location, false);
+        $this->verifyIfDeclareDoesNotExistYet(DeclareDepart::class, $departs);
     }
 }

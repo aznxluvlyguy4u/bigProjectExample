@@ -127,6 +127,7 @@ class JsonInputConstant
     const UBN_NEW_OWNER = 'ubn_new_owner';
     const DEPART_DATE = 'depart_date';
     const REASON_OF_DEPARTURE = 'reason_of_departure';
+    const REASON_OF_DEPART = 'reason_of_depart';
 
     //Tags
     const RELATION_NUMBER_ACCEPTANT = "relation_number_acceptant";

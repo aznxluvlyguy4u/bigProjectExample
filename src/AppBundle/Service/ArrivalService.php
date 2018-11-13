@@ -9,7 +9,6 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\ArrivalAPIControllerInterface;
-use AppBundle\Criteria\DeclareCriteria;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareArrivalResponse;
 use AppBundle\Entity\DeclareDepart;
@@ -23,7 +22,6 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Exception\AnimalNotOnDepartLocationHttpException;
 use AppBundle\Exception\DeadAnimalHttpException;
-use AppBundle\Exception\DuplicateDeclareHttpException;
 use AppBundle\Exception\FeatureNotAvailableHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
@@ -539,7 +537,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
     {
         $arrivals = $this->getManager()->getRepository(DeclareArrival::class)
             ->findByDeclareInput($content, $location, $pedigreeCodeExists);
-        $this->verifyDeclareDoesNotExistYet(DeclareArrival::class, $arrivals);
+        $this->verifyIfDeclareDoesNotExistYet(DeclareArrival::class, $arrivals);
     }
 
 

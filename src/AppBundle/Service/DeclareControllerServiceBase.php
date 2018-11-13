@@ -548,7 +548,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      * @param string $declareClazz
      * @param ArrayCollection $declares
      */
-    protected function verifyDeclareDoesNotExistYet(string $declareClazz, ArrayCollection $declares)
+    protected function verifyIfDeclareDoesNotExistYet(string $declareClazz, ArrayCollection $declares)
     {
         if ($declares->isEmpty()) {
             return;

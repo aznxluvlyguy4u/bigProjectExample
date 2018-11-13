@@ -8,6 +8,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareLossResponse;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -106,6 +107,7 @@ class LossService extends DeclareControllerServiceBase
 
         $useRvoLogic = $location->isDutchLocation();
 
+        $this->verifyIfLossDoesNotExistYet($content, $location);
         $this->verifyIfAnimalIsOnLocation($location, $content->get(Constant::ANIMAL_NAMESPACE));
 
         $log = ActionLogWriter::declareLossPost($this->getManager(), $client, $loggedInUser, $location, $content);
@@ -278,5 +280,17 @@ class LossService extends DeclareControllerServiceBase
     private function validateNonRvoLoss(DeclareLoss $loss)
     {
         $this->validateIfEventDateIsNotBeforeDateOfBirth($loss->getAnimal(), $loss->getDateOfDeath());
+    }
+
+
+    /**
+     * @param ArrayCollection $content
+     * @param Location $location
+     */
+    private function verifyIfLossDoesNotExistYet(ArrayCollection $content, Location $location)
+    {
+        $losses = $this->getManager()->getRepository(DeclareLoss::class)
+            ->findByDeclareInput($content, $location, false);
+        $this->verifyIfDeclareDoesNotExistYet(DeclareLoss::class, $losses);
     }
 }

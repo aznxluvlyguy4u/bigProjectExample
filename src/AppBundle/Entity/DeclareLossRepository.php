@@ -1,6 +1,10 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\RequestUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -63,4 +67,44 @@ class DeclareLossRepository extends BaseRepository {
         return $this->getRequestByRequestId($losses, $requestId);
     }
 
+
+    /**
+     * @param ArrayCollection $content
+     * @param Location $location
+     * @param bool $includeSecondaryValues
+     * @return ArrayCollection
+     */
+    public function findByDeclareInput(ArrayCollection $content, Location $location,
+                                       bool $includeSecondaryValues = false)
+    {
+        $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
+        $reasonOfLoss = $content->get(JsonInputConstant::REASON_OF_LOSS);
+        $ubnProcessor = $content->get(JsonInputConstant::UBN_PROCESSOR);
+        $ubn = $location->getUbn();
+
+        $dateOfDeath = RequestUtil::getDateTimeFromContent($content, JsonInputConstant::DATE_OF_DEATH);
+
+        $ulnCountryCode = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
+        $ulnNumber = ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $animalArray);
+
+        $searchValues = [
+            'dateOfDeath' => $dateOfDeath,
+            'ulnCountryCode' => $ulnCountryCode,
+            'ulnNumber' => $ulnNumber,
+            'ubn' => $ubn,
+        ];
+
+        if ($includeSecondaryValues) {
+            $searchValues['ubnDestructor'] = $ubnProcessor;
+            $searchValues['reasonOfLoss'] = $reasonOfLoss;
+        }
+
+        $losses = $this->findBy($searchValues);
+
+        if (is_array($losses)) {
+            return new ArrayCollection($losses);
+        }
+
+        return new ArrayCollection();
+    }
 }
