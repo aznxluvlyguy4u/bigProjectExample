@@ -465,6 +465,12 @@ DECLARE_TAGS_TRANSFERS: tag transfers
 DECLARE_TAG_REPLACEMENTS: tag replacements
 
 AppBundle\Entity\DeclareArrival: arrival
+AppBundle\Entity\DeclareDepart: depart
+AppBundle\Entity\DeclareImport: import
+AppBundle\Entity\DeclareExport: export
+AppBundle\Entity\DeclareLoss: loss
+AppBundle\Entity\DeclareTagTransfer: tag transfer
+AppBundle\Entity\DeclareTagReplace: tag replace
 
 #Messages
 DECLARE_ARRIVAL_NOTIFICATION_MESSAGE: Automatically issued an arrival notification

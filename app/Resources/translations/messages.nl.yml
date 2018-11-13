@@ -474,6 +474,12 @@ DECLARE_TAG_REPLACEMENTS: omnummeringen
 
 DECLARE: melding
 AppBundle\Entity\DeclareArrival: aanvoermelding
+AppBundle\Entity\DeclareDepart: afvoermelding
+AppBundle\Entity\DeclareImport: importmelding
+AppBundle\Entity\DeclareExport: exportmelding
+AppBundle\Entity\DeclareLoss: sterftemelding
+AppBundle\Entity\DeclareTagTransfer: oormerkoverdracht
+AppBundle\Entity\DeclareTagReplace: omnummering
 
 #Messages
 DECLARE_ARRIVAL_NOTIFICATION_MESSAGE: Automatisch een aanvoer melding uitgevoerd
