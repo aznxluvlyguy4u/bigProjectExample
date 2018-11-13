@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareLossResponse;
 use AppBundle\Entity\Location;
@@ -15,10 +16,12 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Worker\DirectProcessor\DeclareLossProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class LossService extends DeclareControllerServiceBase
 {
@@ -107,8 +110,7 @@ class LossService extends DeclareControllerServiceBase
 
         $useRvoLogic = $location->isDutchLocation();
 
-        $this->verifyIfLossDoesNotExistYet($content, $location);
-        $this->verifyIfAnimalIsOnLocation($location, $content->get(Constant::ANIMAL_NAMESPACE));
+        $this->verifyCreateLoss($content, $location);
 
         $log = ActionLogWriter::declareLossPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
@@ -287,10 +289,34 @@ class LossService extends DeclareControllerServiceBase
      * @param ArrayCollection $content
      * @param Location $location
      */
+    private function verifyCreateLoss(ArrayCollection $content, Location $location)
+    {
+        $this->verifyIfLossDoesNotExistYet($content, $location);
+        $this->verifyIfAnimalIsOnLocation($location, $content->get(Constant::ANIMAL_NAMESPACE));
+        $this->verifyDateOfDeath($content);
+    }
+
+
+    /**
+     * @param ArrayCollection $content
+     * @param Location $location
+     */
     private function verifyIfLossDoesNotExistYet(ArrayCollection $content, Location $location)
     {
         $losses = $this->getManager()->getRepository(DeclareLoss::class)
             ->findByDeclareInput($content, $location, false);
         $this->verifyIfDeclareDoesNotExistYet(DeclareLoss::class, $losses);
+    }
+
+
+    /**
+     * @param ArrayCollection $content
+     */
+    private function verifyDateOfDeath(ArrayCollection $content)
+    {
+        $dateOfDeath = RequestUtil::getDateTimeFromContent($content,JsonInputConstant::DATE_OF_DEATH);
+        if (TimeUtil::isDateInFuture($dateOfDeath)) {
+            throw new PreconditionFailedHttpException($this->translator->trans('THE DATE OF DEATH CANNOT BE IN THE FUTURE'));
+        }
     }
 }
