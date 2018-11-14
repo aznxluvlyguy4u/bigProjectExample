@@ -43,7 +43,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 class AnimalRepository extends BaseRepository
 {
   const BATCH = 1000;
-  const USE_REDIS_CACHE = true; //TODO activate this when the livestock and historicLivestock redis cache is fixed
+  const USE_REDIS_CACHE = true;
   const LIVESTOCK_CACHE_ID = 'GET_LIVESTOCK_';
   const EWES_LIVESTOCK_WITH_LAST_MATE_CACHE_ID = 'GET_EWES_LIVESTOCK_WITH_LAST_MATE_';
   const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
