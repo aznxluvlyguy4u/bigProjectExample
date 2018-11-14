@@ -53,6 +53,28 @@ class LanguageOption
     private $country;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "BASIC",
+     *     "DETAILS"
+     * })
+     */
+    private $isActive;
+
+
+    /**
+     * LanguageOption constructor.
+     */
+    public function __construct()
+    {
+        $this->isActive = true;
+    }
+
+
+    /**
      * @return int
      */
     public function getId(): int
@@ -93,6 +115,24 @@ class LanguageOption
     public function setCountry(Country $country): LanguageOption
     {
         $this->country = $country;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param bool $isActive
+     * @return LanguageOption
+     */
+    public function setIsActive(bool $isActive): LanguageOption
+    {
+        $this->isActive = $isActive;
         return $this;
     }
 
