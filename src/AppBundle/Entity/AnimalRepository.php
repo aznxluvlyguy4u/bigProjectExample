@@ -47,6 +47,7 @@ class AnimalRepository extends BaseRepository
   const LIVESTOCK_CACHE_ID = 'GET_LIVESTOCK_';
   const EWES_LIVESTOCK_WITH_LAST_MATE_CACHE_ID = 'GET_EWES_LIVESTOCK_WITH_LAST_MATE_';
   const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
+  const LIVESTOCK_WITH_LAST_WEIGHT_CACHE_ID = 'GET_LIVESTOCK_WITH_LAST_WEIGHT_';
   const CANDIDATE_FATHERS_CACHE_ID = 'GET_CANDIDATE_FATHERS_';
   const CANDIDATE_MOTHERS_CACHE_ID = 'GET_CANDIDATE_MOTHERS_';
   const CANDIDATE_SURROGATES_CACHE_ID = 'GET_CANDIDATE_SURROGATES_';
@@ -405,6 +406,14 @@ class AnimalRepository extends BaseRepository
       return $query;
   }
 
+    /**
+     * @return array
+     */
+    public static function getLivestockWithLastWeightJmsGroups()
+    {
+        return [JmsGroup::BASIC, JmsGroup::LIVESTOCK, JmsGroup::LAST_WEIGHT];
+    }
+
 
     /**
      * @return array
@@ -484,6 +493,83 @@ class AnimalRepository extends BaseRepository
     }
 
     return $animals;
+  }
+
+
+    /**
+     * @param Location $location
+     * @param CacheService $cacheService
+     * @param BaseSerializer $serializer
+     * @param bool $isAlive
+     * @param null $queryOnlyOnAnimalGenderType
+     * @param array $extraJmsGroups
+     * @return array|mixed
+     * @throws \Doctrine\DBAL\DBALException
+     */
+  public function getLivestockWithLastWeight(Location $location,
+                                             CacheService $cacheService,
+                                             BaseSerializer $serializer,
+                                             $isAlive = true,
+                                             $queryOnlyOnAnimalGenderType = null,
+                                             array $extraJmsGroups = [])
+  {
+
+      $animals = $this->getLiveStock(
+          $location, $cacheService, $serializer, $isAlive, $queryOnlyOnAnimalGenderType, $extraJmsGroups);
+      return $this->addLastWeightsToAnimals($animals);
+  }
+
+
+    /**
+     * @param array $animals
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+  private function addLastWeightsToAnimals($animals)
+  {
+      if (
+          empty($animals) ||
+          ($animals instanceof Collection && $animals->isEmpty())
+      ) {
+          return $animals;
+      }
+
+      $animalIds = SqlUtil::getIdsFromAnimals($animals);
+      $animalIdsString = SqlUtil::valueString($animalIds, false);
+
+      if (empty($animalIds) || empty($animalIdsString)) {
+          return $animals;
+      }
+
+      $dateKey = JsonInputConstant::LAST_WEIGHT_MEASUREMENT_DATE;
+      $animalIdKey = JsonInputConstant::ANIMAL_ID;
+
+      $sql = "SELECT
+                animal_id as $animalIdKey, 
+                last_weight,
+                weight_measurement_date as $dateKey
+              FROM animal_cache c WHERE animal_id IN ($animalIdsString)";
+
+      $results = $this->getConnection()->query($sql)->fetchAll();
+      $weightDataByAnimalId = SqlUtil::createSearchArrayByKey($animalIdKey, $results);
+
+      /** @var Animal $animal */
+      foreach ($animals as $key => $animal) {
+          $id = $animal->getId();
+          $weightData = ArrayUtil::get($id, $weightDataByAnimalId);
+          if (empty($weightData)) {
+              continue;
+          }
+
+          $weightValue = ArrayUtil::get(JsonInputConstant::LAST_WEIGHT, $weightData);
+          $weightDateString = ArrayUtil::get($dateKey, $weightData);
+          $weightDate = TimeUtil::getDateTimeFromNullCheckedDateString($weightDateString);
+
+          $animal->setLastWeightValue($weightValue);
+          $animal->setLastWeightMeasurementDate($weightDate);
+      }
+
+      return $animals;
   }
 
 

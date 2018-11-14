@@ -928,6 +928,26 @@ abstract class Animal
 
 
     /**
+     * @var float|null
+     * @JMS\Type("float")
+     * @JMS\SerializedName("last_weight")
+     * @JMS\Groups({
+     *     "LAST_WEIGHT"
+     * })
+     */
+    protected $lastWeightValue;
+
+    /**
+     * @var \DateTime|null
+     * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "LAST_WEIGHT"
+     * })
+     */
+    protected $lastWeightMeasurementDate;
+
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("is_public")
      * @JMS\Groups({
@@ -3158,5 +3178,39 @@ abstract class Animal
     public function hasLocation(): bool
     {
         return $this->getLocation() !== null;
+    }
+
+
+    /**
+     * @return float|null
+     */
+    public function getLastWeightValue(): ?float
+    {
+        return $this->lastWeightValue;
+    }
+
+    /**
+     * @param float|null $weight
+     */
+    public function setLastWeightValue(?float $weight)
+    {
+        $this->lastWeightValue = $weight;
+    }
+
+
+    /**
+     * @return DateTime|null
+     */
+    public function getLastWeightMeasurementDate(): ?DateTime
+    {
+        return $this->lastWeightMeasurementDate;
+    }
+
+    /**
+     * @param DateTime|null $lastWeightMeasurementDate
+     */
+    public function setLastWeightMeasurementDate(?DateTime $lastWeightMeasurementDate): void
+    {
+        $this->lastWeightMeasurementDate = $lastWeightMeasurementDate;
     }
 }

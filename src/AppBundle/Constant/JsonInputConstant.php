@@ -234,6 +234,8 @@ class JsonInputConstant
     const YEAR_AND_UBN_OF_TREATMENT = 'year_and_ubn_of_treatment';
 
     //Weight measurements
+    const LAST_WEIGHT = 'last_weight';
+    const LAST_WEIGHT_MEASUREMENT_DATE = 'last_weight_measurement_date';
     const WEIGHT_MEASUREMENTS = 'weight_measurements';
     const WEIGHT = 'weight';
     const IS_BIRTH_WEIGHT = 'is_birth_weight';

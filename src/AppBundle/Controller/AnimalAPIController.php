@@ -213,11 +213,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *        "format"="?gender=female"
    *      },
    *      {
-   *        "name"="is_ewes_with_last_mate",
-   *        "dataType"="boolean",
+   *        "name"="type",
+   *        "dataType"="string",
    *        "required"=false,
-   *        "description"="only return ewes and add their last mate, false by default",
-   *        "format"="?is_ewes_with_last_mate=true"
+   *        "description"="options: ewes_with_last_mate, last_weight, null by default",
+   *        "format"="?type=ewes_with_last_mate"
    *      }
    *   },
    *   resource = true,
