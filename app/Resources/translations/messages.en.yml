@@ -465,6 +465,11 @@ DECLARE_LOSSES: losses
 DECLARE_TAGS_TRANSFERS: tag transfers
 DECLARE_TAG_REPLACEMENTS: tag replacements
 
+DECLARE_ARRIVAL: arrival
+DECLARE_DEPART: depart
+NEW_INVOICE: new invoice
+
+DECLARE: declare
 AppBundle\Entity\DeclareArrival: arrival
 AppBundle\Entity\DeclareDepart: depart
 AppBundle\Entity\DeclareImport: import

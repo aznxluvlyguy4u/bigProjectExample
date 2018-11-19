@@ -473,6 +473,10 @@ DECLARE_LOSSES: sterftemeldingen
 DECLARE_TAGS_TRANSFERS: oormerkoverdrachten
 DECLARE_TAG_REPLACEMENTS: omnummeringen
 
+DECLARE_ARRIVAL: arrival
+DECLARE_DEPART: depart
+NEW_INVOICE: new invoice
+
 DECLARE: melding
 AppBundle\Entity\DeclareArrival: aanvoermelding
 AppBundle\Entity\DeclareDepart: afvoermelding
