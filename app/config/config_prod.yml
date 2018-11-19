@@ -19,10 +19,12 @@ monolog:
             type:         fingers_crossed
             action_level: error
             handler:      nested
+            max_files:    7
         nested:
             type:  stream
             path:  "%kernel.logs_dir%/%kernel.environment%.log"
-            level: debug
+            level: info
+            max_files:    7
         console:
             type:  console
 
