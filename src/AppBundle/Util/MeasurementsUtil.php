@@ -299,7 +299,10 @@ class MeasurementsUtil
             $kindsForOutput[] = ExteriorKind::HH_;
         }
 
-        if(!$animal->getIsAlive()) { $kindsForOutput[] = ExteriorKind::DO_; }
+        if(!$animal->getIsAlive()) {
+            $kindsForOutput[] = ExteriorKind::DO_;
+            $kindsForOutput[] = ExteriorKind::DDO_;
+        }
 
         if($ddExists || $dfExists || $vgExists
             || $hkExists || $hhExists //adding $hkExists && $hhExists in case of incomplete exterior data
