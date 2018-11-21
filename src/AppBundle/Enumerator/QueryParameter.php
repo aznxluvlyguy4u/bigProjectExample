@@ -32,7 +32,9 @@ class QueryParameter
     const REFERENCE_DATE = 'reference_date';
     const ASSOCIATIVE_ARRAY_OUTPUT = 'associative_array_output';
     const IS_EWES_WITH_LAST_MATE = 'is_ewes_with_last_mate';
+    const IS_RVO_LEADING = 'is_rvo_leading';
     const MAX_DAYS = 'max_days';
+    const DELAY_IN_SECONDS = 'delay_in_seconds';
     const YEAR = 'year';
     const IS_BATCH = "isBatch";
 }
