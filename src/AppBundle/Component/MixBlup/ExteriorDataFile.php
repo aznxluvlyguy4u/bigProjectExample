@@ -208,7 +208,10 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                   CONCAT(a.uln_country_code, a.uln_number) as uln,
                   a.type,
                   CONCAT(DATE_PART('year', a.date_of_birth),'_', a.ubn_of_birth) as year_and_ubn_of_birth,
-                  CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as litter_group,
+                  NULLIF(
+                      CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')),
+                      CONCAT(mom.uln_country_code, mom.uln_number,'_')
+                  ) as litter_group,
                   a.breed_code,
                   i.inspector_code,
                   a.ubn_of_birth,
