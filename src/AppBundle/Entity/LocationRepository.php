@@ -194,10 +194,12 @@ class LocationRepository extends BaseRepository
 
     /**
      * @param int $hasNotBeenSyncedForAtLeastThisAmountOfDays
+     * @param bool $onlyIncludeRvoLeading
      * @return array
      * @throws \Exception
      */
-  public function getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays = 7)
+  public function getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays = 7,
+                                                 bool $onlyIncludeRvoLeading = false)
   {
       if (!ctype_digit($hasNotBeenSyncedForAtLeastThisAmountOfDays) && !is_int($hasNotBeenSyncedForAtLeastThisAmountOfDays)) {
           throw new \Exception('hasNotBeenSyncedForAtLeastThisAmountOfDays should be an integer');
@@ -212,6 +214,11 @@ class LocationRepository extends BaseRepository
           ->innerJoin('r.location', 'l', Join::WITH, $retrieveAnimalsLocationQb->expr()->eq('r.location', 'l.id'))
           ->where(':minLogDate <= r.logDate')
           ->andWhere($retrieveAnimalsLocationQb->expr()->eq('r.requestState', "'".RequestStateType::FINISHED."'"))
+      ;
+      if ($onlyIncludeRvoLeading) {
+          $retrieveAnimalsLocationQb->andWhere($retrieveAnimalsLocationQb->expr()->eq('r.isRvoLeading', 'true'));
+      }
+      $retrieveAnimalsLocationQb
           ->groupBy('l')
           ->setParameter('minLogDate', $minLogDate->format(SqlUtil::DATE_FORMAT))
       ;

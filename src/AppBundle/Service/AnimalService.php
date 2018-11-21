@@ -52,6 +52,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
 {
+    const DEFAULT_ALL_SYNC_DELAY_IN_SECONDS = 10;
+
     /** @var AnimalDetailsOutput */
     private $animalDetailsOutput;
 
@@ -763,22 +765,37 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         $hasNotBeenSyncedForAtLeastThisAmountOfDays = RequestUtil::getIntegerQuery($request, QueryParameter::MAX_DAYS,7);
-        $message = $this->syncAnimalsForAllLocations($admin, $hasNotBeenSyncedForAtLeastThisAmountOfDays)[Constant::MESSAGE_NAMESPACE];
+        $delayInSeconds = RequestUtil::getIntegerQuery($request, QueryParameter::DELAY_IN_SECONDS,self::DEFAULT_ALL_SYNC_DELAY_IN_SECONDS);
+        $isRvoLeading = RequestUtil::getBooleanQuery($request, QueryParameter::IS_RVO_LEADING,false);
+
+        $message = $this->syncAnimalsForAllLocations($admin, $hasNotBeenSyncedForAtLeastThisAmountOfDays,
+            $isRvoLeading, $delayInSeconds)[Constant::MESSAGE_NAMESPACE];
+
         return ResultUtil::successResult($message);
     }
 
     /**
      * @param $loggedInUser
      * @param int $hasNotBeenSyncedForAtLeastThisAmountOfDays
+     * @param bool $isRvoLeading
+     * @param int $delayInSeconds
      * @return array
      * @throws \Exception
      */
-    public function syncAnimalsForAllLocations($loggedInUser, $hasNotBeenSyncedForAtLeastThisAmountOfDays = 0)
+    public function syncAnimalsForAllLocations($loggedInUser,
+                                               $hasNotBeenSyncedForAtLeastThisAmountOfDays = 0,
+                                               bool $isRvoLeading = false,
+                                               int $delayInSeconds = 5
+    )
     {
         $allLocations = $this->getManager()->getRepository(Location::class)
-            ->getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays);
+            ->getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays, $isRvoLeading);
         $content = new ArrayCollection();
         $count = 0;
+
+        if (empty($delayInSeconds)) {
+            $this->getLogger()->notice('Consecutively send all sync messages without any delay in between');
+        }
 
         /** @var Location $location */
         foreach($allLocations as $location)
@@ -796,7 +813,9 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             }
 
             //Convert the array into an object and add the mandatory values retrieved from the database
+            /** @var RetrieveAnimals $messageObject */
             $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
+            $messageObject->setIsRvoLeading($isRvoLeading);
 
             //First Persist object to Database, before sending it to the queue
             $this->persist($messageObject);
@@ -804,7 +823,17 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             //Send it to the queue and persist/update any changed state to the database
             $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
+            $this->getLogger()->notice($location->getUbn()
+                . ' ' . ($isRvoLeading ? '(RVO LEADING)' : '(NSFO LEADING)')
+                . ' SYNC sent to queue'
+            );
+
             $count++;
+
+            if (!empty($delayInSeconds)) {
+                $this->getLogger()->notice('Sleep '.$delayInSeconds.' seconds ...');
+                sleep($delayInSeconds);
+            }
         }
 
         $total = sizeof($allLocations);

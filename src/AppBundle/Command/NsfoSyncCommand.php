@@ -15,6 +15,9 @@ class NsfoSyncCommand extends ContainerAwareCommand
 
     const ANIMAL_SYNC_MAX_DAYS = 7;
 
+    const OPTION_RVO = 'rvo';
+    const OPTION_WITHOUT_DELAY = 'without_delay';
+
     /** @var EntityManagerInterface */
     private $em;
     /** @var AnimalService */
@@ -27,6 +30,10 @@ class NsfoSyncCommand extends ContainerAwareCommand
         $this
             ->setName('nsfo:sync')
             ->setDescription(self::TITLE)
+            ->addOption(self::OPTION_RVO, 'r', InputOption::VALUE_NONE,
+                'Is RVO leading')
+            ->addOption(self::OPTION_WITHOUT_DELAY, 'w', InputOption::VALUE_NONE,
+                'Do not delay sending message by '.AnimalService::DEFAULT_ALL_SYNC_DELAY_IN_SECONDS.' seconds')
         ;
     }
 
@@ -36,14 +43,26 @@ class NsfoSyncCommand extends ContainerAwareCommand
         $this->animalService = $this->getContainer()->get('app.animal');
         $this->automatedProcess = $this->em->getRepository(Employee::class)->getAutomatedProcess();
 
-        $this->syncAllNonSyncedLocations();
+        $isRvoLeading = $input->getOption(self::OPTION_RVO);
+        $sendWithoutDelays = $input->getOption(self::OPTION_WITHOUT_DELAY);
+        $delayInSeconds = $sendWithoutDelays ? 0 : AnimalService::DEFAULT_ALL_SYNC_DELAY_IN_SECONDS;
+
+        $this->syncAllNonSyncedLocations($isRvoLeading, $delayInSeconds);
     }
 
 
-    private function syncAllNonSyncedLocations()
+    /**
+     * @param bool $isRvoLeading
+     * @param int $delayInSeconds
+     * @throws \Exception
+     */
+    private function syncAllNonSyncedLocations(bool $isRvoLeading, int $delayInSeconds)
     {
         $this->animalService->syncAnimalsForAllLocations($this->automatedProcess,
-            self::ANIMAL_SYNC_MAX_DAYS);
+            self::ANIMAL_SYNC_MAX_DAYS,
+            $isRvoLeading,
+            $delayInSeconds
+            );
     }
 
 }

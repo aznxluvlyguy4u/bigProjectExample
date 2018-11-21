@@ -57,7 +57,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
             self::getFormattedAnimalId($data).
             self::getFormattedGenderFromType($data).
             self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
-            self::getFormattedLitterGroup($data).
+            self::getFormattedLitterGroup($data, MixBlupInstructionFileBase::MISSING_REPLACEMENT).
             self::getFormattedNsfoInspectorCode($data).
             $parsedBreedCode.
             self::getFormattedHeterosis($data).
@@ -208,7 +208,10 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                   CONCAT(a.uln_country_code, a.uln_number) as uln,
                   a.type,
                   CONCAT(DATE_PART('year', a.date_of_birth),'_', a.ubn_of_birth) as year_and_ubn_of_birth,
-                  CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as litter_group,
+                  NULLIF(
+                      CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')),
+                      CONCAT(mom.uln_country_code, mom.uln_number,'_')
+                  ) as litter_group,
                   a.breed_code,
                   i.inspector_code,
                   a.ubn_of_birth,
@@ -226,7 +229,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                   INNER JOIN animal a ON a.id = x.animal_id
                   INNER JOIN animal mom ON mom.id = a.parent_mother_id
                   INNER JOIN inspector i ON i.id = m.inspector_id
-                  INNER JOIN litter l ON l.id = a.litter_id
+                  LEFT JOIN litter l ON l.id = a.litter_id
                   LEFT JOIN pedigree_register r ON r.id = a.pedigree_register_id
                 WHERE m.is_active AND DATE_PART('year', NOW()) - DATE_PART('year', measurement_date) <= 
                   ".MixBlupSetting::MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS."
