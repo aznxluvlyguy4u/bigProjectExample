@@ -57,7 +57,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
             self::getFormattedAnimalId($data).
             self::getFormattedGenderFromType($data).
             self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
-            self::getFormattedLitterGroup($data).
+            self::getFormattedLitterGroup($data, MixBlupInstructionFileBase::MISSING_REPLACEMENT).
             self::getFormattedNsfoInspectorCode($data).
             $parsedBreedCode.
             self::getFormattedHeterosis($data).
@@ -226,7 +226,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                   INNER JOIN animal a ON a.id = x.animal_id
                   INNER JOIN animal mom ON mom.id = a.parent_mother_id
                   INNER JOIN inspector i ON i.id = m.inspector_id
-                  INNER JOIN litter l ON l.id = a.litter_id
+                  LEFT JOIN litter l ON l.id = a.litter_id
                   LEFT JOIN pedigree_register r ON r.id = a.pedigree_register_id
                 WHERE m.is_active AND DATE_PART('year', NOW()) - DATE_PART('year', measurement_date) <= 
                   ".MixBlupSetting::MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS."
