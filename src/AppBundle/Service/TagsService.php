@@ -11,6 +11,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\TagStateType;
@@ -86,9 +87,19 @@ class TagsService extends ControllerServiceBase
         $ulnPartsArray = $this->getUlnPartsArrayFromPlainTextInput($content, $location->getCountryCode());
         $this->validateIfUlnsAreAlreadyUsedByAnimal($ulnPartsArray);
 
-        $this->createTagsWithUniqueConstraintViolationExceptionCheck($ulnPartsArray, $client, $location);
+        $user = $this->getUser();
+        $clientId = $client->getId();
+        $userId = $user->getId();
 
-        ActionLogWriter::createTags($this->getManager(), $client, $this->getUser(), $ulnPartsArray);
+        $isEntityManagerReset = $this->createTagsWithUniqueConstraintViolationExceptionCheck(
+            $ulnPartsArray, $client, $location);
+
+        if ($isEntityManagerReset) {
+            $client = $this->getManager()->getRepository(Person::class)->find($clientId);
+            $user = $this->getManager()->getRepository(Person::class)->find($userId);
+        }
+
+        ActionLogWriter::createTags($this->getManager(), $client, $user, $ulnPartsArray);
 
         return $this->createTagsOutputByRequest($request);
     }
@@ -96,18 +107,25 @@ class TagsService extends ControllerServiceBase
 
     /**
      * @param $ulnPartsArray
-     * @param $client
-     * @param $location
+     * @param Client $client
+     * @param Location $location
      * @param int $loopCount
      * @param int $maxRetries
+     * @param bool $hasUpdatedEntityManager
+     * @return bool
      * @throws UniqueConstraintViolationException
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function createTagsWithUniqueConstraintViolationExceptionCheck($ulnPartsArray, $client, $location,
-                                                                           $loopCount = 1, $maxRetries = 5)
+    private function createTagsWithUniqueConstraintViolationExceptionCheck($ulnPartsArray, Client $client,
+                                                                           Location $location,
+                                                                           $loopCount = 1, $maxRetries = 5,
+                                                                           bool $hasUpdatedEntityManager = false)
     {
         $tagRepository = $this->getManager()->getRepository(Tag::class);
         $currentTags = $tagRepository->findByUlnPartsArray($ulnPartsArray);
+
+        $clientId = $client->getId();
+        $locationId = $location->getId();
 
         try {
             $hasUpdatedCurrentTags = $this->updateTagsByFoundCurrentTags($client, $location, $currentTags);
@@ -120,13 +138,19 @@ class TagsService extends ControllerServiceBase
         } catch (UniqueConstraintViolationException $uniqueConstraintViolationException) {
             SqlUtil::bumpPrimaryKeySeq($this->getConnection(), 'tag', $this->getLogger());
 
-            if ($loopCount <= $maxRetries) {
-                $this->createTagsWithUniqueConstraintViolationExceptionCheck($ulnPartsArray, $client, $location,
-                    $loopCount++, $maxRetries);
-            }
+            $this->resetManager();
 
-            throw $uniqueConstraintViolationException;
+            $client = $this->getManager()->getRepository(Client::class)->find($clientId);
+            $location = $this->getManager()->getRepository(Location::class)->find($locationId);
+
+            if ($loopCount <= $maxRetries) {
+                return $this->createTagsWithUniqueConstraintViolationExceptionCheck($ulnPartsArray, $client, $location,
+                    $loopCount++, $maxRetries, true);
+            } else {
+                throw $uniqueConstraintViolationException;
+            }
         }
+        return $hasUpdatedEntityManager;
     }
 
 
