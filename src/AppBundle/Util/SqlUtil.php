@@ -31,13 +31,19 @@ class SqlUtil
     /**
      * @param Connection $conn
      * @param $tableName
+     * @param Logger|null $logger
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function bumpPrimaryKeySeq(Connection $conn, $tableName)
+    public static function bumpPrimaryKeySeq(Connection $conn, $tableName, ?Logger $logger = null)
     {
         $tableName = strtolower($tableName);
-        $sql = "SELECT setval('".$tableName."_id_seq', (SELECT MAX(id) FROM ".$tableName.")+1)";
+        $sequenceName = $tableName.'_id_seq';
+        $sql = "SELECT setval('".$sequenceName."', (SELECT MAX(id) FROM ".$tableName.")+1)";
         $conn->exec($sql);
+
+        if ($logger) {
+            $logger->notice("Update sequence '".$sequenceName."' using max value of '".$tableName."' table");
+        }
     }
 
 

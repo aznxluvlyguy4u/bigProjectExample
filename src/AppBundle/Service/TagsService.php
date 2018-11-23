@@ -17,9 +17,11 @@ use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
@@ -83,21 +85,49 @@ class TagsService extends ControllerServiceBase
         $content = RequestUtil::getContentAsArray($request);
 
         $ulnPartsArray = $this->getUlnPartsArrayFromPlainTextInput($content, $location->getCountryCode());
-
-        $tagRepository = $this->getManager()->getRepository(Tag::class);
-        $currentTags = $tagRepository->findByUlnPartsArray($ulnPartsArray);
         $this->validateIfUlnsAreAlreadyUsedByAnimal($ulnPartsArray);
 
-        $hasUpdatedCurrentTags = $this->updateTagsByFoundCurrentTags($client, $location, $currentTags);
-        $hasInsertedNewTags = $this->insertNewTags($ulnPartsArray, $currentTags, $client, $location);
-
-        if ($hasUpdatedCurrentTags || $hasInsertedNewTags) {
-            $this->getManager()->flush();
-        }
+        $this->createTagsWithUniqueConstraintViolationExceptionCheck($ulnPartsArray, $client, $location);
 
         ActionLogWriter::createTags($this->getManager(), $client, $this->getUser(), $ulnPartsArray);
 
         return $this->createTagsOutputByRequest($request);
+    }
+
+
+    /**
+     * @param $ulnPartsArray
+     * @param $client
+     * @param $location
+     * @param int $loopCount
+     * @param int $maxRetries
+     * @throws UniqueConstraintViolationException
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function createTagsWithUniqueConstraintViolationExceptionCheck($ulnPartsArray, $client, $location,
+                                                                           $loopCount = 1, $maxRetries = 5)
+    {
+        $tagRepository = $this->getManager()->getRepository(Tag::class);
+        $currentTags = $tagRepository->findByUlnPartsArray($ulnPartsArray);
+
+        try {
+            $hasUpdatedCurrentTags = $this->updateTagsByFoundCurrentTags($client, $location, $currentTags);
+            $hasInsertedNewTags = $this->insertNewTags($ulnPartsArray, $currentTags, $client, $location);
+
+            if ($hasUpdatedCurrentTags || $hasInsertedNewTags) {
+                $this->getManager()->flush();
+            }
+
+        } catch (UniqueConstraintViolationException $uniqueConstraintViolationException) {
+            SqlUtil::bumpPrimaryKeySeq($this->getConnection(), 'tag', $this->getLogger());
+
+            if ($loopCount <= $maxRetries) {
+                $this->createTagsWithUniqueConstraintViolationExceptionCheck($ulnPartsArray, $client, $location,
+                    $loopCount++, $maxRetries);
+            }
+
+            throw $uniqueConstraintViolationException;
+        }
     }
 
 
