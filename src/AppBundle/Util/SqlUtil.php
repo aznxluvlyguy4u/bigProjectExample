@@ -5,6 +5,7 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\DutchGender;
@@ -12,11 +13,10 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestTypeIRDutchInformal;
 use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
 use AppBundle\Service\Report\ReportServiceWithBreedValuesBase;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
-use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -697,6 +697,30 @@ class SqlUtil
         }
 
         return implode(',', $ids);
+    }
+
+
+    /**
+     * @param Animal[]|Collection $animals
+     * @return array
+     * @throws \Exception
+     */
+    public static function getIdsFromAnimals($animals): array
+    {
+        if (!is_array($animals) && (!$animals instanceof Collection)) {
+            throw new \Exception('$animals should be an array or Collection');
+        }
+
+        $ids = [];
+        /** @var Animal $animal */
+        foreach ($animals as $animal) {
+            $id = $animal->getId();
+            if (!ctype_digit($id) && !is_int($id)) {
+                throw new \Exception('Animal.id must be an integer');
+            }
+            $ids[$animal->getId()] = $animal->getId();
+        }
+        return $ids;
     }
 
 

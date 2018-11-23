@@ -3,8 +3,6 @@
 namespace AppBundle\Output;
 
 
-use Symfony\Component\Validator\Constraints\DateTime;
-
 class DeclareReplaceTagsOutput
 {
 

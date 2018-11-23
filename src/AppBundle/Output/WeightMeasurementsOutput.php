@@ -4,7 +4,6 @@ namespace AppBundle\Output;
 
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
-use Doctrine\Common\Collections\Collection;
 
 /**
  * Class WeightMeasurementsOutput

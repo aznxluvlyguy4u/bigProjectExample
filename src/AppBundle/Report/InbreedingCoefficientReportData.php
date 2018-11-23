@@ -3,20 +3,13 @@
 namespace AppBundle\Report;
 
 
-use AppBundle\Component\Utils;
-use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Ewe;
-use AppBundle\Entity\EweRepository;
-use AppBundle\Entity\Ram;
-use AppBundle\Entity\RamRepository;
 use AppBundle\Enumerator\PedigreeMasterKey;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\InbreedingCoefficientOffspring;
 use AppBundle\Util\PedigreeUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Translation\TranslatorInterface;
 

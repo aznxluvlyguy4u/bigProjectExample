@@ -3,18 +3,15 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\StringUtil;
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\Animal;
-use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as JMS;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclareArrival
@@ -22,11 +19,12 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareArrival extends DeclareBase implements DeclareAnimalDataInterface, BasicRvoDeclareInterface
+class DeclareArrival extends DeclareBase implements RelocationDeclareInterface
 {
     use EntityClassInfo;
 
     /**
+     * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="arrivals")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
@@ -176,6 +174,15 @@ class DeclareArrival extends DeclareBase implements DeclareAnimalDataInterface, 
      * @JMS\Type("AppBundle\Entity\LocationHealthQueue")
      */
     private $locationHealthQueue;
+
+    /**
+     * @var DepartArrivalTransaction|null
+     * @ORM\OneToOne(targetEntity="DepartArrivalTransaction",
+     *     inversedBy="arrival", cascade={"persist","refresh"})
+     * @ORM\JoinColumn(name="transaction_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\DepartArrivalTransaction")
+     */
+    private $transaction;
 
     /**
      * DeclareArrival constructor.
@@ -386,6 +393,16 @@ class DeclareArrival extends DeclareBase implements DeclareAnimalDataInterface, 
     }
 
     /**
+     * Get Animal.id
+     *
+     * @return int
+     */
+    public function getAnimalId(): ?int
+    {
+        return $this->animal ? $this->animal->getId() : null;
+    }
+
+    /**
      * Set ubn
      *
      * @param string $ubn
@@ -561,4 +578,24 @@ class DeclareArrival extends DeclareBase implements DeclareAnimalDataInterface, 
     {
         $this->locationHealthQueue = $locationHealthQueue;
     }
+
+    /**
+     * @return DepartArrivalTransaction|null
+     */
+    public function getTransaction(): ?DepartArrivalTransaction
+    {
+        return $this->transaction;
+    }
+
+    /**
+     * @param DepartArrivalTransaction|null $transaction
+     * @return DeclareArrival
+     */
+    public function setTransaction(?DepartArrivalTransaction $transaction): DeclareArrival
+    {
+        $this->transaction = $transaction;
+        return $this;
+    }
+
+
 }

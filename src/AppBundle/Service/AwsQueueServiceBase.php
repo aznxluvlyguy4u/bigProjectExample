@@ -7,14 +7,14 @@ use AppBundle\Constant\Environment;
 use AppBundle\Enumerator\QueueSuffix;
 use AppBundle\Util\ArrayUtil;
 use Aws\Api\AbstractModel;
-use Aws\Sqs\SqsClient;
 use Aws\Credentials\Credentials;
+use Aws\Sqs\SqsClient;
 
 /**
  * Class AWSQueueServiceBase
  * @package AppBundle\Service
  */
-abstract class AwsQueueServiceBase
+abstract class AwsQueueServiceBase implements QueueServiceInterface
 {
     const TaskType = 'TaskType';
     const MessageId = 'MessageId';
@@ -414,15 +414,12 @@ abstract class AwsQueueServiceBase
             foreach ($messageAttributeResults as $key => $data)
             {
                 $stringValue = $data['StringValue'];
-                $dataType = $data['DataType'];
+                /*
+                 * Get dataType: $data['DataType']
+                 * Possible dataTypes: String, Number, Binary
+                 */
 
-                switch ($dataType)
-                {
-                    case 'String': $results[$key] = strval($stringValue); break;
-                    case 'Number': $results[$key] = strval($stringValue); break;
-                    case 'Binary': $results[$key] = strval($stringValue); break;
-                    default: $results[$key] = strval($stringValue); break;
-                }
+                $results[$key] = strval($stringValue);
             }
 
         }

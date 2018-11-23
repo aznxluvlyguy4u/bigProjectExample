@@ -3,11 +3,8 @@
 namespace AppBundle\Util;
 
 
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\DeclareArrival;
-use AppBundle\Entity\DeclareLoss;
 use AppBundle\Enumerator\GenderType;
 
 class StringUtil
@@ -690,6 +687,17 @@ class StringUtil
     public static function trimIfNotNull($string)
     {
         return $string === null ? null : trim($string);
+    }
+
+
+    /**
+     * @param string $ubn
+     * @return string
+     */
+    public static function preformatUbn($ubn): string
+    {
+        return !empty($ubn) && (is_int($ubn) || ctype_digit($ubn))
+            ? ltrim(trim(strval($ubn)), '0') : '';
     }
 
 

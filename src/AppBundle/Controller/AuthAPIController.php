@@ -2,13 +2,12 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Enumerator\DashboardType;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Enumerator\DashboardType;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @Route("/api/v1/auth")
@@ -171,21 +170,6 @@ class AuthAPIController extends APIController {
   public function resetPassword(Request $request)
   {
       return $this->get('app.security.auth')->passwordResetRequest($request, DashboardType::CLIENT);
-  }
-
-  /**
-   * Generate new passwords for new clients and store them.
-   *
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("/generate-passwords")
-   * @Method("POST")
-   *
-   * @param Request $request
-   */
-  public function generatePasswordsForNewClients(Request $request)
-  {
-      return $this->get('app.security.auth')->generatePasswordsForNewClients($request);
   }
 
 

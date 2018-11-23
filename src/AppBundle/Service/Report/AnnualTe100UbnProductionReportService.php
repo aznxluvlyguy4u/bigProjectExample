@@ -4,17 +4,11 @@
 namespace AppBundle\Service\Report;
 
 
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\LitterUtil;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\TimeUtil;
-use AppBundle\Validation\AdminValidator;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValuesBase
 {

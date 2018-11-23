@@ -46,17 +46,19 @@ class HeterosisAndRecombinationUtil
      * @param $breedCodeStringFather
      * @param $breedCodeStringMother
      * @param int|null $roundingAccuracy
-     * @param boolean $returnWithTrailingZeroes
      * @return array|null
      */
     public static function getHeterosisAndRecombinationBy8Parts($breedCodeStringFather, $breedCodeStringMother,
-                                                                $roundingAccuracy = null, $returnWithTrailingZeroes = false)
+                                                                $roundingAccuracy = null)
     {
         $valuesFather = BreedCodeUtil::getBreedCodeAs8PartsFromBreedCodeString($breedCodeStringFather);
         $valuesMother = BreedCodeUtil::getBreedCodeAs8PartsFromBreedCodeString($breedCodeStringMother);
 
-        if($valuesFather == null || $valuesMother == null) { return null; }
-        if(count($valuesFather) == 0 || count($valuesMother) == 0 ) { return null; }
+        if ($valuesFather == null || $valuesMother == null ||
+            count($valuesFather) == 0 || count($valuesMother) == 0
+        ) {
+            return null;
+        }
 
         $codesFather = array_keys($valuesFather);
         $codesMother = array_keys($valuesMother);
@@ -86,13 +88,8 @@ class HeterosisAndRecombinationUtil
         $recombinationValue = (float)$recombinationSum/self::EIGHT_PART_DENOMINATOR;
 
         if($roundingAccuracy != null) {
-            if($returnWithTrailingZeroes) {
-                $heterosisValue = round($heterosisValue, $roundingAccuracy);
-                $recombinationValue = round($recombinationValue, $roundingAccuracy);
-            } else {
-                $heterosisValue = round($heterosisValue, $roundingAccuracy);
-                $recombinationValue = round($recombinationValue, $roundingAccuracy);   
-            }
+            $heterosisValue = round($heterosisValue, $roundingAccuracy);
+            $recombinationValue = round($recombinationValue, $roundingAccuracy);
         }
 
         return [

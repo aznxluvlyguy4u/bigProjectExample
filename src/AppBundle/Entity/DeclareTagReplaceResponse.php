@@ -2,14 +2,11 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclareTagReplace
@@ -26,6 +23,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="DeclareTagReplace", cascade={"persist"}, inversedBy="responses")
      * @JMS\Type("AppBundle\Entity\DeclareTagReplace")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $declareTagReplaceRequestMessage;
 
@@ -33,6 +33,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCodeToReplace;
 
@@ -40,6 +43,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnNumberToReplace;
 
@@ -47,6 +53,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnNumberReplacement;
 
@@ -54,6 +63,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCodeReplacement;
 
@@ -63,6 +75,9 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $replaceDate;
 

@@ -6,11 +6,9 @@ use AppBundle\Constant\DeclareLogMessage;
 use AppBundle\Enumerator\Language;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
-use AppBundle\Util\Translation;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \DateTime;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclareBase
@@ -54,6 +52,7 @@ use \DateTime;
  *     "ERROR_DETAILS",
  *     "ADMIN_HIDDEN_STATUS",
  *     "HIDDEN_STATUS",
+ *     "RESPONSE_PERSISTENCE",
  *     "RVO"
  * })
  *
@@ -67,7 +66,9 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
      * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO"
      * })
      */
@@ -91,6 +92,7 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO"
      * })
      */
@@ -105,6 +107,7 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
      *     "ADMIN_HIDDEN_STATUS",
      *     "ERROR_DETAILS",
      *     "HIDDEN_STATUS",
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO"
      * })
      */
@@ -678,5 +681,13 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
     public function setRevokedRequestState()
     {
         $this->setRequestState(RequestStateType::REVOKED);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRevoked(): bool
+    {
+        return $this->getRequestState() === RequestStateType::REVOKED;
     }
 }

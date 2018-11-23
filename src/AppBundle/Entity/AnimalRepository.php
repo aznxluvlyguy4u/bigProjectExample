@@ -8,7 +8,6 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Criteria\AnimalCriteria;
-use AppBundle\Criteria\MateCriteria;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\GenderType;
@@ -19,7 +18,6 @@ use AppBundle\Service\CacheService;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
-use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
@@ -28,17 +26,13 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Connection;
-use Doctrine\Common\Cache\RedisCache;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Join;
-use Doctrine\ORM\QueryBuilder;
-use Symfony\Component\Cache\Adapter\RedisAdapter;
-use Symfony\Component\Cache\Adapter\TraceableAdapter;
 use Doctrine\ORM\Query\Parameter;
+use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\Console\Output\OutputInterface;
-use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -49,10 +43,11 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 class AnimalRepository extends BaseRepository
 {
   const BATCH = 1000;
-  const USE_REDIS_CACHE = true; //TODO activate this when the livestock and historicLivestock redis cache is fixed
+  const USE_REDIS_CACHE = true;
   const LIVESTOCK_CACHE_ID = 'GET_LIVESTOCK_';
   const EWES_LIVESTOCK_WITH_LAST_MATE_CACHE_ID = 'GET_EWES_LIVESTOCK_WITH_LAST_MATE_';
   const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
+  const LIVESTOCK_WITH_LAST_WEIGHT_CACHE_ID = 'GET_LIVESTOCK_WITH_LAST_WEIGHT_';
   const CANDIDATE_FATHERS_CACHE_ID = 'GET_CANDIDATE_FATHERS_';
   const CANDIDATE_MOTHERS_CACHE_ID = 'GET_CANDIDATE_MOTHERS_';
   const CANDIDATE_SURROGATES_CACHE_ID = 'GET_CANDIDATE_SURROGATES_';
@@ -238,53 +233,42 @@ class AnimalRepository extends BaseRepository
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param array $animalArray
    * @return boolean|null
    */
-  public function verifyIfClientOwnsAnimal(Client $client, $animalArray)
+  public function verifyIfAnimalIsOnLocation(Location $location, $animalArray)
   {
-    $ulnExists = array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray) &&
-        array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray);
-    $pedigreeExists = array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray) &&
-        array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray);
+    $ulnExists = key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalArray) &&
+        key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray);
+    $pedigreeExists = key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalArray) &&
+        key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray);
 
     if ($ulnExists) {
       $numberToCheck = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
       $countryCodeToCheck = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
+        foreach ($location->getAnimals() as $animal) {
+            if ($animal->getUlnCountryCode() == $countryCodeToCheck && $animal->getUlnNumber() == $numberToCheck) {
+                return $animal->getIsAlive();
+            }
+        }
+        return false;
+
     } else if ($pedigreeExists) {
       $numberToCheck = $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
       $countryCodeToCheck = $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
 
-    } else {
-      return null;
-    }
-
-    foreach ($client->getCompanies() as $company) {
-      foreach ($company->getLocations() as $location) {
         foreach ($location->getAnimals() as $animal) {
-
-          if ($ulnExists) {
-            $ulnNumber = $animal->getUlnNumber();
-            $ulnCountryCode = $animal->getUlnCountryCode();
-            if ($ulnNumber == $numberToCheck && $ulnCountryCode == $countryCodeToCheck) {
-              return true;
+            if ($animal->getPedigreeCountryCode() == $countryCodeToCheck && $animal->getPedigreeNumber() == $numberToCheck) {
+                return $animal->getIsAlive();
             }
-
-          } else if ($pedigreeExists) {
-            $pedigreeNumber = $animal->getPedigreeNumber();
-            $pedigreeCountryCode = $animal->getPedigreeCountryCode();
-            if ($pedigreeNumber == $numberToCheck && $pedigreeCountryCode == $countryCodeToCheck) {
-              return true;
-            }
-          }
-
         }
-      }
+        return false;
+
     }
 
-    return false;
+    return null;
   }
 
   /**
@@ -422,6 +406,14 @@ class AnimalRepository extends BaseRepository
       return $query;
   }
 
+    /**
+     * @return array
+     */
+    public static function getLivestockWithLastWeightJmsGroups()
+    {
+        return [JmsGroup::BASIC, JmsGroup::LIVESTOCK, JmsGroup::LAST_WEIGHT];
+    }
+
 
     /**
      * @return array
@@ -501,6 +493,83 @@ class AnimalRepository extends BaseRepository
     }
 
     return $animals;
+  }
+
+
+    /**
+     * @param Location $location
+     * @param CacheService $cacheService
+     * @param BaseSerializer $serializer
+     * @param bool $isAlive
+     * @param null $queryOnlyOnAnimalGenderType
+     * @param array $extraJmsGroups
+     * @return array|mixed
+     * @throws \Doctrine\DBAL\DBALException
+     */
+  public function getLivestockWithLastWeight(Location $location,
+                                             CacheService $cacheService,
+                                             BaseSerializer $serializer,
+                                             $isAlive = true,
+                                             $queryOnlyOnAnimalGenderType = null,
+                                             array $extraJmsGroups = [])
+  {
+
+      $animals = $this->getLiveStock(
+          $location, $cacheService, $serializer, $isAlive, $queryOnlyOnAnimalGenderType, $extraJmsGroups);
+      return $this->addLastWeightsToAnimals($animals);
+  }
+
+
+    /**
+     * @param array $animals
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+  private function addLastWeightsToAnimals($animals)
+  {
+      if (
+          empty($animals) ||
+          ($animals instanceof Collection && $animals->isEmpty())
+      ) {
+          return $animals;
+      }
+
+      $animalIds = SqlUtil::getIdsFromAnimals($animals);
+      $animalIdsString = SqlUtil::valueString($animalIds, false);
+
+      if (empty($animalIds) || empty($animalIdsString)) {
+          return $animals;
+      }
+
+      $dateKey = JsonInputConstant::LAST_WEIGHT_MEASUREMENT_DATE;
+      $animalIdKey = JsonInputConstant::ANIMAL_ID;
+
+      $sql = "SELECT
+                animal_id as $animalIdKey, 
+                last_weight,
+                weight_measurement_date as $dateKey
+              FROM animal_cache c WHERE animal_id IN ($animalIdsString)";
+
+      $results = $this->getConnection()->query($sql)->fetchAll();
+      $weightDataByAnimalId = SqlUtil::createSearchArrayByKey($animalIdKey, $results);
+
+      /** @var Animal $animal */
+      foreach ($animals as $key => $animal) {
+          $id = $animal->getId();
+          $weightData = ArrayUtil::get($id, $weightDataByAnimalId);
+          if (empty($weightData)) {
+              continue;
+          }
+
+          $weightValue = ArrayUtil::get(JsonInputConstant::LAST_WEIGHT, $weightData);
+          $weightDateString = ArrayUtil::get($dateKey, $weightData);
+          $weightDate = TimeUtil::getDateTimeFromNullCheckedDateString($weightDateString);
+
+          $animal->setLastWeightValue($weightValue);
+          $animal->setLastWeightMeasurementDate($weightDate);
+      }
+
+      return $animals;
   }
 
 

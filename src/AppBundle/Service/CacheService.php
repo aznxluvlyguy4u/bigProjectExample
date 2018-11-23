@@ -9,7 +9,6 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
-use Doctrine\ORM\Query;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 
 /**

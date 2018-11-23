@@ -3,6 +3,7 @@
 namespace AppBundle\Component\Modifier;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -18,7 +19,6 @@ use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUBNDetails;
 use AppBundle\Entity\RevokeDeclaration;
-use AppBundle\Component\Utils;
 use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;

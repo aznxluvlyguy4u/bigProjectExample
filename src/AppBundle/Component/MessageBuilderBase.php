@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 use AppBundle\Constant\Environment;
+use AppBundle\Entity\Client as Client;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -16,19 +17,18 @@ use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
-use AppBundle\Entity\Client as Client;
 use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\EntityGetter;
 use Doctrine\Common\Persistence\ObjectManager;
-use AppBundle\Entity\Person;
 
 /**
  * Class MessageBuilderBaseAPIController

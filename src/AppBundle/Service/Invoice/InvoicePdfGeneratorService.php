@@ -9,22 +9,17 @@ use AppBundle\Entity\Invoice;
 use AppBundle\Entity\VatBreakdown;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Service\AWSSimpleStorageService;
-use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
-use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
-use AppBundle\Util\TwigOutputUtil;
-use Doctrine\DBAL\Connection;
-use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
-use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class InvoicePdfGeneratorService
 {

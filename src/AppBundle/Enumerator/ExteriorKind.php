@@ -24,6 +24,7 @@ class ExteriorKind
     const DD_ = 'DD';
     const DF_ = 'DF';
     const DO_ = 'DO';
+    const DDO_ = 'DDO';
     const HK_ = 'HK';
     const HH_ = 'HH';
 
@@ -37,6 +38,7 @@ class ExteriorKind
             self::DD_ => self::DD_,
             self::DF_ => self::DF_,
             self::DO_ => self::DO_,
+            self::DDO_ => self::DDO_,
             self::HK_ => self::HK_,
             self::HH_ => self::HH_,
         ];

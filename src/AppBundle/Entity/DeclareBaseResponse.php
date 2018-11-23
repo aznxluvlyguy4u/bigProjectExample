@@ -6,8 +6,8 @@ use AppBundle\Enumerator\ErrorKindIndicator;
 use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclareBaseResponse
@@ -43,7 +43,8 @@ use JMS\Serializer\Annotation as JMS;
  *      "DeclareTagReplaceResponse" : "AppBundle\Entity\DeclareTagReplaceResponse",
  *      "RevokeDeclarationResponse" : "AppBundle\Entity\RevokeDeclarationResponse"},
  *     groups = {
- *     "DECLARE"
+ *     "DECLARE",
+ *     "RESPONSE_PERSISTENCE"
  * })
  *
  * @package AppBundle\Entity\DeclareBaseResponse
@@ -64,6 +65,9 @@ abstract class DeclareBaseResponse
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $requestId;
 
@@ -72,6 +76,9 @@ abstract class DeclareBaseResponse
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $messageId;
 
@@ -80,7 +87,8 @@ abstract class DeclareBaseResponse
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     protected $messageNumber;
@@ -91,7 +99,8 @@ abstract class DeclareBaseResponse
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     protected $logDate;
@@ -101,7 +110,8 @@ abstract class DeclareBaseResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $errorCode;
@@ -111,7 +121,8 @@ abstract class DeclareBaseResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $errorMessage;
@@ -122,7 +133,8 @@ abstract class DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $errorKindIndicator;
@@ -133,7 +145,8 @@ abstract class DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
      * @JMS\Groups({
-     *     "ERROR_DETAILS"
+     *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE"
      * })
      */
     private $successIndicator;
@@ -143,6 +156,9 @@ abstract class DeclareBaseResponse
      *
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $isRemovedByUser;
 
@@ -151,7 +167,10 @@ abstract class DeclareBaseResponse
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
-     * @JMS\Type("Person")
+     * @JMS\Type("AppBundle\Entity\Person")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $actionBy;
 

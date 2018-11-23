@@ -4,7 +4,6 @@ namespace AppBundle\Output;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Province;
 
 /**
  * Class ProvinceOutput

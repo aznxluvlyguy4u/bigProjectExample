@@ -2,15 +2,10 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\Service\IRSerializer;
-use AppBundle\DataFixtures\ORM\MockedCountries;
-use AppBundle\DataFixtures\ORM\MockedClient;
+use AppBundle\Entity\Client;
 use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use AppBundle\Entity\Country;
-use AppBundle\Entity\Client;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class CountryAPIControllerTest

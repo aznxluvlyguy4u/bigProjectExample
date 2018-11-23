@@ -7,13 +7,11 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\ClientRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Output\ClientOverviewOutput;
 use AppBundle\Service\Container\RepositoryContainerBase;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

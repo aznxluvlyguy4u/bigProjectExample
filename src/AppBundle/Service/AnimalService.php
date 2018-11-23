@@ -28,6 +28,7 @@ use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\EditTypeEnum;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\LiveStockQueryType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\AnimalDetailsOutput;
@@ -576,25 +577,46 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function getLiveStock(Request $request)
     {
         $location = $this->getSelectedLocation($request);
         if($location == null) { return ResultUtil::errorResult('Location cannot be null', 428); }
 
-        $isEwesWithLastMate = RequestUtil::getBooleanQuery($request, QueryParameter::IS_EWES_WITH_LAST_MATE, false);
+        $type = $request->query->get(QueryParameter::TYPE_QUERY);
+        $type = is_string($type) ? strtolower($type) : null;
+
+        $isEwesWithLastMate = false;
+        $isLivestockWithLastWeight = false;
+        switch ($type) {
+            case LiveStockQueryType::EWES_WITH_LAST_MATE; $isEwesWithLastMate = true; break;
+            case LiveStockQueryType::LAST_WEIGHT; $isLivestockWithLastWeight = true; break;
+            default; break;
+        }
+
+        $filterLivestockByGenderQueryParam = true;
 
         if ($isEwesWithLastMate) {
             $livestock = $this->getManager()->getRepository(Animal::class)
                 ->getEwesLivestockWithLastMate($location, $this->getCacheService(), $this->getBaseSerializer(), true);
             $jmsGroups = AnimalRepository::getEwesLivestockWithLastMateJmsGroups();
             $jmsGroups[] = JmsGroup::IS_NOT_HISTORIC_ANIMAL;
+            $filterLivestockByGenderQueryParam = false;
+
+        } else if ($isLivestockWithLastWeight) {
+            $livestock = $this->getManager()->getRepository(Animal::class)
+                ->getLivestockWithLastWeight($location, $this->getCacheService(), $this->getBaseSerializer(), true);
+            $jmsGroups = AnimalRepository::getLivestockWithLastWeightJmsGroups();
+            $jmsGroups[] = JmsGroup::IS_NOT_HISTORIC_ANIMAL;
 
         } else {
             $livestock = $this->getManager()->getRepository(Animal::class)
                 ->getLiveStock($location, $this->getCacheService(), $this->getBaseSerializer(), true);
             $jmsGroups = [JmsGroup::LIVESTOCK, JmsGroup::IS_NOT_HISTORIC_ANIMAL];
+        }
 
+        if ($filterLivestockByGenderQueryParam) {
             $gender = $request->query->get(QueryParameter::GENDER);
             $livestock = $this->filterLivestockByGenderQueryParam($livestock, $gender);
         }

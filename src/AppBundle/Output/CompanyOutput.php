@@ -2,12 +2,12 @@
 
 namespace AppBundle\Output;
 
+use AppBundle\Component\Count;
 use AppBundle\Component\Utils;
-use AppBundle\Entity\Company;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Service\BaseSerializer;
-use AppBundle\Component\Count;
 use AppBundle\Util\ArrayUtil;
 
 class CompanyOutput

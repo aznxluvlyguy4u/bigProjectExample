@@ -4,9 +4,8 @@ namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\RevokeDeclaration;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class RevokeDeclarationResponse
@@ -23,6 +22,9 @@ class RevokeDeclarationResponse extends DeclareBaseResponse
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="RevokeDeclaration", cascade={"persist"}, inversedBy="responses")
    * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+   * @JMS\Groups({
+   *     "RESPONSE_PERSISTENCE"
+   * })
    */
   private $revokeDeclarationRequestMessage;
 //JColumn(name="revoke_declaration_request_message_id", referencedColumnName="id")

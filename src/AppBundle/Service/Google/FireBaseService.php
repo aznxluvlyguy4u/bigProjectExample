@@ -5,7 +5,6 @@ namespace AppBundle\Service\Google;
 use AppBundle\Entity\Message as NsfoNotificationMessage;
 use AppBundle\Entity\Person;
 use AppBundle\Util\ExceptionUtil;
-use Kreait\Firebase\Exception\MessagingException;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\MessageData;
@@ -95,10 +94,22 @@ class FireBaseService
      * @param string $messageTypeValue
      * @param string $title
      * @param string $body
+     * @param $deactivate bool
      * @param MessageData|array|null $data
      */
-    private function sendMessageBase($messageTypeKey, $messageTypeValue, $title, $body, $data = null)
+    private function sendMessageBase($messageTypeKey, $messageTypeValue, $title, $body, $data = null,
+                                     $deactivate = true)
     {
+        /*
+         * TODO reactivate sending messages on the new server instance
+         * Currently sending the message on the old instance results in exception: "OpenSSL unable to sign data"
+         * So sending notifications will be deactivated until after the migration to the new instance.
+         */
+
+        if ($deactivate) {
+            return;
+        }
+
         try {
             $notification = Notification::create($title, $body);
 
@@ -111,7 +122,7 @@ class FireBaseService
 
             $this->messaging->send($message);
 
-        } catch(MessagingException $e) {
+        } catch(\Throwable $e) {
             ExceptionUtil::logException($this->logger, $e);
         }
     }

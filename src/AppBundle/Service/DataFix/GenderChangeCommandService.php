@@ -13,7 +13,6 @@ use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\GenderChanger;
-use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
 

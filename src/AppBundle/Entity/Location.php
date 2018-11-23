@@ -4,12 +4,12 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Traits\EntityClassInfo;
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as JMS;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class Location
@@ -32,6 +32,7 @@ class Location
    * @JMS\Groups({
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
+   *     "RESPONSE_PERSISTENCE",
    *     "RVO"
    * })
    *
@@ -51,6 +52,7 @@ class Location
      *     "INVOICE",
      *     "INVOICE_NO_COMPANY",
      *     "MINIMAL",
+     *     "RESPONSE_PERSISTENCE",
      *     "RVO",
      *     "DOSSIER"
      * })
@@ -74,6 +76,7 @@ class Location
    *     "INVOICE_NO_COMPANY",
    *     "LIVESTOCK",
    *     "MINIMAL",
+   *     "RESPONSE_PERSISTENCE",
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
    *     "TREATMENT_TEMPLATE_MIN",
@@ -686,8 +689,7 @@ class Location
 
     /**
      * Get animals
-     *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection|Animal[]
      */
     public function getAnimals()
     {
@@ -1237,5 +1239,16 @@ class Location
             return $this->getAddress()->getCountryCode();
         }
         return null;
+    }
+
+
+    /**
+     * @param bool $returnEmptyStringAsNull
+     * @return null|string
+     */
+    public function getCompanyName($returnEmptyStringAsNull = false): ?string
+    {
+        $companyName = $this->getCompany() ? $this->getCompany()->getCompanyName() : null;
+        return $returnEmptyStringAsNull && empty($companyName) ? null : $companyName;
     }
 }

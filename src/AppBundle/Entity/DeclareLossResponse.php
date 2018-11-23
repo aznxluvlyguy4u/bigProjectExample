@@ -4,8 +4,8 @@ namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclareLossResponse
@@ -22,6 +22,9 @@ class DeclareLossResponse extends DeclareBaseResponse
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="DeclareLoss", cascade={"persist"}, inversedBy="responses")
      * @JMS\Type("AppBundle\Entity\DeclareLoss")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $declareLossRequestMessage;
 
@@ -29,6 +32,9 @@ class DeclareLossResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCode;
 
@@ -36,6 +42,9 @@ class DeclareLossResponse extends DeclareBaseResponse
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnNumber;
 
@@ -45,6 +54,9 @@ class DeclareLossResponse extends DeclareBaseResponse
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $dateOfDeath;
 
@@ -52,6 +64,9 @@ class DeclareLossResponse extends DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $reasonOfLoss;
 
@@ -59,6 +74,9 @@ class DeclareLossResponse extends DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 10)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ubnDestructor;
 

@@ -3,10 +3,10 @@
 namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Enumerator\AnimalType;
 use Doctrine\Common\Persistence\ObjectManager;
-use AppBundle\Entity\Person;
 
 class RetrieveUbnDetailsMessageBuilder extends MessageBuilderBase
 {

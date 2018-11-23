@@ -2,18 +2,12 @@
 
 namespace AppBundle\Validation;
 
-use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\ClientRepository;
-use AppBundle\Entity\Content;
-use AppBundle\Entity\Employee;
-use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Constant\Constant;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
-use \Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Class CompanyValidator

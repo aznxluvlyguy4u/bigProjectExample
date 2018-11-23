@@ -312,6 +312,20 @@ class TagRepository extends BaseRepository {
      * @param string $ulnNumber
      * @return Tag|null
      */
+    public function findByUln(string $ulnCountryCode, string $ulnNumber): ?Tag
+    {
+        return $this->findOneBy([
+            'ulnCountryCode' => $ulnCountryCode,
+            'ulnNumber' => $ulnNumber,
+        ]);
+    }
+
+
+    /**
+     * @param string $ulnCountryCode
+     * @param string $ulnNumber
+     * @return Tag|null
+     */
   public function findReplacedTag($ulnCountryCode, $ulnNumber)
   {
       return $this->findTagByStatus($ulnCountryCode, $ulnNumber, TagStateType::REPLACED);

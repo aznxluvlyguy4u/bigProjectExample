@@ -6,13 +6,10 @@ use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Constant\DeclareLogMessage;
 use AppBundle\Enumerator\Language;
 use AppBundle\Traits\EntityClassInfo;
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use JMS\Serializer\Annotation as JMS;
-use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
-use JMS\Serializer\Annotation\ExclusionPolicy;
-use JMS\Serializer\Annotation\Expose;
+use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclareNsfoBase

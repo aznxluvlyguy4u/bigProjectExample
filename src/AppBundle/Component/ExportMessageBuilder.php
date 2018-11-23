@@ -5,10 +5,9 @@ namespace AppBundle\Component;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AnimalType;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\Common\Collections\ArrayCollection;
-use AppBundle\Entity\Person;
 
 class ExportMessageBuilder extends MessageBuilderBase
 {

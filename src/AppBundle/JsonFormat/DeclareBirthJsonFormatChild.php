@@ -7,8 +7,6 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\GenderType;
-use AppBundle\JsonFormat\DeclareBirthJsonFormatEwe;
-use AppBundle\Enumerator\AnimalType;
 
 /**
  * Class ChildJsonFormat

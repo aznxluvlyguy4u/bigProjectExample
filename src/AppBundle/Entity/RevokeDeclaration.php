@@ -3,12 +3,12 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as JMS;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class RevokeDeclaration
@@ -26,6 +26,9 @@ class RevokeDeclaration extends DeclareBase
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="revokes", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      * @Expose
      *
      */

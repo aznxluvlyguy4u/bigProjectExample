@@ -4,13 +4,11 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Traits\EntityClassInfo;
-use \DateTime;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationHealthInspectionResult;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class LocationHealthInspection

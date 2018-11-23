@@ -3,7 +3,6 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Util\CommandUtil;
-use AppBundle\Util\NullChecker;
 
 /**
  * Class BlindnessFactorRepository

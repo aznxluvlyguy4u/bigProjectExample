@@ -8,19 +8,19 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\TestConstant;
-use AppBundle\Entity\BirthProgress;
-use AppBundle\Entity\Neuter;
-use AppBundle\Entity\Ram;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\BirthProgress;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareWeight;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
+use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Person;
-use AppBundle\Entity\Employee;
+use AppBundle\Entity\Ram;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\BlindnessFactorType;
 use AppBundle\Enumerator\BreedType;
@@ -646,6 +646,26 @@ class Validator
         }
 
         return $sum%10 == 0;
+    }
+
+
+    /**
+     * @param string $ubn1 a valid ubn
+     * @param string $ubn2 a valid ubn
+     * @param bool $areIdenticalIfBothAreEmpty
+     * @return bool
+     */
+    public static function areUbnsIdentical($ubn1, $ubn2, $areIdenticalIfBothAreEmpty = true): bool
+    {
+        if (empty($ubn1) && empty($ubn2)) {
+            return $areIdenticalIfBothAreEmpty;
+        }
+
+        if (empty($ubn1) || empty($ubn2)) { // at least one is empty
+            return false;
+        }
+
+        return StringUtil::preformatUbn($ubn1) === StringUtil::preformatUbn($ubn2);
     }
 
 

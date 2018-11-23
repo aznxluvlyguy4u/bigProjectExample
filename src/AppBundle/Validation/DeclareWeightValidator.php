@@ -5,7 +5,6 @@ namespace AppBundle\Validation;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Weight;
@@ -14,10 +13,7 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use AppBundle\Constant\Constant;
 use Doctrine\Common\Persistence\ObjectManager;
-use \Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Class WeightValidator

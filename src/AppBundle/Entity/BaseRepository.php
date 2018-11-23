@@ -2,13 +2,10 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
-use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
-use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;

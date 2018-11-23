@@ -6,13 +6,13 @@ namespace AppBundle\Service;
 
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Cache\GeneDiversityUpdater;
-use AppBundle\Component\MixBlup\WormResistanceInputProcess;
-use AppBundle\Constant\Environment;
-use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Component\MixBlup\ExteriorInputProcess;
 use AppBundle\Component\MixBlup\LambMeatIndexInputProcess;
 use AppBundle\Component\MixBlup\MixBlupInputProcessInterface;
 use AppBundle\Component\MixBlup\ReproductionInputProcess;
+use AppBundle\Component\MixBlup\WormResistanceInputProcess;
+use AppBundle\Constant\Environment;
+use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\FilesystemUtil;

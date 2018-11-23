@@ -5,13 +5,11 @@ namespace AppBundle\Util;
 
 use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Enumerator\WeightType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
-use Symfony\Component\Validator\Constraints\Time;
 
 class MeasurementsUtil
 {    
@@ -211,26 +209,24 @@ class MeasurementsUtil
         }
         return $codes;
     }
-    
-    
+
+
     /**
      * @param ObjectManager $em
      * @param Animal $animal
-     * @param string $currentKind
-     * @param boolean $filterByAnimalData
+     * @param string|null $currentKind
+     * @param bool $filterByAnimalData
+     * @param bool $returnAllKinds
      * @return array
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public static function getExteriorKindsOutput(ObjectManager $em, Animal $animal, $currentKind = null, $filterByAnimalData = true)
+    public static function getExteriorKindsOutput(ObjectManager $em, Animal $animal, $currentKind = null,
+                                                  bool $filterByAnimalData = true, bool $returnAllKinds = true)
     {
-        //TODO filter kinds based on previous ACTIVE exteriors AND age on measurementDate. For now just return all exteriorKinds
-        $kindsForOutput = ExteriorKind::getAll();
-
-        sort($kindsForOutput);
-        foreach ($kindsForOutput as $kind) {
-            $output[] = ['code' => $kind];
+        // TODO filter kinds based on previous ACTIVE exteriors AND age on measurementDate. For now just return all exteriorKinds
+        if ($returnAllKinds) {
+            return self::getAllExteriorKindsOutput();
         }
-
-        return $output;
 
         /* */
 
@@ -303,7 +299,10 @@ class MeasurementsUtil
             $kindsForOutput[] = ExteriorKind::HH_;
         }
 
-        if(!$animal->getIsAlive()) { $kindsForOutput[] = ExteriorKind::DO_; }
+        if(!$animal->getIsAlive()) {
+            $kindsForOutput[] = ExteriorKind::DO_;
+            $kindsForOutput[] = ExteriorKind::DDO_;
+        }
 
         if($ddExists || $dfExists || $vgExists
             || $hkExists || $hhExists //adding $hkExists && $hhExists in case of incomplete exterior data
@@ -323,4 +322,19 @@ class MeasurementsUtil
     }
 
 
+    /**
+     * @return array
+     */
+    public static function getAllExteriorKindsOutput(): array
+    {
+        $kindsForOutput = ExteriorKind::getAll();
+        $output = [];
+
+        sort($kindsForOutput);
+        foreach ($kindsForOutput as $kind) {
+            $output[] = ['code' => $kind];
+        }
+
+        return $output;
+    }
 }

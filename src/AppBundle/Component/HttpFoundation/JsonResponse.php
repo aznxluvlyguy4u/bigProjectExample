@@ -2,8 +2,8 @@
 
 namespace AppBundle\Component\HttpFoundation;
 
-use Symfony\Component\HttpFoundation\Response;
 use JMS\Serializer\SerializerBuilder;
+use Symfony\Component\HttpFoundation\Response;
 
 class JsonResponse extends Response
 {

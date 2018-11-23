@@ -5,9 +5,8 @@ namespace AppBundle\Entity;
 use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\DeclareBirth;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclareBirthResponse
@@ -27,6 +26,9 @@ class DeclareBirthResponse extends DeclareBaseResponse
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $dateOfBirth;
 
@@ -34,6 +36,9 @@ class DeclareBirthResponse extends DeclareBaseResponse
      * @ORM\ManyToOne(targetEntity="Animal", cascade={"persist"})
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $animal;
 
@@ -42,6 +47,9 @@ class DeclareBirthResponse extends DeclareBaseResponse
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $gender;
 
@@ -49,6 +57,9 @@ class DeclareBirthResponse extends DeclareBaseResponse
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnNumber;
 
@@ -56,18 +67,27 @@ class DeclareBirthResponse extends DeclareBaseResponse
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCode;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnFather;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCodeFather;
 
@@ -75,6 +95,9 @@ class DeclareBirthResponse extends DeclareBaseResponse
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnMother;
 
@@ -82,6 +105,9 @@ class DeclareBirthResponse extends DeclareBaseResponse
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCodeMother;
 
@@ -89,6 +115,9 @@ class DeclareBirthResponse extends DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnSurrogate;
 
@@ -96,6 +125,9 @@ class DeclareBirthResponse extends DeclareBaseResponse
      * @ORM\Column(type="string", nullable=true)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $ulnCountryCodeSurrogate;
 
@@ -105,6 +137,9 @@ class DeclareBirthResponse extends DeclareBaseResponse
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="DeclareBirth", cascade={"persist"}, inversedBy="responses")
      * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     private $declareBirthRequestMessage;
 

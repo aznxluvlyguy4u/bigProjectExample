@@ -1,7 +1,6 @@
 <?php
 
 namespace AppBundle\Entity;
-use AppBundle\Constant\Constant;
 use AppBundle\Criteria\MateCriteria;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\MateOutput;

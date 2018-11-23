@@ -2,9 +2,6 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\Client;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\DeclareTagsTransferResponseOutput;
 use Doctrine\Common\Collections\ArrayCollection;

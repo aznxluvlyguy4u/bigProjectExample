@@ -6,20 +6,22 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareLossResponse;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\DateUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Worker\DirectProcessor\DeclareLossProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class LossService extends DeclareControllerServiceBase
 {
@@ -102,22 +104,32 @@ class LossService extends DeclareControllerServiceBase
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
 
-        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+        $this->validateRelationNumberKeeperOfLocation($location);
+
+        $useRvoLogic = $location->isDutchLocation();
+
+        $this->verifyCreateLoss($content, $location);
 
         $log = ActionLogWriter::declareLossPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
-        $messageObject = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
+        $loss = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
+
+        if (!$useRvoLogic) {
+            $this->validateNonRvoLoss($loss);
+        }
 
         //First Persist object to Database, before sending it to the queue
-        $this->persist($messageObject);
-        $messageObject->getAnimal()->setTransferringTransferState();
-        $this->getManager()->persist($messageObject->getAnimal());
+        $this->persist($loss);
+        $loss->getAnimal()->setTransferringTransferState();
+        $this->getManager()->persist($loss->getAnimal());
         $this->getManager()->flush();
 
-        $messageArray = $this->runDeclareLossWorkerLogic($messageObject);
+        $messageArray = $this->runDeclareLossWorkerLogic($loss);
 
-        $this->saveNewestDeclareVersion($content, $messageObject);
+        $this->saveNewestDeclareVersion($content, $loss);
 
         $log = ActionLogWriter::completeActionLog($this->getManager(), $log);
 
@@ -152,7 +164,9 @@ class LossService extends DeclareControllerServiceBase
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
-        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
+        $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
+        $this->verifyUlnFormatByAnimalArray($animalArray);
+        $this->verifyIfAnimalIsOnLocation($location, $animalArray);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
@@ -259,5 +273,50 @@ class LossService extends DeclareControllerServiceBase
         }
 
         return new JsonResponse(['DeclareLoss' => ['found open declares' => $openCount, 'open declares resent' => $resentCount]], 200);
+    }
+
+
+    /**
+     * @param DeclareLoss $loss
+     */
+    private function validateNonRvoLoss(DeclareLoss $loss)
+    {
+        $this->validateIfEventDateIsNotBeforeDateOfBirth($loss->getAnimal(), $loss->getDateOfDeath());
+    }
+
+
+    /**
+     * @param ArrayCollection $content
+     * @param Location $location
+     */
+    private function verifyCreateLoss(ArrayCollection $content, Location $location)
+    {
+        $this->verifyIfLossDoesNotExistYet($content, $location);
+        $this->verifyIfAnimalIsOnLocation($location, $content->get(Constant::ANIMAL_NAMESPACE));
+        $this->verifyDateOfDeath($content);
+    }
+
+
+    /**
+     * @param ArrayCollection $content
+     * @param Location $location
+     */
+    private function verifyIfLossDoesNotExistYet(ArrayCollection $content, Location $location)
+    {
+        $losses = $this->getManager()->getRepository(DeclareLoss::class)
+            ->findByDeclareInput($content, $location, false);
+        $this->verifyIfDeclareDoesNotExistYet(DeclareLoss::class, $losses);
+    }
+
+
+    /**
+     * @param ArrayCollection $content
+     */
+    private function verifyDateOfDeath(ArrayCollection $content)
+    {
+        $dateOfDeath = RequestUtil::getDateTimeFromContent($content,JsonInputConstant::DATE_OF_DEATH);
+        if (TimeUtil::isDateInFuture($dateOfDeath)) {
+            throw new PreconditionFailedHttpException($this->translator->trans('THE DATE OF DEATH CANNOT BE IN THE FUTURE'));
+        }
     }
 }

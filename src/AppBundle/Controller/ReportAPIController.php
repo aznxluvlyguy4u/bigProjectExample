@@ -2,16 +2,13 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Service\ReportService;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Validation\AdminValidator;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Symfony\Component\HttpFoundation\Request;
-use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 
 /**

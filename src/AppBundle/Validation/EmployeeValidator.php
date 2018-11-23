@@ -5,9 +5,6 @@ namespace AppBundle\Validation;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Employee;
-use AppBundle\Util\AnimalArrayReader;
-use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class EmployeeValidator

@@ -3,13 +3,11 @@
 namespace AppBundle\Service;
 
 use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
-use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**

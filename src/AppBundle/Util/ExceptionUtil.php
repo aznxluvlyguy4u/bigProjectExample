@@ -49,9 +49,9 @@ class ExceptionUtil
 
     /**
      * @param LoggerInterface $logger
-     * @param \Exception $exception
+     * @param \Throwable $exception
      */
-    public static function logException(LoggerInterface $logger, \Exception $exception)
+    public static function logException(LoggerInterface $logger, \Throwable $exception)
     {
         $logger->error($exception->getMessage());
         $logger->error($exception->getTraceAsString());

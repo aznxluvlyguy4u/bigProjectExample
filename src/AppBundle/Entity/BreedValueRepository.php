@@ -1,7 +1,6 @@
 <?php
 
 namespace AppBundle\Entity;
-use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Enumerator\DateTimeFormats;
 use AppBundle\Setting\BreedGradingSetting;
 use AppBundle\Util\ArrayUtil;

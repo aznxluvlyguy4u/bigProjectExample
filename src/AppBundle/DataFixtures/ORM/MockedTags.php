@@ -3,21 +3,13 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use AppBundle\Entity\Ram;
-use AppBundle\Entity\Tag;
-use AppBundle\Entity\Ewe;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Company;
-use AppBundle\Entity\CompanyAddress;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationAddress;
-use AppBundle\Enumerator\AnimalType;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

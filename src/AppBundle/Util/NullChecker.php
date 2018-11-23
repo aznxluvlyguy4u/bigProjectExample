@@ -4,7 +4,6 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
@@ -145,7 +144,7 @@ class NullChecker
         $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $array);
         $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $array);
 
-        if($ulnCountryCode != null && $ulnCountryCode != null) {
+        if($ulnCountryCode != null && $ulnNumber != null) {
             return $ulnCountryCode.$ulnNumber;
         } else {
             return $replacementText;
@@ -165,7 +164,7 @@ class NullChecker
         $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $array);
         $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $array);
 
-        if($pedigreeCountryCode != null && $pedigreeCountryCode != null) {
+        if($pedigreeCountryCode != null && $pedigreeNumber != null) {
             return $pedigreeCountryCode.$pedigreeNumber;
         } else {
             return $replacementText;

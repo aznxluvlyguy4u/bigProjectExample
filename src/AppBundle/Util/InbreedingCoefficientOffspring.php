@@ -6,7 +6,6 @@ namespace AppBundle\Util;
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
 class InbreedingCoefficientOffspring

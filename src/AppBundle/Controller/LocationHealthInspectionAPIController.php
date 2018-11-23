@@ -2,8 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\FTPFailedImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealthInspection;
@@ -17,21 +17,12 @@ use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use Com\Tecnick\Barcode\Barcode;
-use Doctrine\Common\Collections\ArrayCollection;
 use PHPExcel;
 use PHPExcel_Style_NumberFormat;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\Config\Definition\Exception\Exception;
-use Symfony\Component\Form\Extension\Core\DataMapper\RadioListMapper;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
-use AppBundle\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * @Route("/api/v1/health_inspections")

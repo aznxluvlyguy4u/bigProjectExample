@@ -8,7 +8,6 @@
 
 namespace AppBundle\Service;
 
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Entity\Invoice;
 use Mollie_API_Client;

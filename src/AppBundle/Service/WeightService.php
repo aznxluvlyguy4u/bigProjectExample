@@ -7,14 +7,11 @@ namespace AppBundle\Service;
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\DeclareWeightBuilder;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareWeight;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\DeclareWeightValidator;
 use Symfony\Component\HttpFoundation\Request;
 

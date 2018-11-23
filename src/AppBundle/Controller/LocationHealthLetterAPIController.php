@@ -1,21 +1,15 @@
 <?php
 
 namespace AppBundle\Controller;
-use AppBundle\Constant\Constant;
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\LocationHealthLetter;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Symfony\Component\Form\Extension\Core\DataMapper\RadioListMapper;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
-use AppBundle\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class LocationHealthLetterAPIController

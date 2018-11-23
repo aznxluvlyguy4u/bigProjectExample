@@ -11,7 +11,6 @@ use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\DisplayUtil;
-use AppBundle\Util\StringUtil;
 use AppBundle\Validation\UlnValidatorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;

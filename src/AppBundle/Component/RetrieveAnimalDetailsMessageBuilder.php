@@ -4,9 +4,9 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use Doctrine\Common\Persistence\ObjectManager;
-use AppBundle\Entity\Person;
 
 class RetrieveAnimalDetailsMessageBuilder extends MessageBuilderBase{
   /**

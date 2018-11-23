@@ -10,7 +10,6 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Country;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\QueryParameter;

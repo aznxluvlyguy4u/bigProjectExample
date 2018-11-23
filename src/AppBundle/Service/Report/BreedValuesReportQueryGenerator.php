@@ -5,7 +5,6 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Constant\BreedValueTypeConstant;
-use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\DateUtil;

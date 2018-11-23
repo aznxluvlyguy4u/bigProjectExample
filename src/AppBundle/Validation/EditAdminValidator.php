@@ -5,12 +5,8 @@ namespace AppBundle\Validation;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Employee;
-use AppBundle\Entity\Person;
-use AppBundle\Output\AccessLevelOverviewOutput;
 use Doctrine\Common\Collections\ArrayCollection;
-use AppBundle\Constant\Constant;
 use Doctrine\Common\Persistence\ObjectManager;
-use \Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Class CreateAdminValidator

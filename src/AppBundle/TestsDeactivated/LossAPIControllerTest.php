@@ -2,19 +2,14 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\Entity\DeclareLoss;
-use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Ram;
 use AppBundle\Service\IRSerializer;
-use AppBundle\DataFixtures\ORM\MockedAnimal;
-use AppBundle\DataFixtures\ORM\MockedClient;
-use AppBundle\DataFixtures\ORM\MockedTags;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Ram;
-use AppBundle\Entity\Ewe;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class LossAPIControllerTest

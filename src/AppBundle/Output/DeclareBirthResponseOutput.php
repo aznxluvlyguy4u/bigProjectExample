@@ -4,22 +4,15 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\DeclareBirth;
-use AppBundle\Entity\DeclareBirthResponse;
-use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
-use AppBundle\Entity\Stillborn;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\Collection;
-use AppBundle\Component\HttpFoundation\JsonResponse;
 
 class DeclareBirthResponseOutput extends Output
 {

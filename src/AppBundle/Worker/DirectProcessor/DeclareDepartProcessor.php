@@ -24,14 +24,24 @@ class DeclareDepartProcessor extends DeclareProcessorBase implements DeclareDepa
     /** @var Animal */
     private $animal;
     /** @var Location */
-    private $newLocation;
+    private $destination;
     /** @var bool */
     private $clearCache;
 
-    function process(DeclareDepart $depart)
+    /**
+     * @param DeclareDepart $depart
+     * @param Location|null $destination
+     * @return array|null
+     */
+    function process(DeclareDepart $depart, ?Location $destination)
     {
+        $this->getManager()->persist($depart);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($depart);
+
         $this->depart = $depart;
         $this->animal = $depart->getAnimal();
+        $this->destination = $destination;
 
         $this->response = new DeclareDepartResponse();
         $this->response->setDeclareDepartIncludingAllValues($depart);
@@ -54,21 +64,21 @@ class DeclareDepartProcessor extends DeclareProcessorBase implements DeclareDepa
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
-        $this->depart->addResponse($this->response);
-        $this->getManager()->persist($this->response);
+        $this->persistResponseInSeparateTransaction($this->response);
+
         $this->getManager()->persist($this->depart);
         $this->getManager()->flush();
 
         if ($this->clearCache) {
             $this->clearLivestockCacheForLocation($this->depart->getLocation());
-            $this->clearLivestockCacheForLocation($this->newLocation);
+            $this->clearLivestockCacheForLocation($this->destination);
         }
 
         $this->animal = null;
         $this->depart = null;
         $this->response = null;
         $this->clearCache = null;
-        $this->newLocation = null;
+        $this->destination = null;
 
         return $this->getDeclareMessageArray($depart, false);
     }
@@ -93,7 +103,7 @@ class DeclareDepartProcessor extends DeclareProcessorBase implements DeclareDepa
             return RequestStateType::FAILED;
         }
 
-        if ($this->animal->isDeclaredDead() && $animalIsOnOriginLocation) {
+        if ($this->animal->isDead() && $animalIsOnOriginLocation) {
             $this->response->setFailedValues(
                 $this->translator->trans('ANIMAL IS ALREADY DEAD'),
                 Response::HTTP_PRECONDITION_REQUIRED
@@ -114,9 +124,7 @@ class DeclareDepartProcessor extends DeclareProcessorBase implements DeclareDepa
         $this->getManager()->persist($this->animal);
 
         $this->closeLastOpenAnimalResidence($this->animal, $this->depart->getLocation(), $this->depart->getDepartDate());
-        $this->newLocation = $this->getManager()->getRepository(Location::class)
-            ->findOneByActiveUbn($this->depart->getUbnNewOwner());
-        $this->finalizeAnimalTransferAndAnimalResidenceDestination($this->animal, $this->newLocation);
+        $this->finalizeAnimalTransferAndAnimalResidenceDestination($this->animal, $this->destination);
         $this->displayDeclareNotificationMessage($this->depart, $this->response);
 
         $this->depart->setFinishedRequestState();

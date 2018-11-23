@@ -203,7 +203,8 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     {
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
-                        $data = $this->liveStockReportService->getReport($worker->getActionBy(), $worker->getLocation(), $fileType, $concatValueAndAccuracy, $content, $locale);
+                        $data = $this->liveStockReportService->getReport($worker->getLocation()->getOwner(),
+                            $worker->getLocation(), $fileType, $concatValueAndAccuracy, $content, $locale);
                         break;
                     }
             }

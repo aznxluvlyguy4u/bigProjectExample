@@ -7,7 +7,6 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\InvoiceSenderDetailsAPIControllerInterface;
 use AppBundle\Entity\BillingAddress;
-use AppBundle\Entity\Country;
 use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\ArrayUtil;

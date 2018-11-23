@@ -7,8 +7,8 @@ namespace AppBundle\Service;
 use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Criteria\DeclareCriteria;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -19,7 +19,9 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\DepartArrivalTransaction;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
@@ -30,10 +32,19 @@ use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Exception\AnimalNotOnLocationHttpException;
 use AppBundle\Exception\DeclareToOtherCountryHttpException;
+use AppBundle\Exception\DuplicateDeclareHttpException;
+use AppBundle\Exception\EventDateBeforeDateOfBirthHttpException;
+use AppBundle\Exception\InvalidStnHttpException;
+use AppBundle\Exception\InvalidUlnHttpException;
+use AppBundle\Exception\MissingRelationNumberKeeperOfLocationHttpException;
 use AppBundle\Output\RequestMessageOutputBuilder;
+use AppBundle\Util\AnimalArrayReader;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -235,7 +246,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      * @param $user
      * @param Location $location
      * @param Person $loggedInUser
-     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
      * @throws \Exception
      */
     protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
@@ -334,17 +345,35 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
 
     /**
-     * @param Client $client
+     * @param Location $location
+     */
+    protected function validateRelationNumberKeeperOfLocation(Location $location)
+    {
+        if (
+            !$location->getOwner() ||
+            ($location->getOwner() && empty($location->getOwner()->getRelationNumberKeeper()))
+        ) {
+            throw new MissingRelationNumberKeeperOfLocationHttpException($this->translator, $location);
+        }
+    }
+
+
+    /**
+     * @param Location|null $location
      * @param array $animalArray
      */
-    protected function verifyIfClientOwnsAnimal(?Client $client, array $animalArray): void
+    protected function verifyIfAnimalIsOnLocation(?Location $location, array $animalArray): void
     {
-        $this->nullCheckClient($client);
-        $isAnimalOfClient = $this->getManager()->getRepository(Animal::class)
-            ->verifyIfClientOwnsAnimal($client, $animalArray);
+        $this->nullCheckLocation($location);
+        $animalIsOnLocation = $this->getManager()->getRepository(Animal::class)
+            ->verifyIfAnimalIsOnLocation($location, $animalArray);
 
-        if(!$isAnimalOfClient) {
-            throw new PreconditionFailedHttpException("Animal doesn't belong to this account.");
+        if(!$animalIsOnLocation) {
+            $animalData = AnimalArrayReader::readUlnOrPedigree($animalArray);
+            $identifier = $animalData[JsonInputConstant::DATA];
+            $translationKey = $animalData[JsonInputConstant::TRANSLATION_KEY];
+
+            throw new AnimalNotOnLocationHttpException($this->translator, $location->getUbn(), $translationKey, $identifier);
         }
     }
 
@@ -357,6 +386,87 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     {
         if (!Validator::hasValidUbnFormatByLocationType($ubn, $isDutchLocation)) {
             throw new PreconditionFailedHttpException($this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn);
+        }
+    }
+
+
+    /**
+     * @param $animalArray
+     */
+    protected function verifyUlnOrPedigreeNumberFormatByAnimalArray($animalArray)
+    {
+        if (!is_array($animalArray)) {
+            throw new InvalidUlnHttpException($this->translator, null);
+        }
+
+        $uln = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray)
+            . ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $animalArray);
+        $uln = is_string($uln) && !empty($uln) ? $uln : null;
+
+        if ($uln) {
+            if (!Validator::verifyUlnFormat($uln, false)) {
+                throw new InvalidUlnHttpException($this->translator, $uln);
+            }
+            return;
+        }
+
+        $stn = ArrayUtil::get(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray)
+            . ArrayUtil::get(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+        $stn = is_string($stn) && !empty($stn) ? $stn : null;
+
+        $stnIsValid = $stn && Validator::verifyPedigreeCountryCodeAndNumberFormat($stn,false);
+        if (!$stnIsValid) {
+            throw new InvalidStnHttpException($this->translator, $stn);
+        }
+    }
+
+
+    /**
+     * @param $animalArray
+     */
+    protected function verifyUlnFormatByAnimalArray($animalArray)
+    {
+        $hasValidUlnFormat = false;
+        $uln = null;
+
+        if (is_array($animalArray)) {
+            $uln = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray)
+                . ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $animalArray);
+
+            $hasValidUlnFormat = Validator::verifyUlnFormat($uln, false);
+            $uln = is_string($uln) ? $uln : null;
+        }
+
+        if (!$hasValidUlnFormat) {
+            throw new InvalidUlnHttpException($this->translator, $uln);
+        }
+    }
+
+
+    /**
+     * @param string $uln
+     * @param bool $includeSpaceBetweenCountryCodeAndNumber
+     */
+    protected function verifyUlnFormat($uln, $includeSpaceBetweenCountryCodeAndNumber = false)
+    {
+        $hasValidUlnFormat = Validator::verifyUlnFormat($uln, $includeSpaceBetweenCountryCodeAndNumber);
+        if (!$hasValidUlnFormat) {
+            $uln = is_string($uln) ? $uln : null;
+            throw new InvalidUlnHttpException($this->translator, $uln);
+        }
+    }
+
+
+    /**
+     * @param $ubnOfDeparture
+     * @param $ubnOfArrival
+     */
+    protected function verifyIfDepartureAndArrivalUbnAreIdentical($ubnOfDeparture, $ubnOfArrival): void
+    {
+        if (Validator::areUbnsIdentical($ubnOfArrival, $ubnOfDeparture)) {
+            throw new PreconditionFailedHttpException(
+                $this->translator->trans('UBN OF DEPARTURE AND ARRIVAL ARE IDENTICAL')
+            );
         }
     }
 
@@ -377,5 +487,80 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         }
 
         return $declareBase;
+    }
+
+
+    /**
+     * @param DeclareArrival|null $arrival
+     * @param DeclareDepart|null $depart
+     * @param Person $actionBy
+     * @param bool $useRvoLogic
+     * @param bool $isArrivalInitiated
+     */
+    protected function createDepartArrivalTransaction(?DeclareArrival $arrival,
+                                                      ?DeclareDepart $depart,
+                                                      Person $actionBy,
+                                                      bool $useRvoLogic,
+                                                      bool $isArrivalInitiated)
+    {
+        if ($isArrivalInitiated) {
+            if (!$arrival) {
+                throw new PreconditionRequiredHttpException('ARRIVAL cannot be NULL if leading');
+            }
+        } else {
+            if (!$depart) {
+                throw new PreconditionRequiredHttpException('DEPART cannot be NULL if leading');
+            }
+        }
+
+        $transaction = new DepartArrivalTransaction();
+        $transaction
+            ->setArrival($arrival)
+            ->setDepart($depart)
+            ->setActionBy($actionBy)
+            ->setIsRvoMessage($useRvoLogic)
+            ->setIsArrivalInitiated($isArrivalInitiated)
+        ;
+
+        $this->getManager()->persist($transaction);
+    }
+
+
+
+
+    /**
+     * @param Animal|null $animal
+     * @param \DateTime|null $eventDate
+     */
+    protected function validateIfEventDateIsNotBeforeDateOfBirth(?Animal $animal, $eventDate)
+    {
+        if ($animal && $animal->getDateOfBirth() && !empty($eventDate) && $eventDate instanceof \DateTime
+            && TimeUtil::isDate1BeforeDate2($eventDate, $animal->getDateOfBirth())
+        ) {
+            throw new EventDateBeforeDateOfBirthHttpException(
+                $this->translator, $animal->getDateOfBirth(), $eventDate
+            );
+        }
+    }
+
+
+    /**
+     * @param string $declareClazz
+     * @param ArrayCollection $declares
+     */
+    protected function verifyIfDeclareDoesNotExistYet(string $declareClazz, ArrayCollection $declares)
+    {
+        if ($declares->isEmpty()) {
+            return;
+        }
+
+        $hasOpenArrivals = $declares->matching(DeclareCriteria::byOpenRequestState())
+                ->count() > 0;
+        $hasFinishedArrivals = $declares->matching(DeclareCriteria::byFinishedOrFinishedWithWarningRequestState())
+                ->count() > 0;
+
+        if ($hasOpenArrivals || $hasFinishedArrivals) {
+            throw new DuplicateDeclareHttpException($this->translator, $declareClazz, $hasOpenArrivals);
+        }
     }
 }

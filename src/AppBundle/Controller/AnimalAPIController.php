@@ -2,15 +2,13 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Animal;
 use AppBundle\Service\AnimalDetailsBatchUpdaterService;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Symfony\Component\HttpFoundation\Request;
-use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 
 /**
@@ -215,11 +213,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *        "format"="?gender=female"
    *      },
    *      {
-   *        "name"="is_ewes_with_last_mate",
-   *        "dataType"="boolean",
+   *        "name"="type",
+   *        "dataType"="string",
    *        "required"=false,
-   *        "description"="only return ewes and add their last mate, false by default",
-   *        "format"="?is_ewes_with_last_mate=true"
+   *        "description"="options: ewes_with_last_mate, last_weight, null by default",
+   *        "format"="?type=ewes_with_last_mate"
    *      }
    *   },
    *   resource = true,

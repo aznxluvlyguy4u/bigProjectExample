@@ -3,7 +3,6 @@
 namespace AppBundle\Util;
 
 
-use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
@@ -14,7 +13,6 @@ use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\ScrapieStatus;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\DBAL\Types\DecimalType;
 
 class HealthChecker
 {

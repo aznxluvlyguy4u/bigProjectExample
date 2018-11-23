@@ -21,27 +21,39 @@ class AnimalArrayReader
      */
     public static function readUlnOrPedigree($animalArray)
     {
-        $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
-        $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
+        $ulnCountryCode = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
+        $ulnNumber = ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $animalArray);
         if ($ulnCountryCode != null && $ulnNumber != null) {
-            return array(   Constant::TYPE_NAMESPACE => Constant::ULN_NAMESPACE,
-                 JsonInputConstant::ULN_COUNTRY_CODE => $animalArray[JsonInputConstant::ULN_COUNTRY_CODE],
-                       JsonInputConstant::ULN_NUMBER => $animalArray[JsonInputConstant::ULN_NUMBER]);
+            return [
+                Constant::TYPE_NAMESPACE => Constant::ULN_NAMESPACE,
+                JsonInputConstant::ULN_COUNTRY_CODE => $ulnCountryCode,
+                JsonInputConstant::ULN_NUMBER => $ulnNumber,
+                JsonInputConstant::DATA => $ulnCountryCode.$ulnNumber,
+                JsonInputConstant::TRANSLATION_KEY => Constant::ULN_NAMESPACE,
+            ];
         }
 
 
-        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
-        $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+        $pedigreeCountryCode = ArrayUtil::get(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+        $pedigreeNumber = ArrayUtil::get(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
         if ($pedigreeCountryCode != null && $pedigreeNumber != null) {
 
-            return array(   Constant::TYPE_NAMESPACE => Constant::PEDIGREE_NAMESPACE,
-            JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animalArray[JsonInputConstant::PEDIGREE_COUNTRY_CODE],
-                  JsonInputConstant::PEDIGREE_NUMBER => $animalArray[JsonInputConstant::PEDIGREE_NUMBER]);
+            return [
+                Constant::TYPE_NAMESPACE => Constant::PEDIGREE_NAMESPACE,
+                JsonInputConstant::PEDIGREE_COUNTRY_CODE => $pedigreeCountryCode,
+                JsonInputConstant::PEDIGREE_NUMBER => $pedigreeNumber,
+                JsonInputConstant::DATA => $pedigreeCountryCode.$pedigreeNumber,
+                JsonInputConstant::TRANSLATION_KEY => Constant::STN_NAMESPACE,
+            ];
         }
 
-        return array(   Constant::TYPE_NAMESPACE => null,
-             JsonInputConstant::ULN_COUNTRY_CODE => null,
-                   JsonInputConstant::ULN_NUMBER => null);
+        return [
+            Constant::TYPE_NAMESPACE => null,
+            JsonInputConstant::ULN_COUNTRY_CODE => null,
+            JsonInputConstant::ULN_NUMBER => null,
+            JsonInputConstant::DATA => null,
+            JsonInputConstant::TRANSLATION_KEY => null,
+        ];
     }
 
 

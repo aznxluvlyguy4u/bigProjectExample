@@ -4,10 +4,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Cache\AnimalCacher;
-use AppBundle\Cache\NLingCacher;
-use AppBundle\Cache\ProductionCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -17,7 +14,6 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBase;
-use AppBundle\Entity\DeclareBaseResponse;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareBirthResponse;
 use AppBundle\Entity\DeclareDepart;
@@ -33,7 +29,6 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Stillborn;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
@@ -47,14 +42,13 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
-use AppBundle\Util\Validator;
 use AppBundle\Util\WorkerTaskUtil;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Worker\DirectProcessor\DeclareProcessorBase;
 use AppBundle\Worker\Task\WorkerMessageBodyLitter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -195,6 +189,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
+        $this->validateRelationNumberKeeperOfLocation($location);
 
         $clientId = $client->getId();
         $locationId = $location->getId();
@@ -406,6 +401,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         $childrenToRemove = [];
         $stillbornsToRemove = [];
+
+        $useRvoLogic = $location->isDutchLocation();
 
         $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::ADMIN);
 
@@ -685,7 +682,13 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
                     if ($declareBirthResponse) {
                         $declareBirthResponseCount++;
-                        //Only successful RVO responses contain messageNumbers and can be revoked by a RevokeDeclare
+                        /*
+                         * Only successful RVO responses contain messageNumbers and can be revoked by a RevokeDeclare
+                         *
+                         * DO NOT persist a response here in case of for example a non-RVO revoke.
+                         * This will cause a duplicate key violation on the declare_base_response table.
+                         * Send a response a json to the worker instead, to be persisted in the worker.
+                         */
                         if ($declareBirth->isRvoMessage() &&
                             $declareBirthResponse->getMessageNumber() != null
                         ) {
@@ -707,8 +710,11 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
             $missingMessages = $declareBirthCount-$declareBirthResponseCount;
             if ($declareBirthCount > $declareBirthResponseCount) {
-                $message = 'There are '.$declareBirthCount.' declareBirths found for the litter, which are missing '.$missingMessages.' responses';
-                $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
+                if ($useRvoLogic) {
+                    $message = 'There are '.$declareBirthCount.' declareBirths found for the litter, which are missing '.$missingMessages.' responses';
+                    $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
+                }
+                // A non-RVO birth-litter might be revoked, before the response has been processed
             } elseif($declareBirthCount == 0 && $litter->getBornAliveCount() != 0) {
                 $message = 'The litter does not contain any declareBirths';
                 $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
@@ -1139,12 +1145,16 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $response = new DeclareBirthResponse();
         $response->setDeclareBirthIncludingAllValues($birth);
         $response->setSuccessValues();
-        $birth->addResponse($response);
+
+        DeclareProcessorBase::sendResponseToWorkerQueue(
+            $this->getBaseSerializer(),
+            $this->internalQueueService,
+            $response
+        );
 
         $birth->setFinishedRequestState();
         $this->removeReservedTag($birth);
 
-        $this->getManager()->persist($response);
         $this->getManager()->persist($birth);
 
         return $this->getDeclareMessageArray($birth, false);

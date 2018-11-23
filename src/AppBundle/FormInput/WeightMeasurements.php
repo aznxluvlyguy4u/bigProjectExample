@@ -3,7 +3,6 @@
 namespace AppBundle\FormInput;
 
 
-use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\WeightMeasurement;

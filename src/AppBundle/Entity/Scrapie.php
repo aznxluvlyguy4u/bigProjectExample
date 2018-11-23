@@ -5,13 +5,12 @@ namespace AppBundle\Entity;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\StringUtil;
-use \DateTime;
-use Doctrine\Common\Collections\ArrayCollection;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class Scrapie

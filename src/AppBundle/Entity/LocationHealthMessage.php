@@ -3,18 +3,12 @@
 namespace AppBundle\Entity;
 
 
-use AppBundle\Entity\DeclareArrival;
-use AppBundle\Entity\DeclareImport;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationHealth;
 use AppBundle\Traits\EntityClassInfo;
-use \DateTime;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class LocationHealthMessage

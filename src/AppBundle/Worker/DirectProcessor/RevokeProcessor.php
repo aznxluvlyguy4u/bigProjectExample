@@ -28,19 +28,38 @@ use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInterface
 {
 
-    function revokeArrival(DeclareArrival $arrival, Client $client, Person $actionBy): RevokeDeclaration
+    function revokeArrival(DeclareArrival $arrival, Client $client, Person $actionBy,
+                           bool $isReverseSideAutoRevoke = false): RevokeDeclaration
     {
+        /*
+         * Always revoke the Depart BEFORE the Arrival for nonRVO declares
+         */
+        $declareArrivalTransaction = $arrival->getTransaction();
+        $depart = null;
+        if ($declareArrivalTransaction && !$declareArrivalTransaction->isRvoMessage()) {
+            $depart = $declareArrivalTransaction->getDepart();
+            $departOwner = $declareArrivalTransaction->getDepartOwner();
+            if ($depart && $departOwner && !$isReverseSideAutoRevoke) {
+                $this->revokeDepart($depart, $departOwner, $actionBy, true);
+            }
+        }
+
         $animal = $this->getAnimalFromDeclare($arrival);
-        $animal->setTransferredTransferState();
-        $animal->setLocation(null);
         $animal->setIsDepartedAnimal(false);
+
+        if ($depart) {
+            $animal->setLocation($depart->getLocation());
+            $animal->setTransferState(null);
+        } else {
+            // If no reverseSide depart exists put the animal in the TRANSFERRED state
+            $animal->setTransferredTransferState();
+            $animal->setLocation(null);
+        }
 
         $this->removeLastOpenResidenceOnLocation($arrival->getLocation(), $animal);
 
         $this->clearLivestockCacheForLocationPrioritizedByActiveUbn($arrival->getUbnPreviousOwner());
         $this->getCacheService()->clearLivestockCacheForLocation($arrival->getLocation());
-
-        $revoke = $this->createRevokeDeclaration($arrival, $client, $actionBy);
 
         $arrival->setRevokedRequestState();
         $this->getManager()->persist($animal);
@@ -48,7 +67,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $this->getManager()->flush();
 
-        return $revoke;
+        return $this->createRevokeDeclaration($arrival, $client, $actionBy);
     }
 
 
@@ -64,7 +83,7 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $location->addAnimal($animal);
 
-        $revoke = $this->createRevokeDeclaration($export, $client, $actionBy);
+        $this->reopenClosedResidenceOnLocationByEndDate($location, $animal, $export->getExportDate());
 
         $export->setRevokedRequestState();
         $this->getManager()->persist($location);
@@ -73,13 +92,16 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $this->getManager()->flush();
 
+        $revoke = $this->createRevokeDeclaration($export, $client, $actionBy);
+
         $this->getCacheService()->clearLivestockCacheForLocation($location);
 
         return $revoke;
     }
 
 
-    function revokeDepart(DeclareDepart $depart, Client $client, Person $actionBy): RevokeDeclaration
+    function revokeDepart(DeclareDepart $depart, Client $client, Person $actionBy,
+                          bool $isReverseSideAutoRevoke = false): RevokeDeclaration
     {
         $location = $depart->getLocation();
 
@@ -91,8 +113,6 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $location->addAnimal($animal);
 
-        $revoke = $this->createRevokeDeclaration($depart, $client, $actionBy);
-
         $this->reopenClosedResidenceOnLocationByEndDate($location, $animal, $depart->getDepartDate());
 
         $depart->setRevokedRequestState();
@@ -102,8 +122,24 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $this->getManager()->flush();
 
+        $revoke = $this->createRevokeDeclaration($depart, $client, $actionBy);
+
         $this->getCacheService()->clearLivestockCacheForLocation($location);
         $this->getCacheService()->clearLivestockCacheForLocation($currentLocation);
+
+        /*
+         * Always revoke the Depart BEFORE the Arrival for nonRVO declares
+         */
+        if (!$isReverseSideAutoRevoke) {
+            $declareArrivalTransaction = $depart->getTransaction();
+            if ($declareArrivalTransaction && !$declareArrivalTransaction->isRvoMessage()) {
+                $arrival = $declareArrivalTransaction->getArrival();
+                $arrivalOwner = $declareArrivalTransaction->getArrivalOwner();
+                if ($arrival && $arrivalOwner) {
+                    $this->revokeArrival($arrival, $arrivalOwner, $actionBy, true);
+                }
+            }
+        }
 
         return $revoke;
     }
@@ -129,12 +165,13 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
             $this->getManager()->remove($animal);
         }
 
-        $revoke = $this->createRevokeDeclaration($import, $client, $actionBy);
         $import->setRevokedRequestState();
 
         $this->getManager()->persist($import);
-
         $this->getManager()->flush();
+
+        $revoke = $this->createRevokeDeclaration($import, $client, $actionBy);
+
         $this->getCacheService()->clearLivestockCacheForLocation($location);
 
         return $revoke;
@@ -151,13 +188,13 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
 
         $this->reopenClosedResidenceOnLocationByEndDate($location, $animal, $loss->getDateOfDeath());
 
-        $revoke = $this->createRevokeDeclaration($loss, $client, $actionBy);
-
         $loss->setRevokedRequestState();
         $this->getManager()->persist($animal);
         $this->getManager()->persist($loss);
-
         $this->getManager()->flush();
+
+        $revoke = $this->createRevokeDeclaration($loss, $client, $actionBy);
+
         $this->getCacheService()->clearLivestockCacheForLocation($location);
 
         return $revoke;
@@ -194,13 +231,13 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
         $animal->setUlnNumber($tagReplace->getUlnNumberToReplace());
         $animal->setAnimalOrderNumber($tagReplace->getAnimalOrderNumberToReplace());
 
-        $revoke = $this->createRevokeDeclaration($tagReplace, $client, $actionBy);
-
         $tagReplace->setRevokedRequestState();
         $this->getManager()->persist($animal);
         $this->getManager()->persist($tagReplace);
-
         $this->getManager()->flush();
+
+        $revoke = $this->createRevokeDeclaration($tagReplace, $client, $actionBy);
+
         $this->getCacheService()->clearLivestockCacheForLocation($location);
 
         return $revoke;
@@ -235,10 +272,12 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
         $declare->setRevoke($revokeDeclaration);
         $revokeDeclaration->setFinishedRequestState();
 
-        $this->createRevokeSuccessResponse($revokeDeclaration);
-
         $this->getManager()->persist($revokeDeclaration);
         $this->getManager()->persist($declare);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($revokeDeclaration);
+
+        $this->createRevokeSuccessResponse($revokeDeclaration);
 
         return $revokeDeclaration;
     }
@@ -252,10 +291,8 @@ class RevokeProcessor extends DeclareProcessorBase implements RevokeProcessorInt
         $response = new RevokeDeclarationResponse();
         $response->setRevokeDeclarationIncludingAllValues($revoke);
         $response->setSuccessValues();
-        $revoke->addResponse($response);
 
-        $this->getManager()->persist($response);
-        $this->getManager()->persist($revoke);
+        $this->persistResponseInSeparateTransaction($response);
     }
 
 

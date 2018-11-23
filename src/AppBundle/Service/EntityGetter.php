@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -14,22 +15,18 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
-use AppBundle\Entity\RevokeDeclaration;
-use AppBundle\Enumerator\GenderType;
-use AppBundle\Enumerator\TagStateType;
-use Doctrine\Common\Persistence\ObjectManager;
-use Exception;
-use AppBundle\Constant\Constant;
-use AppBundle\Enumerator\RequestType;
-use \AppBundle\Entity\Ewe;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\HttpFoundation\Request;
-use AppBundle\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Validator\Constraints\DateTime;
+use Doctrine\Common\Persistence\ObjectManager;
+use Exception;
 
 class EntityGetter
 {

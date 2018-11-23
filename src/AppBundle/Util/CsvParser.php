@@ -104,4 +104,55 @@ class CsvParser
         return $results;
     }
 
+
+    /**
+     * @param string $filename
+     * @param string $folderName
+     * @param int $startPositionId
+     * @param int $endPositionId
+     * @return array
+     * @throws \Exception
+     */
+    public static function extractIdsInColumnOfTextFile(string $filename,
+                                                  string $folderName,
+                                                  int $startPositionId = 0,
+                                                  int $endPositionId = 9
+    ): array
+    {
+        $csvOptions = new CsvOptions();
+        $csvOptions
+            ->ignoreFirstLine()
+            ->setPipeSeparator()
+            ->setFileName($filename)
+            ->setInputFolder($folderName)
+        ;
+
+        $csvAsArray = CsvParser::parse($csvOptions);
+
+        $idsInInput = [];
+        foreach ($csvAsArray as $xRows)
+        {
+            $row = array_shift($xRows);
+            if (empty($row)) {
+                continue;
+            }
+
+            if (!is_string($row)) {
+                throw new \Exception('NOT A STRING: '.
+                    (is_array($row) ? implode(', ', $row) : $row)
+                    , 400);
+            }
+
+            $animalId = trim(substr($row, $startPositionId, $endPositionId));
+
+            if (!ctype_digit($animalId)) {
+                throw new \Exception('NOT A NUMBER: '.$animalId, 400);
+            }
+
+            $animalId = intval($animalId);
+            $idsInInput[$animalId] = $animalId;
+        }
+
+        return $idsInInput;
+    }
 }

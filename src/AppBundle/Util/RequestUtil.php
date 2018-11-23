@@ -9,6 +9,7 @@ use AppBundle\Constant\JsonInputConstant;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class RequestUtil
 {
@@ -30,7 +31,12 @@ class RequestUtil
             }
         }
 
-        return new ArrayCollection(json_decode($content, true));
+        $decodedJson = json_decode($content, true);
+        if ($decodedJson === null || $decodedJson === false) {
+            throw new BadRequestHttpException();
+        }
+
+        return new ArrayCollection($decodedJson);
     }
 
 
@@ -169,5 +175,20 @@ class RequestUtil
     public static function isMultiEdit(ArrayCollection $content)
     {
         return $content->get(JsonInputConstant::IS_MULTI_EDIT) === true;
+    }
+
+
+    /**
+     * @param ArrayCollection $content
+     * @param string $dateKey
+     * @return \DateTime
+     */
+    public static function getDateTimeFromContent(ArrayCollection $content, $dateKey)
+    {
+        $departDateString = $content->get($dateKey);
+        if (empty($departDateString)) {
+            throw new PreconditionFailedHttpException('Missing key: '.$dateKey);
+        }
+        return new \DateTime($departDateString);
     }
 }

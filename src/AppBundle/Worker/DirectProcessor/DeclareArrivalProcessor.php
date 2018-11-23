@@ -5,7 +5,6 @@ namespace AppBundle\Worker\DirectProcessor;
 
 
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareArrivalResponse;
 use AppBundle\Entity\Location;
@@ -31,12 +30,18 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
 
     /**
      * @param DeclareArrival $arrival
+     * @param Location $origin
      * @return array
      */
-    function process(DeclareArrival $arrival)
+    function process(DeclareArrival $arrival, ?Location $origin)
     {
+        $this->getManager()->persist($arrival);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($arrival);
+
         $this->arrival = $arrival;
         $this->animal = $arrival->getAnimal();
+        $this->origin = $origin;
 
         $this->response = new DeclareArrivalResponse();
         $this->response->setDeclareArrivalIncludingAllValues($arrival);
@@ -59,8 +64,8 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
-        $this->arrival->addResponse($this->response);
-        $this->getManager()->persist($this->response);
+        $this->persistResponseInSeparateTransaction($this->response);
+
         $this->getManager()->persist($this->arrival);
         $this->getManager()->flush();
 
@@ -81,7 +86,7 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
 
     private function getRequestStateAndSetResponseData()
     {
-        if ($this->animal->isDeclaredDead()) {
+        if ($this->animal->isDead()) {
             $this->response->setFailedValues(
                 $this->translator->trans('ANIMAL IS ALREADY DEAD'),
                 Response::HTTP_PRECONDITION_REQUIRED
@@ -106,8 +111,6 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
 
     private function processSuccessLogic()
     {
-        $ubnPreviousOwner = $this->arrival->getUbnPreviousOwner();
-        $this->origin = $this->getManager()->getRepository(Location::class)->findOnePrioritizedByActiveUbn($ubnPreviousOwner);
         if ($this->origin) {
             $finalizeTransaction = $this->animalResidenceOnPreviousLocationHasBeenFinalized($this->animal, $this->origin);
         } else {
@@ -126,6 +129,7 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
         $this->animal->setTransferState(null);
         $this->animal->setIsExportAnimal(false);
         $this->animal->setIsDepartedAnimal(false);
+        $this->animal->setIsAlive(true);
 
         $this->animal->setLocation($destination);
 
@@ -147,8 +151,18 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
 
     private function processSuccessWithWarning()
     {
+        $updateAnimal = false;
         if ($this->animal->getIsExportAnimal()) {
             $this->animal->setIsExportAnimal(false);
+            $updateAnimal = true;
+        }
+
+        if (!$this->animal->getIsAlive()) {
+            $this->animal->setIsAlive(true);
+            $updateAnimal = true;
+        }
+
+        if ($updateAnimal) {
             $this->getManager()->persist($this->animal);
         }
 

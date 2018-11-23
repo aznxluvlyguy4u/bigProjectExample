@@ -239,7 +239,7 @@ class BreedCodeUtil
     public static function divideBreedCodeValuesInHalf($breedCodePartsParent1, $breedCodePartsParent2, $nullResponse = null)
     {
         if(!is_array($breedCodePartsParent1) || !is_array($breedCodePartsParent2)) { return $nullResponse; }
-        if(count($breedCodePartsParent1) == 0 || count($breedCodePartsParent1) == 0) { return $nullResponse; }
+        if(count($breedCodePartsParent1) == 0 || count($breedCodePartsParent2) == 0) { return $nullResponse; }
 
         $totalParts = [];
 

@@ -2,8 +2,8 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Enumerator\AnimalTransferStatus;
+use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
@@ -12,13 +12,13 @@ use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
+use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use Doctrine\Common\Collections\ArrayCollection;
-use \DateTime;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class Animal
@@ -46,6 +46,7 @@ use \DateTime;
  *     "MINIMAL",
  *     "MIXBLUP",
  *     "PARENT_DATA",
+ *     "RESPONSE_PERSISTENCE",
  *     "USER_MEASUREMENT"
  * })
  *
@@ -73,6 +74,7 @@ abstract class Animal
      *     "ERROR_DETAILS",
      *     "MIXBLUP",
      *     "PARENT_DATA",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "USER_MEASUREMENT"
      * })
@@ -202,6 +204,7 @@ abstract class Animal
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "ERROR_DETAILS",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE"
      * })
      */
@@ -239,6 +242,7 @@ abstract class Animal
      *     "LIVESTOCK",
      *     "MINIMAL",
      *     "MIXBLUP",
+     *     "RESPONSE_PERSISTENCE",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -456,6 +460,7 @@ abstract class Animal
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "PARENT_DATA",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "USER_MEASUREMENT"
@@ -482,6 +487,7 @@ abstract class Animal
      *     "MINIMAL",
      *     "MIXBLUP",
      *     "PARENT_DATA",
+     *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "USER_MEASUREMENT"
@@ -919,6 +925,26 @@ abstract class Animal
 
         return $this->nLing;
     }
+
+
+    /**
+     * @var float|null
+     * @JMS\Type("float")
+     * @JMS\SerializedName("last_weight")
+     * @JMS\Groups({
+     *     "LAST_WEIGHT"
+     * })
+     */
+    protected $lastWeightValue;
+
+    /**
+     * @var \DateTime|null
+     * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "LAST_WEIGHT"
+     * })
+     */
+    protected $lastWeightMeasurementDate;
 
 
     /**
@@ -3140,9 +3166,9 @@ abstract class Animal
     /**
      * @return bool
      */
-    public function isDeclaredDead(): bool
+    public function isDead(): bool
     {
-        return !$this->getIsAlive() && $this->getDateOfDeath();
+        return !$this->getIsAlive();
     }
 
 
@@ -3152,5 +3178,39 @@ abstract class Animal
     public function hasLocation(): bool
     {
         return $this->getLocation() !== null;
+    }
+
+
+    /**
+     * @return float|null
+     */
+    public function getLastWeightValue(): ?float
+    {
+        return $this->lastWeightValue;
+    }
+
+    /**
+     * @param float|null $weight
+     */
+    public function setLastWeightValue(?float $weight)
+    {
+        $this->lastWeightValue = $weight;
+    }
+
+
+    /**
+     * @return DateTime|null
+     */
+    public function getLastWeightMeasurementDate(): ?DateTime
+    {
+        return $this->lastWeightMeasurementDate;
+    }
+
+    /**
+     * @param DateTime|null $lastWeightMeasurementDate
+     */
+    public function setLastWeightMeasurementDate(?DateTime $lastWeightMeasurementDate): void
+    {
+        $this->lastWeightMeasurementDate = $lastWeightMeasurementDate;
     }
 }

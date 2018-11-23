@@ -2,21 +2,20 @@
 
 namespace AppBundle\Worker\Logic;
 
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\AnimalResidenceRepository;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareDepartRepository;
+use AppBundle\Entity\DeclareDepartResponse;
 use AppBundle\Entity\Location;
-use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Entity\LocationRepository;
+use AppBundle\Enumerator\AnimalTransferStatus;
+use AppBundle\Enumerator\InternalWorkerResponse;
 use AppBundle\Util\DoctrineUtil;
-use \Doctrine\Common\Persistence\ObjectManager;
-use \AppBundle\Entity\AnimalResidence;
-use \AppBundle\Entity\DeclareDepart;
-use \AppBundle\Entity\DeclareDepartResponse;
-use \AppBundle\Entity\DeclareDepartRepository;
-use \AppBundle\Entity\LocationRepository;
-use \AppBundle\Constant\JsonInputConstant;
-use \AppBundle\Util\TimeUtil;
-use \AppBundle\Util\IRUtil;
-use \AppBundle\Enumerator\InternalWorkerResponse;
-use \AppBundle\Enumerator\AnimalTransferStatus;
+use AppBundle\Util\IRUtil;
+use AppBundle\Util\TimeUtil;
+use Doctrine\Common\Persistence\ObjectManager;
 
 class DeclareDepartAction
 {    

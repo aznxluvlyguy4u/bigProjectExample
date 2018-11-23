@@ -18,15 +18,41 @@ use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Service\AwsInternalQueueService;
+use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\ControllerServiceBase;
 use AppBundle\Service\DeclareControllerServiceBase;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\WorkerTaskUtil;
 use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
 class DeclareProcessorBase extends ControllerServiceBase
 {
+    /** @var AwsInternalQueueService */
+    private $internalQueueService;
+
     /** @var string */
     private $environment;
+
+
+    /**
+     * @return AwsInternalQueueService
+     */
+    protected function getInternalQueueService(): AwsInternalQueueService
+    {
+        return $this->internalQueueService;
+    }
+
+    /**
+     * @required
+     *
+     * @param AwsInternalQueueService $internalQueueService
+     */
+    public function setInternalQueueService(AwsInternalQueueService $internalQueueService): void
+    {
+        $this->internalQueueService = $internalQueueService;
+    }
+
 
     /**
      * @param string $environment
@@ -43,6 +69,45 @@ class DeclareProcessorBase extends ControllerServiceBase
     {
         return $this->environment;
     }
+
+
+    /**
+     * @param DeclareBaseResponse $response
+     * @return bool|array|null
+     */
+    public function persistResponseInSeparateTransaction(DeclareBaseResponse $response)
+    {
+        return DeclareProcessorBase::sendResponseToWorkerQueue(
+            $this->getBaseSerializer(),
+            $this->getInternalQueueService(),
+            $response
+        );
+    }
+
+
+    /**
+     * @param BaseSerializer $serializer
+     * @param AwsInternalQueueService $internalQueueService
+     * @param DeclareBaseResponse $response
+     * @return bool|array|null
+     */
+    public static function sendResponseToWorkerQueue(BaseSerializer $serializer,
+                                                     AwsInternalQueueService $internalQueueService,
+                                                     DeclareBaseResponse $response)
+    {
+        if($response == null) { return false; }
+
+        $workerMessageBody = WorkerTaskUtil::createResponseToPersistBody($response);
+        $jsonMessage = $serializer->serializeToJSON($workerMessageBody, JmsGroup::RESPONSE_PERSISTENCE);
+
+        //Send  message to Queue
+        $sendToQresult = $internalQueueService
+            ->send($jsonMessage, $workerMessageBody->getTaskType(), 1);
+
+        //If send to Queue, failed, it needs to be resend, set state to failed
+        return $sendToQresult['statusCode'] == '200';
+    }
+
 
     /**
      * @param DeclareBase $messageObject

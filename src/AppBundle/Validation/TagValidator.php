@@ -10,9 +10,8 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Tag;
 use AppBundle\Entity\TagRepository;
-use AppBundle\Util\AnimalArrayReader;
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class TagValidator

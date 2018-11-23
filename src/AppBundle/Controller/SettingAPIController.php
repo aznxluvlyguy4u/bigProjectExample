@@ -3,14 +3,13 @@
 namespace AppBundle\Controller;
 
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
-use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
  * Class SettingAPIController

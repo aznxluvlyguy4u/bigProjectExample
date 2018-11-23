@@ -8,12 +8,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Employee;
-use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AdminAuthService extends AuthServiceBase
 {

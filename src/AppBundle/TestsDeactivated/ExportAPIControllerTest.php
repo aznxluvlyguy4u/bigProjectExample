@@ -2,20 +2,13 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\DataFixtures\ORM\MockedTags;
-use AppBundle\Entity\DeclareExport;
-use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Ram;
 use AppBundle\Service\IRSerializer;
-use AppBundle\DataFixtures\ORM\MockedAnimal;
-use AppBundle\DataFixtures\ORM\MockedClient;
 use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
-use Proxies\__CG__\AppBundle\Entity\Location;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Ram;
-use AppBundle\Entity\Ewe;
-use Doctrine\Common\Collections\ArrayCollection;
 
 class DeclareExportAPIControllerTest extends  WebTestCase {
 

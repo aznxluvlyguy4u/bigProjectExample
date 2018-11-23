@@ -191,6 +191,8 @@ BREEDER: FOKKER
 BREEDER UBN: FOKKER UBN
 BREEDER UBN HOLDER: FOKKER UBN HOUDER
 CURRENT_UBN: UBN HOUDER
+CURRENT UBN: UBN houder
+UBN: UBN
 UBN_OF_BIRTH: UBN FOKKER
 UBN_OF_BIRTH_TEXT_VALUE: UBN FOKKER TEXT WAARDE
 ACTIVE UBN AT REFERENCE DATE: ACTIEF UBN OP PEILDATUM
@@ -288,6 +290,7 @@ YEAR2PLUS: JAAR2PLUS
 DATEFORMAT: d-m-Y
 TRUE: waar
 FALSE: onwaar
+EVENT DATE: gebeurtenisdatum
 
 #Chart labels
 CHART_LABEL_TOTAL_BORN: Totaal geb. per worp
@@ -403,6 +406,7 @@ THE FOLLOWING DATA IS MISSING: DEZE GEGEVENS ONTBREKEN
 FAILED WRITING THE CSV FILE: HET IS NIET GELUKT OM HET CSV BESTAND TE SCHRIJVEN
 YEAR IS MISSING: JAAR ONTBREEKT
 REFERENCE DATE CANNOT BE IN THE FUTURE: PEILDATUM MAG NIET IN DE TOEKOMST LIGGEN
+THE DATE OF DEATH CANNOT BE IN THE FUTURE: De sterftedatum mag niet in de toekomst liggen
 DATA IS EMPTY: DATA IS LEEG
 NO ANIMALS FOUND FOR GIVEN INPUT: ER ZIJN GEEN DIEREN GEVONDEN VOOR DE GEGEVEN INVOER
 THE FOLLOWING ANIMALS ARE NOT CURRENT LIVESTOCK OR HISTORIC LIVESTOCK ANIMALS OF THIS UBN: DE VOLGENDE DIEREN ZIJN GEEN HUIDIGE STALLIJST OF HISTORISCHE STALLIJST DIEREN VAN DIT UBN
@@ -439,12 +443,26 @@ ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: zijn alleen toegestaan tuss
 ARE ONLY ALLOWED FOR DUTCH UBNS: zijn alleen toegestaan voor Nederlandse UBNs
 COMPANY RELATION NUMBER CANNOT BE EMPTY: BRS-nummer mag niet leeg zijn
 THE NEW OWNER HAS NO RELATION NUMBER KEEPER IN THE NSFO SYSTEM: De nieuwe eigenaar heeft geen relatienummerhouder in het NSFO systeem
+THE LOCATION HAS NO RELATION NUMBER KEEPER IN THE NSFO SYSTEM: De locatie heeft geen relatienummerhouder in het NSFO systeem
 NO ANIMAL WAS LINKED TO THIS DECLARE: Geen dier was gelinkt aan deze melding
 DECLARE HAS ALREADY BEEN REVOKED: Melding is al ingetrokken
 DECLARE IS BEING REVOKED: Melding wordt op dit moment ingetrokken
 A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED: Een melding met deze status kan niet worden ingetrokken
 ANIMAL IS ALREADY DEAD: Dier is al dood
 SWITCHING UBN NUMBERS BETWEEN LOCATIONS IS NOT ALLOWED: Wisselen van UBN nummers tussen locaties is niet toegestaan
+UBN OF DEPARTURE AND ARRIVAL ARE IDENTICAL: UBN van vertrek en aankomst zijn identiek
+ANIMAL DOES NOT EXIST IN THE DATABASE: Dier bestaat niet in de database
+ANIMAL IS ON AN UBN IN ANOTHER COUNTRY: Dier staat op een UBN in het buitenland
+ANIMAL IS ALREADY ON THE LIVESTOCK LIST: Dier staat al op de stallijst
+ANIMAL IS NOT ON LOCATION OF DEPART: Dier staat niet op locatie van afvoer
+ARRIVALS ARE ONLY ALLOWED BETWEEN UBNS FROM THE SAME COUNTRY: Aanvoermeldingen zijn alleen toegestaan tussen UBNs in hetzelfde land
+THIS FEATURE IS NOT AVAILABLE YET: Deze functie is nog niet beschikbaar
+AN ANIMAL ALREADY EXISTS WITH THIS ULN: Een dier met dit ULN bestaat al
+THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: De gebeurtenisdatum kan niet voor de geboortedatum zijn
+THE ULN HAS AN INVALID FORMAT: Het ULN heeft een ongeldig format
+THE STN HAS AN INVALID FORMAT: Het STN heeft een ongeldig format
+THE ANIMAL IS NOT ON THE GIVEN LOCATION: Het dier behoort niet tot de opgegeven locatie
+AN IDENTICAL %requestState% %declare% ALREADY EXISTS: Een identieke %declare% (%requestState%) bestaat al
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen
@@ -454,6 +472,19 @@ DECLARE_EXPORTS: exportmeldingen
 DECLARE_LOSSES: sterftemeldingen
 DECLARE_TAGS_TRANSFERS: oormerkoverdrachten
 DECLARE_TAG_REPLACEMENTS: omnummeringen
+
+DECLARE_ARRIVAL: arrival
+DECLARE_DEPART: depart
+NEW_INVOICE: new invoice
+
+DECLARE: melding
+AppBundle\Entity\DeclareArrival: aanvoermelding
+AppBundle\Entity\DeclareDepart: afvoermelding
+AppBundle\Entity\DeclareImport: importmelding
+AppBundle\Entity\DeclareExport: exportmelding
+AppBundle\Entity\DeclareLoss: sterftemelding
+AppBundle\Entity\DeclareTagTransfer: oormerkoverdracht
+AppBundle\Entity\DeclareTagReplace: omnummering
 
 #Messages
 DECLARE_ARRIVAL_NOTIFICATION_MESSAGE: Automatisch een aanvoer melding uitgevoerd

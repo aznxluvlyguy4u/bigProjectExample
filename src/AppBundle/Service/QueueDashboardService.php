@@ -9,7 +9,6 @@ use AppBundle\Controller\QueueDashboardAPIControllerInterface;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class QueueDashboardService extends ControllerServiceBase implements QueueDashboardAPIControllerInterface

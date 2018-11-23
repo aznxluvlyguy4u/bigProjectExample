@@ -12,10 +12,9 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\RequestUtil;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Intl\Exception\NotImplementedException;
 
 /**
  * Class VwaAnimalDetailsReportService
@@ -93,14 +92,6 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
 
     private function getCsvReport()
     {
-        throw new \Exception('Not implemented', Response::HTTP_NOT_IMPLEMENTED);
-
-        $this->extension = FileType::CSV;
-
-        $csvData = $this->data;
-
-        return $this->generateFile($this->filename, $csvData,
-            self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
-        );
+        throw new NotImplementedException('Not implemented');
     }
 }

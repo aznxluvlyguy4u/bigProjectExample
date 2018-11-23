@@ -4,7 +4,6 @@ namespace AppBundle\Entity;
 
 use AppBundle\Util\SqlUtil;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
-use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
 /**
  * Class ResultTableBreedGradesRepository

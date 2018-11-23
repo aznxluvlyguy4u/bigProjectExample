@@ -35,6 +35,10 @@ class DeclareImportProcessor extends DeclareProcessorBase implements DeclareImpo
 
     function process(DeclareImport $import)
     {
+        $this->getManager()->persist($import);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($import);
+
         $this->import = $import;
 
         $this->response = new DeclareImportResponse();
@@ -73,8 +77,9 @@ class DeclareImportProcessor extends DeclareProcessorBase implements DeclareImpo
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
+        $this->persistResponseInSeparateTransaction($this->response);
+
         $this->getManager()->persist($this->import);
-        $this->getManager()->persist($this->response);
         $this->getManager()->flush();
 
         $this->import = null;
@@ -93,7 +98,7 @@ class DeclareImportProcessor extends DeclareProcessorBase implements DeclareImpo
     private function getRequestState(): string
     {
         if (
-            $this->animal->isDeclaredDead() ||
+            $this->animal->isDead() ||
             $this->animalIsOnAnotherLocation
         ) {
             return RequestStateType::FAILED;
@@ -160,7 +165,7 @@ class DeclareImportProcessor extends DeclareProcessorBase implements DeclareImpo
         $this->import->setFailedRequestState();
 
         $errorMessages = [];
-        if ($this->animal->isDeclaredDead()) {
+        if ($this->animal->isDead()) {
             $errorMessages[] = $this->translator->trans('ANIMAL HAS ALREADY BEEN DECLARED DEAD').'. '
                 .$this->translator->trans('DATE_OF_DEATH').': '.$this->animal->getDateOfDeathString(DateTimeFormats::DAY_MONTH_YEAR);
         }

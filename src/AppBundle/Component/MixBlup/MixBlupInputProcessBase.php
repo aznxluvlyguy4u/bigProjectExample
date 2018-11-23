@@ -4,7 +4,6 @@
 namespace AppBundle\Component\MixBlup;
 
 use AppBundle\Setting\MixBlupFolder;
-use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;

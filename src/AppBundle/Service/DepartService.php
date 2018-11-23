@@ -6,11 +6,9 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\ArrivalMessageBuilder;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareDepartResponse;
@@ -22,6 +20,8 @@ use AppBundle\Enumerator\MessageType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Exception\AnimalNotOnDepartLocationHttpException;
+use AppBundle\Exception\DeadAnimalHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
@@ -30,7 +30,6 @@ use AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface;
 use AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface;
 use AppBundle\Worker\DirectProcessor\DeclareExportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -173,13 +172,20 @@ class DepartService extends DeclareControllerServiceBase
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
-        $sendToRvo = $location->isDutchLocation();
+        $useRvoLogic = $location->isDutchLocation();
+        $this->validateRelationNumberKeeperOfLocation($location);
 
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
         $arrivalLog = null;
 
-        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
-        $this->verifyUbnFormat($content->get(JsonInputConstant::UBN_NEW_OWNER), $location->isDutchLocation());
+        $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
+        $this->verifyUlnOrPedigreeNumberFormatByAnimalArray($animalArray);
+        $this->verifyIfAnimalIsOnLocation($location, $animalArray);
+
+        $ubnNewOwner = $content->get(JsonInputConstant::UBN_NEW_OWNER);
+        $this->verifyUbnFormat($ubnNewOwner, $location->isDutchLocation());
+        $this->verifyIfDepartureAndArrivalUbnAreIdentical($location->getUbn(), $ubnNewOwner);
+        $this->verifyIfDepartDoesNotExistYet($content, $location);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
         $depart = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);
@@ -190,7 +196,13 @@ class DepartService extends DeclareControllerServiceBase
 
         $this->validateIfOriginAndDestinationAreInSameCountry(DeclareDepart::class, $location, $arrivalLocation);
 
+        if (!$useRvoLogic) {
+            $this->validateNonRvoSpecificDepartConditions($depart);
+        }
+
+        $arrival = null;
         if($arrivalLocation) {
+            $this->validateRelationNumberKeeperOfLocation($arrivalLocation);
             $arrivalOwner = $arrivalLocation->getCompany()->getOwner();
 
             //DeclareArrival
@@ -211,16 +223,16 @@ class DepartService extends DeclareControllerServiceBase
             $arrival = $arrivalMessageBuilder->buildMessage($arrival, $arrivalOwner, $loggedInUser, $arrivalLocation);
             $this->persist($arrival);
 
-            if ($sendToRvo) {
+            if ($useRvoLogic) {
                 $this->sendMessageObjectToQueue($arrival);
             } else {
-                $this->arrivalProcessor->process($arrival);
+                $this->arrivalProcessor->process($arrival, $location);
             }
 
             $arrivalLog = ActionLogWriter::declareArrival($arrival, $arrivalOwner, true);
         }
 
-        if ($sendToRvo) {
+        if ($useRvoLogic) {
             //Send it to the queue and persist/update any changed state to the database
             $messageArray = $this->sendMessageObjectToQueue($depart);
 
@@ -237,8 +249,11 @@ class DepartService extends DeclareControllerServiceBase
             $this->clearLivestockCacheForLocation($location);
 
         } else {
-            $messageArray = $this->departProcessor->process($depart);
+            $messageArray = $this->departProcessor->process($depart, $arrivalLocation);
         }
+
+        $this->createDepartArrivalTransaction($arrival, $depart, $loggedInUser, $useRvoLogic,false);
+        $this->getManager()->flush();
 
         // Create Message for Receiving Owner
         if($arrivalLocation) {
@@ -273,16 +288,23 @@ class DepartService extends DeclareControllerServiceBase
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
+        $this->validateRelationNumberKeeperOfLocation($location);
+
+        $useRvoLogic = $location->isDutchLocation();
 
         $departOrExportLog = ActionLogWriter::declareDepartOrExportPost($this->getManager(), $client, $loggedInUser, $location, $content);
         $arrivalLog = null;
 
-        $this->verifyIfClientOwnsAnimal($client, $content->get(Constant::ANIMAL_NAMESPACE));
+        $this->verifyIfAnimalIsOnLocation($location, $content->get(Constant::ANIMAL_NAMESPACE));
 
         //Convert the array into an object and add the mandatory values retrieved from the database
-        $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
+        $export = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
 
-        $messageArray = $this->runDeclareExportWorkerLogic($messageObject, $content);
+        if (!$useRvoLogic) {
+            $this->validateNonRvoSpecificExportConditions($export);
+        }
+
+        $messageArray = $this->runDeclareExportWorkerLogic($export, $content);
 
         if ($arrivalLog) { $this->persist($arrivalLog); }
         ActionLogWriter::completeActionLog($this->getManager(), $departOrExportLog);
@@ -417,5 +439,51 @@ class DepartService extends DeclareControllerServiceBase
         $declareExports = $repository->getExportsWithLastHistoryResponses($location);
 
         return ResultUtil::successResult(['departs' => $declareDeparts, 'exports' => $declareExports]);
+    }
+
+
+    private function validateNonRvoSpecificDepartConditions(DeclareDepart $depart)
+    {
+        $animal = $depart->getAnimal();
+        if (!$animal) {
+            return;
+        }
+
+        if ($animal->getUbn() !== $depart->getUbn()) {
+            throw new AnimalNotOnDepartLocationHttpException($this->translator, $animal);
+        }
+
+        if (!$animal->getIsAlive()) {
+            throw new DeadAnimalHttpException($this->translator, $animal->getUln());
+        }
+
+        $this->validateIfEventDateIsNotBeforeDateOfBirth($animal, $depart->getDepartDate());
+    }
+
+
+    private function validateNonRvoSpecificExportConditions(DeclareExport $export)
+    {
+        $animal = $export->getAnimal();
+        if (!$animal) {
+            return;
+        }
+
+        if (!$animal->getIsAlive()) {
+            throw new DeadAnimalHttpException($this->translator, $animal->getUln());
+        }
+
+        $this->validateIfEventDateIsNotBeforeDateOfBirth($animal, $export->getExportDate());
+    }
+
+
+    /**
+     * @param ArrayCollection $content
+     * @param Location $location
+     */
+    private function verifyIfDepartDoesNotExistYet(ArrayCollection $content, Location $location)
+    {
+        $departs = $this->getManager()->getRepository(DeclareDepart::class)
+            ->findByDeclareInput($content, $location, false);
+        $this->verifyIfDeclareDoesNotExistYet(DeclareDepart::class, $departs);
     }
 }

@@ -3,10 +3,10 @@
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
-use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\NumberUtil;

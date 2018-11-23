@@ -16,17 +16,17 @@ use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
+use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
-use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\IRSerializer;
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Collections\ArrayCollection;
-use AppBundle\Entity\Person;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class RequestMessageBuilder

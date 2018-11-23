@@ -9,13 +9,11 @@ use AppBundle\Constant\Constant;
 use AppBundle\Controller\TagsSyncAPIControllerInterface;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\RetrieveTags;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 

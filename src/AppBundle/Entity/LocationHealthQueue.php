@@ -5,11 +5,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
-use AppBundle\Entity\DeclareArrival;
-use AppBundle\Entity\DeclareImport;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class LocationHealthQueue

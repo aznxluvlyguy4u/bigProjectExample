@@ -6,15 +6,16 @@ namespace AppBundle\Service;
 
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\RevokeAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\BasicRvoDeclareInterface;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBaseInterface;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
@@ -23,22 +24,20 @@ use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Mate;
-use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Entity\RelocationDeclareInterface;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Exception\DeadAnimalHttpException;
 use AppBundle\Output\Output;
 use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
 use AppBundle\Worker\DirectProcessor\RevokeProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
-use Symfony\Component\Translation\TranslatorInterface;
 
 
 class RevokeService extends DeclareControllerServiceBase implements RevokeAPIControllerInterface
@@ -121,7 +120,7 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
     /**
      * @param Request $request
-     * @return array
+     * @return array|bool
      */
     private function processNonRvoRevoke(Request $request)
     {
@@ -131,30 +130,44 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
         $requestId = $content->get(JsonInputConstant::REQUEST_ID);
         $declare = $this->getRequestByRequestId($requestId);
-        $this->validateDeclareForRevoke($declare);
+        $isAlreadyRevoked = $declare instanceof BasicRvoDeclareInterface && $declare->isRevoked();
 
         switch (true) {
             case $declare instanceof DeclareArrival:
-                $revoke = $this->revokeProcessor->revokeArrival($declare, $client, $loggedInUser);
+                if ($isAlreadyRevoked) {
+                    $revoke = $this->getAlreadyRevokedResponse($declare);
+                } else {
+                    $this->validateRelocationDeclareRevoke($declare);
+                    $revoke = $this->revokeProcessor->revokeArrival($declare, $client, $loggedInUser);
+                }
                 break;
 
             case $declare instanceof DeclareDepart:
-                $revoke = $this->revokeProcessor->revokeDepart($declare, $client, $loggedInUser);
+                if ($isAlreadyRevoked) {
+                    $revoke = $this->getAlreadyRevokedResponse($declare);
+                } else {
+                    $this->validateRelocationDeclareRevoke($declare);
+                    $revoke = $this->revokeProcessor->revokeDepart($declare, $client, $loggedInUser);
+                }
                 break;
 
             case $declare instanceof DeclareExport:
+                $this->validateRelocationDeclareRevoke($declare);
                 $revoke = $this->revokeProcessor->revokeExport($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareImport:
+                $this->validateRelocationDeclareRevoke($declare);
                 $revoke = $this->revokeProcessor->revokeImport($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareLoss:
+                $this->validateDeclareForRevoke($declare);
                 $revoke = $this->revokeProcessor->revokeLoss($declare, $client, $loggedInUser);
                 break;
 
             case $declare instanceof DeclareTagReplace:
+                $this->validateTagReplaceRevoke($declare);
                 $revoke = $this->revokeProcessor->revokeTagReplace($declare, $client, $loggedInUser);
                 break;
 
@@ -162,9 +175,11 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
                 'Non-NL revoke is not allowed for this declare type: '.Utils::getClassName($declare));
         }
 
-        ActionLogWriter::nonRvoRevoke($this->getManager(), $client, $loggedInUser, $revoke);
+        if ($isAlreadyRevoked) {
+            ActionLogWriter::nonRvoRevoke($this->getManager(), $client, $loggedInUser, $revoke);
+        }
 
-        return $this->getDeclareMessageArray($revoke,false);
+        return is_bool($revoke) ? $revoke : $this->getDeclareMessageArray($revoke,false);
     }
 
 
@@ -240,9 +255,9 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
 
     /**
-     * @param DeclareBase $declare
+     * @param DeclareBaseInterface $declare
      */
-    public function validateDeclareForRevoke(DeclareBase $declare): void
+    public function validateDeclareForRevoke(DeclareBaseInterface $declare): void
     {
         $requestState = $declare->getRequestState();
 
@@ -265,5 +280,49 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
             $this->translator->trans('A DECLARE WITH THIS REQUEST STATE CANNOT BE REVOKED').': '.
             $this->translator->trans($requestState)
         );
+    }
+
+
+    /**
+     * @param DeclareBase $declare
+     * @return RevokeDeclaration|true
+     */
+    public function getAlreadyRevokedResponse(DeclareBase $declare)
+    {
+        if ($declare instanceof BasicRvoDeclareInterface && $declare->getRevoke()) {
+            return $declare->getRevoke();
+        }
+        return true;
+    }
+
+
+    /**
+     * @param DeclareTagReplace $tagReplace
+     */
+    private function validateTagReplaceRevoke(DeclareTagReplace $tagReplace)
+    {
+        $this->validateDeclareForRevoke($tagReplace);
+        $this->validateIfAnimalIsAlive($tagReplace->getAnimal());
+    }
+
+
+    /**
+     * @param RelocationDeclareInterface $declare
+     */
+    private function validateRelocationDeclareRevoke(RelocationDeclareInterface $declare)
+    {
+        $this->validateDeclareForRevoke($declare);
+        $this->validateIfAnimalIsAlive($declare->getAnimal());
+    }
+
+
+    /**
+     * @param Animal|null $animal
+     */
+    private function validateIfAnimalIsAlive(?Animal $animal)
+    {
+        if ($animal && $animal->isDead()) {
+            throw new DeadAnimalHttpException($this->translator, $animal->getUln());
+        }
     }
 }

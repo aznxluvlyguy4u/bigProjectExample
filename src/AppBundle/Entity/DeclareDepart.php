@@ -6,14 +6,12 @@ use AppBundle\Component\Utils;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\StringUtil;
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\Animal;
-use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as JMS;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class DeclareDepart
@@ -21,7 +19,7 @@ use JMS\Serializer\Annotation\Expose;
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
-class DeclareDepart extends DeclareBase implements DeclareAnimalDataInterface, BasicRvoDeclareInterface
+class DeclareDepart extends DeclareBase implements RelocationDeclareInterface
 {
     use EntityClassInfo;
 
@@ -175,6 +173,15 @@ class DeclareDepart extends DeclareBase implements DeclareAnimalDataInterface, B
      * @Expose
      */
     private $revoke;
+
+    /**
+     * @var DepartArrivalTransaction|null
+     * @ORM\OneToOne(targetEntity="DepartArrivalTransaction",
+     *     inversedBy="depart", cascade={"persist","refresh"})
+     * @ORM\JoinColumn(name="transaction_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\DepartArrivalTransaction")
+     */
+    private $transaction;
 
     /**
      * DeclareDepart constructor.
@@ -501,6 +508,22 @@ class DeclareDepart extends DeclareBase implements DeclareAnimalDataInterface, B
         $this->reasonOfDepart = $reasonOfDepart;
     }
 
+    /**
+     * @return DepartArrivalTransaction|null
+     */
+    public function getTransaction(): ?DepartArrivalTransaction
+    {
+        return $this->transaction;
+    }
 
+    /**
+     * @param DepartArrivalTransaction|null $transaction
+     * @return DeclareDepart
+     */
+    public function setTransaction(?DepartArrivalTransaction $transaction): DeclareDepart
+    {
+        $this->transaction = $transaction;
+        return $this;
+    }
 
 }

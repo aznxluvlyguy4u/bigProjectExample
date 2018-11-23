@@ -1,8 +1,8 @@
 <?php
 
 namespace AppBundle\Output;
-use AppBundle\Entity\Client;
 use AppBundle\Component\Count;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\Content;
 use AppBundle\Entity\ContentRepository;
 use AppBundle\Entity\Location;
@@ -10,7 +10,6 @@ use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManagerInterface;
 

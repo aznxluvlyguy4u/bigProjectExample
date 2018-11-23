@@ -2,9 +2,9 @@
 
 namespace AppBundle\Worker\Task;
 
-use JMS\Serializer\Annotation as JMS;
 use AppBundle\Component\Utils;
 use DateTime;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class WorkerMessageBody
@@ -16,48 +16,72 @@ class WorkerMessageBody
     /**
      * @var string
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $messageId;
 
     /**
      * @var string
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $taskType;
 
     /**
      * @var string
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $levelType;
 
     /**
      * @var string
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $levelId;
 
     /**
      * @var string
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $scope;
     
     /**
      * @var boolean
      * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $onlyProcessBlankRecords;
     
     /**
      * @var DateTime
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $creationDate;
 
     /**
      * @var string
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "RESPONSE_PERSISTENCE"
+     * })
      */
     protected $notes;
 

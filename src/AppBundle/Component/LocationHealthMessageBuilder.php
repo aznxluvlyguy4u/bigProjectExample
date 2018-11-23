@@ -4,7 +4,6 @@ namespace AppBundle\Component;
 
 
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\LocationHealth;
@@ -16,7 +15,6 @@ use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\HealthChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
-use Symfony\Component\Console\Event\ConsoleCommandEvent;
 
 class LocationHealthMessageBuilder
 {

@@ -5,14 +5,9 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
-use AppBundle\Enumerator\QueryParameter;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
-use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

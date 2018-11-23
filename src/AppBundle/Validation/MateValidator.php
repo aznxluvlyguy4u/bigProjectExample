@@ -3,18 +3,13 @@
 namespace AppBundle\Validation;
 
 
-use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\Ewe;
-use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
-use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\ControllerServiceBase;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\Validator;

@@ -5,7 +5,6 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\DepartMessageBuilder;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -21,6 +20,9 @@ use AppBundle\Enumerator\MessageType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Exception\AnimalNotOnDepartLocationHttpException;
+use AppBundle\Exception\DeadAnimalHttpException;
+use AppBundle\Exception\FeatureNotAvailableHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
@@ -32,10 +34,9 @@ use AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface;
 use AppBundle\Worker\DirectProcessor\DeclareDepartProcessorInterface;
 use AppBundle\Worker\DirectProcessor\DeclareImportProcessorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 
 class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIControllerInterface
 {
@@ -198,16 +199,13 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
+        $this->validateRelationNumberKeeperOfLocation($location);
 
-        $sendToRvo = $location->isDutchLocation();
+        $useRvoLogic = $location->isDutchLocation();
 
         $arrivalOrImportLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
-        //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
-        $pedigreeValidation = $this->validateArrivalPost($content, $location->isDutchLocation());
-        if(!$pedigreeValidation->get(Constant::IS_VALID_NAMESPACE)) {
-            return $pedigreeValidation->get(Constant::RESPONSE);
-        }
+        $this->validateArrivalPost($content, $location);
 
         $departLocation = $this->getValidatedLocationPreviousOwner($location, $content->get(Constant::UBN_PREVIOUS_OWNER_NAMESPACE));
 
@@ -223,7 +221,12 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, true);
         $arrival = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
 
+        if (!$useRvoLogic) {
+            $this->validateNonRvoSpecificConditions($arrival, $departLocation);
+        }
+
         $departLog = null;
+        $depart = null;
         if ($departLocation) {
             $departOwner = $departLocation->getCompany()->getOwner();
 
@@ -244,18 +247,17 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             $departMessageBuilder = new DepartMessageBuilder($this->getManager() , $this->environment);
             $depart = $departMessageBuilder->buildMessage($depart, $departOwner, $loggedInUser, $departLocation);
 
-            if ($sendToRvo) {
+            if ($useRvoLogic) {
                 $this->persist($depart);
+                $this->sendMessageObjectToQueue($depart);
             } else {
-                $this->departProcessor->process($depart);
+                $this->departProcessor->process($depart, $location);
             }
-
-            $this->sendMessageObjectToQueue($depart);
 
             $departLog = ActionLogWriter::declareDepart($depart, $departOwner, true);
         }
 
-        if ($sendToRvo) {
+        if ($useRvoLogic) {
             //Send it to the queue and persist/update any changed state to the database
             $outputArray = $this->sendMessageObjectToQueue($arrival);
             $arrival->setAnimal(null);
@@ -264,8 +266,10 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             $this->persist($arrival);
 
         } else {
-            $outputArray = $this->arrivalProcessor->process($arrival);
+            $outputArray = $this->arrivalProcessor->process($arrival, $departLocation);
         }
+
+        $this->createDepartArrivalTransaction($arrival, $depart, $loggedInUser, $useRvoLogic,true);
 
         // Create Message for Receiving Owner
         if($departLocation) {
@@ -312,10 +316,15 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
+        $useRvoLogic = $location->isDutchLocation();
+        if (!$useRvoLogic) {
+            throw new FeatureNotAvailableHttpException($this->translator, 'DECLARE_IMPORTS');
+        }
+
         $actionLog = ActionLogWriter::declareArrivalOrImportPost($this->getManager(), $client, $loggedInUser, $location, $content);
 
         //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
-        $pedigreeValidation = $this->validateArrivalPost($content, $location->isDutchLocation());
+        $pedigreeValidation = $this->validateArrivalPost($content, $location);
         if(!$pedigreeValidation->get(Constant::IS_VALID_NAMESPACE)) {
             return $pedigreeValidation->get(Constant::RESPONSE);
         }
@@ -482,58 +491,54 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
     /**
      * @param ArrayCollection $content
-     * @param bool $isDutchLocation
-     * @return ArrayCollection
+     * @param Location $location
      */
-    private function validateArrivalPost(ArrayCollection $content, $isDutchLocation)
+    private function validateArrivalPost(ArrayCollection $content, Location $location)
     {
-        $errorCode = Response::HTTP_PRECONDITION_REQUIRED;
-
-        //Default values
-        $result = new ArrayCollection();
-        $jsonErrorResponse = null;
-        $isValid = true;
-        $result->set(Constant::IS_VALID_NAMESPACE, $isValid);
-        $result->set(Constant::RESPONSE, $jsonErrorResponse);
-
-
         $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
         $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
         $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
-        $this->verifyUbnFormat($content->get(JsonInputConstant::UBN_PREVIOUS_OWNER), $isDutchLocation);
+        $this->verifyUbnFormat($content->get(JsonInputConstant::UBN_PREVIOUS_OWNER), $location->isDutchLocation());
 
         //Don't check if uln was chosen instead of pedigree
         $pedigreeCodeExists = $pedigreeCountryCode != null && $pedigreeNumber != null;
-        if(!$pedigreeCodeExists) {
-            return $result;
+
+        $this->verifyIfArrivalDoesNotExistYet($content, $location, $pedigreeCodeExists);
+
+        if (!$pedigreeCodeExists) {
+            $this->verifyUlnFormatByAnimalArray($animalArray);
+            return;
         }
 
 
         $isFormatCorrect = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
 
-        if(!$isFormatCorrect) {
-            $isValid = false;
+        //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
+        if (!$isFormatCorrect) {
             //TODO Translate message in English and match it with the translator in the Frontend
-            $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
-                "pedigree" => $pedigreeCountryCode.$pedigreeNumber,
-                "message" => "Het stamboeknummer moet deze structuur XXXXX-XXXXX hebben."), $errorCode);
-
+            throw new PreconditionRequiredHttpException("Het stamboeknummer moet deze structuur XXXXX-XXXXX hebben.");
         } else {
             $pedigreeInDatabaseVerification = $this->verifyOnlyPedigreeCodeInAnimal($animalArray);
             $isExistsInDatabase = $pedigreeInDatabaseVerification->get('isValid');
 
-            if(!$isExistsInDatabase){
-                $isValid = false;
-                $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
-                    "pedigree" => $pedigreeCountryCode.$pedigreeNumber,
-                    "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), $errorCode);
+            if (!$isExistsInDatabase) {
+                throw new PreconditionRequiredHttpException("PEDIGREE VALUE IS NOT REGISTERED WITH NSFO");
             }
         }
+    }
 
-        $result->set(Constant::IS_VALID_NAMESPACE, $isValid);
-        $result->set(Constant::RESPONSE, $jsonErrorResponse);
 
-        return $result;
+    /**
+     * @param ArrayCollection $content
+     * @param Location $location
+     * @param bool $pedigreeCodeExists
+     */
+    private function verifyIfArrivalDoesNotExistYet(ArrayCollection $content, Location $location,
+                                                    $pedigreeCodeExists = false)
+    {
+        $arrivals = $this->getManager()->getRepository(DeclareArrival::class)
+            ->findByDeclareInput($content, $location, $pedigreeCodeExists);
+        $this->verifyIfDeclareDoesNotExistYet(DeclareArrival::class, $arrivals);
     }
 
 
@@ -594,6 +599,9 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             return null;
         }
 
+        self::verifyIfDepartureAndArrivalUbnAreIdentical($locationOfDestination->getUbn(), $ubnOfPreviousOwner);
+        $ubnOfPreviousOwner = StringUtil::preformatUbn($ubnOfPreviousOwner);
+
         /** @var Location $departLocation */
         $departLocation = $this->getManager()->getRepository(Location::class)
             ->findOneBy(['ubn' => $ubnOfPreviousOwner, 'isActive' => true]);
@@ -610,6 +618,54 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             );
         }
 
+        $this->validateRelationNumberKeeperOfLocation($departLocation);
+
         return $departLocation;
+    }
+
+
+    /**
+     * @param DeclareArrival $arrival
+     * @param Location|null $origin
+     */
+    private function validateNonRvoSpecificConditions(DeclareArrival $arrival, ?Location $origin)
+    {
+        // Animal should already exist in the database
+        $animalDoesNotExistInDatabase = empty($arrival->getAnimalId());
+        if ($animalDoesNotExistInDatabase) {
+            $uln = $arrival->getAnimal() && $arrival->getAnimal()->getUln() ? $arrival->getAnimal()->getUln() : null;
+            $ulnData = $uln ? ' ULN: ' . $uln : '';
+            throw new PreconditionRequiredHttpException(
+                $this->translator->trans('ANIMAL DOES NOT EXIST IN THE DATABASE').'.'.$ulnData
+            );
+        }
+
+        $animal = $arrival->getAnimal();
+        $ulnData = ' ULN: '.$animal->getUln();
+
+        // Animal must be alive
+        if ($animal->isDead()) {
+            throw new DeadAnimalHttpException($this->translator, $animal->getUln());
+        }
+
+        // Animal should not already be on the livestock list
+        if ($animal->getUbn() === $arrival->getUbn()) {
+            throw new PreconditionRequiredHttpException(
+                $this->translator->trans('ANIMAL IS ALREADY ON THE LIVESTOCK LIST'). '.' . $ulnData
+            );
+        }
+
+        // De location of origin should be in the same country
+        $this->validateIfOriginAndDestinationAreInSameCountry(DeclareArrival::class, $origin, $arrival->getLocation());
+
+        // If location of origin is also an NSFO location, the animal should be on that location during the declare
+        if ($origin) {
+            $animalIsOnOrigin = $animal->getUbn() === $origin->getUbn();
+            if (!$animalIsOnOrigin) {
+                throw new AnimalNotOnDepartLocationHttpException($this->translator, $animal);
+            }
+        }
+
+        $this->validateIfEventDateIsNotBeforeDateOfBirth($animal, $arrival->getArrivalDate());
     }
 }

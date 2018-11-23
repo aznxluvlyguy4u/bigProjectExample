@@ -9,10 +9,7 @@ use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Enumerator\MollieEnums;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use Doctrine\ORM\EntityManagerInterface;
-use Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Translation\TranslatorInterface;
 
 class MolliePaymentService extends ControllerServiceBase
 {

@@ -4,9 +4,7 @@
 namespace AppBundle\Service\Migration;
 
 use AppBundle\Cache\ExteriorCacher;
-use AppBundle\Entity\Inspector;
 use AppBundle\Entity\Measurement;
-use AppBundle\Entity\Person;
 use AppBundle\Enumerator\QueryType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;

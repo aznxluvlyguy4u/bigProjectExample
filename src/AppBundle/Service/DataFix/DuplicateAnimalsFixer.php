@@ -5,15 +5,12 @@ namespace AppBundle\Service\DataFix;
 
 
 use AppBundle\Component\Builder\CsvOptions;
-use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareTagReplace;
-use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MeasurementRepository;
-use AppBundle\Entity\Ram;
 use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\AnimalTransferStatus;
@@ -35,7 +32,6 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
-use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**

@@ -24,6 +24,10 @@ class DeclareExportProcessor extends DeclareProcessorBase implements DeclareExpo
 
     public function process(DeclareExport $export): array
     {
+        $this->getManager()->persist($export);
+        $this->getManager()->flush();
+        $this->getManager()->refresh($export);
+
         $this->export = $export;
         $this->animal = $export->getAnimal();
 
@@ -53,8 +57,9 @@ class DeclareExportProcessor extends DeclareProcessorBase implements DeclareExpo
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
+        $this->persistResponseInSeparateTransaction($this->response);
+
         $this->getManager()->persist($this->export);
-        $this->getManager()->persist($this->response);
         $this->getManager()->flush();
 
         $this->export = null;

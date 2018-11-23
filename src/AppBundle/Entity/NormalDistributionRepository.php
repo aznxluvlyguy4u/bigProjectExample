@@ -1,8 +1,6 @@
 <?php
 
 namespace AppBundle\Entity;
-use AppBundle\Constant\BreedValueTypeConstant;
-use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\MathUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 
