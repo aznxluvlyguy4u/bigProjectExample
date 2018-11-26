@@ -51,7 +51,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
 {
-    const DEFAULT_ALL_SYNC_DELAY_IN_SECONDS = 10;
+    const DEFAULT_ALL_SYNC_DELAY_IN_SECONDS = 30;
 
     /** @var AnimalDetailsOutput */
     private $animalDetailsOutput;
