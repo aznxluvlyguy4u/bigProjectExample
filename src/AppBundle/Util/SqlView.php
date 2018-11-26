@@ -17,6 +17,7 @@ class SqlView
     const VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS = 'view_animal_livestock_overview_details';
     const VIEW_LITTER_DETAILS = 'view_litter_details';
     const VIEW_LOCATION_DETAILS = 'view_location_details';
+    const VIEW_NAME_AND_ADDRESS_DETAILS = 'view_name_and_address_details';
     const VIEW_MINIMAL_PARENT_DETAILS = 'view_minimal_parent_details';
     const VIEW_PEDIGREE_REGISTER_ABBREVIATION = 'view_pedigree_register_abbreviation';
 
@@ -93,6 +94,7 @@ class SqlView
             case self::VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS: return self::animalLiveStockOverviewDetails();
             case self::VIEW_LITTER_DETAILS: return self::litterDetails();
             case self::VIEW_LOCATION_DETAILS: return self::locationDetails();
+            case self::VIEW_NAME_AND_ADDRESS_DETAILS: return self::nameAndAddressDetailsQuery();
             case self::VIEW_MINIMAL_PARENT_DETAILS: return self::minimalParentDetails();
             case self::VIEW_PEDIGREE_REGISTER_ABBREVIATION: return self::pedigreeRegisterAbbreviation();
             case self::VIEW_PERSON_FULL_NAME: return self::personFullName();
@@ -468,4 +470,29 @@ class SqlView
                 GROUP BY r.animal_id";
     }
 
+
+    /**
+     * @return string
+     */
+    private static function nameAndAddressDetailsQuery(): string
+    {
+        return "SELECT
+                  c.id as company_id,
+                  c.owner_id,
+                  TRIM(CONCAT(owner.first_name,' ',owner.last_name)) as company_owner_full_name,
+                  owner.email_address as company_owner_email_address,
+                  owner.cellphone_number as company_owner_cellphone_number,
+                  c.telephone_number as company_telephone_number,
+                  TRIM(CONCAT(ca.street_name,' ',ca.address_number,ca.address_number_suffix)) as company_address,
+                  ca.postal_code as company_postal_code,
+                  ca.city as company_city,
+                  country.code as company_country_code,
+                  country.id as company_country_id,
+                  owner.is_active as owner_is_active,
+                  c.is_active as company_is_active
+                FROM company c
+                  LEFT JOIN address ca ON ca.id = c.address_id
+                  LEFT JOIN person owner ON owner.id = c.owner_id
+                  LEFT JOIN country on ca.country_details_id = country.id";
+    }
 }
