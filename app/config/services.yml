@@ -682,6 +682,9 @@ services:
           - method: setValidator
             arguments:
               - '@validator'
+          - method: setInternalQueueService
+            arguments:
+              - '@app.aws.queueservice.internal'
 
     AppBundle\Service\ArrivalService:
         parent: app.abstract_base.declare
