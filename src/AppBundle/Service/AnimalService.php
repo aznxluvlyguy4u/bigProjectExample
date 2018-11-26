@@ -775,9 +775,13 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $this->getLogger()->notice('Consecutively send all sync messages without any delay in between');
         }
 
+        $totalLocationsCount = empty($allLocations) ? 0 : count($allLocations);
+        $counter = 0;
+
         /** @var Location $location */
         foreach($allLocations as $location)
         {
+            $counter++;
             if (!$location->getIsActive() && !$location->getCompany()->isActive()) {
                 continue;
             }
@@ -803,7 +807,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
             $this->getLogger()->notice($location->getUbn()
                 . ' ' . ($isRvoLeading ? '(RVO LEADING)' : '(NSFO LEADING)')
-                . ' SYNC sent to queue'
+                . ' SYNC sent to queue '.'[ '.$counter.' of '.$totalLocationsCount.' ]'
             );
 
             $count++;
