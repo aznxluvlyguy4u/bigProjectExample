@@ -668,54 +668,64 @@ class DatabaseDataFixer
      * @param CommandUtil $cmdUtil
      * @return int
      */
-    public static function removeDuplicateAnimalResidencesWithEndDateIsNull(Connection $conn, $cmdUtil)
+    public static function removeDuplicateAnimalResidences(Connection $conn, $cmdUtil)
     {
-        $cmdUtil->writeln('Delete duplicate animal_residences with endDate ISNULL');
-        $cmdUtil->writeln('and keep the one with the lowest startDate and after that the lowest id');
+        $cmdUtil->writeln('Delete duplicate animal_residences');
+        $cmdUtil->writeln('ignoring hours in startDate and endDate');
 
-        $sql = "DELETE FROM animal_residence
-                WHERE id IN (                
-                  SELECT r.id
-                  FROM animal_residence r
+        $sql = "DELETE FROM animal_residence WHERE id IN (
+                  -- WHERE end date is null
+                  SELECT
+                    rr.id as duplicate_residence_id
+                  FROM animal_residence rr
                     INNER JOIN (
                                  SELECT
-                                   max(r.id) AS max_id,
-                                   r.start_date,
-                                   r.animal_id,
-                                   r.location_id
+                                   r.animal_id, r.location_id,
+                                   DATE(r.start_date) as start_date,
+                                   --DATE(r.end_date) as end_date,
+                                   r.country, r.is_pending,
+                                   MIN(id) as min_id
                                  FROM animal_residence r
-                                   INNER JOIN (
-                                                SELECT
-                                                  max_start_date,
-                                                  g.animal_id,
-                                                  g.location_id
-                                                FROM animal_residence r
-                                                  INNER JOIN (
-                                                               SELECT
-                                                                 animal_id,
-                                                                 location_id,
-                                                                 max(start_date) AS max_start_date
-                                                               FROM animal_residence
-                                                               WHERE end_date ISNULL
-                                                               GROUP BY animal_id, location_id
-                                                               HAVING COUNT(*) > 1
-                                                             ) g ON g.animal_id = r.animal_id AND g.location_id = r.location_id
-                                                WHERE end_date ISNULL
-                                              ) g
-                                     ON g.max_start_date = r.start_date AND g.animal_id = r.animal_id AND g.location_id = r.location_id
-                                 WHERE end_date ISNULL
-                                 GROUP BY start_date, r.animal_id, r.location_id
-                               ) g ON r.start_date = g.start_date AND r.animal_id = g.animal_id AND r.location_id = g.location_id AND r.id = max_id
+                                 WHERE r.end_date ISNULL
+                                 GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
+                                   --DATE(r.end_date),
+                                   r.country, r.is_pending HAVING COUNT(*) > 1
+                               )r ON r.animal_id = rr.animal_id AND
+                                     r.location_id = rr.location_id AND
+                                     r.start_date = DATE(rr.start_date) AND
+                                     --r.end_date = DATE(rr.end_date) AND
+                                     r.country = rr.country AND
+                                     r.is_pending = rr.is_pending AND
+                                     rr.id <> r.min_id
+                  WHERE rr.end_date ISNULL
+                
+                  UNION
+                
+                  -- WHERE end date is not null
+                  SELECT
+                    rr.id as duplicate_residence_id
+                  FROM animal_residence rr
+                    INNER JOIN (
+                                 SELECT
+                                   r.animal_id, r.location_id,
+                                   DATE(r.start_date) as start_date,
+                                   DATE(r.end_date) as end_date,
+                                   r.country, r.is_pending,
+                                   MIN(id) as min_id
+                                 FROM animal_residence r
+                                 GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
+                                   DATE(r.end_date),
+                                   r.country, r.is_pending HAVING COUNT(*) > 1
+                               )r ON r.animal_id = rr.animal_id AND
+                                     r.location_id = rr.location_id AND
+                                     r.start_date = DATE(rr.start_date) AND
+                                     r.end_date = DATE(rr.end_date) AND
+                                     r.country = rr.country AND
+                                     r.is_pending = rr.is_pending AND
+                                     rr.id <> r.min_id
                 )";
 
-        $totalDeleteCount = 0;
-
-        do {
-            $deleteCount = SqlUtil::updateWithCount($conn, $sql);
-            $totalDeleteCount += $deleteCount;
-            if($deleteCount > 0) { $cmdUtil->writeln($deleteCount . ' records deleted ...'); }
-        } while ($deleteCount > 0);
-
+        $totalDeleteCount = SqlUtil::updateWithCount($conn, $sql);
         $countPrefix = $totalDeleteCount === 0 ? 'No' : $totalDeleteCount ;
         $cmdUtil->writeln($countPrefix.' duplicate animal_residences deleted in total');
 
