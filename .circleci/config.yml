@@ -33,7 +33,7 @@ jobs:
       - run: sudo apt-get install -y zlib1g-dev libicu-dev g++ libxml2-dev
       - run: sudo docker-php-ext-configure intl
       - run: sudo docker-php-ext-install intl
-      - run: sudo docker-php-ext-install pdo_mysql
+      - run: docker-php-ext-install pdo_mysql
       - run: sudo docker-php-ext-install soap
       - run: sudo apt-get install unzip
       - run: cp app/config/parameters_test.circle.yml app/config/parameters.yml
