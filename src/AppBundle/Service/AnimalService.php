@@ -52,13 +52,16 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AnimalService extends DeclareControllerServiceBase implements AnimalAPIControllerInterface
 {
-    const DEFAULT_ALL_SYNC_DELAY_IN_SECONDS = 10;
+    const DEFAULT_ALL_SYNC_DELAY_IN_SECONDS = 30;
 
     /** @var AnimalDetailsOutput */
     private $animalDetailsOutput;
 
     /** @var ValidatorInterface */
     private $validator;
+
+    /** @var AwsInternalQueueService */
+    private $internalQueueService;
 
     /**
      * @required
@@ -79,6 +82,16 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 		{
 			$this->validator = $validator;
 		}
+
+    /**
+     * @required
+     *
+     * @param AwsInternalQueueService $internalQueueService
+     */
+    public function setInternalQueueService(AwsInternalQueueService $internalQueueService)
+    {
+        $this->internalQueueService = $internalQueueService;
+    }
 
     /**
      * @param Request $request
@@ -779,13 +792,15 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      * @param int $hasNotBeenSyncedForAtLeastThisAmountOfDays
      * @param bool $isRvoLeading
      * @param int $delayInSeconds
+     * @param int $maxInternalQueueSize
      * @return array
      * @throws \Exception
      */
     public function syncAnimalsForAllLocations($loggedInUser,
                                                $hasNotBeenSyncedForAtLeastThisAmountOfDays = 0,
                                                bool $isRvoLeading = false,
-                                               int $delayInSeconds = 5
+                                               int $delayInSeconds = 5,
+                                               int $maxInternalQueueSize = 10
     )
     {
         $allLocations = $this->getManager()->getRepository(Location::class)
@@ -797,9 +812,15 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $this->getLogger()->notice('Consecutively send all sync messages without any delay in between');
         }
 
+        $totalLocationsCount = empty($allLocations) ? 0 : count($allLocations);
+        $counter = 0;
+
         /** @var Location $location */
         foreach($allLocations as $location)
         {
+            $this->sleepIfInternalQueueIsTooFull($maxInternalQueueSize);
+
+            $counter++;
             if (!$location->getIsActive() && !$location->getCompany()->isActive()) {
                 continue;
             }
@@ -825,7 +846,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
             $this->getLogger()->notice($location->getUbn()
                 . ' ' . ($isRvoLeading ? '(RVO LEADING)' : '(NSFO LEADING)')
-                . ' SYNC sent to queue'
+                . ' SYNC sent to queue '.'[ '.$counter.' of '.$totalLocationsCount.' ]'
             );
 
             $count++;
@@ -842,6 +863,23 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return array(Constant::MESSAGE_NAMESPACE => $message,
             Constant::COUNT => $count);
     }
+
+
+    /**
+     * @param int $maxInternalQueueSize deactivate queue size check for 0 or less
+     * @param int $delayInSecondsForFullQueue
+     */
+    private function sleepIfInternalQueueIsTooFull(int $maxInternalQueueSize = 0, int $delayInSecondsForFullQueue = 120)
+    {
+        if ($maxInternalQueueSize < 1) {
+            return;
+        }
+        while ($this->internalQueueService->getSizeOfQueue() > $maxInternalQueueSize) {
+            $this->getLogger()->notice('InternalQueue has more than '.$maxInternalQueueSize.' messages. Sleep for '.$delayInSecondsForFullQueue.' seconds ...');
+            sleep($delayInSecondsForFullQueue);
+        }
+    }
+
 
     /**
      * @param Request $request
