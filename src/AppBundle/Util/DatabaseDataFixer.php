@@ -673,7 +673,9 @@ class DatabaseDataFixer
         $cmdUtil->writeln('Delete duplicate animal_residences');
         $cmdUtil->writeln('ignoring hours in startDate and endDate');
 
-        $sql = "DELETE FROM animal_residence WHERE id IN (
+        $sqls = [
+            "Delete duplicate animal residences by animal, location, dates, country and is_pending" =>
+            "DELETE FROM animal_residence WHERE id IN (
                   -- WHERE end date is null
                   SELECT
                     rr.id as duplicate_residence_id
@@ -723,9 +725,76 @@ class DatabaseDataFixer
                                      r.country = rr.country AND
                                      r.is_pending = rr.is_pending AND
                                      rr.id <> r.min_id
-                )";
+                )",
+            "Delete pending animal residences which have a duplicate non pending version" =>
+            "DELETE FROM animal_residence WHERE id IN (
+              SELECT
+                r_pending.id as duplicate_pending_residence_id
+              FROM animal_residence r_not_pending
+                INNER JOIN (
+                             SELECT
+                               r.animal_id, r.location_id,
+                               DATE(r.start_date) as start_date,
+                               r.country,
+                               MIN(id) as min_id
+                             FROM animal_residence r
+                             WHERE r.end_date ISNULL
+                             GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
+                               r.country
+                             HAVING COUNT(*) = 2
+                           )r ON r.animal_id = r_not_pending.animal_id AND
+                                 r.location_id = r_not_pending.location_id AND
+                                 r.start_date = DATE(r_not_pending.start_date) AND
+                                 r.country = r_not_pending.country
+                INNER JOIN animal_residence r_pending
+                  ON r.animal_id = r_pending.animal_id AND
+                     r.location_id = r_pending.location_id AND
+                     r.start_date = DATE(r_pending.start_date) AND
+                     r.country = r_pending.country
+              WHERE r_not_pending.end_date ISNULL AND r_pending.end_date ISNULL
+                    AND r_not_pending.is_pending = FALSE AND r_pending.is_pending
+            
+              UNION
+            
+              SELECT
+                r_pending.id as duplicate_pending_residence_id
+              FROM animal_residence r_not_pending
+                INNER JOIN (
+                             SELECT
+                               r.animal_id, r.location_id,
+                               DATE(r.start_date) as start_date,
+                               DATE(r.end_date) as end_date,
+                               r.country,
+                               MIN(id) as min_id
+                             FROM animal_residence r
+                             GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
+                               DATE(r.end_date),
+                               r.country
+                             HAVING COUNT(*) = 2
+                           )r ON r.animal_id = r_not_pending.animal_id AND
+                                 r.location_id = r_not_pending.location_id AND
+                                 r.start_date = DATE(r_not_pending.start_date) AND
+                                 r.end_date = DATE(r_not_pending.end_date) AND
+                                 r.country = r_not_pending.country
+                INNER JOIN animal_residence r_pending
+                  ON r.animal_id = r_pending.animal_id AND
+                     r.location_id = r_pending.location_id AND
+                     r.start_date = DATE(r_pending.start_date) AND
+                     r.country = r_pending.country
+              WHERE r_not_pending.is_pending = FALSE AND r_pending.is_pending
+            )
+"
+        ];
 
-        $totalDeleteCount = SqlUtil::updateWithCount($conn, $sql);
+        $totalDeleteCount = 0;
+
+        foreach ($sqls as $title => $sql) {
+            $cmdUtil->writeln($title);
+            $deleteCount = SqlUtil::updateWithCount($conn, $sql);
+            $totalDeleteCount += $deleteCount;
+            $cmdUtil->writeln('Deleted '.$deleteCount.'|'.$totalDeleteCount.' [sub|total]');
+        }
+
         $countPrefix = $totalDeleteCount === 0 ? 'No' : $totalDeleteCount ;
         $cmdUtil->writeln($countPrefix.' duplicate animal_residences deleted in total');
 
