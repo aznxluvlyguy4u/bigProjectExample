@@ -158,6 +158,7 @@ class SqlView
                             TRIM(BOTH '{,}' FROM CAST(array_agg(prr.breeder_number ORDER BY breeder_number) AS TEXT)) as breeder_numbers
                           FROM pedigree_register_registration prr
                             INNER JOIN pedigree_register pr ON prr.pedigree_register_id = pr.id
+                          WHERE prr.is_active
                           GROUP BY location_id
                         )prs ON prs.location_id = l.id
               LEFT JOIN (
@@ -169,7 +170,7 @@ class SqlView
                             INNER JOIN pedigree_register pr ON prr.pedigree_register_id = pr.id
                             INNER JOIN pedigree_register_pedigree_codes codes ON pr.id = codes.pedigree_register_id
                             INNER JOIN pedigree_code c ON codes.pedigree_code_id = c.id
-                          WHERE c.code = 'TE'
+                          WHERE c.code = 'TE' AND prr.is_active
                           GROUP BY location_id
                         )te_prs ON te_prs.location_id = l.id";
     }
