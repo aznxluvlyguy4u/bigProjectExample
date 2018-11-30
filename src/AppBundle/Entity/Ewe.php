@@ -67,6 +67,15 @@ class Ewe extends Animal implements ParentInterface
     private $matings;
 
     /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\InbreedingCoefficient", mappedBy="ewe",
+     *     cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\InbreedingCoefficient>")
+     */
+    private $inbreedingCoefficients;
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("last_mate")
      * @JMS\Groups({
@@ -102,6 +111,7 @@ class Ewe extends Animal implements ParentInterface
          $this->litters = new ArrayCollection();
          $this->children = new ArrayCollection();
          $this->matings = new ArrayCollection();
+         $this->inbreedingCoefficients = new ArrayCollection();
      }
 
     /**
@@ -247,6 +257,28 @@ class Ewe extends Animal implements ParentInterface
     public function getLitters()
     {
         return $this->litters;
+    }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getInbreedingCoefficients(): ArrayCollection
+    {
+        if ($this->inbreedingCoefficients === null) {
+            $this->inbreedingCoefficients = new ArrayCollection();
+        }
+        return $this->inbreedingCoefficients;
+    }
+
+    /**
+     * @param ArrayCollection $inbreedingCoefficients
+     * @return Ram
+     */
+    public function setInbreedingCoefficients(ArrayCollection $inbreedingCoefficients): Ram
+    {
+        $this->inbreedingCoefficients = $inbreedingCoefficients;
+        return $this;
     }
 
 
