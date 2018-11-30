@@ -329,6 +329,14 @@ class Company
      */
     private $twinfieldOfficeCode;
 
+
+    /**
+     * @var ResultTableAnimalCounts
+     * @ORM\OneToOne(targetEntity="ResultTableAnimalCounts", mappedBy="company", cascade={"persist", "remove"})
+     * @JMS\Type("AppBundle\Entity\ResultTableAnimalCounts")
+     */
+    protected $resultTableAnimalCounts;
+
   /**
    * Company constructor.
    */

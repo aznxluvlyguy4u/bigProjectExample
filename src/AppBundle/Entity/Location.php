@@ -366,6 +366,15 @@ class Location
         return $this->getOwner() !== null || count($this->getCompanyUsers()) > 0;
     }
 
+
+    /**
+     * @var ResultTableAnimalCounts
+     * @ORM\OneToOne(targetEntity="ResultTableAnimalCounts", mappedBy="location", cascade={"persist", "remove"})
+     * @JMS\Type("AppBundle\Entity\ResultTableAnimalCounts")
+     */
+    protected $resultTableAnimalCounts;
+
+
     /**
     * Constructor
     */
