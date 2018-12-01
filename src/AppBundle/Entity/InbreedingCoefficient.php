@@ -5,7 +5,6 @@ namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -43,12 +42,25 @@ class InbreedingCoefficient
 
     /**
      * @var float
-     *
      * @ORM\Column(type="float", nullable=false, options={"default":0})
-     * @JMS\Type("float")
      * @Assert\NotBlank
      */
     private $value;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", options={"default":false})
+     * @Assert\NotBlank
+     */
+    private $recalculate;
+
+    /**
+     * InbreedingCoefficient constructor.
+     */
+    public function __construct()
+    {
+        $this->recalculate = false;
+    }
 
     /**
      * @return int
@@ -119,6 +131,24 @@ class InbreedingCoefficient
     public function setValue(float $value): InbreedingCoefficient
     {
         $this->value = $value;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRecalculate(): bool
+    {
+        return $this->recalculate;
+    }
+
+    /**
+     * @param bool $recalculate
+     * @return InbreedingCoefficient
+     */
+    public function setRecalculate(bool $recalculate): InbreedingCoefficient
+    {
+        $this->recalculate = $recalculate;
         return $this;
     }
 
