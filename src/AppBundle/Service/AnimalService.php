@@ -821,7 +821,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $this->sleepIfInternalQueueIsTooFull($maxInternalQueueSize);
 
             $counter++;
-            if (!$location->getIsActive() && !$location->getCompany()->isActive()) {
+            if (
+                (!$location->getIsActive() && !$location->getCompany()->isActive()) ||
+                !$location->isDutchLocation()
+            ) {
                 continue;
             }
 

@@ -9,6 +9,8 @@ use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Criteria\DeclareCriteria;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\BasicRetrieveRvoDeclareInterface;
+use AppBundle\Entity\BasicRvoDeclareInterface;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -94,12 +96,20 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 
 
     /**
-     * @param DeclareBase $messageObject
+     * @param DeclareBase|BasicRvoDeclareInterface|BasicRetrieveRvoDeclareInterface $messageObject
      * @param bool $isUpdate
      * @param string|array $jmsGroups
      * @return array
      */
     protected function sendMessageObjectToQueue($messageObject, $isUpdate = false, $jmsGroups = [JmsGroup::RVO]) {
+
+        if (
+            ($messageObject instanceof BasicRvoDeclareInterface ||
+             $messageObject instanceof BasicRetrieveRvoDeclareInterface)
+            && $messageObject->getLocation() && !$messageObject->getLocation()->isDutchLocation()
+        ) {
+            throw new PreconditionFailedHttpException('RVO Message is only allowed for Dutch locations');
+        }
 
         $requestId = $messageObject->getRequestId();
 

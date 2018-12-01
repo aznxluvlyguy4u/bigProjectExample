@@ -16,7 +16,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveAnimalsRepository")
  * @package AppBundle\Entity
  */
-class RetrieveAnimals
+class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
 {
     use EntityClassInfo;
 
