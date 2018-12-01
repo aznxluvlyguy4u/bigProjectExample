@@ -368,11 +368,11 @@ class Location
 
 
     /**
-     * @var ResultTableAnimalCounts
+     * @var ResultTableAnimalCounts|null
      * @ORM\OneToOne(targetEntity="ResultTableAnimalCounts", mappedBy="location", cascade={"persist", "remove"})
      * @JMS\Type("AppBundle\Entity\ResultTableAnimalCounts")
      */
-    protected $resultTableAnimalCounts;
+    private $resultTableAnimalCounts;
 
 
     /**
@@ -1260,4 +1260,24 @@ class Location
         $companyName = $this->getCompany() ? $this->getCompany()->getCompanyName() : null;
         return $returnEmptyStringAsNull && empty($companyName) ? null : $companyName;
     }
+
+    /**
+     * @return ResultTableAnimalCounts|null
+     */
+    public function getResultTableAnimalCounts(): ?ResultTableAnimalCounts
+    {
+        return $this->resultTableAnimalCounts;
+    }
+
+    /**
+     * @param ResultTableAnimalCounts|null $resultTableAnimalCounts
+     * @return Location
+     */
+    public function setResultTableAnimalCounts(?ResultTableAnimalCounts $resultTableAnimalCounts): Location
+    {
+        $this->resultTableAnimalCounts = $resultTableAnimalCounts;
+        return $this;
+    }
+
+
 }

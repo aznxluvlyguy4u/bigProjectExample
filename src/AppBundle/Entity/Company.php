@@ -331,11 +331,11 @@ class Company
 
 
     /**
-     * @var ResultTableAnimalCounts
+     * @var ResultTableAnimalCounts|null
      * @ORM\OneToOne(targetEntity="ResultTableAnimalCounts", mappedBy="company", cascade={"persist", "remove"})
      * @JMS\Type("AppBundle\Entity\ResultTableAnimalCounts")
      */
-    protected $resultTableAnimalCounts;
+    private $resultTableAnimalCounts;
 
   /**
    * Company constructor.
@@ -938,6 +938,24 @@ class Company
     public function getAddressCountryId(): ?int
     {
         return $this->getAddress() ? $this->getAddress()->getCountryId() : null;
+    }
+
+    /**
+     * @return ResultTableAnimalCounts|null
+     */
+    public function getResultTableAnimalCounts(): ?ResultTableAnimalCounts
+    {
+        return $this->resultTableAnimalCounts;
+    }
+
+    /**
+     * @param ResultTableAnimalCounts|null $resultTableAnimalCounts
+     * @return Company
+     */
+    public function setResultTableAnimalCounts(?ResultTableAnimalCounts $resultTableAnimalCounts): Company
+    {
+        $this->resultTableAnimalCounts = $resultTableAnimalCounts;
+        return $this;
     }
 
 }
