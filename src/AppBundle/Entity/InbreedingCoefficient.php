@@ -8,7 +8,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Class Inspector
+ * Class InbreedingCoefficient
+ * @ORM\Table(name="inbreeding_coefficient",indexes={
+ *     @ORM\Index(name="inbreeding_coefficient_idx", columns={"ram_id", "ewe_id"})
+ * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\InbreedingCoefficientRepository")
  * @package AppBundle\Entity
  */
