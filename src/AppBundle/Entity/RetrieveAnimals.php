@@ -4,8 +4,10 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Traits\EntityClassInfo;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
+use Proxies\__CG__\AppBundle\Entity\AnimalRemoval;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -137,6 +139,14 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
     private $actionBy;
 
     /**
+     * @var ArrayCollection|AnimalRemoval[]
+     *
+     * @ORM\OneToMany(targetEntity="AnimalRemoval", mappedBy="retrieveAnimals", cascade={"persist"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalRemoval>")
+     */
+    private $animalRemovals;
+
+    /**
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @Assert\NotBlank
@@ -205,6 +215,7 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
         $this->logDate = new \DateTime();
         $this->animalType = AnimalType::sheep;
         $this->isRvoLeading = false;
+        $this->animalRemovals = new ArrayCollection();
     }
 
     /**
@@ -535,6 +546,24 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
     public function setRemovedAnimalsCount($removedAnimalsCount)
     {
         $this->removedAnimalsCount = $removedAnimalsCount;
+        return $this;
+    }
+
+    /**
+     * @return AnimalRemoval[]|ArrayCollection
+     */
+    public function getAnimalRemovals()
+    {
+        return $this->animalRemovals;
+    }
+
+    /**
+     * @param AnimalRemoval[]|ArrayCollection $animalRemovals
+     * @return RetrieveAnimals
+     */
+    public function setAnimalRemovals($animalRemovals)
+    {
+        $this->animalRemovals = $animalRemovals;
         return $this;
     }
 

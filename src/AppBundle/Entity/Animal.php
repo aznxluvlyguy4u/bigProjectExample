@@ -18,6 +18,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
+use Proxies\__CG__\AppBundle\Entity\AnimalRemoval;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -948,6 +949,15 @@ abstract class Animal
 
 
     /**
+     * @var ArrayCollection|AnimalRemoval[]
+     *
+     * @ORM\OneToMany(targetEntity="AnimalRemoval", mappedBy="animal", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalRemoval>")
+     */
+    private $animalRemovals;
+
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("is_public")
      * @JMS\Groups({
@@ -1092,6 +1102,7 @@ abstract class Animal
         $this->tagReplacements = new ArrayCollection();
         $this->treatments = new ArrayCollection();
         $this->wormResistances = new ArrayCollection();
+        $this->animalRemovals = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -3213,4 +3224,25 @@ abstract class Animal
     {
         $this->lastWeightMeasurementDate = $lastWeightMeasurementDate;
     }
+
+    /**
+     * @return AnimalRemoval[]|ArrayCollection
+     */
+    public function getAnimalRemovals()
+    {
+        return $this->animalRemovals;
+    }
+
+    /**
+     * @param AnimalRemoval[]|ArrayCollection $animalRemovals
+     * @return Animal
+     */
+    public function setAnimalRemovals($animalRemovals)
+    {
+        $this->animalRemovals = $animalRemovals;
+        return $this;
+    }
+
+
+
 }
