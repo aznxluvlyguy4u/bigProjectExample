@@ -233,7 +233,7 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
      *
      * @param \DateTime $logDate
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setLogDate($logDate)
     {
@@ -257,7 +257,7 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
      *
      * @param string $requestId
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setRequestId($requestId)
     {
@@ -282,7 +282,7 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
      *
      * @param string $messageId
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setMessageId($messageId)
     {
@@ -306,7 +306,7 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
      *
      * @param string $requestState
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setRequestState($requestState)
     {
@@ -330,7 +330,7 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
      *
      * @param string $relationNumberKeeper
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setRelationNumberKeeper($relationNumberKeeper)
     {
@@ -354,7 +354,7 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
      *
      * @param string $ubn
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setUbn($ubn)
     {
