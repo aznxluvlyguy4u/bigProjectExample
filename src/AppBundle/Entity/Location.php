@@ -374,6 +374,14 @@ class Location
      */
     private $resultTableAnimalCounts;
 
+    /**
+     * @var ArrayCollection|AnimalRemoval[]
+     *
+     * @ORM\OneToMany(targetEntity="AnimalRemoval", mappedBy="previousLocation", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalRemoval>")
+     */
+    private $animalRemovals;
+
 
     /**
     * Constructor
@@ -399,6 +407,7 @@ class Location
     $this->treatments = new ArrayCollection();
     $this->pedigreeRegisterRegistrations = new ArrayCollection();
     $this->workers = new ArrayCollection();
+    $this->animalRemovals = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 
@@ -1276,6 +1285,24 @@ class Location
     public function setResultTableAnimalCounts(?ResultTableAnimalCounts $resultTableAnimalCounts): Location
     {
         $this->resultTableAnimalCounts = $resultTableAnimalCounts;
+        return $this;
+    }
+
+    /**
+     * @return AnimalRemoval[]|ArrayCollection
+     */
+    public function getAnimalRemovals()
+    {
+        return $this->animalRemovals;
+    }
+
+    /**
+     * @param AnimalRemoval[]|ArrayCollection $animalRemovals
+     * @return Location
+     */
+    public function setAnimalRemovals($animalRemovals)
+    {
+        $this->animalRemovals = $animalRemovals;
         return $this;
     }
 
