@@ -12,6 +12,7 @@ use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
+use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DateUtil;
@@ -70,6 +71,9 @@ class ReportService
     /** @var PedigreeCertificateReportService */
     private $pedigreeCertificateReportService;
 
+    /** @var LiveStockReportService */
+    private $livestockReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -89,7 +93,8 @@ class ReportService
         TranslatorInterface $translator,
         Logger $logger,
         UlnValidatorInterface $ulnValidator,
-        PedigreeCertificateReportService $pedigreeCertificateReportService
+        PedigreeCertificateReportService $pedigreeCertificateReportService,
+        LiveStockReportService $livestockReportService
     )
     {
         $this->em = $em;
@@ -100,6 +105,7 @@ class ReportService
         $this->logger = $logger;
         $this->ulnValidator = $ulnValidator;
         $this->pedigreeCertificateReportService = $pedigreeCertificateReportService;
+        $this->livestockReportService = $livestockReportService;
     }
 
     /**
@@ -116,11 +122,56 @@ class ReportService
         return $this->serializer->getDecodedJson($workers,[JmsGroup::BASIC],true);
     }
 
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createLiveStockReport(Request $request): JsonResponse
+    {
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->createLiveStockReportAsWorkerTask($request);
+        }
+
+        return $this->createLiveStockReportWithoutWorker($request);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    private function createLiveStockReportWithoutWorker(Request $request): JsonResponse
+    {
+        $person = $this->userService->getUser();
+
+        if(!AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
+            $person = $this->userService->getAccountOwner($request);
+        }
+
+        $location = $this->userService->getSelectedLocation($request);
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+        $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
+        $content = RequestUtil::getContentAsArray($request);
+        $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
+
+        $report = $this->livestockReportService->getReport($person, $location, $fileType, $concatValueAndAccuracy, $content,$language);
+        if ($report instanceof Response) {
+            return $report;
+        }
+        return ResultUtil::successResult($report);
+    }
+
+
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function createLiveStockReport(Request $request): JsonResponse
+    private function createLiveStockReportAsWorkerTask(Request $request): JsonResponse
     {
         $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
         $content = RequestUtil::getContentAsArray($request);
@@ -136,7 +187,7 @@ class ReportService
             }
 
             $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if(!$workerId)
+            if (!$workerId)
                 return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
 
             $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
@@ -147,12 +198,13 @@ class ReportService
                 ]
             );
         }
-        catch(\Exception $e) {
+        catch (\Exception $e) {
             $this->logExceptionAsError($e);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
     }
+
 
     /**
      * @param Request $request

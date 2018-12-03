@@ -609,6 +609,7 @@ services:
           - '@logger'
           - '@AppBundle\Validation\UlnValidatorInterface'
           - '@app.report.pedigree_certificates'
+          - '@app.report.livestock'
 
 
     AppBundle\Processor\ReportProcessor:
