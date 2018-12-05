@@ -73,6 +73,10 @@ services:
           - '%kernel.environment%'
           - true
 
+    AppBundle\Service\AwsFeedbackQueueService:
+        parent: app.aws.queueservice.workers_base
+        arguments: { index_0: '%aws_sqs_queue_feedback_prefix%' }
+
     AppBundle\Service\AwsExternalQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%' }
