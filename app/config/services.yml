@@ -1099,6 +1099,11 @@ services:
         class: AppBundle\Worker\DirectProcessor\RevokeProcessor
         parent: app.abstract_base.direct_processor
 
+    AppBundle\Service\ProcessLocker:
+        arguments:
+          - '@logger'
+          - '@AppBundle\Service\SettingsContainer'
+
     AppBundle\Service\SettingsContainer:
         arguments:
           - '%max_feedback_workers%'
