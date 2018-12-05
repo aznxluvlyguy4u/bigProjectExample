@@ -28,6 +28,8 @@ parameters:
     aws_sqs_version: ~
     aws_sqs_queue_exteral_prefix: ~
     aws_sqs_queue_interal_prefix: ~
+    aws_sqs_queue_feedback_prefix: ~
+    max_feedback_workers: 1
     aws_sqs_queue_mixblup_input_prefix: ~
     aws_sqs_queue_mixblup_output_prefix: ~
 

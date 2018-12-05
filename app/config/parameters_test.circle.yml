@@ -22,6 +22,8 @@ parameters:
     aws_s3_bucket: '%env(aws_s3_bucketname)%'
     aws_sqs_queue_exteral_prefix: ext_nsfo_
     aws_sqs_queue_interal_prefix: int_nsfo_
+    aws_sqs_queue_feedback_prefix: feedback_nsfo_
+    max_feedback_workers: 1
     aws_sqs_queue_mixblup_input_prefix: mixblup_input_nsfo_
     aws_sqs_queue_mixblup_output_prefix: mixblup_output_nsfo_
     redis_host: 'redis://localhost'

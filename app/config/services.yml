@@ -1099,6 +1099,9 @@ services:
         class: AppBundle\Worker\DirectProcessor\RevokeProcessor
         parent: app.abstract_base.direct_processor
 
+    AppBundle\Service\SettingsContainer:
+        arguments:
+          - '%max_feedback_workers%'
 
     # Listeners
     AppBundle\EventListener\ViewListener:
