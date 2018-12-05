@@ -16,8 +16,8 @@ use Aws\Sqs\SqsClient;
  */
 abstract class AwsQueueServiceBase implements QueueServiceInterface
 {
-    const TaskType = 'TaskType';
-    const MessageId = 'MessageId';
+    const TASK_TYPE = 'TaskType';
+    const MESSAGE_ID = 'MessageId';
 
     /** @var string */
     protected $region;
@@ -469,7 +469,7 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
      * @param array $messageAttributeNames
      * @return bool
      */
-    public function moveErrorQueueMessagesToPrimaryQueue(array $messageAttributeNames = [self::TaskType, self::MessageId])
+    public function moveErrorQueueMessagesToPrimaryQueue(array $messageAttributeNames = [self::TASK_TYPE, self::MESSAGE_ID])
     {
         $this->errorQueueNullCheck();
         $queueSize = $this->getSizeOfErrorQueue();
@@ -493,8 +493,8 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
             $taskType = null;
             $messageId = null;
             if (is_array($messageAttributes)) {
-                $taskType =  ArrayUtil::get(self::TaskType, $messageAttributes,null);
-                $messageId = ArrayUtil::get(self::MessageId, $messageAttributes,null);
+                $taskType =  ArrayUtil::get(self::TASK_TYPE, $messageAttributes,null);
+                $messageId = ArrayUtil::get(self::MESSAGE_ID, $messageAttributes,null);
             }
 
             $response = $this->send(
