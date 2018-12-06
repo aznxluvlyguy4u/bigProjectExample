@@ -109,6 +109,20 @@ class HealthCheckTask
     private $retrieveAnimals;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     */
+    private $isProcessing;
+
+    public function __construct()
+    {
+        $this->isProcessing = false;
+    }
+
+    /**
      * @return int
      */
     public function getId(): int
@@ -275,6 +289,24 @@ class HealthCheckTask
     public function setRetrieveAnimals(?RetrieveAnimals $retrieveAnimals): HealthCheckTask
     {
         $this->retrieveAnimals = $retrieveAnimals;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isProcessing(): bool
+    {
+        return $this->isProcessing;
+    }
+
+    /**
+     * @param bool $isProcessing
+     * @return HealthCheckTask
+     */
+    public function setIsProcessing(bool $isProcessing): HealthCheckTask
+    {
+        $this->isProcessing = $isProcessing;
         return $this;
     }
 
