@@ -7,7 +7,7 @@ use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
-use Proxies\__CG__\AppBundle\Entity\AnimalRemoval;
+use Proxies\__CG__\AppBundle\Entity\AnimalRelocation;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -139,9 +139,9 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
     private $actionBy;
 
     /**
-     * @var ArrayCollection|AnimalRemoval[]
+     * @var ArrayCollection|AnimalRelocation[]
      *
-     * @ORM\OneToMany(targetEntity="AnimalRemoval", mappedBy="retrieveAnimals", cascade={"persist"}, fetch="LAZY")
+     * @ORM\OneToMany(targetEntity="AnimalRelocation", mappedBy="retrieveAnimals", cascade={"persist"}, fetch="LAZY")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalRemoval>")
      */
     private $animalRemovals;
@@ -550,7 +550,7 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
     }
 
     /**
-     * @return AnimalRemoval[]|ArrayCollection
+     * @return AnimalRelocation[]|ArrayCollection
      */
     public function getAnimalRemovals()
     {
@@ -558,7 +558,7 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
     }
 
     /**
-     * @param AnimalRemoval[]|ArrayCollection $animalRemovals
+     * @param AnimalRelocation[]|ArrayCollection $animalRemovals
      * @return RetrieveAnimals
      */
     public function setAnimalRemovals($animalRemovals)

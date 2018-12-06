@@ -10,13 +10,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class AnimalRemoval
- * @ORM\Table(name="animal_removal",indexes={
- *     @ORM\Index(name="animal_removal_idx", columns={"previous_location_id", "animal_id"})
+ * @ORM\Table(name="animal_relocation",indexes={
+ *     @ORM\Index(name="animal_relocation_idx", columns={"location_id", "animal_id"})
  * })
- * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalRemovalRepository")
+ * @ORM\Entity(repositoryClass="AnimalRelocationRepository")
  * @package AppBundle\Entity
  */
-class AnimalRemoval
+class AnimalRelocation
 {
     use EntityClassInfo;
 
@@ -48,11 +48,11 @@ class AnimalRemoval
      * @JMS\Type("DateTime")
      * @Assert\NotBlank
      */
-    private $removalDate;
+    private $relocationDate;
 
     /**
      * @var Animal
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="animalRemovals")
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="animalRelocations")
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Assert\NotBlank
@@ -61,12 +61,21 @@ class AnimalRemoval
 
     /**
      * @var Location
-     * @ORM\ManyToOne(targetEntity="Location", inversedBy="animalRemovals")
-     * @ORM\JoinColumn(name="previous_location_id", referencedColumnName="id", onDelete="CASCADE")
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="animalRelocations")
+     * @ORM\JoinColumn(name="location_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Location")
      * @Assert\NotBlank
      */
-    private $previousLocation;
+    private $location;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false)
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     */
+    private $isRemoval;
 
     /**
      * @var boolean
@@ -75,7 +84,7 @@ class AnimalRemoval
      * @JMS\Type("boolean")
      * @Assert\NotBlank
      */
-    private $removedByRvoLeadingSync;
+    private $relocatedByRvoLeadingSync;
 
     /**
      * @var RetrieveAnimals|null
@@ -91,7 +100,7 @@ class AnimalRemoval
     public function __construct()
     {
         $this->logDate = new \DateTime();
-        $this->removedByRvoLeadingSync = false;
+        $this->relocatedByRvoLeadingSync = false;
     }
 
     /**
@@ -112,9 +121,9 @@ class AnimalRemoval
 
     /**
      * @param \DateTime $logDate
-     * @return AnimalRemoval
+     * @return AnimalRelocation
      */
-    public function setLogDate(\DateTime $logDate): AnimalRemoval
+    public function setLogDate(\DateTime $logDate): AnimalRelocation
     {
         $this->logDate = $logDate;
         return $this;
@@ -123,18 +132,18 @@ class AnimalRemoval
     /**
      * @return \DateTime
      */
-    public function getRemovalDate(): \DateTime
+    public function getRelocationDate(): \DateTime
     {
-        return $this->removalDate;
+        return $this->relocationDate;
     }
 
     /**
-     * @param \DateTime $removalDate
-     * @return AnimalRemoval
+     * @param \DateTime $relocationDate
+     * @return AnimalRelocation
      */
-    public function setRemovalDate(\DateTime $removalDate): AnimalRemoval
+    public function setRelocationDate(\DateTime $relocationDate): AnimalRelocation
     {
-        $this->removalDate = $removalDate;
+        $this->relocationDate = $relocationDate;
         return $this;
     }
 
@@ -148,9 +157,9 @@ class AnimalRemoval
 
     /**
      * @param Animal $animal
-     * @return AnimalRemoval
+     * @return AnimalRelocation
      */
-    public function setAnimal(Animal $animal): AnimalRemoval
+    public function setAnimal(Animal $animal): AnimalRelocation
     {
         $this->animal = $animal;
         return $this;
@@ -159,36 +168,54 @@ class AnimalRemoval
     /**
      * @return Location
      */
-    public function getPreviousLocation(): Location
+    public function getLocation(): Location
     {
-        return $this->previousLocation;
+        return $this->location;
     }
 
     /**
-     * @param Location $previousLocation
-     * @return AnimalRemoval
+     * @param Location $location
+     * @return AnimalRelocation
      */
-    public function setPreviousLocation(Location $previousLocation): AnimalRemoval
+    public function setLocation(Location $location): AnimalRelocation
     {
-        $this->previousLocation = $previousLocation;
+        $this->location = $location;
         return $this;
     }
 
     /**
      * @return bool
      */
-    public function isRemovedByRvoLeadingSync(): bool
+    public function isRemoval(): bool
     {
-        return $this->removedByRvoLeadingSync;
+        return $this->isRemoval;
     }
 
     /**
-     * @param bool $removedByRvoLeadingSync
-     * @return AnimalRemoval
+     * @param bool $isRemoval
+     * @return AnimalRelocation
      */
-    public function setRemovedByRvoLeadingSync(bool $removedByRvoLeadingSync): AnimalRemoval
+    public function setIsRemoval(bool $isRemoval): AnimalRelocation
     {
-        $this->removedByRvoLeadingSync = $removedByRvoLeadingSync;
+        $this->isRemoval = $isRemoval;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRelocatedByRvoLeadingSync(): bool
+    {
+        return $this->relocatedByRvoLeadingSync;
+    }
+
+    /**
+     * @param bool $relocatedByRvoLeadingSync
+     * @return AnimalRelocation
+     */
+    public function setRelocatedByRvoLeadingSync(bool $relocatedByRvoLeadingSync): AnimalRelocation
+    {
+        $this->relocatedByRvoLeadingSync = $relocatedByRvoLeadingSync;
         return $this;
     }
 
@@ -202,9 +229,9 @@ class AnimalRemoval
 
     /**
      * @param RetrieveAnimals|null $retrieveAnimals
-     * @return AnimalRemoval
+     * @return AnimalRelocation
      */
-    public function setRetrieveAnimals(?RetrieveAnimals $retrieveAnimals): AnimalRemoval
+    public function setRetrieveAnimals(?RetrieveAnimals $retrieveAnimals): AnimalRelocation
     {
         $this->retrieveAnimals = $retrieveAnimals;
         return $this;

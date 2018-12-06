@@ -9,7 +9,6 @@ use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
-use Proxies\__CG__\AppBundle\Entity\AnimalRemoval;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -376,12 +375,12 @@ class Location
     private $resultTableAnimalCounts;
 
     /**
-     * @var ArrayCollection|AnimalRemoval[]
+     * @var ArrayCollection|AnimalRelocation[]
      *
-     * @ORM\OneToMany(targetEntity="AnimalRemoval", mappedBy="previousLocation", cascade={"persist", "remove"}, fetch="LAZY")
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalRemoval>")
+     * @ORM\OneToMany(targetEntity="AnimalRelocation", mappedBy="location", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalRelocation>")
      */
-    private $animalRemovals;
+    private $animalRelocations;
 
 
     /**
@@ -408,7 +407,7 @@ class Location
     $this->treatments = new ArrayCollection();
     $this->pedigreeRegisterRegistrations = new ArrayCollection();
     $this->workers = new ArrayCollection();
-    $this->animalRemovals = new ArrayCollection();
+    $this->animalRelocations = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 
@@ -1290,20 +1289,20 @@ class Location
     }
 
     /**
-     * @return AnimalRemoval[]|ArrayCollection
+     * @return AnimalRelocation[]|ArrayCollection
      */
-    public function getAnimalRemovals()
+    public function getAnimalRelocations()
     {
-        return $this->animalRemovals;
+        return $this->animalRelocations;
     }
 
     /**
-     * @param AnimalRemoval[]|ArrayCollection $animalRemovals
+     * @param AnimalRelocation[]|ArrayCollection $animalRelocations
      * @return Location
      */
-    public function setAnimalRemovals($animalRemovals)
+    public function setAnimalRelocations($animalRelocations)
     {
-        $this->animalRemovals = $animalRemovals;
+        $this->animalRelocations = $animalRelocations;
         return $this;
     }
 
