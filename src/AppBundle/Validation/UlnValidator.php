@@ -12,6 +12,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -73,7 +74,10 @@ class UlnValidator implements UlnValidatorInterface
 
         $this->ulns = [];
         foreach ($ulnSets as $ulnSet) {
-            $uln = $ulnSet[JsonInputConstant::ULN_COUNTRY_CODE] . $ulnSet[JsonInputConstant::ULN_NUMBER];
+            $uln = !empty($ulnSet) && is_array($ulnSet) ?
+                   ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $ulnSet, '')
+                  .ArrayUtil::get(JsonInputConstant::ULN_NUMBER, $ulnSet, '')
+                : '';
             if  (!Validator::verifyUlnFormat($uln, false)) {
                 $this->getInvalidUlns()[] = $uln;
             }
