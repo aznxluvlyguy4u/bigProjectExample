@@ -6,6 +6,7 @@ use AppBundle\Component\LocationHealthMessageBuilder;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\HealthCheckTask;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\MaediVisna;
@@ -76,6 +77,16 @@ class LocationHealthUpdater
         $checkDate = $declareImport->getImportDate();
         return self::updateByGivenLocationOfOrigin($declareImport, $locationOfDestination, $checkDate,
             $isDeclareInBase, null, $createLocationHealthMessage);
+    }
+
+
+    /**
+     * @param HealthCheckTask $healthCheckTask
+     */
+    public function updateByHealthCheckTaskFromRvoSync(HealthCheckTask $healthCheckTask)
+    {
+        // TODO
+        dump($healthCheckTask);die;
     }
 
 

@@ -70,25 +70,11 @@ class SyncHealthCheckProcessor extends SqsWorkerTaskProcessorBase implements Sqs
     {
         $messageBody = AwsQueueServiceBase::getMessageBodyFromResponse($queueMessage, false);
 
-        $healthCheckTask = $this->getSerializer()->deserializeToObject($messageBody, HealthCheckTask::class);
+        $healthCheckTask = $this->getJsonMessageReader()->readHealthCheckTask($messageBody);
 
         if (!($healthCheckTask instanceof HealthCheckTask)) {
             throw new SqsMessageInvalidBodyException('Could not serialize message body to HealthCheckTask');
         }
-
-        $destinationLocationId = $healthCheckTask->getDestinationLocationId();
-        $location = $destinationLocationId ?
-            $this->getManager()->getRepository(Location::class)->find($destinationLocationId) :
-            null
-        ;
-        $healthCheckTask->setDestinationLocation($location);
-
-        $retrieveAnimalsId = $healthCheckTask->getRetrieveAnimalsId();
-        $retrieveAnimals = $retrieveAnimalsId ?
-            $this->getManager()->getRepository(RetrieveAnimals::class)->find($retrieveAnimalsId) :
-            null
-        ;
-        $healthCheckTask->setRetrieveAnimals($retrieveAnimals);
 
         return $healthCheckTask;
     }

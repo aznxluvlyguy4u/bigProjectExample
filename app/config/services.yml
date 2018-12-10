@@ -647,7 +647,7 @@ services:
         abstract: true
         arguments:
           - '@doctrine.orm.entity_manager'
-          - '@app.serializer.base'
+          - '@AppBundle\Service\Worker\FeedbackJsonMessageReaderInterface'
           - '@logger'
         lazy: true
 
@@ -1126,6 +1126,15 @@ services:
     AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessor
         parent: app.abstract_base.direct_processor
+
+    AppBundle\Service\Worker\FeedbackJsonMessageReaderInterface:
+        class: AppBundle\Service\Worker\JavaJsonReader
+        parent: AppBundle\Service\Worker\JavaJsonReader
+
+    AppBundle\Service\Worker\JavaJsonReader:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.base'
 
     AppBundle\Worker\DirectProcessor\RevokeProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\RevokeProcessor

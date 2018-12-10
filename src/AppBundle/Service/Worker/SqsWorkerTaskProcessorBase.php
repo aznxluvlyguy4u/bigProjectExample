@@ -14,15 +14,15 @@ abstract class SqsWorkerTaskProcessorBase
     private $em;
     /** @var Logger */
     private $logger;
-    /** @var BaseSerializer */
-    private $serializer;
+    /** @var FeedbackJsonMessageReaderInterface */
+    private $jsonMessageReader;
 
     public function __construct(EntityManagerInterface $em,
-                                BaseSerializer $serializer,
+                                FeedbackJsonMessageReaderInterface $jsonMessageReader,
                                 Logger $logger)
     {
         $this->em = $em;
-        $this->serializer = $serializer;
+        $this->jsonMessageReader = $jsonMessageReader;
         $this->logger = $logger;
     }
 
@@ -35,11 +35,11 @@ abstract class SqsWorkerTaskProcessorBase
     }
 
     /**
-     * @return BaseSerializer
+     * @return FeedbackJsonMessageReaderInterface
      */
-    protected function getSerializer(): BaseSerializer
+    protected function getJsonMessageReader(): FeedbackJsonMessageReaderInterface
     {
-        return $this->serializer;
+        return $this->jsonMessageReader;
     }
 
     /**
