@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Enumerator\ProcessType;
 use AppBundle\Exception\ProcessLockerException;
 use AppBundle\Util\ArrayUtil;
 use Monolog\Logger;
@@ -11,6 +12,8 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class ProcessLocker implements ProcessLockerInterface
 {
+    const DEFAULT_MAX_PROCESSES = 1;
+
     /** @var Logger */
     private $logger;
     /** @var SettingsContainer */
@@ -36,14 +39,25 @@ class ProcessLocker implements ProcessLockerInterface
 
     /**
      * @param string $processGroupName
-     * @param int $maxProcesses
+     * @param int $maxProcesses priority: this argument, env parameter, default value of 1
      * @return string
      * @throws ProcessLockerException
      */
-    function initializeProcessGroupValues(string $processGroupName, int $maxProcesses = 1): string
+    function initializeProcessGroupValues(string $processGroupName, int $maxProcesses = 0): string
     {
         if (!ctype_alnum($processGroupName)) {
             $this->logAndThrowException('ProcessGroupName can only contain numbers or letters: ' . $processGroupName);
+        }
+
+        if ($maxProcesses <= 0) {
+            switch ($processGroupName) {
+                case ProcessType::SQS_FEEDBACK_WORKER:
+                    $maxProcesses = $this->settingsContainer->getMaxFeedbackWorkers();
+                    break;
+                default:
+                    $maxProcesses = self::DEFAULT_MAX_PROCESSES;
+                    break;
+            }
         }
 
         $this->lockFilePaths[$processGroupName] = sys_get_temp_dir(). DIRECTORY_SEPARATOR . $processGroupName . '.lock';
@@ -59,12 +73,32 @@ class ProcessLocker implements ProcessLockerInterface
      */
     function isProcessLimitReached(string $processGroupName): bool
     {
-        $currentProcessCount = count($this->getProcesses($processGroupName));
+        $currentProcessCount = $this->getProcessesCount($processGroupName, false);
         $maxProcessCount = ArrayUtil::get($processGroupName, $this->maxProcessCounts, 1);
         $this->logger->info($processGroupName . ' processes [current|max]: '
             . $currentProcessCount . '|' . $maxProcessCount);
         return $currentProcessCount >= $maxProcessCount;
     }
+
+
+    /**
+     * @param string $processGroupName
+     * @param bool $logValues
+     * @return int
+     * @throws ProcessLockerException
+     */
+    function getProcessesCount(string $processGroupName, bool $logValues = true)
+    {
+        $currentProcessCount = count($this->getProcesses($processGroupName));
+
+        if ($logValues) {
+            $maxProcessCount = ArrayUtil::get($processGroupName, $this->maxProcessCounts, 1);
+            $this->logger->notice($processGroupName . ' processes [current|max]: '
+                . $currentProcessCount . '|' . $maxProcessCount);
+        }
+        return $currentProcessCount;
+    }
+
 
     /**
      * @param string $processGroupName
