@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\ActionLog;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
@@ -14,9 +15,11 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealthInspection;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Entity\TreatmentType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -676,6 +679,39 @@ class AdminActionLogWriter
 
         return $log;
     }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Person $actionBy
+     * @param Animal $animal
+     * @param $content
+     * @return ActionLog
+     */
+    public static function createAnimal(EntityManagerInterface $em, Person $actionBy, Animal $animal, $content): ActionLog
+    {
+        switch ($animal->getGender()) {
+            case GenderType::MALE: $gender = 'Ram'; break;
+            case GenderType::FEMALE: $gender = 'Ooi'; break;
+            default: $gender = 'Onbekend'; break;
+        }
+
+        $message = 'animal[id: '.$animal->getId().', uln: '.$animal->getUln().']: '
+            . $gender
+            . ', ' . ($animal->getIsAlive() ? 'Levend' : 'Dood')
+            . ', Geboortedatum '. $animal->getDateOfBirthString()
+            . ', base64content: ' . base64_encode($content)
+        ;
+
+        $log = new ActionLog(
+            null, $actionBy,
+            UserActionType::ADMIN_ANIMAL_CREATE,
+            true, $message, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
 
     /**
      * @param EntityManagerInterface $em
