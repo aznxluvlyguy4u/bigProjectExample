@@ -237,7 +237,7 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
      * @param $messageAttributeNames
      * @return \Aws\Result
      */
-    public function getNextMessage(array $messageAttributeNames = [])
+    public function getNextMessage(array $messageAttributeNames = ['All'])
     {
         return $this->getNextMessageBase($this->queueUrl, $messageAttributeNames);
     }
@@ -387,13 +387,14 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
 
     /**
      * @param \Aws\Result $response
+     * @param bool $decodeJsonString
      * @return mixed
      */
-    public static function getMessageBodyFromResponse($response)
+    public static function getMessageBodyFromResponse($response, bool $decodeJsonString = true)
     {
         $jsonBody = self::getResponseValue($response, 'Body');
         if(is_string($jsonBody)) {
-            return json_decode($jsonBody);
+            return $decodeJsonString ? json_decode($jsonBody) : $jsonBody;
         }
         return null;
     }
@@ -425,6 +426,19 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
         }
 
         return $results;
+    }
+
+
+    /**
+     * @param \Aws\Result $messageResponse
+     * @return null|string
+     */
+    public static function getTaskType($messageResponse): ?string
+    {
+        $messageAttributes = AwsQueueServiceBase::getMessageAttributes($messageResponse);
+        return is_array($messageAttributes) ?
+            ArrayUtil::get(self::TASK_TYPE, $messageAttributes,null) :
+            null;
     }
 
 

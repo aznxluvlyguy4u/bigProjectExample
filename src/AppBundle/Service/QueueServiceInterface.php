@@ -103,9 +103,10 @@ interface QueueServiceInterface
 
     /**
      * @param \Aws\Result $response
+     * @param bool $decodeJsonString
      * @return mixed
      */
-    public static function getMessageBodyFromResponse($response);
+    public static function getMessageBodyFromResponse($respons, bool $decodeJsonString = truee);
 
 
     /**

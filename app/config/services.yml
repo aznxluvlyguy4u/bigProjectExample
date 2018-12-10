@@ -633,6 +633,34 @@ services:
         tags:
           - {name: 'enqueue.client.processor'}
 
+    AppBundle\Processor\SqsFeedbackProcessor:
+        arguments:
+          - '@AppBundle\Service\AwsFeedbackQueueService'
+          - '@logger'
+          - '@AppBundle\Service\ProcessLocker'
+          - '@AppBundle\Service\SettingsContainer'
+          - '@translator'
+          - '@AppBundle\Service\Worker\SyncAnimalRelocationProcessor'
+          - '@AppBundle\Service\Worker\SyncHealthCheckProcessor'
+
+    app.abstract_base.worker_task_processor:
+        abstract: true
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.base'
+          - '@logger'
+        lazy: true
+
+    AppBundle\Service\Worker\SyncAnimalRelocationProcessor:
+        parent: app.abstract_base.worker_task_processor
+
+    AppBundle\Service\Worker\SyncHealthCheckProcessor:
+        parent: app.abstract_base.worker_task_processor
+        calls:
+          - method: setLocationHealthUpdater
+            arguments:
+              - '@app.health.locationhealth.updater'
+
     app.abstract_base.auth:
         parent: app.abstract_base.controller
         abstract: true

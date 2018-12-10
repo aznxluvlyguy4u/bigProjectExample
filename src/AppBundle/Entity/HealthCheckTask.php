@@ -229,6 +229,14 @@ class HealthCheckTask
     }
 
     /**
+     * @return integer|null
+     */
+    public function getDestinationLocationId(): ?int
+    {
+        return $this->destinationLocation ? $this->destinationLocation->getId() : null;
+    }
+
+    /**
      * @param Location $destinationLocation
      * @return HealthCheckTask
      */
@@ -280,6 +288,14 @@ class HealthCheckTask
     public function getRetrieveAnimals(): ?RetrieveAnimals
     {
         return $this->retrieveAnimals;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getRetrieveAnimalsId(): ?int
+    {
+        return $this->retrieveAnimals ? $this->retrieveAnimals->getId() : null;
     }
 
     /**
