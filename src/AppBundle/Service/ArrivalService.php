@@ -25,6 +25,7 @@ use AppBundle\Exception\DeadAnimalHttpException;
 use AppBundle\Exception\FeatureNotAvailableHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\LocationHealthUpdater;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
@@ -211,7 +212,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->validateIfOriginAndDestinationAreInSameCountry(DeclareArrival::class, $departLocation, $location);
 
-        if ($location->getAnimalHealthSubscription()) {
+        $checkHealthStatus = LocationHealthUpdater::checkHealthStatus($location);
+        if ($checkHealthStatus) {
             //LocationHealth null value fixes
             $this->healthService->fixLocationHealthMessagesWithNullValues($location);
             $this->healthService->fixIncongruentLocationHealthIllnessValues($location);
@@ -290,7 +292,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->saveNewestDeclareVersion($content, $arrival);
 
-        if ($location->getAnimalHealthSubscription()) {
+        if ($checkHealthStatus) {
             //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
             $this->healthService->updateLocationHealth($arrival);
         }
@@ -336,7 +338,8 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
             return $tagValidator->createImportJsonErrorResponse();
         }
 
-        if ($location->getAnimalHealthSubscription()) {
+        $checkHealthStatus = LocationHealthUpdater::checkHealthStatus($location);
+        if ($checkHealthStatus) {
             //LocationHealth null value fixes
             $this->healthService->fixLocationHealthMessagesWithNullValues($location);
             $this->healthService->fixIncongruentLocationHealthIllnessValues($location);
@@ -349,7 +352,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         $this->saveNewestDeclareVersion($content, $import);
 
-        if ($location->getAnimalHealthSubscription()) {
+        if ($checkHealthStatus) {
             //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
             $this->healthService->updateLocationHealth($import);
         }

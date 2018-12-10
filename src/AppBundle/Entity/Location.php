@@ -1232,7 +1232,7 @@ class Location
      */
     public function getAnimalHealthSubscription()
     {
-        return $this->company ? $this->company->getAnimalHealthSubscription() : false;
+        return $this->company && $this->company->getAnimalHealthSubscription();
     }
 
 
@@ -1245,6 +1245,15 @@ class Location
             return $this->getAddress()->isDutchAddress();
         }
         return Address::IS_DUTCH_COUNTRY_DEFAULT_BOOLEAN;
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function hasNonBlankScrapieStatus(): bool
+    {
+        return $this->getLocationHealth() && $this->getLocationHealth()->hasNonBlankScrapieStatus();
     }
 
 

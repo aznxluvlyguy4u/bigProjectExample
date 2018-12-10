@@ -132,6 +132,9 @@ class HealthUpdaterService
     {
         NullChecker::checkLocation($location);
 
+        $createDefaultMaediVisna = LocationHealthUpdater::checkMaediVisnaStatus($location);
+        $createDefaultScrapie = LocationHealthUpdater::checkScrapieStatus($location);
+
         //Get the latest values
         $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($location, $this->entityManager);
         /** @var MaediVisna $latestMaediVisna */
@@ -144,7 +147,9 @@ class HealthUpdaterService
         $latestScrapieEndDate = ($latestScrapie ? $latestScrapie->getEndDate() : null);
 
         if ($location->getLocationHealth() === null) {
-            LocationHealthUpdater::persistNewLocationHealthWithInitialValues($this->entityManager, $location, new \DateTime('today'));
+            LocationHealthUpdater::persistNewLocationHealthWithInitialValues($this->entityManager,
+                $location, new \DateTime('today'), $createDefaultMaediVisna, $createDefaultScrapie
+            );
         }
 
         $locationHealth = $location->getLocationHealth();

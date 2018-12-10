@@ -396,6 +396,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.email'
+          - '@logger'
 
     app.authenticator.token:
         class: AppBundle\Component\Authentication\TokenAuthenticator
