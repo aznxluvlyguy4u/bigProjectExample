@@ -22,6 +22,7 @@ use Symfony\Component\Translation\TranslatorInterface;
 class SqsFeedbackProcessor
 {
     const ERROR_LOG_HEADER = '===== SQS FEEDBACK WORKER =====';
+    const LOOP_DELAY_SECONDS = 10;
 
     /** @var Logger */
     private $logger;
@@ -68,11 +69,30 @@ class SqsFeedbackProcessor
      */
     public function process()
     {
-        $this->taskCount = 0;
+        $delayInSeconds = self::LOOP_DELAY_SECONDS;
 
         if (!$this->initializeProcessLocker()) {
             return;
         }
+
+        while (true) {
+            $this->processAllFoundMessages();
+
+            /*
+             * WARNING!
+             * Removing this sleep will cause a huge amount of calls to the queue and a huge AWS bill!
+             */
+            $this->logger->notice('Sleep '.$delayInSeconds.' seconds ...');
+            sleep($delayInSeconds);
+        }
+
+        $this->unlockProcess();
+    }
+
+
+    private function processAllFoundMessages()
+    {
+        $this->taskCount = 0;
 
         try {
             while ($this->feedbackQueueService->getSizeOfQueue() > 0) {
@@ -87,8 +107,6 @@ class SqsFeedbackProcessor
             $this->logException($e);
             $this->unlockProcess();
         }
-
-        $this->unlockProcess();
 
         $this->logger->debug((empty($this->taskCount) ? 'No' : $this->taskCount)
             . ' ' . $this->getProcessType().' messages processed');
