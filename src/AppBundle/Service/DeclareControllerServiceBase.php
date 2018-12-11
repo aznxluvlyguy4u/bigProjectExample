@@ -338,7 +338,8 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     {
         if (!$location->isDutchLocation()) {
             $message = ucfirst($this->translator->trans(StringUtil::getDeclareTranslationKey($declareClazz, true)))
-            .' '.$this->translator->trans('ARE ONLY ALLOWED FOR DUTCH UBNS');
+            .' '.$this->translator->trans('ARE ONLY ALLOWED FOR DUTCH UBNS') . '. '
+            . $this->translator->trans('SELECT EXPORT TO RELOCATE ANIMALS TO A UBN IN ANOTHER COUNTRY');
             throw new PreconditionFailedHttpException($message);
         }
     }

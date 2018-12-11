@@ -463,6 +463,7 @@ THE ULN HAS AN INVALID FORMAT: Het ULN heeft een ongeldig format
 THE STN HAS AN INVALID FORMAT: Het STN heeft een ongeldig format
 THE ANIMAL IS NOT ON THE GIVEN LOCATION: Het dier behoort niet tot de opgegeven locatie
 AN IDENTICAL %requestState% %declare% ALREADY EXISTS: Een identieke %declare% (%requestState%) bestaat al
+SELECT EXPORT TO RELOCATE ANIMALS TO A UBN IN ANOTHER COUNTRY: Zet export op ‘Ja’ om deze dieren af te voeren naar een UBN van een ander land.
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen
