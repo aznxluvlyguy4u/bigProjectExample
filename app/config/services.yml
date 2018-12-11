@@ -73,6 +73,10 @@ services:
           - '%kernel.environment%'
           - true
 
+    AppBundle\Service\AwsFeedbackQueueService:
+        parent: app.aws.queueservice.workers_base
+        arguments: { index_0: '%aws_sqs_queue_feedback_prefix%' }
+
     AppBundle\Service\AwsExternalQueueService:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%' }
@@ -392,6 +396,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.email'
+          - '@logger'
 
     app.authenticator.token:
         class: AppBundle\Component\Authentication\TokenAuthenticator
@@ -609,6 +614,7 @@ services:
           - '@logger'
           - '@AppBundle\Validation\UlnValidatorInterface'
           - '@app.report.pedigree_certificates'
+          - '@app.report.livestock'
 
 
     AppBundle\Processor\ReportProcessor:
@@ -627,6 +633,34 @@ services:
           - '@logger'
         tags:
           - {name: 'enqueue.client.processor'}
+
+    AppBundle\Processor\SqsFeedbackProcessor:
+        arguments:
+          - '@AppBundle\Service\AwsFeedbackQueueService'
+          - '@logger'
+          - '@AppBundle\Service\ProcessLocker'
+          - '@AppBundle\Service\SettingsContainer'
+          - '@translator'
+          - '@AppBundle\Service\Worker\SyncAnimalRelocationProcessor'
+          - '@AppBundle\Service\Worker\SyncHealthCheckProcessor'
+
+    app.abstract_base.worker_task_processor:
+        abstract: true
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@AppBundle\Service\Worker\FeedbackJsonMessageReaderInterface'
+          - '@logger'
+        lazy: true
+
+    AppBundle\Service\Worker\SyncAnimalRelocationProcessor:
+        parent: app.abstract_base.worker_task_processor
+
+    AppBundle\Service\Worker\SyncHealthCheckProcessor:
+        parent: app.abstract_base.worker_task_processor
+        calls:
+          - method: setLocationHealthUpdater
+            arguments:
+              - '@app.health.locationhealth.updater'
 
     app.abstract_base.auth:
         parent: app.abstract_base.controller
@@ -1094,10 +1128,27 @@ services:
         class: AppBundle\Worker\DirectProcessor\DeclareTagTransferProcessor
         parent: app.abstract_base.direct_processor
 
+    AppBundle\Service\Worker\FeedbackJsonMessageReaderInterface:
+        class: AppBundle\Service\Worker\JavaJsonReader
+        parent: AppBundle\Service\Worker\JavaJsonReader
+
+    AppBundle\Service\Worker\JavaJsonReader:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@app.serializer.base'
+
     AppBundle\Worker\DirectProcessor\RevokeProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\RevokeProcessor
         parent: app.abstract_base.direct_processor
 
+    AppBundle\Service\ProcessLocker:
+        arguments:
+          - '@logger'
+          - '@AppBundle\Service\SettingsContainer'
+
+    AppBundle\Service\SettingsContainer:
+        arguments:
+          - '%max_feedback_workers%'
 
     # Listeners
     AppBundle\EventListener\ViewListener:

@@ -12,7 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveTagsRepository")
  * @package AppBundle\Entity
  */
-class RetrieveTags
+class RetrieveTags implements BasicRetrieveRvoDeclareInterface
 {
     use EntityClassInfo;
 

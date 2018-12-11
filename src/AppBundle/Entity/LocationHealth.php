@@ -167,37 +167,15 @@ class LocationHealth
 
     /**
      * LocationHealth constructor.
-     * @param boolean $createWithDefaultUnderObservationIllnesses
-     * @param \DateTime $checkDate only has an effect if $createWithDefaultUnderObservationIllnesses = true
      */
-    public function __construct($createWithDefaultUnderObservationIllnesses = false, \DateTime $checkDate = null)
+    public function __construct()
     {
         $this->logDate = new DateTime('now');
-        $this->isRevoked = false;
 
         $this->maediVisnas = new ArrayCollection();
         $this->scrapies = new ArrayCollection();
         $this->caseousLymphadenitis = new ArrayCollection();
         $this->footRots = new ArrayCollection();
-
-        if($createWithDefaultUnderObservationIllnesses) {
-            $defaultMaediVisnaStatus = MaediVisnaStatus::UNDER_OBSERVATION;
-            $defaultScrapieStatus = ScrapieStatus::UNDER_OBSERVATION;
-
-            $this->setCurrentMaediVisnaStatus($defaultMaediVisnaStatus);
-            $this->setCurrentScrapieStatus($defaultScrapieStatus);
-
-            $scrapie = new Scrapie($defaultScrapieStatus);
-            $scrapie->setCheckDate($checkDate);
-
-            $maediVisna = new MaediVisna($defaultMaediVisnaStatus);
-            $maediVisna->setCheckDate($checkDate);
-
-            $this->addScrapie($scrapie);
-            $this->addMaediVisna($maediVisna);
-            $scrapie->setLocationHealth($this);
-            $maediVisna->setLocationHealth($this);
-        }
     }
 
     /**
@@ -640,6 +618,45 @@ class LocationHealth
      */
     public function getAnimalHealthSubscription()
     {
-        return $this->getLocation() ? $this->getLocation()->getAnimalHealthSubscription() : false;
+        return $this->getLocation() && $this->getLocation()->getAnimalHealthSubscription();
+    }
+
+
+    /**
+     * @param DateTime $checkDate
+     * @param string $status
+     */
+    public function createDefaultMaediVisna(\DateTime $checkDate, string $status = MaediVisnaStatus::UNDER_OBSERVATION)
+    {
+        $maediVisna = new MaediVisna($status);
+        $maediVisna->setCheckDate($checkDate);
+        $maediVisna->setLocationHealth($this);
+
+        $this->addMaediVisna($maediVisna);
+        $this->setCurrentMaediVisnaStatus($status);
+    }
+
+
+    /**
+     * @param DateTime $checkDate
+     * @param string $status
+     */
+    public function createDefaultScrapie(\DateTime $checkDate, string $status = ScrapieStatus::UNDER_OBSERVATION)
+    {
+        $scrapie = new Scrapie($status);
+        $scrapie->setCheckDate($checkDate);
+        $scrapie->setLocationHealth($this);
+
+        $this->addScrapie($scrapie);
+        $this->setCurrentScrapieStatus($status);
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function hasNonBlankScrapieStatus(): bool
+    {
+        return $this->getCurrentScrapieStatus() !== ScrapieStatus::BLANK && $this->currentScrapieStatus !== null;
     }
 }

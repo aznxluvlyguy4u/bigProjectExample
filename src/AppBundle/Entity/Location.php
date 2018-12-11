@@ -366,6 +366,23 @@ class Location
         return $this->getOwner() !== null || count($this->getCompanyUsers()) > 0;
     }
 
+
+    /**
+     * @var ResultTableAnimalCounts|null
+     * @ORM\OneToOne(targetEntity="ResultTableAnimalCounts", mappedBy="location", cascade={"persist", "remove"})
+     * @JMS\Type("AppBundle\Entity\ResultTableAnimalCounts")
+     */
+    private $resultTableAnimalCounts;
+
+    /**
+     * @var ArrayCollection|AnimalRelocation[]
+     *
+     * @ORM\OneToMany(targetEntity="AnimalRelocation", mappedBy="location", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalRelocation>")
+     */
+    private $animalRelocations;
+
+
     /**
     * Constructor
     */
@@ -390,6 +407,7 @@ class Location
     $this->treatments = new ArrayCollection();
     $this->pedigreeRegisterRegistrations = new ArrayCollection();
     $this->workers = new ArrayCollection();
+    $this->animalRelocations = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 
@@ -1214,7 +1232,7 @@ class Location
      */
     public function getAnimalHealthSubscription()
     {
-        return $this->company ? $this->company->getAnimalHealthSubscription() : false;
+        return $this->company && $this->company->getAnimalHealthSubscription();
     }
 
 
@@ -1227,6 +1245,15 @@ class Location
             return $this->getAddress()->isDutchAddress();
         }
         return Address::IS_DUTCH_COUNTRY_DEFAULT_BOOLEAN;
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function hasNonBlankScrapieStatus(): bool
+    {
+        return $this->getLocationHealth() && $this->getLocationHealth()->hasNonBlankScrapieStatus();
     }
 
 
@@ -1251,4 +1278,42 @@ class Location
         $companyName = $this->getCompany() ? $this->getCompany()->getCompanyName() : null;
         return $returnEmptyStringAsNull && empty($companyName) ? null : $companyName;
     }
+
+    /**
+     * @return ResultTableAnimalCounts|null
+     */
+    public function getResultTableAnimalCounts(): ?ResultTableAnimalCounts
+    {
+        return $this->resultTableAnimalCounts;
+    }
+
+    /**
+     * @param ResultTableAnimalCounts|null $resultTableAnimalCounts
+     * @return Location
+     */
+    public function setResultTableAnimalCounts(?ResultTableAnimalCounts $resultTableAnimalCounts): Location
+    {
+        $this->resultTableAnimalCounts = $resultTableAnimalCounts;
+        return $this;
+    }
+
+    /**
+     * @return AnimalRelocation[]|ArrayCollection
+     */
+    public function getAnimalRelocations()
+    {
+        return $this->animalRelocations;
+    }
+
+    /**
+     * @param AnimalRelocation[]|ArrayCollection $animalRelocations
+     * @return Location
+     */
+    public function setAnimalRelocations($animalRelocations)
+    {
+        $this->animalRelocations = $animalRelocations;
+        return $this;
+    }
+
+
 }

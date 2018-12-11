@@ -20,7 +20,7 @@ class Exterior extends Measurement
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 2)
+     * @Assert\Length(max = 3)
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "USER_MEASUREMENT"

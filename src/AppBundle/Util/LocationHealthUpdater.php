@@ -6,17 +6,22 @@ use AppBundle\Component\LocationHealthMessageBuilder;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\HealthCheckTask;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\MaediVisna;
+use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
+use AppBundle\Exception\InvalidSwitchCaseException;
 use AppBundle\Service\EmailService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Monolog\Logger;
 
 //TODO Nothing is done with the endDates yet.
 
@@ -30,11 +35,14 @@ class LocationHealthUpdater
     private $em;
     /** @var EmailService */
     private $emailService;
+    /** @var Logger */
+    private $logger;
 
-    public function __construct(EntityManagerInterface $em, EmailService $emailService)
+    public function __construct(EntityManagerInterface $em, EmailService $emailService, Logger $logger)
     {
         $this->em = $em;
         $this->emailService = $emailService;
+        $this->logger = $logger;
     }
 
 
@@ -44,6 +52,7 @@ class LocationHealthUpdater
      * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @param boolean $createLocationHealthMessage
      * @return DeclareArrival
+     * @throws InvalidSwitchCaseException
      */
     public function updateByGivenUbnOfOrigin(Location $locationOfDestination,
                                              DeclareArrival $declareArrival,
@@ -55,7 +64,7 @@ class LocationHealthUpdater
         $checkDate = $declareArrival->getArrivalDate();
 
         $locationOfOrigin = $this->em->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubnPreviousOwner);
-        return self::updateByGivenLocationOfOrigin($declareArrival ,$locationOfDestination, $checkDate,
+        return $this->updateByGivenLocationOfOrigin($declareArrival ,$locationOfDestination, $checkDate,
             $isDeclareInBase, $locationOfOrigin, $createLocationHealthMessage);
     }
 
@@ -66,6 +75,7 @@ class LocationHealthUpdater
      * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @param boolean $createLocationHealthMessage
      * @return DeclareImport
+     * @throws InvalidSwitchCaseException
      */
     public function updateWithoutOriginHealthData(Location $locationOfDestination,
                                                   DeclareImport $declareImport,
@@ -74,42 +84,68 @@ class LocationHealthUpdater
     )
     {
         $checkDate = $declareImport->getImportDate();
-        return self::updateByGivenLocationOfOrigin($declareImport, $locationOfDestination, $checkDate,
+        return $this->updateByGivenLocationOfOrigin($declareImport, $locationOfDestination, $checkDate,
             $isDeclareInBase, null, $createLocationHealthMessage);
     }
 
 
+    /**
+     * @param HealthCheckTask $healthCheckTask
+     * @throws InvalidSwitchCaseException
+     */
+    public function updateByHealthCheckTaskFromRvoSync(HealthCheckTask $healthCheckTask)
+    {
+        $destinationLocation = $healthCheckTask->getDestinationLocation();
+        if (LocationHealthUpdater::checkHealthStatus($destinationLocation)) {
+            $this->updateByGivenLocationOfOrigin($healthCheckTask,
+                $destinationLocation, $healthCheckTask->getSyncDate(),
+                true,null,true);
+        } else {
+            $this->logger->warning('No health checks will be done for UBN: ' . $destinationLocation->getUbn());
+            $this->logger->warning('Health check task will not be processed');
+        }
+    }
+
 
     /**
+     * @param DeclareArrival|DeclareImport|HealthCheckTask $declareInOrHealthCheckTask
      * @param Location $locationOfDestination
-     * @param DeclareArrival|DeclareImport $declareIn
      * @param \DateTime $checkDate
-     * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
-     * @param Location $locationOfOrigin
-     * @param boolean $createLocationHealthMessage
-     * @return DeclareArrival|DeclareImport
+     * @param Location|null $locationOfOrigin
+     * @param bool $recheckLocationHealthNullCheck used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
+     * @param bool $createLocationHealthMessage
+     * @return  DeclareArrival|DeclareImport|HealthCheckTask
+     * @throws InvalidSwitchCaseException
      */
-    private function updateByGivenLocationOfOrigin($declareIn,
+    private function updateByGivenLocationOfOrigin($declareInOrHealthCheckTask,
                                                    Location $locationOfDestination,
                                                    \DateTime $checkDate,
-                                                   $isDeclareInBase,
-                                                   $locationOfOrigin,
-                                                   $createLocationHealthMessage
+                                                   bool $recheckLocationHealthNullCheck,
+                                                   ?Location $locationOfOrigin,
+                                                   bool $createLocationHealthMessage
     )
     {
         $checkDate = TimeUtil::getDayOfDateTime($checkDate);
+        $includeMaediVisna = LocationHealthUpdater::checkMaediVisnaStatus($locationOfDestination);
+        $includeScrapie = LocationHealthUpdater::checkScrapieStatus($locationOfDestination);
+
+        $this->logger->debug(($includeMaediVisna ? '' : 'NOT ') . 'Health checking MAEDI VISNA');
+        $this->logger->debug(($includeScrapie ? '' : 'NOT ') . 'Health checking SCRAPIE');
 
         //Initializing the locationHealth if necessary. This is a fail safe. All locations should be created with their own locationHealth.
-        $locationOfDestination = $this->persistInitialLocationHealthIfNull($locationOfDestination, $checkDate);
+        $locationOfDestination = $this->persistInitialLocationHealthIfNull($locationOfDestination, $checkDate,
+            $includeMaediVisna, $includeScrapie);
 
+        $locationHealthMessage = null;
         if ($createLocationHealthMessage) {
             //Persist a new LocationHealthMessage for declareIn, without the healthValues
-            self::persistNewLocationHealthMessage($declareIn);
+            $locationHealthMessage = self::persistNewLocationHealthMessage($declareInOrHealthCheckTask);
         }
 
-        if($isDeclareInBase) {
+        if($recheckLocationHealthNullCheck) {
             //Redo the null check in case all illnesses are made hidden
-            $locationOfDestination = $this->persistInitialLocationHealthIfNull($locationOfDestination, $checkDate);
+            $locationOfDestination = $this->persistInitialLocationHealthIfNull($locationOfDestination, $checkDate,
+                $includeMaediVisna, $includeScrapie);
         }
 
         //Get the latest values
@@ -132,11 +168,13 @@ class LocationHealthUpdater
 
         if($locationOfOrigin == null) { //an import or Location that is not in our NSFO database
 
-            if(!$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
+            if ($includeMaediVisna &&
+                !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
                 $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
-            if(!$previousScrapieDestination->isStatusBlank() && $previousScrapieDestinationIsHealthy){
+            if ($includeScrapie &&
+                !$previousScrapieDestination->isStatusBlank() && $previousScrapieDestinationIsHealthy){
                 $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
@@ -147,28 +185,32 @@ class LocationHealthUpdater
 
             $locationHealthOrigin = $locationOfOrigin->getLocationHealth();
 
-            $maediVisnaOrigin = Finder::findLatestActiveMaediVisna($locationOfOrigin, $this->em);
-            if($maediVisnaOrigin != null) {
-                $maediVisnaOriginIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaOrigin->getStatus());
-            } else {
-                $maediVisnaOriginIsHealthy = false;
+            if ($includeMaediVisna) {
+
+                $maediVisnaOrigin = Finder::findLatestActiveMaediVisna($locationOfOrigin, $this->em);
+                if($maediVisnaOrigin != null) {
+                    $maediVisnaOriginIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaOrigin->getStatus());
+                } else {
+                    $maediVisnaOriginIsHealthy = false;
+                }
+
+                if(!$maediVisnaOriginIsHealthy && !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
+                    $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
+                } //else do nothing
             }
 
-            $scrapieOrigin = Finder::findLatestActiveScrapie($locationOfOrigin, $this->em);
-            if($scrapieOrigin != null) {
-                $scrapieOriginIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieOrigin->getStatus());
-            } else {
-                $scrapieOriginIsHealthy = false;
+            if ($includeScrapie) {
+                $scrapieOrigin = Finder::findLatestActiveScrapie($locationOfOrigin, $this->em);
+                if($scrapieOrigin != null) {
+                    $scrapieOriginIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieOrigin->getStatus());
+                } else {
+                    $scrapieOriginIsHealthy = false;
+                }
+
+                if(!$scrapieOriginIsHealthy && !$previousScrapieDestination->isStatusBlank() && $previousScrapieDestinationIsHealthy) {
+                    $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
+                } //else do nothing
             }
-
-
-            if(!$maediVisnaOriginIsHealthy && !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
-                $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
-            } //else do nothing
-
-            if(!$scrapieOriginIsHealthy && !$previousScrapieDestination->isStatusBlank() && $previousScrapieDestinationIsHealthy) {
-                $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
-            } //else do nothing
 
             $this->persistTheOverallLocationHealthStatus($locationOfOrigin); //FIXME see function
         }
@@ -184,28 +226,40 @@ class LocationHealthUpdater
             /* The LocationHealthMessage contains the LocationHealth history
                 and must be calculated AFTER the locationHealth has been updated.
             */
-            $this->finalizeLocationHealthMessage($declareIn, $locationHealthDestination, $locationHealthOrigin, $illnesses);
+            $this->finalizeLocationHealthMessage($locationHealthMessage,
+                $locationHealthDestination, $locationHealthOrigin, $illnesses,
+                $includeMaediVisna, $includeScrapie);
         }
 
-        return $declareIn;
+        return $declareInOrHealthCheckTask;
     }
 
+
     /**
-     * @param DeclareArrival|DeclareImport $messageObject
+     * @param DeclareArrival|DeclareImport|HealthCheckTask $messageObject
+     * @return LocationHealthMessage
+     * @throws InvalidSwitchCaseException
      */
     private function persistNewLocationHealthMessage($messageObject)
     {
         $locationHealthMessage = LocationHealthMessageBuilder::prepare($messageObject);
-        $location = $messageObject->getLocation();
 
         //Set LocationHealthMessage relationships
-        $messageObject->setHealthMessage($locationHealthMessage);
+        if ($messageObject instanceof HealthCheckTask) {
+            $location = $messageObject->getDestinationLocation();
+        } else {
+            $location = $messageObject->getLocation();
+            $messageObject->setHealthMessage($locationHealthMessage);
+        }
+
         $location->addHealthMessage($locationHealthMessage);
 
         //Persist LocationHealthMessage
         $this->em->persist($location);
         $this->em->persist($locationHealthMessage);
         $this->em->flush();
+
+        return $locationHealthMessage;
     }
 
     private function persistNewIllnessesOfLocationIfLatestAreNull(Location $locationOfDestination, \DateTime $checkDate)
@@ -226,21 +280,30 @@ class LocationHealthUpdater
     }
 
     /**
-     * @param DeclareArrival|DeclareImport $messageObject
+     * @param LocationHealthMessage $locationHealthMessage
      * @param LocationHealth $locationHealthDestination
      * @param LocationHealth $locationHealthOrigin
+     * @param bool $includeMaediVisna
+     * @param bool $includeScrapie
      * @param ArrayCollection $illnesses
      */
-    private function finalizeLocationHealthMessage($messageObject, $locationHealthDestination, $locationHealthOrigin, $illnesses)
+    private function finalizeLocationHealthMessage(LocationHealthMessage $locationHealthMessage,
+                                                   $locationHealthDestination, $locationHealthOrigin, $illnesses,
+                                                   bool $includeMaediVisna = true, bool $includeScrapie = true)
     {
-        $locationHealthMessage = LocationHealthMessageBuilder::finalize($messageObject, $illnesses, $locationHealthDestination, $locationHealthOrigin);
+        $locationHealthMessage = LocationHealthMessageBuilder::finalize($locationHealthMessage,
+            $illnesses, $locationHealthDestination, $locationHealthOrigin, $includeMaediVisna, $includeScrapie);
 
         //Persist LocationHealthMessage
         $this->em->persist($locationHealthMessage);
         $this->em->flush();
 
         if ($locationHealthMessage->getCheckForMaediVisna() || $locationHealthMessage->getCheckForScrapie()) {
-            $this->emailService->sendPossibleSickAnimalArrivalNotificationEmail($locationHealthMessage);
+            $this->logger->debug('Sending health check notification ...');
+            $sentEmail = $this->emailService->sendPossibleSickAnimalArrivalNotificationEmail($locationHealthMessage);
+            $this->logger->debug(($sentEmail ? 'Email sent!' : 'FAILED sending email'));
+        } else {
+            $this->logger->debug('No  health check notification email is needed. Email not sent.');
         }
     }
 
@@ -248,13 +311,25 @@ class LocationHealthUpdater
      * @param EntityManagerInterface $em
      * @param Location $location
      * @param \DateTime $checkDate
+     * @param bool $createDefaultMaediVisna
+     * @param bool $createDefaultScrapie
      * @return Location
      */
-    public static function persistNewLocationHealthWithInitialValues(EntityManagerInterface $em, Location $location, $checkDate)
+    public static function persistNewLocationHealthWithInitialValues(EntityManagerInterface $em, Location $location,
+                                                                     $checkDate,
+                                                                     bool $createDefaultMaediVisna = true,
+                                                                     bool $createDefaultScrapie = true
+    )
     {
-        //Create a LocationHealth with a MaediVisna and Scrapie with all statusses set to Under Observation
-        $createWithDefaultUnderObservationIllnesses = true;
-        $locationHealth = new LocationHealth($createWithDefaultUnderObservationIllnesses, $checkDate);
+        //Create a LocationHealth with a MaediVisna and Scrapie with all statuses set to Under Observation
+        $locationHealth = new LocationHealth();
+        if ($createDefaultMaediVisna) {
+            $locationHealth->createDefaultMaediVisna($checkDate);
+        }
+        if ($createDefaultScrapie) {
+            $locationHealth->createDefaultScrapie($checkDate);
+        }
+
         $location->setLocationHealth($locationHealth);
         $locationHealth->setLocation($location);
 
@@ -326,9 +401,14 @@ class LocationHealthUpdater
      *
      * @param Location $locationOfDestination
      * @param \DateTime $checkDate
+     * @param bool $includeMaediVisna
+     * @param bool $includeScrapie
      * @return Location
      */
-    private function persistInitialLocationHealthIfNull(Location $locationOfDestination, $checkDate)
+    private function persistInitialLocationHealthIfNull(Location $locationOfDestination, $checkDate,
+                                                        bool $includeMaediVisna = true,
+                                                        bool $includeScrapie = true
+    )
     {
         if($locationOfDestination == null) {
             return null;
@@ -337,18 +417,23 @@ class LocationHealthUpdater
         $locationHealthDestination = $locationOfDestination->getLocationHealth();
 
         if($locationHealthDestination == null) {
-            self::persistNewLocationHealthWithInitialValues($this->em, $locationOfDestination, $checkDate);
+            self::persistNewLocationHealthWithInitialValues($this->em, $locationOfDestination, $checkDate,
+                $includeMaediVisna, $includeScrapie);
 
         } else {
 
-            $maediVisnaDestination = Finder::findLatestActiveMaediVisna($locationOfDestination, $this->em);
-            if ($maediVisnaDestination == null) {
-                $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
+            if ($includeMaediVisna) {
+                $maediVisnaDestination = Finder::findLatestActiveMaediVisna($locationOfDestination, $this->em);
+                if ($maediVisnaDestination == null) {
+                    $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
+                }
             }
 
-            $scrapieDestination = Finder::findLatestActiveScrapie($locationOfDestination, $this->em);
-            if ($scrapieDestination == null) {
-                $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
+            if ($includeScrapie) {
+                $scrapieDestination = Finder::findLatestActiveScrapie($locationOfDestination, $this->em);
+                if ($scrapieDestination == null) {
+                    $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
+                }
             }
         }
 
@@ -429,4 +514,41 @@ class LocationHealthUpdater
     }
 
 
+    /**
+     * @param Location $location
+     * @return bool
+     */
+    public static function checkHealthStatus(Location $location): bool
+    {
+        // TODO only set this to true after testing and verification
+        $alsoCheckOnlyScrapieIfNoHealthSubscriptionButHasNonBlankScrapieStatus = false;
+
+        if (!$alsoCheckOnlyScrapieIfNoHealthSubscriptionButHasNonBlankScrapieStatus) {
+            return $location->getAnimalHealthSubscription();
+        }
+
+        return self::checkMaediVisnaStatus($location)
+            || self::checkScrapieStatus($location)
+            ;
+    }
+
+
+    /**
+     * @param Location $location
+     * @return bool
+     */
+    public static function checkMaediVisnaStatus(Location $location): bool
+    {
+        return $location->getAnimalHealthSubscription();
+    }
+
+
+    /**
+     * @param Location $location
+     * @return bool
+     */
+    public static function checkScrapieStatus(Location $location): bool
+    {
+        return $location->getAnimalHealthSubscription() || $location->hasNonBlankScrapieStatus();
+    }
 }

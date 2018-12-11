@@ -6,12 +6,14 @@ namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\HealthCheckTask;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Enumerator\LocationHealthStatus;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\ScrapieStatus;
+use AppBundle\Exception\InvalidSwitchCaseException;
 use AppBundle\Util\HealthChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -19,11 +21,16 @@ use Doctrine\Common\Persistence\ObjectManager;
 class LocationHealthMessageBuilder
 {
     /**
-     * @param DeclareArrival|DeclareImport $declareIn
+     * @param DeclareArrival|DeclareImport|HealthCheckTask $declareIn
      * @return LocationHealthMessage
+     * @throws InvalidSwitchCaseException
      */
     public static function prepare($declareIn)
     {
+        if ($declareIn instanceof HealthCheckTask) {
+            return self::prepareByHealthCheckTask($declareIn);
+        }
+
         $location = $declareIn->getLocation();
 
         $healthMessage = new LocationHealthMessage();
@@ -51,23 +58,49 @@ class LocationHealthMessageBuilder
                 break;
 
             default:
+                throw new InvalidSwitchCaseException('type: RequestType, input: '.$declareType . ' allowed: '
+                    . implode(',', [RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_IMPORT_ENTITY]));
                 break;
         }
 
         return $healthMessage;
     }
 
+
+    private static function prepareByHealthCheckTask(HealthCheckTask $task)
+    {
+        $healthMessage = new LocationHealthMessage();
+        $healthMessage->setLocation($task->getDestinationLocation());
+        $healthMessage->setUbnNewOwner($task->getDestinationUbn());
+        $healthMessage->setUlnCountryCode($task->getUlnCountryCode());
+        $healthMessage->setUlnNumber($task->getUlnNumber());
+
+        $healthMessage->setReasonOfHealthStatusDemotion(
+            Utils::getClassName($task->getRetrieveAnimals())
+        );
+
+        $healthMessage->setArrivalDate($task->getArrivalDate());
+        $healthMessage->setSyncDate($task->getSyncDate());
+
+        return $healthMessage;
+    }
+
+
     /**
-     * @param DeclareArrival|DeclareImport $declareIn
+     * @param LocationHealthMessage $healthMessage
      * @param ArrayCollection $illnesses
      * @param LocationHealth $locationHealthDestination
      * @param LocationHealth|null $locationHealthOrigin
+     * @param bool $includeMaediVisna
+     * @param bool $includeScrapie
      * @return LocationHealthMessage
      */
-    public static function finalize($declareIn, ArrayCollection $illnesses, LocationHealth $locationHealthDestination, LocationHealth $locationHealthOrigin = null)
+    public static function finalize(LocationHealthMessage $healthMessage,
+                                    ArrayCollection $illnesses,
+                                    LocationHealth $locationHealthDestination,
+                                    LocationHealth $locationHealthOrigin = null,
+                                    bool $includeMaediVisna = true, bool $includeScrapie = true)
     {
-        $healthMessage = $declareIn->getHealthMessage();
-
         //Set Illnesses
         $healthMessage->setMaediVisna($illnesses->get(Constant::MAEDI_VISNA));
         $healthMessage->setScrapie($illnesses->get(Constant::SCRAPIE));
@@ -89,20 +122,30 @@ class LocationHealthMessageBuilder
         $healthMessage->setOriginMaediVisnaStatus($maediVisnaStatusOrigin);
         $healthMessage->setOriginScrapieStatus($scrapieStatusOrigin);
 
-        $isMaediVisnaStatusOriginHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaStatusOrigin);
-        $isScrapieStatusOriginHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieStatusOrigin);
-
         //Set illness  booleans
-        if($isMaediVisnaStatusOriginHealthy || $maediVisnaStatusDestination === MaediVisnaStatus::BLANK) {
-            $healthMessage->setCheckForMaediVisna(false);
-        } else {
-            $healthMessage->setCheckForMaediVisna(true);
+        $healthMessage->setCheckForMaediVisna(false);
+        $healthMessage->setCheckForScrapie(false);
+
+        if ($includeMaediVisna) {
+            $isMaediVisnaStatusOriginHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaStatusOrigin);
+            $healthMessage->setCheckForMaediVisna(
+                !$isMaediVisnaStatusOriginHealthy &&
+                (
+                    $maediVisnaStatusDestination !== MaediVisnaStatus::BLANK &&
+                    $maediVisnaStatusDestination !== null
+                )
+            );
         }
 
-        if($isScrapieStatusOriginHealthy || $scrapieStatusDestination === ScrapieStatus::BLANK) {
-            $healthMessage->setCheckForScrapie(false);
-        } else {
-            $healthMessage->setCheckForScrapie(true);
+        if ($includeScrapie) {
+            $isScrapieStatusOriginHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieStatusOrigin);
+            $healthMessage->setCheckForScrapie(
+                !$isScrapieStatusOriginHealthy &&
+                (
+                    $scrapieStatusDestination !== ScrapieStatus::BLANK &&
+                    $scrapieStatusDestination !== null
+                )
+            );
         }
 
         return $healthMessage;

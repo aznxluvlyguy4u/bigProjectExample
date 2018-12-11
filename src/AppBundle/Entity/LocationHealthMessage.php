@@ -213,6 +213,14 @@ class LocationHealthMessage
     private $arrivalDate;
 
     /**
+     * @var \DateTime|null
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $syncDate;
+
+    /**
      * @ORM\ManyToOne(targetEntity="MaediVisna", fetch="EAGER")
      * @ORM\JoinColumn(name="maedi_visna_id", referencedColumnName="id")
      */
@@ -242,6 +250,8 @@ class LocationHealthMessage
     public function __construct()
     {
         $this->setLogDate(new \DateTime('now'));
+        $this->checkForMaediVisna = false;
+        $this->checkForScrapie = false;
     }
 
 
@@ -802,6 +812,26 @@ class LocationHealthMessage
     {
         $this->footRot = $footRot;
     }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getSyncDate(): ?\DateTime
+    {
+        return $this->syncDate;
+    }
+
+    /**
+     * @param \DateTime|null $syncDate
+     * @return LocationHealthMessage
+     */
+    public function setSyncDate(?\DateTime $syncDate): LocationHealthMessage
+    {
+        $this->syncDate = $syncDate;
+        return $this;
+    }
+
+
 
 
 

@@ -112,7 +112,8 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 		 */
     public function createAnimal(Request $request)
     {
-        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
+        $actionBy = $this->getUser();
+        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN)) {
             return AdminValidator::getStandardErrorResponse();
         }
 
@@ -201,6 +202,12 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         catch(\Exception $e) {
             $this->logExceptionAsError($e);
             return ResultUtil::errorResult('INTERNAL SERVER ERROR', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        try {
+            AdminActionLogWriter::createAnimal($this->getManager(), $actionBy, $newAnimal, $request->getContent());
+        } catch (\Exception $t) {
+            $this->logExceptionAsError($t);
         }
 
         if ($newAnimal->getLocation()) {
@@ -821,7 +828,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $this->sleepIfInternalQueueIsTooFull($maxInternalQueueSize);
 
             $counter++;
-            if (!$location->getIsActive() && !$location->getCompany()->isActive()) {
+            if (
+                (!$location->getIsActive() && !$location->getCompany()->isActive()) ||
+                !$location->isDutchLocation()
+            ) {
                 continue;
             }
 

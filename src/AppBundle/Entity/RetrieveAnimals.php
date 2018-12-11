@@ -4,8 +4,10 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Traits\EntityClassInfo;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
+use Proxies\__CG__\AppBundle\Entity\AnimalRelocation;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -16,7 +18,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveAnimalsRepository")
  * @package AppBundle\Entity
  */
-class RetrieveAnimals
+class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
 {
     use EntityClassInfo;
 
@@ -137,6 +139,14 @@ class RetrieveAnimals
     private $actionBy;
 
     /**
+     * @var ArrayCollection|AnimalRelocation[]
+     *
+     * @ORM\OneToMany(targetEntity="AnimalRelocation", mappedBy="retrieveAnimals", cascade={"persist"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalRemoval>")
+     */
+    private $animalRemovals;
+
+    /**
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @Assert\NotBlank
@@ -205,6 +215,7 @@ class RetrieveAnimals
         $this->logDate = new \DateTime();
         $this->animalType = AnimalType::sheep;
         $this->isRvoLeading = false;
+        $this->animalRemovals = new ArrayCollection();
     }
 
     /**
@@ -222,7 +233,7 @@ class RetrieveAnimals
      *
      * @param \DateTime $logDate
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setLogDate($logDate)
     {
@@ -246,7 +257,7 @@ class RetrieveAnimals
      *
      * @param string $requestId
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setRequestId($requestId)
     {
@@ -271,7 +282,7 @@ class RetrieveAnimals
      *
      * @param string $messageId
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setMessageId($messageId)
     {
@@ -295,7 +306,7 @@ class RetrieveAnimals
      *
      * @param string $requestState
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setRequestState($requestState)
     {
@@ -319,7 +330,7 @@ class RetrieveAnimals
      *
      * @param string $relationNumberKeeper
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setRelationNumberKeeper($relationNumberKeeper)
     {
@@ -343,7 +354,7 @@ class RetrieveAnimals
      *
      * @param string $ubn
      *
-     * @return DeclareBase
+     * @return RetrieveAnimals
      */
     public function setUbn($ubn)
     {
@@ -535,6 +546,24 @@ class RetrieveAnimals
     public function setRemovedAnimalsCount($removedAnimalsCount)
     {
         $this->removedAnimalsCount = $removedAnimalsCount;
+        return $this;
+    }
+
+    /**
+     * @return AnimalRelocation[]|ArrayCollection
+     */
+    public function getAnimalRemovals()
+    {
+        return $this->animalRemovals;
+    }
+
+    /**
+     * @param AnimalRelocation[]|ArrayCollection $animalRemovals
+     * @return RetrieveAnimals
+     */
+    public function setAnimalRemovals($animalRemovals)
+    {
+        $this->animalRemovals = $animalRemovals;
         return $this;
     }
 

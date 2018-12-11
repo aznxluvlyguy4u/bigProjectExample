@@ -22,6 +22,7 @@ use AppBundle\Enumerator\Country;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
+use AppBundle\Enumerator\ProcessType;
 use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
@@ -31,6 +32,7 @@ use AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator;
 use AppBundle\Service\Migration\WormResistanceIndexMigrator;
 use AppBundle\Service\MixBlupInputFilesService;
 use AppBundle\Service\MixBlupOutputFilesService;
+use AppBundle\Service\ProcessLockerInterface;
 use AppBundle\Service\Report\BreedValuesOverviewReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
 use AppBundle\Util\ActionLogWriter;
@@ -158,6 +160,8 @@ class NsfoMainCommand extends ContainerAwareCommand
             '12: '.strtolower(CommandTitle::DEPART_INTERNAL_WORKER), "\n",
             '-----------------------------------------------', "\n",
             '13: '.strtolower(CommandTitle::CALCULATIONS_AND_ALGORITHMS), "\n",
+            '-----------------------------------------------', "\n",
+            '14: '.strtolower(CommandTitle::PROCESS_LOCKER), "\n",
             '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
@@ -177,6 +181,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 11: $this->runMixblupCliOptions($this->cmdUtil); break;
             case 12: $this->getContainer()->get('app.cli.internal_worker.depart')->run($this->cmdUtil); break;
             case 13: $this->calculationsAndAlgorithmsOptions(); break;
+            case 14: $this->processLockerOptions(); break;
 
             default: return;
         }
@@ -927,7 +932,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
     public function calculationsAndAlgorithmsOptions()
     {
-        $this->initializeMenu(self::LITTER_GENE_DIVERSITY_TITLE);
+        $this->initializeMenu(CommandTitle::CALCULATIONS_AND_ALGORITHMS);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
@@ -1003,6 +1008,57 @@ class NsfoMainCommand extends ContainerAwareCommand
         }
     }
 
+
+    public function processLockerOptions()
+    {
+        $this->initializeMenu(CommandTitle::PROCESS_LOCKER);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '1: Display all processes', "\n",
+            '2: Unlock  all processes', "\n",
+            '3: Display feedback worker processes', "\n",
+            '4: Unlock  feedback worker processes', "\n",
+            "\n",
+            'other: exit submenu', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+            case 1: $this->displayAllLockedProcesses(); break;
+            case 2: $this->unlockAllProcesses(); break;
+            case 3: $this->displayLockedProcesses(ProcessType::SQS_FEEDBACK_WORKER); break;
+            case 4: $this->unlockWorkerProcesses(ProcessType::SQS_FEEDBACK_WORKER); break;
+            default: $this->writeLn('Exit menu'); return;
+        }
+        $this->processLockerOptions();
+    }
+
+    private function displayAllLockedProcesses()
+    {
+        foreach (ProcessType::getConstants() as $processTypeKey => $processType) {
+            $this->displayLockedProcesses($processType);
+        }
+    }
+
+    private function displayLockedProcesses($processType)
+    {
+        $this->getProcessLocker()->initializeProcessGroupValues($processType);
+        $this->getProcessLocker()->getProcessesCount($processType, true);
+    }
+
+    private function unlockAllProcesses()
+    {
+        foreach (ProcessType::getConstants() as $processType) {
+            $this->unlockWorkerProcesses($processType);
+        }
+    }
+
+    private function unlockWorkerProcesses($processType)
+    {
+        $this->getProcessLocker()->initializeProcessGroupValues($processType);
+        $this->getProcessLocker()->getProcessesCount($processType, true);
+        $this->getProcessLocker()->removeAllProcessesOfGroup($processType);
+    }
 
     private function writeLn($line)
     {
@@ -1127,5 +1183,13 @@ class NsfoMainCommand extends ContainerAwareCommand
     public function getBreedValuesResultTableUpdater()
     {
         return $this->getContainer()->get('AppBundle\Cache\BreedValuesResultTableUpdater');
+    }
+
+    /**
+     * @return ProcessLockerInterface
+     */
+    public function getProcessLocker()
+    {
+        return $this->getContainer()->get('AppBundle\Service\ProcessLocker');
     }
 }

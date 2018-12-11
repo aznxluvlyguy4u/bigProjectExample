@@ -12,6 +12,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\VwaEmployee;
+use AppBundle\Enumerator\RequestType;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -325,15 +326,31 @@ class EmailService
         }
 
         $subjectHeaderData = ' ['.$locationHealthMessage->getUln().', ';
-        if ($locationHealthMessage->getReasonOfHealthStatusDemotion() === 'DeclareArrival') {
-            $arrivalVerbType = 'aangevoerd';
-            $senderInfo = ' van UBN '.$locationHealthMessage->getUbnPreviousOwner();
-            $subjectHeaderData = $subjectHeaderData .'Aanvoer: UBN '.$locationHealthMessage->getUbnPreviousOwner();
-        } else {
-            $arrivalVerbType = 'geimporteerd';
-            $senderInfo = ' vanuit land '.$locationHealthMessage->getAnimalCountryOrigin();
-            $subjectHeaderData = $subjectHeaderData .'Import: '.$locationHealthMessage->getAnimalCountryOrigin();
-        } $locationHealthMessage->getUbnPreviousOwner();
+
+        switch ($locationHealthMessage->getReasonOfHealthStatusDemotion()) {
+            case RequestType::DECLARE_ARRIVAL_ENTITY:
+                $arrivalVerbType = 'aangevoerd';
+                $senderInfo = ' van UBN ' . $locationHealthMessage->getUbnPreviousOwner();
+                $subjectHeaderData = $subjectHeaderData . 'Aanvoer: UBN ' . $locationHealthMessage->getUbnPreviousOwner();
+                break;
+
+            case RequestType::DECLARE_IMPORT_ENTITY:
+                $arrivalVerbType = 'geimporteerd';
+                $senderInfo = ' vanuit land ' . $locationHealthMessage->getAnimalCountryOrigin();
+                $subjectHeaderData = $subjectHeaderData . 'Import: ' . $locationHealthMessage->getAnimalCountryOrigin();
+                break;
+
+            case RequestType::RETRIEVE_ANIMALS_ENTITY:
+                $arrivalVerbType = 'gesynchroniseerd';
+                $senderInfo = '';
+                $syncDate = $locationHealthMessage->getSyncDate();
+                $subjectHeaderData = $subjectHeaderData . 'Stallijst Sync'
+                    . ($syncDate ? ' op: ' . $syncDate->format(DATE_ISO8601) : '');
+                break;
+
+            default:
+                break;
+        }
 
         $subjectHeaderData = $subjectHeaderData .' => UBN '.$locationHealthMessage->getUbnNewOwner().']';
         $introMessage = 'Er is een dier '.$arrivalVerbType.' op ' . $locationHealthMessage->getUbnNewOwner() . $senderInfo . '.';

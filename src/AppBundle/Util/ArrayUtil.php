@@ -311,4 +311,18 @@ class ArrayUtil
     {
         return count(array_keys($haystack, $needle));
     }
+
+
+    /**
+     * @param $key
+     * @param $array
+     */
+    public static function reformatJsonDateValue($key, &$array)
+    {
+        $dateTime = new \DateTime();
+        $dateTime->format('U = ' . DateUtil::JSON_DATE_TIME_FORMAT);
+        $array[$key] = $array[$key] / 1000;
+        $dateTime->setTimestamp($array[$key]);
+        $array[$key] = $dateTime->format(DateUtil::JSON_DATE_TIME_FORMAT);
+    }
 }

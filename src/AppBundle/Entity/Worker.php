@@ -14,11 +14,13 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap(
  *   {
- *      "ReportWorker" = "ReportWorker"
+ *      "ReportWorker" = "ReportWorker",
+ *      "SqsCommandWorker" = "SqsCommandWorker"
  *   }
  * )
  * @JMS\Discriminator(field = "type", disabled=false, map = {
- *                      "ReportWorker" : "AppBundle\Entity\ReportWorker"
+ *                      "ReportWorker" : "AppBundle\Entity\ReportWorker",
+ *                      "SqsCommandWorker" : "AppBundle\Entity\SqsCommandWorker"
  *                      },
  *     groups = {
  *     "BASIC"

@@ -151,6 +151,14 @@ class Message
     private $creationDate;
 
     /**
+     * @var RetrieveAnimals
+     *
+     * @ORM\ManyToOne(targetEntity="RetrieveAnimals")
+     * @ORM\JoinColumn(name="retrieve_animals_id", referencedColumnName="id")
+     */
+    private $retrieveAnimals;
+
+    /**
      * Message constructor.
      */
     public function __construct()
@@ -384,6 +392,24 @@ class Message
     public function setCreationDate($creationDate)
     {
         $this->creationDate = $creationDate;
+    }
+
+    /**
+     * @return RetrieveAnimals|null
+     */
+    public function getRetrieveAnimals(): ?RetrieveAnimals
+    {
+        return $this->retrieveAnimals;
+    }
+
+    /**
+     * @param RetrieveAnimals|null $retrieveAnimals
+     * @return Message
+     */
+    public function setRetrieveAnimals(?RetrieveAnimals $retrieveAnimals): Message
+    {
+        $this->retrieveAnimals = $retrieveAnimals;
+        return $this;
     }
 
 
