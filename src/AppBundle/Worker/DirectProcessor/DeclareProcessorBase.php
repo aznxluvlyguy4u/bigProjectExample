@@ -246,16 +246,16 @@ class DeclareProcessorBase extends ControllerServiceBase
 
 
     /**
+     * NOTE! Set the Response on the message in the JAVA worker. Or else the
+     *
      * @param DeclareBase $declare
-     * @param DeclareBaseResponse $response
      */
-    protected function displayDeclareNotificationMessage(DeclareBase $declare, DeclareBaseResponse $response)
+    protected function displayDeclareNotificationMessage(DeclareBase $declare)
     {
         $message = $this->getManager()->getRepository(Message::class)
             ->findOneByRequest($declare);
         if ($message) {
             $message->setHidden(false);
-            $message->setResponseMessage($response);
             $this->getManager()->persist($message);
         }
     }

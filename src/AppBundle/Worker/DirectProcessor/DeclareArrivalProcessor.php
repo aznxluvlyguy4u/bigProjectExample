@@ -64,10 +64,10 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
-        $this->persistResponseInSeparateTransaction($this->response);
-
         $this->getManager()->persist($this->arrival);
         $this->getManager()->flush();
+
+        $this->persistResponseInSeparateTransaction($this->response);
 
         if ($this->clearCache) {
             $this->clearLivestockCacheForLocation($this->arrival->getLocation());
@@ -135,7 +135,7 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
 
         $this->getManager()->persist($this->animal);
 
-        $this->displayDeclareNotificationMessage($this->arrival, $this->response);
+        $this->displayDeclareNotificationMessage($this->arrival);
 
         $this->arrival->setFinishedRequestState();
         $this->clearCache = true;

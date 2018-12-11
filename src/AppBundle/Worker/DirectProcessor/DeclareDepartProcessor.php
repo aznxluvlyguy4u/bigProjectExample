@@ -64,10 +64,10 @@ class DeclareDepartProcessor extends DeclareProcessorBase implements DeclareDepa
             default: throw new PreconditionFailedHttpException('Invalid requestState: '.$status);
         }
 
-        $this->persistResponseInSeparateTransaction($this->response);
-
         $this->getManager()->persist($this->depart);
         $this->getManager()->flush();
+
+        $this->persistResponseInSeparateTransaction($this->response);
 
         if ($this->clearCache) {
             $this->clearLivestockCacheForLocation($this->depart->getLocation());
@@ -125,7 +125,7 @@ class DeclareDepartProcessor extends DeclareProcessorBase implements DeclareDepa
 
         $this->closeLastOpenAnimalResidence($this->animal, $this->depart->getLocation(), $this->depart->getDepartDate());
         $this->finalizeAnimalTransferAndAnimalResidenceDestination($this->animal, $this->destination);
-        $this->displayDeclareNotificationMessage($this->depart, $this->response);
+        $this->displayDeclareNotificationMessage($this->depart);
 
         $this->depart->setFinishedRequestState();
         $this->clearCache = true;
