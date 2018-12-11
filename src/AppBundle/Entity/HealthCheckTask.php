@@ -4,14 +4,11 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
-use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class HealthCheckTask
- *
- * @ORM\Entity(repositoryClass="AppBundle\Entity\HealthCheckTaskRepository")
  * @package AppBundle\Entity
  */
 class HealthCheckTask
@@ -20,16 +17,13 @@ class HealthCheckTask
 
     /**
      * @var integer
-     * @ORM\Column(type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
      */
     private $id;
 
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
@@ -38,7 +32,6 @@ class HealthCheckTask
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
@@ -47,7 +40,6 @@ class HealthCheckTask
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
@@ -55,8 +47,6 @@ class HealthCheckTask
 
     /**
      * @var string
-     *
-     * @ORM\Column(type="string")
      * @JMS\Type("string")
      */
     private $originUbn;
@@ -64,7 +54,6 @@ class HealthCheckTask
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
@@ -74,9 +63,6 @@ class HealthCheckTask
      * @var Location
      *
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Location")
-     * @ORM\JoinColumn(name="destination_location_id", referencedColumnName="id",
-     *     nullable = false, onDelete="CASCADE")
      * @JMS\Type("Location")
      */
     private $destinationLocation;
@@ -84,7 +70,6 @@ class HealthCheckTask
     /**
      * @var \DateTime
      *
-     * @ORM\Column(type="datetime", nullable=false)
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
@@ -94,7 +79,6 @@ class HealthCheckTask
     /**
      * @var \DateTime
      *
-     * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
      */
@@ -102,16 +86,12 @@ class HealthCheckTask
 
     /**
      * @var RetrieveAnimals|null
-     *
-     * @ORM\ManyToOne(targetEntity="RetrieveAnimals", fetch="LAZY")
-     * @ORM\JoinColumn(name="retrieve_animals_id", referencedColumnName="id", onDelete="set null")
      */
     private $retrieveAnimals;
 
     /**
      * @var boolean
      *
-     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
      * @Assert\NotBlank
      */
