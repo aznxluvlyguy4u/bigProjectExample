@@ -82,7 +82,7 @@ class SqsFeedbackProcessor
              * WARNING!
              * Removing this sleep will cause a huge amount of calls to the queue and a huge AWS bill!
              */
-            $this->logger->notice('Sleep '.$delayInSeconds.' seconds ...');
+            $this->logger->info('Sleep '.$delayInSeconds.' seconds ...');
             sleep($delayInSeconds);
         }
 
@@ -108,8 +108,13 @@ class SqsFeedbackProcessor
             $this->unlockProcess();
         }
 
-        $this->logger->debug((empty($this->taskCount) ? 'No' : $this->taskCount)
-            . ' ' . $this->getProcessType().' messages processed');
+        $taskCountMessage = (empty($this->taskCount) ? 'No' : $this->taskCount)
+            . ' ' . $this->getProcessType().' messages processed';
+        if (empty($this->taskCount)) {
+            $this->logger->info($taskCountMessage);
+        } else {
+            $this->logger->debug($taskCountMessage);
+        }
     }
 
 
