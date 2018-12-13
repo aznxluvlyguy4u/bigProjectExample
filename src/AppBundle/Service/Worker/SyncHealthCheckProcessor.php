@@ -6,8 +6,6 @@ namespace AppBundle\Service\Worker;
 
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\HealthCheckTask;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\SqsCommandWorker;
 use AppBundle\Enumerator\SqsCommandType;
 use AppBundle\Exception\Sqs\SqsMessageInvalidBodyException;
@@ -103,6 +101,10 @@ class SyncHealthCheckProcessor extends SqsWorkerTaskProcessorBase implements Sqs
     }
 
 
+    /**
+     * @param HealthCheckTask $healthCheckTask
+     * @throws \AppBundle\Exception\InvalidSwitchCaseException
+     */
     private function processHealthCheckTask(HealthCheckTask $healthCheckTask)
     {
         $this->locationHealthUpdater->updateByHealthCheckTaskFromRvoSync($healthCheckTask);
