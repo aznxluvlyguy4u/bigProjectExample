@@ -25,7 +25,9 @@ class SqsFeedbackProcessor
     const LOOP_DELAY_SECONDS = 10;
 
     /** @var Logger */
-    private $logger;
+    private $feedbackWorkerLogger;
+    /** @var Logger */
+    private $exceptionLogger;
     /** @var AwsFeedbackQueueService */
     private $feedbackQueueService;
     /** @var ProcessLockerInterface */
@@ -46,7 +48,8 @@ class SqsFeedbackProcessor
     private $taskCount;
 
     public function __construct(AwsFeedbackQueueService $feedbackQueueService,
-                                Logger $logger,
+                                Logger $feedbackWorkerLogger,
+                                Logger $exceptionLogger,
                                 ProcessLockerInterface $processLocker,
                                 SettingsContainer $settingsContainer,
                                 TranslatorInterface $translator,
@@ -55,7 +58,8 @@ class SqsFeedbackProcessor
     )
     {
         $this->feedbackQueueService = $feedbackQueueService;
-        $this->logger = $logger;
+        $this->feedbackWorkerLogger = $feedbackWorkerLogger;
+        $this->exceptionLogger = $exceptionLogger;
         $this->processLocker = $processLocker;
         $this->settingsContainer = $settingsContainer;
         $this->translator = $translator;
@@ -75,16 +79,14 @@ class SqsFeedbackProcessor
             return;
         }
 
-        while (true) {
-            $this->processAllFoundMessages();
+        $this->processAllFoundMessages();
 
-            /*
-             * WARNING!
-             * Removing this sleep will cause a huge amount of calls to the queue and a huge AWS bill!
-             */
-            $this->logger->info('Sleep '.$delayInSeconds.' seconds ...');
-            sleep($delayInSeconds);
-        }
+        /*
+         * WARNING!
+         * Removing this sleep while calling this function in a loop
+         * will cause a huge amount of calls to the queue and a huge AWS bill!
+         */
+        sleep($delayInSeconds);
 
         $this->unlockProcess();
     }
@@ -111,9 +113,9 @@ class SqsFeedbackProcessor
         $taskCountMessage = (empty($this->taskCount) ? 'No' : $this->taskCount)
             . ' ' . $this->getProcessType().' messages processed';
         if (empty($this->taskCount)) {
-            $this->logger->debug($taskCountMessage);
+            $this->feedbackWorkerLogger->debug($taskCountMessage);
         } else {
-            $this->logger->info($taskCountMessage);
+            $this->feedbackWorkerLogger->info($taskCountMessage);
         }
     }
 
@@ -125,7 +127,7 @@ class SqsFeedbackProcessor
      */
     private function processNextMessage(Result $queueMessage)
     {
-        $this->logger->debug('New '.$this->getProcessType().' message found!');
+        $this->feedbackWorkerLogger->debug('New '.$this->getProcessType().' message found!');
         $taskTypeName = !empty($queueMessage) ? AwsQueueServiceBase::getTaskType($queueMessage) : null;
 
         if (!$taskTypeName) {
@@ -153,9 +155,13 @@ class SqsFeedbackProcessor
 
     private function logException(\Throwable $exception)
     {
-        $this->logger->error(self::ERROR_LOG_HEADER);
-        $this->logger->error($exception->getMessage());
-        $this->logger->error($exception->getTraceAsString());
+        $this->feedbackWorkerLogger->error(self::ERROR_LOG_HEADER);
+        $this->feedbackWorkerLogger->error($exception->getMessage());
+        $this->feedbackWorkerLogger->error($exception->getTraceAsString());
+
+        $this->exceptionLogger->error(self::ERROR_LOG_HEADER);
+        $this->exceptionLogger->error($exception->getMessage());
+        $this->exceptionLogger->error($exception->getTraceAsString());
     }
 
 
@@ -173,13 +179,13 @@ class SqsFeedbackProcessor
         $this->processLocker->initializeProcessGroupValues($this->getProcessType());
 
         if ($this->processLocker->isProcessLimitReached($this->getProcessType())) {
-            $this->logger->notice('Max process limit of '.$maxWorkerCount.' reached. '
+            $this->feedbackWorkerLogger->notice('Max process limit of '.$maxWorkerCount.' reached. '
                 .'No new '.$this->getProcessType().' process started.');
             return false;
         }
 
         $this->processId = $this->processLocker->addProcess($this->getProcessType());
-        $this->logger->debug('Initialized feedback processor lock with id: ' . $this->processId);
+        $this->feedbackWorkerLogger->debug('Initialized feedback processor lock with id: ' . $this->processId);
         return true;
     }
 
@@ -187,6 +193,6 @@ class SqsFeedbackProcessor
     private function unlockProcess()
     {
         $this->processLocker->removeProcess($this->getProcessType(), $this->processId);
-        $this->logger->debug('Unlocked feedback processor lock with id: ' . $this->processId);
+        $this->feedbackWorkerLogger->debug('Unlocked feedback processor lock with id: ' . $this->processId);
     }
 }

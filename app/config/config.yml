@@ -146,7 +146,7 @@ nelmio_cors:
 nelmio_api_doc: ~
 
 monolog:
-    channels: [security, non_security]
+    channels: [security, non_security, feedback_worker]
     handlers:
         non_security_handler:
             level:    error
@@ -159,6 +159,12 @@ monolog:
             type:     stream
             path:     '%kernel.logs_dir%/%kernel.environment%_security_exceptions_only.log'
             channels: [security]
+            max_files: 30
+        feedback_worker_handler:
+            level:    info
+            type:     stream
+            path:     '%kernel.logs_dir%/%kernel.environment%_feedback_worker.log'
+            channels: [feedback_worker]
             max_files: 30
         console:
             type: console

@@ -638,6 +638,7 @@ services:
     AppBundle\Processor\SqsFeedbackProcessor:
         arguments:
           - '@AppBundle\Service\AwsFeedbackQueueService'
+          - '@monolog.logger.feedback_worker'
           - '@logger'
           - '@AppBundle\Service\ProcessLocker'
           - '@AppBundle\Service\SettingsContainer'
@@ -1144,7 +1145,7 @@ services:
 
     AppBundle\Service\ProcessLocker:
         arguments:
-          - '@logger'
+          - '@monolog.logger.feedback_worker'
           - '@AppBundle\Service\SettingsContainer'
 
     AppBundle\Service\SettingsContainer:
