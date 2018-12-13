@@ -582,6 +582,7 @@ services:
           - '%notification_email_addresses%'
           - '@templating'
           - '@translator'
+          - '@logger'
           - '%kernel.environment%'
 
     app.abstract_base.controller:

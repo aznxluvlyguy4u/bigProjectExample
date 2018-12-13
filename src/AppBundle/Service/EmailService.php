@@ -13,6 +13,7 @@ use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\RequestType;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -30,12 +31,15 @@ class EmailService
     private $templating;
     /** @var TranslatorInterface */
     private $translator;
+    /** @var Logger */
+    private $logger;
 
     public function __construct(\Swift_Mailer $swiftMailer,
                                 $mailerSourceAddress,
                                 $notificationEmailAddresses,
                                 TwigEngine $templating,
                                 TranslatorInterface $translator,
+                                Logger $logger,
                                 $environment
     )
     {
@@ -44,6 +48,7 @@ class EmailService
         $this->mailerSourceAddress = $mailerSourceAddress;
         $this->templating = $templating;
         $this->translator = $translator;
+        $this->logger = $logger;
 
         if (is_array($notificationEmailAddresses)) {
             $this->notificationEmailAddresses = $notificationEmailAddresses;
@@ -322,6 +327,7 @@ class EmailService
     public function sendPossibleSickAnimalArrivalNotificationEmail(LocationHealthMessage $locationHealthMessage)
     {
         if ($locationHealthMessage === null) {
+            $this->logger->notice('No LocationHealthMessage notification send by email, because it is null!');
             return false;
         }
 
@@ -373,7 +379,18 @@ class EmailService
             )
             ->setSender($this->mailerSourceAddress);
 
-        return $this->swiftMailer->send($message) > 0;
+        $sendCount = $this->swiftMailer->send($message, $failures);
+        $isEmailSent = $sendCount > 0;
+
+        $this->logger->info(($isEmailSent ? 'Sent ' : 'Failed sending ')
+            . 'Email: ' . $message->getSubject()
+            . '. To: ' . implode(',', array_keys($message->getTo())));
+
+        if (!empty($failures)) {
+            $this->logger->warning('Failed sending to the following emails: ' . implode(',',$failures));
+        }
+
+        return $isEmailSent;
     }
 
 
