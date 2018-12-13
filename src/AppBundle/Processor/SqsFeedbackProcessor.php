@@ -111,9 +111,9 @@ class SqsFeedbackProcessor
         $taskCountMessage = (empty($this->taskCount) ? 'No' : $this->taskCount)
             . ' ' . $this->getProcessType().' messages processed';
         if (empty($this->taskCount)) {
-            $this->logger->info($taskCountMessage);
-        } else {
             $this->logger->debug($taskCountMessage);
+        } else {
+            $this->logger->info($taskCountMessage);
         }
     }
 
