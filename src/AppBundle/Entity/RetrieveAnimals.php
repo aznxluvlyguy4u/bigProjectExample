@@ -209,6 +209,28 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
     private $removedAnimalsCount;
 
     /**
+     * @var integer|null
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
+     */
+    private $oneDayDateOfBirthDifferenceCount;
+
+
+    /**
+     * @var integer|null
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "BASIC",
+     * })
+     */
+    private $moreThanOneDayDateOfBirthDifferenceCount;
+
+
+    /**
      * RetrieveAnimals constructor
      */
     public function __construct() {
@@ -566,6 +588,43 @@ class RetrieveAnimals implements BasicRetrieveRvoDeclareInterface
         $this->animalRemovals = $animalRemovals;
         return $this;
     }
+
+    /**
+     * @return int|null
+     */
+    public function getOneDayDateOfBirthDifferenceCount(): ?int
+    {
+        return $this->oneDayDateOfBirthDifferenceCount;
+    }
+
+    /**
+     * @param int|null $oneDayDateOfBirthDifferenceCount
+     * @return RetrieveAnimals
+     */
+    public function setOneDayDateOfBirthDifferenceCount(?int $oneDayDateOfBirthDifferenceCount): RetrieveAnimals
+    {
+        $this->oneDayDateOfBirthDifferenceCount = $oneDayDateOfBirthDifferenceCount;
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getMoreThanOneDayDateOfBirthDifferenceCount(): ?int
+    {
+        return $this->moreThanOneDayDateOfBirthDifferenceCount;
+    }
+
+    /**
+     * @param int|null $moreThanOneDayDateOfBirthDifferenceCount
+     * @return RetrieveAnimals
+     */
+    public function setMoreThanOneDayDateOfBirthDifferenceCount(?int $moreThanOneDayDateOfBirthDifferenceCount): RetrieveAnimals
+    {
+        $this->moreThanOneDayDateOfBirthDifferenceCount = $moreThanOneDayDateOfBirthDifferenceCount;
+        return $this;
+    }
+
 
 
 }
