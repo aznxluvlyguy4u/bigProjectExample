@@ -815,6 +815,9 @@ services:
           - method: setFireBaseService
             arguments:
               - '@AppBundle\Service\Google\FireBaseService'
+          - method: setHealthUpdaterService
+            arguments:
+              - '@app.health.updater'
 
     AppBundle\Service\ExportService:
         parent: app.abstract_base.declare

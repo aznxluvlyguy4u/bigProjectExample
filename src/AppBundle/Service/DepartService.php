@@ -24,6 +24,7 @@ use AppBundle\Exception\AnimalNotOnDepartLocationHttpException;
 use AppBundle\Exception\DeadAnimalHttpException;
 use AppBundle\Service\Google\FireBaseService;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\LocationHealthUpdater;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface;
@@ -37,6 +38,9 @@ class DepartService extends DeclareControllerServiceBase
 {
     /** @var string */
     private $environment;
+
+    /** @var HealthUpdaterService */
+    private $healthService;
 
     /** @var FireBaseService */
     private $fireBaseService;
@@ -85,6 +89,16 @@ class DepartService extends DeclareControllerServiceBase
      */
     public function setFireBaseService(FireBaseService $fireBaseService) {
         $this->fireBaseService = $fireBaseService;
+    }
+
+    /**
+     * @required
+     *
+     * @param HealthUpdaterService $healthService
+     */
+    public function setHealthUpdaterService(HealthUpdaterService $healthService)
+    {
+        $this->healthService = $healthService;
     }
 
     /**
@@ -227,6 +241,12 @@ class DepartService extends DeclareControllerServiceBase
                 $this->sendMessageObjectToQueue($arrival);
             } else {
                 $this->arrivalProcessor->process($arrival, $location);
+            }
+
+            $checkHealthStatusArrivalLocation = LocationHealthUpdater::checkHealthStatus($arrivalLocation);
+            if ($checkHealthStatusArrivalLocation) {
+                //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
+                $this->healthService->updateLocationHealth($arrival);
             }
 
             $arrivalLog = ActionLogWriter::declareArrival($arrival, $arrivalOwner, true);
