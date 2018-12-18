@@ -15,6 +15,7 @@ use AppBundle\Component\MixBlup\MixBlupInputFileValidator;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\EditType;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\ScrapieGenotypeSource;
 use AppBundle\Entity\TagSyncErrorLog;
 use AppBundle\Enumerator\CommandTitle;
@@ -26,6 +27,7 @@ use AppBundle\Enumerator\ProcessType;
 use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
+use AppBundle\Service\CacheService;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\Migration\LambMeatIndexMigrator;
 use AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator;
@@ -163,6 +165,8 @@ class NsfoMainCommand extends ContainerAwareCommand
             '-----------------------------------------------', "\n",
             '14: '.strtolower(CommandTitle::PROCESS_LOCKER), "\n",
             '===============================================', "\n",
+            '15: '.strtolower(CommandTitle::REDIS), "\n",
+            '===============================================', "\n",
             'other: EXIT ', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -182,6 +186,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 12: $this->getContainer()->get('app.cli.internal_worker.depart')->run($this->cmdUtil); break;
             case 13: $this->calculationsAndAlgorithmsOptions(); break;
             case 14: $this->processLockerOptions(); break;
+            case 15: $this->redisOptions(); break;
 
             default: return;
         }
@@ -1060,6 +1065,42 @@ class NsfoMainCommand extends ContainerAwareCommand
         $this->getProcessLocker()->removeAllProcessesOfGroup($processType);
     }
 
+
+    public function redisOptions()
+    {
+        $this->initializeMenu(CommandTitle::REDIS);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '1: Clear all', "\n",
+            '2: Clear by location primary key', "\n",
+            "\n",
+            'other: exit submenu', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+            case 1: $this->getCacheService()->clear(); break;
+            case 2: $this->clearRedisCacheByLocation(); break;
+            default: $this->writeLn('Exit menu'); return;
+        }
+        $this->redisOptions();
+    }
+
+
+    private function clearRedisCacheByLocation()
+    {
+        do {
+            $locationId = $this->cmdUtil->questionForIntChoice(262,'location primary key');
+            $location = $this->em->getRepository(Location::class)->find($locationId);
+
+        } while (empty($location));
+
+        $this->writeLn("Clearing redis cache for location ".$locationId.", UBN ".$location->getUbn());
+
+        $this->getCacheService()->clearLivestockCacheForLocation($location, null);
+    }
+
+
     private function writeLn($line)
     {
         $this->cmdUtil->writelnWithTimestamp($line);
@@ -1191,5 +1232,13 @@ class NsfoMainCommand extends ContainerAwareCommand
     public function getProcessLocker()
     {
         return $this->getContainer()->get('AppBundle\Service\ProcessLocker');
+    }
+
+    /**
+     * @return CacheService
+     */
+    public function getCacheService()
+    {
+        return $this->getContainer()->get('app.cache');
     }
 }
