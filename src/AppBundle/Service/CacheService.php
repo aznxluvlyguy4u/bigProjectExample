@@ -147,6 +147,12 @@ class CacheService
     }
 
 
+    public function clear()
+    {
+        $this->getRedisAdapter()->clear();
+    }
+
+
     /**
      * @param array $extraJmsGroups
      * @return string
