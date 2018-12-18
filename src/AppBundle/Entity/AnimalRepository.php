@@ -2150,6 +2150,23 @@ class AnimalRepository extends BaseRepository
         return SqlUtil::getSingleValueGroupedSqlResults('id', $this->getConnection()->query($sql)->fetchAll(), true);
     }
 
+
+    /**
+     * @param HealthCheckTask $task
+     * @return Animal|Ewe|Neuter|Ram|null
+     */
+    public function findByHealthCheckTask(HealthCheckTask $task)
+    {
+        $animals = $this->findBy([
+//            'ulnCountryCode' => $task->getUlnCountryCode(),
+//            'ulnNumber' => $task->getUlnNumber(),
+            'location' => $task->getDestinationLocationId()
+        ]);
+        dump($animals);
+        return AnimalArrayReader::prioritizeImportedAnimalFromArray($animals);
+    }
+
+
     /**
      * @param array $animalsArray
      * @param int $locationId

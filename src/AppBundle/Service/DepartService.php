@@ -214,6 +214,7 @@ class DepartService extends DeclareControllerServiceBase
             $this->validateNonRvoSpecificDepartConditions($depart);
         }
 
+        $animal = $depart->getAnimal();
         $arrival = null;
         if($arrivalLocation) {
             $this->validateRelationNumberKeeperOfLocation($arrivalLocation);
@@ -246,7 +247,7 @@ class DepartService extends DeclareControllerServiceBase
             $checkHealthStatusArrivalLocation = LocationHealthUpdater::checkHealthStatus($arrivalLocation);
             if ($checkHealthStatusArrivalLocation) {
                 //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
-                $this->healthService->updateLocationHealth($arrival);
+                $this->healthService->updateLocationHealth($arrival, $animal);
             }
 
             $arrivalLog = ActionLogWriter::declareArrival($arrival, $arrivalOwner, true);

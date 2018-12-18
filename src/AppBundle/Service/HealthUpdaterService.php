@@ -4,6 +4,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
@@ -37,14 +38,15 @@ class HealthUpdaterService
 
     /**
      * @param DeclareArrival|DeclareImport $declareInBase
+     * @param Animal $animal
      */
-    public function updateLocationHealth($declareInBase)
+    public function updateLocationHealth($declareInBase, Animal $animal)
     {
         $location = $declareInBase->getLocation();
 
         //update locationHealth chronologically
         $isDeclareInBase = true;
-        $this->updateLocationHealthByArrivalOrImport($location, $declareInBase, $isDeclareInBase, true);
+        $this->updateLocationHealthByArrivalOrImport($location, $declareInBase, $animal, $isDeclareInBase, true);
 
         /*
          * Warning!
@@ -60,19 +62,20 @@ class HealthUpdaterService
     /**
      * @param Location $location
      * @param DeclareArrival|DeclareImport $declareIn
+     * @param Animal $animal
      * @param boolean $isDeclareBaseIn
      * @param boolean $createLocationHealthMessage
      */
-    private function updateLocationHealthByArrivalOrImport(Location $location, $declareIn, $isDeclareBaseIn,
-                                                           $createLocationHealthMessage)
+    private function updateLocationHealthByArrivalOrImport(Location $location, $declareIn, Animal $animal,
+                                                           $isDeclareBaseIn, $createLocationHealthMessage)
     {
         if($declareIn instanceof DeclareArrival) {
-            $this->locationHealthUpdater->updateByGivenUbnOfOrigin($location, $declareIn, $isDeclareBaseIn,
-                $createLocationHealthMessage);
+            $this->locationHealthUpdater->updateByGivenUbnOfOrigin($location, $declareIn, $animal,
+                $isDeclareBaseIn, $createLocationHealthMessage);
 
         } else if ($declareIn instanceof DeclareImport) {
-            $this->locationHealthUpdater->updateWithoutOriginHealthData($location, $declareIn, $isDeclareBaseIn,
-                $createLocationHealthMessage);
+            $this->locationHealthUpdater->updateWithoutOriginHealthData($location, $declareIn, $animal,
+                $isDeclareBaseIn, $createLocationHealthMessage);
 
         }
         // else do nothing

@@ -4,6 +4,7 @@ namespace AppBundle\Util;
 
 use AppBundle\Component\LocationHealthMessageBuilder;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\HealthCheckTask;
@@ -49,6 +50,7 @@ class LocationHealthUpdater
     /**
      * @param Location $locationOfDestination
      * @param DeclareArrival $declareArrival
+     * @param Animal $animal
      * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @param boolean $createLocationHealthMessage
      * @return DeclareArrival
@@ -56,6 +58,7 @@ class LocationHealthUpdater
      */
     public function updateByGivenUbnOfOrigin(Location $locationOfDestination,
                                              DeclareArrival $declareArrival,
+                                             Animal $animal,
                                              $isDeclareInBase,
                                              $createLocationHealthMessage
     )
@@ -65,13 +68,14 @@ class LocationHealthUpdater
 
         $locationOfOrigin = $this->em->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubnPreviousOwner);
         return $this->updateByGivenLocationOfOrigin($declareArrival ,$locationOfDestination, $checkDate,
-            $isDeclareInBase, $locationOfOrigin, $createLocationHealthMessage);
+            $isDeclareInBase, $locationOfOrigin, $animal, $createLocationHealthMessage);
     }
 
 
     /**
      * @param Location $locationOfDestination
      * @param DeclareImport $declareImport
+     * @param Animal $animal
      * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @param boolean $createLocationHealthMessage
      * @return DeclareImport
@@ -79,13 +83,14 @@ class LocationHealthUpdater
      */
     public function updateWithoutOriginHealthData(Location $locationOfDestination,
                                                   DeclareImport $declareImport,
+                                                  Animal $animal,
                                                   $isDeclareInBase,
                                                   $createLocationHealthMessage
     )
     {
         $checkDate = $declareImport->getImportDate();
         return $this->updateByGivenLocationOfOrigin($declareImport, $locationOfDestination, $checkDate,
-            $isDeclareInBase, null, $createLocationHealthMessage);
+            $isDeclareInBase, null, $animal, $createLocationHealthMessage);
     }
 
 
@@ -97,9 +102,16 @@ class LocationHealthUpdater
     {
         $destinationLocation = $healthCheckTask->getDestinationLocation();
         if (LocationHealthUpdater::checkHealthStatus($destinationLocation)) {
-            $this->updateByGivenLocationOfOrigin($healthCheckTask,
-                $destinationLocation, $healthCheckTask->getSyncDate(),
-                true,null,true);
+            $animal = $this->em->getRepository(Animal::class)->findByHealthCheckTask($healthCheckTask);
+
+            if ($animal) {
+                $this->updateByGivenLocationOfOrigin($healthCheckTask,
+                    $destinationLocation, $healthCheckTask->getSyncDate(),
+                    true,null, $animal,true);
+            } else {
+                $this->logger->warning('ANIMAL NOT FOUND IN DATABASE FOR HEALTH CHECK TASK');
+            }
+
         } else {
             $this->logger->warning('No health checks will be done for UBN: ' . $destinationLocation->getUbn());
             $this->logger->warning('Health check task will not be processed');
@@ -112,6 +124,7 @@ class LocationHealthUpdater
      * @param Location $locationOfDestination
      * @param \DateTime $checkDate
      * @param Location|null $locationOfOrigin
+     * @param Animal $animal
      * @param bool $recheckLocationHealthNullCheck used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @param bool $createLocationHealthMessage
      * @return  DeclareArrival|DeclareImport|HealthCheckTask
@@ -122,6 +135,7 @@ class LocationHealthUpdater
                                                    \DateTime $checkDate,
                                                    bool $recheckLocationHealthNullCheck,
                                                    ?Location $locationOfOrigin,
+                                                   Animal $animal,
                                                    bool $createLocationHealthMessage
     )
     {
