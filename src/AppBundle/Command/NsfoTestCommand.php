@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\HealthCheckTask;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\ResultTableBreedGrades;
@@ -76,6 +77,20 @@ class NsfoTestCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
+
+        $location = $this->em->getRepository(Location::class)->find(262);
+        $task = new HealthCheckTask();
+        $task->setUlnCountryCode('NL')
+            ->setUlnNumber('100003608834')
+            ->setDestinationLocation($location)
+            ;
+
+        $animal = $this->em->getRepository(Animal::class)->findByHealthCheckTask($task);
+
+        dump($animal);die;
+
+
+        dump('HEYEYEYEYEY');die;
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",

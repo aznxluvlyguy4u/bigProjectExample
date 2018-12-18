@@ -4,6 +4,7 @@ namespace AppBundle\Util;
 
 use AppBundle\Component\LocationHealthMessageBuilder;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\HealthCheckTask;
@@ -14,6 +15,7 @@ use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
+use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Exception\InvalidSwitchCaseException;
 use AppBundle\Service\EmailService;
@@ -49,6 +51,7 @@ class LocationHealthUpdater
     /**
      * @param Location $locationOfDestination
      * @param DeclareArrival $declareArrival
+     * @param Animal $animal
      * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @param boolean $createLocationHealthMessage
      * @return DeclareArrival
@@ -56,6 +59,7 @@ class LocationHealthUpdater
      */
     public function updateByGivenUbnOfOrigin(Location $locationOfDestination,
                                              DeclareArrival $declareArrival,
+                                             Animal $animal,
                                              $isDeclareInBase,
                                              $createLocationHealthMessage
     )
@@ -65,13 +69,14 @@ class LocationHealthUpdater
 
         $locationOfOrigin = $this->em->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubnPreviousOwner);
         return $this->updateByGivenLocationOfOrigin($declareArrival ,$locationOfDestination, $checkDate,
-            $isDeclareInBase, $locationOfOrigin, $createLocationHealthMessage);
+            $isDeclareInBase, $locationOfOrigin, $animal, $createLocationHealthMessage);
     }
 
 
     /**
      * @param Location $locationOfDestination
      * @param DeclareImport $declareImport
+     * @param Animal $animal
      * @param boolean $isDeclareInBase used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @param boolean $createLocationHealthMessage
      * @return DeclareImport
@@ -79,13 +84,14 @@ class LocationHealthUpdater
      */
     public function updateWithoutOriginHealthData(Location $locationOfDestination,
                                                   DeclareImport $declareImport,
+                                                  Animal $animal,
                                                   $isDeclareInBase,
                                                   $createLocationHealthMessage
     )
     {
         $checkDate = $declareImport->getImportDate();
         return $this->updateByGivenLocationOfOrigin($declareImport, $locationOfDestination, $checkDate,
-            $isDeclareInBase, null, $createLocationHealthMessage);
+            $isDeclareInBase, null, $animal, $createLocationHealthMessage);
     }
 
 
@@ -97,9 +103,19 @@ class LocationHealthUpdater
     {
         $destinationLocation = $healthCheckTask->getDestinationLocation();
         if (LocationHealthUpdater::checkHealthStatus($destinationLocation)) {
+            $animal = $this->em->getRepository(Animal::class)->findByHealthCheckTaskFromSync($healthCheckTask);
+
+            if (!$animal) {
+                $this->logger->warning('ANIMAL NOT FOUND IN DATABASE FOR HEALTH CHECK TASK, '
+                    . 'ULN : ' . $healthCheckTask->getUlnNumber() .', '
+                    . 'Destination: ' . $healthCheckTask->getDestinationUbn()
+                );
+            }
+
             $this->updateByGivenLocationOfOrigin($healthCheckTask,
                 $destinationLocation, $healthCheckTask->getSyncDate(),
-                true,null,true);
+                true,null, $animal,true);
+
         } else {
             $this->logger->warning('No health checks will be done for UBN: ' . $destinationLocation->getUbn());
             $this->logger->warning('Health check task will not be processed');
@@ -112,6 +128,7 @@ class LocationHealthUpdater
      * @param Location $locationOfDestination
      * @param \DateTime $checkDate
      * @param Location|null $locationOfOrigin
+     * @param Animal|null $animal
      * @param bool $recheckLocationHealthNullCheck used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
      * @param bool $createLocationHealthMessage
      * @return  DeclareArrival|DeclareImport|HealthCheckTask
@@ -122,6 +139,7 @@ class LocationHealthUpdater
                                                    \DateTime $checkDate,
                                                    bool $recheckLocationHealthNullCheck,
                                                    ?Location $locationOfOrigin,
+                                                   ?Animal $animal,
                                                    bool $createLocationHealthMessage
     )
     {
@@ -166,6 +184,8 @@ class LocationHealthUpdater
 
         //Do the health check ...
 
+        $isScrapieStatusDemotingAnimal = self::isScrapieStatusDemotingAnimal($animal);
+
         if ($locationOfOrigin == null || // an import or Location that is not in our NSFO database
             !$locationOfOrigin->getAnimalHealthSubscription() // location where health statuses are not updated anymore
         ) {
@@ -176,7 +196,7 @@ class LocationHealthUpdater
             } //else do nothing
 
             if ($includeScrapie &&
-                !$previousScrapieDestination->isStatusBlank() && $previousScrapieDestinationIsHealthy){
+                $isScrapieStatusDemotingAnimal && $previousScrapieDestinationIsHealthy){
                 $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
             } //else do nothing
 
@@ -202,14 +222,25 @@ class LocationHealthUpdater
             }
 
             if ($includeScrapie) {
-                $scrapieOrigin = Finder::findLatestActiveScrapie($locationOfOrigin, $this->em);
-                if($scrapieOrigin != null) {
-                    $scrapieOriginIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieOrigin->getStatus());
+                $checkByAnimalData = true;
+
+                if ($checkByAnimalData) {
+                    $animalMutationSourceIsScrapieStatusDemoting = $isScrapieStatusDemotingAnimal;
+
                 } else {
-                    $scrapieOriginIsHealthy = false;
+                    $scrapieOrigin = Finder::findLatestActiveScrapie($locationOfOrigin, $this->em);
+                    if($scrapieOrigin != null) {
+                        $scrapieOriginIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieOrigin->getStatus());
+                    } else {
+                        $scrapieOriginIsHealthy = false;
+                    }
+
+                    $animalMutationSourceIsScrapieStatusDemoting = !$scrapieOriginIsHealthy &&
+                        !$previousScrapieDestination->isStatusBlank()
+                    ;
                 }
 
-                if(!$scrapieOriginIsHealthy && !$previousScrapieDestination->isStatusBlank() && $previousScrapieDestinationIsHealthy) {
+                if ($animalMutationSourceIsScrapieStatusDemoting && $previousScrapieDestinationIsHealthy) {
                     $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 } //else do nothing
             }
@@ -236,6 +267,24 @@ class LocationHealthUpdater
         return $declareInOrHealthCheckTask;
     }
 
+
+    /**
+     * @param Animal|null $animal
+     * @return bool
+     */
+    public static function isScrapieStatusDemotingAnimal(?Animal $animal): bool
+    {
+        return $animal == null || self::isScrapieStatusDemotingGenotype($animal->getScrapieGenotype());
+    }
+
+    /**
+     * @param null|string $scrapieGenotype
+     * @return bool
+     */
+    public static function isScrapieStatusDemotingGenotype(?string $scrapieGenotype): bool
+    {
+        return $scrapieGenotype !== ScrapieGenotypeType::ARR_ARR;
+    }
 
     /**
      * @param DeclareArrival|DeclareImport|HealthCheckTask $messageObject

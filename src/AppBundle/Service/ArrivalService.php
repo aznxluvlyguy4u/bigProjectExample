@@ -222,6 +222,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         //Convert the array into an object and add the mandatory values retrieved from the database
         $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, true);
         $arrival = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
+        $animal = $arrival->getAnimal();
 
         if (!$useRvoLogic) {
             $this->validateNonRvoSpecificConditions($arrival, $departLocation);
@@ -294,7 +295,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         if ($checkHealthStatus) {
             //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
-            $this->healthService->updateLocationHealth($arrival);
+            $this->healthService->updateLocationHealth($arrival, $animal);
         }
 
         if ($departLog) { $this->persist($departLog); }
@@ -346,6 +347,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         }
 
         $import = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $loggedInUser, $location);
+        $animal = $import->getAnimal();
 
         //Send it to the queue and persist/update any changed state to the database
        $messageArray = $this->runDeclareImportWorkerLogic($import);
@@ -354,7 +356,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
         if ($checkHealthStatus) {
             //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
-            $this->healthService->updateLocationHealth($import);
+            $this->healthService->updateLocationHealth($import, $animal);
         }
 
         ActionLogWriter::completeActionLog($this->getManager(), $actionLog);
