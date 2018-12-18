@@ -166,7 +166,9 @@ class LocationHealthUpdater
 
         //Do the health check ...
 
-        if($locationOfOrigin == null) { //an import or Location that is not in our NSFO database
+        if ($locationOfOrigin == null || // an import or Location that is not in our NSFO database
+            !$locationOfOrigin->getAnimalHealthSubscription() // location where health statuses are not updated anymore
+        ) {
 
             if ($includeMaediVisna &&
                 !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
