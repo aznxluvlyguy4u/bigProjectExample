@@ -780,7 +780,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     public function createRetrieveAnimalsForAllLocations(Request $request)
     {
         $admin = $this->getEmployee();
-        if (!AdminValidator::isAdmin($admin, AccessLevelType::SUPER_ADMIN)) {
+        if (!AdminValidator::isAdmin($admin, AccessLevelType::DEVELOPER)) {
             return AdminValidator::getStandardErrorResponse();
         }
 
