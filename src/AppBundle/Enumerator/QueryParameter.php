@@ -34,6 +34,7 @@ class QueryParameter
     const IS_EWES_WITH_LAST_MATE = 'is_ewes_with_last_mate';
     const IS_RVO_LEADING = 'is_rvo_leading';
     const MAX_DAYS = 'max_days';
+    const IS_MAX_ONCE_A_DAY = 'is_max_once_a_day';
     const DELAY_IN_SECONDS = 'delay_in_seconds';
     const YEAR = 'year';
     const IS_BATCH = "isBatch";

@@ -787,9 +787,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $hasNotBeenSyncedForAtLeastThisAmountOfDays = RequestUtil::getIntegerQuery($request, QueryParameter::MAX_DAYS,7);
         $delayInSeconds = RequestUtil::getIntegerQuery($request, QueryParameter::DELAY_IN_SECONDS,self::DEFAULT_ALL_SYNC_DELAY_IN_SECONDS);
         $isRvoLeading = RequestUtil::getBooleanQuery($request, QueryParameter::IS_RVO_LEADING,false);
+        $maxOnceADay = RequestUtil::getBooleanQuery($request, QueryParameter::IS_MAX_ONCE_A_DAY,true);
 
         $message = $this->syncAnimalsForAllLocations($admin, $hasNotBeenSyncedForAtLeastThisAmountOfDays,
-            $isRvoLeading, $delayInSeconds)[Constant::MESSAGE_NAMESPACE];
+            $isRvoLeading, $delayInSeconds, $maxOnceADay)[Constant::MESSAGE_NAMESPACE];
 
         return ResultUtil::successResult($message);
     }
@@ -800,6 +801,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      * @param bool $isRvoLeading
      * @param int $delayInSeconds
      * @param int $maxInternalQueueSize
+     * @param boolean $maxLimitOnceADay
      * @return array
      * @throws \Exception
      */
@@ -807,11 +809,12 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
                                                $hasNotBeenSyncedForAtLeastThisAmountOfDays = 0,
                                                bool $isRvoLeading = false,
                                                int $delayInSeconds = 5,
+                                               bool $maxLimitOnceADay = true,
                                                int $maxInternalQueueSize = 10
     )
     {
         $allLocations = $this->getManager()->getRepository(Location::class)
-            ->getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays, $isRvoLeading);
+            ->getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays, $isRvoLeading, $maxLimitOnceADay);
         $content = new ArrayCollection();
         $count = 0;
 

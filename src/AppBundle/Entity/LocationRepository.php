@@ -195,20 +195,23 @@ class LocationRepository extends BaseRepository
     /**
      * @param int $hasNotBeenSyncedForAtLeastThisAmountOfDays
      * @param bool $onlyIncludeRvoLeading
+     * @param bool $maxLimitOnceADay
      * @return array
      * @throws \Exception
      */
   public function getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays = 7,
-                                                 bool $onlyIncludeRvoLeading = false)
+                                                 bool $onlyIncludeRvoLeading = false,
+                                                 bool $maxLimitOnceADay = true)
   {
       if (!ctype_digit($hasNotBeenSyncedForAtLeastThisAmountOfDays) && !is_int($hasNotBeenSyncedForAtLeastThisAmountOfDays)) {
           throw new \Exception('hasNotBeenSyncedForAtLeastThisAmountOfDays should be an integer');
       }
 
-      $minLogDate = empty($hasNotBeenSyncedForAtLeastThisAmountOfDays) ?
-          new \DateTime() :
-          new \DateTime('- '.$hasNotBeenSyncedForAtLeastThisAmountOfDays.'days')
-      ;
+      if ($hasNotBeenSyncedForAtLeastThisAmountOfDays <= 0) {
+          $minLogDate = $maxLimitOnceADay ? new \DateTime('today') : new \DateTime();
+      } else {
+          $minLogDate = new \DateTime('- '.$hasNotBeenSyncedForAtLeastThisAmountOfDays.'days');
+      }
 
       $addressQb = $this->getManager()->createQueryBuilder();
       $addressQb

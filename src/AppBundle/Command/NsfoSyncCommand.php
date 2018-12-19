@@ -18,6 +18,7 @@ class NsfoSyncCommand extends ContainerAwareCommand
 
     const OPTION_RVO = 'rvo';
     const OPTION_WITHOUT_DELAY = 'without_delay';
+    const OPTION_NO_MAX_ONCE_A_DAY = 'no_max_once_a_day';
 
     /** @var EntityManagerInterface */
     private $em;
@@ -33,6 +34,8 @@ class NsfoSyncCommand extends ContainerAwareCommand
             ->setDescription(self::TITLE)
             ->addOption(self::OPTION_RVO, 'r', InputOption::VALUE_NONE,
                 'Is RVO leading')
+            ->addOption(self::OPTION_NO_MAX_ONCE_A_DAY, 'd', InputOption::VALUE_NONE,
+                'Auto sync can be sent more than once a day')
             ->addOption(self::OPTION_WITHOUT_DELAY, 'w', InputOption::VALUE_NONE,
                 'Do not delay sending message by '.AnimalService::DEFAULT_ALL_SYNC_DELAY_IN_SECONDS.' seconds')
         ;
@@ -45,24 +48,27 @@ class NsfoSyncCommand extends ContainerAwareCommand
         $this->automatedProcess = $this->em->getRepository(Employee::class)->getAutomatedProcess();
 
         $isRvoLeading = $input->getOption(self::OPTION_RVO);
+        $noMaxOnceADay = $input->getOption(self::OPTION_NO_MAX_ONCE_A_DAY);
         $sendWithoutDelays = $input->getOption(self::OPTION_WITHOUT_DELAY);
         $delayInSeconds = $sendWithoutDelays ? 0 : AnimalService::DEFAULT_ALL_SYNC_DELAY_IN_SECONDS;
 
-        $this->syncAllNonSyncedLocations($isRvoLeading, $delayInSeconds);
+        $this->syncAllNonSyncedLocations($isRvoLeading, $delayInSeconds, !$noMaxOnceADay);
     }
 
 
     /**
      * @param bool $isRvoLeading
+     * @param bool $maxOnceADay
      * @param int $delayInSeconds
      * @throws \Exception
      */
-    private function syncAllNonSyncedLocations(bool $isRvoLeading, int $delayInSeconds)
+    private function syncAllNonSyncedLocations(bool $isRvoLeading, int $delayInSeconds, bool $maxOnceADay)
     {
         $this->animalService->syncAnimalsForAllLocations($this->automatedProcess,
             self::ANIMAL_SYNC_MAX_DAYS,
             $isRvoLeading,
-            $delayInSeconds
+            $delayInSeconds,
+            $maxOnceADay
             );
     }
 
