@@ -245,7 +245,7 @@ class LocationRepository extends BaseRepository
           ->where($qb->expr()->eq('company.isActive', 'true'))
           ->andWhere($qb->expr()->eq('location.isActive', 'true'))
           ->andWhere($qb->expr()->notIn('location.id', $retrieveAnimalsLocationQb->getDQL()))
-          ->andWhere($qb->expr()->notIn('location.address', $addressQb->getDQL()))
+          ->andWhere($qb->expr()->in('location.address', $addressQb->getDQL()))
           ->setParameter('minLogDate', $minLogDate->format(SqlUtil::DATE_FORMAT))
       ;
 
