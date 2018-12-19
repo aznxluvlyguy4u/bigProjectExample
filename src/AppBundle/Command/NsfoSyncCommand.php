@@ -14,7 +14,7 @@ class NsfoSyncCommand extends ContainerAwareCommand
 {
     const TITLE = 'Run sync processes intended for recurrent use with a cronjob';
 
-    const ANIMAL_SYNC_MAX_DAYS = 7;
+    const ANIMAL_SYNC_MAX_DAYS = 0;
 
     const OPTION_RVO = 'rvo';
     const OPTION_WITHOUT_DELAY = 'without_delay';

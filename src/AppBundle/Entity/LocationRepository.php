@@ -205,7 +205,10 @@ class LocationRepository extends BaseRepository
           throw new \Exception('hasNotBeenSyncedForAtLeastThisAmountOfDays should be an integer');
       }
 
-      $minLogDate = new \DateTime('- '.$hasNotBeenSyncedForAtLeastThisAmountOfDays.'days');
+      $minLogDate = empty($hasNotBeenSyncedForAtLeastThisAmountOfDays) ?
+          new \DateTime() :
+          new \DateTime('- '.$hasNotBeenSyncedForAtLeastThisAmountOfDays.'days')
+      ;
 
       $addressQb = $this->getManager()->createQueryBuilder();
       $addressQb
