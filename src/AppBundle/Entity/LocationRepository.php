@@ -227,7 +227,12 @@ class LocationRepository extends BaseRepository
           ->from(RetrieveAnimals::class, 'r')
           ->innerJoin('r.location', 'l', Join::WITH, $retrieveAnimalsLocationQb->expr()->eq('r.location', 'l.id'))
           ->where(':minLogDate <= r.logDate')
-          ->andWhere($retrieveAnimalsLocationQb->expr()->eq('r.requestState', "'".RequestStateType::FINISHED."'"))
+          ->andWhere(
+              $retrieveAnimalsLocationQb->expr()->orX(
+                  $retrieveAnimalsLocationQb->expr()->eq('r.requestState', "'".RequestStateType::FINISHED."'"),
+                  $retrieveAnimalsLocationQb->expr()->eq('r.requestState', "'".RequestStateType::OPEN."'")
+              )
+          )
       ;
       if ($onlyIncludeRvoLeading) {
           $retrieveAnimalsLocationQb->andWhere($retrieveAnimalsLocationQb->expr()->eq('r.isRvoLeading', 'true'));
