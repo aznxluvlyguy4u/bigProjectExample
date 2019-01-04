@@ -768,7 +768,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         if($uln) {
             $motherUlnCountryCode = mb_substr($uln, 0, 2);
             $motherUlnNumber = substr($uln, 2);
-            $mother = $this->getManager()->getRepository(Animal::class)->findOneBy(array('ulnCountryCode'=>$motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
+            $mother = $this->getManager()->getRepository(Ewe::class)->findOneBy(array('ulnCountryCode'=>$motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
         }
 
         if(!$mother) {
@@ -868,7 +868,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         if($uln) {
             $motherUlnCountryCode = mb_substr($uln, 0, 2);
             $motherUlnNumber = substr($uln, 2);
-            $mother = $this->getManager()->getRepository(Animal::class)->findOneBy(array ('ulnCountryCode' => $motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
+            $mother = $this->getManager()->getRepository(Ewe::class)->findOneBy(array ('ulnCountryCode' => $motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
         }
 
         if(!$mother) {
