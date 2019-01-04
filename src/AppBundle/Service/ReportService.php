@@ -23,8 +23,10 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\UlnValidatorInterface;
+use function Couchbase\defaultDecoder;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\ORMException;
 use Enqueue\Client\ProducerInterface;
 use Enqueue\Util\JSON;
 use Symfony\Bridge\Monolog\Logger;
@@ -179,6 +181,7 @@ class ReportService
 
         $inputForHash = $contentAsJson . StringUtil::getBooleanAsString($concatValueAndAccuracy);
 
+        $workerId = null;
         try {
             $reportType = ReportType::LIVE_STOCK;
 
@@ -199,10 +202,31 @@ class ReportService
             );
         }
         catch (\Exception $e) {
-            $this->logExceptionAsError($e);
+            $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
+    }
+
+
+    /**
+     * @param \Exception $e
+     * @param int|null $workerId
+     */
+    private function processWorkerError(\Exception $e, int $workerId = null)
+    {
+        $this->logExceptionAsError($e);
+        if ($workerId) {
+            $workerRecord = $this->em->getRepository(ReportWorker::class)->find($workerId);
+            if ($workerRecord) {
+                try {
+                    $this->em->remove($workerRecord);
+                    $this->em->flush();
+                } catch (ORMException $ORMException) {
+                    $this->logExceptionAsError($ORMException);
+                }
+            }
+        }
     }
 
 
@@ -238,6 +262,7 @@ class ReportService
         $contentAsJson = JSON::encode($content->toArray());
         $inputForHash = $contentAsJson;
 
+        $workerId = null;
         try {
             $reportType = ReportType::PEDIGREE_CERTIFICATE;
 
@@ -257,7 +282,7 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            $this->logExceptionAsError($e);
+            $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
@@ -305,6 +330,7 @@ class ReportService
         $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, !false);
         $inputForHash = $type . StringUtil::getBooleanAsString($uploadToS3);
 
+        $workerId = null;
         try {
             $reportType = ReportType::PEDIGREE_REGISTER_OVERVIEW;
 
@@ -325,7 +351,7 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            $this->logExceptionAsError($e);
+            $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
@@ -351,6 +377,7 @@ class ReportService
         $contentAsJson = JSON::encode($content->toArray());
         $inputForHash = $contentAsJson . StringUtil::getBooleanAsString($concatValueAndAccuracy);
 
+        $workerId = null;
         try {
             $reportType = ReportType::OFFSPRING;
 
@@ -371,7 +398,7 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            $this->logExceptionAsError($e);
+            $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
@@ -398,6 +425,7 @@ class ReportService
 
         $inputForHash = $referenceYear;
 
+        $workerId = null;
         try {
             $reportType = ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES;
 
@@ -417,7 +445,7 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            $this->logExceptionAsError($e);
+            $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
@@ -446,6 +474,7 @@ class ReportService
         $activeUbnReferenceDateString = $activeUbnReferenceDate->format('y-m-d H:i:s');
         $inputForHash = StringUtil::getBooleanAsString($concatValueAndAccuracy) . $pedigreeActiveEndDateLimitString . $activeUbnReferenceDateString;
 
+        $workerId = null;
         try {
             $reportType = ReportType::ANIMALS_OVERVIEW;
 
@@ -467,7 +496,7 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            $this->logExceptionAsError($e);
+            $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
@@ -483,6 +512,7 @@ class ReportService
         $contentAsJson = JSON::encode($content->toArray());
         $inputForHash = $contentAsJson;
 
+        $workerId = null;
         try {
             $reportType = ReportType::INBREEDING_COEFFICIENT;
 
@@ -502,7 +532,7 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            $this->logExceptionAsError($e);
+            $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
@@ -518,6 +548,7 @@ class ReportService
         $referenceDateString = $referenceDate->format('y-m-d H:i:s');
         $inputForHash = $referenceDateString;
 
+        $workerId = null;
         try {
             $reportType = ReportType::FERTILIZER_ACCOUNTING;
 
@@ -537,7 +568,7 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            $this->logExceptionAsError($e);
+            $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
@@ -563,6 +594,7 @@ class ReportService
 
         $inputForHash = $year . $pedigreeActiveEndDateLimitString;
 
+        $workerId = null;
         try {
             $reportType = ReportType::ANNUAL_TE_100;
 
@@ -583,7 +615,7 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            $this->logExceptionAsError($e);
+            $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
@@ -610,6 +642,7 @@ class ReportService
 
         $inputForHash = $referenceYear;
 
+        $workerId = null;
         try {
             $reportType = ReportType::ANNUAL_ACTIVE_LIVE_STOCK;
 
@@ -629,7 +662,7 @@ class ReportService
             );
         }
         catch(\Exception $e) {
-            $this->logExceptionAsError($e);
+            $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
         return ResultUtil::successResult('OK');
