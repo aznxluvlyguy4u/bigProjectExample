@@ -384,7 +384,13 @@ class ViewMinimalParentDetails implements SqlViewInterface
      */
     public function getHistoricUbnsAsArray(): array
     {
-        return empty($this->historicUbns) ? [] : json_decode($this->historicUbns);
+        if (!empty($this->historicUbns)) {
+            $ubns = json_decode($this->historicUbns);
+            if (is_array($ubns)) {
+                return $ubns;
+            }
+        }
+        return [];
     }
 
     /**
