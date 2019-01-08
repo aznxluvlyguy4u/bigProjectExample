@@ -26,7 +26,6 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\UlnValidatorInterface;
-use function Couchbase\defaultDecoder;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMException;
@@ -190,31 +189,13 @@ class ReportService
 
         $inputForHash = $contentAsJson . StringUtil::getBooleanAsString($concatValueAndAccuracy);
 
-        $workerId = null;
-        try {
-            $reportType = ReportType::LIVE_STOCK;
-
-            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-            }
-
-            $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if (!$workerId)
-                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                [
-                    'worker_id' => $workerId,
-                    'content' => $contentAsJson,
-                    'concat_value_and_accuracy' => $concatValueAndAccuracy,
-                ]
-            );
-        }
-        catch (\Exception $e) {
-            $this->processWorkerError($e, $workerId);
-            return ResultUtil::internalServerError();
-        }
-        return ResultUtil::successResult('OK');
+        return $this->processReportAsWorkerTask(
+            [
+                'content' => $contentAsJson,
+                'concat_value_and_accuracy' => $concatValueAndAccuracy,
+            ],
+            $request,ReportType::LIVE_STOCK, $inputForHash
+        );
     }
 
 
@@ -254,47 +235,19 @@ class ReportService
             $location = $this->userService->getSelectedLocation($request);
             $company = $location ? $location->getCompany() : null;
             $this->ulnValidator->pedigreeCertificateUlnsInputValidation($content, $this->userService->getUser(), $company);
-            return $this->createPedigreeCertificatesAsWorkerTask($request);
+
+            $contentAsJson = JSON::encode($content->toArray());
+            $inputForHash = $contentAsJson;
+
+            return $this->processReportAsWorkerTask(
+                [
+                    'content' => $contentAsJson,
+                ],
+                $request,ReportType::PEDIGREE_CERTIFICATE, $inputForHash
+            );
         }
 
         return $this->createPedigreeCertificatesWithoutWorker($request);
-    }
-
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    private function createPedigreeCertificatesAsWorkerTask(Request $request)
-    {
-        $content = RequestUtil::getContentAsArray($request);
-        $contentAsJson = JSON::encode($content->toArray());
-        $inputForHash = $contentAsJson;
-
-        $workerId = null;
-        try {
-            $reportType = ReportType::PEDIGREE_CERTIFICATE;
-
-            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-            }
-
-            $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if (!$workerId)
-                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                [
-                    'worker_id' => $workerId,
-                    'content' => $contentAsJson,
-                ]
-            );
-        }
-        catch(\Exception $e) {
-            $this->processWorkerError($e, $workerId);
-            return ResultUtil::internalServerError();
-        }
-        return ResultUtil::successResult('OK');
     }
 
 
@@ -339,31 +292,13 @@ class ReportService
         $uploadToS3 = RequestUtil::getBooleanQuery($request,QueryParameter::S3_UPLOAD, !false);
         $inputForHash = $type . StringUtil::getBooleanAsString($uploadToS3);
 
-        $workerId = null;
-        try {
-            $reportType = ReportType::PEDIGREE_REGISTER_OVERVIEW;
-
-            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-            }
-
-            $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if(!$workerId)
-                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                [
-                    'worker_id' => $workerId,
-                    'type' => $type,
-                    'upload_to_s3' => $uploadToS3,
-                ]
-            );
-        }
-        catch(\Exception $e) {
-            $this->processWorkerError($e, $workerId);
-            return ResultUtil::internalServerError();
-        }
-        return ResultUtil::successResult('OK');
+        return $this->processReportAsWorkerTask(
+            [
+                'type' => $type,
+                'upload_to_s3' => $uploadToS3,
+            ],
+            $request,ReportType::PEDIGREE_REGISTER_OVERVIEW, $inputForHash
+        );
     }
 
     /**
@@ -386,31 +321,13 @@ class ReportService
         $contentAsJson = JSON::encode($content->toArray());
         $inputForHash = $contentAsJson . StringUtil::getBooleanAsString($concatValueAndAccuracy);
 
-        $workerId = null;
-        try {
-            $reportType = ReportType::OFFSPRING;
-
-            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-            }
-
-            $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if(!$workerId)
-                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                [
-                    'worker_id' => $workerId,
-                    'content' => $contentAsJson,
-                    'concat_value_and_accuracy' => $concatValueAndAccuracy,
-                ]
-            );
-        }
-        catch(\Exception $e) {
-            $this->processWorkerError($e, $workerId);
-            return ResultUtil::internalServerError();
-        }
-        return ResultUtil::successResult('OK');
+        return $this->processReportAsWorkerTask(
+            [
+                'content' => $contentAsJson,
+                'concat_value_and_accuracy' => $concatValueAndAccuracy,
+            ],
+            $request,ReportType::OFFSPRING, $inputForHash
+        );
     }
 
     /**
@@ -434,30 +351,12 @@ class ReportService
 
         $inputForHash = $referenceYear;
 
-        $workerId = null;
-        try {
-            $reportType = ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES;
-
-            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-            }
-
-            $workerId = $this->createWorker($request, ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES, $inputForHash);
-            if(!$workerId)
-                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                [
-                    'worker_id' => $workerId,
-                    'year' => $referenceYear
-                ]
-            );
-        }
-        catch(\Exception $e) {
-            $this->processWorkerError($e, $workerId);
-            return ResultUtil::internalServerError();
-        }
-        return ResultUtil::successResult('OK');
+        return $this->processReportAsWorkerTask(
+            [
+                'year' => $referenceYear
+            ],
+            $request,ReportType::ANNUAL_ACTIVE_LIVE_STOCK_RAM_MATES, $inputForHash
+        );
     }
 
     /**
@@ -483,32 +382,14 @@ class ReportService
         $activeUbnReferenceDateString = $activeUbnReferenceDate->format('y-m-d H:i:s');
         $inputForHash = StringUtil::getBooleanAsString($concatValueAndAccuracy) . $pedigreeActiveEndDateLimitString . $activeUbnReferenceDateString;
 
-        $workerId = null;
-        try {
-            $reportType = ReportType::ANIMALS_OVERVIEW;
-
-            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-            }
-
-            $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if(!$workerId)
-                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                [
-                    'worker_id' => $workerId,
-                    'concat_value_and_accuracy' => $concatValueAndAccuracy,
-                    'pedigree_active_end_date_limit' => $pedigreeActiveEndDateLimitString,
-                    'active_ubn_reference_date_string' => $activeUbnReferenceDateString,
-                ]
-            );
-        }
-        catch(\Exception $e) {
-            $this->processWorkerError($e, $workerId);
-            return ResultUtil::internalServerError();
-        }
-        return ResultUtil::successResult('OK');
+        return $this->processReportAsWorkerTask(
+            [
+                'concat_value_and_accuracy' => $concatValueAndAccuracy,
+                'pedigree_active_end_date_limit' => $pedigreeActiveEndDateLimitString,
+                'active_ubn_reference_date_string' => $activeUbnReferenceDateString,
+            ],
+            $request,ReportType::ANIMALS_OVERVIEW, $inputForHash
+        );
     }
 
     /**
@@ -521,30 +402,12 @@ class ReportService
         $contentAsJson = JSON::encode($content->toArray());
         $inputForHash = $contentAsJson;
 
-        $workerId = null;
-        try {
-            $reportType = ReportType::INBREEDING_COEFFICIENT;
-
-            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-            }
-
-            $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if(!$workerId)
-                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                [
-                    'worker_id' => $workerId,
-                    'content' => $contentAsJson,
-                ]
-            );
-        }
-        catch(\Exception $e) {
-            $this->processWorkerError($e, $workerId);
-            return ResultUtil::internalServerError();
-        }
-        return ResultUtil::successResult('OK');
+        return $this->processReportAsWorkerTask(
+            [
+                'content' => $contentAsJson,
+            ],
+            $request,ReportType::INBREEDING_COEFFICIENT, $inputForHash
+        );
     }
 
     /**
@@ -557,30 +420,12 @@ class ReportService
         $referenceDateString = $referenceDate->format('y-m-d H:i:s');
         $inputForHash = $referenceDateString;
 
-        $workerId = null;
-        try {
-            $reportType = ReportType::FERTILIZER_ACCOUNTING;
-
-            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-            }
-
-            $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if(!$workerId)
-                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                [
-                    'worker_id' => $workerId,
-                    'reference_date' => $referenceDateString,
-                ]
-            );
-        }
-        catch(\Exception $e) {
-            $this->processWorkerError($e, $workerId);
-            return ResultUtil::internalServerError();
-        }
-        return ResultUtil::successResult('OK');
+        return $this->processReportAsWorkerTask(
+            [
+                'reference_date' => $referenceDateString,
+            ],
+            $request,ReportType::FERTILIZER_ACCOUNTING, $inputForHash
+        );
     }
 
     /**
@@ -603,31 +448,13 @@ class ReportService
 
         $inputForHash = $year . $pedigreeActiveEndDateLimitString;
 
-        $workerId = null;
-        try {
-            $reportType = ReportType::ANNUAL_TE_100;
-
-            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-            }
-
-            $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if(!$workerId)
-                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                [
-                    'worker_id' => $workerId,
-                    'year' => $year,
-                    'pedigree_active_end_date' => $pedigreeActiveEndDateLimitString,
-                ]
-            );
-        }
-        catch(\Exception $e) {
-            $this->processWorkerError($e, $workerId);
-            return ResultUtil::internalServerError();
-        }
-        return ResultUtil::successResult('OK');
+        return $this->processReportAsWorkerTask(
+            [
+                'year' => $year,
+                'pedigree_active_end_date' => $pedigreeActiveEndDateLimitString,
+            ],
+            $request,ReportType::ANNUAL_TE_100, $inputForHash
+        );
     }
 
     /**
@@ -649,32 +476,12 @@ class ReportService
             return ResultUtil::errorResult('Invalid reference year', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
-        $inputForHash = $referenceYear;
-
-        $workerId = null;
-        try {
-            $reportType = ReportType::ANNUAL_ACTIVE_LIVE_STOCK;
-
-            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-            }
-
-            $workerId = $this->createWorker($request, $reportType, $inputForHash);
-            if(!$workerId)
-                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                [
-                    'worker_id' => $workerId,
-                    'year' => $referenceYear
-                ]
-            );
-        }
-        catch(\Exception $e) {
-            $this->processWorkerError($e, $workerId);
-            return ResultUtil::internalServerError();
-        }
-        return ResultUtil::successResult('OK');
+        return $this->processReportAsWorkerTask(
+            [
+                'year' => $referenceYear
+            ],
+            $request,ReportType::ANNUAL_ACTIVE_LIVE_STOCK, $referenceYear
+        );
     }
 
 
@@ -705,38 +512,40 @@ class ReportService
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
         if ($processAsWorkerTask) {
-
-            $inputForHash = $optionsAsJson;
-
-            $workerId = null;
-            try {
-                $reportType = ReportType::BIRTH_LIST;
-
-                if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
-                    return $this->reportWorkerInProgressAlreadyExistErrorResponse();
-                }
-
-                $workerId = $this->createWorker($request, $reportType, $inputForHash);
-                if (!$workerId) {
-                    return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
-                }
-
-                $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
-                    [
-                        'worker_id' => $workerId,
-                        'options' => $optionsAsJson
-                    ]
-                );
-            }
-            catch(\Exception $e) {
-                $this->processWorkerError($e, $workerId);
-                return ResultUtil::internalServerError();
-            }
-            return ResultUtil::successResult('OK');
-
+            return $this->processReportAsWorkerTask(
+                [
+                    'options' => $optionsAsJson
+                ],
+                $request,ReportType::BIRTH_LIST, $optionsAsJson
+            );
         }
 
         return $this->birthListReportService->getReport($actionBy, $location, $options);
+    }
+
+
+    private function processReportAsWorkerTask(array $messageBodyAsArray, Request $request, string $reportType, string $inputForHash)
+    {
+        $workerId = null;
+        try {
+
+            if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $reportType, $inputForHash);
+            if (!$workerId) {
+                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $messageBodyAsArray['worker_id'] = $workerId;
+            $this->producer->sendCommand(WorkerAction::GENERATE_REPORT, $messageBodyAsArray);
+        }
+        catch(\Exception $e) {
+            $this->processWorkerError($e, $workerId);
+            return ResultUtil::internalServerError();
+        }
+        return ResultUtil::successResult('OK');
     }
 
 
