@@ -3,6 +3,7 @@
 
 namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\Option\BirthListReportOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ReportWorker;
 use AppBundle\Enumerator\AccessLevelType;
@@ -12,10 +13,12 @@ use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
+use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DateUtil;
+use AppBundle\Util\NullChecker;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
@@ -76,6 +79,9 @@ class ReportService
     /** @var LiveStockReportService */
     private $livestockReportService;
 
+    /** @var BirthListReportService */
+    private $birthListReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -86,6 +92,7 @@ class ReportService
      * @param Logger $logger
      * @param UlnValidatorInterface $ulnValidator
      * @param PedigreeCertificateReportService $pedigreeCertificateReportService
+     * @param BirthListReportService $birthListReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -96,7 +103,8 @@ class ReportService
         Logger $logger,
         UlnValidatorInterface $ulnValidator,
         PedigreeCertificateReportService $pedigreeCertificateReportService,
-        LiveStockReportService $livestockReportService
+        LiveStockReportService $livestockReportService,
+        BirthListReportService $birthListReportService
     )
     {
         $this->em = $em;
@@ -108,6 +116,7 @@ class ReportService
         $this->ulnValidator = $ulnValidator;
         $this->pedigreeCertificateReportService = $pedigreeCertificateReportService;
         $this->livestockReportService = $livestockReportService;
+        $this->birthListReportService = $birthListReportService;
     }
 
     /**
@@ -667,6 +676,69 @@ class ReportService
         }
         return ResultUtil::successResult('OK');
     }
+
+
+    /**
+     * @param Request $request
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function createBirthListReport(Request $request)
+    {
+        $actionBy = $this->userService->getUser();
+        $location = $this->userService->getSelectedLocation($request);
+
+        NullChecker::checkLocation($location);
+        BirthListReportService::validateUser($actionBy, $location);
+
+        $breedCode = $request->query->get(QueryParameter::BREED_CODE);
+        $pedigreeRegisterAbbreviation = $request->query->get(QueryParameter::PEDIGREE_REGISTER);
+        $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
+
+        $options = (new BirthListReportOptions())
+            ->setLanguage($language)
+            ->setPedigreeRegisterAbbreviation($pedigreeRegisterAbbreviation)
+            ->setBreedCode($breedCode)
+        ;
+
+        $optionsAsJson = $this->serializer->serializeToJSON($options);
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+
+            $inputForHash = $optionsAsJson;
+
+            $workerId = null;
+            try {
+                $reportType = ReportType::BIRTH_LIST;
+
+                if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+                    return $this->reportWorkerInProgressAlreadyExistErrorResponse();
+                }
+
+                $workerId = $this->createWorker($request, $reportType, $inputForHash);
+                if (!$workerId) {
+                    return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+
+                $this->producer->sendCommand(WorkerAction::GENERATE_REPORT,
+                    [
+                        'worker_id' => $workerId,
+                        'options' => $optionsAsJson
+                    ]
+                );
+            }
+            catch(\Exception $e) {
+                $this->processWorkerError($e, $workerId);
+                return ResultUtil::internalServerError();
+            }
+            return ResultUtil::successResult('OK');
+
+        }
+
+        return $this->birthListReportService->getReport($actionBy, $location, $options);
+    }
+
 
     /**
      * @param Request $request

@@ -8,6 +8,7 @@ class QueryParameter
 {
     const ACTIVE_ONLY = 'active_only';
     const ALIVE_ONLY = 'alive_only';
+    const BREED_CODE = 'breed_code';
     const CONCAT_VALUE_AND_ACCURACY = 'concat_value_and_accuracy';
     const END_DATE = 'end_date';
     const FILE_TYPE_QUERY = 'file_type';
@@ -27,6 +28,7 @@ class QueryParameter
     const USER_ACCOUNT_ID = 'user_account_id';
     const LANGUAGE = 'language';
     const PEDIGREE_ACTIVE_END_DATE = 'pedigree_active_end_date';
+    const PEDIGREE_REGISTER = 'pedigree_register';
     const PLAIN_TEXT_INPUT = 'plain_text_input';
     const PROCESS_AS_WORKER_TASK = 'process_as_worker_task';
     const REFERENCE_DATE = 'reference_date';

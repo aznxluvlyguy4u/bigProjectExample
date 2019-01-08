@@ -509,6 +509,9 @@ services:
     AppBundle\Service\Report\FertilizerAccountingReport:
         parent: app.report.base
 
+    AppBundle\Service\Report\BirthListReportService:
+      parent: app.report.base
+
     app.report.vwa.animal_details:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaAnimalDetailsReportService
@@ -616,6 +619,7 @@ services:
           - '@AppBundle\Validation\UlnValidatorInterface'
           - '@app.report.pedigree_certificates'
           - '@app.report.livestock'
+          - '@AppBundle\Service\Report\BirthListReportService'
 
 
     AppBundle\Processor\ReportProcessor:
@@ -630,8 +634,10 @@ services:
           - '@AppBundle\Service\Report\PedigreeRegisterOverviewReportService'
           - '@app.report.pedigree_certificates'
           - '@app.report.livestock'
+          - '@AppBundle\Service\Report\BirthListReportService'
           - '@doctrine.orm.entity_manager'
           - '@logger'
+          - '@app.serializer.base'
         tags:
           - {name: 'enqueue.client.processor'}
 

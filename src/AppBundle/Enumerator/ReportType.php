@@ -20,4 +20,5 @@ class ReportType
     const OFFSPRING = 8;
     const PEDIGREE_REGISTER_OVERVIEW = 9;
     const LIVE_STOCK = 10;
+    const BIRTH_LIST = 11;
 }

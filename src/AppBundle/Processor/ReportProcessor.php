@@ -2,13 +2,16 @@
 
 namespace AppBundle\Processor;
 
+use AppBundle\Component\Option\BirthListReportOptions;
 use AppBundle\Entity\ReportWorker;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
+use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\Report\AnimalsOverviewReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockReportService;
 use AppBundle\Service\Report\AnnualTe100UbnProductionReportService;
+use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
@@ -85,6 +88,12 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      */
     private $liveStockReportService;
 
+    /** @var BirthListReportService */
+    private $birthListReportService;
+
+    /** @var BaseSerializer */
+    private $serializer;
+
     /**
      * @var Logger
      */
@@ -101,12 +110,15 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         PedigreeRegisterOverviewReportService $pedigreeRegisterOverviewReportService,
         PedigreeCertificateReportService $pedigreeCertificateReportService,
         LiveStockReportService $liveStockReportService,
+        BirthListReportService $birthListReportService,
         EntityManager $em,
-        Logger $logger
+        Logger $logger,
+        BaseSerializer $serializer
     )
     {
         $this->em = $em;
         $this->logger = $logger;
+        $this->serializer = $serializer;
         $this->livestockReport = $annualActiveLivestockReportService;
         $this->annualTe = $annualTe100UbnProductionReportService;
         $this->fertilizerAccounting = $accountingReport;
@@ -117,6 +129,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->pedigreeRegisterOverviewReportService = $pedigreeRegisterOverviewReportService;
         $this->pedigreeCertificateReportService = $pedigreeCertificateReportService;
         $this->liveStockReportService = $liveStockReportService;
+        $this->birthListReportService = $birthListReportService;
     }
 
     public function process(PsrMessage $message, PsrContext $context)
@@ -205,6 +218,14 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
                         $data = $this->liveStockReportService->getReport($worker->getLocation()->getOwner(),
                             $worker->getLocation(), $fileType, $concatValueAndAccuracy, $content, $locale);
+                        break;
+                    }
+                case ReportType::BIRTH_LIST:
+                    {
+                        $options = $this->serializer->deserializeToObject($data['options'],
+                            BirthListReportOptions::class, null);
+                        $data = $this->birthListReportService->getReport($worker->getActionBy(),
+                            $worker->getLocation(), $options);
                         break;
                     }
             }

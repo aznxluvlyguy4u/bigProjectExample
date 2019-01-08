@@ -92,8 +92,12 @@ class BaseSerializer
      */
     public function deserializeToObject($json, $messageClassNameSpace, $basePath = self::ENTITY_NAMESPACE)
     {
-        $messageClassPathNameSpace = strtr($basePath . $messageClassNameSpace,
-            [self::ENTITY_NAMESPACE.self::ENTITY_NAMESPACE => self::ENTITY_NAMESPACE]);
+        if ($basePath === self::ENTITY_NAMESPACE) {
+            $messageClassPathNameSpace = strtr($basePath . $messageClassNameSpace,
+                [self::ENTITY_NAMESPACE.self::ENTITY_NAMESPACE => self::ENTITY_NAMESPACE]);
+        } else {
+            $messageClassPathNameSpace = $messageClassNameSpace;
+        }
 
         $messageObject = $this->jmsSerializer->deserialize($json, $messageClassPathNameSpace, Constant::jsonNamespace);
 
