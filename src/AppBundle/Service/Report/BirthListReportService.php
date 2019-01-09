@@ -6,8 +6,10 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\BirthListReportOptions;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
@@ -20,6 +22,7 @@ class BirthListReportService extends ReportServiceBase
 
     const FILE_NAME_REPORT_TYPE = 'BIRTH_LIST';
 
+    const MAX_MATE_AGE_IN_MONTHS = 6;
 
     /**
      * @param Person $person
@@ -101,14 +104,163 @@ class BirthListReportService extends ReportServiceBase
      */
     private function getReportData(Location $location, BirthListReportOptions $options): array
     {
+        $pedigreeRegisterId = null;
+        $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)
+            ->findOneByAbbreviation($options->getPedigreeRegisterAbbreviation());
+        if ($pedigreeRegister) {
+            $pedigreeRegisterId = $pedigreeRegister->getId();
+        }
+
+        $breedCode = $options->getBreedCode();
+        $locationId = $location->getId();
+
+        $rams = $this->conn->query($this->sqlRams($locationId, $pedigreeRegisterId, $breedCode))->fetchAll();
+        $ewesCount = $this->conn->query($this->sqlEwesCount($locationId, $pedigreeRegisterId, $breedCode))->fetch()['unique_ewe_count'];
+        $mates = $this->conn->query($this->sqlMates($locationId, $pedigreeRegisterId, $breedCode))->fetchAll();
+        $document = $this->conn->query($this->sqlDocument($locationId))->fetch();
+
         return [
-            'TEST',
-            'TEST',
-            'TEST',
-            'TEST',
-            'TEST',
-            'TEST',
-            'TEST',
+            'rams' => $rams,
+            'ewes' => $ewesCount,
+            'mates' => $mates,
+            'document' => $document,
         ];
+    }
+
+
+    /**
+     * @param int|null $locationId
+     * @param int|null $pedigreeRegisterId
+     * @param string|null $breedCode
+     * @return string
+     */
+    private function sqlMates(int $locationId = null,
+                              int $pedigreeRegisterId = null,
+                              string $breedCode = null): string
+    {
+        return $this->sqlMatesBase(true, null, $locationId, $pedigreeRegisterId, $breedCode);
+    }
+
+
+    /**
+     * @param int|null $locationId
+     * @param int|null $pedigreeRegisterId
+     * @param string|null $breedCode
+     * @return string
+     */
+    private function sqlEwesCount(int $locationId = null,
+                                  int $pedigreeRegisterId = null,
+                                  string $breedCode = null): string
+    {
+        return "SELECT
+          COUNT(*) as unique_ewe_count
+        FROM (
+       ".$this->sqlMatesBase(false, 'ewe.id', $locationId, $pedigreeRegisterId, $breedCode)."
+       GROUP BY ewe.id
+       ) AS unique_ewes";
+    }
+
+
+    /**
+     * @param int|null $locationId
+     * @param int|null $pedigreeRegisterId
+     * @param string|null $breedCode
+     * @return string
+     */
+    private function sqlRams(int $locationId = null,
+                             int $pedigreeRegisterId = null,
+                             string $breedCode = null): string
+    {
+        $resultColumns = "ram.id as ram_id,
+                  CONCAT(ram.uln_country_code, ram.uln_number) as uln,
+                  ram.uln_country_code, ram.uln_number,
+                  COUNT(ram.id) as mate_count";
+        return $this->sqlMatesBase(false, $resultColumns, $locationId, $pedigreeRegisterId, $breedCode)
+            ." GROUP BY ram.id, ram.uln_country_code, ram.uln_number
+            ORDER BY COUNT(ram.id) DESC, ram.animal_order_number";
+    }
+
+
+    /**
+     * @param bool $sortResults
+     * @param string|null $resultColumns
+     * @param int|null $locationId
+     * @param int|null $pedigreeRegisterId
+     * @param string|null $breedCode
+     * @return string
+     */
+    private function sqlMatesBase(bool $sortResults = true,
+                                  string $resultColumns = null,
+                                  int $locationId = null,
+                                  int $pedigreeRegisterId = null,
+                                  string $breedCode = null): string
+    {
+        $locationFilter = !is_int($locationId) ? ' ' : ' AND m.location_id = '.$locationId.' ';
+        $breedCodeFilter = empty($breedCode) ? ' ' :
+            " AND (ewe.breed_code = '$breedCode' OR ram.breed_code = '$breedCode') ";
+        $pedigreeRegisterFilter = !is_int($pedigreeRegisterId) ? ' ' :
+            ' AND (ewe.pedigree_register_id = 5 OR ram.pedigree_register_id = 5) ';
+
+        $orderBy = $sortResults ? ' ORDER BY m.start_date, ewe.animal_order_number ' : ' ';
+
+        $columns = empty($resultColumns) ? "                   ewe.collar_color,
+                   ewe.collar_number,
+                   CONCAT(ewe.uln_country_code, ewe.uln_number) as ewe_uln,
+                   ewe.uln_country_code as ewe_uln_country_code,
+                   substr(ewe.uln_number, 0, length(ewe.uln_number) - 4) as ewe_uln_number_without_order_number,
+                   ewe.animal_order_number as ewe_order_number,
+                   CONCAT(ram.uln_country_code, ram.uln_number) as ram_uln,
+                   ram.animal_order_number as ram_order_number,
+                   (m.start_date + interval '145' day)::date as min_expected_litter_date,
+                   (m.end_date + interval '145' day)::date as max_expected_litter_date,
+                   m.end_date::date <> m.start_date::date as is_expected_litter_date_period,
+                   (CASE WHEN (m.end_date::date = m.start_date::date)
+                     THEN to_char((m.start_date + interval '145' day)::date, 'DD-MM-YYYY')
+                     ELSE CONCAT(
+                         to_char((m.start_date + interval '145' day)::date, 'DD-MM-YYYY'),' - ',
+                         to_char((m.end_date + interval '145' day)::date, 'DD-MM-YYYY')
+                       )
+                     END
+                     ) as formatted_expected_litter_date" : $resultColumns;
+
+        return "SELECT
+                  $columns
+                FROM mate m
+                  INNER JOIN declare_nsfo_base b ON b.id = m.id
+                  INNER JOIN animal ewe ON ewe.id = m.stud_ewe_id
+                  INNER JOIN animal ram ON ram.id = m.stud_ram_id
+                  LEFT JOIN litter l on m.id = l.mate_id
+                WHERE
+                      is_approved_by_third_party AND
+                      (
+                        b.request_state = '".RequestStateType::FINISHED."' OR 
+                        b.request_state = '".RequestStateType::FINISHED_WITH_WARNING."' OR
+                        b.request_state = '".RequestStateType::IMPORTED."'
+                      ) AND
+                      l.id ISNULL -- open mates
+                      AND (EXTRACT(YEAR FROM AGE(end_date)) * 12 + EXTRACT(MONTH FROM AGE(end_date))) <= "
+            .self::MAX_MATE_AGE_IN_MONTHS."-- max mate age based on min_mate_age
+                ".$locationFilter.$breedCodeFilter.$pedigreeRegisterFilter.$orderBy;
+    }
+
+
+    /**
+     * @param int $locationId
+     * @return string
+     */
+    private function sqlDocument(int $locationId): string
+    {
+        return "SELECT
+                  l.id,
+                  l.ubn,
+                  TRIM(CONCAT(p.first_name,' ',p.last_name)) as owner,
+                  TRIM(CONCAT(a.street_name,' ',a.address_number,' ',a.address_number_suffix)) as address,
+                  a.postal_code,
+                  a.city
+                FROM location l
+                  INNER JOIN company c on l.company_id = c.id
+                  INNER JOIN person p ON p.id = c.owner_id
+                  INNER JOIN address a ON a.id = c.address_id
+                WHERE l.id = ".$locationId;
     }
 }
