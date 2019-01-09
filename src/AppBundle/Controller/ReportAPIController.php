@@ -18,8 +18,6 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class ReportAPIController extends APIController {
 
-  const IS_USE_PROD_VERSION_OUTPUT = true;
-
     /**
      * Get all reports
      *

@@ -20,7 +20,6 @@ class PedigreeCertificateReportService extends ReportServiceBase
 {
     const TITLE = 'pedigree certificates report';
     const TWIG_FILE = 'Report/pedigree_certificates2.html.twig';
-    const TWIG_FILE_BETA = 'Report/pedigree_certificates_beta.html.twig';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
 
@@ -76,8 +75,6 @@ class PedigreeCertificateReportService extends ReportServiceBase
      */
     private function getPdfReport()
     {
-        //Or use... $this->getCurrentEnvironment() == Environment::PROD;
-        $twigFile = ReportAPIController::IS_USE_PROD_VERSION_OUTPUT ? self::TWIG_FILE : self::TWIG_FILE_BETA;
         $data = $this->pedigreeCertificatesGenerator->getReports();
         $additionalData = [
 	        'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/css/bootstrap.min.css',
@@ -95,7 +92,7 @@ class PedigreeCertificateReportService extends ReportServiceBase
 	        'margin-left'   => 3,
         ];
 
-        return $this->getPdfReportBase($twigFile, $data, false, $additionalData, $customPdfOptions, true);
+        return $this->getPdfReportBase(self::TWIG_FILE, $data, false, $additionalData, $customPdfOptions, true);
     }
 
 
