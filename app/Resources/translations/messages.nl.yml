@@ -461,6 +461,8 @@ AN ANIMAL ALREADY EXISTS WITH THIS ULN: Een dier met dit ULN bestaat al
 THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: De gebeurtenisdatum kan niet voor de geboortedatum zijn
 THE ULN HAS AN INVALID FORMAT: Het ULN heeft een ongeldig format
 THE STN HAS AN INVALID FORMAT: Het STN heeft een ongeldig format
+THE BREED CODE HAS AN INVALID FORMAT: De rascode heeft een ongeldig format
+THE PEDIGREE REGISTER ABBREVIATION HAS AN INVALID FORMAT: De stamboekafkorting heeft een ongeldig format
 THE ANIMAL IS NOT ON THE GIVEN LOCATION: Het dier behoort niet tot de opgegeven locatie
 AN IDENTICAL %requestState% %declare% ALREADY EXISTS: Een identieke %declare% (%requestState%) bestaat al
 SELECT EXPORT TO RELOCATE ANIMALS TO A UBN IN ANOTHER COUNTRY: Zet export op ‘Ja’ om deze dieren af te voeren naar een UBN van een ander land.

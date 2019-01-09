@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\BirthListReportOptions;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\ReportWorker;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
@@ -13,10 +14,13 @@ use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
+use AppBundle\Exception\InvalidBreedCodeHttpException;
+use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\RequestUtil;
@@ -498,7 +502,23 @@ class ReportService
         BirthListReportService::validateUser($actionBy, $location);
 
         $breedCode = $request->query->get(QueryParameter::BREED_CODE);
+        if ($breedCode !== null) {
+            $breedCode = strtoupper($breedCode);
+            if (!BreedCodeUtil::isValidBreedCodeString($breedCode)) {
+                throw new InvalidBreedCodeHttpException($this->translator, strval($breedCode));
+            }
+        }
+
         $pedigreeRegisterAbbreviation = $request->query->get(QueryParameter::PEDIGREE_REGISTER);
+        if ($pedigreeRegisterAbbreviation !== null) {
+            $pedigreeRegisterAbbreviation = strtoupper($pedigreeRegisterAbbreviation);
+            $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)
+                ->findOneByAbbreviation($pedigreeRegisterAbbreviation);
+            if (!$pedigreeRegister) {
+                throw new InvalidPedigreeRegisterAbbreviationHttpException($this->translator,strval($pedigreeRegisterAbbreviation));
+            }
+        }
+
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
 
         $options = (new BirthListReportOptions())

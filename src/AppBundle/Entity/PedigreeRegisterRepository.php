@@ -72,4 +72,22 @@ class PedigreeRegisterRepository extends BaseRepository {
 
         return null;
     }
+
+
+    /**
+     * @param string|null $abbreviation
+     * @return PedigreeRegister|null
+     */
+    public function findOneByAbbreviation($abbreviation): ?PedigreeRegister
+    {
+        if (empty($abbreviation) || !is_string($abbreviation)) {
+            return null;
+        }
+
+        $abbreviation = strtoupper($abbreviation);
+
+        return $this->findOneBy([
+           'abbreviation' => $abbreviation
+        ]);
+    }
 }

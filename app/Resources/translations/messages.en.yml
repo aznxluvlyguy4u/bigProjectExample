@@ -453,6 +453,8 @@ AN ANIMAL ALREADY EXISTS WITH THIS ULN: An animal already exists with this ULN
 THE EVENT DATE CANNOT BE BEFORE THE DATE OF BIRTH: The event date cannot be before the date of birth
 THE ULN HAS AN INVALID FORMAT: The ULN has an invalid format
 THE STN HAS AN INVALID FORMAT: The STN has an invalid format
+THE BREED CODE HAS AN INVALID FORMAT: The breed code has an invalid format
+THE PEDIGREE REGISTER ABBREVIATION HAS AN INVALID FORMAT: The pedigree register abbreviation has an invalid format
 THE ANIMAL IS NOT ON THE GIVEN LOCATION: The animal is not on the given location
 AN IDENTICAL %requestState% %declare% ALREADY EXISTS: An identical %declare% (%requestState%) already exists
 SELECT EXPORT TO RELOCATE ANIMALS TO A UBN IN ANOTHER COUNTRY: Select export to relocate animals to a UBN in another country
