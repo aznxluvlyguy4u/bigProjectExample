@@ -12,11 +12,11 @@
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
     {% set pageCounter = 0 %}
-    {% set rowsPerPage = 8 %}
+    {% set rowsPerPage = 5 %}
     {% set size = mates|length %}
     {% set pageAmount = 1 %}
     {% if size > rowsPerPage %}
-        {% set pageAmount = (size / rowsPerPage | round(0, 'ceil')) + 1 %}
+        {% set pageAmount = ((size / rowsPerPage) | round(0, 'ceil')) + 1 %}
     {% endif %}
 
 
@@ -50,9 +50,9 @@
            <div class="right">{{ 'PAGE' | trans | capitalize }} {{ page }} {{ 'PAGE_OF' | trans | lower }} {{ pageAmount }}  &nbsp;&nbsp;&nbsp; {{ 'DATE' | trans | capitalize }}: {{ date }}</div>
         </div>
 
-        {# MATES #}
+        {% if not loop.last %}
 
-
+{# MATES #}
          <table class="tg">
             <thead>
                 <tr>
@@ -138,6 +138,14 @@
             </tbody>
         </table>
 
+        {% else %}
+
+            <h4>Samenvatting Geboortelijst</h4>
+        
+        {% endif %}
+
+
+
     </div>
 {% endfor %}
 
@@ -154,6 +162,11 @@
         #page-without-break {
             overflow: hidden;
             page-break-after: avoid;
+        }
+
+        #page {
+            overflow: hidden;
+            page-break-after: always;
         }
 
         .header {
@@ -321,7 +334,6 @@
         }
 
         .max_expected_litter_date {
-            /*font-size: small;*/
             font-size: 4.1mm;
             font-weight: lighter;
         }
