@@ -5,8 +5,10 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\BirthListReportOptions;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\ReportWorker;
+use AppBundle\Entity\Token;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\JmsGroup;
@@ -38,6 +40,7 @@ use Enqueue\Util\JSON;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -694,18 +697,52 @@ class ReportService
     public function testReportTemplate(Request $request, $reportType, $base64encodedBody)
     {
         $this->userService->validateDevToken($request);
-        $body = base64_decode($base64encodedBody);
+        $request = $this->setLocationAndClientHeadersByLocationIdQueryParameter($request);
 
-        $content = new ArrayCollection(json_decode($body, true));
+        $body = empty($base64encodedBody) ? null :base64_decode($base64encodedBody);
+        $isEmptyBody = empty($body) || $body === '{}';
+
+        $content = new ArrayCollection(($isEmptyBody ? json_decode($body, true) : null));
+        $request->query->set(QueryParameter::PROCESS_AS_WORKER_TASK, 'false');
 
         switch ($reportType) {
             case ReportType::PEDIGREE_CERTIFICATE:
                 return $this->createPedigreeCertificatesWithoutWorker($request, $content);
+            case ReportType::BIRTH_LIST:
+                return $this->createBirthListReport($request);
             default:
                 throw new PreconditionFailedHttpException('INVALID REPORT TYPE'
                     .'. '.$this->getValidTestReportTypesErrorMessage());
         }
     }
+
+
+    /**
+     * @param Request $request
+     * @return Request
+     */
+    private function setLocationAndClientHeadersByLocationIdQueryParameter(Request $request)
+    {
+        $locationId = $request->query->get(QueryParameter::LOCATION_ID);
+        if (is_int($locationId) || ctype_digit($locationId)) {
+            $locationId = intval($locationId);
+            $location = $this->em->getRepository(Location::class)->find($locationId);
+            if ($location) {
+                $request->headers->set('ubn', $location->getUbn());
+                $owner = $location->getOwner();
+
+                $token = $this->em->getRepository(Token::class)->findByClientIdPrioritizedByGhostTokenType($owner);
+                if (!$token) {
+                    throw new PreconditionFailedHttpException('Owner for location ' . $locationId
+                        . '/ubn ' . $location->getUbn() . ' has no token');
+                }
+
+                $request->headers->set('GhostToken', $token->getCode());
+            }
+        }
+        return $request;
+    }
+
 
     /**
      * @return string
