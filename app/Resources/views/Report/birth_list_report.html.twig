@@ -53,205 +53,91 @@
         {# MATES #}
 
 
-        <table class="tg">
-          <tr>
-            <th class="tg-amwm">Halsnr</th>
-            <th class="tg-amwm">Ooi (ULN)</th>
-            <th class="tg-amwm">Gedekt door ram</th>
-            <th class="tg-amwm">Verwachte</th>
-            <th class="tg-amwm">Werkelijke</th>
-            <th class="tg-amwm">Worpgrootte</th>
-            <th class="tg-amwm">Aantal</th>
-            <th class="tg-amwm" colspan="4">Geslacht (O/R)</th>
-          </tr>
-          <tr>
-            <td class="tg-s6z2 border-bottom-emphasized" rowspan="3">Rascode</td>
-            <td class="tg-amwm"></td>
-            <td class="tg-amwm">(ULN)</td>
-            <td class="tg-amwm">werpdatum</td>
-            <td class="tg-amwm">lamdatum</td>
-            <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="3"></td>
-            <td class="tg-amwm">levend</td>
-            <td class="tg-amwm" colspan="4">Werknummer</td>
-          </tr>
-          <tr>
-            <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
-            <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
-            <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
-            <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
-            <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
-            <td class="bottom-bordered-thin tg-amwm" colspan="4">Geboortegewicht</td>
-          </tr>
-          <tr class="border-bottom-emphasized">
-            <td class="tg-amwm">Lam 1</td>
-            <td class="tg-amwm">Lam 2</td>
-            <td class="tg-amwm">Lam 3</td>
-            <td class="tg-amwm">Lam 4</td>
-          </tr>
-          <tr class="border-top-emphasized">
-            <td class="tg-amwm">Geel 46</td>
-            <td class="tg-1wig">NLEWE100000</td>
-            <td class="tg-1wig">DKRAM100000</td>
-            <td class="tg-1wig">01-02-2019</td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-          </tr>
-          <tr>
-            <td class="tg-s6z2 border-bottom-emphasized" rowspan="2">TE100</td>
-            <td class="tg-0lax" colspan="6">Geboorteverloop:</td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-          </tr>
-          <tr class="border-bottom-emphasized">
-            <td class="tg-0lax" colspan="6">Opmerking:</td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-          </tr>
+         <table class="tg">
+            <thead>
+                <tr>
+                    <th class="tg-amwm">Halsnr</th>
+                    <th class="tg-amwm">Ooi (ULN)</th>
+                    <th class="tg-amwm">Gedekt door ram</th>
+                    <th class="tg-amwm">Verwachte</th>
+                    <th class="tg-amwm">Werkelijke</th>
+                    <th class="tg-amwm">Worpgrootte</th>
+                    <th class="tg-amwm">Aantal</th>
+                    <th class="tg-amwm" colspan="4">Geslacht (O/R)</th>
+                </tr>
+                <tr>
+                    <td class="tg-s6z2 border-bottom-emphasized" rowspan="3">Rascode</td>
+                    <td class="tg-amwm"></td>
+                    <td class="tg-amwm">(ULN)</td>
+                    <td class="tg-amwm">werpdatum</td>
+                    <td class="tg-amwm">lamdatum</td>
+                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="3"></td>
+                    <td class="tg-amwm">levend</td>
+                    <td class="tg-amwm" colspan="4">Werknummer</td>
+                </tr>
+                <tr>
+                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
+                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
+                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
+                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
+                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
+                    <td class="bottom-bordered-thin tg-amwm" colspan="4">Geboortegewicht</td>
+              </tr>
+              <tr class="border-bottom-emphasized">
+                    <td class="tg-amwm">Lam 1</td>
+                    <td class="tg-amwm">Lam 2</td>
+                    <td class="tg-amwm">Lam 3</td>
+                    <td class="tg-amwm">Lam 4</td>
+              </tr>
+            </thead>
+            <tbody>
+                {% set beginValue = rowsPerPage * (page - 1) %}
+                {% set endValue = beginValue + (rowsPerPage-1) %}
+                {% for i in beginValue..endValue %}
+
+                    {% if mates[i] is defined %}
+                    {% set v = mates[i] %}
+                      <tr class="border-top-emphasized">
+                        <td class="tg-amwm">{{ v.ewe_collar }}</td>
+                        <td class="tg-1wig">{{ v.ewe_uln_country_code }}{{ v.ewe_uln_number_without_order_number }}<span class="order-number">{{ v.ewe_order_number }}</span></td>
+                        <td class="tg-1wig">{{ v.ram_uln }}</td>
+                        <td class="tg-1wig">
+                            {% if v.is_expected_litter_date_period %}
+                                <div class="top-center min_expected_litter_date">{{ v.min_expected_litter_date| date('d-m-Y') }}</div>
+                                <div class="lower-center max_expected_litter_date">{{ v.max_expected_litter_date| date('d-m-Y') }}</div>
+                            {% else %}
+                                <div class="middle-center min_expected_litter_date">{{ v.min_expected_litter_date| date('d-m-Y') }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                      </tr>
+                      <tr>
+                        <td class="tg-s6z2 border-bottom-emphasized" rowspan="2">TE100</td>
+                        <td class="tg-0lax" colspan="6">Geboorteverloop:</td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                      </tr>
+                      <tr class="border-bottom-emphasized">
+                        <td class="tg-0lax" colspan="6">Opmerking:</td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                        <td class="tg-0lax"></td>
+                      </tr>
+                    {% endif %}
+                {% endfor %}
+
+            </tbody>
         </table>
 
-
-        {#<table>#}
-            {#<thead>#}
-                {#<tr>#}
-                    {#<td><div class="middle-center font-weight-bold">Halsnr</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">Ooi (ULN)</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">Gedekt door ram</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">Verwachte</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">Werkelijke</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">Worpgrootte</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">Aantal</div></td>#}
-                    {#<td colspan="4"><div>Geslacht (O/R)</div></td>#}
-                {#</tr>#}
-                {#<tr>#}
-                    {#<td rowspan="3" class="middle-center"><div>Rascode</div></td>#}
-                    {#<td rowspan="3"></td>#}
-                    {#<td><div class="middle-center font-weight-bold">(ULN)</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">werpdatum</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">lamdatum</div></td>#}
-                    {#<td rowspan="3"></td>#}
-                    {#<td><div class="middle-center font-weight-bold">levend</div></td>#}
-                    {#<td colspan="4"><div>Werknummer</div></td>#}
-                {#</tr>#}
-                {#<tr>#}
-                    {#<td rowspan="2"></td>#}
-                    {#<td rowspan="2"></td>#}
-                    {#<td rowspan="2"></td>#}
-                    {#<td colspan="4" class="middle-center font-weight-bold"><div>Geboortegewicht</div></td>#}
-                {#</tr>#}
-                {#<tr>#}
-                    {#<td><div class="middle-center font-weight-bold">Lam 1</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">Lam 2</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">Lam 3</div></td>#}
-                    {#<td><div class="middle-center font-weight-bold">Lam 4</div></td>#}
-                {#</tr>#}
-            {#</thead>#}
-
-            {#<thead>#}
-                {#<tr>#}
-                    {#<th>#}
-                        {#<div class="top-center font-weight-bold">Halsnr</div>#}
-                        {#<div class="middle-center">Rascode</div>#}
-                    {#</th>#}
-                    {#<th>#}
-                        {#<div class="top-center font-weight-bold">Ooi (ULN)</div>#}
-                    {#</th>#}
-                    {#<th>#}
-                        {#<div class="top-center font-weight-bold">Gedekt door ram (ULN)</div>#}
-                    {#</th>#}
-                    {#<th>#}
-                        {#<div class="top-center font-weight-bold">Verwachte werpdatum</div>#}
-                    {#</th>#}
-                    {#<th>#}
-                        {#<div class="top-center font-weight-bold">Werkelijke lamdatum</div>#}
-                    {#</th>#}
-                    {#<th>#}
-                        {#<div class="top-center font-weight-bold">Worpgrootte</div>#}
-                    {#</th>#}
-                    {#<th>#}
-                        {#<div class="top-center font-weight-bold">Aantal levend</div>#}
-                    {#</th>#}
-                    {#<th>#}
-                        {#<table>#}
-                           {#<tbody>#}
-                              {#<tr>#}
-                                {#<td><div class="top-center font-weight-bold">Geslacht (O/R)</div></td>#}
-                              {#</tr>#}
-                              {#<tr>#}
-                                {#<td><div class="middle-center font-weight-bold">Werknummer</div></td>#}
-                              {#</tr>#}
-                              {#<tr>#}
-                                {#<td><div class="lower-center font-weight-bold">Geboortegewicht</div></td>#}
-                              {#</tr>#}
-                              {#<tr>#}
-                                {#<td><div class="middle-center font-weight-bold">Lam 1</div></td>#}
-                                {#<td><div class="middle-center font-weight-bold">Lam 2</div></td>#}
-                                {#<td><div class="middle-center font-weight-bold">Lam 3</div></td>#}
-                                {#<td><div class="middle-center font-weight-bold">Lam 4</div></td>#}
-                              {#</tr>#}
-                           {#</tbody>#}
-                        {#</table>#}
-                    {#</th>#}
-                {#</tr>#}
-            {#</thead>#}
-            {#<tbody>#}
-                {#{% set beginValue = rowsPerPage * (page - 1) %}#}
-                {#{% set endValue = beginValue + (rowsPerPage-1) %}#}
-                {#{% for i in beginValue..endValue %}#}
-
-                    {#{% if mates[i] is defined %}#}
-                    {#{% set v = mates[i] %}#}
-                    {#<tr>#}
-                        {#<td>#}
-                            {#<div class="top-center font-weight-bold">{{ v.ewe_collar }}</div>#}
-                            {#<div class="middle-center">{{ v.ewe_breed_code }}</div>#}
-                        {#</td>#}
-                    {#</tr>#}
-                    {#<tr>#}
-                        {#<td>#}
-                            {#<table>#}
-                               {#<tbody>#}
-                                  {#<tr>#}
-                                    {#<td class="left-center font-weight-bold">#}
-                                        {#<div>{{ v.ewe_uln_country_code_without_order_number }}</div>#}
-                                        {#<div class="order-number">{{ v.ewe_uln_country_code_without_order_number }}</div>#}
-                                    {#</td>#}
-                                    {#<td class="font-weight-bold">#}
-                                        {#{% if is_expected_litter_date_period %}#}
-                                            {#<div class="top-center">{{ v.min_expected_litter_date }}</div>#}
-                                            {#<div class="bottom-center">{{ v.max_expected_litter_date }}</div>#}
-                                        {#{% elseif %}#}
-                                            {#<div class="middle-center">{{ v.min_expected_litter_date }}</div>#}
-                                        {#{% endif %}#}
-                                    {#</td>#}
-                                    {#<td class="left-center font-weight-bold">{{ v. }}</td>#}
-                                    {#<td class="left-center font-weight-bold"></td>#}
-                                    {#<td class="left-center font-weight-bold"></td>#}
-                                    {#<td class="left-center font-weight-bold"></td>#}
-                                  {#</tr>#}
-                                  {#<tr>#}
-                                    {#<td colspan="6"><div class="left-center">Geboorteverloop:</div></td>#}
-                                  {#</tr>#}
-                                  {#<tr>#}
-                                    {#<td colspan="6"><div class="left-center font-weight-bold">Opmerking:</div></td>#}
-                                  {#</tr>#}
-                               {#</tbody>#}
-                            {#</table>#}
-                        {#</td>#}
-                    {#</tr>#}
-                    {#{% endif %}#}
-                {#{% endfor %}#}
-
-            {#</tbody>#}
-        </table>
     </div>
 {% endfor %}
 
@@ -308,8 +194,7 @@
         }
 
         .order-number {
-            font-size: large;
-            font-weight: bold;
+            font-size: x-large;
         }
 
         .sub-header .right {
@@ -428,6 +313,17 @@
 
         .border-top-emphasized {
             border-top-width: medium;
+        }
+
+        .min_expected_litter_date {
+            font-size: 4.1mm;
+            font-weight: lighter;
+        }
+
+        .max_expected_litter_date {
+            /*font-size: small;*/
+            font-size: 4.1mm;
+            font-weight: lighter;
         }
 
     </style>
