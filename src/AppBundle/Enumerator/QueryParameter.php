@@ -19,6 +19,7 @@ class QueryParameter
     const INCLUDE_ALL_LIVESTOCK_ANIMALS = 'include_all_livestock_animals';
     const INCLUDE_GHOST_LOGIN_DATA = 'include_ghost_login_data';
     const INCLUDE_LITTER = 'include_litter';
+    const LOCATION_ID = 'location_id';
     const MINIMAL_OUTPUT = 'minimal_output';
     const S3_UPLOAD = 's3_upload';
     const SHOW_HIDDEN = 'show_hidden';
