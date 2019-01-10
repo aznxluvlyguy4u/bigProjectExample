@@ -4,19 +4,21 @@ namespace AppBundle\Service\Report;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\BirthListReportOptions;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class BirthListReportService extends ReportServiceBase
 {
     const TITLE = 'birth_list_report';
-    const TWIG_FILE = 'Report/birth_list.html.twig';
+    const TWIG_FILE = 'Report/birth_list_report.html.twig';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
 
@@ -85,8 +87,6 @@ class BirthListReportService extends ReportServiceBase
     {
         $data = $this->getReportData($location, $options);
 
-        dump($data);die;
-
         return $this->getPdfReportBase(self::TWIG_FILE,
             $data,
             true,
@@ -118,12 +118,15 @@ class BirthListReportService extends ReportServiceBase
         $ewesCount = $this->conn->query($this->sqlEwesCount($locationId, $pedigreeRegisterId, $breedCode))->fetch()['unique_ewe_count'];
         $mates = $this->conn->query($this->sqlMates($locationId, $pedigreeRegisterId, $breedCode))->fetchAll();
         $document = $this->conn->query($this->sqlDocument($locationId))->fetch();
+        $date = TimeUtil::getTimeStampToday('d-m-Y');
 
         return [
             'rams' => $rams,
             'ewes' => $ewesCount,
             'mates' => $mates,
             'document' => $document,
+            'date' => $date,
+            ReportLabel::IMAGES_DIRECTORY => $this->getImagesDirectory(),
         ];
     }
 
@@ -203,9 +206,13 @@ class BirthListReportService extends ReportServiceBase
 
         $orderBy = $sortResults ? ' ORDER BY m.start_date, ewe.animal_order_number ' : ' ';
 
-        $columns = empty($resultColumns) ? "                   ewe.collar_color,
-                   ewe.collar_number,
+
+        $defaultNullFiller = "'-'";
+
+        $columns = empty($resultColumns) ?
+        "COALESCE(NULLIF(TRIM(CONCAT(ewe.collar_color,' ',ewe.collar_number)),''),".$defaultNullFiller.") as ewe_collar,
                    CONCAT(ewe.uln_country_code, ewe.uln_number) as ewe_uln,
+                   COALESCE(ewe.breed_code, ".$defaultNullFiller.") as ewe_breed_code,
                    ewe.uln_country_code as ewe_uln_country_code,
                    substr(ewe.uln_number, 0, length(ewe.uln_number) - 4) as ewe_uln_number_without_order_number,
                    ewe.animal_order_number as ewe_order_number,
