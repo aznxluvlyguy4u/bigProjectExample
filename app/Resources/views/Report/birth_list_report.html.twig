@@ -143,6 +143,11 @@
 
             {% set ramsCount = rams|length %}
 
+            {% set ramsData = [] %}
+            {% for i in 0..(ramsCount-1) %}
+                {% set ramsData = ramsData|merge({('_'~i) :'Aantal dekkingen door ram [' ~ rams[i]['uln'] ~ ']: ' ~ rams[i]['mate_count']}) %}
+            {% endfor %}
+
             <table class="summary-table">
               <tr class="summary-table">
                 <th class="summary-table" colspan="3"><h4>Samenvatting Geboortelijst</h4></th>
@@ -150,28 +155,38 @@
               <tr class="summary-table">
                 <td class="summary-table smt-col-1">Totaal aantal ooien op geboortelijst</td>
                 <td class="summary-table smt-col-2">: 10</td>
-                <td class="summary-table">Aantal dekkingen door ram [NL100203567891]: 9</td>
+                <td class="summary-table">{{ ramsCount >= 1 ? ramsData['_0'] : '' }}</td>
               </tr>
               <tr class="summary-table">
                 <td class="summary-table smt-col-1">Aantal ooien met worp</td>
                 <td class="summary-table smt-col-2">:_____ &nbsp;&nbsp;</td>
-                <td class="summary-table">Aantal dekkingen door ram [NL100203567891]: 9</td>
+                <td class="summary-table">{{ ramsCount >= 2 ? ramsData['_1'] : '' }}</td>
               </tr>
               <tr class="summary-table">
                 <td class="summary-table smt-col-1">Totaal geboren lammeren</td>
                 <td class="summary-table smt-col-2">:_____ &nbsp;&nbsp;&nbsp;&nbsp;</td>
-                <td class="summary-table"></td>
+                <td class="summary-table">{{ ramsCount >= 3 ? ramsData['_2'] : '' }}</td>
               </tr>
               <tr class="summary-table">
                 <td class="summary-table smt-col-1">Levend geboren lammeren</td>
                 <td class="summary-table smt-col-2">:_____</td>
-                <td class="summary-table"></td>
+                <td class="summary-table">{{ ramsCount >= 4 ? ramsData['_3'] : '' }}</td>
               </tr>
               <tr class="summary-table">
                 <td class="summary-table smt-col-1">Gemiddelde worpgrootte</td>
                 <td class="summary-table smt-col-2">:_____</td>
-                <td class="summary-table"></td>
+                <td class="summary-table">{{ ramsCount >= 5 ? ramsData['_4'] : '' }}</td>
               </tr>
+
+            {% if ramsCount >= 6 %}
+                {% for i in 6..ramsCount %}
+                  <tr class="summary-table">
+                    <td class="summary-table smt-col-1">&nbsp;</td>
+                    <td class="summary-table smt-col-2">&nbsp;</td>
+                    <td class="summary-table">{{ ramsData['_'~(i-1)] }}</td>
+                  </tr>
+                {% endfor %}
+            {% endif %}
               <tr class="summary-table" colspan="3">
                 <td class="summary-table">&nbsp;</td>
               </tr>
