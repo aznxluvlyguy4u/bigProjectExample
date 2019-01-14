@@ -19,6 +19,7 @@
         {% set pageAmount = ((size / rowsPerPage) | round(0, 'ceil')) + 1 %}
     {% endif %}
 
+    {% set commentLinesCount = 7 %}
 
     {% for page in 1..pageAmount %}
 
@@ -140,8 +141,56 @@
 
         {% else %}
 
-            <h4>Samenvatting Geboortelijst</h4>
-        
+            {% set ramsCount = rams|length %}
+
+            <table class="summary-table">
+              <tr class="summary-table">
+                <th class="summary-table" colspan="3"><h4>Samenvatting Geboortelijst</h4></th>
+              </tr>
+              <tr class="summary-table">
+                <td class="summary-table smt-col-1">Totaal aantal ooien op geboortelijst</td>
+                <td class="summary-table smt-col-2">: 10</td>
+                <td class="summary-table">Aantal dekkingen door ram [NL100203567891]: 9</td>
+              </tr>
+              <tr class="summary-table">
+                <td class="summary-table smt-col-1">Aantal ooien met worp</td>
+                <td class="summary-table smt-col-2">:_____ &nbsp;&nbsp;</td>
+                <td class="summary-table">Aantal dekkingen door ram [NL100203567891]: 9</td>
+              </tr>
+              <tr class="summary-table">
+                <td class="summary-table smt-col-1">Totaal geboren lammeren</td>
+                <td class="summary-table smt-col-2">:_____ &nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td class="summary-table"></td>
+              </tr>
+              <tr class="summary-table">
+                <td class="summary-table smt-col-1">Levend geboren lammeren</td>
+                <td class="summary-table smt-col-2">:_____</td>
+                <td class="summary-table"></td>
+              </tr>
+              <tr class="summary-table">
+                <td class="summary-table smt-col-1">Gemiddelde worpgrootte</td>
+                <td class="summary-table smt-col-2">:_____</td>
+                <td class="summary-table"></td>
+              </tr>
+              <tr class="summary-table" colspan="3">
+                <td class="summary-table">&nbsp;</td>
+              </tr>
+              <tr class="summary-table">
+                <td class="summary-table" colspan="3">Opmerkingen &nbsp;&nbsp;&nbsp;&nbsp;
+                <span style="font-style: italic;">Extra ruimte om opmerkingen te maken, indien u dit niet bij de worp zelf kwijt kunt</span></td>
+              </tr>
+              {% for i in 1..commentLinesCount %}
+              <tr>
+                <td class="comment-lines" colspan="3">&nbsp;</td>
+              </tr>
+              {% endfor %}
+            </table>
+
+            {% for i, ram in rams %}
+
+
+            {% endfor %}
+
         {% endif %}
 
 
@@ -271,9 +320,49 @@
             padding: 1mm 1mm 1mm 1mm;
         }
 
+        table.summary-table {
+            width: 100%;
+            margin-top: 10mm;
+            font-size: 4.1mm;
+            border-collapse: collapse;
+            vertical-align: text-bottom;
+        }
+
+        tr.summary-table {
+            border-style: solid;
+            border-color: transparent;
+        }
+
+        td.summary-table {
+            text-align: left;
+            border-style: solid;
+            border-color: transparent;
+            white-space: nowrap;
+        }
+
+        td.smt-col-1 {
+            width: 1%; /* fit content */
+            white-space: nowrap;
+        }
+
+        td.smt-col-2 {
+            width: 1%; /* fit content */
+            white-space: nowrap;
+        }
+
+        th.summary-table {
+            text-align: left;
+        }
+
+        tr td.comment-lines {
+            border-bottom-style: solid;
+            border-bottom-width: thin;
+            border-color: black;
+        }
+
         h4 {
             margin-top: 3rem;
-            text-align: center;
+            text-align: left;
         }
 
         .tg-amwm {
