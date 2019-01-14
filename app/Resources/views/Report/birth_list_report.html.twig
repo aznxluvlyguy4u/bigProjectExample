@@ -12,9 +12,9 @@
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
     {% set pageCounter = 0 %}
-    {% set rowsPerPage = 5 %}
+    {% set rowsPerPage = 7 %}
     {% set size = mates|length %}
-    {% set pageAmount = 1 %}
+    {% set pageAmount = 2 %}
     {% if size > rowsPerPage %}
         {% set pageAmount = ((size / rowsPerPage) | round(0, 'ceil')) + 1 %}
     {% endif %}
@@ -56,27 +56,27 @@
 {# MATES #}
          <table class="tg">
             <thead>
-                <tr>
-                    <th class="tg-amwm">Halsnr</th>
-                    <th class="tg-amwm">Ooi (ULN)</th>
-                    <th class="tg-amwm">Gedekt door ram</th>
-                    <th class="tg-amwm">Verwachte</th>
-                    <th class="tg-amwm">Werkelijke</th>
-                    <th class="tg-amwm">Worpgrootte</th>
-                    <th class="tg-amwm">Aantal</th>
-                    <th class="tg-amwm" colspan="4">Geslacht (O/R)</th>
+                <tr class="table-spacing">
+                    <th class="table-spacing tg-amwm">Halsnr</th>
+                    <th class="table-spacing tg-amwm">Ooi (ULN)</th>
+                    <th class="table-spacing tg-amwm">Gedekt door ram</th>
+                    <th class="table-spacing tg-amwm">Verwachte</th>
+                    <th class="table-spacing tg-amwm">Werkelijke</th>
+                    <th class="table-spacing tg-amwm">Worpgrootte</th>
+                    <th class="table-spacing tg-amwm">Aantal</th>
+                    <th class="table-spacing tg-amwm" colspan="4">Geslacht (O/R)</th>
                 </tr>
-                <tr>
-                    <td class="tg-s6z2 border-bottom-emphasized" rowspan="3">Rascode</td>
-                    <td class="tg-amwm"></td>
-                    <td class="tg-amwm">(ULN)</td>
-                    <td class="tg-amwm">werpdatum</td>
-                    <td class="tg-amwm">lamdatum</td>
-                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="3"></td>
-                    <td class="tg-amwm">levend</td>
-                    <td class="tg-amwm" colspan="4">Werknummer</td>
+                <tr class="table-spacing">
+                    <td class="table-spacing tg-s6z2 border-bottom-emphasized" rowspan="3">Rascode</td>
+                    <td class="table-spacing tg-amwm"></td>
+                    <td class="table-spacing tg-amwm">(ULN)</td>
+                    <td class="table-spacing tg-amwm">werpdatum</td>
+                    <td class="table-spacing tg-amwm">lamdatum</td>
+                    <td class="table-spacing bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="3"></td>
+                    <td class="table-spacing tg-amwm">levend</td>
+                    <td class="table-spacing tg-amwm" colspan="4">Werknummer</td>
                 </tr>
-                <tr>
+                <tr class="table-spacing">
                     <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
                     <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
                     <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
@@ -84,11 +84,11 @@
                     <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
                     <td class="bottom-bordered-thin tg-amwm" colspan="4">Geboortegewicht</td>
               </tr>
-              <tr class="border-bottom-emphasized">
-                    <td class="tg-amwm">Lam 1</td>
-                    <td class="tg-amwm">Lam 2</td>
-                    <td class="tg-amwm">Lam 3</td>
-                    <td class="tg-amwm">Lam 4</td>
+              <tr class="border-bottom-emphasized table-spacing">
+                    <td class="table-spacing tg-amwm">Lam 1</td>
+                    <td class="table-spacing tg-amwm">Lam 2</td>
+                    <td class="table-spacing tg-amwm">Lam 3</td>
+                    <td class="table-spacing tg-amwm">Lam 4</td>
               </tr>
             </thead>
             <tbody>
@@ -99,10 +99,10 @@
                     {% if mates[i] is defined %}
                     {% set v = mates[i] %}
                       <tr class="border-top-emphasized">
-                        <td class="tg-amwm">{{ v.ewe_collar }}</td>
-                        <td class="tg-1wig">{{ v.ewe_uln_country_code }}{{ v.ewe_uln_number_without_order_number }}<span class="order-number">{{ v.ewe_order_number }}</span></td>
-                        <td class="tg-1wig">{{ v.ram_uln }}</td>
-                        <td class="tg-1wig">
+                        <td class="table-spacing tg-amwm">{{ v.ewe_collar }}</td>
+                        <td class="table-spacing tg-1wig">{{ v.ewe_uln_country_code }}{{ v.ewe_uln_number_without_order_number }}<span class="order-number">{{ v.ewe_order_number }}</span></td>
+                        <td class="table-spacing tg-1wig">{{ v.ram_uln }}</td>
+                        <td class="table-spacing tg-1wig">
                             {% if v.is_expected_litter_date_period %}
                                 <div class="top-center min_expected_litter_date">{{ v.min_expected_litter_date| date('d-m-Y') }}</div>
                                 <div class="lower-center max_expected_litter_date">{{ v.max_expected_litter_date| date('d-m-Y') }}</div>
@@ -110,28 +110,28 @@
                                 <div class="middle-center min_expected_litter_date">{{ v.min_expected_litter_date| date('d-m-Y') }}</div>
                             {% endif %}
                         </td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
                       </tr>
                       <tr>
-                        <td class="tg-s6z2 border-bottom-emphasized" rowspan="2">TE100</td>
-                        <td class="tg-0lax" colspan="6">Geboorteverloop:</td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
+                        <td class="table-spacing tg-s6z2 border-bottom-emphasized" rowspan="2">TE100</td>
+                        <td class="table-spacing tg-0lax" colspan="6">Geboorteverloop:</td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
                       </tr>
                       <tr class="border-bottom-emphasized">
-                        <td class="tg-0lax" colspan="6">Opmerking:</td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
-                        <td class="tg-0lax"></td>
+                        <td class="table-spacing tg-0lax" colspan="6">Opmerking:</td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
+                        <td class="table-spacing tg-0lax"></td>
                       </tr>
                     {% endif %}
                 {% endfor %}
@@ -241,7 +241,7 @@
 
         .sub-header {
             padding-top: 1mm;
-            font-size: 4.5mm;
+            font-size: 3.5mm;
         }
 
         .nsfo-logo {
@@ -258,20 +258,20 @@
             vertical-align: top;
             width: 60%;
             font-weight: 700;
-            font-size: 7.5mm;
+            font-size: 6.5mm;
             text-align: center;
         }
 
         .ubn {
             float: left;
-            font-size: 5.5mm;
+            font-size: 4mm;
             font-weight: bold;
             margin-top: 2.5mm;
             width: 22%;
         }
 
         .order-number {
-            font-size: x-large;
+            font-size: large;
         }
 
         .sub-header .right {
@@ -321,13 +321,23 @@
         table {
             width: 100%;
             margin-top: 10mm;
-            font-size: 4.1mm;
+            font-size: 3.5mm;
             border-collapse: collapse;
             vertical-align: text-bottom;
         }
 
         tr {
             border-bottom: solid 1px #000000;
+        }
+
+        td.table-spacing {
+            margin: 0 auto;
+            padding: 2px 5px; /* top and bottom 2px */
+        }
+
+        tr.table-spacing {
+            margin: 0 auto;
+            padding: 2px 5px; /* top and bottom 2px */
         }
 
         td, th {
@@ -338,9 +348,19 @@
         table.summary-table {
             width: 100%;
             margin-top: 10mm;
-            font-size: 4.1mm;
+            font-size: 3.5mm;
             border-collapse: collapse;
             vertical-align: text-bottom;
+        }
+
+        .min_expected_litter_date {
+            font-size: 3mm;
+            font-weight: lighter;
+        }
+
+        .max_expected_litter_date {
+            font-size: 3mm;
+            font-weight: lighter;
         }
 
         tr.summary-table {
@@ -430,16 +450,6 @@
 
         .border-top-emphasized {
             border-top-width: medium;
-        }
-
-        .min_expected_litter_date {
-            font-size: 4.1mm;
-            font-weight: lighter;
-        }
-
-        .max_expected_litter_date {
-            font-size: 4.1mm;
-            font-weight: lighter;
         }
 
     </style>
