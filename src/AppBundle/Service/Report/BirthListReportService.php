@@ -85,7 +85,8 @@ class BirthListReportService extends ReportServiceBase
      */
     private function getPdfReport(Location $location, BirthListReportOptions $options)
     {
-        $data = $this->getReportData($location, $options);
+        $testRamsToAdd = 0;
+        $data = $this->getReportData($location, $options, $testRamsToAdd);
 
         return $this->getPdfReportBase(self::TWIG_FILE,
             $data,
@@ -100,9 +101,10 @@ class BirthListReportService extends ReportServiceBase
     /**
      * @param Location $location
      * @param BirthListReportOptions $options
+     * @param int $testRamsToAdd
      * @return array
      */
-    private function getReportData(Location $location, BirthListReportOptions $options): array
+    private function getReportData(Location $location, BirthListReportOptions $options, int $testRamsToAdd = 0): array
     {
         $pedigreeRegisterId = null;
         $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)
@@ -120,6 +122,8 @@ class BirthListReportService extends ReportServiceBase
         $document = $this->conn->query($this->sqlDocument($locationId))->fetch();
         $date = TimeUtil::getTimeStampToday('d-m-Y');
 
+        $rams = $this->addTestRams($rams, $testRamsToAdd);
+
         return [
             'rams' => $rams,
             'ewes' => $ewesCount,
@@ -128,6 +132,34 @@ class BirthListReportService extends ReportServiceBase
             'date' => $date,
             ReportLabel::IMAGES_DIRECTORY => $this->getImagesDirectory(),
         ];
+    }
+
+
+    /**
+     * @param array $rams
+     * @param int $testRamsToAdd
+     * @return array
+     */
+    private function addTestRams(array $rams, int $testRamsToAdd = 0): array
+    {
+        if (empty($testRamsToAdd) || $testRamsToAdd < 0) {
+            return $rams;
+        }
+
+        $ramsCount = count($rams);
+        $startCount = $ramsCount + 1;
+        $maxCount = $testRamsToAdd + $startCount - 1;
+
+        for ($i = $startCount; $i <= $maxCount; $i++) {
+            $rams[$i-1] = [
+                'ram_id' => $i,
+                'uln' => 'DU00000' . $i,
+                'uln_country_code' => 'DU',
+                'uln_number' => '00000' . $i,
+                'mate_count' => $i,
+            ];
+        }
+        return $rams;
     }
 
 
