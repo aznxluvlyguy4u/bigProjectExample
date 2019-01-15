@@ -524,6 +524,9 @@ class ReportService
 
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
 
+        // Set file type as PDF. This value will be saved in the ReportWorker table
+        $request->query->set(QueryParameter::FILE_TYPE_QUERY, FileType::PDF);
+
         $options = (new BirthListReportOptions())
             ->setLanguage($language)
             ->setPedigreeRegisterAbbreviation($pedigreeRegisterAbbreviation)
