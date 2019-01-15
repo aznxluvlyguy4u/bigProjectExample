@@ -74,7 +74,7 @@ class BreedFormat
     public static function getFormattedIndexValue($value, $accuracy): string
     {
         if (self::isIndexEmpty($value, $accuracy)) {
-            BreedFormat::EMPTY_INDEX_VALUE;
+            return BreedFormat::EMPTY_INDEX_VALUE;
         }
         $scaledIndex = $value + self::INDEX_SCALE;
         return number_format($scaledIndex, BreedFormat::INDEX_DECIMAL_ACCURACY, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR);
@@ -89,7 +89,7 @@ class BreedFormat
     public static function getFormattedIndexAccuracy($value, $accuracy): string
     {
         if (self::isIndexEmpty($value, $accuracy)) {
-            BreedFormat::EMPTY_INDEX_ACCURACY;
+            return BreedFormat::EMPTY_INDEX_ACCURACY;
         }
         return round($accuracy*100);
     }
