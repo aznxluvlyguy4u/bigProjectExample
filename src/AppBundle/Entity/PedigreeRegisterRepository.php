@@ -86,8 +86,16 @@ class PedigreeRegisterRepository extends BaseRepository {
 
         $abbreviation = strtoupper($abbreviation);
 
-        return $this->findOneBy([
-           'abbreviation' => $abbreviation
-        ]);
+        $qb = $this->getManager()->createQueryBuilder();
+        $query =
+            $qb
+                ->select('r')
+                ->from(PedigreeRegister::class, 'r')
+                ->where("UPPER(r.abbreviation) = '$abbreviation'")
+                ->setMaxResults(1)
+                ->getQuery();
+
+        $result = $query->getResult();
+        return empty($result) ? null : reset($result);
     }
 }
