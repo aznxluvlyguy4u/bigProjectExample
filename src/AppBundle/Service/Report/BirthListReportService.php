@@ -11,6 +11,7 @@ use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Exception\ReportHasNoDataHttpException;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
@@ -123,6 +124,10 @@ class BirthListReportService extends ReportServiceBase
         $date = TimeUtil::getTimeStampToday('d-m-Y');
 
         $rams = $this->addTestRams($rams, $testRamsToAdd);
+
+        if (empty($mates)) {
+            throw new ReportHasNoDataHttpException($this->translator);
+        }
 
         return [
             'rams' => $rams,

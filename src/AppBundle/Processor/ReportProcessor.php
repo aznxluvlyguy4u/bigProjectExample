@@ -244,8 +244,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             if($worker) {
                 $worker->setDebugErrorCode($e->getCode());
                 $worker->setDebugErrorMessage($e->getMessage());
-                $worker->setErrorCode(Response::HTTP_INTERNAL_SERVER_ERROR);
-                $worker->setErrorMessage('SOMETHING WENT WRONG');
+                if ($this->publicallyDisplayErrorMessage($e->getCode())) {
+                    $worker->setErrorCode($e->getCode());
+                    $worker->setErrorMessage($e->getMessage());
+                } else {
+                    $worker->setErrorCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+                    $worker->setErrorMessage('SOMETHING WENT WRONG');
+                }
             }
             $this->logException($e);
         }
@@ -275,5 +280,17 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->logger->error(self::ERROR_LOG_HEADER);
         $this->logger->error($exception->getMessage());
         $this->logger->error($exception->getTraceAsString());
+    }
+
+
+    /**
+     * @param int|null $errorCode
+     * @return bool
+     */
+    private function publicallyDisplayErrorMessage($errorCode): bool
+    {
+        return is_int($errorCode) && (
+                $errorCode === Response::HTTP_NOT_FOUND
+            );
     }
 }

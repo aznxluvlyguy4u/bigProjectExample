@@ -412,6 +412,7 @@ YEAR IS MISSING: JAAR ONTBREEKT
 REFERENCE DATE CANNOT BE IN THE FUTURE: PEILDATUM MAG NIET IN DE TOEKOMST LIGGEN
 THE DATE OF DEATH CANNOT BE IN THE FUTURE: De sterftedatum mag niet in de toekomst liggen
 DATA IS EMPTY: DATA IS LEEG
+REPORT HAS NO DATA: Er is geen data gevonden voor deze rapportage
 NO ANIMALS FOUND FOR GIVEN INPUT: ER ZIJN GEEN DIEREN GEVONDEN VOOR DE GEGEVEN INVOER
 THE FOLLOWING ANIMALS ARE NOT CURRENT LIVESTOCK OR HISTORIC LIVESTOCK ANIMALS OF THIS UBN: DE VOLGENDE DIEREN ZIJN GEEN HUIDIGE STALLIJST OF HISTORISCHE STALLIJST DIEREN VAN DIT UBN
 FERTILIZER ACCOUNTING NOTE: De forfaitaire excretienormen waar in deze rapportage mee is gerekend zijn gebaseerd op Tabel 4 Diergebonden forfaitaire gehalten %year% RVO. Heeft u een biologisch bedrijf dat is geregistreerd bij de  Stichting Skal en houdt u graasdieren? Dan gelden mogelijk andere stikstofexcretiegehalten (zie de excretiegehalten voor stikstof uit de bijlage van de Regeling dierlijke producten). Voor de berekening van de fosfaatexcretie kunt u wel gebruik maken van de getallen in deze rapportage.
