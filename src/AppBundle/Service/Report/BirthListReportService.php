@@ -232,9 +232,9 @@ class BirthListReportService extends ReportServiceBase
     {
         $locationFilter = !is_int($locationId) ? ' ' : ' AND m.location_id = '.$locationId.' ';
         $breedCodeFilter = empty($breedCode) ? ' ' :
-            " AND (ewe.breed_code = '$breedCode' OR ram.breed_code = '$breedCode') ";
+            " AND (ewe.breed_code = '$breedCode') ";
         $pedigreeRegisterFilter = !is_int($pedigreeRegisterId) ? ' ' :
-            ' AND (ewe.pedigree_register_id = 5 OR ram.pedigree_register_id = 5) ';
+            " AND (ewe.pedigree_register_id = $pedigreeRegisterId) ";
 
         $orderBy = $sortResults ? ' ORDER BY m.start_date, ewe.animal_order_number ' : ' ';
 
