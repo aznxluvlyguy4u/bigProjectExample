@@ -117,8 +117,6 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
      */
     private function getPdfReport()
     {
-        $additionalData = [];
-
         $customPdfOptions = [
             'orientation'=>'Landscape',
             'default-header'=>false,
@@ -129,8 +127,7 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
             'margin-left'   => 8,
         ];
 
-        return $this->getPdfReportBase(self::TWIG_FILE, $this->data, true,
-            $additionalData, $customPdfOptions);
+        return $this->getPdfReportBase(self::TWIG_FILE, $this->data, true, $customPdfOptions);
     }
 
 

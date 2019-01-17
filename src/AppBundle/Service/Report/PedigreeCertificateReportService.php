@@ -92,7 +92,8 @@ class PedigreeCertificateReportService extends ReportServiceBase
 	        'margin-left'   => 3,
         ];
 
-        return $this->getPdfReportBase(self::TWIG_FILE, $data, false, $additionalData, $customPdfOptions);
+        return $this->getPdfReportBase(self::TWIG_FILE, $data, false,
+            $customPdfOptions, $additionalData);
     }
 
 

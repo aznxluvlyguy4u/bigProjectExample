@@ -422,11 +422,12 @@ class ReportServiceBase
 		 * @param string $twigFile
 		 * @param array|object $data
 		 * @param boolean $isLandscape
+         * @param array $customPdfOptions
 		 * @param array $additionalData
-		 * @param null $customPdfOptions
 		 * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
 		 */
-    protected function getPdfReportBase($twigFile, $data, $isLandscape = true, $additionalData = [], $customPdfOptions = null)
+    protected function getPdfReportBase($twigFile, $data, $isLandscape = true,
+                                        array $customPdfOptions = [], array $additionalData = [])
     {
     	  $twigInput = ArrayUtil::concatArrayValues(
     	  	[
@@ -449,8 +450,8 @@ class ReportServiceBase
 
         $this->extension = FileType::PDF;
 
-        $pdfOptions = $isLandscape ? TwigOutputUtil::pdfLandscapeOptions() : TwigOutputUtil::pdfPortraitOptions();
-        $pdfOptions = $customPdfOptions ? $customPdfOptions : $pdfOptions;
+        $defaultPdfOptions = $isLandscape ? TwigOutputUtil::pdfLandscapeOptions() : TwigOutputUtil::pdfPortraitOptions();
+        $pdfOptions = empty($customPdfOptions) ? $defaultPdfOptions : $customPdfOptions;
 
         if($this->outputReportsToCacheFolderForLocalTesting) {
             //Save pdf in local cache
