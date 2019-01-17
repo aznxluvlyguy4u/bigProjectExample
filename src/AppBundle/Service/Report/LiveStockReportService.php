@@ -130,7 +130,7 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
         ];
 
         return $this->getPdfReportBase(self::TWIG_FILE, $this->data, true,
-            $additionalData, $customPdfOptions,true);
+            $additionalData, $customPdfOptions);
     }
 
 

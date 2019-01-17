@@ -89,13 +89,7 @@ class BirthListReportService extends ReportServiceBase
         $testRamsToAdd = 0;
         $data = $this->getReportData($location, $options, $testRamsToAdd);
 
-        return $this->getPdfReportBase(self::TWIG_FILE,
-            $data,
-            true,
-            [],
-            null,
-            true
-        );
+        return $this->getPdfReportBase(self::TWIG_FILE, $data,true);
     }
 
 

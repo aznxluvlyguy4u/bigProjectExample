@@ -69,4 +69,3 @@ parameters:
     output_reports_to_cache_folder_for_local_testing: false
     display_report_pdf_output_as_html: false
     use_test_data: false
-    wkhtmltopdf_v125_path: '/usr/bin/wkhtmltopdfV125'
