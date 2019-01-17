@@ -145,7 +145,7 @@ class ReportService
      * @return JsonResponse
      * @throws \Exception
      */
-    public function createLiveStockReport(Request $request): JsonResponse
+    public function createLiveStockReport(Request $request)
     {
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
@@ -162,7 +162,7 @@ class ReportService
      * @return JsonResponse
      * @throws \Exception
      */
-    private function createLiveStockReportWithoutWorker(Request $request): JsonResponse
+    private function createLiveStockReportWithoutWorker(Request $request)
     {
         $person = $this->userService->getUser();
 
