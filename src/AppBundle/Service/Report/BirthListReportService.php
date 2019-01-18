@@ -89,7 +89,18 @@ class BirthListReportService extends ReportServiceBase
         $testRamsToAdd = 0;
         $data = $this->getReportData($location, $options, $testRamsToAdd);
 
-        return $this->getPdfReportBase(self::TWIG_FILE, $data,true);
+        $customPdfOptions = [
+            'orientation'=>'Landscape',
+            'default-header'=>false,
+            'disable-smart-shrinking'=>true,
+            'page-size' => 'A4',
+            'margin-top'    => 6,
+            'margin-right'  => 8,
+            'margin-bottom' => 4,
+            'margin-left'   => 8,
+        ];
+
+        return $this->getPdfReportBase(self::TWIG_FILE, $data,true, $customPdfOptions);
     }
 
 
