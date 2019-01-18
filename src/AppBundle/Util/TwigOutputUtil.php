@@ -13,7 +13,7 @@ class TwigOutputUtil
         return [
             'orientation'=>'Landscape',
             'default-header'=>false,
-            'disable-smart-shrinking'=>true,
+            'disable-smart-shrinking'=>false,
             'print-media-type' => true,
             'page-size' => 'A4',
             'margin-top'    => 6,
@@ -32,7 +32,7 @@ class TwigOutputUtil
         return [
             'orientation'=>'Portrait',
             'default-header'=>false,
-            'disable-smart-shrinking'=>true,
+            'disable-smart-shrinking'=>false,
             'print-media-type' => true,
             'page-size' => 'A4',
             'margin-top'    => 6,
