@@ -55,7 +55,6 @@ class HealthChecker
                 MaediVisnaStatus::FREE_1_YEAR,
                 MaediVisnaStatus::FREE_2_YEAR,
                 MaediVisnaStatus::FREE,
-                MaediVisnaStatus::STATUS_KNOWN_BY_AHD,
             ]
         );
     }
