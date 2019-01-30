@@ -23,6 +23,7 @@ monolog:
             type:  stream
             path:  "%kernel.logs_dir%/%kernel.environment%.log"
             level: debug
+            channels: ['!feedback_worker']
             max_files:    7
         console:
             type:  console
