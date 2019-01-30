@@ -22,6 +22,8 @@ $kernel = new AppKernel('prod', false);
 //$kernel->loadClassCache(); depreciated since php 7
 //$kernel = new AppCache($kernel);
 
+//Trusted Proxies example: Request::setTrustedProxies(['0.0.0.1', '0.0.0.2']);
+
 // When using the HttpCache, you need to call the method in your front controller instead of relying on the configuration parameter
 //Request::enableHttpMethodParameterOverride();
 $request = Request::createFromGlobals();

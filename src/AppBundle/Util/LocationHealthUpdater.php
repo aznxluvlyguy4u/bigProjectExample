@@ -217,6 +217,7 @@ class LocationHealthUpdater
                 }
 
                 if(!$maediVisnaOriginIsHealthy && !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
+                    $locationHealthMessage->setCheckForMaediVisna(true);
                     $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 } //else do nothing
             }
@@ -241,6 +242,7 @@ class LocationHealthUpdater
                 }
 
                 if ($animalMutationSourceIsScrapieStatusDemoting && $previousScrapieDestinationIsHealthy) {
+                    $locationHealthMessage->setCheckForScrapie(true);
                     $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 } //else do nothing
             }
@@ -260,8 +262,7 @@ class LocationHealthUpdater
                 and must be calculated AFTER the locationHealth has been updated.
             */
             $this->finalizeLocationHealthMessage($locationHealthMessage,
-                $locationHealthDestination, $locationHealthOrigin, $illnesses,
-                $includeMaediVisna, $includeScrapie);
+                $locationHealthDestination, $locationHealthOrigin, $illnesses);
         }
 
         return $declareInOrHealthCheckTask;
@@ -334,16 +335,13 @@ class LocationHealthUpdater
      * @param LocationHealthMessage $locationHealthMessage
      * @param LocationHealth $locationHealthDestination
      * @param LocationHealth $locationHealthOrigin
-     * @param bool $includeMaediVisna
-     * @param bool $includeScrapie
      * @param ArrayCollection $illnesses
      */
     private function finalizeLocationHealthMessage(LocationHealthMessage $locationHealthMessage,
-                                                   $locationHealthDestination, $locationHealthOrigin, $illnesses,
-                                                   bool $includeMaediVisna = true, bool $includeScrapie = true)
+                                                   $locationHealthDestination, $locationHealthOrigin, $illnesses)
     {
         $locationHealthMessage = LocationHealthMessageBuilder::finalize($locationHealthMessage,
-            $illnesses, $locationHealthDestination, $locationHealthOrigin, $includeMaediVisna, $includeScrapie);
+            $illnesses, $locationHealthDestination, $locationHealthOrigin);
 
         //Persist LocationHealthMessage
         $this->em->persist($locationHealthMessage);

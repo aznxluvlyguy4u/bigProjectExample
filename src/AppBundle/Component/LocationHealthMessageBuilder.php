@@ -91,15 +91,12 @@ class LocationHealthMessageBuilder
      * @param ArrayCollection $illnesses
      * @param LocationHealth $locationHealthDestination
      * @param LocationHealth|null $locationHealthOrigin
-     * @param bool $includeMaediVisna
-     * @param bool $includeScrapie
      * @return LocationHealthMessage
      */
     public static function finalize(LocationHealthMessage $healthMessage,
                                     ArrayCollection $illnesses,
                                     LocationHealth $locationHealthDestination,
-                                    LocationHealth $locationHealthOrigin = null,
-                                    bool $includeMaediVisna = true, bool $includeScrapie = true)
+                                    LocationHealth $locationHealthOrigin = null)
     {
         //Set Illnesses
         $healthMessage->setMaediVisna($illnesses->get(Constant::MAEDI_VISNA));
@@ -121,32 +118,6 @@ class LocationHealthMessageBuilder
         }
         $healthMessage->setOriginMaediVisnaStatus($maediVisnaStatusOrigin);
         $healthMessage->setOriginScrapieStatus($scrapieStatusOrigin);
-
-        //Set illness  booleans
-        $healthMessage->setCheckForMaediVisna(false);
-        $healthMessage->setCheckForScrapie(false);
-
-        if ($includeMaediVisna) {
-            $isMaediVisnaStatusOriginHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaStatusOrigin);
-            $healthMessage->setCheckForMaediVisna(
-                !$isMaediVisnaStatusOriginHealthy &&
-                (
-                    $maediVisnaStatusDestination !== MaediVisnaStatus::BLANK &&
-                    $maediVisnaStatusDestination !== null
-                )
-            );
-        }
-
-        if ($includeScrapie) {
-            $isScrapieStatusOriginHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieStatusOrigin);
-            $healthMessage->setCheckForScrapie(
-                !$isScrapieStatusOriginHealthy &&
-                (
-                    $scrapieStatusDestination !== ScrapieStatus::BLANK &&
-                    $scrapieStatusDestination !== null
-                )
-            );
-        }
 
         return $healthMessage;
     }
