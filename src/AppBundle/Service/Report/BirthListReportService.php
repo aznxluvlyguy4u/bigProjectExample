@@ -240,7 +240,7 @@ class BirthListReportService extends ReportServiceBase
                                   int $pedigreeRegisterId = null,
                                   string $breedCode = null): string
     {
-        $locationFilter = !is_int($locationId) ? ' ' : ' AND m.location_id = '.$locationId.' ';
+        $eweFilter = !is_int($locationId) ? ' ' : ' ewe.location_id = '.$locationId.' AND ewe.is_alive AND ';
         $breedCodeFilter = empty($breedCode) ? ' ' :
             " AND (ewe.breed_code = '$breedCode') ";
         $pedigreeRegisterFilter = !is_int($pedigreeRegisterId) ? ' ' :
@@ -280,6 +280,7 @@ class BirthListReportService extends ReportServiceBase
                   INNER JOIN animal ram ON ram.id = m.stud_ram_id
                   LEFT JOIN litter l on m.id = l.mate_id
                 WHERE
+                      ".$eweFilter."
                       is_approved_by_third_party AND
                       (
                         b.request_state = '".RequestStateType::FINISHED."' OR 
@@ -289,7 +290,7 @@ class BirthListReportService extends ReportServiceBase
                       l.id ISNULL -- open mates
                       AND (EXTRACT(YEAR FROM AGE(end_date)) * 12 + EXTRACT(MONTH FROM AGE(end_date))) <= "
             .self::MAX_MATE_AGE_IN_MONTHS."-- max mate age based on min_mate_age
-                ".$locationFilter.$breedCodeFilter.$pedigreeRegisterFilter.$orderBy;
+                ".$breedCodeFilter.$pedigreeRegisterFilter.$orderBy;
     }
 
 
