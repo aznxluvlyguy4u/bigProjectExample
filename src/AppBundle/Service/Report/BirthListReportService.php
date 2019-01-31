@@ -279,6 +279,14 @@ class BirthListReportService extends ReportServiceBase
                   INNER JOIN animal ewe ON ewe.id = m.stud_ewe_id
                   INNER JOIN animal ram ON ram.id = m.stud_ram_id
                   LEFT JOIN litter l on m.id = l.mate_id
+                  INNER JOIN (
+                    ".$this->sqlMatesBase(false,
+'          ewe.id as stud_ewe_id,
+          MAX(m.start_date) as max_start_date',
+                        $locationId, $pedigreeRegisterId, $breedCode
+                    )."
+                    GROUP BY ewe.id
+                  )last_mate ON m.start_date = last_mate.max_start_date AND m.stud_ewe_id = last_mate.stud_ewe_id
                 WHERE
                       ".$eweFilter."
                       is_approved_by_third_party AND
