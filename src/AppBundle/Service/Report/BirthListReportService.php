@@ -232,13 +232,16 @@ class BirthListReportService extends ReportServiceBase
      * @param int|null $locationId
      * @param int|null $pedigreeRegisterId
      * @param string|null $breedCode
+     * @param bool $includeNestedSqlMatesBase
      * @return string
      */
     private function sqlMatesBase(bool $sortResults = true,
                                   string $resultColumns = null,
                                   int $locationId = null,
                                   int $pedigreeRegisterId = null,
-                                  string $breedCode = null): string
+                                  string $breedCode = null,
+                                  bool $includeNestedSqlMatesBase = true
+    ): string
     {
         $eweFilter = !is_int($locationId) ? ' ' : ' ewe.location_id = '.$locationId.' AND ewe.is_alive AND ';
         $breedCodeFilter = empty($breedCode) ? ' ' :
@@ -272,6 +275,18 @@ class BirthListReportService extends ReportServiceBase
                      END
                      ) as formatted_expected_litter_date" : $resultColumns;
 
+        $groupByUniqueEweJoin = $includeNestedSqlMatesBase ?
+            "                  INNER JOIN (
+                    ".$this->sqlMatesBase(false,
+                '          ewe.id as stud_ewe_id,
+          MAX(m.start_date) as max_start_date',
+                $locationId, $pedigreeRegisterId, $breedCode,
+                false
+            )."
+                    GROUP BY ewe.id
+                  )last_mate ON m.start_date = last_mate.max_start_date AND m.stud_ewe_id = last_mate.stud_ewe_id"
+            : ' ';
+
         return "SELECT
                   $columns
                 FROM mate m
@@ -279,14 +294,7 @@ class BirthListReportService extends ReportServiceBase
                   INNER JOIN animal ewe ON ewe.id = m.stud_ewe_id
                   INNER JOIN animal ram ON ram.id = m.stud_ram_id
                   LEFT JOIN litter l on m.id = l.mate_id
-                  INNER JOIN (
-                    ".$this->sqlMatesBase(false,
-'          ewe.id as stud_ewe_id,
-          MAX(m.start_date) as max_start_date',
-                        $locationId, $pedigreeRegisterId, $breedCode
-                    )."
-                    GROUP BY ewe.id
-                  )last_mate ON m.start_date = last_mate.max_start_date AND m.stud_ewe_id = last_mate.stud_ewe_id
+                  $groupByUniqueEweJoin
                 WHERE
                       ".$eweFilter."
                       is_approved_by_third_party AND
