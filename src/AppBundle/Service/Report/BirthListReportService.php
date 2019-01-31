@@ -243,6 +243,7 @@ class BirthListReportService extends ReportServiceBase
                                   bool $includeNestedSqlMatesBase = true
     ): string
     {
+        $locationFilter = !is_int($locationId) ? ' ' : ' AND m.location_id = '.$locationId.' ';
         $eweFilter = !is_int($locationId) ? ' ' : ' ewe.location_id = '.$locationId.' AND ewe.is_alive AND ';
         $breedCodeFilter = empty($breedCode) ? ' ' :
             " AND (ewe.breed_code = '$breedCode') ";
@@ -306,7 +307,7 @@ class BirthListReportService extends ReportServiceBase
                       l.id ISNULL -- open mates
                       AND (EXTRACT(YEAR FROM AGE(start_date)) * 12 + EXTRACT(MONTH FROM AGE(start_date))) <= "
             .self::MAX_MATE_AGE_IN_MONTHS."-- max mate age based on min_mate_age
-                ".$breedCodeFilter.$pedigreeRegisterFilter.$orderBy;
+                ".$locationFilter.$breedCodeFilter.$pedigreeRegisterFilter.$orderBy;
     }
 
 
