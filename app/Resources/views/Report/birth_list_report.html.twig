@@ -5,7 +5,7 @@
     <!-- set variables -->
     {% set date = variables.date %}
     {% set rams = variables.rams %}
-    {% set months = variables.ewes %}
+    {% set mateCount = variables.ewes %}
     {% set mates = variables.mates %}
     {% set d = variables.document %}
 
@@ -119,7 +119,7 @@
                         <td class="table-spacing tg-0lax"></td>
                       </tr>
                       <tr>
-                        <td class="table-spacing tg-s6z2 border-bottom-emphasized" rowspan="2">TE100</td>
+                        <td class="table-spacing tg-s6z2 border-bottom-emphasized" rowspan="2">{{ v.ewe_breed_code }}</td>
                         <td class="table-spacing tg-0lax" colspan="6">Geboorteverloop:</td>
                         <td class="table-spacing tg-0lax"></td>
                         <td class="table-spacing tg-0lax"></td>
@@ -154,7 +154,7 @@
               </tr>
               <tr class="summary-table">
                 <td class="summary-table smt-col-1">Totaal aantal ooien op geboortelijst</td>
-                <td class="summary-table smt-col-2">: 10</td>
+                <td class="summary-table smt-col-2">: {{ mateCount }}</td>
                 <td class="summary-table">{{ ramsCount >= 1 ? ramsData['_0'] : '' }}</td>
               </tr>
               <tr class="summary-table">
