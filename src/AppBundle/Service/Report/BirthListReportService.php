@@ -288,7 +288,7 @@ class BirthListReportService extends ReportServiceBase
                         b.request_state = '".RequestStateType::IMPORTED."'
                       ) AND
                       l.id ISNULL -- open mates
-                      AND (EXTRACT(YEAR FROM AGE(end_date)) * 12 + EXTRACT(MONTH FROM AGE(end_date))) <= "
+                      AND (EXTRACT(YEAR FROM AGE(start_date)) * 12 + EXTRACT(MONTH FROM AGE(start_date))) <= "
             .self::MAX_MATE_AGE_IN_MONTHS."-- max mate age based on min_mate_age
                 ".$breedCodeFilter.$pedigreeRegisterFilter.$orderBy;
     }
