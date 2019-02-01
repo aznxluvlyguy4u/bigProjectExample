@@ -584,7 +584,7 @@ services:
           - '@templating'
           - '@translator'
           - '@logger'
-          - '%kernel.environment%'
+          - '%environment%'
 
     app.abstract_base.controller:
         abstract: true
