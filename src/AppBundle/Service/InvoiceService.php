@@ -547,6 +547,7 @@ class InvoiceService extends ControllerServiceBase
 
         /** @var InvoiceRule $invoiceRule */
         $invoiceRule = $invoiceRuleSelection->getInvoiceRule();
+        $invoiceRule->setDefaultValuesIfEmpty();
 
         $validationResult = $this->validateRuleTemplate($invoiceRule);
         if ($validationResult instanceof JsonResponse) {

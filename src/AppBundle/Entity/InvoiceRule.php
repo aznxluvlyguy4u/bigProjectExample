@@ -191,8 +191,26 @@ class InvoiceRule
      */
     public function __construct()
     {
-        $this->invoiceRuleSelections = new ArrayCollection();
-        $this->isActive = true;
+        $this->setDefaultValuesIfEmpty();
+    }
+
+    public function setDefaultValuesIfEmpty()
+    {
+        if ($this->invoiceRuleSelections === null) {
+            $this->invoiceRuleSelections = new ArrayCollection();
+        }
+
+        if ($this->isActive === null) {
+            $this->isActive = true;
+        }
+
+        if ($this->isBatch === null) {
+            $this->isBatch = false;
+        }
+
+        if ($this->isDeleted === null) {
+            $this->isDeleted = false;
+        }
     }
 
     /**
