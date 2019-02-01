@@ -193,11 +193,13 @@ class LocationHealthUpdater
             if ($includeMaediVisna &&
                 !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
                 $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
+                $locationHealthMessage->setCheckForMaediVisna(true);
             } //else do nothing
 
             if ($includeScrapie &&
                 $isScrapieStatusDemotingAnimal && $previousScrapieDestinationIsHealthy){
                 $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
+                $locationHealthMessage->setCheckForScrapie(true);
             } //else do nothing
 
             $locationHealthOrigin = null;
