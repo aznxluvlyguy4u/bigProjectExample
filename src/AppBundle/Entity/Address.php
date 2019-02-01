@@ -235,6 +235,9 @@ abstract class Address
     public function setAddressNumberSuffix($addressNumberSuffix)
     {
         $this->addressNumberSuffix = StringUtil::trimIfNotNull($addressNumberSuffix);
+        if ($this->addressNumberSuffix === '') {
+            $this->addressNumberSuffix = null;
+        }
 
         return $this;
     }
