@@ -14,6 +14,7 @@ use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\ControllerServiceBase;
 use AppBundle\Util\NullChecker;
@@ -60,9 +61,10 @@ class MateValidator extends DeclareNsfoBaseValidator
     private $translator;
 
     public function __construct(ObjectManager $manager, TranslatorInterface $translator,
-                                ArrayCollection $content, Client $client, $validateEweGender = true, $isPost = true)
+                                ArrayCollection $content, Client $client, Person $loggedInUser,
+                                $validateEweGender = true, $isPost = true)
     {
-        parent::__construct($manager, $content, $client);
+        parent::__construct($manager, $content, $client, $loggedInUser);
         $this->validateEweGender = $validateEweGender;
         $this->translator = $translator;
 

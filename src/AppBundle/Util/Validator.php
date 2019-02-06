@@ -41,6 +41,7 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 class Validator
 {
     const UNAUTHORIZED = 'UNAUTHORIZED';
+    const DECLARE_BELONGS_TO_OTHER_ACCOUNT = 'DECLARE_BELONGS_TO_OTHER_ACCOUNT';
 
     const MAX_NUMBER_OF_CURRENCY_INPUT_DECIMALS = 3;
 
@@ -481,9 +482,11 @@ class Validator
      * @param ObjectManager $manager
      * @param Client $client
      * @param $messageId
+     * @param $loggedInUser
      * @return DeclareNsfoBase|Mate|DeclareWeight|boolean
      */
-    public static function isNonRevokedNsfoDeclarationOfClient(ObjectManager $manager, Client $client, $messageId)
+    public static function isNonRevokedNsfoDeclarationOfClient(ObjectManager $manager, Client $client, $messageId,
+                                                               $loggedInUser = null)
     {
         /** @var DeclareNsfoBase $declaration */
         $declaration = $manager->getRepository(DeclareNsfoBase::class)->findOneByMessageId($messageId);
@@ -493,6 +496,10 @@ class Validator
 
         //Revoke check, to prevent data loss by incorrect data
         if($declaration->getRequestState() == RequestStateType::REVOKED) { return false; }
+
+        if ($loggedInUser instanceof Employee) {
+            return $declaration;
+        }
 
         /** @var Location $location */
         $location = $manager->getRepository(Location::class)->findOneByUbn($declaration->getUbn());
@@ -504,6 +511,7 @@ class Validator
             if($owner->getId() == $client->getId()) {
                 return $declaration;
             }
+            throw new UnauthorizedHttpException(null, self::DECLARE_BELONGS_TO_OTHER_ACCOUNT,null);
         }
 
         return false;

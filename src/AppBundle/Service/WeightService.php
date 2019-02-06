@@ -36,7 +36,7 @@ class WeightService extends ControllerServiceBase
 
         $log = ActionLogWriter::createDeclareWeight($this->getManager(), $client, $loggedInUser, $content);
 
-        $weightValidator = new DeclareWeightValidator($this->getManager(), $content, $client);
+        $weightValidator = new DeclareWeightValidator($this->getManager(), $content, $client, $loggedInUser);
         if(!$weightValidator->getIsInputValid()) {
             return $weightValidator->createJsonResponse();
         }
@@ -71,7 +71,7 @@ class WeightService extends ControllerServiceBase
         $log = ActionLogWriter::editDeclareWeight($this->getManager(), $client, $loggedInUser, $content);
 
         $isPost = false;
-        $weightValidator = new DeclareWeightValidator($this->getManager(), $content, $client, $isPost);
+        $weightValidator = new DeclareWeightValidator($this->getManager(), $content, $client, $loggedInUser, $isPost);
         if(!$weightValidator->getIsInputValid()) {
             return $weightValidator->createJsonResponse();
         }
