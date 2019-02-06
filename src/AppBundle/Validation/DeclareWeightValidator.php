@@ -7,6 +7,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareWeight;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Util\NullChecker;
@@ -69,18 +70,19 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
      * @param ObjectManager $manager
      * @param ArrayCollection $content
      * @param Client $client
+     * @param Person $loggedInUser
      * @param bool $isPost
      * @param float $minWeight
      * @param float $maxWeight
      * @param float $maxWeightLambs
      */
-    public function __construct(ObjectManager $manager, ArrayCollection $content, Client
-    $client, $isPost = true,
+    public function __construct(ObjectManager $manager, ArrayCollection $content,
+                                Client $client, Person $loggedInUser, $isPost = true,
                                 $minWeight = DeclareWeightValidator::DEFAULT_MIN_WEIGHT,
                                 $maxWeight = DeclareWeightValidator::DEFAULT_MAX_WEIGHT,
                                 $maxWeightLambs = DeclareWeightValidator::DEFAULT_MAX_WEIGHT_LAMBS)
     {
-        parent::__construct($manager, $content, $client);
+        parent::__construct($manager, $content, $client, $loggedInUser);
         
         //Set given values
         $this->minWeight = $minWeight;

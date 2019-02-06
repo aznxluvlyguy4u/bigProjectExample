@@ -208,7 +208,7 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
 
         $log = ActionLogWriter::revokeNsfoDeclaration($this->getManager(), $client, $loggedInUser, $messageId);
 
-        $declarationFromMessageId = Validator::isNonRevokedNsfoDeclarationOfClient($this->getManager(), $client, $messageId);
+        $declarationFromMessageId = Validator::isNonRevokedNsfoDeclarationOfClient($this->getManager(), $client, $messageId, $loggedInUser);
 
         if(!($declarationFromMessageId instanceof DeclareNsfoBase)) {
             return Output::createStandardJsonErrorResponse();

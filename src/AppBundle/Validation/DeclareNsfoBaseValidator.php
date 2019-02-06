@@ -9,6 +9,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Mate;
+use AppBundle\Entity\Person;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -23,13 +24,17 @@ abstract class DeclareNsfoBaseValidator extends BaseValidator
     
     /** @var Client */
     protected $client;
-    
 
-    public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client)
+    /** @var Person */
+    protected $loggedInUser;
+
+    public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client,
+                                Person $loggedInUser = null)
     {
         parent::__construct($manager, $content);
         $this->animalRepository = $this->manager->getRepository(Animal::class);
         $this->client = $client;
+        $this->loggedInUser = $loggedInUser;
     }
     
     
@@ -41,7 +46,7 @@ abstract class DeclareNsfoBaseValidator extends BaseValidator
      */
     protected function isNonRevokedNsfoDeclarationOfClient($messageId)
     {
-        return Validator::isNonRevokedNsfoDeclarationOfClient($this->manager, $this->client, $messageId);
+        return Validator::isNonRevokedNsfoDeclarationOfClient($this->manager, $this->client, $messageId, $this->loggedInUser);
     }
 
 
