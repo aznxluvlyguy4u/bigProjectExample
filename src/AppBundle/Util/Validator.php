@@ -491,11 +491,15 @@ class Validator
         /** @var DeclareNsfoBase $declaration */
         $declaration = $manager->getRepository(DeclareNsfoBase::class)->findOneByMessageId($messageId);
 
-        //null check
-        if(!($declaration instanceof DeclareNsfoBase) || $messageId == null) { return false; }
-
-        //Revoke check, to prevent data loss by incorrect data
-        if($declaration->getRequestState() == RequestStateType::REVOKED) { return false; }
+        if (
+            //null check
+            !($declaration instanceof DeclareNsfoBase) ||
+            $messageId == null ||
+            // Revoke check, to prevent data loss by incorrect data
+            $declaration->getRequestState() == RequestStateType::REVOKED
+        ) {
+            return false;
+        }
 
         if ($loggedInUser instanceof Employee) {
             return $declaration;
@@ -505,16 +509,29 @@ class Validator
         $location = $manager->getRepository(Location::class)->findOneByUbn($declaration->getUbn());
 
         $owner = NullChecker::getOwnerOfLocation($location);
+        $locationOwnerIsDeclareOwner = $owner instanceof Client && $client instanceof Client
+            && $owner->getId() == $client->getId();
 
-        if($owner instanceof Client && $client instanceof Client) {
-            /** @var Client $owner */
-            if($owner->getId() == $client->getId()) {
-                return $declaration;
-            }
-            throw new UnauthorizedHttpException(null, self::DECLARE_BELONGS_TO_OTHER_ACCOUNT,null);
+        if (
+            $locationOwnerIsDeclareOwner ||
+            self::ubnOfLocationIsIdenticalToUbnsOwnedByClient($client, $location)
+        ) {
+            return $declaration;
         }
 
-        return false;
+        throw new UnauthorizedHttpException(null, self::DECLARE_BELONGS_TO_OTHER_ACCOUNT,null);
+    }
+
+
+    /**
+     * @param Client $client
+     * @param Location $location
+     * @return bool
+     */
+    public static function ubnOfLocationIsIdenticalToUbnsOwnedByClient(Client $client, Location $location): bool
+    {
+        $ubns = $client->getUbns(true);
+        return in_array($location->getUbn(), $ubns);
     }
 
 

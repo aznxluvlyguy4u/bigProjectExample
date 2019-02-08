@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -292,9 +293,10 @@ class Client extends Person implements PersonImplementationInterface
 
 
     /**
+     * @param bool $onlyReturnActiveUbns
      * @return array|string[]
      */
-    public function getUbns()
+    public function getUbns(bool $onlyReturnActiveUbns = true)
     {
         if (!$this->getCompanies()) {
             return [];
@@ -302,12 +304,22 @@ class Client extends Person implements PersonImplementationInterface
 
         $ubns = [];
         foreach ($this->getCompanies() as $company) {
-            foreach ($company->getLocations() as $location) {
-                if (!empty($location->getUbn())) {
-                    $ubns[] = $location->getUbn();
+            if ($company->isActive() || !$onlyReturnActiveUbns) {
+                foreach ($company->getLocations() as $location) {
+                    if (($location->getIsActive() || !$onlyReturnActiveUbns) && !empty($location->getUbn())) {
+                        $ubns[] = $location->getUbn();
+                    }
                 }
             }
         }
+
+        if ($this->getEmployer()) {
+            $employerUbns = $this->getEmployer()->getUbns($onlyReturnActiveUbns);
+            if (!empty($employerUbns)) {
+                $ubns = array_unique(ArrayUtil::concatArrayValues([$ubns, $employerUbns], true));
+            }
+        }
+
         return $ubns;
     }
 }
