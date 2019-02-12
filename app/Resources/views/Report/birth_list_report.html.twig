@@ -35,7 +35,7 @@
         <div class="header">
 
             <div class="ubn">
-                [UBN {{ d.ubn }}]
+                UBN {{ d.ubn }}
             </div>
 
             <div class="title">
@@ -145,7 +145,7 @@
 
             {% set ramsData = [] %}
             {% for i in 0..(ramsCount-1) %}
-                {% set ramsData = ramsData|merge({('_'~i) :'Aantal dekkingen door ram [' ~ rams[i]['uln'] ~ ']: ' ~ rams[i]['mate_count']}) %}
+                {% set ramsData = ramsData|merge({('_'~i) :'Aantal dekkingen door ram ' ~ rams[i]['uln'] ~ ': ' ~ rams[i]['mate_count']}) %}
             {% endfor %}
 
             <table class="summary-table">
