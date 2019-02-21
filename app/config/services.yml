@@ -510,6 +510,9 @@ services:
     AppBundle\Service\Report\BirthListReportService:
       parent: app.report.base
 
+    AppBundle\Service\Report\MembersAndUsersOverviewReportService:
+      parent: app.report.base
+
     app.report.vwa.animal_details:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaAnimalDetailsReportService
