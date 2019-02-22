@@ -621,6 +621,7 @@ services:
           - '@app.report.pedigree_certificates'
           - '@app.report.livestock'
           - '@AppBundle\Service\Report\BirthListReportService'
+          - '@AppBundle\Service\Report\MembersAndUsersOverviewReportService'
 
 
     AppBundle\Processor\ReportProcessor:
@@ -636,6 +637,7 @@ services:
           - '@app.report.pedigree_certificates'
           - '@app.report.livestock'
           - '@AppBundle\Service\Report\BirthListReportService'
+          - '@AppBundle\Service\Report\MembersAndUsersOverviewReportService'
           - '@doctrine.orm.entity_manager'
           - '@logger'
           - '@app.serializer.base'

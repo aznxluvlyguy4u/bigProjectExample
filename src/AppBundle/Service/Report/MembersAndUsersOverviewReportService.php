@@ -4,6 +4,7 @@
 namespace AppBundle\Service\Report;
 
 
+use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Util\ResultUtil;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
@@ -21,18 +22,16 @@ class MembersAndUsersOverviewReportService extends ReportServiceBase
     const LABEL_ANIMAL_HEALTH_SUBSCRIPTION = 'diergezondheid';
 
     /**
-     * @param \DateTime $referenceDate
-     * @param bool $mustHaveActiveHealthSubscription
-     * @param string|null $pedigreeRegisterAbbreviation
-     * @param string $locale
+     * @param MembersAndUsersOverviewReportOptions $options
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
-    function getReport(
-        \DateTime $referenceDate,
-        bool $mustHaveActiveHealthSubscription,
-        $pedigreeRegisterAbbreviation,
-        $locale)
+    function getReport(MembersAndUsersOverviewReportOptions $options)
     {
+        $referenceDate = $options->getReferenceDate();
+        $mustHaveActiveHealthSubscription = $options->isMustHaveAnimalHealthSubscription();
+        $pedigreeRegisterAbbreviation = $options->getPedigreeRegisterAbbreviation();
+        $locale = $options->getLanguage();
+
         try {
 
             $this->validatePedigreeRegisterAbbreviation($pedigreeRegisterAbbreviation);
@@ -58,6 +57,10 @@ class MembersAndUsersOverviewReportService extends ReportServiceBase
 
     private function validatePedigreeRegisterAbbreviation($pedigreeRegisterAbbreviation)
     {
+        if (empty($pedigreeRegisterAbbreviation)) {
+            return;
+        }
+
         $sql = "SELECT
                 COUNT(id)
                 FROM pedigree_register WHERE abbreviation = :name";

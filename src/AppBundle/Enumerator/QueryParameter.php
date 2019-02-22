@@ -28,6 +28,7 @@ class QueryParameter
     const USER_ACTION_TYPE = 'user_action_type';
     const USER_ACCOUNT_ID = 'user_account_id';
     const LANGUAGE = 'language';
+    const MUST_HAVE_ANIMAL_HEALTH_SUBSCRIPTION = 'must_have_animal_health_subscription';
     const PEDIGREE_ACTIVE_END_DATE = 'pedigree_active_end_date';
     const PEDIGREE_REGISTER = 'pedigree_register';
     const PLAIN_TEXT_INPUT = 'plain_text_input';

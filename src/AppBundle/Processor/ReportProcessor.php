@@ -3,6 +3,7 @@
 namespace AppBundle\Processor;
 
 use AppBundle\Component\Option\BirthListReportOptions;
+use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Entity\ReportWorker;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
@@ -15,6 +16,7 @@ use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
+use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
 use AppBundle\Service\Report\OffspringReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
@@ -91,6 +93,9 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /** @var BirthListReportService */
     private $birthListReportService;
 
+    /** @var MembersAndUsersOverviewReportService */
+    private $membersAndUsersOverviewReport;
+
     /** @var BaseSerializer */
     private $serializer;
 
@@ -111,6 +116,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         PedigreeCertificateReportService $pedigreeCertificateReportService,
         LiveStockReportService $liveStockReportService,
         BirthListReportService $birthListReportService,
+        MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
         EntityManager $em,
         Logger $logger,
         BaseSerializer $serializer
@@ -130,6 +136,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->pedigreeCertificateReportService = $pedigreeCertificateReportService;
         $this->liveStockReportService = $liveStockReportService;
         $this->birthListReportService = $birthListReportService;
+        $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
     }
 
     public function process(PsrMessage $message, PsrContext $context)
@@ -151,7 +158,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             $fileType = $worker->getFileType();
             $locale = $worker->getLocale();
 
-            switch($reportType) {
+            switch ($reportType) {
                 case ReportType::PEDIGREE_CERTIFICATE:
                     {
                         $content = new ArrayCollection(json_decode($data['content'], true));
@@ -226,6 +233,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                             BirthListReportOptions::class, null);
                         $data = $this->birthListReportService->getReport($worker->getActionBy(),
                             $worker->getLocation(), $options);
+                        break;
+                    }
+                case ReportType::MEMBERS_AND_USERS_OVERVIEW:
+                    {
+                        $options = $this->serializer->deserializeToObject($data['options'],
+                            MembersAndUsersOverviewReportOptions::class, null);
+                        $data = $this->membersAndUsersOverviewReport->getReport($options);
                         break;
                     }
             }
