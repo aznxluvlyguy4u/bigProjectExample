@@ -99,6 +99,8 @@ class MembersAndUsersOverviewReportService extends ReportServiceBase
 
         $healthSubscriptionFilter = $mustHaveActiveHealthSubscription ? " AND c.animal_health_subscription " : " ";
 
+        $quotedDoubleQuote = "'\"'";
+
         return "SELECT
   -- c.id as company_id,
   -- c.owner_id,
@@ -112,7 +114,7 @@ class MembersAndUsersOverviewReportService extends ReportServiceBase
   ca.city as bedrijf_stad, --company_city
   country.code as bedrijf_landcode, --company_country_code
   -- country.id as company_country_id,
-  TRIM(CONCAT(owner.first_name,' ',owner.last_name)) as primaire_contactpersoon, --primary_contact_person
+  CONCAT($quotedDoubleQuote,TRIM(CONCAT(owner.first_name,' ',owner.last_name)),$quotedDoubleQuote) as primaire_contactpersoon, --primary_contact_person
   secondary_users.other_active_users as andere_actieve_gebruikers, --other_active_users
   pra.company_id NOTNULL as ".self::LABEL_HAS_ACTIVE_PEDIGREE_REGISTER.", --has_active_pedigree_register
   pra.pedigree_register_abbreviations as stamboeken, --pedigree_registers
