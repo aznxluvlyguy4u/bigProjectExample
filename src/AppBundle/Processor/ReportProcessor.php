@@ -258,7 +258,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             if($worker) {
                 $worker->setDebugErrorCode($e->getCode());
                 $worker->setDebugErrorMessage($e->getMessage());
-                if ($this->publicallyDisplayErrorMessage($e->getCode())) {
+                if ($this->publiclyDisplayErrorMessage($e->getCode())) {
                     $worker->setErrorCode($e->getCode());
                     $worker->setErrorMessage($e->getMessage());
                 } else {
@@ -301,7 +301,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      * @param int|null $errorCode
      * @return bool
      */
-    private function publicallyDisplayErrorMessage($errorCode): bool
+    private function publiclyDisplayErrorMessage($errorCode): bool
     {
         return is_int($errorCode) && (
                 $errorCode === Response::HTTP_NOT_FOUND
