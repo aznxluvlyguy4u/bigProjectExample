@@ -573,6 +573,12 @@ class ReportService
         $referenceDateString = $request->query->get(QueryParameter::REFERENCE_DATE);
         $referenceDate = empty($referenceDateString) ? new \DateTime() : new \DateTime($referenceDateString);
 
+        if (TimeUtil::isDateInFuture($referenceDate)) {
+            throw new PreconditionFailedHttpException(ucfirst(strtolower(
+                $this->translator->trans('REFERENCE DATE CANNOT BE IN THE FUTURE')
+            )));
+        }
+
         $mustHaveAnimalHealthSubscription = RequestUtil::getBooleanQuery($request,QueryParameter::MUST_HAVE_ANIMAL_HEALTH_SUBSCRIPTION,false);
 
         $pedigreeRegisterAbbreviation = $request->query->get(QueryParameter::PEDIGREE_REGISTER);
