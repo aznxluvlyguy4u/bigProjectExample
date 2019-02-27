@@ -571,13 +571,6 @@ class LocationHealthUpdater
      */
     public static function checkHealthStatus(Location $location): bool
     {
-        // TODO only set this to true after testing and verification
-        $alsoCheckOnlyScrapieIfNoHealthSubscriptionButHasNonBlankScrapieStatus = true;
-
-        if (!$alsoCheckOnlyScrapieIfNoHealthSubscriptionButHasNonBlankScrapieStatus) {
-            return $location->getAnimalHealthSubscription();
-        }
-
         return self::checkMaediVisnaStatus($location)
             || self::checkScrapieStatus($location)
             ;
