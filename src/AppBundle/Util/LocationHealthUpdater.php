@@ -191,13 +191,13 @@ class LocationHealthUpdater
         ) {
 
             if ($includeMaediVisna &&
-                !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
+                !$previousMaediVisnaDestination->isStatusBlank()){
                 $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 $locationHealthMessage->setCheckForMaediVisna(true);
             } //else do nothing
 
             if ($includeScrapie &&
-                $isScrapieStatusDemotingAnimal && $previousScrapieDestinationIsHealthy){
+                $isScrapieStatusDemotingAnimal){
                 $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 $locationHealthMessage->setCheckForScrapie(true);
             } //else do nothing
@@ -218,7 +218,7 @@ class LocationHealthUpdater
                     $maediVisnaOriginIsHealthy = false;
                 }
 
-                if(!$maediVisnaOriginIsHealthy && !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
+                if(!$maediVisnaOriginIsHealthy && !$previousMaediVisnaDestination->isStatusBlank()){
                     $locationHealthMessage->setCheckForMaediVisna(true);
                     $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 } //else do nothing
@@ -243,7 +243,7 @@ class LocationHealthUpdater
                     ;
                 }
 
-                if ($animalMutationSourceIsScrapieStatusDemoting && $previousScrapieDestinationIsHealthy) {
+                if ($animalMutationSourceIsScrapieStatusDemoting) {
                     $locationHealthMessage->setCheckForScrapie(true);
                     $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 } //else do nothing
@@ -572,7 +572,7 @@ class LocationHealthUpdater
     public static function checkHealthStatus(Location $location): bool
     {
         // TODO only set this to true after testing and verification
-        $alsoCheckOnlyScrapieIfNoHealthSubscriptionButHasNonBlankScrapieStatus = false;
+        $alsoCheckOnlyScrapieIfNoHealthSubscriptionButHasNonBlankScrapieStatus = true;
 
         if (!$alsoCheckOnlyScrapieIfNoHealthSubscriptionButHasNonBlankScrapieStatus) {
             return $location->getAnimalHealthSubscription();
