@@ -583,6 +583,57 @@ class ReportAPIController extends APIController {
 
 
     /**
+     * Generate NSFO members and users overview report and return a download link for the csv.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="reference_date",
+     *        "dataType"="date",
+     *        "required"=false,
+     *        "description"="The reference date of the report, default is current date",
+     *        "format"="?reference_date=2018-05-01"
+     *     },
+     *     {
+     *        "name"="pedigree_register",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="filter on pedigree register abbreviation, default = empty (no pedigree register filter)",
+     *        "format"="?pedigree_register=nts"
+     *     },
+     *     {
+     *        "name"="must_have_animal_health_subscription",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="Only include companies that have an animal health subscription, default = false",
+     *        "format"="?must_have_animal_health_subscription=true"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate NSFO members and users overview report and return a download link for the csv."
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/members-and-users-overview")
+     * @Method("POST")
+     * @throws \Exception
+     */
+    public function getMembersAndUsersOverviewReportService(Request $request)
+    {
+        return $this->get(ReportService::class)->createMembersAndUsersOverviewReportService($request);
+    }
+
+
+    /**
      * Generate VWA animal details report as pdf.
      *
      * ### POST EXAMPLE ###

@@ -15,6 +15,10 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
+ * WARNING!
+ * Currently for this service to work, the database should be able to write to the machine it is running on.
+ * So this will currently not work on a cloud service managed database. 
+ *
  * Class ReportBySqlService
  *
  * Reports generated from data retrieved by sql query
