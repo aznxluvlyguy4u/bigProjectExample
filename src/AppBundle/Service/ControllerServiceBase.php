@@ -25,6 +25,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
@@ -39,12 +40,15 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Util\Json;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -213,8 +217,6 @@ abstract class ControllerServiceBase
      */
     public function isAccessTokenValid(Request $request)
     {
-        $token = null;
-        $response = null;
         $content = RequestUtil::getContentAsArray($request);
 
         //Get token header to read token value
@@ -225,63 +227,92 @@ abstract class ControllerServiceBase
             $token = $this->getManager()->getRepository(Token::class)
                 ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
 
+            $response = $this->getUnauthorizedResponse();
+
             if ($token != null) {
-                if ($environment == 'USER') {
-                    if ($token->getOwner() instanceof Client) {
-                        $response = array(
-                            'token_status' => 'valid',
-                            'token' => $tokenCode
-                        );
-                        return new JsonResponse($response, 200);
-                    } elseif ($token->getOwner() instanceof Employee ) {
-                        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
-                        $ghostToken = $this->getManager()->getRepository(Token::class)
-                            ->findOneBy(array("code" => $ghostTokenCode, "type" => TokenType::GHOST));
 
-                        if($ghostToken != null) {
-                            $response = array(
-                                'token_status' => 'valid',
-                                'token' => $tokenCode
-                            );
-                            return new JsonResponse($response, 200);
-                        }
-                    } else {
-                        $response = array(
-                            'error' => 401,
-                            'errorMessage' => 'No AccessToken provided'
-                        );
-                    }
+                switch ($environment) {
+                    case 'USER':
+                        $response = $this->getUserEnvironmentAccessTokenValidationResponse($request, $token->getOwner(), $tokenCode);
+                        break;
+
+                    case 'ADMIN':
+                        $response = $this->getAdminEnvironmentAccessTokenValidationResponse($token->getOwner(), $tokenCode);
+                        break;
+
+                    default:
+                        break;
                 }
             }
 
-            if ($environment == 'ADMIN') {
-                if ($token->getOwner() instanceof Employee) {
-                    $response = array(
-                        'token_status' => 'valid',
-                        'token' => $tokenCode
-                    );
-                    return new JsonResponse($response, 200);
-                } else {
-                    $response = array(
-                        'error' => 401,
-                        'errorMessage' => 'No AccessToken provided'
-                    );
-                }
-            }
-
-            $response = array(
-                'error'=> 401,
-                'errorMessage'=> 'No AccessToken provided'
-            );
-        } else {
-            //Mandatory AccessToken was not provided
-            $response = array(
-                'error'=> 401,
-                'errorMessage'=> 'Mandatory AccessToken header was not provided'
-            );
+            return $response;
         }
 
-        return new JsonResponse($response, 401);
+        return new JsonResponse([
+            'error'=> Response::HTTP_UNAUTHORIZED,
+            'errorMessage'=> 'Mandatory AccessToken header was not provided'
+        ], Response::HTTP_UNAUTHORIZED);
+    }
+
+
+    /**
+     * @param Request $request
+     * @param Person $owner
+     * @param string $tokenCode
+     * @return JsonResponse
+     */
+    private function getUserEnvironmentAccessTokenValidationResponse(Request $request, $owner, $tokenCode): JsonResponse
+    {
+        if ($owner instanceof Client) {
+            return $this->getTokenResponse($tokenCode);
+
+        } elseif ($owner instanceof Employee ) {
+            $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
+            $ghostToken = $this->getManager()->getRepository(Token::class)
+                ->findOneBy(array("code" => $ghostTokenCode, "type" => TokenType::GHOST));
+
+            if ($ghostToken != null) {
+                return $this->getTokenResponse($tokenCode);
+            }
+        }
+        return $this->getUnauthorizedResponse();
+    }
+
+
+    /**
+     * @param Person $owner
+     * @param string $tokenCode
+     * @return JsonResponse
+     */
+    private function getAdminEnvironmentAccessTokenValidationResponse($owner, $tokenCode): JsonResponse
+    {
+        if ($owner instanceof Employee) {
+            return $this->getTokenResponse($tokenCode);
+        }
+        return $this->getUnauthorizedResponse();
+    }
+
+
+    private function getUnauthorizedResponse(): JsonResponse
+    {
+        return new JsonResponse([
+            'error'=> Response::HTTP_UNAUTHORIZED,
+            'errorMessage'=> 'No AccessToken provided'
+        ], Response::HTTP_UNAUTHORIZED);
+    }
+
+
+    /**
+     * @param string $tokenCode
+     * @param string $tokenStatus
+     * @return JsonResponse
+     */
+    private function getTokenResponse($tokenCode, $tokenStatus = 'valid'): JsonResponse
+    {
+        return new JsonResponse([
+            'token_status' => $tokenStatus,
+            'token' => $tokenCode
+        ], Response::HTTP_OK);
     }
 
 
