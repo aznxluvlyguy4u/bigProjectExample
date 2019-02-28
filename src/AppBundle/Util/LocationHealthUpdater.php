@@ -191,13 +191,13 @@ class LocationHealthUpdater
         ) {
 
             if ($includeMaediVisna &&
-                !$previousMaediVisnaDestination->isStatusBlank()){
+                !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
                 $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 $locationHealthMessage->setCheckForMaediVisna(true);
             } //else do nothing
 
             if ($includeScrapie &&
-                $isScrapieStatusDemotingAnimal){
+                $isScrapieStatusDemotingAnimal && $previousScrapieDestinationIsHealthy){
                 $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 $locationHealthMessage->setCheckForScrapie(true);
             } //else do nothing
@@ -218,7 +218,7 @@ class LocationHealthUpdater
                     $maediVisnaOriginIsHealthy = false;
                 }
 
-                if(!$maediVisnaOriginIsHealthy && !$previousMaediVisnaDestination->isStatusBlank()){
+                if(!$maediVisnaOriginIsHealthy && !$previousMaediVisnaDestination->isStatusBlank() && $previousMaediVisnaDestinationIsHealthy){
                     $locationHealthMessage->setCheckForMaediVisna(true);
                     $latestMaediVisnaDestination = $this->persistNewDefaultMaediVisnaAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 } //else do nothing
@@ -243,7 +243,7 @@ class LocationHealthUpdater
                     ;
                 }
 
-                if ($animalMutationSourceIsScrapieStatusDemoting) {
+                if ($animalMutationSourceIsScrapieStatusDemoting && $previousScrapieDestinationIsHealthy) {
                     $locationHealthMessage->setCheckForScrapie(true);
                     $latestScrapieDestination = $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealthDestination, $checkDate);
                 } //else do nothing
