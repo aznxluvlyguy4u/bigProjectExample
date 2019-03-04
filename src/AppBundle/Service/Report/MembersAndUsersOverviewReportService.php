@@ -5,6 +5,7 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
+use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Util\ResultUtil;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
@@ -120,6 +121,7 @@ class MembersAndUsersOverviewReportService extends ReportServiceBase
   pra.pedigree_register_abbreviations as stamboeken, --pedigree_registers
   c.animal_health_subscription as ".self::LABEL_ANIMAL_HEALTH_SUBSCRIPTION.", --animal_health_subscription
   COALESCE(old_animal_count.animal_count_at_least_one_year_old, 0) as aantal_dieren_een_jaar_of_ouder,
+  COALESCE(old_pedigree_ewe_count.pedigree_ewes_count_at_least_six_months_old, 0) as aantal_stamboek_ooien_zes_maanden_of_ouder,
   COALESCE(young_animal_count.animal_count_younger_than_one_year_old, 0) as aantal_dieren_jonger_dan_een_jaar
   ,sync_counts.*
 FROM company c
@@ -186,6 +188,10 @@ FROM company c
        LEFT JOIN (
           ".$this->getOlderAnimalsQuery($referenceDateString)."
        ) old_animal_count ON old_animal_count.company_id = c.id
+
+       LEFT JOIN (
+          ".$this->get6MonthsOrOlderPedigreeEwesQuery($referenceDateString)."
+       ) old_pedigree_ewe_count ON old_pedigree_ewe_count.company_id = c.id
 
        LEFT JOIN (
           ".$this->getYoungAnimalsQuery($referenceDateString)."
@@ -262,6 +268,45 @@ WHERE
           ) gc ON gc.company_id = c.id
           WHERE c.is_active";
     }
+
+
+    private function get6MonthsOrOlderPedigreeEwesQuery($referenceDateString): string {
+        $ewe = AnimalObjectType::Ewe;
+
+        return "SELECT
+            c.id as company_id,
+            pedigree_ewes_count_at_least_six_months_old
+          FROM company c
+                 INNER JOIN (
+            SELECT
+              c.id as company_id,
+              count(*) as pedigree_ewes_count_at_least_six_months_old
+            FROM animal a
+              INNER JOIN (
+                  SELECT animal_id, location_id
+                  FROM animal_residence
+                  WHERE DATE(start_date) <= '$referenceDateString'
+                    AND (
+                      end_date ISNULL OR
+                      DATE(end_date) >= '$referenceDateString'
+                    )
+                    --Group to ignore double animal_residence entries
+                  GROUP BY animal_id, location_id
+                )g on g.animal_id = a.id
+               INNER JOIN location l ON l.id = g.location_id
+               INNER JOIN company c ON c.id = l.company_id
+            WHERE
+              a.date_of_birth NOTNULL AND l.is_active AND  
+              a.type = '$ewe' AND a.pedigree_register_id NOTNULL AND 
+              (
+                EXTRACT(YEAR FROM AGE('$referenceDateString', a.date_of_birth)) * 12 +
+                EXTRACT(MONTH FROM AGE('$referenceDateString', a.date_of_birth))
+              ) >= 6 --age in months on reference_date
+            GROUP BY c.id
+          ) gc ON gc.company_id = c.id
+          WHERE c.is_active";
+    }
+
 
 
     private function getSyncCountsQuery($referenceDateString): string {
