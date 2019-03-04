@@ -64,9 +64,9 @@ class MembersAndUsersOverviewReportService extends ReportServiceBase
 
         $sql = "SELECT
                 COUNT(id)
-                FROM pedigree_register WHERE abbreviation = :name";
+                FROM pedigree_register WHERE lower(abbreviation) = :name";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue("name", $pedigreeRegisterAbbreviation);
+        $stmt->bindValue("name", strtolower($pedigreeRegisterAbbreviation));
         $stmt->execute();
         $count = $stmt->fetch()['count'];
 
@@ -408,7 +408,7 @@ WHERE
                       INNER JOIN pedigree_register pr ON prr.pedigree_register_id = pr.id
                       INNER JOIN location l ON l.id = prr.location_id
                WHERE prr.is_active
-                 AND pr.abbreviation = '$pedigreeRegisterAbbreviation'
+                 AND lower(pr.abbreviation) = '".strtolower($pedigreeRegisterAbbreviation)."'
                GROUP BY company_id, pr.abbreviation
              )pra GROUP BY company_id
       )register_filter ON register_filter.company_id = c.id " : " ";
