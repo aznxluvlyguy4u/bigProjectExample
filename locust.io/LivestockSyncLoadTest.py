@@ -42,12 +42,7 @@ class UserBehavior(TaskSet):
   # 100 Max
   @task(100)
   def action_landing_page(self):
-      self.client.get("/api/v1/animals-livestock")
-
-  # 100 Max
-  @task(100)
-  def action_landing_page(self):
-      self.client.get("/api/v1/animals-historic-livestock")
+      self.client.post("/api/v1/animals-sync", "{\"is_rvo_leading\":false}")
 
 class WebsiteUser(HttpLocust):
     """ 1 host to call """
