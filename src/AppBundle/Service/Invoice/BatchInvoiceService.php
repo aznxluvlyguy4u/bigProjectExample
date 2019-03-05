@@ -73,6 +73,7 @@ class BatchInvoiceService extends ControllerServiceBase
      *
      * @param Request $request
      * @return JsonResponse
+     * @throws \Exception
      */
     public function createBatchInvoices(Request $request) {
         $companies = $this->getManager()->getRepository(Company::class)->findBy(array("isActive" => true));
@@ -88,6 +89,7 @@ class BatchInvoiceService extends ControllerServiceBase
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::BATCH_INVOICES_SEND);
         $this->getManager()->persist($log);
         $this->getManager()->flush();
+        
         return ResultUtil::successResult($invoices);
     }
 
@@ -117,7 +119,7 @@ class BatchInvoiceService extends ControllerServiceBase
                     $registerRule = clone $newRule;
                     $registerDescription = $registerRule->getDescription()." - ".$register->getAbbreviation()." - ".$controlDate->format(DateTimeFormats::DAY_MONTH_YEAR);
                     $registerRule->setDescription($registerDescription);
-                    $registerRule->setSubArticleCode($register->getAbbreviation());
+                    //$registerRule->setSubArticleCode($register->getAbbreviation());
                     $this->getManager()->persist($registerRule);
                     $newRules->add($registerRule);
                 }
@@ -127,9 +129,9 @@ class BatchInvoiceService extends ControllerServiceBase
                 $newRule->setDescription($newRule->getDescription()." - ".$controlDate->format(DateTimeFormats::YEAR));
                 $this->getManager()->persist($newRule);
                 $newRules->add($newRule);
-                continue;
             }
         }
+        
         return $newRules;
     }
 
@@ -141,6 +143,7 @@ class BatchInvoiceService extends ControllerServiceBase
      * @param ArrayCollection $batchRules
      * @param \DateTime $date
      * @return array
+     * @throws \Exception
      */
     private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date, Request $request){
         $invoices = array();
@@ -198,6 +201,7 @@ class BatchInvoiceService extends ControllerServiceBase
      * @param array|null $data
      * @param Request $request
      * @return array
+     * @throws \Exception
      */
     private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, Request $request, array $data = null) {
         $invoiceSet = array();
@@ -261,28 +265,41 @@ class BatchInvoiceService extends ControllerServiceBase
 
                 $this->fireBaseService->sendNsfoMessageToUser($location->getOwner(), $message);
             }
+            $this->validateAndSendToTwinfield($invoice);
             $invoiceSet[] = $invoice;
             $this->getManager()->persist($invoice);
         }
         return $invoiceSet;
     }
-
+    /**
+     * @param Invoice $invoice
+     * @throws \Exception
+     */
     private function validateAndSendToTwinfield(Invoice $invoice) {
         $message = "Company debtor number and/or twinfield administration code are not filled out";
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
         if ($invoice->getCompanyTwinfieldOfficeCode() && $invoice->getCompanyDebtorNumber()) {
-            if ($this->invoicesSendCounter >= 100) {
+            if ($this->invoicesSendCounter >= 99) {
                 $this->twinfieldInvoiceService->reAuthenticate();
                 $this->invoicesSendCounter = 0;
             }
             $result = $this->twinfieldInvoiceService->sendInvoiceToTwinfield($invoice);
-            $this->invoicesSendCounter++;
             if (is_a($result, \PhpTwinfield\Invoice::class)) {
+                $this->invoicesSendCounter++;
                 $invoice->setInvoiceNumber($result->getInvoiceNumber());
                 $invoice->setInvoiceDate(new \DateTime());
                 $this->persist($invoice);
                 return;
             }
+            $message = "Twinfield error";
+            if ($result !== null) {
+                $message = $result->getMessage();
+            }
+            $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
+            $invoice->setStatus(InvoiceStatus::NOT_SEND);
+            $invoice->setInvoiceDate(null);
+            $this->persist($log);
+            $this->persist($invoice);
        } else {
             $invoice->setStatus(InvoiceStatus::NOT_SEND);
             $invoice->setInvoiceDate(null);
