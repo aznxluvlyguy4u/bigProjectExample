@@ -120,3 +120,7 @@ nsfo_dev
 firebase-credentials-production.json
 firebase-credentials-staging.json
 firebase-credentials.json
+
+# locust python files
+/locust.io/*.pyc
+/locust.io/.env
