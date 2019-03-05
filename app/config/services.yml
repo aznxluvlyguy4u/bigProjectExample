@@ -1008,6 +1008,7 @@ services:
         abstract: true
         arguments:
             - '@AppBundle\Service\ExternalProvider\ExternalProviderAuthenticator'
+            - '@app.cache'
         calls:
             - method: reAuthenticate
 

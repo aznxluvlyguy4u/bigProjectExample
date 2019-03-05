@@ -5,6 +5,7 @@ namespace AppBundle\Service\ExternalProvider;
 
 
 use AppBundle\Constant\ExternalProviderSetting;
+use AppBundle\Service\CacheService;
 
 class ExternalProviderBase
 {
@@ -14,10 +15,18 @@ class ExternalProviderBase
     /** @var int */
     private $retryCount;
 
-    public function __construct(ExternalProviderAuthenticator $authenticator)
+    /** @var CacheService */
+    private $cacheService;
+
+    private $customerListCacheId;
+
+    private $officeListCacheId;
+
+    public function __construct(ExternalProviderAuthenticator $authenticator, CacheService $cacheService)
     {
         $this->authenticator = $authenticator;
         $this->resetRetryCount();
+        $this->cacheService = $cacheService;
     }
 
     /**
@@ -28,6 +37,45 @@ class ExternalProviderBase
         return $this->authenticator;
     }
 
+    /**
+     * @return CacheService
+     */
+    public function getCacheService(): CacheService
+    {
+        return $this->cacheService;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCustomerListCacheId()
+    {
+        return $this->customerListCacheId;
+    }
+
+    /**
+     * @param mixed $customerListCacheId
+     */
+    public function setCustomerListCacheId($customerListCacheId): void
+    {
+        $this->customerListCacheId = $customerListCacheId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getOfficeListCacheId()
+    {
+        return $this->officeListCacheId;
+    }
+
+    /**
+     * @param mixed $officeListCacheId
+     */
+    public function setOfficeListCacheId($officeListCacheId): void
+    {
+        $this->officeListCacheId = $officeListCacheId;
+    }
 
     /**
      * @param \Exception $exception

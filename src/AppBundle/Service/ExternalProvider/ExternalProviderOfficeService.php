@@ -27,6 +27,7 @@ class ExternalProviderOfficeService extends ExternalProviderBase implements Exte
     public function getAllOffices() {
         try {
             return $this->officeConnection->listAll();
+
         } catch (\Exception $exception) {
             if (!$this->allowRetryTwinfieldApiCall($exception)) {
                 $this->resetRetryCount();
