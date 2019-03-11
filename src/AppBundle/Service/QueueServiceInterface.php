@@ -106,7 +106,7 @@ interface QueueServiceInterface
      * @param bool $decodeJsonString
      * @return mixed
      */
-    public static function getMessageBodyFromResponse($respons, bool $decodeJsonString = truee);
+    public static function getMessageBodyFromResponse($respons, bool $decodeJsonString = true);
 
 
     /**
