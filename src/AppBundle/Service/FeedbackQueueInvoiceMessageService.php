@@ -3,11 +3,7 @@
 
 namespace AppBundle\Service;
 
-
-use AppBundle\Enumerator\SqsCommandType;
-use AppBundle\Entity\JsonFormat\CreateBatchInvoicesMessage;
 use Enqueue\Util\UUID;
-use function MongoDB\BSON\toJSON;
 use Symfony\Component\HttpFoundation\Request;
 
 class FeedbackQueueInvoiceMessageService

@@ -73,7 +73,6 @@ class BatchInvoiceService extends ControllerServiceBase
      * active companies
      *
      * @param string $date
-     * @return JsonResponse
      * @throws \Exception
      */
     public function createBatchInvoices(string $date) {
@@ -87,8 +86,6 @@ class BatchInvoiceService extends ControllerServiceBase
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::BATCH_INVOICES_SEND);
         $this->getManager()->persist($log);
         $this->getManager()->flush();
-        
-        return ResultUtil::successResult($invoices);
     }
 
     /**
