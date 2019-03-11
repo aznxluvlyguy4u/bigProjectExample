@@ -59,7 +59,7 @@ class ExternalProviderInvoiceService extends ExternalProviderBase implements Ext
             return $customer;
         }
         if ($customer == null) {
-            return null;
+            return "Debtor number not found in twinfield";
         }
 
         $customer->setCode($invoice->getCompanyDebtorNumber());
