@@ -654,6 +654,7 @@ services:
           - '@translator'
           - '@AppBundle\Service\Worker\SyncAnimalRelocationProcessor'
           - '@AppBundle\Service\Worker\SyncHealthCheckProcessor'
+          - '@AppBundle\Service\Invoice\BatchInvoiceService'
 
     app.abstract_base.worker_task_processor:
         abstract: true
@@ -1034,6 +1035,13 @@ services:
 
     AppBundle\Service\ExternalProvider\ExternalProviderOfficeService:
         parent: app.abstract_base.external_provider
+
+    AppBundle\Service\FeedbackQueueInvoiceMessageService:
+        calls:
+          - method: instantiateServices
+            arguments:
+              - '@app.serializer.base'
+              - '@AppBundle\Service\AwsFeedbackQueueService'
 
     AppBundle\SqlView\SqlViewManager:
         arguments:
