@@ -18,6 +18,7 @@ use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Message;
 use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\DateTimeFormats;
 use AppBundle\Enumerator\InvoiceAction;
 use AppBundle\Enumerator\InvoiceMessages;
@@ -71,21 +72,18 @@ class BatchInvoiceService extends ControllerServiceBase
      * This is the only public function in the service, that will call all other functions to create invoices for all
      * active companies
      *
-     * @param Request $request
+     * @param string $date
      * @return JsonResponse
      * @throws \Exception
      */
-    public function createBatchInvoices(Request $request) {
+    public function createBatchInvoices(string $date) {
         $companies = $this->getManager()->getRepository(Company::class)->findBy(array("isActive" => true));
-        $requestJson = $request->getContent();
-        $requestJson = json_decode($requestJson, true);
-        $date = $requestJson["controlDate"];
         $date = new \DateTime($date);
         $animalsByCompanyResult = $this->getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate($date);
         $registerCounts = $this->setupAnimalDataByCompanyLocation($companies, $animalsByCompanyResult);
         $rules = new ArrayCollection($this->getManager()->getRepository(InvoiceRule::class)->findBy(array("isBatch" => true)));
         $newRules = $this->createRuleCopiesForBatch($rules, $date);
-        $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date, $request);
+        $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date);
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::BATCH_INVOICES_SEND);
         $this->getManager()->persist($log);
         $this->getManager()->flush();
@@ -145,14 +143,14 @@ class BatchInvoiceService extends ControllerServiceBase
      * @return array
      * @throws \Exception
      */
-    private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date, Request $request){
+    private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date){
         $invoices = array();
         /** @var Company $company */
         foreach ($companies as $company) {
             if (array_key_exists($company->getId(), $animalData)) {
-                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $request, $animalData[$company->getId()]);
+                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $animalData[$company->getId()]);
             } else {
-                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $request);
+                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date);
             }
             if (sizeof($invoiceSet) > 0) {
                 foreach ($invoiceSet as $invoice) {
@@ -203,7 +201,7 @@ class BatchInvoiceService extends ControllerServiceBase
      * @return array
      * @throws \Exception
      */
-    private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, Request $request, array $data = null) {
+    private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, array $data = null) {
         $invoiceSet = array();
 
         $details = $this->getManager()->getRepository(InvoiceSenderDetails::class)->findBy(array(), array("id" => "DESC"),1);
@@ -240,7 +238,7 @@ class BatchInvoiceService extends ControllerServiceBase
             } else {
                 $invoice->setStatus(InvoiceStatus::UNPAID);
                 $invoice->setInvoiceDate(new \DateTime());
-                $client = $this->getAccountOwner($request);
+                $client = $this->getManager()->getRepository(Person::class)->findOneBy(array("id" => 2334));
                 $message->setSender($client);
                 $message->setType(MessageType::NEW_INVOICE);
                 $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
@@ -293,7 +291,11 @@ class BatchInvoiceService extends ControllerServiceBase
             }
             $message = "Twinfield error";
             if ($result !== null) {
-                $message = $result->getMessage();
+                if ($result instanceof \Exception) {
+                    $message = $result->getMessage();
+                } else {
+                    $message = $result;
+                }
             }
             $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
             $invoice->setStatus(InvoiceStatus::NOT_SEND);
