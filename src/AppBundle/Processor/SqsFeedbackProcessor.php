@@ -10,6 +10,7 @@ use AppBundle\Exception\FeatureNotAvailableHttpException;
 use AppBundle\Exception\Sqs\SqsMessageMissingTaskTypeException;
 use AppBundle\Service\AwsFeedbackQueueService;
 use AppBundle\Service\AwsQueueServiceBase;
+use AppBundle\Service\Invoice\BatchInvoiceService;
 use AppBundle\Service\ProcessLockerInterface;
 use AppBundle\Service\SettingsContainer;
 use AppBundle\Service\Worker\SyncAnimalRelocationProcessor;
@@ -46,6 +47,8 @@ class SqsFeedbackProcessor
     private $processId;
     /** @var int */
     private $taskCount;
+    /** @var BatchInvoiceService */
+    private $batchInvoiceService;
 
     public function __construct(AwsFeedbackQueueService $feedbackQueueService,
                                 Logger $feedbackWorkerLogger,
@@ -54,7 +57,8 @@ class SqsFeedbackProcessor
                                 SettingsContainer $settingsContainer,
                                 TranslatorInterface $translator,
                                 SyncAnimalRelocationProcessor $syncAnimalRelocationProcessor,
-                                SyncHealthCheckProcessor $syncHealthCheckProcessor
+                                SyncHealthCheckProcessor $syncHealthCheckProcessor,
+                                BatchInvoiceService $batchInvoiceService
     )
     {
         $this->feedbackQueueService = $feedbackQueueService;
@@ -66,6 +70,7 @@ class SqsFeedbackProcessor
 
         $this->syncAnimalRelocationProcessor = $syncAnimalRelocationProcessor;
         $this->syncHealthCheckProcessor = $syncHealthCheckProcessor;
+        $this->batchInvoiceService = $batchInvoiceService;
     }
 
     /**
@@ -142,6 +147,9 @@ class SqsFeedbackProcessor
                 break;
             case SqsCommandType::SYNC_ANIMAL_RELOCATION:
                 $this->syncAnimalRelocationProcessor->process($queueMessage);
+                break;
+            case SqsCommandType::BATCH_INVOICE_GENERATION:
+                $this->batchInvoiceService->createBatchInvoices(AwsQueueServiceBase::getMessageBodyFromResponse($queueMessage, false));
                 break;
             default:
                 throw new FeatureNotAvailableHttpException($this->translator, 'Given TaskType: '.$taskTypeName);

@@ -348,7 +348,7 @@ class InvoiceService extends ControllerServiceBase
          * Do not allow any other simultaneous edits besides that!
          */
         if ($onlySetPaidStatusOnUnpaidInvoice) {
-            $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_PAID_ADMIN);
+            //$log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::INVOICE_PAID_ADMIN);
             $invoice->setStatus(InvoiceStatus::PAID);
             $invoice->setPaidDate(new \DateTime());
 
@@ -440,6 +440,11 @@ class InvoiceService extends ControllerServiceBase
         return ResultUtil::successResult($this->getInvoiceOutput($invoice));
     }
 
+    /**
+     * @param Invoice $invoice
+     * @return JsonResponse
+     * @throws \Exception
+     */
     private function validateAndSendToTwinfield(Invoice $invoice) {
         $message = "Company debtor number and/or twinfield administration code are not filled out";
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);

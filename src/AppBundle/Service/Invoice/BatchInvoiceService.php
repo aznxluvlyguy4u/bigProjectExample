@@ -11,6 +11,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceRuleSelection;
@@ -18,6 +19,7 @@ use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Message;
 use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Entity\Person;
 use AppBundle\Enumerator\DateTimeFormats;
 use AppBundle\Enumerator\InvoiceAction;
 use AppBundle\Enumerator\InvoiceMessages;
@@ -71,24 +73,20 @@ class BatchInvoiceService extends ControllerServiceBase
      * This is the only public function in the service, that will call all other functions to create invoices for all
      * active companies
      *
-     * @param Request $request
-     * @return JsonResponse
+     * @param string $date
+     * @throws \Exception
      */
-    public function createBatchInvoices(Request $request) {
+    public function createBatchInvoices(string $date) {
         $companies = $this->getManager()->getRepository(Company::class)->findBy(array("isActive" => true));
-        $requestJson = $request->getContent();
-        $requestJson = json_decode($requestJson, true);
-        $date = $requestJson["controlDate"];
         $date = new \DateTime($date);
         $animalsByCompanyResult = $this->getAllAnimalsSortedByPedigreeRegisterAndLocationOnControlDate($date);
         $registerCounts = $this->setupAnimalDataByCompanyLocation($companies, $animalsByCompanyResult);
         $rules = new ArrayCollection($this->getManager()->getRepository(InvoiceRule::class)->findBy(array("isBatch" => true)));
         $newRules = $this->createRuleCopiesForBatch($rules, $date);
-        $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date, $request);
+        $invoices = $this->setupInvoices($registerCounts, $companies, $newRules, $date);
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::BATCH_INVOICES_SEND);
         $this->getManager()->persist($log);
         $this->getManager()->flush();
-        return ResultUtil::successResult($invoices);
     }
 
     /**
@@ -117,7 +115,6 @@ class BatchInvoiceService extends ControllerServiceBase
                     $registerRule = clone $newRule;
                     $registerDescription = $registerRule->getDescription()." - ".$register->getAbbreviation()." - ".$controlDate->format(DateTimeFormats::DAY_MONTH_YEAR);
                     $registerRule->setDescription($registerDescription);
-                    $registerRule->setSubArticleCode($register->getAbbreviation());
                     $this->getManager()->persist($registerRule);
                     $newRules->add($registerRule);
                 }
@@ -127,9 +124,9 @@ class BatchInvoiceService extends ControllerServiceBase
                 $newRule->setDescription($newRule->getDescription()." - ".$controlDate->format(DateTimeFormats::YEAR));
                 $this->getManager()->persist($newRule);
                 $newRules->add($newRule);
-                continue;
             }
         }
+        
         return $newRules;
     }
 
@@ -141,15 +138,16 @@ class BatchInvoiceService extends ControllerServiceBase
      * @param ArrayCollection $batchRules
      * @param \DateTime $date
      * @return array
+     * @throws \Exception
      */
-    private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date, Request $request){
+    private function setupInvoices(array $animalData, array $companies, ArrayCollection $batchRules, \DateTime $date){
         $invoices = array();
         /** @var Company $company */
         foreach ($companies as $company) {
             if (array_key_exists($company->getId(), $animalData)) {
-                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $request, $animalData[$company->getId()]);
+                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $animalData[$company->getId()]);
             } else {
-                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date, $request);
+                $invoiceSet = $this->SetupInvoicesForCompanyLocation($company, $batchRules, $date);
             }
             if (sizeof($invoiceSet) > 0) {
                 foreach ($invoiceSet as $invoice) {
@@ -198,8 +196,9 @@ class BatchInvoiceService extends ControllerServiceBase
      * @param array|null $data
      * @param Request $request
      * @return array
+     * @throws \Exception
      */
-    private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, Request $request, array $data = null) {
+    private function SetupInvoicesForCompanyLocation(Company $company, ArrayCollection $batchRules, \DateTime $date, array $data = null) {
         $invoiceSet = array();
 
         $details = $this->getManager()->getRepository(InvoiceSenderDetails::class)->findBy(array(), array("id" => "DESC"),1);
@@ -236,7 +235,7 @@ class BatchInvoiceService extends ControllerServiceBase
             } else {
                 $invoice->setStatus(InvoiceStatus::UNPAID);
                 $invoice->setInvoiceDate(new \DateTime());
-                $client = $this->getAccountOwner($request);
+                $client = $this->getManager()->getRepository(Employee::class)->getAutomatedProcess();
                 $message->setSender($client);
                 $message->setType(MessageType::NEW_INVOICE);
                 $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
@@ -261,28 +260,45 @@ class BatchInvoiceService extends ControllerServiceBase
 
                 $this->fireBaseService->sendNsfoMessageToUser($location->getOwner(), $message);
             }
+            $this->validateAndSendToTwinfield($invoice);
             $invoiceSet[] = $invoice;
             $this->getManager()->persist($invoice);
         }
         return $invoiceSet;
     }
-
+    /**
+     * @param Invoice $invoice
+     * @throws \Exception
+     */
     private function validateAndSendToTwinfield(Invoice $invoice) {
         $message = "Company debtor number and/or twinfield administration code are not filled out";
         $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
         if ($invoice->getCompanyTwinfieldOfficeCode() && $invoice->getCompanyDebtorNumber()) {
-            if ($this->invoicesSendCounter >= 100) {
+            if ($this->invoicesSendCounter >= 99) {
                 $this->twinfieldInvoiceService->reAuthenticate();
                 $this->invoicesSendCounter = 0;
             }
             $result = $this->twinfieldInvoiceService->sendInvoiceToTwinfield($invoice);
-            $this->invoicesSendCounter++;
             if (is_a($result, \PhpTwinfield\Invoice::class)) {
+                $this->invoicesSendCounter++;
                 $invoice->setInvoiceNumber($result->getInvoiceNumber());
                 $invoice->setInvoiceDate(new \DateTime());
                 $this->persist($invoice);
                 return;
             }
+            $message = "Twinfield error";
+            if ($result !== null) {
+                if ($result instanceof \Exception) {
+                    $message = $result->getMessage();
+                } else {
+                    $message = $result;
+                }
+            }
+            $log = new ActionLog($this->getUser(), $this->getUser(), InvoiceAction::TWINFIELD_ERROR, false, $message);
+            $invoice->setStatus(InvoiceStatus::NOT_SEND);
+            $invoice->setInvoiceDate(null);
+            $this->persist($log);
+            $this->persist($invoice);
        } else {
             $invoice->setStatus(InvoiceStatus::NOT_SEND);
             $invoice->setInvoiceDate(null);
