@@ -3,6 +3,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Enumerator\SqsCommandType;
 use Enqueue\Util\UUID;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -22,6 +23,7 @@ class FeedbackQueueInvoiceMessageService
     public function createBatchInvoiceMessage(Request $request) {
         $requestJson = json_decode($request->getContent(), true);
         $date = $requestJson["controlDate"];
-        return $this->feedbackQueueService->send($date, "BATCH_INVOICE_GENERATION", UUID::generate());
+        $requestType = SqsCommandType::getName(SqsCommandType::BATCH_INVOICE_GENERATION);
+        return $this->feedbackQueueService->send($date, $requestType, UUID::generate());
     }
 }
