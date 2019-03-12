@@ -327,4 +327,7 @@ class JsonInputConstant
 
     // User
     const USE_RVO_LOGIC = 'use_rvo_logic';
+
+    // Email
+    const NSFO_DERDEN_LOGIN_URL = 'nsfo_derden_login_url';
 }

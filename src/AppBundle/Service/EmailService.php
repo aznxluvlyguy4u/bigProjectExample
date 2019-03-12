@@ -33,6 +33,8 @@ class EmailService
     private $translator;
     /** @var Logger */
     private $logger;
+    /** @var string */
+    private $nsfoDerdenLoginUrl;
 
     public function __construct(\Swift_Mailer $swiftMailer,
                                 $mailerSourceAddress,
@@ -40,7 +42,8 @@ class EmailService
                                 TwigEngine $templating,
                                 TranslatorInterface $translator,
                                 Logger $logger,
-                                $environment
+                                $environment,
+                                $nsfoDerdenLoginUrl
     )
     {
         $this->environment = $environment;
@@ -49,6 +52,7 @@ class EmailService
         $this->templating = $templating;
         $this->translator = $translator;
         $this->logger = $logger;
+        $this->nsfoDerdenLoginUrl = $nsfoDerdenLoginUrl;
 
         if (is_array($notificationEmailAddresses)) {
             $this->notificationEmailAddresses = $notificationEmailAddresses;
@@ -209,6 +213,8 @@ class EmailService
      */
     public function sendVwaInvitationEmail($emailData)
     {
+        $emailData[JsonInputConstant::NSFO_DERDEN_LOGIN_URL] = $this->nsfoDerdenLoginUrl;
+
         //Confirmation message back to the sender
         $message = \Swift_Message::newInstance()
             ->setSubject(Constant::NEW_THIRD_PARTY_PASSWORD_MAIL_SUBJECT_HEADER)

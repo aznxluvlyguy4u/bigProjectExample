@@ -588,6 +588,7 @@ services:
           - '@translator'
           - '@logger'
           - '%environment%'
+          - '%nsfo_derden_login_url%'
 
     app.abstract_base.controller:
         abstract: true
