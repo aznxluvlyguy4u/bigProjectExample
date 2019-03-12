@@ -63,6 +63,8 @@ parameters:
     firebase_notifications_client_email: ~
     firebase_notifications_private_key: ~
 
+    nsfo_derden_login_url: http://localhost:4200/login
+
     sentry_dns: ~
 
     # These parameters are only set to true during development and should be false in production!
