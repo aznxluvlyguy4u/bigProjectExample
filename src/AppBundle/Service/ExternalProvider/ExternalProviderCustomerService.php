@@ -4,6 +4,7 @@
 namespace AppBundle\Service\ExternalProvider;
 
 
+use AppBundle\Constant\ExternalProviderSetting;
 use PhpTwinfield\ApiConnectors\CustomerApiConnector;
 use PhpTwinfield\Customer;
 use PhpTwinfield\Office;
@@ -15,6 +16,7 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
     private $customerConnection;
     /** @var ExternalProviderOfficeService */
     private $twinfieldOfficeService;
+
 
 
     /**
@@ -82,20 +84,49 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
      * @throws \Exception
      */
     public function getSingleCustomer($debtorNumber, $administrationCode) {
-        $offices = $this->twinfieldOfficeService->getAllOffices();
+        if ($this->getOfficeListCacheId() && $this->getCacheService()->isHit($this->getOfficeListCacheId())) {
+            $offices = $this->getCacheService()->getItem($this->getOfficeListCacheId());
+        } else {
+            $offices = $this->twinfieldOfficeService->getAllOffices();
+            if (!is_array($offices) || empty($offices) || !is_a($offices[0], Office::class)) {
+                throw new \Exception("ExternalProvider office call failed", Response::HTTP_NOT_FOUND);
+            }
+            $officeCacheId = ExternalProviderSetting::EXTERNAL_PROVIDER_OFFICE_LIST_CACHE_ID;
+            $this->getCacheService()->set($officeCacheId, $offices);
+            $this->setOfficeListCacheId($officeCacheId);
+        }
+
         $customerOffice = new Office();
         if (!is_array($offices) || empty($offices) || !is_a($offices[0], Office::class)) {
             throw new \Exception("ExternalProvider office call failed", Response::HTTP_NOT_FOUND);
         }
+        $customerList = null;
         /** @var Office $office */
         foreach ($offices as $office) {
             if ($office->getCode() == $administrationCode) {
                 $customerOffice = $office;
-            }
+                $customersCacheId = $office->getCode()
+                    . ExternalProviderSetting::EXTERNAL_PROVIDER_OFFICE_CUSTOMER_POSTFIX_CACHE_ID;
+                if (!$this->getCacheService()->isHit($customersCacheId)) {
 
+                    $customerList = $this->getAllCustomers($office->getCode());
+                    $this->getCacheService()->set($customersCacheId, $customerList);
+                } else {
+                    $customerList = $this->getCacheService()->getItem($customersCacheId);
+                }
+            }
         }
+        if ($customerList !== null && is_array($customerList)) {
+            foreach ($customerList as $customer) {
+                if ($customer["code"] == $debtorNumber) {
+                    return $this->getCustomer($debtorNumber, $customerOffice);
+                }
+            }
+        }
+
         $this->resetRetryCount();
-        return $this->getCustomer($debtorNumber, $customerOffice);
+
+        return null;
     }
 
 

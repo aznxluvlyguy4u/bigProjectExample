@@ -6,5 +6,5 @@ namespace AppBundle\Setting;
 
 class InvoiceSetting
 {
-    const IS_ACTIVE = false;
+    const IS_ACTIVE = true;
 }

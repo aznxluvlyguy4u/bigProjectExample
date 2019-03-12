@@ -58,6 +58,10 @@ class ExternalProviderInvoiceService extends ExternalProviderBase implements Ext
         if (is_a($customer, JsonResponse::class)) {
             return $customer;
         }
+        if ($customer == null) {
+            return "Debtor number not found in twinfield";
+        }
+
         $customer->setCode($invoice->getCompanyDebtorNumber());
         $office = new Office();
         $office->setCode($invoice->getCompanyTwinfieldOfficeCode());
@@ -80,17 +84,17 @@ class ExternalProviderInvoiceService extends ExternalProviderBase implements Ext
 
     /**
      * @param \PhpTwinfield\Invoice $twinfieldInvoice
-     * @return \PhpTwinfield\Invoice
+     * @return \Exception|\PhpTwinfield\Invoice
      * @throws \Exception
      */
-    private function sendTwinfieldInvoice(\PhpTwinfield\Invoice $twinfieldInvoice): \PhpTwinfield\Invoice
+    private function sendTwinfieldInvoice(\PhpTwinfield\Invoice $twinfieldInvoice)
     {
         try {
             return $this->invoiceConnection->send($twinfieldInvoice);
         } catch (\Exception $exception) {
             if (!$this->allowRetryTwinfieldApiCall($exception)) {
                 $this->resetRetryCount();
-                throw new \Exception($exception->getMessage(),Response::HTTP_INTERNAL_SERVER_ERROR);
+                return $exception;
             }
 
             $this->incrementRetryCount();
@@ -115,6 +119,7 @@ class ExternalProviderInvoiceService extends ExternalProviderBase implements Ext
             case 0: $line->setVatCode(TwinfieldEnums::NO_VAT); break;
             case 6: $line->setVatCode(TwinfieldEnums::LOW_VAT); break;
             case 21: $line->setVatCode(TwinfieldEnums::HIGH_VAT); break;
+            default: $line->setVatCode(TwinfieldEnums::NO_VAT); break;
         }
     }
 }

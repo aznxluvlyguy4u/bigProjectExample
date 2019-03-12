@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\BirthListReportOptions;
+use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegister;
@@ -20,6 +21,7 @@ use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\LiveStockReportService;
+use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
@@ -88,6 +90,9 @@ class ReportService
     /** @var BirthListReportService */
     private $birthListReportService;
 
+    /** @var MembersAndUsersOverviewReportService */
+    private $membersAndUsersOverviewReport;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -110,7 +115,8 @@ class ReportService
         UlnValidatorInterface $ulnValidator,
         PedigreeCertificateReportService $pedigreeCertificateReportService,
         LiveStockReportService $livestockReportService,
-        BirthListReportService $birthListReportService
+        BirthListReportService $birthListReportService,
+        MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
     )
     {
         $this->em = $em;
@@ -123,6 +129,7 @@ class ReportService
         $this->pedigreeCertificateReportService = $pedigreeCertificateReportService;
         $this->livestockReportService = $livestockReportService;
         $this->birthListReportService = $birthListReportService;
+        $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
     }
 
     /**
@@ -547,6 +554,69 @@ class ReportService
         }
 
         return $this->birthListReportService->getReport($actionBy, $location, $options);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createMembersAndUsersOverviewReportService(Request $request)
+    {
+        $actionBy = $this->userService->getUser();
+
+        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN)) {
+            throw AdminValidator::standardException();
+        }
+
+        $referenceDateString = $request->query->get(QueryParameter::REFERENCE_DATE);
+        $referenceDate = empty($referenceDateString) ? new \DateTime() : new \DateTime($referenceDateString);
+
+        if (TimeUtil::isDateInFuture($referenceDate)) {
+            throw new PreconditionFailedHttpException(ucfirst(strtolower(
+                $this->translator->trans('REFERENCE DATE CANNOT BE IN THE FUTURE')
+            )));
+        }
+
+        $mustHaveAnimalHealthSubscription = RequestUtil::getBooleanQuery($request,QueryParameter::MUST_HAVE_ANIMAL_HEALTH_SUBSCRIPTION,false);
+
+        $pedigreeRegisterAbbreviation = $request->query->get(QueryParameter::PEDIGREE_REGISTER);
+        if ($pedigreeRegisterAbbreviation !== null) {
+            $pedigreeRegisterAbbreviation = strtoupper($pedigreeRegisterAbbreviation);
+            $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)
+                ->findOneByAbbreviation($pedigreeRegisterAbbreviation);
+            if (!$pedigreeRegister) {
+                throw new InvalidPedigreeRegisterAbbreviationHttpException($this->translator,strval($pedigreeRegisterAbbreviation));
+            }
+        }
+
+        $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
+
+        // Set file type as CSV. This value will be saved in the ReportWorker table
+        $request->query->set(QueryParameter::FILE_TYPE_QUERY, FileType::CSV);
+
+        $options = (new MembersAndUsersOverviewReportOptions())
+            ->setReferenceDate($referenceDate)
+            ->setMustHaveAnimalHealthSubscription($mustHaveAnimalHealthSubscription)
+            ->setPedigreeRegisterAbbreviation($pedigreeRegisterAbbreviation)
+            ->setLanguage($language)
+        ;
+
+        $optionsAsJson = $this->serializer->serializeToJSON($options);
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'options' => $optionsAsJson
+                ],
+                $request,ReportType::MEMBERS_AND_USERS_OVERVIEW, $optionsAsJson
+            );
+        }
+
+        return $this->membersAndUsersOverviewReport->getReport($options);
     }
 
 

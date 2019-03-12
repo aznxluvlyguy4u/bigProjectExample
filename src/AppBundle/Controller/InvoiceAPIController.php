@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Invoice;
+use AppBundle\Service\FeedbackQueueInvoiceMessageService;
 use AppBundle\Service\Invoice\BatchInvoiceService;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -115,7 +116,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
      * @return JsonResponse
      */
     function creatInvoiceBatch(Request $request) {
-        return $this->get(BatchInvoiceService::class)->createBatchInvoices($request);
+        return $this->get(FeedbackQueueInvoiceMessageService::class)->createBatchInvoiceMessage($request);
     }
 
     /**
