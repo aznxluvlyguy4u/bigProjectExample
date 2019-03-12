@@ -11,6 +11,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceRuleSelection;
@@ -114,7 +115,6 @@ class BatchInvoiceService extends ControllerServiceBase
                     $registerRule = clone $newRule;
                     $registerDescription = $registerRule->getDescription()." - ".$register->getAbbreviation()." - ".$controlDate->format(DateTimeFormats::DAY_MONTH_YEAR);
                     $registerRule->setDescription($registerDescription);
-                    //$registerRule->setSubArticleCode($register->getAbbreviation());
                     $this->getManager()->persist($registerRule);
                     $newRules->add($registerRule);
                 }
@@ -235,7 +235,7 @@ class BatchInvoiceService extends ControllerServiceBase
             } else {
                 $invoice->setStatus(InvoiceStatus::UNPAID);
                 $invoice->setInvoiceDate(new \DateTime());
-                $client = $this->getManager()->getRepository(Person::class)->findOneBy(array("id" => 2334));
+                $client = $this->getManager()->getRepository(Employee::class)->getAutomatedProcess();
                 $message->setSender($client);
                 $message->setType(MessageType::NEW_INVOICE);
                 $message->setSubject(InvoiceMessages::NEW_INVOICE_SUBJECT);
