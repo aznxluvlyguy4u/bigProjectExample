@@ -101,7 +101,9 @@ app/*.cache
 /out/
 
 # (s)hell scripts
+*/**/.sh
 *.sh
+*.conf
 
 # database dump files:
 *.gz
