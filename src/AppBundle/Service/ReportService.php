@@ -352,7 +352,6 @@ class ReportService
     {
         $inputForHash = '';
 
-        return $this->animalhealthsever->getReport();
         return $this->processReportAsWorkerTask(
             [],
             $request,ReportType::ANIMAL_HEALTH_STATUSES, $inputForHash
