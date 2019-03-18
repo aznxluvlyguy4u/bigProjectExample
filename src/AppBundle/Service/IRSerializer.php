@@ -385,6 +385,15 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                         JsonInputConstant::ULN_NUMBER => $ulnNumber,
                     ];
                 }
+
+                $gender = ArrayUtil::get('gender', $childArray, null);
+                if (
+                    $gender !== GenderType::MALE &&
+                    $gender !== GenderType::FEMALE &&
+                    $gender !== GenderType::NEUTER
+                ) {
+                    return Validator::createJsonResponse('Het geslacht ontbreekt voor een levendgeboren kind', $statusCode);
+                }
             }
         }
 
