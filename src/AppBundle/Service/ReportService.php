@@ -653,7 +653,6 @@ class ReportService
             $this->producer->sendCommand(WorkerAction::GENERATE_REPORT, $messageBodyAsArray);
         }
         catch(\Exception $e) {
-            dump($e);
             $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
