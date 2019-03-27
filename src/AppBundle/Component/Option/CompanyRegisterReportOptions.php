@@ -44,9 +44,9 @@ class CompanyRegisterReportOptions
     }
 
     /**
-     * @return string|null
+     * @return \DateTime
      */
-    public function getSampleDate(): ?string
+    public function getSampleDate(): \DateTime
     {
         return $this->sampleDate;
     }
