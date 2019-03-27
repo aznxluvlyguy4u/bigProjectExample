@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\BirthListReportOptions;
+use AppBundle\Component\Option\CompanyRegisterReportOptions;
 use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Location;
@@ -20,6 +21,7 @@ use AppBundle\Enumerator\WorkerType;
 use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
@@ -42,7 +44,6 @@ use Enqueue\Util\JSON;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -93,6 +94,9 @@ class ReportService
     /** @var MembersAndUsersOverviewReportService */
     private $membersAndUsersOverviewReport;
 
+    /** @var CompanyRegisterReportService */
+    private $companyRegisterReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -103,7 +107,10 @@ class ReportService
      * @param Logger $logger
      * @param UlnValidatorInterface $ulnValidator
      * @param PedigreeCertificateReportService $pedigreeCertificateReportService
+     * @param LiveStockReportService $livestockReportService
      * @param BirthListReportService $birthListReportService
+     * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+     * @param CompanyRegisterReportService $companyRegisterReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -116,7 +123,8 @@ class ReportService
         PedigreeCertificateReportService $pedigreeCertificateReportService,
         LiveStockReportService $livestockReportService,
         BirthListReportService $birthListReportService,
-        MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+        MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
+        CompanyRegisterReportService $companyRegisterReportService
     )
     {
         $this->em = $em;
@@ -130,6 +138,7 @@ class ReportService
         $this->livestockReportService = $livestockReportService;
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
+        $this->companyRegisterReportService = $companyRegisterReportService;
     }
 
     /**
@@ -554,6 +563,51 @@ class ReportService
         }
 
         return $this->birthListReportService->getReport($actionBy, $location, $options);
+    }
+
+    /**
+     * @param Request $request
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function createCompanyRegisterReport(Request $request)
+    {
+        $actionBy = $this->userService->getUser();
+        $location = $this->userService->getSelectedLocation($request);
+
+        NullChecker::checkLocation($location);
+
+        $sampleDateString = $request->query->get(QueryParameter::SAMPLE_DATE);
+        $sampleDate = empty($sampleDateString) ? new \DateTime() : new \DateTime($sampleDateString);
+
+
+        if (TimeUtil::isDateInFuture($sampleDate)) {
+            throw new PreconditionFailedHttpException(ucfirst(strtolower(
+                $this->translator->trans('SAMPLE DATE CANNOT BE IN THE FUTURE')
+            )));
+        }
+
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+
+
+        $options = (new CompanyRegisterReportOptions())
+            ->setFileType($fileType)
+            ->setSampleDate($sampleDate)
+        ;
+
+        $optionsAsJson = $this->serializer->serializeToJSON($options);
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'options' => $optionsAsJson
+                ],
+                $request,ReportType::COMPANY_REGISTER, $optionsAsJson
+            );
+        }
+
+        return $this->companyRegisterReportService->getReport($actionBy, $location, $options);
     }
 
 

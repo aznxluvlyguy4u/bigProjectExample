@@ -581,6 +581,48 @@ class ReportAPIController extends APIController {
         return $this->get(ReportService::class)->createBirthListReport($request);
     }
 
+    /**
+     * Generate company register report and return a download link for the pdf.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="sample_date",
+     *        "dataType"="string",
+     *        "required"=true,
+     *        "description"="sample date to get animals from",
+     *        "format"="?breed_code=TE100"
+     *     },
+     *     {
+     *        "name"="file_type",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
+     *        "format"="?file_type=csv"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate company register report and return a download link for the pdf"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/company-register")
+     * @Method("POST")
+     */
+    public function getCompanyRegisterReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createCompanyRegisterReport($request);
+    }
+
 
     /**
      * Generate NSFO members and users overview report and return a download link for the csv.
