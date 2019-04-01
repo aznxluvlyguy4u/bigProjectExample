@@ -4,24 +4,10 @@ namespace AppBundle\Service\Report;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\CompanyRegisterReportOptions;
-use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
-use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\Locale;
-use AppBundle\Report\InbreedingCoefficientReportData;
-use AppBundle\Util\NullChecker;
-use AppBundle\Util\ResultUtil;
-use AppBundle\Util\SqlUtil;
-use AppBundle\Util\StringUtil;
-use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
-use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class CompanyRegisterReportService extends ReportServiceBase
 {
@@ -29,15 +15,7 @@ class CompanyRegisterReportService extends ReportServiceBase
     const TWIG_FILE = 'Report/company_register_report.html.twig';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
-
     const FILE_NAME_REPORT_TYPE = 'COMPANY_REGISTER';
-
-    const MAX_MATE_AGE_IN_MONTHS = 6;
-
-    /**
-     * @var Client
-     */
-    private $client;
 
     /**
      * @param Person $person
@@ -61,41 +39,34 @@ class CompanyRegisterReportService extends ReportServiceBase
         }
 
         return $this->getPdfReport($person, $location, $options);
-
-//        try {
-//
-//            $this->setFileNameValues();
-//
-//            return $this->generateCsvFileBySqlQuery(
-//                $this->getFilename(),
-//                $this->getQuery(),
-//                $this->getBooleanColumns()
-//            );
-//
-//        } catch (\Exception $exception) {
-//            return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
-//        }
     }
 
     /**
+     * @param Person $person
+     * @param Location $location
+     * @param CompanyRegisterReportOptions $options
      * @return JsonResponse
+     * @throws \Doctrine\DBAL\DBALException
      */
     private function getPdfReport(Person $person, Location $location, CompanyRegisterReportOptions $options)
     {
         $reportData = [];
-        $reportData['records'] = $this->conn->query(self::getSqlQuery($options->getSampleDate(), $location->getId()))->fetchAll();
-        $reportData['summary'] = $this->conn->query(self::getSqlQuery($options->getSampleDate(), $location->getId()))->fetchAll();
+        $reportData['sampleDate'] = $options->getSampleDate();
+        $reportData['person'] = $person;
+        $reportData['location'] = $location;
+        $reportData['animals'] = $this->conn->query(self::getRecordsSqlQuery($options->getSampleDate(), $location->getId()))->fetchAll();
+        $reportData['summary'] = $this->conn->query(self::getSummarySqlQuery($options->getSampleDate(), $location->getId()))->fetchAll();
         $reportData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
 
-        return $this->getPdfReportBase(self::TWIG_FILE, $reportData, false);
+        return $this->getPdfReportBase(self::TWIG_FILE, $reportData, true);
     }
 
     /**
-     * @param int $year
-     * @param \DateTime $pedigreeActiveEndDateLimit
+     * @param \DateTime $sampleDate
+     * @param int $locationId
      * @return string
      */
-    private function getSqlQuery(\DateTime $sampleDate, int $locationId)
+    private function getRecordsSqlQuery(\DateTime $sampleDate, int $locationId)
     {
         return "SELECT
             va.uln,
@@ -115,7 +86,29 @@ class CompanyRegisterReportService extends ReportServiceBase
             va.dd_mm_yyyy_date_of_death as datum_sterfte,
             'Slachtrijp/Weiderij' as reden_afvoer_of_sterfte
             FROM view_animal_livestock_overview_details va
-            LIMIT 10
+            LIMIT 50
+        ";
+    }
+
+    /**
+     * @param \DateTime $sampleDate
+     * @param int $locationId
+     * @return string
+     */
+    private function getSummarySqlQuery(\DateTime $sampleDate, int $locationId)
+    {
+        return "SELECT
+           230 as total_animal_count_on_reference_date,
+           '01-02-2019' as reference_date,
+           '27-03-2019' as log_date,
+           10 as ewes_one_year_or_older,
+           84 as rams_one_year_or_older,
+           12 as neuters_one_year_or_older,
+           10 as ewes_younger_than_one_year,
+           12 as rams_younger_than_one_year,
+           1 as neuters_younger_than_one_year,
+           '24-03-2019' as latest_sync_date,
+           '23-03-2019' as latest_sync_date_rvo_leading
         ";
     }
 }

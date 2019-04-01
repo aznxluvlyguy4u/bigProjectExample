@@ -3,24 +3,23 @@
 {% block body %}
 
     <!-- set variables -->
-    {% set date = variables.date %}
-    {% set rams = variables.rams %}
-    {% set mateCount = variables.ewes %}
-    {% set mates = variables.mates %}
-    {% set d = variables.document %}
-
-    {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+    {% set sample_date = variables.sampleDate %}
+    {% set ubn = variables.location.ubn %}
+    {% set animals = variables.animals %}
+    {% set summary = variables.summary[0] %}
 
     {% set pageCounter = 0 %}
-    {% set rowsPerPage = 7 %}
-    {% set size = mates|length %}
-    {% set pageAmount = 2 %}
-    {% if size > rowsPerPage %}
-        {% set pageAmount = ((size / rowsPerPage) | round(0, 'ceil')) + 1 %}
+    {% set rowsFirstPage = 18 %}
+    {% set rowsPerPage = 25 %}
+    {% set size = variables.animals|length %}
+    {% set pageAmount = 1 %}
+    {% if size > rowsFirstPage %}
+        {% set pageAmount = ((size  - rowsFirstPage) / rowsPerPage) | round(0, 'ceil') +1 %}
     {% endif %}
+    {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
-    {% set commentLinesCount = 7 %}
 
+    {# HEADER #}
     {% for page in 1..pageAmount %}
 
     {% if loop.last %}
@@ -28,191 +27,135 @@
     {% else %}
         <div id="page">
     {% endif %}
-
-
-        {# HEADER #}
-
         <div class="header">
-
-            <div class="ubn">
-                UBN {{ d.ubn }}
-            </div>
-
-            <div class="title">
-                {{ "BIRTH_LIST" | trans() | capitalize }}
-            </div>
-
             <div class="nsfo-logo">
-                <img alt="nsfo-logo" src="{{ imagesDirectory }}"/>
+                <img src="{{ imagesDirectory }}"/>
+            </div>
+            <div class="title">
+                Bedrijfsregister
+            </div>
+
+            <div class="date">
+                Peildatum: {{ sample_date | date("d-m-Y") }}
             </div>
         </div>
         <div class="sub-header">
-           <div class="left">{{ d.owner }}, {{ d.address }}, {{ d.postal_code }}, {{ d.city }}</div>
-           <div class="right">{{ 'PAGE' | trans | capitalize }} {{ page }} {{ 'PAGE_OF' | trans | lower }} {{ pageAmount }}  &nbsp;&nbsp;&nbsp; {{ 'DATE' | trans | capitalize }}: {{ date }}</div>
+           <div class="right"> Pagina {{ page }} van {{ pageAmount }}</div>
         </div>
 
-        {% if not loop.last %}
+        {# FIRST PAGE #}
+        {% if page == 1 %}
+        <div class="legend-container">
+            <div class="info">
+                <p> <span>UBN: </span> {{ ubn }}</p>
+            </div>
 
-{# MATES #}
-         <table class="tg">
+        </div>
+
+        {# SUMMARY #}
+        <table class="overview-table">
             <thead>
-                <tr class="table-spacing">
-                    <th class="table-spacing tg-amwm">Halsnr</th>
-                    <th class="table-spacing tg-amwm">Ooi (ULN)</th>
-                    <th class="table-spacing tg-amwm">Gedekt door ram</th>
-                    <th class="table-spacing tg-amwm">Verwachte</th>
-                    <th class="table-spacing tg-amwm">Werkelijke</th>
-                    <th class="table-spacing tg-amwm">Worpgrootte</th>
-                    <th class="table-spacing tg-amwm">Aantal</th>
-                    <th class="table-spacing tg-amwm" colspan="4">Geslacht (O/R)</th>
-                </tr>
-                <tr class="table-spacing">
-                    <td class="table-spacing tg-s6z2 border-bottom-emphasized" rowspan="3">Rascode</td>
-                    <td class="table-spacing tg-amwm"></td>
-                    <td class="table-spacing tg-amwm">(ULN)</td>
-                    <td class="table-spacing tg-amwm">werpdatum</td>
-                    <td class="table-spacing tg-amwm">lamdatum</td>
-                    <td class="table-spacing bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="3"></td>
-                    <td class="table-spacing tg-amwm">levend</td>
-                    <td class="table-spacing tg-amwm" colspan="4">Werknummer</td>
-                </tr>
-                <tr class="table-spacing">
-                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
-                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
-                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
-                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
-                    <td class="bottom-bordered-medium tg-amwm border-bottom-emphasized" rowspan="2"></td>
-                    <td class="bottom-bordered-thin tg-amwm" colspan="4">Geboortegewicht</td>
-              </tr>
-              <tr class="border-bottom-emphasized table-spacing">
-                    <td class="table-spacing tg-amwm">Lam 1</td>
-                    <td class="table-spacing tg-amwm">Lam 2</td>
-                    <td class="table-spacing tg-amwm">Lam 3</td>
-                    <td class="table-spacing tg-amwm">Lam 4</td>
-              </tr>
+            <tr>
+                <th></th>
+                <th class="center">Totaal</th>
+                <th class="center">Ouder dan 1 jaar</th>
+                <th class="center">Jonger dan 1 jaar</th>
+            </tr>
             </thead>
             <tbody>
-                {% set beginValue = rowsPerPage * (page - 1) %}
-                {% set endValue = beginValue + (rowsPerPage-1) %}
-                {% for i in beginValue..endValue %}
-
-                    {% if mates[i] is defined %}
-                    {% set v = mates[i] %}
-                      <tr class="border-top-emphasized">
-                        <td class="table-spacing tg-amwm">{{ v.ewe_collar }}</td>
-                        <td class="table-spacing tg-1wig">{{ v.ewe_uln_country_code }}{{ v.ewe_uln_number_without_order_number }}<span class="order-number">{{ v.ewe_order_number }}</span></td>
-                        <td class="table-spacing tg-1wig">{{ v.ram_uln }}</td>
-                        <td class="table-spacing tg-1wig">
-                            {% if v.is_expected_litter_date_period %}
-                                <div class="top-center min_expected_litter_date">{{ v.min_expected_litter_date| date('d-m-Y') }}</div>
-                                <div class="lower-center max_expected_litter_date">{{ v.max_expected_litter_date| date('d-m-Y') }}</div>
-                            {% else %}
-                                <div class="middle-center min_expected_litter_date">{{ v.min_expected_litter_date| date('d-m-Y') }}</div>
-                            {% endif %}
-                        </td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                      </tr>
-                      <tr>
-                        <td class="table-spacing tg-s6z2 border-bottom-emphasized" rowspan="2">{{ v.ewe_breed_code }}</td>
-                        <td class="table-spacing tg-0lax" colspan="6">Geboorteverloop:</td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                      </tr>
-                      <tr class="border-bottom-emphasized">
-                        <td class="table-spacing tg-0lax" colspan="6">Opmerking:</td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                        <td class="table-spacing tg-0lax"></td>
-                      </tr>
-                    {% endif %}
-                {% endfor %}
-
+            <tr>
+                <td>Rammen</td>
+                <td class="center">{{ summary.rams_one_year_or_older + summary.rams_younger_than_one_year }}</td>
+                <td class="center">{{ summary.rams_one_year_or_older }}</td>
+                <td class="center">{{ summary.rams_younger_than_one_year }}</td>
+            </tr>
+            <tr>
+                <td>Ooien</td>
+                <td class="center">{{ summary.ewes_one_year_or_older + summary.ewes_younger_than_one_year }}</td>
+                <td class="center">{{ summary.ewes_one_year_or_older }}</td>
+                <td class="center">{{ summary.ewes_younger_than_one_year }}</td>
+            </tr>
+            <tr>
+                <td>Onzijdig</td>
+                <td class="center">{{ summary.neuters_one_year_or_older + summary.neuters_younger_than_one_year }}</td>
+                <td class="center">{{ summary.neuters_one_year_or_older }}</td>
+                <td class="center">{{ summary.neuters_younger_than_one_year }}</td>
+            </tr>
             </tbody>
         </table>
-
-        {% else %}
-
-            {% set ramsCount = rams|length %}
-
-            {% set ramsData = [] %}
-            {% for i in 0..(ramsCount-1) %}
-                {% set ramsData = ramsData|merge({('_'~i) :'Aantal dekkingen door ram ' ~ rams[i]['uln'] ~ ': ' ~ rams[i]['mate_count']}) %}
-            {% endfor %}
-
-            <table class="summary-table">
-              <tr class="summary-table">
-                <th class="summary-table" colspan="3"><h4>Samenvatting Geboortelijst</h4></th>
-              </tr>
-              <tr class="summary-table">
-                <td class="summary-table smt-col-1">Totaal aantal ooien op geboortelijst</td>
-                <td class="summary-table smt-col-2">: {{ mateCount }}</td>
-                <td class="summary-table">{{ ramsCount >= 1 ? ramsData['_0'] : '' }}</td>
-              </tr>
-              <tr class="summary-table">
-                <td class="summary-table smt-col-1">Aantal ooien met worp</td>
-                <td class="summary-table smt-col-2">:_____ &nbsp;&nbsp;</td>
-                <td class="summary-table">{{ ramsCount >= 2 ? ramsData['_1'] : '' }}</td>
-              </tr>
-              <tr class="summary-table">
-                <td class="summary-table smt-col-1">Totaal geboren lammeren</td>
-                <td class="summary-table smt-col-2">:_____ &nbsp;&nbsp;&nbsp;&nbsp;</td>
-                <td class="summary-table">{{ ramsCount >= 3 ? ramsData['_2'] : '' }}</td>
-              </tr>
-              <tr class="summary-table">
-                <td class="summary-table smt-col-1">Levend geboren lammeren</td>
-                <td class="summary-table smt-col-2">:_____</td>
-                <td class="summary-table">{{ ramsCount >= 4 ? ramsData['_3'] : '' }}</td>
-              </tr>
-              <tr class="summary-table">
-                <td class="summary-table smt-col-1">Gemiddelde worpgrootte</td>
-                <td class="summary-table smt-col-2">:_____</td>
-                <td class="summary-table">{{ ramsCount >= 5 ? ramsData['_4'] : '' }}</td>
-              </tr>
-
-            {% if ramsCount >= 6 %}
-                {% for i in 6..ramsCount %}
-                  <tr class="summary-table">
-                    <td class="summary-table smt-col-1">&nbsp;</td>
-                    <td class="summary-table smt-col-2">&nbsp;</td>
-                    <td class="summary-table">{{ ramsData['_'~(i-1)] }}</td>
-                  </tr>
-                {% endfor %}
-            {% endif %}
-              <tr class="summary-table" colspan="3">
-                <td class="summary-table">&nbsp;</td>
-              </tr>
-              <tr class="summary-table">
-                <td class="summary-table" colspan="3">Opmerkingen &nbsp;&nbsp;&nbsp;&nbsp;
-                <span style="font-style: italic;">Extra ruimte om opmerkingen te maken, indien u dit niet bij de worp zelf kwijt kunt</span></td>
-              </tr>
-              {% for i in 1..commentLinesCount %}
-              <tr>
-                <td class="comment-lines" colspan="3">&nbsp;</td>
-              </tr>
-              {% endfor %}
-            </table>
-
-            {% for i, ram in rams %}
-
-
-            {% endfor %}
-
         {% endif %}
 
 
+        {# ANIMALS #}
 
+        <table>
+            <thead>
+                <tr>
+                    <th>ULN</th>
+                    <th>STN</th>
+                    <th>Werknummer</th>
+                    <th>Geslacht</th>
+                    <th>Geboortedatum</th>
+                    <th>Vorige UBN</th>
+                    <th>Datum aanvoer</th>
+                    <th>Datum afvoer</th>
+                    <th>Datum sterfte</th>
+                    <th>Reden afvoer of sterfte</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set beginValue = 0 %}
+                {% set endValue = rowsFirstPage-1 %}
+                {% if page == 2 %}
+                    {% set beginValue = (rowsFirstPage-1) + (page - 1) %}
+                    {% set endValue = beginValue + (rowsPerPage-1) %}
+                {% elseif page >= 3 %}
+                    {% set beginValue = ((page - 2) * (rowsPerPage-1)) + (rowsFirstPage-1) + (page - 1) %}
+                    {% set endValue = beginValue + (rowsPerPage-1) %}
+                {% endif %}
+                {% for i in beginValue..endValue %}
+
+                    {% if animals[i] is defined %}
+                    {% set value = animals[i] %}
+
+                    <tr>
+                        <td style="min-width: 32mm; max-width: 32mm">
+                            {{ value.uln }}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.stn }}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.werknummer }}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.geslacht }}
+                        </td>
+                        <td style="min-width: 16mm; max-width: 16mm">
+                            {{ value.geboorte_datum | date("d-m-Y") }}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.vorig_ubn }}
+                        </td>
+                        <td style="min-width: 16mm; max-width: 16mm">
+                            {{ value.datum_aanvoer | date("d-m-Y") }}
+                        </td>
+                        <td style="min-width: 16mm; max-width: 16mm">
+                            {{ value.datum_afvoer | date("d-m-Y") }}
+                        </td>
+                        <td style="min-width: 16mm; max-width: 16mm">
+                            {{ value.datum_sterfte | date("d-m-Y") }}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.reden_afvoer_of_sterfte }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-{% endfor %}
-
+    {% endfor %}
 {% endblock %}
 
 {% block stylesheets %}
@@ -223,14 +166,14 @@
             font-stretch: semi-condensed;
         }
 
-        #page-without-break {
-            overflow: hidden;
-            page-break-after: avoid;
-        }
-
         #page {
             overflow: hidden;
             page-break-after: always;
+        }
+
+        #page-without-break {
+            overflow: hidden;
+            page-break-after: avoid;
         }
 
         .header {
@@ -239,68 +182,56 @@
             width: 100%;
         }
 
-        .sub-header {
-            padding-top: 1mm;
-            font-size: 3.5mm;
-        }
-
         .nsfo-logo {
             display: inline-block;
-            width: 10%;
+            width: 25%;
         }
 
         .nsfo-logo img {
-            height: 30px;
+            height: 50px;
         }
 
         .title {
             display: inline-block;
             vertical-align: top;
-            width: 60%;
+            width: 50%;
             font-weight: 700;
-            font-size: 6.5mm;
+            font-size: 7.5mm;
             text-align: center;
         }
 
-        .ubn {
-            float: left;
-            font-size: 4mm;
-            font-weight: bold;
-            margin-top: 2.5mm;
-            width: 22%;
+        .date {
+            display: inline-block;
+            width: 23.8%;
+            text-align: right;
         }
 
-        .order-number {
-            font-size: large;
-        }
-
-        .sub-header .right {
-            float: right;
+        .sub-header {
+            padding-top: 1mm;
+            font-size: 4.5mm;
         }
 
         .sub-header .left {
             float: left;
+            white-space: nowrap;
         }
 
-        .top-center {
-          display: block;
-          text-align: center;
-          vertical-align: top;
+        .sub-header .right {
+            float: right;
+            white-space: nowrap;
         }
-        .middle-center {
-          display: block;
-          text-align: center;
-          vertical-align: middle;
+
+        .legend-container {
+            position: relative;
+            padding-top: 5mm;
+            font-size: 4.5mm;
+            height: 10mm;
         }
-        .left-center {
-          display: block;
-          text-align: left;
-          vertical-align: middle;
-        }
-        .lower-center {
-          display: block;
-          text-align: center;
-          vertical-align: bottom;
+
+        .info {
+            position: absolute;
+            left: 0;
+            width: 60%;
         }
 
         .legend-container .info p span {
@@ -318,138 +249,47 @@
             list-style: none;
         }
 
+        li.legend-title {
+            font-weight: 700;
+            padding-bottom: 1.5mm;
+        }
+
         table {
             width: 100%;
             margin-top: 10mm;
-            font-size: 3.5mm;
+            font-size: 4.1mm;
             border-collapse: collapse;
             vertical-align: text-bottom;
+            white-space: nowrap;
+        }
+
+        table.overview-table {
+            margin: 10mm auto 15mm auto;
+            width: 40%;
         }
 
         tr {
             border-bottom: solid 1px #000000;
         }
 
-        td.table-spacing {
-            margin: 0 auto;
-            padding: 2px 5px; /* top and bottom 2px */
-        }
-
-        tr.table-spacing {
-            margin: 0 auto;
-            padding: 2px 5px; /* top and bottom 2px */
-        }
-
         td, th {
-            text-align: right;
+            text-align: left;
             padding: 1mm 1mm 1mm 1mm;
         }
 
-        table.summary-table {
-            width: 100%;
-            margin-top: 10mm;
-            font-size: 3.5mm;
-            border-collapse: collapse;
-            vertical-align: text-bottom;
-        }
-
-        .min_expected_litter_date {
-            font-size: 3mm;
-            font-weight: lighter;
-        }
-
-        .max_expected_litter_date {
-            font-size: 3mm;
-            font-weight: lighter;
-        }
-
-        tr.summary-table {
-            border-style: solid;
-            border-color: transparent;
-        }
-
-        td.summary-table {
-            text-align: left;
-            border-style: solid;
-            border-color: transparent;
-            white-space: nowrap;
-        }
-
-        td.smt-col-1 {
-            width: 1%; /* fit content */
-            white-space: nowrap;
-        }
-
-        td.smt-col-2 {
-            width: 1%; /* fit content */
-            white-space: nowrap;
-        }
-
-        th.summary-table {
-            text-align: left;
-        }
-
-        tr td.comment-lines {
-            border-bottom-style: solid;
-            border-bottom-width: thin;
-            border-color: black;
-        }
-
-        h4 {
-            margin-top: 3rem;
-            text-align: left;
-        }
-
-        .tg-amwm {
+        .center {
             text-align: center;
-            vertical-align: center;
-            font-weight: bold;
-            border-width: thin;
-            border-style: solid;
-            border-bottom-color: transparent;
         }
 
-        .bottom-bordered-thin {
-            border-bottom-width: thin;
-            border-bottom-style: solid;
-            border-bottom-color: black;
+        .single-letter-column {
+           text-align: left;
+           min-width: 2mm;
+           max-width: 2mm;
         }
 
-        .bottom-bordered-medium {
-            border-bottom-width: medium;
-            border-bottom-style: solid;
-            border-bottom-color: black;
-        }
-
-        .tg-s6z2 {
-            text-align: center;
-            vertical-align: center;
-            border-width: thin;
-            border-width: thin;
-            border-style: solid;
-        }
-
-        .tg-1wig {
-            text-align: left;
-            vertical-align: center;
-            font-weight: bold;
-            border-width: thin;
-            border-style: solid;
-        }
-
-        .tg-0lax {
-            text-align: left;
-            vertical-align: center;
-            border-width: thin;
-            border-style: solid;
-        }
-
-        .border-bottom-emphasized {
-            border-bottom-width: medium;
-        }
-
-        .border-top-emphasized {
-            border-top-width: medium;
+        .exterior-column {
+            min-width: 4mm;
+            max-width: 4mm
         }
 
     </style>
