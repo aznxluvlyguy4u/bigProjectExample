@@ -20,6 +20,7 @@ use AppBundle\Enumerator\WorkerType;
 use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
@@ -93,6 +94,9 @@ class ReportService
     /** @var MembersAndUsersOverviewReportService */
     private $membersAndUsersOverviewReport;
 
+    /** @var EweCardReportService  */
+    private $eweCardReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -103,7 +107,10 @@ class ReportService
      * @param Logger $logger
      * @param UlnValidatorInterface $ulnValidator
      * @param PedigreeCertificateReportService $pedigreeCertificateReportService
+     * @param LiveStockReportService $livestockReportService
      * @param BirthListReportService $birthListReportService
+     * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+     * @param EweCardReportService $eweCardReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -116,7 +123,8 @@ class ReportService
         PedigreeCertificateReportService $pedigreeCertificateReportService,
         LiveStockReportService $livestockReportService,
         BirthListReportService $birthListReportService,
-        MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+        MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
+        EweCardReportService $eweCardReportService
     )
     {
         $this->em = $em;
@@ -130,6 +138,7 @@ class ReportService
         $this->livestockReportService = $livestockReportService;
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
+        $this->eweCardReportService = $eweCardReportService;
     }
 
     /**
@@ -343,6 +352,47 @@ class ReportService
             $request,ReportType::OFFSPRING, $inputForHash
         );
     }
+
+
+    /**
+     * @param Request $request
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse
+     */
+    public function createEweCardReport(Request $request)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+        $animalsArray = $content->get(JsonInputConstant::EWES);
+
+        if (!is_array($animalsArray)) {
+            return ResultUtil::errorResult("'".JsonInputConstant::EWES."' key is missing in body", Response::HTTP_BAD_REQUEST);
+        }
+
+        if (count($animalsArray) === 0) {
+            return ResultUtil::errorResult("Empty input", Response::HTTP_BAD_REQUEST);
+        }
+
+        $contentAsJson = JSON::encode($content->toArray());
+        $inputForHash = $contentAsJson;
+
+
+        $location = $this->userService->getSelectedLocation($request);
+        $actionBy = $this->userService->getUser();
+
+        $report = $this->eweCardReportService->getReport($actionBy, $location, $content);
+        if ($report instanceof Response) {
+            return $report;
+        }
+        return ResultUtil::successResult($report);
+
+
+        return $this->processReportAsWorkerTask(
+            [
+                'content' => $contentAsJson
+            ],
+            $request,ReportType::EWE_CARD, $inputForHash
+        );
+    }
+
 
     /**
      * @param Request $request

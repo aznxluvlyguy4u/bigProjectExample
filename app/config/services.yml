@@ -510,6 +510,13 @@ services:
     AppBundle\Service\Report\BirthListReportService:
       parent: app.report.base
 
+    AppBundle\Service\Report\EweCardReportService:
+      parent: app.report.base
+      calls:
+        - method: setPedigreeCertificatesGenerator
+          arguments:
+            - '@AppBundle\Report\PedigreeCertificates'
+
     AppBundle\Service\Report\MembersAndUsersOverviewReportService:
       parent: app.report.base
 
@@ -623,6 +630,7 @@ services:
           - '@app.report.livestock'
           - '@AppBundle\Service\Report\BirthListReportService'
           - '@AppBundle\Service\Report\MembersAndUsersOverviewReportService'
+          - '@AppBundle\Service\Report\EweCardReportService'
 
 
     AppBundle\Processor\ReportProcessor:

@@ -416,6 +416,32 @@ class ReportAPIController extends APIController {
         return $this->get(ReportService::class)->createOffspringReport($request);
     }
 
+    /**
+     * Generate ewe card report.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate ewe card report"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/ewe-card")
+     * @Method("POST")
+     */
+    public function getEweCardReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createEweCardReport($request);
+    }
+
 
     /**
      * Generate pedigree register xls report by abbreviation in query parameter 'type'
