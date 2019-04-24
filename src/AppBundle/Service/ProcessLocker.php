@@ -75,8 +75,6 @@ class ProcessLocker implements ProcessLockerInterface
     {
         $currentProcessCount = $this->getProcessesCount($processGroupName, false);
         $maxProcessCount = ArrayUtil::get($processGroupName, $this->maxProcessCounts, 1);
-        $this->logger->info($processGroupName . ' processes [current|max]: '
-            . $currentProcessCount . '|' . $maxProcessCount);
         return $currentProcessCount >= $maxProcessCount;
     }
 
