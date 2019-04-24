@@ -4,8 +4,6 @@
 namespace AppBundle\Exception\Sqs;
 
 
-use AppBundle\Sqs\Exception\SqsMessageException;
-
 class SqsMessageInvalidBodyException extends SqsMessageException
 {
     /**
