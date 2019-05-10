@@ -24,6 +24,7 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Enumerator\ProcessType;
+use AppBundle\Exception\Cli\InvalidInputCliException;
 use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
@@ -55,6 +56,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -89,12 +91,16 @@ class NsfoMainCommand extends ContainerAwareCommand
     private $cmdUtil;
     /** @var Connection */
     private $conn;
+    /** @var bool */
+    private $exitAfterRun = false;
 
     protected function configure()
     {
         $this
             ->setName('nsfo')
             ->setDescription(self::TITLE)
+            ->addOption('option', 'o', InputOption::VALUE_OPTIONAL,
+                'Run process directly. For example: 6,1')
         ;
     }
 
@@ -105,7 +111,33 @@ class NsfoMainCommand extends ContainerAwareCommand
         $this->em = $this->getContainer()->get('doctrine')->getManager();
         $this->conn = $this->em->getConnection();
 
-        $this->mainMenu();
+        $selectedOptions = $this->getSelectedOptions($input);
+        if (empty($selectedOptions)) {
+            $this->mainMenu(true);
+        } else {
+            $this->mainMenu(true, $selectedOptions);
+        }
+    }
+
+
+    /**
+     * @param InputInterface $input
+     * @return array
+     * @throws InvalidInputCliException
+     */
+    private function getSelectedOptions(InputInterface $input) {
+        $optionsString = ltrim($input->getOption('option'),'=');
+        if (empty($optionsString)) {
+            return [];
+        }
+
+        $optionsList = explode(',', $optionsString);
+        foreach ($optionsList as $option) {
+            if (!ctype_digit($option)) {
+                throw new InvalidInputCliException("Invalid option: " . $option);
+            }
+        }
+        return $optionsList;
     }
 
 
@@ -131,8 +163,9 @@ class NsfoMainCommand extends ContainerAwareCommand
 
     /**
      * @param bool $isIntroScreen
+     * @param array $options
      */
-    public function mainMenu($isIntroScreen = true)
+    public function mainMenu($isIntroScreen = true, array $options = [])
     {
         if ($isIntroScreen) {
             $this->printAsciiArt();
@@ -140,35 +173,39 @@ class NsfoMainCommand extends ContainerAwareCommand
 
         $this->initializeMenu(self::MAIN_TITLE);
 
-        $option = $this->cmdUtil->generateMultiLineQuestion([
-            '===============================================', "\n",
-            'SELECT SUBMENU: ', "\n",
-            '===============================================', "\n",
-            '1: '.strtolower(self::INFO_SYSTEM_SETTINGS), "\n",
-            '-----------------------------------------------', "\n",
-            '2: '.strtolower(self::ANIMAL_CACHE_TITLE), "\n",
-            '3: '.strtolower(self::LITTER_GENE_DIVERSITY_TITLE), "\n",
-            '4: '.strtolower(self::ERROR_LOG_TITLE), "\n",
-            '5: '.strtolower(self::FIX_DUPLICATE_ANIMALS), "\n",
-            '6: '.strtolower(self::FIX_DATABASE_VALUES), "\n",
-            '7: '.strtolower(self::GENDER_CHANGE), "\n",
-            '8: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
-            '9: '.strtolower(self::FILL_MISSING_DATA), "\n",
-            '-----------------------------------------------', "\n",
-            '10: '.strtolower(CommandTitle::DATA_MIGRATION), "\n",
-            '-----------------------------------------------', "\n",
-            '11: '.strtolower(CommandTitle::MIXBLUP), "\n",
-            '-----------------------------------------------', "\n",
-            '12: '.strtolower(CommandTitle::DEPART_INTERNAL_WORKER), "\n",
-            '-----------------------------------------------', "\n",
-            '13: '.strtolower(CommandTitle::CALCULATIONS_AND_ALGORITHMS), "\n",
-            '-----------------------------------------------', "\n",
-            '14: '.strtolower(CommandTitle::PROCESS_LOCKER), "\n",
-            '===============================================', "\n",
-            '15: '.strtolower(CommandTitle::REDIS), "\n",
-            '===============================================', "\n",
-            'other: EXIT ', "\n"
-        ], self::DEFAULT_OPTION);
+        if (empty($options)) {
+            $option = $this->cmdUtil->generateMultiLineQuestion([
+                '===============================================', "\n",
+                'SELECT SUBMENU: ', "\n",
+                '===============================================', "\n",
+                '1: '.strtolower(self::INFO_SYSTEM_SETTINGS), "\n",
+                '-----------------------------------------------', "\n",
+                '2: '.strtolower(self::ANIMAL_CACHE_TITLE), "\n",
+                '3: '.strtolower(self::LITTER_GENE_DIVERSITY_TITLE), "\n",
+                '4: '.strtolower(self::ERROR_LOG_TITLE), "\n",
+                '5: '.strtolower(self::FIX_DUPLICATE_ANIMALS), "\n",
+                '6: '.strtolower(self::FIX_DATABASE_VALUES), "\n",
+                '7: '.strtolower(self::GENDER_CHANGE), "\n",
+                '8: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
+                '9: '.strtolower(self::FILL_MISSING_DATA), "\n",
+                '-----------------------------------------------', "\n",
+                '10: '.strtolower(CommandTitle::DATA_MIGRATION), "\n",
+                '-----------------------------------------------', "\n",
+                '11: '.strtolower(CommandTitle::MIXBLUP), "\n",
+                '-----------------------------------------------', "\n",
+                '12: '.strtolower(CommandTitle::DEPART_INTERNAL_WORKER), "\n",
+                '-----------------------------------------------', "\n",
+                '13: '.strtolower(CommandTitle::CALCULATIONS_AND_ALGORITHMS), "\n",
+                '-----------------------------------------------', "\n",
+                '14: '.strtolower(CommandTitle::PROCESS_LOCKER), "\n",
+                '===============================================', "\n",
+                '15: '.strtolower(CommandTitle::REDIS), "\n",
+                '===============================================', "\n",
+                'other: EXIT ', "\n"
+            ], self::DEFAULT_OPTION);
+        } else {
+            $option = array_shift($options);
+        }
 
         switch ($option) {
             case 1: $this->getContainer()->get('app.info.parameters')->printInfo(); break;
@@ -177,15 +214,15 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 3: $this->litterAndGeneDiversityOptions(); break;
             case 4: $this->errorLogOptions(); break;
             case 5: $this->fixDuplicateAnimalsOptions(); break;
-            case 6: $this->fixDatabaseValuesOptions(); break;
+            case 6: $this->fixDatabaseValuesOptions($options); break;
             case 7: $this->getContainer()->get('app.cli.gender_changer')->run($this->cmdUtil); break;
             case 8: $this->initializeDatabaseValuesOptions(); break;
             case 9: $this->fillMissingDataOptions(); break;
             case 10: $this->dataMigrationOptions(); break;
             case 11: $this->runMixblupCliOptions($this->cmdUtil); break;
             case 12: $this->getContainer()->get('app.cli.internal_worker.depart')->run($this->cmdUtil); break;
-            case 13: $this->calculationsAndAlgorithmsOptions(); break;
-            case 14: $this->processLockerOptions(); break;
+            case 13: $this->calculationsAndAlgorithmsOptions($options); break;
+            case 14: $this->processLockerOptions($options); break;
             case 15: $this->redisOptions(); break;
 
             default: return;
@@ -553,41 +590,46 @@ class NsfoMainCommand extends ContainerAwareCommand
     }
 
 
-    public function fixDatabaseValuesOptions()
+    public function fixDatabaseValuesOptions(array $options = [])
     {
         $this->initializeMenu(self::FIX_DATABASE_VALUES);
 
-        $option = $this->cmdUtil->generateMultiLineQuestion([
-            'Choose option: ', "\n",
-            '=====================================', "\n",
-            '1: Update MaxId of all sequences', "\n",
-            '=====================================', "\n",
-            '2: Fix incongruent genders vs Ewe/Ram/Neuter records', "\n",
-            '3: Fix incongruent animalOrderNumbers', "\n",
-            '4: Fix incongruent animalIdAndDate values in measurement table', "\n",
-            '5: Fix duplicate litters only containing stillborns', "\n",
-            '6: Find animals with themselves being their own ascendant', "\n",
-            '7: Print from database, animals with themselves being their own ascendant', "\n",
-            '8: Fill missing breedCodes and set breedCode = breedCodeParents if both parents have the same pure (XX100) breedCode', "\n",
-            '9: Replace non-alphanumeric symbols in uln_number of animal table (based on symbols found in migration file)', "\n",
-            '10: Replace non-digit symbols in ubn_of_birth of animal table ', "\n",
-            '11: Replace non-digit symbols in ubn_of_birth of animal_migration_table', "\n",
-            '12: Replace empty strings by null', "\n",
-            '13: Recalculate breedCodes of all offspring of animal by id or uln', "\n",
-            '14: Set null boolean values in animal to false for is_departed_animal, is_import_animal, is_export_animal', "\n",
-            '15: Remove time from MaediVisna and Scrapie checkdates', "\n",
-            '=====================================', "\n",
-            '20: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n\n",
-            '================== ANIMAL LOCATION & RESIDENCE ===================', "\n",
-            '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
-            '31: Kill resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss', "\n",
-            '32: Kill alive animals with a date_of_death, even if they don\'t have a declare loss', "\n",
-            '33: Remove duplicate animal residences', "\n\n",
+        if (empty($options)) {
+            $option = $this->cmdUtil->generateMultiLineQuestion([
+                'Choose option: ', "\n",
+                '=====================================', "\n",
+                '1: Update MaxId of all sequences', "\n",
+                '=====================================', "\n",
+                '2: Fix incongruent genders vs Ewe/Ram/Neuter records', "\n",
+                '3: Fix incongruent animalOrderNumbers', "\n",
+                '4: Fix incongruent animalIdAndDate values in measurement table', "\n",
+                '5: Fix duplicate litters only containing stillborns', "\n",
+                '6: Find animals with themselves being their own ascendant', "\n",
+                '7: Print from database, animals with themselves being their own ascendant', "\n",
+                '8: Fill missing breedCodes and set breedCode = breedCodeParents if both parents have the same pure (XX100) breedCode', "\n",
+                '9: Replace non-alphanumeric symbols in uln_number of animal table (based on symbols found in migration file)', "\n",
+                '10: Replace non-digit symbols in ubn_of_birth of animal table ', "\n",
+                '11: Replace non-digit symbols in ubn_of_birth of animal_migration_table', "\n",
+                '12: Replace empty strings by null', "\n",
+                '13: Recalculate breedCodes of all offspring of animal by id or uln', "\n",
+                '14: Set null boolean values in animal to false for is_departed_animal, is_import_animal, is_export_animal', "\n",
+                '15: Remove time from MaediVisna and Scrapie checkdates', "\n",
+                '=====================================', "\n",
+                '20: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n\n",
+                '================== ANIMAL LOCATION & RESIDENCE ===================', "\n",
+                '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
+                '31: Kill resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss', "\n",
+                '32: Kill alive animals with a date_of_death, even if they don\'t have a declare loss', "\n",
+                '33: Remove duplicate animal residences', "\n\n",
 
-            '================== DECLARES ===================', "\n",
-            '50: Fill missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015', "\n\n",
-            'other: exit submenu', "\n"
-        ], self::DEFAULT_OPTION);
+                '================== DECLARES ===================', "\n",
+                '50: Fill missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015', "\n\n",
+                'other: exit submenu', "\n"
+            ], self::DEFAULT_OPTION);
+        } else {
+            $option = array_shift($options);
+            $this->exitAfterRun = true;
+        }
 
         $ascendantValidator = new AscendantValidator($this->em, $this->cmdUtil, $this->getContainer()->get('logger'));
 
@@ -618,6 +660,9 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
             default: $this->writeLn('Exit menu'); return;
+        }
+        if ($this->exitAfterRun) {
+            die;
         }
         $this->fixDatabaseValuesOptions();
     }
@@ -935,19 +980,24 @@ class NsfoMainCommand extends ContainerAwareCommand
 
 
 
-    public function calculationsAndAlgorithmsOptions()
+    public function calculationsAndAlgorithmsOptions(array $options = [])
     {
         $this->initializeMenu(CommandTitle::CALCULATIONS_AND_ALGORITHMS);
 
-        $option = $this->cmdUtil->generateMultiLineQuestion([
-            'Choose option: ', "\n",
-            '1: Validate UBN, all types', "\n",
-            '2: Validate UBN, Dutch format only', "\n",
-            '3: Validate UBN, non-Dutch format only', "\n",
-            '4: Validate UBN format of all active locations', "\n",
-            "\n",
-            'other: exit submenu', "\n"
-        ], self::DEFAULT_OPTION);
+        if (empty($options)) {
+            $option = $this->cmdUtil->generateMultiLineQuestion([
+                'Choose option: ', "\n",
+                '1: Validate UBN, all types', "\n",
+                '2: Validate UBN, Dutch format only', "\n",
+                '3: Validate UBN, non-Dutch format only', "\n",
+                '4: Validate UBN format of all active locations', "\n",
+                "\n",
+                'other: exit submenu', "\n"
+            ], self::DEFAULT_OPTION);
+        } else {
+            $option = array_shift($options);
+            $this->exitAfterRun = true;
+        }
 
         switch ($option) {
 
@@ -956,6 +1006,9 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 3: $this->validateUbn(3); break;
             case 4: $this->validataUbnsOfAllActiveLocations(); break;
             default: $this->writeLn('Exit menu'); return;
+        }
+        if ($this->exitAfterRun) {
+            die;
         }
         $this->calculationsAndAlgorithmsOptions();
     }
@@ -1014,19 +1067,24 @@ class NsfoMainCommand extends ContainerAwareCommand
     }
 
 
-    public function processLockerOptions()
+    public function processLockerOptions(array $options = [])
     {
         $this->initializeMenu(CommandTitle::PROCESS_LOCKER);
 
-        $option = $this->cmdUtil->generateMultiLineQuestion([
-            'Choose option: ', "\n",
-            '1: Display all processes', "\n",
-            '2: Unlock  all processes', "\n",
-            '3: Display feedback worker processes', "\n",
-            '4: Unlock  feedback worker processes', "\n",
-            "\n",
-            'other: exit submenu', "\n"
-        ], self::DEFAULT_OPTION);
+        if (empty($options)) {
+            $option = $this->cmdUtil->generateMultiLineQuestion([
+                'Choose option: ', "\n",
+                '1: Display all processes', "\n",
+                '2: Unlock  all processes', "\n",
+                '3: Display feedback worker processes', "\n",
+                '4: Unlock  feedback worker processes', "\n",
+                "\n",
+                'other: exit submenu', "\n"
+            ], self::DEFAULT_OPTION);
+        } else {
+            $option = array_shift($options);
+            $this->exitAfterRun = true;
+        }
 
         switch ($option) {
             case 1: $this->displayAllLockedProcesses(); break;
@@ -1034,6 +1092,9 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 3: $this->displayLockedProcesses(ProcessType::SQS_FEEDBACK_WORKER); break;
             case 4: $this->unlockWorkerProcesses(ProcessType::SQS_FEEDBACK_WORKER); break;
             default: $this->writeLn('Exit menu'); return;
+        }
+        if ($this->exitAfterRun) {
+            die;
         }
         $this->processLockerOptions();
     }
