@@ -24,7 +24,6 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Enumerator\ProcessType;
-use AppBundle\Exception\Cli\InvalidInputCliException;
 use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
@@ -45,6 +44,7 @@ use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\ErrorLogUtil;
 use AppBundle\Util\LitterUtil;
+use AppBundle\Util\MainCommandUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
@@ -111,33 +111,12 @@ class NsfoMainCommand extends ContainerAwareCommand
         $this->em = $this->getContainer()->get('doctrine')->getManager();
         $this->conn = $this->em->getConnection();
 
-        $selectedOptions = $this->getSelectedOptions($input);
+        $selectedOptions = MainCommandUtil::getSelectedOptions($input);
         if (empty($selectedOptions)) {
             $this->mainMenu(true);
         } else {
             $this->mainMenu(true, $selectedOptions);
         }
-    }
-
-
-    /**
-     * @param InputInterface $input
-     * @return array
-     * @throws InvalidInputCliException
-     */
-    private function getSelectedOptions(InputInterface $input) {
-        $optionsString = ltrim($input->getOption('option'),'=');
-        if (empty($optionsString)) {
-            return [];
-        }
-
-        $optionsList = explode(',', $optionsString);
-        foreach ($optionsList as $option) {
-            if (!ctype_digit($option)) {
-                throw new InvalidInputCliException("Invalid option: " . $option);
-            }
-        }
-        return $optionsList;
     }
 
 
@@ -184,7 +163,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '3: '.strtolower(self::LITTER_GENE_DIVERSITY_TITLE), "\n",
                 '4: '.strtolower(self::ERROR_LOG_TITLE), "\n",
                 '5: '.strtolower(self::FIX_DUPLICATE_ANIMALS), "\n",
-                '6: '.strtolower(self::FIX_DATABASE_VALUES), "\n",
+                MainCommandUtil::FIX_DATABASE_VALUES.': '.strtolower(self::FIX_DATABASE_VALUES), "\n",
                 '7: '.strtolower(self::GENDER_CHANGE), "\n",
                 '8: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
                 '9: '.strtolower(self::FILL_MISSING_DATA), "\n",
@@ -197,7 +176,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '-----------------------------------------------', "\n",
                 '13: '.strtolower(CommandTitle::CALCULATIONS_AND_ALGORITHMS), "\n",
                 '-----------------------------------------------', "\n",
-                '14: '.strtolower(CommandTitle::PROCESS_LOCKER), "\n",
+                MainCommandUtil::PROCESSOR_LOCKER_OPTIONS.': '.strtolower(CommandTitle::PROCESS_LOCKER), "\n",
                 '===============================================', "\n",
                 '15: '.strtolower(CommandTitle::REDIS), "\n",
                 '===============================================', "\n",
@@ -214,7 +193,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 3: $this->litterAndGeneDiversityOptions(); break;
             case 4: $this->errorLogOptions(); break;
             case 5: $this->fixDuplicateAnimalsOptions(); break;
-            case 6: $this->fixDatabaseValuesOptions($options); break;
+            case MainCommandUtil::FIX_DATABASE_VALUES: $this->fixDatabaseValuesOptions($options); break;
             case 7: $this->getContainer()->get('app.cli.gender_changer')->run($this->cmdUtil); break;
             case 8: $this->initializeDatabaseValuesOptions(); break;
             case 9: $this->fillMissingDataOptions(); break;
@@ -222,7 +201,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 11: $this->runMixblupCliOptions($this->cmdUtil); break;
             case 12: $this->getContainer()->get('app.cli.internal_worker.depart')->run($this->cmdUtil); break;
             case 13: $this->calculationsAndAlgorithmsOptions($options); break;
-            case 14: $this->processLockerOptions($options); break;
+            case MainCommandUtil::PROCESSOR_LOCKER_OPTIONS: $this->processLockerOptions($options); break;
             case 15: $this->redisOptions(); break;
 
             default: return;
@@ -1075,7 +1054,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             $option = $this->cmdUtil->generateMultiLineQuestion([
                 'Choose option: ', "\n",
                 '1: Display all processes', "\n",
-                '2: Unlock  all processes', "\n",
+                MainCommandUtil::UNLOCK_ALL_PROCESSES . ': Unlock  all processes', "\n",
                 '3: Display feedback worker processes', "\n",
                 '4: Unlock  feedback worker processes', "\n",
                 "\n",
@@ -1088,7 +1067,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
         switch ($option) {
             case 1: $this->displayAllLockedProcesses(); break;
-            case 2: $this->unlockAllProcesses(); break;
+            case MainCommandUtil::UNLOCK_ALL_PROCESSES: $this->unlockAllProcesses(); break;
             case 3: $this->displayLockedProcesses(ProcessType::SQS_FEEDBACK_WORKER); break;
             case 4: $this->unlockWorkerProcesses(ProcessType::SQS_FEEDBACK_WORKER); break;
             default: $this->writeLn('Exit menu'); return;
