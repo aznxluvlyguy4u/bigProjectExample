@@ -247,7 +247,7 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
      * @param $messageAttributeNames
      * @return \Aws\Result
      */
-    public function getNextErrorMessage(array $messageAttributeNames = [])
+    public function getNextErrorMessage(array $messageAttributeNames = ['All'])
     {
         $this->errorQueueNullCheck();
         return $this->getNextMessageBase($this->errorQueueUrl, $messageAttributeNames);
@@ -493,6 +493,9 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
             return true;
         }
 
+        /**
+         * To prevent an infinite loop, only process the amount of error messages equal to the error queue size.
+         */
         for($i = 0; $i <= $queueSize; $i++)
         {
             $messageResponse = $this->getNextErrorMessage($messageAttributeNames);
@@ -517,12 +520,21 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
                 $messageId
             );
 
-            if (ArrayUtil::get('statusCode', $response) === 200) {
+            if (self::isMessageSuccessFullySent($response)) {
                 $this->deleteErrorMessage($messageResponse);
             }
         }
 
         return $this->getSizeOfErrorQueue() === 0;
+    }
+
+
+    /**
+     * @param $response
+     * @return bool
+     */
+    public static function isMessageSuccessFullySent($response) {
+        return ArrayUtil::get('statusCode', $response) === 200;
     }
 
 

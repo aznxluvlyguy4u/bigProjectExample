@@ -114,6 +114,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
 
     /**
      * @param Animal $retrievedAnimal
+     * @param boolean $unsetChildren
      * @return array
      */
     function returnAnimalArray(Animal $retrievedAnimal, $unsetChildren = true)
@@ -135,7 +136,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
             $retrievedAnimalContentArray['type'] = 'Neuter';
         }
 
-        if($unsetChildren ==  true) {
+        if($unsetChildren) {
             unset($retrievedAnimalContentArray[Constant::CHILDREN_NAMESPACE]);
             unset($retrievedAnimalContentArray[Constant::SURROGATE_CHILDREN_NAMESPACE]);
         }
@@ -153,7 +154,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
 
         $childContentArray['parent_father'] = $this->returnAnimalArray($retrievedAnimal->getParentFather());
         $childContentArray['parent_mother'] =  $this->returnAnimalArray($retrievedAnimal->getParentMother());
-        $childContentArray['surrogate'] =  $this->returnAnimalArray($retrievedAnimal->getSurrogate());
+        $childContentArray[JsonInputConstant::SURROGATE_MOTHER] =  $this->returnAnimalArray($retrievedAnimal->getSurrogate());
 
         return  $childContentArray;
     }
@@ -164,10 +165,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     function parseDeclarationDetail(ArrayCollection $declarationDetailcontentArray, Client $client, $isEditMessage)
     {
         $declarationDetailcontentArray["type"] = RequestType::DECLARATION_DETAIL_ENTITY;
-
         // TODO: Implement parseDeclarationDetail() method.
-        $declarationDetailcontentArray = null;
-
         return $declarationDetailcontentArray;
     }
 
@@ -177,10 +175,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     function parseDeclareAnimalFlag(ArrayCollection $declareAnimalFlagContentArray, Client $client, $isEditMessage)
     {
         $declareAnimalFlagContentArray["type"] = RequestType::DECLARE_ANIMAL_FLAG_ENTITY;
-
         // TODO: Implement parseDeclareAnimalFlag() method.
-        $declareAnimalFlagContentArray = null;
-
         return $declareAnimalFlagContentArray;
     }
 
@@ -358,10 +353,8 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
             //If no mother is given, allow arbitrary litter size.
             $maxLitterSize = 7;
 
-            if($mother) {
-                if($litterSize > $maxLitterSize) {
-                    return Validator::createJsonResponse("De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." lammeren", $statusCode);
-                }
+            if($mother && $litterSize > $maxLitterSize) {
+                return Validator::createJsonResponse("De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." lammeren", $statusCode);
             }
         }
 
@@ -373,7 +366,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         foreach ($childrenContent as $childArray) {
             $isAlive = ArrayUtil::get('is_alive', $childArray);
             if ($isAlive) {
-                if (key_exists('uln_country_code', $childArray) && key_exists('uln_number', $childArray)) {
+                if (key_exists(JsonInputConstant::ULN_COUNTRY_CODE, $childArray) && key_exists(JsonInputConstant::ULN_NUMBER, $childArray)) {
                     $ulnCountryCode = $childArray['uln_country_code'];
                     $ulnNumber = $childArray['uln_number'];
                     $uln = $ulnCountryCode.$ulnNumber;
@@ -384,6 +377,15 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                         JsonInputConstant::ULN_COUNTRY_CODE => $ulnCountryCode,
                         JsonInputConstant::ULN_NUMBER => $ulnNumber,
                     ];
+                }
+
+                $gender = ArrayUtil::get('gender', $childArray, null);
+                if (
+                    $gender !== GenderType::MALE &&
+                    $gender !== GenderType::FEMALE &&
+                    $gender !== GenderType::NEUTER
+                ) {
+                    return Validator::createJsonResponse('Het geslacht ontbreekt voor een levendgeboren kind', $statusCode);
                 }
             }
         }
@@ -406,11 +408,9 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 $animal = $animalRepository->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
                 if ($animal) {
                     return Validator::createJsonResponse("Opgegeven vrije oormerk: " . $uln . " voor het lam, is reeds toegewezen aan een bestaand dier met ULN: " . $uln, $statusCode);
-                } else if ($tagToReserve->getLocation()) {
-                    if ($tagToReserve->getLocation()->getId() == $location->getId()) {
-                        $tags[$uln] = $tagToReserve;
-                        continue;
-                    }
+                } else if ($tagToReserve->getLocation() && $tagToReserve->getLocation()->getId() == $location->getId()) {
+                    $tags[$uln] = $tagToReserve;
+                    continue;
                 }
                 return Validator::createJsonResponse("Opgegeven oormerk: " . $uln . " is niet geregistreerd voor dit UBN: " . $location->getUbn(), $statusCode);
             }
@@ -424,14 +424,14 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $surrogateMothersByUln = [];
         foreach ($childrenContent as $childArray) {
             $surrogate = null;
-            if(array_key_exists('surrogate_mother', $childArray)) {
+            if(array_key_exists(JsonInputConstant::SURROGATE_MOTHER, $childArray)) {
 
                 if($this->hasLambar($childArray)) {
                     return Validator::createJsonResponse("Als een pleegmoeder is opgegeven mag het kind geen lambar hebben.", $statusCode);
                 }
 
                 /** @var Animal $surrogate */
-                $surrogate = $animalRepository->getAnimalByUlnOrPedigree($childArray['surrogate_mother']);
+                $surrogate = $animalRepository->getAnimalByUlnOrPedigree($childArray[JsonInputConstant::SURROGATE_MOTHER]);
 
                 if(!$surrogate) {
                     return Validator::createJsonResponse("Opgegeven pleegmoeder kan niet gevonden worden.", $statusCode);

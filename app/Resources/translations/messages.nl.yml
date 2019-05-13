@@ -472,6 +472,8 @@ THE PEDIGREE REGISTER ABBREVIATION HAS AN INVALID FORMAT: De stamboekafkorting h
 THE ANIMAL IS NOT ON THE GIVEN LOCATION: Het dier behoort niet tot de opgegeven locatie
 AN IDENTICAL %requestState% %declare% ALREADY EXISTS: Een identieke %declare% (%requestState%) bestaat al
 SELECT EXPORT TO RELOCATE ANIMALS TO A UBN IN ANOTHER COUNTRY: Zet export op ‘Ja’ om deze dieren af te voeren naar een UBN van een ander land.
+NO OPEN DECLARE BIRTHS FOUND. RESENDING IMPOSSIBLE. : Er zijn geen onverwerkte geboortemeldingen gevonden. Opnieuw verzenden niet mogelijk.
+ONLY %openDeclaresResent% OF THE %foundOpenDeclares% WHERE RESENT: Alleen %openDeclaresResent% van de %foundOpenDeclares% gevonden meldingen waren opnieuw verzonden
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen

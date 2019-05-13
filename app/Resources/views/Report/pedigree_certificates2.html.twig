@@ -133,7 +133,9 @@
             {# footer #}
             <div class="row">
                 <div class="col-xs-12">
-                    <div class="fieldName pull-right">BLAD 1 VAN 2&nbsp;&nbsp;&nbsp;{% if certificate.animals.c.name != '-' %}{{ certificate.animals.c.name }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.gender != '-' %}{{ certificate.animals.c.gender | upper }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.pedigree != '-' %}{{ 'STAMBOEKNR. '~certificate.animals.c.pedigree }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{{ 'UNIEK LEVERSNR. '~certificate.animals.c.uln }}</div>
+                    <div class="footer text-center">
+                        NEDERLANDSE SCHAPEN - EN GEITENFOKKERS ORGANISATIE&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;WWW.NSFO.NL&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;BLAD 1 VAN 2&nbsp;&nbsp;&nbsp;{% if certificate.animals.c.name != '-' %}{{ certificate.animals.c.name }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.gender != '-' %}{{ certificate.animals.c.gender | upper }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.pedigree != '-' %}{{ 'STAMBOEKNR. '~certificate.animals.c.pedigree }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{{ 'UNIEK LEVERSNR. '~certificate.animals.c.uln }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -516,6 +518,15 @@
             font-family: 'brandonGrotesqueMedium';
             font-size: 13px;
             color: #009E66;
+        }
+
+        .footer {
+            padding-top: 2px;
+            white-space: nowrap;
+            font-family: 'crimson-text-roman';
+            font-size: 9.5px;
+            color: #009E66;
+            max-height: 15px;
         }
 
         .fieldName {

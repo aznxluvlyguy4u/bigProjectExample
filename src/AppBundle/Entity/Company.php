@@ -875,7 +875,7 @@ class Company
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getTwinfieldOfficeCode(): ?string
     {
@@ -883,9 +883,9 @@ class Company
     }
 
     /**
-     * @param string $twinfieldOfficeCode
+     * @param string|null $twinfieldOfficeCode
      */
-    public function setTwinfieldOfficeCode(string $twinfieldOfficeCode)
+    public function setTwinfieldOfficeCode(?string $twinfieldOfficeCode)
     {
         $this->twinfieldOfficeCode = $twinfieldOfficeCode;
     }
