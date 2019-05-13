@@ -335,10 +335,70 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
 
     /**
+     * @param int $litterId
+     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @throws \Exception
+     */
+    public function resendCreateBirthsByLitterId($litterId)
+    {
+        $loggedInUser = $this->getUser();
+        $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::SUPER_ADMIN);
+        if(!$isAdmin) { return AdminValidator::getStandardErrorResponse(); }
+
+        $requestMessages = $this->getManager()->getRepository(DeclareBirth::class)->findBy(
+            [
+                'requestState' => RequestStateType::OPEN,
+                'isRvoMessage' => true,
+                'litter' => $litterId
+            ]
+        );
+
+        if (empty($requestMessages)) {
+            return ResultUtil::errorResult(
+                $this->translator->trans("NO OPEN DECLARE BIRTHS FOUND. RESENDING IMPOSSIBLE."),
+                Response::HTTP_NOT_FOUND
+            );
+        }
+
+        $logs = ActionLogWriter::createBirth($this->getManager(), $requestMessages, new ArrayCollection(), null, $loggedInUser);
+
+        $openCount = count($requestMessages);
+        $resentCount = 0;
+
+        //Creating request succeeded, send to Queue
+        /** @var DeclareBirth $requestMessage */
+        foreach ($requestMessages as $requestMessage) {
+
+            if($requestMessage->getResponses()->count() === 0) {
+                //Resend it to the queue and persist/update any changed state to the database
+                $result[] = $this->sendMessageObjectToQueue($requestMessage);
+                $resentCount++;
+            }
+        }
+
+        ActionLogWriter::completeActionLog($this->getManager(), $logs);
+
+        if ($openCount > $resentCount) {
+            $errorMessage = $this->translator->trans('ONLY %openDeclaresResent% OF THE %foundOpenDeclares% WHERE RESENT',
+                    [
+                        '%openDeclaresResent%' => $resentCount,
+                        '%foundOpenDeclares%' => $openCount,
+                    ]). '.';
+            return ResultUtil::errorResult($errorMessage,Response::HTTP_BAD_REQUEST);
+        }
+
+        return ResultUtil::successResult([
+            'foundOpenDeclares' => $openCount,
+            'openDeclaresResent' => $resentCount
+        ]);
+    }
+
+
+    /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function resendCreateBirth(Request $request)
+    public function resendAllCreateBirths(Request $request)
     {
         $loggedInUser = $this->getUser();
         $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::DEVELOPER);
@@ -370,7 +430,10 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             ActionLogWriter::completeActionLog($this->getManager(), $logs);
         }
 
-        return new JsonResponse(['DeclareBirth' => ['found open declares' => $openCount, 'open declares resent' => $resentCount]], 200);
+        return ResultUtil::successResult([
+            'foundOpenDeclares' => $openCount,
+            'openDeclaresResent' => $resentCount
+        ]);
     }
 
 
