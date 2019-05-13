@@ -118,7 +118,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      * @param Request $request the request object
      * @param int $litterId
      * @return JsonResponse
-     * @Route("/{litterId}")
+     * @Route("/{litterId}", requirements={"litterId"="\d+"})
      * @Method("POST")
      */
     public function resendCreateBirths(Request $request, $litterId)
