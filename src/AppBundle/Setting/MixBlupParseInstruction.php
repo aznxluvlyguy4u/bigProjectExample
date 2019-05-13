@@ -9,6 +9,7 @@ use AppBundle\Component\MixBlup\LambMeatIndexInstructionFiles;
 use AppBundle\Component\MixBlup\ReproductionInstructionFiles;
 use AppBundle\Component\MixBlup\WormResistanceInstructionFiles;
 use AppBundle\Constant\MixBlupAnalysis;
+use AppBundle\Exception\MixBlupException;
 
 
 /**
@@ -118,8 +119,7 @@ class MixBlupParseInstruction
                 $model = LambMeatIndexInstructionFiles::getIndirectLambMeatModel($isRelani);
                 break;
 
-            default:
-                $model = [];
+            default: throw new MixBlupException("This MiXBLUP analysis type has no getIndirectModel() support");
         }
         return array_keys($model);
 
