@@ -75,8 +75,6 @@ class ProcessLocker implements ProcessLockerInterface
     {
         $currentProcessCount = $this->getProcessesCount($processGroupName, false);
         $maxProcessCount = ArrayUtil::get($processGroupName, $this->maxProcessCounts, 1);
-        $this->logger->info($processGroupName . ' processes [current|max]: '
-            . $currentProcessCount . '|' . $maxProcessCount);
         return $currentProcessCount >= $maxProcessCount;
     }
 
@@ -112,7 +110,6 @@ class ProcessLocker implements ProcessLockerInterface
         $processes[$newProcessId] = $newProcessId;
 
         $this->updateLockFileByGroupName($processGroupName, $processes);
-        $this->logger->info('Added process ' . $newProcessId);
 
         return $newProcessId;
     }
@@ -141,9 +138,6 @@ class ProcessLocker implements ProcessLockerInterface
         if (key_exists($processId, $processes)) {
             unset($processes[$processId]);
             $this->updateLockFileByGroupName($processGroupName, $processes);
-            $this->logger->info('Removed process, processId: ' . $processId);
-        } else {
-            $this->logger->info('Process is not locked, processId: ' . $processId);
         }
     }
 
@@ -213,9 +207,7 @@ class ProcessLocker implements ProcessLockerInterface
             $this->updateLockFile($lockFilePath, []);
         }
 
-        $this->logger->info('Get lockfile info from: '.$lockFilePath);
         $content = file_get_contents($lockFilePath);
-        $this->logger->info('Lockfile content: ' . ($content ? $content : 'empty'));
         return json_decode($content, true);
     }
 

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Sqs\Exception;
+namespace AppBundle\Exception\Sqs;
 
 
 class SqsMessageException extends \Exception

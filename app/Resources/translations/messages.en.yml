@@ -465,6 +465,8 @@ THE PEDIGREE REGISTER ABBREVIATION HAS AN INVALID FORMAT: The pedigree register 
 THE ANIMAL IS NOT ON THE GIVEN LOCATION: The animal is not on the given location
 AN IDENTICAL %requestState% %declare% ALREADY EXISTS: An identical %declare% (%requestState%) already exists
 SELECT EXPORT TO RELOCATE ANIMALS TO A UBN IN ANOTHER COUNTRY: Select export to relocate animals to a UBN in another country
+NO OPEN DECLARE BIRTHS FOUND. RESENDING IMPOSSIBLE.: No open declare births found. Resending not possible.
+ONLY %openDeclaresResent% OF THE %foundOpenDeclares% WHERE RESENT: Only %openDeclaresResent% of the %foundOpenDeclares% found declares where resent
 
 #Declares
 DECLARE_ARRIVALS: arrivals
