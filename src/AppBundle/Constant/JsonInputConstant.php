@@ -88,6 +88,7 @@ class JsonInputConstant
     const PARENT_TYPES = 'parent_types';
     const EXCLUDE_MOTHER = 'exclude_mother';
     const EXCLUDE_FATHER = 'exclude_father';
+    const SURROGATE_MOTHER = 'surrogate_mother';
     const GENERATIONS = 'generations';
     const SEPARATOR = 'separator';
     const ULNS_WITHOUT_FOUND_ANIMALS = 'ulns_without_found_animals';
