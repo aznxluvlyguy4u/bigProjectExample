@@ -465,6 +465,13 @@ class DeclareBirth extends DeclareBase implements BasicRvoDeclareInterface
         return $this->birthWeight;
     }
 
+
+    public function setEmptyBirthWeight()
+    {
+        $this->birthWeight = 0.0;
+    }
+
+
     /**
      * @param integer $birthWeight
      */
@@ -480,6 +487,13 @@ class DeclareBirth extends DeclareBase implements BasicRvoDeclareInterface
     {
         return $this->birthTailLength;
     }
+
+
+    public function setEmptyBirthTailLength()
+    {
+        $this->birthTailLength = 0.0;
+    }
+
 
     /**
      * @param integer $birthTailLength
