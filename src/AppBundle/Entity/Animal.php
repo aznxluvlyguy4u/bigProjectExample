@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Variable;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalTypeInLatin;
 use AppBundle\Enumerator\GenderType;
@@ -1979,6 +1980,27 @@ abstract class Animal
         return $this->births;
     }
 
+
+    /**
+     * @return DeclareBirth|null
+     */
+    public function getLatestBirth(): ?DeclareBirth
+    {
+        $criteria = Criteria::create()
+            ->where(
+                Criteria::expr()->orX(
+                    Criteria::expr()->eq(Variable::REQUEST_STATE, RequestStateType::FINISHED),
+                    Criteria::expr()->eq(Variable::REQUEST_STATE, RequestStateType::FINISHED_WITH_WARNING),
+                    Criteria::expr()->eq(Variable::REQUEST_STATE, RequestStateType::IMPORTED)
+                )
+            )
+            ->orderBy([Variable::LOG_DATE => Criteria::DESC])
+            ->setMaxResults(1);
+        $result = $this->births->matching($criteria)->first();
+        return ($result instanceof DeclareBirth) ? $result : null;
+    }
+
+
     /**
      * Add death
      *
@@ -2333,10 +2355,27 @@ abstract class Animal
         }
 
         $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq("isActive", true))
-            ->orderBy(array("measurementDate" => Criteria::DESC))
+            ->where(Criteria::expr()->eq(Variable::IS_ACTIVE, true))
+            ->orderBy([Variable::MEASUREMENT_DATE => Criteria::DESC])
             ->setMaxResults(1);
-        return $measurements->matching($criteria)->first();
+        $result = $measurements->matching($criteria)->first();
+        return ($result instanceof Measurement) ? $result : null;
+    }
+
+
+    /**
+     * @return Weight|null
+     */
+    public function getLatestBirthWeight(): ?Weight
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq(Variable::IS_ACTIVE, true))
+            ->andWhere(Criteria::expr()->eq(Variable::IS_BIRTH_WEIGHT, true))
+            ->andWhere(Criteria::expr()->eq(Variable::IS_REVOKED, false))
+            ->orderBy([Variable::MEASUREMENT_DATE => Criteria::DESC])
+            ->setMaxResults(1);
+        $result = $this->weightMeasurements->matching($criteria)->first();
+        return ($result instanceof Weight) ? $result : null;
     }
 
 
@@ -2345,16 +2384,8 @@ abstract class Animal
      */
     public function getLatestBirthWeightValue()
     {
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq("isActive", true))
-            ->andWhere(Criteria::expr()->eq("isBirthWeight", true))
-            ->andWhere(Criteria::expr()->eq("isRevoked", false))
-            ->orderBy(array("measurementDate" => Criteria::DESC))
-            ->setMaxResults(1);
-        /** @var Weight $birthWeight */
-        $birthWeight = $this->weightMeasurements->matching($criteria)->first();
-
-        return $birthWeight ? $birthWeight->getWeight() : null;
+        $latestBirthWeight = $this->getLatestBirthWeight();
+        return $latestBirthWeight ? $latestBirthWeight->getWeight() : null;
     }
 
 
@@ -2415,6 +2446,31 @@ abstract class Animal
     {
         $this->tailLengthMeasurements->removeElement($tailLengthMeasurement);
     }
+
+
+    /**
+     * @return TailLength|null
+     */
+    public function getLatestTailLength(): ?TailLength
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq(Variable::IS_ACTIVE, true))
+            ->orderBy([Variable::MEASUREMENT_DATE => Criteria::DESC])
+            ->setMaxResults(1);
+        $result = $this->tailLengthMeasurements->matching($criteria)->first();
+        return ($result instanceof TailLength) ? $result : null;
+    }
+
+
+    /**
+     * @return float|null
+     */
+    public function getLatestTailLengthValue()
+    {
+        $latestTailWeight = $this->getLatestTailLength();
+        return $latestTailWeight ? $latestTailWeight->getLength() : null;
+    }
+
 
     /**
      * Get tailLengthMeasurements

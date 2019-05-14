@@ -475,6 +475,8 @@ AN IDENTICAL %requestState% %declare% ALREADY EXISTS: Een identieke %declare% (%
 SELECT EXPORT TO RELOCATE ANIMALS TO A UBN IN ANOTHER COUNTRY: Zet export op ‘Ja’ om deze dieren af te voeren naar een UBN van een ander land.
 NO OPEN DECLARE BIRTHS FOUND. RESENDING IMPOSSIBLE. : Er zijn geen onverwerkte geboortemeldingen gevonden. Opnieuw verzenden niet mogelijk.
 ONLY %openDeclaresResent% OF THE %foundOpenDeclares% WHERE RESENT: Alleen %openDeclaresResent% van de %foundOpenDeclares% gevonden meldingen waren opnieuw verzonden
+INVALID BIRTH WEIGHT %minValue% %maxValue%: Ongeldig geboortegewicht. De waarde voor het geboortegewicht moet zitten tussen %minValue% en %maxValue%
+INVALID TAIL LENGTH %minValue% %maxValue%: Ongeldig staartlengte. De waarde voor de staartlengte moet zitten tussen %minValue% en %maxValue%
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen
