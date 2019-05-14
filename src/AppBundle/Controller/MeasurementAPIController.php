@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Service\BirthMeasurementService;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -11,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * @Route("/api/v1/measurements")
  */
-class MeasurementAPIController extends APIController implements MeasurementAPIControllerInterface
+class MeasurementAPIController extends APIController implements MeasurementAPIControllerInterface, BirthMeasurementAPIControllerInterface
 {
 
     /**
@@ -185,5 +186,52 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
     {
         return $this->get('app.measurement')->getAllowedInspectorsForExteriorMeasurements($request, $ulnString);
     }
+
+
+    /**
+     *
+     * Edits the birth weight and tail length of the given animal.
+     *
+     * If the animal already contains a weight and tail length record, the values in those records is overwritten.
+     * If those records do not exist yet, new records are created.
+     * The values in the declareBirth records are also updated.
+     *
+     * The animal identifier is the animalId, because there currently are issues where due to bugs,
+     * two animals with the same ULN might exists in the database.
+     *
+     * RequestBody example:
+     *  {
+            "birth_weight": 0.526,
+            "tail_length": 5.22,
+            "reset_measurement_date_using_date_of_birth": false
+        }
+     * To remove the birth weight or tail length from the animal, just remove the key from the request body.
+     *
+     * @ApiDoc(
+     *   section = "Measurements",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Update an exterior measurement for a specific ULN and measurementDate"
+     * )
+     *
+     * @param Request $request the request object
+     * @param int $animalId
+     * @return JsonResponse
+     * @Route("/{animalId}/birth-measurements", requirements={"animalId"="\d+"})
+     * @Method("PUT")
+     * @throws \Exception
+     */
+    function editBirthMeasurements(Request $request, $animalId)
+    {
+        return $this->get(BirthMeasurementService::class)->editBirthMeasurements($request, $animalId);
+    }
+
 
 }

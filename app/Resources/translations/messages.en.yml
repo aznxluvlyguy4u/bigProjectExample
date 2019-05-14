@@ -466,6 +466,8 @@ AN IDENTICAL %requestState% %declare% ALREADY EXISTS: An identical %declare% (%r
 SELECT EXPORT TO RELOCATE ANIMALS TO A UBN IN ANOTHER COUNTRY: Select export to relocate animals to a UBN in another country
 NO OPEN DECLARE BIRTHS FOUND. RESENDING IMPOSSIBLE.: No open declare births found. Resending not possible.
 ONLY %openDeclaresResent% OF THE %foundOpenDeclares% WHERE RESENT: Only %openDeclaresResent% of the %foundOpenDeclares% found declares where resent
+INVALID BIRTH WEIGHT %minValue% %maxValue%: Invalid birth weight value. The birth weight value should be between %minValue% and %maxValue%
+INVALID TAIL LENGTH %minValue% %maxValue%: Invalid tail length value. The tail length value should be between %minValue% and %maxValue%
 
 #Declares
 DECLARE_ARRIVALS: arrivals
