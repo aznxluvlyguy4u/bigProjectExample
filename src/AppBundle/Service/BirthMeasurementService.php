@@ -23,9 +23,15 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class BirthMeasurementService extends ControllerServiceBase implements BirthMeasurementAPIControllerInterface
 {
+    const MIN_BIRTH_WEIGHT = 0.0;
+    const MAX_BIRTH_WEIGHT = 9.9;
+    const MIN_TAIL_LENGTH = 0.0;
+    const MAX_TAIL_LENGTH = 30;
+
     /**
      * @param Request $request
      * @param $animalId
@@ -238,14 +244,51 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
         $content = new EditBirthMeasurementsJsonFormat();
         $requestBody = RequestUtil::getContentAsArray($request);
 
+        $birthWeight = $this->getFloatValueInput(JsonInputConstant::BIRTH_WEIGHT, $requestBody);
+        $tailLength = $this->getFloatValueInput(JsonInputConstant::TAIL_LENGTH, $requestBody);
+
+        $defaultResetMeasurementDate = false;
+        $resetMeasurementDate = $requestBody->get(JsonInputConstant::RESET_MEASUREMENT_DATE_USING_DATE_OF_BIRTH)
+            ?? $defaultResetMeasurementDate;
+        $resetMeasurementDate = is_bool($resetMeasurementDate) ? $resetMeasurementDate : $defaultResetMeasurementDate;
+
+        $this->validateBirthMeasurements($birthWeight, $tailLength);
+
         $content
-            ->setBirthWeight($this->getFloatValueInput(JsonInputConstant::BIRTH_WEIGHT, $requestBody))
-            ->setTailLength($this->getFloatValueInput(JsonInputConstant::TAIL_LENGTH, $requestBody))
-            ->setResetMeasurementDateUsingDateOfBirth(
-                $requestBody->get(JsonInputConstant::RESET_MEASUREMENT_DATE_USING_DATE_OF_BIRTH) ?? false
-            )
+            ->setBirthWeight($birthWeight)
+            ->setTailLength($tailLength)
+            ->setResetMeasurementDateUsingDateOfBirth($resetMeasurementDate)
         ;
         return $content;
+    }
+
+
+    private function validateBirthMeasurements($birthWeight, $tailLength) {
+        $errorMessage = '';
+        $errorSeparator = '';
+
+        if ($birthWeight < self::MIN_BIRTH_WEIGHT || $birthWeight > self::MAX_BIRTH_WEIGHT) {
+            $errorMessage .= $errorSeparator . $this->translator->trans(
+                'INVALID BIRTH WEIGHT %minValue% %maxValue%',
+                        [
+                            '%minValue%' => self::MIN_BIRTH_WEIGHT,
+                            '%maxValue%' => self::MAX_BIRTH_WEIGHT,
+                        ]);
+            $errorSeparator = '. ';
+        }
+
+        if ($tailLength < self::MIN_TAIL_LENGTH || $tailLength > self::MAX_TAIL_LENGTH) {
+            $errorMessage .= $errorSeparator . $this->translator->trans(
+                    'INVALID TAIL LENGTH %minValue% %maxValue%',
+                    [
+                        '%minValue%' => self::MIN_TAIL_LENGTH,
+                        '%maxValue%' => self::MAX_TAIL_LENGTH,
+                    ]);
+        }
+
+        if (!empty($errorMessage)) {
+            throw new PreconditionFailedHttpException($errorMessage.'.');
+        }
     }
 
 
