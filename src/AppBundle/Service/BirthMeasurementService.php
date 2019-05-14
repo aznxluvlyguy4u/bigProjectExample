@@ -6,11 +6,13 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\BirthMeasurementAPIControllerInterface;
+use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\UserActionType;
 use AppBundle\JsonFormat\EditBirthMeasurementsJsonFormat;
 use AppBundle\Output\BirthMeasurements\BirthMeasurementsOutput;
 use AppBundle\Output\BirthMeasurements\BirthWeightOutput;
@@ -49,9 +51,10 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
 
         $this->getManager()->beginTransaction(); // suspend auto-commit
         try {
-            $isBirthWeightUpdated = $this->updateBirthWeight($actionBy, $animal, $animal->getLatestBirthWeight(), $content);
-            $isTailLengthUpdated = $this->updateTailLength($actionBy, $animal, $animal->getLatestTailLength(), $content);
-            if ($isBirthWeightUpdated || $isTailLengthUpdated) {
+            $birthWeightUpdateMessage = $this->updateBirthWeight($actionBy, $animal, $animal->getLatestBirthWeight(), $content);
+            $tailLengthUpdateMessage = $this->updateTailLength($actionBy, $animal, $animal->getLatestTailLength(), $content);
+            if (!empty($birthWeightUpdateMessage) || !empty($tailLengthUpdateMessage)) {
+                $this->logAction($actionBy, $animal, $birthWeightUpdateMessage, $tailLengthUpdateMessage);
                 $this->getManager()->flush();
             } else {
                 $this->getManager()->clear();
@@ -63,6 +66,25 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
         }
 
         return $this->getResponse($animalId);
+    }
+
+
+    private function logAction(Person $actionBy, Animal $animal, $birthWeightUpdateMessage, $tailLengthUpdateMessage) {
+        if (empty($birthWeightUpdateMessage) && empty($tailLengthUpdateMessage)) {
+            return;
+        }
+
+        $description = AnimalDetailsBatchUpdaterService::getAnimalEditLogPrefix($animal);
+        if (!empty($birthWeightUpdateMessage)) {
+            $description .= $birthWeightUpdateMessage.'; ';
+        }
+        if (!empty($tailLengthUpdateMessage)) {
+            $description .= $tailLengthUpdateMessage;
+        }
+
+        $log = new ActionLog(null, $actionBy, UserActionType::ADMIN_ANIMAL_EDIT,
+            true, $description, true);
+        $this->getManager()->persist($log);
     }
 
 
@@ -89,11 +111,11 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
      * @param Animal $animal
      * @param Weight|null $currentBirthWeight
      * @param EditBirthMeasurementsJsonFormat $content
-     * @return bool
+     * @return string|null
      * @throws \Exception
      */
     private function updateBirthWeight(Person $actionBy, Animal $animal, ?Weight $currentBirthWeight,
-                                       EditBirthMeasurementsJsonFormat $content): bool
+                                       EditBirthMeasurementsJsonFormat $content): ?string
     {
         $isUpdated = false;
         $newBirthWeightValue = $content->getBirthWeight();
@@ -102,7 +124,10 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
         $updateBirthValue = false;
         $emptyBirthValue = false;
 
+        $oldValue = null;
+
         if ($currentBirthWeight instanceof Weight) {
+            $oldValue = $currentBirthWeight->getWeight();
             if ($newBirthWeightValue === null) {
                 $currentBirthWeight->setIsActive(false);
                 $currentBirthWeight->setDeleteDate(new \DateTime());
@@ -157,7 +182,9 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
             $this->getManager()->persist($birth);
         }
 
-        return $isUpdated;
+        return ($isUpdated) ? "Geboortegewicht "
+            .($oldValue ?? AnimalDetailsUpdaterService::LOG_EMPTY).' => '
+            .($newBirthWeightValue ?? AnimalDetailsUpdaterService::LOG_EMPTY) : null;
     }
 
 
@@ -166,11 +193,11 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
      * @param Animal $animal
      * @param TailLength|null $currentTailLength
      * @param EditBirthMeasurementsJsonFormat $content
-     * @return bool
+     * @return string|null
      * @throws \Exception
      */
     private function updateTailLength(Person $actionBy, Animal $animal, ?TailLength $currentTailLength,
-                                      EditBirthMeasurementsJsonFormat $content): bool
+                                      EditBirthMeasurementsJsonFormat $content): ?string
     {
         $isUpdated = false;
         $newTailLengthValue = $content->getTailLength();
@@ -178,7 +205,10 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
         $updateBirthValue = false;
         $emptyBirthValue = false;
 
+        $oldValue = null;
+
         if ($currentTailLength instanceof TailLength) {
+            $oldValue = $currentTailLength->getLength();
             if ($newTailLengthValue === null) {
                 $currentTailLength->setIsActive(false);
                 $currentTailLength->setDeleteDate(new \DateTime());
@@ -229,7 +259,9 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
             $this->getManager()->persist($birth);
         }
 
-        return $isUpdated;
+        return ($isUpdated) ? "Staartlengte "
+            .($oldValue ?? AnimalDetailsUpdaterService::LOG_EMPTY).' => '
+            .($newTailLengthValue ?? AnimalDetailsUpdaterService::LOG_EMPTY) : null;
     }
 
 
