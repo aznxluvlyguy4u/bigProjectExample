@@ -9,7 +9,7 @@ use AppBundle\Component\MixBlup\LambMeatIndexInstructionFiles;
 use AppBundle\Component\MixBlup\ReproductionInstructionFiles;
 use AppBundle\Component\MixBlup\WormResistanceInstructionFiles;
 use AppBundle\Constant\MixBlupAnalysis;
-use AppBundle\Exception\MixBlupException;
+use AppBundle\Exception\MiXBLUP\MixBlupException;
 
 
 /**
