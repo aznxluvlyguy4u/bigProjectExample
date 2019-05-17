@@ -464,6 +464,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             }
             
             $this->zip->close();
+
+            $extractedFiles = array_diff(scandir($this->getResultsFolder()), array('.', '..'));
+            $this->logger->notice("Extracted files:");
+            foreach($extractedFiles as $extractedFile) {
+                $this->logger->notice($extractedFile);
+            }
+
             return true;
         }
         return false;
