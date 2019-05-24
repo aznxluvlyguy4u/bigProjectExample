@@ -304,6 +304,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                 $unsuccessfulUnzips = [];
                 $successfulUnzips = [];
+                $hasBothRelaniTypeFilesInZip = [];
 
                 foreach($this->relsol as $zipFileName){
 
@@ -316,34 +317,43 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->relaniDirectAndIndirectExists =
                         file_exists($this->getResultsFolder() . Filename::RELANI_DIRECT) &&
                         file_exists($this->getResultsFolder() . Filename::RELANI_INDIRECT);
-                    $successfulUnzip = $solaniExists && ($relaniExists || $this->relaniDirectAndIndirectExists);
 
-                    if($successfulUnzip) {
-                        $this->logger->notice('Unzip was successful!');
 
-                        $this->resetSearchArrays();
-
-                        $this->runBreedValueTypeCustomPreparationLogic();
-
-                        $this->parseSolaniFiles();
-
-                        if($this->relaniDirectAndIndirectExists) {
-                            $this->logger->notice('Found separate direct and indirect Relani files');
-                            $this->parseRelaniDirectFiles();
-                            $this->parseRelaniIndirectFiles();
-                            $this->processDirectBreedValues();
-                            $this->processIndirectBreedValues();
-                        } else {
-                            $this->parseRelaniFiles();
-                            $this->processBreedValues();
-                        }
-
-                        $this->purgeResultsFolder();
-                        $successfulUnzips[] = $zipFileName;
-                    } else {
-                        $this->logger->notice('Unzip failed');
-                        $unsuccessfulUnzips[] = $zipFileName;
+                    if ($relaniExists && $this->relaniDirectAndIndirectExists) {
+                        $this->logger->error($this->currentBreedType. ' has normal and (in)direct Relani files.
+                        Thus something when wrong during the MiXBLUP output files processing');
                         $this->errors[] = $this->currentBreedType;
+                        $hasBothRelaniTypeFilesInZip[] = $this->currentBreedType;
+                    } else {
+                        $successfulUnzip = $solaniExists && ($relaniExists || $this->relaniDirectAndIndirectExists);
+
+                        if($successfulUnzip) {
+                            $this->logger->notice('Unzip was successful!');
+
+                            $this->resetSearchArrays();
+
+                            $this->runBreedValueTypeCustomPreparationLogic();
+
+                            $this->parseSolaniFiles();
+
+                            if($this->relaniDirectAndIndirectExists) {
+                                $this->logger->notice('Found separate direct and indirect Relani files');
+                                $this->parseRelaniDirectFiles();
+                                $this->parseRelaniIndirectFiles();
+                                $this->processDirectBreedValues();
+                                $this->processIndirectBreedValues();
+                            } else {
+                                $this->parseRelaniFiles();
+                                $this->processBreedValues();
+                            }
+
+                            $this->purgeResultsFolder();
+                            $successfulUnzips[] = $zipFileName;
+                        } else {
+                            $this->logger->notice('Unzip failed');
+                            $unsuccessfulUnzips[] = $zipFileName;
+                            $this->errors[] = $this->currentBreedType;
+                        }
                     }
                 }
 
