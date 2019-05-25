@@ -417,7 +417,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             $this->extractAnimalIdsFromSolaniFiles();
 
             $sql = "SELECT id, breed_code FROM animal 
-                    WHERE breed_code = 'CF100' AND id IN (".implode(',',$this->animalIdsInOutputFile).")";
+                    WHERE breed_code LIKE '%CF%' -- any breedCode containing CF
+                      AND id IN (".implode(',',$this->animalIdsInOutputFile).")";
             $res = $this->conn->query($sql)->fetchAll();
             $this->validatedAnimalIds = SqlUtil::getSingleValueGroupedSqlResults('id',$res, true,false);
         }
