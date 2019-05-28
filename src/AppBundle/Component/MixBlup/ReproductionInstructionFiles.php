@@ -4,6 +4,7 @@
 namespace AppBundle\Component\MixBlup;
 
 
+use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Setting\MixBlupInstructionFile;
 use AppBundle\Setting\MixBlupSetting;
@@ -15,6 +16,8 @@ use AppBundle\Util\ArrayUtil;
  */
 class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements MixBlupInstructionFileInterface
 {
+    const TITLE_FERTILITY = 'Vruchtbaarheid';
+    const TITLE_BIRTH_PROGRESS = 'Geboorteverloop';
 
     /**
      * @inheritDoc
@@ -98,13 +101,16 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     {
         $gebGemakSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' CovHetLam CovRecLam';
 
+        $type = BreedValueTypeConstant::BIRTH_PROGRESS;
+        $instruction = ' '.$type.'  ~ '.self::jaarBedrijf($isRelani).$gebGemakSolaniTraits.' !RANDOM G(ID,IDM)';
+
         $baseModel = [
-            'GebGemak' =>   ' GebGemak  ~ '.self::jaarBedrijf($isRelani).$gebGemakSolaniTraits.' !RANDOM G(ID,IDM)'
+            $type =>   $instruction
         ];
 
         if($appendIdmBreedValues) {
             $appendedModel = [
-                'GebGemak'.self::INDIRECT_SUFFIX =>   ' GebGemak  ~ '.self::jaarBedrijf($isRelani).$gebGemakSolaniTraits.' !RANDOM G(ID,IDM)'
+                $type.self::INDIRECT_SUFFIX =>   $instruction
             ];
             return ArrayUtil::concatArrayValues([$baseModel, $appendedModel], false);
         }
@@ -119,8 +125,9 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
      */
     public static function getIndirectProgressModel($isRelani = true)
     {
+        $type = BreedValueTypeConstant::BIRTH_PROGRESS;
         $gebGemakSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' CovHetLam CovRecLam';
-        return ['GebGemak'.self::INDIRECT_SUFFIX =>   ' GebGemak  ~ '.self::jaarBedrijf($isRelani).$gebGemakSolaniTraits.' !RANDOM G(ID,IDM)'];
+        return [$type.self::INDIRECT_SUFFIX =>   ' '.$type.'  ~ '.self::jaarBedrijf($isRelani).$gebGemakSolaniTraits.' !RANDOM G(ID,IDM)'];
     }
 
 
@@ -131,7 +138,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     {
         return self::reproductionInstructionFileBase(
             self::getBirthProgressModel(self::INCLUDE_COMMENTED_OUT_TRAITS),
-            'Geboorteverloop');
+            self::TITLE_BIRTH_PROGRESS);
     }
 
 
@@ -142,7 +149,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     {
         return self::reproductionInstructionFileBase(
             self::getBirthProgressModel(self::INCLUDE_COMMENTED_OUT_TRAITS, true),
-            'Geboorteverloop', true);
+            self::TITLE_BIRTH_PROGRESS, true);
     }
 
 
@@ -196,7 +203,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     {
         return self::reproductionInstructionFileBase(
             self::getFertilityModel($part,self::INCLUDE_COMMENTED_OUT_TRAITS),
-            'Vruchtbaarheid');
+            self::TITLE_FERTILITY);
     }
 
 
@@ -208,7 +215,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     {
         return self::reproductionInstructionFileBase(
             self::getFertilityModel($part,self::INCLUDE_COMMENTED_OUT_TRAITS, true),
-            'Vruchtbaarheid', true);
+            self::TITLE_FERTILITY, true);
     }
 
 
