@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\Exception;
+namespace AppBundle\Exception\MiXBLUP;
 
 
 class MixBlupException extends \Exception

@@ -7,10 +7,54 @@ namespace AppBundle\Util;
 use AppBundle\Entity\DeclareBirthRepository;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
+use Monolog\Logger;
 
 class LitterUtil
 {
     const MIN_YEAR = 2016;
+
+
+    /**
+     * @param Connection $conn
+     * @param Logger $logger
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function validateDuplicateLitters(Connection $conn, Logger $logger): bool {
+        $sqlDuplicateLitterCheck = "SELECT
+            l.id
+        FROM litter l
+        INNER JOIN (
+            SELECT
+                animal_mother_id,
+                animal_father_id,
+                litter_date
+            FROM litter l
+            WHERE 
+                  l.status <> 'REVOKED' AND 
+                  DATE_PART('year', l.litter_date) >= ".self::MIN_YEAR."
+            GROUP BY animal_father_id, animal_mother_id, litter_date HAVING COUNT(*) > 1
+            )g ON g.litter_date = l.litter_date AND g.animal_father_id = l.animal_father_id AND g.animal_mother_id = l.animal_mother_id
+        INNER JOIN declare_nsfo_base dnb on l.id = dnb.id;";
+        $ids = SqlUtil::getSingleValueGroupedSqlResults('id',
+            $conn->query($sqlDuplicateLitterCheck)->fetchAll(),
+            true,
+            true
+        );
+
+        if (empty($ids)) {
+            $logger->notice("No duplicate litters with litterDate after ".self::MIN_YEAR." are found.");
+            return true;
+        }
+
+        $errorHeader = "=== DUPLICATE LITTERS FOUND ===";
+        $logger->error($errorHeader);
+        $logger->error("Duplicate litterIds: ".implode(",", $ids));
+        $logger->error($errorHeader);
+        $logger->error("Fix duplicate litters and animals first");
+        return false;
+    }
+
 
     /**
      * @param Connection $conn

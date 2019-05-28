@@ -16,6 +16,7 @@ use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -36,6 +37,8 @@ class NsfoTestCommand extends ContainerAwareCommand
     private $em;
     /** @var Connection $conn */
     private $conn;
+    /** @var Logger */
+    private $logger;
     /** @var OutputInterface */
     private $output;
     /** @var CommandUtil */
@@ -65,6 +68,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         $this->em = $em;
         $this->output = $output;
         $this->conn = $em->getConnection();
+        $this->logger = $this->getContainer()->get('logger');
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
