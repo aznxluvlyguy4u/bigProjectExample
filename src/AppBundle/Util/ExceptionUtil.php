@@ -48,6 +48,32 @@ class ExceptionUtil
 
 
     /**
+     * @param string $errorMessage
+     * @param string $columnName
+     * @param bool $isInteger
+     * @return int|string|null
+     */
+    public static function getDuplicateKeyValue(string $errorMessage, string $columnName, bool $isInteger)
+    {
+        $duplicateValue = StringUtil::extractSandwichedSubString(
+            $errorMessage,
+            "DETAIL:  Key ($columnName)=(",
+            ") already exists."
+        );
+
+        if (empty($duplicateValue)) {
+            return null;
+        }
+
+        if ($isInteger && ctype_digit($duplicateValue)) {
+            return intval($duplicateValue);
+        }
+
+        return $duplicateValue;
+    }
+
+
+    /**
      * @param LoggerInterface $logger
      * @param \Throwable $exception
      */

@@ -857,6 +857,13 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                     $this->updateCurrentActionLogMessage($actionLogLabelLocation, $ubnCurrentLocation, $ubnNewLocation);
                 }
 
+                if ($retrievedAnimal->getTransferState() !== null) {
+                    $this->updateCurrentActionLogMessage('transferState',
+                        $retrievedAnimal->getTransferState(),
+                        null);
+                    $retrievedAnimal->setTransferState(null);
+                }
+
                 $retrievedAnimal->setLocation($newLocation);
                 break;
 

@@ -13,6 +13,7 @@ use AppBundle\Component\MixBlup\ReproductionInputProcess;
 use AppBundle\Component\MixBlup\WormResistanceInputProcess;
 use AppBundle\Constant\Environment;
 use AppBundle\Enumerator\MixBlupType;
+use AppBundle\Exception\MiXBLUP\MixBlupException;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\FilesystemUtil;
@@ -239,6 +240,10 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $this->logger->notice($updateCount.' heterosis and recombination values updated');
 
         if ($this->runIncludesFertility() || $this->runIncludesWorm()) {
+            if (!LitterUtil::validateDuplicateLitters($this->conn, $this->logger)) {
+                throw new MixBlupException("Fix duplicate litters and animals linked to those litters!");
+            }
+
             $this->logger->notice(LitterUtil::matchMatchingMates($this->conn, false).' \'mate-litter\'s matched');
             $this->logger->notice(LitterUtil::removeMatesFromRevokedLitters($this->conn).' \'mate-litter\'s unmatched');
 
