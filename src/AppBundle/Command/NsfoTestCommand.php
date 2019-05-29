@@ -2,6 +2,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Constant\MixBlupAnalysis;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Location;
@@ -9,9 +10,11 @@ use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Service\AwsExternalTestQueueService;
 use AppBundle\Service\AwsInternalTestQueueService;
+use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -80,6 +83,19 @@ class NsfoTestCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
+
+        $breedTypeFilterString = "'".
+            implode("','",MixBlupSetting::breedTypeByAnalysis(MixBlupAnalysis::FERTILITY_3))
+            ."'";
+
+        $sql = "SELECT b.id, animal_id, t.nl as dutch_breed_value_type
+                    FROM breed_value b
+                      INNER JOIN breed_value_type t ON b.type_id = t.id
+                    WHERE generation_date = '2019-05-15 11:37:19' AND
+                    t.nl IN (".$breedTypeFilterString.")"; //TODO filter breed_value_type based on $this->currentBreedType
+        $results = $this->conn->query($sql)->fetchAll();
+dump($results);die;
+
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
