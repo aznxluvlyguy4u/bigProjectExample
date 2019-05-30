@@ -579,7 +579,7 @@ class BreedValuesResultTableUpdater
                           b.generation_date = '$generationDate' AND
                           t.result_table_value_variable = '$valueVar' AND
                           (
-                            100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) <> nr.$valueVar OR
+                            ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation)) <> nr.$valueVar OR
                             SQRT(b.reliability) <> r.$accuracyVar OR
                             nr.$valueVar ISNULL
                           ) AND
