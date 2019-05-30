@@ -7,6 +7,7 @@ namespace AppBundle\Cache;
 use AppBundle\Constant\BreedIndexDiscriminatorTypeConstant;
 use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\BreedValueType;
+use AppBundle\Entity\ProcessLog;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Entity\ResultTableNormalizedBreedGrades;
 use AppBundle\Enumerator\MixBlupType;
@@ -148,6 +149,9 @@ class BreedValuesResultTableUpdater
 
         $totalBreedValueUpdateCount = 0;
         $totalNormalizedBreedValueUpdateCount = 0;
+
+        $processorLogRepository = $this->em->getRepository(ProcessLog::class);
+
         foreach ($results as $result)
         {
             $valueVar = $result['result_table_value_variable'];
@@ -157,6 +161,13 @@ class BreedValuesResultTableUpdater
 
             if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
 
+                /** @var ProcessLog $previousProcessLog */
+                $previousProcessLog = $processorLogRepository->findBreedValuesResultTableUpdaterProcessLog($valueVar, true);
+                if ($previousProcessLog) {
+                    $this->printPreviousLogData($valueVar, $previousProcessLog);
+                    continue;
+                }
+
                 $generationDate = $this->maxGenerationDate($valueVar);
                 if ($generationDate == null) {
                     $this->write('No breed values found for breed_value_type '.$valueVar);
@@ -164,10 +175,14 @@ class BreedValuesResultTableUpdater
                 }
                 $this->write('(Max) generation_date found and used for all '.$valueVar.' breed_values: '.$generationDate);
 
+                $processorLog = $processorLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar);
+
                 $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate);
                 if ($useNormalDistribution) {
                     $totalNormalizedBreedValueUpdateCount += $this->updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate);
                 }
+
+                $processorLogRepository->endProcessLog($processorLog);
             }
         }
 
@@ -183,6 +198,14 @@ class BreedValuesResultTableUpdater
         $breedIndexUpdateCount = $this->updateResultTableByBreedValueIndexType();
         $messagePrefix = $breedIndexUpdateCount > 0 ? 'In total '.$breedIndexUpdateCount : 'In total NO';
         $this->write($messagePrefix. ' breed Index&Accuracy sets were updated');
+    }
+
+
+    private function printPreviousLogData($valueVar, ProcessLog $log) {
+        $message = sprintf('The breedValueType %s has already been processed, duration: %s'
+            .' [%s -> %s]',$valueVar, $log->duration(),
+            $log->getStartDateAsString(), $log->getEndDateAsString());
+        $this->write($message);
     }
 
 
