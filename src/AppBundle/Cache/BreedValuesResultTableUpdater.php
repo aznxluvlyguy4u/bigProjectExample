@@ -14,6 +14,7 @@ use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValueService;
 use AppBundle\Service\NormalDistributionService;
+use AppBundle\Util\LoggerUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -46,6 +47,10 @@ class BreedValuesResultTableUpdater
 
     /** @var string */
     private $normalizedResultTableName;
+
+    const BATCH_SIZE = 250000;
+
+    const PROCESSING = "Processing ";
 
     public function __construct(EntityManagerInterface $em,
                                 Logger $logger,
@@ -114,36 +119,47 @@ class BreedValuesResultTableUpdater
      * @param boolean $updateBreedIndexes
      * @param boolean $updateNormalDistributions
      * @param boolean $ignorePreviouslyFinishedProcesses
+     * @param boolean $insertMissingResultTableAndGeneticBaseRecords
      * @param string $generationDateString if null, then the generationDate of the latest inserted breedValue will be used
      * @throws \Exception
      */
-    public function update(array $analysisTypes = [], $ignorePreviouslyFinishedProcesses = false,
+    public function update(array $analysisTypes = [],
+                           $insertMissingResultTableAndGeneticBaseRecords = true,
+                           $ignorePreviouslyFinishedProcesses = false,
                            $updateBreedIndexes = false, $updateNormalDistributions = false,
                            $generationDateString = null)
     {
-        $this->insertMissingBlankRecords();
+        if ($insertMissingResultTableAndGeneticBaseRecords) {
+            $this->insertMissingBlankRecords();
+            /*
+             * NOTE! Without genetic bases the corrected breedValues cannot be calculated, so do this first!
+             */
+            $this->breedValueService->initializeBlankGeneticBases();
+        } else {
+            $this->logger->notice("Skip insert missing blank resultTable records");
+            $this->logger->notice("Skip initializing blank genetic base records");
+        }
+
+        if ($updateBreedIndexes) {
+            $generationDateStringForBenchMarkValues = $this->getGenerationDateString($generationDateString);
+            $this->updateBreedIndexesByOutputFileType($generationDateStringForBenchMarkValues, $analysisTypes);
+        } else {
+            $this->logger->notice("Skip updating breed indexes");
+        }
+
+        if ($updateNormalDistributions) {
+            $this->updateNormalDistributions($analysisTypes);
+        } else {
+            $this->logger->notice("Skip updating normal distributions");
+        }
 
         $generationDateStringForResultTableValues = $generationDateString;
         if (empty($generationDateString)) {
             $generationDateStringForResultTableValues = null;
             $this->logger->notice("=== Using per breedValueType max generation string ===");
+        } else {
+            $this->logger->notice("=== Using ".$generationDateString." generation string for all breedValueTypes ===");
         }
-
-        $generationDateStringForBenchMarkValues = $this->getGenerationDateString($generationDateString);
-
-        /*
-         * NOTE! Without genetic bases the corrected breedValues cannot be calculated, so do this first!
-         */
-        $this->breedValueService->initializeBlankGeneticBases();
-
-        if ($updateBreedIndexes) {
-            $this->updateBreedIndexesByOutputFileType($generationDateStringForBenchMarkValues, $analysisTypes);
-        }
-
-        if ($updateNormalDistributions) {
-            $this->updateNormalDistributions($analysisTypes);
-        }
-
 
         $this->updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues(
             $analysisTypes, $ignorePreviouslyFinishedProcesses, $generationDateStringForResultTableValues);
@@ -166,6 +182,12 @@ class BreedValuesResultTableUpdater
 
         $processorLogRepository = $this->em->getRepository(ProcessLog::class);
 
+        $previousProcessLogs = [];
+        if (!empty($generationDateString)) {
+            $previousProcessLogs = $processorLogRepository
+                ->findBreedValuesResultTableUpdaterProcessLogs($generationDateString,true);
+        }
+
         foreach ($results as $result)
         {
             $valueVar = $result['result_table_value_variable'];
@@ -173,16 +195,27 @@ class BreedValuesResultTableUpdater
             $useNormalDistribution = $result['use_normal_distribution'];
             $analysisTypeNl = $result['analysis_type_nl'];
 
+            $this->write(self::PROCESSING.$valueVar);
+
             if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
 
-                $generationDate = empty($generationDateString) ? $this->maxGenerationDate($valueVar) : $generationDateString;
-                if ($generationDate == null) {
+                $generationDate = empty($generationDateString) ?
+                    $this->maxGenerationDate($valueVar, $previousProcessLogs) :
+                    $generationDateString
+                ;
+
+                $breedValuesExist = $this->breedValueRecordsExist($valueVar, $generationDate);
+                if (!$breedValuesExist) {
                     $this->write('No breed values found for breed_value_type '.$valueVar);
+                    $processorLog = $processorLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate);
+                    $processorLog = $processorLogRepository->endProcessLog($processorLog);
+                    $this->write('Finished process for '.$valueVar.', duration: '.$processorLog->duration());
                     continue;
                 }
 
                 /** @var ProcessLog $previousProcessLog */
                 $previousProcessLog = $processorLogRepository->findBreedValuesResultTableUpdaterProcessLog(
+                    $previousProcessLogs,
                     $valueVar, $generationDate, true);
                 if ($previousProcessLog) {
                     $this->printPreviousLogData($valueVar, $previousProcessLog, $ignorePreviouslyFinishedProcesses);
@@ -232,12 +265,12 @@ class BreedValuesResultTableUpdater
 
 
     /**
-     * @param $generationDateString
+     * @param string|null $generationDateString
      * @return mixed
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Exception
      */
-    public function getGenerationDateString($generationDateString)
+    public function getGenerationDateString($generationDateString = null)
     {
         if (is_string($generationDateString) && $generationDateString != '') {
             return $generationDateString;
@@ -285,16 +318,35 @@ class BreedValuesResultTableUpdater
 
     /**
      * @param string $breedTypeValueVar
+     * @param array|ProcessLog[] $previousProcessLogs
      * @return string|null
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function maxGenerationDate($breedTypeValueVar): ?string {
+    private function maxGenerationDate($breedTypeValueVar, $previousProcessLogs): ?string {
+        if (key_exists($breedTypeValueVar, $previousProcessLogs)) {
+            $generationDate = $previousProcessLogs[$breedTypeValueVar]->getSubCategory();
+            if (!empty($generationDate)) {
+                return $generationDate;
+            }
+        }
+
         $sql = "SELECT
                     MAX(generation_date)
                 FROM breed_value WHERE type_id = (
                     SELECT id FROM breed_value_type WHERE result_table_value_variable = '$breedTypeValueVar'
                     )";
         return $this->conn->query($sql)->fetch()['max'];
+    }
+
+
+    private function breedValueRecordsExist($breedTypeValueVar, $generationDateString): bool {
+        $sql = "SELECT
+                    id
+                FROM breed_value WHERE generation_date = '$generationDateString' AND type_id = (
+                    SELECT id FROM breed_value_type WHERE result_table_value_variable = '$breedTypeValueVar'
+                    )
+                LIMIT 1";
+        return !empty($this->conn->query($sql)->fetchAll());
     }
 
 
@@ -308,8 +360,14 @@ class BreedValuesResultTableUpdater
     {
         $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
 
-        // Default: Using genetic base
-        $sqlResultTableValues = "SELECT
+        $updateCount = 0;
+        $loopCount = 0;
+
+        $this->logger->notice("Batch processing ".$valueVar);
+        $this->logger->notice("...");
+        do {
+            // Default: Using genetic base
+            $sqlResultTableValues = "SELECT
                           b.animal_id,
                           b.value - gb.value as corrected_value,
                           SQRT(b.reliability) as accuracy
@@ -321,15 +379,21 @@ class BreedValuesResultTableUpdater
                          b.generation_date = '$generationDate' AND
                          t.result_table_value_variable = '$valueVar' AND
                          (b.value - gb.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
-                         r.$valueVar ISNULL OR r.$accuracyVar ISNULL)";
+                         r.$valueVar ISNULL OR r.$accuracyVar ISNULL)
+                         LIMIT ".self::BATCH_SIZE;
 
-        $sql = "UPDATE result_table_breed_grades
+            $sql = "UPDATE result_table_breed_grades
                 SET $valueVar = v.corrected_value, $accuracyVar = v.accuracy
                 FROM (
                       $sqlResultTableValues   
                 ) as v(animal_id, corrected_value, accuracy)
                 WHERE result_table_breed_grades.animal_id = v.animal_id";
-        $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+            $localUpdateCount = SqlUtil::updateWithCount($this->conn, $sql);
+            $updateCount += $localUpdateCount;
+            $loopCount++;
+            LoggerUtil::overwriteNotice($this->logger, "Processed ".$updateCount.' batch '.$loopCount);
+        } while ($localUpdateCount > 0);
+        $this->logger->notice("Total processed ".$updateCount);
 
         /*
          * Update obsolete value to null
@@ -493,7 +557,13 @@ class BreedValuesResultTableUpdater
     {
         $this->write('Updating '.$valueVar. ' values in '.$this->normalizedResultTableName.' ... ');
 
-        $sqlResultTableValues = "SELECT
+        $updateCount = 0;
+        $loopCount = 0;
+
+        $this->logger->notice("Batch processing ".$valueVar);
+        $this->logger->notice("...");
+        do {
+            $sqlResultTableValues = "SELECT
                           b.animal_id,
                           ROUND(100 + 
                                         (b.value - n.mean) 
@@ -514,15 +584,21 @@ class BreedValuesResultTableUpdater
                             nr.$valueVar ISNULL
                           ) AND
                           t.use_normal_distribution AND
-                          n.is_including_only_alive_animals = FALSE";
+                          n.is_including_only_alive_animals = FALSE
+                          LIMIT ".self::BATCH_SIZE;
 
-        $sql = "UPDATE $this->normalizedResultTableName
+            $sql = "UPDATE $this->normalizedResultTableName
                 SET $valueVar = v.corrected_value
                 FROM (
                       $sqlResultTableValues   
                 ) as v(animal_id, corrected_value)
                 WHERE $this->normalizedResultTableName.animal_id = v.animal_id";
-        $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+            $localUpdateCount = SqlUtil::updateWithCount($this->conn, $sql);
+            $updateCount += $localUpdateCount;
+            $loopCount++;
+            LoggerUtil::overwriteNotice($this->logger, "Processed ".$updateCount.' batch '.$loopCount);
+        } while ($localUpdateCount > 0);
+        $this->logger->notice("Total processed ".$updateCount);
 
         /*
          * Update obsolete value to null
@@ -665,7 +741,7 @@ class BreedValuesResultTableUpdater
                 // Make sure the following code already has run once
                 // $this->breedValueService->initializeBlankGeneticBases();
 
-                $this->logger->notice('Processing new LambMeatIndexes...');
+                $this->logger->notice(self::PROCESSING.'new LambMeatIndexes...');
                 $this->breedIndexService->updateLambMeatIndexes($generationDateString);
             }
         }
@@ -686,7 +762,7 @@ class BreedValuesResultTableUpdater
         // Indexes
 
         if ($processLambMeatIndexAnalysis) {
-            $this->logger->notice('Processing LambMeatIndex NormalDistribution...');
+            $this->logger->notice(self::PROCESSING.'LambMeatIndex NormalDistribution...');
             $generationDateString = $this->getLatestBreedIndexGenerationDateString(BreedIndexDiscriminatorTypeConstant::LAMB_MEAT);
             if ($generationDateString) {
                 $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString, false);
@@ -711,7 +787,7 @@ class BreedValuesResultTableUpdater
 
             if ($generate) {
                 $normalDistributionLabel = $breedValueType->getNl();
-                $this->logger->notice('Processing '.$normalDistributionLabel.' NormalDistribution...');
+                $this->logger->notice(self::PROCESSING.$normalDistributionLabel.' NormalDistribution...');
 
                 $generationDateString = $this->getLatestBreedValueGenerationDateString($breedValueType->getId());
                 if (!$generationDateString) {
@@ -751,7 +827,7 @@ class BreedValuesResultTableUpdater
             }
 
             $normalDistributionLabel = $breedValueType->getNl();
-            $this->logger->notice('Processing '.$normalDistributionLabel.' NormalDistribution...');
+            $this->logger->notice(self::PROCESSING.$normalDistributionLabel.' NormalDistribution...');
             $this->normalDistributionService
                 ->persistBreedValueTypeMeanAndStandardDeviation($normalDistributionLabel, $generationDateString, $overwriteExisting);
         }
@@ -796,7 +872,7 @@ class BreedValuesResultTableUpdater
      */
     public function updateAllBreedIndexNormalDistributions(bool $overwriteOldValues = false): void
     {
-        $this->logger->notice('Processing LambMeatIndex NormalDistribution...');
+        $this->logger->notice(self::PROCESSING.'LambMeatIndex NormalDistribution...');
         $generationDateString = $this->getLatestBreedIndexGenerationDateString(BreedIndexDiscriminatorTypeConstant::LAMB_MEAT);
         if ($generationDateString) {
             $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString, $overwriteOldValues);

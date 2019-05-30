@@ -837,10 +837,14 @@ class NsfoMainCommand extends ContainerAwareCommand
                 break;
 
             case 13: $this->updateAllResultTableValuesAndPrerequisites(); break;
-            case 14: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::LAMB_MEAT_INDEX], $this->ignorePreviouslyFinishedProcesses()); break;
-            case 15: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::FERTILITY], $this->ignorePreviouslyFinishedProcesses()); break;
-            case 16: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::WORM], $this->ignorePreviouslyFinishedProcesses()); break;
-            case 17: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::EXTERIOR], $this->ignorePreviouslyFinishedProcesses()); break;
+            case 14: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::LAMB_MEAT_INDEX],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
+            case 15: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::FERTILITY],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
+            case 16: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::WORM],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
+            case 17: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::EXTERIOR],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
 
             case 18: $this->getLambMeatIndexMigrator()->migrate(); break;
             case 19: $this->getWormResistanceIndexMigrator()->migrate(); break;
@@ -884,6 +888,14 @@ class NsfoMainCommand extends ContainerAwareCommand
     }
 
 
+    private function insertMissingResultTableAndGeneticBaseRecords(): bool {
+        $question = 'Insert missing resultTable and genetic base records';
+        $choice = $this->cmdUtil->generateConfirmationQuestion($question.'? (y/n, default is true)', true);
+        $this->cmdUtil->writeln($question.': '. StringUtil::getBooleanAsString($choice));
+        return $choice;
+    }
+
+
     private function deactivateBreedValuesResultTableUpdaterLogs() {
         $updateCount = $this->em->getRepository(ProcessLog::class)->deactivateBreedValuesResultTableUpdaterProcessLog();
         $this->cmdUtil->writeln($updateCount . ' breedValuesResultTableUpdaterProcessLogs deactivated');
@@ -899,20 +911,39 @@ class NsfoMainCommand extends ContainerAwareCommand
         /*
          * Options
          */
-        $updateBreedIndexes = $this->cmdUtil->generateConfirmationQuestion('Update BreedIndexes? (y/n, default is false)');
-        $this->getLogger()->notice('Update BreedIndexes: '. StringUtil::getBooleanAsString($updateBreedIndexes));
+        $ignoreAllPrerequisiteChecks = $this->cmdUtil->generateConfirmationQuestion('Ignore all prerequisite checks? (y/n, default is false)');
+        $this->getLogger()->notice('Ignore all prerequisite checks: '. StringUtil::getBooleanAsString($ignoreAllPrerequisiteChecks));
 
-        $updateNormalDistributions = $this->cmdUtil->generateConfirmationQuestion('Update NormalDistributions? (y/n, default is false)');
-        $this->getLogger()->notice('Update NormalDistributions: '. StringUtil::getBooleanAsString($updateNormalDistributions));
+        if ($ignoreAllPrerequisiteChecks) {
+            $updateBreedIndexes = false;
+            $updateNormalDistributions = false;
+            $insertMissingResultTableRecords = false;
+        } else {
+            $updateBreedIndexes = $this->cmdUtil->generateConfirmationQuestion('Update BreedIndexes? (y/n, default is false)');
+            $this->getLogger()->notice('Update BreedIndexes: '. StringUtil::getBooleanAsString($updateBreedIndexes));
 
-        $generationDateString = $this->cmdUtil->generateQuestion('Insert custom GenerationDateString (default: The generationDateString of the last inserted breedValue will be used)', null);
-        $this->getLogger()->notice('GenerationDateString to be used: '.$this->getBreedValuesResultTableUpdater()->getGenerationDateString($generationDateString));
+            $updateNormalDistributions = $this->cmdUtil->generateConfirmationQuestion('Update NormalDistributions? (y/n, default is false)');
+            $this->getLogger()->notice('Update NormalDistributions: '. StringUtil::getBooleanAsString($updateNormalDistributions));
+
+            $insertMissingResultTableRecords = $this->insertMissingResultTableAndGeneticBaseRecords();
+        }
 
         $ignorePreviouslyFinishedProcesses = $this->ignorePreviouslyFinishedProcesses();
+
+        $useLastGenerationDateString = 'Use last generationDateString for all breedValueTypes';
+        $useLastGenerationDateStringChoice = $this->cmdUtil->generateQuestion($useLastGenerationDateString.' (default: true)', true);
+
+        if ($useLastGenerationDateStringChoice) {
+            $generationDateString = $this->getBreedValuesResultTableUpdater()->getGenerationDateString();
+        } else {
+            $generationDateString = $this->cmdUtil->generateQuestion('Insert custom GenerationDateString (default: The generationDateString of the last inserted breedValue will be used)', null);
+        }
+
         // End of options
 
         $this->getBreedValuesResultTableUpdater()->update(
             [],
+            $insertMissingResultTableRecords,
             $ignorePreviouslyFinishedProcesses,
             $updateBreedIndexes,
             $updateNormalDistributions,

@@ -61,6 +61,41 @@ class ProcessLogRepository extends BaseRepository {
 
 
     /**
+     * @param string $generationDate
+     * @param bool $mustBeFinished
+     * @return array|ProcessLog[]
+     */
+    function findBreedValuesResultTableUpdaterProcessLogs(string $generationDate, bool $mustBeFinished) {
+
+        $qb = $this->getManager()->createQueryBuilder();
+        $queryBuilder =
+            $qb
+                ->select('p')
+                ->from(ProcessLog::class, 'p')
+                ->where($qb->expr()->eq('p.typeId', ProcessLogType::BREED_VALUES_RESULT_TABLE_UPDATER))
+                ->andWhere($qb->expr()->eq('p.subCategory', "'".$generationDate."'"))
+                ->andWhere($qb->expr()->eq('p.isActive', 'true'))
+        ;
+
+        if ($mustBeFinished) {
+            $qb->andWhere($qb->expr()->isNotNull('p.endDate'));
+        }
+
+        $query = $queryBuilder->getQuery();
+
+        $result = [];
+        $logs = $query->getResult();
+        /** @var ProcessLog $log */
+        foreach ($logs as $log) {
+            $result[$log->getCategory()] = $log;
+        }
+        return $result;
+    }
+
+
+
+    /**
+     * @param array|ProcessLog[] $previousProcessorLogs
      * @param string $breedValueTypeResultTableValue
      * @param string $generationDate
      * @param bool $mustBeFinished
@@ -68,8 +103,15 @@ class ProcessLogRepository extends BaseRepository {
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    function findBreedValuesResultTableUpdaterProcessLog(string $breedValueTypeResultTableValue,
+    function findBreedValuesResultTableUpdaterProcessLog(array $previousProcessorLogs, string $breedValueTypeResultTableValue,
                                                          string $generationDate, bool $mustBeFinished) {
+        if (key_exists($breedValueTypeResultTableValue, $previousProcessorLogs)) {
+            $log = $previousProcessorLogs[$breedValueTypeResultTableValue];
+            if ($log instanceof ProcessLog) {
+                return $log;
+            }
+        }
+
         $breedValueTypeId = $this->getBreedValueTypeId($breedValueTypeResultTableValue);
 
         $qb = $this->getManager()->createQueryBuilder();

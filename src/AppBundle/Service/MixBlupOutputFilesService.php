@@ -1145,7 +1145,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             $this->logger->notice('WormOutputFilename found in message...');
         }
 
-        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes,false,
+        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes,
+            true,false,
             true, true, $this->getGenerationDateStringFromKey());
     }
 
