@@ -187,10 +187,10 @@ class MixBlupCliOptionsService
                 break;
 
             case 13: $this->updateAllResultTableValuesAndPrerequisites(); break;
-            case 14: $this->breedValuesResultTableUpdater->update([MixBlupType::LAMB_MEAT_INDEX]); break;
-            case 15: $this->breedValuesResultTableUpdater->update([MixBlupType::FERTILITY]); break;
-            case 16: $this->breedValuesResultTableUpdater->update([MixBlupType::WORM]); break;
-            case 17: $this->breedValuesResultTableUpdater->update([MixBlupType::EXTERIOR]); break;
+            case 14: $this->breedValuesResultTableUpdater->update([MixBlupType::LAMB_MEAT_INDEX], $this->ignorePreviouslyFinishedProcesses()); break;
+            case 15: $this->breedValuesResultTableUpdater->update([MixBlupType::FERTILITY], $this->ignorePreviouslyFinishedProcesses()); break;
+            case 16: $this->breedValuesResultTableUpdater->update([MixBlupType::WORM], $this->ignorePreviouslyFinishedProcesses()); break;
+            case 17: $this->breedValuesResultTableUpdater->update([MixBlupType::EXTERIOR], $this->ignorePreviouslyFinishedProcesses()); break;
 
             case 18: $this->lambMeatIndexMigrator->migrate(); break;
             case 19: $this->wormResistanceIndexMigrator->migrate(); break;
@@ -245,14 +245,24 @@ class MixBlupCliOptionsService
 
         $generationDateString = $this->cmdUtil->generateQuestion('Insert custom GenerationDateString (default: The generationDateString of the last inserted breedValue will be used)', null);
         $this->logger->notice('GenerationDateString to be used: '.$this->breedValuesResultTableUpdater->getGenerationDateString($generationDateString));
+
+        $ignorePreviouslyFinishedProcesses = $this->ignorePreviouslyFinishedProcesses();
         // End of options
 
         $this->breedValuesResultTableUpdater->update(
             [],
+            $ignorePreviouslyFinishedProcesses,
             $updateBreedIndexes,
             $updateNormalDistributions,
             $generationDateString
         );
+    }
+
+
+    private function ignorePreviouslyFinishedProcesses(): bool {
+        $ignorePreviouslyFinishedProcesses = $this->cmdUtil->generateConfirmationQuestion('Ignore previously finished processes? (y/n, default is false)', false);
+        $this->logger->notice('Ignore previously finished processes: '. StringUtil::getBooleanAsString($ignorePreviouslyFinishedProcesses));
+        return $ignorePreviouslyFinishedProcesses;
     }
 
 

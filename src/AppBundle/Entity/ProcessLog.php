@@ -96,10 +96,18 @@ class ProcessLog
      */
     private $endDate;
 
+    /**
+     * @var bool
+     * @ORM\Column(type="boolean", nullable=false, options={"default":true})
+     * @Assert\NotBlank
+     * @JMS\Type("boolean")
+     */
+    private $isActive;
 
     public function __construct()
     {
         $this->startDate = new \DateTime();
+        $this->isActive = true;
     }
 
     /**
@@ -215,6 +223,24 @@ class ProcessLog
     public function setSubCategoryId(int $subCategoryId): ProcessLog
     {
         $this->subCategoryId = $subCategoryId;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param bool $isActive
+     * @return ProcessLog
+     */
+    public function setIsActive(bool $isActive): ProcessLog
+    {
+        $this->isActive = $isActive;
         return $this;
     }
 

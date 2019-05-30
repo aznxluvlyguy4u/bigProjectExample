@@ -113,10 +113,13 @@ class BreedValuesResultTableUpdater
      * @param array $analysisTypes
      * @param boolean $updateBreedIndexes
      * @param boolean $updateNormalDistributions
+     * @param boolean $ignorePreviouslyFinishedProcesses
      * @param string $generationDateString if null, then the generationDate of the latest inserted breedValue will be used
      * @throws \Exception
      */
-    public function update(array $analysisTypes = [], $updateBreedIndexes = false, $updateNormalDistributions = false, $generationDateString = null)
+    public function update(array $analysisTypes = [], $ignorePreviouslyFinishedProcesses = false,
+                           $updateBreedIndexes = false, $updateNormalDistributions = false,
+                           $generationDateString = null)
     {
         $this->insertMissingBlankRecords();
         $generationDateString = $this->getGenerationDateString($generationDateString);
@@ -135,15 +138,17 @@ class BreedValuesResultTableUpdater
         }
 
 
-        $this->updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues($analysisTypes);
+        $this->updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues($analysisTypes, $ignorePreviouslyFinishedProcesses);
     }
 
 
     /**
      * @param $analysisTypes
+     * @param bool $ignorePreviouslyFinishedProcesses
      * @throws \Exception
      */
-    private function updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues($analysisTypes)
+    private function updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues(
+        $analysisTypes, bool $ignorePreviouslyFinishedProcesses = false)
     {
         $results = self::getResultTableVariables($this->conn, $this->resultTableName);
 
@@ -164,8 +169,10 @@ class BreedValuesResultTableUpdater
                 /** @var ProcessLog $previousProcessLog */
                 $previousProcessLog = $processorLogRepository->findBreedValuesResultTableUpdaterProcessLog($valueVar, true);
                 if ($previousProcessLog) {
-                    $this->printPreviousLogData($valueVar, $previousProcessLog);
-                    continue;
+                    $this->printPreviousLogData($valueVar, $previousProcessLog, $ignorePreviouslyFinishedProcesses);
+                    if (!$ignorePreviouslyFinishedProcesses) {
+                        continue;
+                    }
                 }
 
                 $generationDate = $this->maxGenerationDate($valueVar);
@@ -182,7 +189,8 @@ class BreedValuesResultTableUpdater
                     $totalNormalizedBreedValueUpdateCount += $this->updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate);
                 }
 
-                $processorLogRepository->endProcessLog($processorLog);
+                $processorLog = $processorLogRepository->endProcessLog($processorLog);
+                $this->write('Finished process for '.$valueVar.', duration: '.$processorLog->duration());
             }
         }
 
@@ -201,11 +209,14 @@ class BreedValuesResultTableUpdater
     }
 
 
-    private function printPreviousLogData($valueVar, ProcessLog $log) {
+    private function printPreviousLogData($valueVar, ProcessLog $log, bool $ignorePreviouslyFinishedProcesses) {
         $message = sprintf('The breedValueType %s has already been processed, duration: %s'
             .' [%s -> %s]',$valueVar, $log->duration(),
             $log->getStartDateAsString(), $log->getEndDateAsString());
         $this->write($message);
+        if ($ignorePreviouslyFinishedProcesses) {
+            $this->write("Still redoing the process for ".$valueVar);
+        }
     }
 
 
