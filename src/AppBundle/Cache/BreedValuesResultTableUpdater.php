@@ -49,6 +49,7 @@ class BreedValuesResultTableUpdater
     private $normalizedResultTableName;
 
     const BATCH_SIZE = 250000;
+    const MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT = 3;
 
     const PROCESSING = "Processing ";
 
@@ -362,6 +363,8 @@ class BreedValuesResultTableUpdater
 
         $updateCount = 0;
         $loopCount = 0;
+        $lastLocalUpdateCount = 0;
+        $repeatedLastLocalUpdateCount = 0;
 
         $this->logger->notice("Batch processing ".$valueVar);
         $this->logger->notice("...");
@@ -390,8 +393,22 @@ class BreedValuesResultTableUpdater
                 WHERE result_table_breed_grades.animal_id = v.animal_id";
             $localUpdateCount = SqlUtil::updateWithCount($this->conn, $sql);
             $updateCount += $localUpdateCount;
+
             $loopCount++;
             LoggerUtil::overwriteNotice($this->logger, "Processed ".$updateCount.' batch '.$loopCount);
+
+            if ($localUpdateCount != self::BATCH_SIZE && $localUpdateCount == $lastLocalUpdateCount) {
+                $repeatedLastLocalUpdateCount++;
+            }
+
+            if ($repeatedLastLocalUpdateCount == self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
+                $this->logger->error("Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x");
+                break;
+            }
+
+            $lastLocalUpdateCount = $localUpdateCount;
+
+
         } while ($localUpdateCount > 0);
         $this->logger->notice("Total processed ".$updateCount);
 
@@ -559,6 +576,8 @@ class BreedValuesResultTableUpdater
 
         $updateCount = 0;
         $loopCount = 0;
+        $lastLocalUpdateCount = 0;
+        $repeatedLastLocalUpdateCount = 0;
 
         $this->logger->notice("Batch processing ".$valueVar);
         $this->logger->notice("...");
@@ -593,8 +612,21 @@ class BreedValuesResultTableUpdater
                 WHERE $this->normalizedResultTableName.animal_id = v.animal_id";
             $localUpdateCount = SqlUtil::updateWithCount($this->conn, $sql);
             $updateCount += $localUpdateCount;
+
             $loopCount++;
             LoggerUtil::overwriteNotice($this->logger, "Processed ".$updateCount.' batch '.$loopCount);
+
+            if ($localUpdateCount != self::BATCH_SIZE && $localUpdateCount == $lastLocalUpdateCount) {
+                $repeatedLastLocalUpdateCount++;
+            }
+
+            if ($repeatedLastLocalUpdateCount == self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
+                $this->logger->error("Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x");
+                break;
+            }
+
+            $lastLocalUpdateCount = $localUpdateCount;
+
         } while ($localUpdateCount > 0);
         $this->logger->notice("Total processed ".$updateCount);
 
