@@ -16,6 +16,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\EditType;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\ProcessLog;
 use AppBundle\Entity\ScrapieGenotypeSource;
 use AppBundle\Entity\TagSyncErrorLog;
 use AppBundle\Enumerator\CommandTitle;
@@ -775,6 +776,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             '5: Set minimum reliability for all breedValueTypes by accuracy option', "\n",
             '6: Update/Insert LambMeatIndex values by generationDate (excl. resultTable update)', "\n",
             '7: Update breedIndex & breedValue normal distribution values', "\n",
+            '8: Deactivate breedValueResultTable processor logs', "\n",
             '========================================================================', "\n",
             '10: Initialize BreedIndexType and BreedValueType', "\n",
             '11: Initialize MixBlupAnalysisTypes', "\n",
@@ -817,6 +819,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 5: $this->getBreedValueService()->setMinReliabilityForAllBreedValueTypesByAccuracyOption($this->cmdUtil); break;
             case 6: $this->updateLambMeatIndexesByGenerationDate(); break;
             case 7: $this->updateBreedIndexAndBreedValueNormalDistributions(); break;
+            case 8: $this->deactivateBreedValuesResultTableUpdaterLogs(); break;
 
 
             case 10:
@@ -834,10 +837,10 @@ class NsfoMainCommand extends ContainerAwareCommand
                 break;
 
             case 13: $this->updateAllResultTableValuesAndPrerequisites(); break;
-            case 14: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::LAMB_MEAT_INDEX]); break;
-            case 15: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::FERTILITY]); break;
-            case 16: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::WORM]); break;
-            case 17: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::EXTERIOR]); break;
+            case 14: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::LAMB_MEAT_INDEX], $this->ignorePreviouslyFinishedProcesses()); break;
+            case 15: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::FERTILITY], $this->ignorePreviouslyFinishedProcesses()); break;
+            case 16: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::WORM], $this->ignorePreviouslyFinishedProcesses()); break;
+            case 17: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::EXTERIOR], $this->ignorePreviouslyFinishedProcesses()); break;
 
             case 18: $this->getLambMeatIndexMigrator()->migrate(); break;
             case 19: $this->getWormResistanceIndexMigrator()->migrate(); break;
@@ -874,6 +877,19 @@ class NsfoMainCommand extends ContainerAwareCommand
     }
 
 
+    private function ignorePreviouslyFinishedProcesses(): bool {
+        $ignorePreviouslyFinishedProcesses = $this->cmdUtil->generateConfirmationQuestion('Ignore previously finished processes? (y/n, default is false)', false);
+        $this->cmdUtil->writeln('Ignore previously finished processes: '. StringUtil::getBooleanAsString($ignorePreviouslyFinishedProcesses));
+        return $ignorePreviouslyFinishedProcesses;
+    }
+
+
+    private function deactivateBreedValuesResultTableUpdaterLogs() {
+        $updateCount = $this->em->getRepository(ProcessLog::class)->deactivateBreedValuesResultTableUpdaterProcessLog();
+        $this->cmdUtil->writeln($updateCount . ' breedValuesResultTableUpdaterProcessLogs deactivated');
+    }
+
+
     /**
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Exception
@@ -891,10 +907,13 @@ class NsfoMainCommand extends ContainerAwareCommand
 
         $generationDateString = $this->cmdUtil->generateQuestion('Insert custom GenerationDateString (default: The generationDateString of the last inserted breedValue will be used)', null);
         $this->getLogger()->notice('GenerationDateString to be used: '.$this->getBreedValuesResultTableUpdater()->getGenerationDateString($generationDateString));
+
+        $ignorePreviouslyFinishedProcesses = $this->ignorePreviouslyFinishedProcesses();
         // End of options
 
         $this->getBreedValuesResultTableUpdater()->update(
             [],
+            $ignorePreviouslyFinishedProcesses,
             $updateBreedIndexes,
             $updateNormalDistributions,
             $generationDateString
