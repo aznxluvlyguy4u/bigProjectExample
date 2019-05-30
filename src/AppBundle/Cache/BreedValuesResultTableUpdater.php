@@ -156,9 +156,17 @@ class BreedValuesResultTableUpdater
             $analysisTypeNl = $result['analysis_type_nl'];
 
             if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
-                $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar);
+
+                $generationDate = $this->maxGenerationDate($valueVar);
+                if ($generationDate == null) {
+                    $this->write('No breed values found for breed_value_type '.$valueVar);
+                    continue;
+                }
+                $this->write('(Max) generation_date found and used for all '.$valueVar.' breed_values: '.$generationDate);
+
+                $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate);
                 if ($useNormalDistribution) {
-                    $totalNormalizedBreedValueUpdateCount += $this->updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar);
+                    $totalNormalizedBreedValueUpdateCount += $this->updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate);
                 }
             }
         }
@@ -231,11 +239,27 @@ class BreedValuesResultTableUpdater
 
 
     /**
+     * @param string $breedTypeValueVar
+     * @return string|null
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function maxGenerationDate($breedTypeValueVar): ?string {
+        $sql = "SELECT
+                    MAX(generation_date)
+                FROM breed_value WHERE type_id = (
+                    SELECT id FROM breed_value_type WHERE result_table_value_variable = '$breedTypeValueVar'
+                    )";
+        return $this->conn->query($sql)->fetch()['max'];
+    }
+
+
+    /**
      * @param string $valueVar
      * @param string $accuracyVar
+     * @param string $generationDate
      * @return int
      */
-    private function updateResultTableByBreedValueType($valueVar, $accuracyVar)
+    private function updateResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate)
     {
         $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
 
@@ -246,16 +270,10 @@ class BreedValuesResultTableUpdater
                           SQRT(b.reliability) as accuracy
                        FROM breed_value b
                          INNER JOIN breed_value_type t ON t.id = b.type_id
-                         INNER JOIN (
-                                      SELECT b.animal_id, b.type_id, max(generation_date) as max_generation_date
-                                      FROM breed_value b
-                                        INNER JOIN breed_value_type t ON t.id = b.type_id
-                                      WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                                      GROUP BY b.animal_id, b.type_id
-                                    )g ON g.animal_id = b.animal_id AND g.type_id = b.type_id AND g.max_generation_date = b.generation_date
                          INNER JOIN result_table_breed_grades r ON r.animal_id = b.animal_id
                          INNER JOIN breed_value_genetic_base gb ON gb.breed_value_type_id = t.id AND gb.year = DATE_PART('year', b.generation_date)
                        WHERE
+                         b.generation_date = '$generationDate' AND
                          t.result_table_value_variable = '$valueVar' AND
                          (b.value - gb.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
                          r.$valueVar ISNULL OR r.$accuracyVar ISNULL)";
@@ -423,9 +441,10 @@ class BreedValuesResultTableUpdater
     /**
      * @param string $valueVar
      * @param string $accuracyVar
+     * @param string $generationDate
      * @return int
      */
-    private function updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar)
+    private function updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate)
     {
         $this->write('Updating '.$valueVar. ' values in '.$this->normalizedResultTableName.' ... ');
 
@@ -438,17 +457,11 @@ class BreedValuesResultTableUpdater
                                ) as corrected_value
                         FROM breed_value b
                           INNER JOIN breed_value_type t ON t.id = b.type_id
-                          INNER JOIN (
-                                       SELECT b.animal_id, b.type_id, max(generation_date) as max_generation_date
-                                       FROM breed_value b
-                                         INNER JOIN breed_value_type t ON t.id = b.type_id
-                                       WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                                       GROUP BY b.animal_id, b.type_id
-                                     )g ON g.animal_id = b.animal_id AND g.type_id = b.type_id AND g.max_generation_date = b.generation_date
                           INNER JOIN $this->normalizedResultTableName nr ON nr.animal_id = b.animal_id
                           INNER JOIN $this->resultTableName r ON r.animal_id = b.animal_id
                           INNER JOIN normal_distribution n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
                         WHERE
+                          b.generation_date = '$generationDate' AND
                           t.result_table_value_variable = '$valueVar' AND
                           (
                             100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) <> nr.$valueVar OR
