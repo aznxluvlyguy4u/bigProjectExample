@@ -573,14 +573,12 @@ class BreedValuesResultTableUpdater
                         FROM breed_value b
                           INNER JOIN breed_value_type t ON t.id = b.type_id
                           INNER JOIN $this->normalizedResultTableName nr ON nr.animal_id = b.animal_id
-                          INNER JOIN $this->resultTableName r ON r.animal_id = b.animal_id
                           INNER JOIN normal_distribution n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
                         WHERE
                           b.generation_date = '$generationDate' AND
                           t.result_table_value_variable = '$valueVar' AND
                           (
                             ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation)) <> nr.$valueVar OR
-                            SQRT(b.reliability) <> r.$accuracyVar OR
                             nr.$valueVar ISNULL
                           ) AND
                           t.use_normal_distribution AND
