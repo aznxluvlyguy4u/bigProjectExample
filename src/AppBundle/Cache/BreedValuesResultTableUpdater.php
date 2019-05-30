@@ -204,15 +204,6 @@ class BreedValuesResultTableUpdater
                     $generationDateString
                 ;
 
-                $breedValuesExist = $this->breedValueRecordsExist($valueVar, $generationDate);
-                if (!$breedValuesExist) {
-                    $this->write('No breed values found for breed_value_type '.$valueVar);
-                    $processorLog = $processorLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate);
-                    $processorLog = $processorLogRepository->endProcessLog($processorLog);
-                    $this->write('Finished process for '.$valueVar.', duration: '.$processorLog->duration());
-                    continue;
-                }
-
                 /** @var ProcessLog $previousProcessLog */
                 $previousProcessLog = $processorLogRepository->findBreedValuesResultTableUpdaterProcessLog(
                     $previousProcessLogs,
@@ -222,6 +213,15 @@ class BreedValuesResultTableUpdater
                     if (!$ignorePreviouslyFinishedProcesses) {
                         continue;
                     }
+                }
+
+                $breedValuesExist = $this->breedValueRecordsExist($valueVar, $generationDate);
+                if (!$breedValuesExist) {
+                    $this->write('No breed values found for breed_value_type '.$valueVar);
+                    $processorLog = $processorLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate);
+                    $processorLog = $processorLogRepository->endProcessLog($processorLog);
+                    $this->write('Finished process for '.$valueVar.', duration: '.$processorLog->duration());
+                    continue;
                 }
 
                 $this->write('(Max) generation_date found and used for all '.$valueVar.' breed_values: '.$generationDate);
