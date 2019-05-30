@@ -26,10 +26,11 @@ class ProcessLogRepository extends BaseRepository {
 
     /**
      * @param string $breedValueTypeResultTableValue
+     * @param string $generationDate
      * @return ProcessLog
      * @throws \Doctrine\DBAL\DBALException
      */
-    function startBreedValuesResultTableUpdaterProcessLog(string $breedValueTypeResultTableValue): ProcessLog {
+    function startBreedValuesResultTableUpdaterProcessLog(string $breedValueTypeResultTableValue, string $generationDate): ProcessLog {
         $breedValueTypeId = $this->getBreedValueTypeId($breedValueTypeResultTableValue);
         $processLog = new ProcessLog();
         $processLog
@@ -37,6 +38,7 @@ class ProcessLogRepository extends BaseRepository {
             ->setType(ProcessLogType::getName(ProcessLogType::BREED_VALUES_RESULT_TABLE_UPDATER))
             ->setCategory($breedValueTypeResultTableValue)
             ->setCategoryId($breedValueTypeId)
+            ->setSubCategory($generationDate)
             ;
         $this->getManager()->persist($processLog);
         $this->getManager()->flush();
@@ -60,12 +62,14 @@ class ProcessLogRepository extends BaseRepository {
 
     /**
      * @param string $breedValueTypeResultTableValue
+     * @param string $generationDate
      * @param bool $mustBeFinished
      * @return ProcessLog|null
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    function findBreedValuesResultTableUpdaterProcessLog(string $breedValueTypeResultTableValue, bool $mustBeFinished) {
+    function findBreedValuesResultTableUpdaterProcessLog(string $breedValueTypeResultTableValue,
+                                                         string $generationDate, bool $mustBeFinished) {
         $breedValueTypeId = $this->getBreedValueTypeId($breedValueTypeResultTableValue);
 
         $qb = $this->getManager()->createQueryBuilder();
@@ -75,6 +79,7 @@ class ProcessLogRepository extends BaseRepository {
                 ->from(ProcessLog::class, 'p')
                 ->where($qb->expr()->eq('p.typeId', ProcessLogType::BREED_VALUES_RESULT_TABLE_UPDATER))
                 ->andWhere($qb->expr()->eq('p.categoryId', $breedValueTypeId))
+                ->andWhere($qb->expr()->eq('p.subCategory', "'".$generationDate."'"))
                 ->andWhere($qb->expr()->eq('p.isActive', 'true'))
             ;
 

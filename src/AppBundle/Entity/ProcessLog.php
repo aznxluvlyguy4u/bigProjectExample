@@ -14,7 +14,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * Class ProcessLog
  * @ORM\Table(name="process_log",indexes={
  *     @ORM\Index(name="process_log_idx",
- *          columns={"type_id","category_id","sub_category_id"}
+ *          columns={"type_id","category_id","sub_category_id","category","sub_category"}
  *     )
  * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\ProcessLogRepository")

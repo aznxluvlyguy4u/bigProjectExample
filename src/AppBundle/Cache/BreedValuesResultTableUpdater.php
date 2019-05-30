@@ -122,7 +122,14 @@ class BreedValuesResultTableUpdater
                            $generationDateString = null)
     {
         $this->insertMissingBlankRecords();
-        $generationDateString = $this->getGenerationDateString($generationDateString);
+
+        $generationDateStringForResultTableValues = $generationDateString;
+        if (empty($generationDateString)) {
+            $generationDateStringForResultTableValues = null;
+            $this->logger->notice("=== Using per breedValueType max generation string ===");
+        }
+
+        $generationDateStringForBenchMarkValues = $this->getGenerationDateString($generationDateString);
 
         /*
          * NOTE! Without genetic bases the corrected breedValues cannot be calculated, so do this first!
@@ -130,7 +137,7 @@ class BreedValuesResultTableUpdater
         $this->breedValueService->initializeBlankGeneticBases();
 
         if ($updateBreedIndexes) {
-            $this->updateBreedIndexesByOutputFileType($generationDateString, $analysisTypes);
+            $this->updateBreedIndexesByOutputFileType($generationDateStringForBenchMarkValues, $analysisTypes);
         }
 
         if ($updateNormalDistributions) {
@@ -138,17 +145,19 @@ class BreedValuesResultTableUpdater
         }
 
 
-        $this->updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues($analysisTypes, $ignorePreviouslyFinishedProcesses);
+        $this->updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues(
+            $analysisTypes, $ignorePreviouslyFinishedProcesses, $generationDateStringForResultTableValues);
     }
 
 
     /**
      * @param $analysisTypes
      * @param bool $ignorePreviouslyFinishedProcesses
+     * @param string|null $generationDateString
      * @throws \Exception
      */
     private function updateBreedValueResultTableValuesAndAccuraciesAndNormalizedValues(
-        $analysisTypes, bool $ignorePreviouslyFinishedProcesses = false)
+        $analysisTypes, bool $ignorePreviouslyFinishedProcesses = false, $generationDateString = null)
     {
         $results = self::getResultTableVariables($this->conn, $this->resultTableName);
 
@@ -166,8 +175,15 @@ class BreedValuesResultTableUpdater
 
             if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
 
+                $generationDate = empty($generationDateString) ? $this->maxGenerationDate($valueVar) : $generationDateString;
+                if ($generationDate == null) {
+                    $this->write('No breed values found for breed_value_type '.$valueVar);
+                    continue;
+                }
+
                 /** @var ProcessLog $previousProcessLog */
-                $previousProcessLog = $processorLogRepository->findBreedValuesResultTableUpdaterProcessLog($valueVar, true);
+                $previousProcessLog = $processorLogRepository->findBreedValuesResultTableUpdaterProcessLog(
+                    $valueVar, $generationDate, true);
                 if ($previousProcessLog) {
                     $this->printPreviousLogData($valueVar, $previousProcessLog, $ignorePreviouslyFinishedProcesses);
                     if (!$ignorePreviouslyFinishedProcesses) {
@@ -175,14 +191,9 @@ class BreedValuesResultTableUpdater
                     }
                 }
 
-                $generationDate = $this->maxGenerationDate($valueVar);
-                if ($generationDate == null) {
-                    $this->write('No breed values found for breed_value_type '.$valueVar);
-                    continue;
-                }
                 $this->write('(Max) generation_date found and used for all '.$valueVar.' breed_values: '.$generationDate);
 
-                $processorLog = $processorLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar);
+                $processorLog = $processorLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate);
 
                 $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate);
                 if ($useNormalDistribution) {
@@ -210,8 +221,8 @@ class BreedValuesResultTableUpdater
 
 
     private function printPreviousLogData($valueVar, ProcessLog $log, bool $ignorePreviouslyFinishedProcesses) {
-        $message = sprintf('The breedValueType %s has already been processed, duration: %s'
-            .' [%s -> %s]',$valueVar, $log->duration(),
+        $message = sprintf('The breedValueType %s for generation date %s has already been processed, duration: %s'
+            .' [%s -> %s]',$valueVar, $log->getSubCategory(), $log->duration(),
             $log->getStartDateAsString(), $log->getEndDateAsString());
         $this->write($message);
         if ($ignorePreviouslyFinishedProcesses) {
