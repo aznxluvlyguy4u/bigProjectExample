@@ -546,8 +546,8 @@ class BreedValuesResultTableUpdater
                 FROM (
                   SELECT
                     ra.animal_id,
-                    (rf.$valueVar + rm.$valueVar) / 2 as calculated_breed_value,
-                    SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar) as calculated_accuracy
+                    (if.corrected_value + im.corrected_value) / 2 as calculated_breed_value,
+                    SQRT(0.25*if.accuracy*if.accuracy + 0.25*im.accuracy*im.accuracy) as calculated_accuracy
                   FROM result_table_breed_grades ra
                     LEFT JOIN
                      (
@@ -558,15 +558,33 @@ class BreedValuesResultTableUpdater
                            AND b.generation_date = '$generationDate'
                      )i ON ra.animal_id = i.animal_id                      
                     INNER JOIN animal a ON ra.animal_id = a.id
-                    INNER JOIN result_table_breed_grades rf ON a.parent_father_id = rf.animal_id
-                    INNER JOIN result_table_breed_grades rm ON a.parent_mother_id = rm.animal_id
+                    INNER JOIN
+                    (
+                      SELECT
+                             b.id, b.animal_id, SQRT(b.reliability) as accuracy, b.value - gb.value as corrected_value
+                      FROM breed_value b
+                        INNER JOIN breed_value_type t ON t.id = b.type_id
+                        INNER JOIN breed_value_genetic_base gb ON gb.breed_value_type_id = t.id AND gb.year = DATE_PART('year', b.generation_date)
+                      WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                        AND b.generation_date = '$generationDate'
+                    )im ON a.parent_mother_id = im.animal_id
+                    INNER JOIN
+                    (
+                      SELECT
+                             b.id, b.animal_id, SQRT(b.reliability) as accuracy, b.value - gb.value as corrected_value
+                      FROM breed_value b
+                        INNER JOIN breed_value_type t ON t.id = b.type_id
+                        INNER JOIN breed_value_genetic_base gb ON gb.breed_value_type_id = t.id AND gb.year = DATE_PART('year', b.generation_date)
+                      WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                        AND b.generation_date = '$generationDate'
+                    )if ON a.parent_father_id = if.animal_id                     
                   WHERE
                     i.id ISNULL AND -- ONLY OVERWRITE VALUES IF ANIMAL DOES NOT ALREADY HAVE IT'S OWN BREED VALUE
                     a.parent_father_id NOTNULL AND
                     a.parent_mother_id NOTNULL AND
-                    (rf.$valueVar NOTNULL OR rf.$accuracyVar NOTNULL) AND
-                    (rm.$valueVar NOTNULL OR rm.$accuracyVar NOTNULL) AND
-                    SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar)
+                    (if.accuracy NOTNULL OR if.accuracy NOTNULL) AND
+                    (im.accuracy NOTNULL OR im.accuracy NOTNULL) AND
+                    SQRT(0.25*if.accuracy*if.accuracy + 0.25*im.accuracy*im.accuracy)                        
                     >= (SELECT SQRT(min_reliability) as min_accuracy FROM breed_value_type WHERE result_table_value_variable = '$valueVar')
                 ) AS calc(animal_id, breed_value, accuracy)
                 WHERE result_table_breed_grades.animal_id = calc.animal_id
