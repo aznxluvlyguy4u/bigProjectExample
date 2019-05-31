@@ -106,21 +106,21 @@ class ProcessLog
 
     /**
      * @var string|null
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      * @JMS\Type("string")
      */
     private $description;
 
     /**
      * @var string|null
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      * @JMS\Type("string")
      */
     private $errorMessage;
 
     /**
      * @var string|null
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      * @JMS\Type("string")
      */
     private $debuggingData;
