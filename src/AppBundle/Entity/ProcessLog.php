@@ -320,6 +320,20 @@ class ProcessLog
     }
 
     /**
+     * @param string|null $description
+     * @return ProcessLog
+     */
+    public function addToDescription(?string $description): ProcessLog
+    {
+        if ($this->description) {
+            $this->description = $this->description . '. ' . $description;
+        } else {
+            $this->description = $description;
+        }
+        return $this;
+    }
+
+    /**
      * @return string|null
      */
     public function getErrorMessage(): ?string
@@ -338,6 +352,21 @@ class ProcessLog
     }
 
     /**
+     * @param string|null $errorMessage
+     * @return ProcessLog
+     */
+    public function addToErrorMessage(?string $errorMessage): ProcessLog
+    {
+        if ($this->errorMessage) {
+            $this->errorMessage = $this->errorMessage . '. ' . $errorMessage;
+        } else {
+            $this->errorMessage = $errorMessage;
+        }
+        return $this;
+    }
+
+
+    /**
      * @return string|null
      */
     public function getDebuggingData(): ?string
@@ -352,6 +381,20 @@ class ProcessLog
     public function setDebuggingData(?string $debuggingData): ProcessLog
     {
         $this->debuggingData = $debuggingData;
+        return $this;
+    }
+
+    /**
+     * @param string|null $debuggingData
+     * @return ProcessLog
+     */
+    public function addToDebuggingData(?string $debuggingData): ProcessLog
+    {
+        if ($this->debuggingData) {
+            $this->debuggingData = $this->debuggingData . '. ' . $debuggingData;
+        } else {
+            $this->debuggingData = $debuggingData;
+        }
         return $this;
     }
 

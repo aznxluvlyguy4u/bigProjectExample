@@ -405,7 +405,12 @@ class BreedValuesResultTableUpdater
             }
 
             if ($repeatedLastLocalUpdateCount == self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
-                $this->logger->error("Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x");
+                $errorMessage = "Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x";
+                if ($this->processLog instanceof ProcessLog) {
+                    $this->processLog->addToErrorMessage($errorMessage);
+                    $this->processLog->addToDebuggingData("base64encoded resultTable sql query: " . base64_encode($sql));
+                }
+                $this->logger->error($errorMessage);
                 break;
             }
 
@@ -430,6 +435,10 @@ class BreedValuesResultTableUpdater
         $records = $valueVar.' and '.$accuracyVar. ' records';
         $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.', removed: '.$removeCount.') '. $records. ' updated.': 'No '.$records.' updated.';
         $this->write($message);
+
+        if ($this->processLog) {
+            $this->processLog->addToDescription('ResultTable: ' . $message);
+        }
 
         return $updateCount;
     }
@@ -624,7 +633,12 @@ class BreedValuesResultTableUpdater
             }
 
             if ($repeatedLastLocalUpdateCount == self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
-                $this->logger->error("Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x");
+                $errorMessage = "Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x";
+                if ($this->processLog instanceof ProcessLog) {
+                    $this->processLog->addToErrorMessage($errorMessage);
+                    $this->processLog->addToDebuggingData("base64encoded normalizedResultTable sql query: " . base64_encode($sql));
+                }
+                $this->logger->error($errorMessage);
                 break;
             }
 
@@ -648,6 +662,10 @@ class BreedValuesResultTableUpdater
         $records = $valueVar. ' records';
         $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.', removed: '.$removeCount.') '. $records. ' updated.': 'No '.$records.' updated.';
         $this->write($message);
+
+        if ($this->processLog) {
+            $this->processLog->addToDescription('NormalizedResultTable: ' . $message);
+        }
 
         return $updateCount;
     }
