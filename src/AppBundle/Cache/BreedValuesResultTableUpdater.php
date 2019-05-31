@@ -446,11 +446,11 @@ class BreedValuesResultTableUpdater
          * NOTE! This should be done BEFORE calculating the values for the children,
          * to prevent cascading calculation for children breedValues based on other calculated values
          */
-        $removeCount = $this->setResultTableValueToNullWhereBreedValueIsMissing($valueVar, $accuracyVar);
+        $removeCount = $this->setResultTableValueToNullWhereBreedValueIsMissingIncludingForAnyParent($valueVar, $accuracyVar, $generationDate);
         $updateCount += $removeCount;
 
         //Calculate breed values and accuracies of children without one, based on the values of both parents
-        $childrenUpdateCount = $this->updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar);
+        $childrenUpdateCount = $this->updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar, $generationDate);
         $updateCount += $childrenUpdateCount;
 
         $records = $valueVar.' and '.$accuracyVar. ' records';
@@ -468,25 +468,35 @@ class BreedValuesResultTableUpdater
     /**
      * @param $valueVar
      * @param $accuracyVar
+     * @param $generationDate
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function setResultTableValueToNullWhereBreedValueIsMissing($valueVar, $accuracyVar)
+    private function setResultTableValueToNullWhereBreedValueIsMissingIncludingForAnyParent($valueVar, $accuracyVar, $generationDate)
     {
         $sql = "UPDATE result_table_breed_grades
                     SET $valueVar = NULL, $accuracyVar = NULL
                     WHERE animal_id IN (
                       SELECT r.animal_id
                       FROM result_table_breed_grades r
+                        INNER JOIN animal a ON r.animal_id = a.id
+                        LEFT JOIN result_table_breed_grades rf ON a.parent_father_id = rf.animal_id
+                        LEFT JOIN result_table_breed_grades rm ON a.parent_mother_id = rm.animal_id
                         LEFT JOIN
                         (
                           SELECT b.id, b.animal_id FROM breed_value b
                             INNER JOIN breed_value_type t ON t.id = b.type_id
                           WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                            AND b.generation_date = '$generationDate'
                         )i ON r.animal_id = i.animal_id
+                      
                       WHERE
                         i.id ISNULL AND 
-                        (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL)
+                        (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL) AND
+                        (
+                            rf.$valueVar ISNULL OR rf.$accuracyVar ISNULL OR
+                            rm.$valueVar ISNULL OR rm.$accuracyVar ISNULL
+                        )
                       )";
         return SqlUtil::updateWithCount($this->conn, $sql);
     }
@@ -495,10 +505,11 @@ class BreedValuesResultTableUpdater
     /**
      * @param string $valueVar
      * @param string $accuracyVar
+     * @param string $generationDate
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar)
+    private function updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar, $generationDate)
     {
         $sql = "UPDATE result_table_breed_grades SET $valueVar = calc.breed_value, $accuracyVar = calc.accuracy
                 FROM (
@@ -507,13 +518,21 @@ class BreedValuesResultTableUpdater
                     (rf.$valueVar + rm.$valueVar) / 2 as calculated_breed_value,
                     SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar) as calculated_accuracy
                   FROM result_table_breed_grades ra
+                    LEFT JOIN
+                     (
+                         SELECT b.id, b.animal_id
+                         FROM breed_value b
+                                  INNER JOIN breed_value_type t ON t.id = b.type_id
+                         WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                           AND b.generation_date = '$generationDate'
+                     )i ON ra.animal_id = i.animal_id                      
                     INNER JOIN animal a ON ra.animal_id = a.id
                     INNER JOIN result_table_breed_grades rf ON a.parent_father_id = rf.animal_id
                     INNER JOIN result_table_breed_grades rm ON a.parent_mother_id = rm.animal_id
                   WHERE
+                    i.id ISNULL AND -- ONLY OVERWRITE VALUES IF ANIMAL DOES NOT ALREADY HAVE IT'S OWN BREED VALUE
                     a.parent_father_id NOTNULL AND
                     a.parent_mother_id NOTNULL AND
-                    (ra.$valueVar ISNULL OR ra.$accuracyVar ISNULL) AND
                     (rf.$valueVar NOTNULL OR rf.$accuracyVar NOTNULL) AND
                     (rm.$valueVar NOTNULL OR rm.$accuracyVar NOTNULL) AND
                     SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar)
