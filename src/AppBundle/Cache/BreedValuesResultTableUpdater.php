@@ -48,6 +48,9 @@ class BreedValuesResultTableUpdater
     /** @var string */
     private $normalizedResultTableName;
 
+    /** @var ProcessLog */
+    private $processLog;
+
     const BATCH_SIZE = 250000;
     const MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT = 3;
 
@@ -181,11 +184,11 @@ class BreedValuesResultTableUpdater
         $totalBreedValueUpdateCount = 0;
         $totalNormalizedBreedValueUpdateCount = 0;
 
-        $processorLogRepository = $this->em->getRepository(ProcessLog::class);
+        $processLogRepository = $this->em->getRepository(ProcessLog::class);
 
         $previousProcessLogs = [];
         if (!empty($generationDateString)) {
-            $previousProcessLogs = $processorLogRepository
+            $previousProcessLogs = $processLogRepository
                 ->findBreedValuesResultTableUpdaterProcessLogs($generationDateString,true);
         }
 
@@ -206,7 +209,7 @@ class BreedValuesResultTableUpdater
                 ;
 
                 /** @var ProcessLog $previousProcessLog */
-                $previousProcessLog = $processorLogRepository->findBreedValuesResultTableUpdaterProcessLog(
+                $previousProcessLog = $processLogRepository->findBreedValuesResultTableUpdaterProcessLog(
                     $previousProcessLogs,
                     $valueVar, $generationDate, true);
                 if ($previousProcessLog) {
@@ -219,23 +222,23 @@ class BreedValuesResultTableUpdater
                 $breedValuesExist = $this->breedValueRecordsExist($valueVar, $generationDate);
                 if (!$breedValuesExist) {
                     $this->write('No breed values found for breed_value_type '.$valueVar);
-                    $processorLog = $processorLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate);
-                    $processorLog = $processorLogRepository->endProcessLog($processorLog);
-                    $this->write('Finished process for '.$valueVar.', duration: '.$processorLog->duration());
+                    $this->processLog = $processLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate);
+                    $this->processLog = $processLogRepository->endProcessLog($this->processLog);
+                    $this->write('Finished process for '.$valueVar.', duration: '.$this->processLog->duration());
                     continue;
                 }
 
                 $this->write('(Max) generation_date found and used for all '.$valueVar.' breed_values: '.$generationDate);
 
-                $processorLog = $processorLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate);
+                $this->processLog = $processLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate);
 
                 $totalBreedValueUpdateCount += $this->updateResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate);
                 if ($useNormalDistribution) {
                     $totalNormalizedBreedValueUpdateCount += $this->updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate);
                 }
 
-                $processorLog = $processorLogRepository->endProcessLog($processorLog);
-                $this->write('Finished process for '.$valueVar.', duration: '.$processorLog->duration());
+                $this->processLog = $processLogRepository->endProcessLog($this->processLog);
+                $this->write('Finished process for '.$valueVar.', duration: '.$this->processLog->duration());
             }
         }
 
