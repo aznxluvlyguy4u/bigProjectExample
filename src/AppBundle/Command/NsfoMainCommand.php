@@ -85,6 +85,9 @@ class NsfoMainCommand extends ContainerAwareCommand
     const FILL_MISSING_DATA = 'FILL MISSING DATA';
     const GENDER_CHANGE = 'GENDER CHANGE';
 
+    const LINE_THICK = "========================================================================";
+    const LINE_THIN = '-----------------------------------------------';
+    const TYPES_EXCLUDING_PREREQUISITES = ' types (excluding prerequisites)';
 
     /** @var ObjectManager|EntityManagerInterface */
     private $em;
@@ -155,11 +158,11 @@ class NsfoMainCommand extends ContainerAwareCommand
 
         if (empty($options)) {
             $option = $this->cmdUtil->generateMultiLineQuestion([
-                '===============================================', "\n",
+                self::LINE_THICK, "\n",
                 'SELECT SUBMENU: ', "\n",
-                '===============================================', "\n",
+                self::LINE_THICK, "\n",
                 '1: '.strtolower(self::INFO_SYSTEM_SETTINGS), "\n",
-                '-----------------------------------------------', "\n",
+                self::LINE_THIN, "\n",
                 '2: '.strtolower(self::ANIMAL_CACHE_TITLE), "\n",
                 '3: '.strtolower(self::LITTER_GENE_DIVERSITY_TITLE), "\n",
                 '4: '.strtolower(self::ERROR_LOG_TITLE), "\n",
@@ -168,19 +171,19 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '7: '.strtolower(self::GENDER_CHANGE), "\n",
                 '8: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
                 '9: '.strtolower(self::FILL_MISSING_DATA), "\n",
-                '-----------------------------------------------', "\n",
+                self::LINE_THIN, "\n",
                 '10: '.strtolower(CommandTitle::DATA_MIGRATION), "\n",
-                '-----------------------------------------------', "\n",
+                self::LINE_THIN, "\n",
                 '11: '.strtolower(CommandTitle::MIXBLUP), "\n",
-                '-----------------------------------------------', "\n",
+                self::LINE_THIN, "\n",
                 '12: '.strtolower(CommandTitle::DEPART_INTERNAL_WORKER), "\n",
-                '-----------------------------------------------', "\n",
+                self::LINE_THIN, "\n",
                 '13: '.strtolower(CommandTitle::CALCULATIONS_AND_ALGORITHMS), "\n",
-                '-----------------------------------------------', "\n",
+                self::LINE_THIN, "\n",
                 MainCommandUtil::PROCESSOR_LOCKER_OPTIONS.': '.strtolower(CommandTitle::PROCESS_LOCKER), "\n",
-                '===============================================', "\n",
+                self::LINE_THICK, "\n",
                 '15: '.strtolower(CommandTitle::REDIS), "\n",
-                '===============================================', "\n",
+                self::LINE_THICK, "\n",
                 'other: EXIT ', "\n"
             ], self::DEFAULT_OPTION);
         } else {
@@ -235,7 +238,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             '21: BatchUpdate all Incongruent exterior values', "\n",
             '22: BatchUpdate all Incongruent weight values', "\n",
             '23: BatchUpdate all Incongruent tailLength values', "\n",
-            '-------------------------', "\n",
+            self::LINE_THIN, "\n",
             '24: BatchInsert empty animal_cache records and BatchUpdate all Incongruent values', "\n",
             '25: Remove all orphaned animal_cache records', "\n",
             '', "\n",
@@ -385,9 +388,14 @@ class NsfoMainCommand extends ContainerAwareCommand
                 $this->cmdUtil->writeln('DONE!');
                 break;
 
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         $this->animalCacheOptions();
+    }
+
+
+    private function writeMenuExit() {
+        $this->writeLn('Exit menu');
     }
 
 
@@ -472,7 +480,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 11: $this->writeLn(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated'); break;
             case 12: $this->writeLn(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated'); break;
 
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         $this->litterAndGeneDiversityOptions();
     }
@@ -507,7 +515,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 $this->cmdUtil->writeln($this->em->getRepository(TagSyncErrorLog::class)->getQueryFilterByRetrieveAnimalIds($retrieveAnimalsId));
                 break;
 
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         $this->errorLogOptions();
     }
@@ -564,7 +572,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 6: $duplicateAnimalsFixer->fixDuplicateDueToTagReplaceAndAnimalSyncRaceCondition($this->cmdUtil); break;
             case 7: $duplicateAnimalsFixer->mergePrimaryUlnWithSecondaryPedigreeNumberFromCsvFile($this->cmdUtil); break;
             case 8: $duplicateAnimalsFixer->mergeByUlnStringsAndCreateDeclareTagReplace($this->cmdUtil); break;
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         $this->fixDuplicateAnimalsOptions();
     }
@@ -577,9 +585,9 @@ class NsfoMainCommand extends ContainerAwareCommand
         if (empty($options)) {
             $option = $this->cmdUtil->generateMultiLineQuestion([
                 'Choose option: ', "\n",
-                '=====================================', "\n",
+                self::LINE_THICK, "\n",
                 '1: Update MaxId of all sequences', "\n",
-                '=====================================', "\n",
+                self::LINE_THICK, "\n",
                 '2: Fix incongruent genders vs Ewe/Ram/Neuter records', "\n",
                 '3: Fix incongruent animalOrderNumbers', "\n",
                 '4: Fix incongruent animalIdAndDate values in measurement table', "\n",
@@ -594,7 +602,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '13: Recalculate breedCodes of all offspring of animal by id or uln', "\n",
                 '14: Set null boolean values in animal to false for is_departed_animal, is_import_animal, is_export_animal', "\n",
                 '15: Remove time from MaediVisna and Scrapie checkdates', "\n",
-                '=====================================', "\n",
+                self::LINE_THICK, "\n",
                 '20: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n\n",
                 '================== ANIMAL LOCATION & RESIDENCE ===================', "\n",
                 '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
@@ -639,7 +647,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         if ($this->exitAfterRun) {
             die;
@@ -654,7 +662,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '=====================================', "\n",
+            self::LINE_THICK, "\n",
             '1: BirthProgress', "\n",
             '2: is_rvo_message boolean in action_log', "\n",
             '3: TreatmentType', "\n",
@@ -663,7 +671,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             '6: PedigreeCodes & PedigreeRegister-PedigreeCode relationships', "\n",
             '7: Initialize batch invoice invoice rules', "\n",
             '8: EditType', "\n",
-            '=====================================', "\n",
+            self::LINE_THICK, "\n",
             '10: StoredProcedures: initialize if not exist', "\n",
             '11: StoredProcedures: overwrite all', "\n",
             '12: SqlViews: initialize if not exist', "\n",
@@ -694,7 +702,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 12: $this->getContainer()->get('AppBundle\Service\Migration\SqlViewInitializer')->initialize(); break;
             case 13: $this->getContainer()->get('AppBundle\Service\Migration\SqlViewInitializer')->update(); break;
 
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         $this->initializeDatabaseValuesOptions();
     }
@@ -706,7 +714,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '=====================================', "\n",
+            self::LINE_THICK, "\n",
             '1: Birth Weight and TailLength', "\n",
             '2: UbnOfBirth (string) in Animal', "\n",
             '3: Fill empty breedCode, breedType and pedigree (stn) data for all declareBirth animals (no data is overwritten)', "\n",
@@ -723,7 +731,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScrapieGenotypeReprocessor')->run($this->cmdUtil); break;
             case 5: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->batchMatchMissingPedigreeRegisterByBreederNumberInStn(); break;
 
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         $this->fillMissingDataOptions();
     }
@@ -735,7 +743,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '=====================================', "\n",
+            self::LINE_THICK, "\n",
             '1: '.strtolower(CommandTitle::INSPECTOR), "\n",
             '2: '.strtolower(CommandTitle::DATA_MIGRATE_2017_AND_WORM), "\n",
             '3: '.strtolower(CommandTitle::PEDIGREE_REGISTER_REGISTRATION), "\n",
@@ -749,7 +757,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 2: $this->getContainer()->get('app.migrator.vsm')->run($this->cmdUtil); break;
             case 3: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeRegisterRegistrationMigrator')->run($this->cmdUtil); break;
             case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScanMeasurementsMigrator')->run($this->cmdUtil); break;
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         $this->dataMigrationOptions();
     }
@@ -777,32 +785,32 @@ class NsfoMainCommand extends ContainerAwareCommand
             '6: Update/Insert LambMeatIndex values by generationDate (excl. resultTable update)', "\n",
             '7: Update breedIndex & breedValue normal distribution values', "\n",
             '8: Deactivate breedValueResultTable processor logs', "\n",
-            '========================================================================', "\n",
+            self::LINE_THICK, "\n",
             '10: Initialize BreedIndexType and BreedValueType', "\n",
             '11: Initialize MixBlupAnalysisTypes', "\n",
             '12: Delete all duplicate breedValues', "\n",
-            '========================================================================', "\n",
+            self::LINE_THICK, "\n",
             '13: Update result_table_breed_grades values and accuracies for all breedValue and breedIndex types (including prerequisite options)', "\n",
-            '14: Update result_table_breed_grades values and accuracies for '.MixBlupType::LAMB_MEAT_INDEX.' types (excluding prerequisites)', "\n",
-            '15: Update result_table_breed_grades values and accuracies for '.MixBlupType::FERTILITY.' types (excluding prerequisites)', "\n",
-            '16: Update result_table_breed_grades values and accuracies for '.MixBlupType::WORM.' types (excluding prerequisites)', "\n",
-            '17: Update result_table_breed_grades values and accuracies for '.MixBlupType::EXTERIOR.' types (excluding prerequisites)', "\n",
-            '========================================================================', "\n",
+            '14: Update result_table_breed_grades values and accuracies for '.MixBlupType::LAMB_MEAT_INDEX.self::TYPES_EXCLUDING_PREREQUISITES, "\n",
+            '15: Update result_table_breed_grades values and accuracies for '.MixBlupType::FERTILITY.self::TYPES_EXCLUDING_PREREQUISITES, "\n",
+            '16: Update result_table_breed_grades values and accuracies for '.MixBlupType::WORM.self::TYPES_EXCLUDING_PREREQUISITES, "\n",
+            '17: Update result_table_breed_grades values and accuracies for '.MixBlupType::EXTERIOR.self::TYPES_EXCLUDING_PREREQUISITES, "\n",
+            self::LINE_THICK, "\n",
             '18: Initialize lambMeatIndexCoefficients', "\n",
             '19: Initialize wormResistanceIndexCoefficients', "\n",
-            '========================================================================', "\n",
+            self::LINE_THICK, "\n",
             '20: Validate ubnOfBirth format as !BLOCK in DataVruchtb.txt in mixblup cache folder', "\n",
             '21: Validate ubnOfBirth format as !BLOCK in PedVruchtb.txt in mixblup cache folder', "\n",
-            '========================================================================', "\n",
+            self::LINE_THICK, "\n",
             '30: Print separate csv files of latest breedValues for all ubns', "\n",
             '31: Print separate csv files of latest breedValues for chosen ubn', "\n",
-            '========================================================================', "\n",
+            self::LINE_THICK, "\n",
             '40: Clear excel cache folder', "\n",
             '41: Print CSV file for CF pedigree register', "\n",
             '42: Print CSV file for NTS, TSNH, LAX pedigree registers', "\n",
             '43: Print CSV file Breedvalues overview all animals on a ubn, with atleast one breedValue', "\n",
             '44: Print CSV file Breedvalues overview all animals on a ubn, even those without a breedValue', "\n",
-            '========================================================================', "\n",
+            self::LINE_THICK, "\n",
             '50: Generate & Upload EXTERIOR MixBlupInputFiles and send message to MixBlup queue', "\n",
             '51: Generate & Upload LAMB MEAT INDEX MixBlupInputFiles and send message to MixBlup queue', "\n",
             '52: Generate & Upload FERTILITY MixBlupInputFiles and send message to MixBlup queue', "\n",
@@ -1034,7 +1042,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 2: $this->validateUbn(2); break;
             case 3: $this->validateUbn(3); break;
             case 4: $this->validataUbnsOfAllActiveLocations(); break;
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         if ($this->exitAfterRun) {
             die;
@@ -1120,7 +1128,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case MainCommandUtil::UNLOCK_ALL_PROCESSES: $this->unlockAllProcesses(); break;
             case 3: $this->displayLockedProcesses(ProcessType::SQS_FEEDBACK_WORKER); break;
             case 4: $this->unlockWorkerProcesses(ProcessType::SQS_FEEDBACK_WORKER); break;
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         if ($this->exitAfterRun) {
             die;
@@ -1130,7 +1138,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
     private function displayAllLockedProcesses()
     {
-        foreach (ProcessType::getConstants() as $processTypeKey => $processType) {
+        foreach (ProcessType::getConstants() as $processType) {
             $this->displayLockedProcesses($processType);
         }
     }
@@ -1171,7 +1179,7 @@ class NsfoMainCommand extends ContainerAwareCommand
         switch ($option) {
             case 1: $this->getCacheService()->clear(); break;
             case 2: $this->clearRedisCacheByLocation(); break;
-            default: $this->writeLn('Exit menu'); return;
+            default: $this->writeMenuExit(); return;
         }
         $this->redisOptions();
     }

@@ -1064,29 +1064,27 @@ class BreedValuesResultTableUpdater
      */
     public function getLatestBreedValueGenerationDateString($breedValueId): ?string
     {
-        if (!is_int($breedValueId)) {
-            $this->logger->error('Given BreedValueId is not an integer: '.$breedValueId);
-            return null;
-        }
-
-        try {
-            $sql = 'SELECT
+        if (is_int($breedValueId)) {
+            try {
+                $sql = 'SELECT
                     generation_date
                 FROM breed_value
                 WHERE type_id = '.$breedValueId.'
                 ORDER BY id DESC
                 LIMIT 1';
-            $result = $this->em->getConnection()->query($sql)->fetch();
-            if (!$result) {
-                $this->logger->warn('No breedValue records exist for breedValueType: '.$breedValueId);
-                return null;
-            }
-            return $result[self::GENERATION_DATE];
+                $result = $this->em->getConnection()->query($sql)->fetch();
+                if (!empty($result)) {
+                    return $result[self::GENERATION_DATE];
+                }
 
-        } catch (\Exception $exception) {
-            $this->logger->error($exception->getTraceAsString());
-            return null;
+                $this->logger->warn('No breedValue records exist for breedValueType: '.$breedValueId);
+            } catch (\Exception $exception) {
+                $this->logger->error($exception->getTraceAsString());
+            }
+        } else {
+            $this->logger->error('Given BreedValueId is not an integer: '.$breedValueId);
         }
+        return null;
     }
 
 
