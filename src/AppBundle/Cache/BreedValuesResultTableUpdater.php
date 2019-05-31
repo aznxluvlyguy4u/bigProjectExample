@@ -760,7 +760,7 @@ class BreedValuesResultTableUpdater
         $updateCount += $removeCount;
 
         //Calculate breed values and accuracies of children without one, based on the values of both parents
-        $childrenUpdateCount = $this->updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar);
+        $childrenUpdateCount = $this->updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $generationDate);
         $updateCount += $childrenUpdateCount;
 
         $records = $valueVar. ' records';
@@ -822,30 +822,61 @@ class BreedValuesResultTableUpdater
     /**
      * @param string $valueVar
      * @param string $accuracyVar
+     * @param string $generationDate
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar)
+    private function updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $generationDate)
     {
         $sql = "UPDATE $this->normalizedResultTableName SET $valueVar = calc.normalized_breed_value
                 FROM (
                   SELECT
                     ra.animal_id,
-                    (nrf.$valueVar + nrm.$valueVar) / 2 as calculated_normalized_breed_value
+                    (nf.normalized_value + nm.normalized_value) / 2 as calculated_normalized_breed_value
                   FROM $this->resultTableName ra
                     INNER JOIN animal a ON ra.animal_id = a.id
-                    INNER JOIN $this->resultTableName rf ON a.parent_father_id = rf.animal_id
-                    INNER JOIN $this->resultTableName rm ON a.parent_mother_id = rm.animal_id
                     INNER JOIN $this->normalizedResultTableName nra ON nra.animal_id = a.id
-                    INNER JOIN $this->normalizedResultTableName nrf ON nrf.animal_id = a.parent_father_id
-                    INNER JOIN $this->normalizedResultTableName nrm ON nrm.animal_id = a.parent_mother_id
+                    INNER JOIN (
+                        SELECT
+                            b.animal_id,
+                            ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) 
+                                      * (CASE WHEN t.invert_normal_distribution THEN -1 ELSE 1 END)
+                               ) as normalized_value,
+                            SQRT(b.reliability) as accuracy
+                        FROM breed_value b
+                          INNER JOIN breed_value_type t ON t.id = b.type_id
+                          INNER JOIN (
+                              SELECT * FROM normal_distribution WHERE is_including_only_alive_animals = FALSE 
+                           )n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
+                        WHERE
+                          b.generation_date = '$generationDate' AND
+                          t.result_table_value_variable = '$valueVar' AND
+                          b.reliability >= t.min_reliability AND
+                          t.use_normal_distribution
+                    )nm ON nm.animal_id = a.parent_mother_id
+                    INNER JOIN (
+                        SELECT
+                            b.animal_id,
+                            ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) 
+                                      * (CASE WHEN t.invert_normal_distribution THEN -1 ELSE 1 END)
+                               ) as normalized_value,
+                            SQRT(b.reliability) as accuracy
+                        FROM breed_value b
+                          INNER JOIN breed_value_type t ON t.id = b.type_id
+                          INNER JOIN (
+                              SELECT * FROM normal_distribution WHERE is_including_only_alive_animals = FALSE 
+                           )n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date) 
+                        WHERE
+                          b.generation_date = '$generationDate' AND
+                          t.result_table_value_variable = '$valueVar' AND
+                          b.reliability >= t.min_reliability AND
+                          t.use_normal_distribution                        
+                    )nf ON nf.animal_id = a.parent_father_id            
                   WHERE
                     a.parent_father_id NOTNULL AND
                     a.parent_mother_id NOTNULL AND
-                    (nra.$valueVar ISNULL) AND
-                    (nrf.$valueVar NOTNULL) AND
-                    (nrm.$valueVar NOTNULL) AND
-                    SQRT(0.25*rf.$accuracyVar*rf.$accuracyVar + 0.25*rm.$accuracyVar*rm.$accuracyVar)
+                    nra.$valueVar ISNULL AND
+                    SQRT(0.25*nf.accuracy*nf.accuracy + 0.25*nm.accuracy*nm.accuracy)
                     >= (SELECT SQRT(min_reliability) as min_accuracy FROM breed_value_type WHERE result_table_value_variable = '$valueVar')
                 ) AS calc(animal_id, normalized_breed_value)
                 WHERE $this->normalizedResultTableName.animal_id = calc.animal_id
