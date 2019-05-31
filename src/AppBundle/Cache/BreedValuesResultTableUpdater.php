@@ -52,6 +52,7 @@ class BreedValuesResultTableUpdater
     /** @var ProcessLog */
     private $processLog;
 
+    const USE_BATCH_PROCESSING = false;
     const BATCH_SIZE = 250000;
     const MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT = 3;
 
@@ -376,25 +377,15 @@ class BreedValuesResultTableUpdater
 
 
     /**
-     * @param string $valueVar
-     * @param string $accuracyVar
-     * @param string $generationDate
-     * @return int
+     * @param $valueVar
+     * @param $accuracyVar
+     * @param $generationDate
+     * @param $useBatchProcessing
+     * @return string
      */
-    private function updateResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate)
-    {
-        $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
-
-        $updateCount = 0;
-        $loopCount = 0;
-        $lastLocalUpdateCount = 0;
-        $repeatedLastLocalUpdateCount = 0;
-
-        $this->logger->notice("Batch processing ".$valueVar);
-        $this->logger->notice("...");
-        do {
-            // Default: Using genetic base
-            $sqlResultTableValues = "SELECT
+    private function updateResultTableQuery($valueVar, $accuracyVar, $generationDate, $useBatchProcessing): string {
+        // Default: Using genetic base
+        $sqlResultTableValues = "SELECT
                           b.animal_id,
                           b.value - gb.value as corrected_value,
                           SQRT(b.reliability) as accuracy
@@ -405,40 +396,70 @@ class BreedValuesResultTableUpdater
                        WHERE
                          b.generation_date = '$generationDate' AND
                          t.result_table_value_variable = '$valueVar' AND
+                         b.reliability >= t.min_reliability AND
                          (b.value - gb.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
-                         r.$valueVar ISNULL OR r.$accuracyVar ISNULL)
-                         LIMIT ".self::BATCH_SIZE;
+                         r.$valueVar ISNULL OR r.$accuracyVar ISNULL) "
+                         .($useBatchProcessing ? ' LIMIT '.self::BATCH_SIZE : '');
 
-            $sql = "UPDATE result_table_breed_grades
+        return "UPDATE result_table_breed_grades
                 SET $valueVar = v.corrected_value, $accuracyVar = v.accuracy
                 FROM (
                       $sqlResultTableValues   
                 ) as v(animal_id, corrected_value, accuracy)
                 WHERE result_table_breed_grades.animal_id = v.animal_id";
-            $localUpdateCount = SqlUtil::updateWithCount($this->conn, $sql);
-            $updateCount += $localUpdateCount;
 
-            $loopCount++;
-            LoggerUtil::overwriteNotice($this->logger, "Processed ".$updateCount.' batch '.$loopCount);
+    }
 
-            if ($localUpdateCount != self::BATCH_SIZE && $localUpdateCount == $lastLocalUpdateCount) {
-                $repeatedLastLocalUpdateCount++;
-            }
 
-            if ($repeatedLastLocalUpdateCount >= self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
-                $errorMessage = "Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x";
-                if ($this->processLog instanceof ProcessLog) {
-                    $this->processLog->addToErrorMessage($errorMessage);
-                    $this->processLog->addToDebuggingData("base64encoded resultTable sql query: " . base64_encode($sql));
+    /**
+     * @param string $valueVar
+     * @param string $accuracyVar
+     * @param string $generationDate
+     * @return int
+     */
+    private function updateResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate)
+    {
+        $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
+
+        $updateCount = 0;
+
+        if (self::USE_BATCH_PROCESSING) {
+            $loopCount = 0;
+            $lastLocalUpdateCount = 0;
+            $repeatedLastLocalUpdateCount = 0;
+
+            $this->logger->notice("Batch processing ".$valueVar);
+            $this->logger->notice("...");
+            do {
+                $sql = $this->updateResultTableQuery($valueVar, $accuracyVar, $generationDate, true);
+                $localUpdateCount = SqlUtil::updateWithCount($this->conn, $sql);
+                $updateCount += $localUpdateCount;
+
+                $loopCount++;
+                LoggerUtil::overwriteNotice($this->logger, "Processed ".$updateCount.' batch '.$loopCount);
+
+                if ($localUpdateCount != self::BATCH_SIZE && $localUpdateCount == $lastLocalUpdateCount) {
+                    $repeatedLastLocalUpdateCount++;
                 }
-                $this->logger->error($errorMessage);
-                break;
-            }
 
-            $lastLocalUpdateCount = $localUpdateCount;
+                if ($repeatedLastLocalUpdateCount >= self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
+                    $errorMessage = "Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x";
+                    if ($this->processLog instanceof ProcessLog) {
+                        $this->processLog->addToErrorMessage($errorMessage);
+                        $this->processLog->addToDebuggingData("base64encoded resultTable sql query: " . base64_encode($sql));
+                    }
+                    $this->logger->error($errorMessage);
+                    break;
+                }
 
+                $lastLocalUpdateCount = $localUpdateCount;
 
-        } while ($localUpdateCount > 0);
+            } while ($localUpdateCount > 0);
+        } else {
+            $sql = $this->updateResultTableQuery($valueVar, $accuracyVar, $generationDate, false);
+            $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+        }
+
         $this->logger->notice("Total processed ".$updateCount);
 
         /*
@@ -480,8 +501,6 @@ class BreedValuesResultTableUpdater
                       SELECT r.animal_id
                       FROM result_table_breed_grades r
                         INNER JOIN animal a ON r.animal_id = a.id
-                        LEFT JOIN result_table_breed_grades rf ON a.parent_father_id = rf.animal_id
-                        LEFT JOIN result_table_breed_grades rm ON a.parent_mother_id = rm.animal_id
                         LEFT JOIN
                         (
                           SELECT b.id, b.animal_id FROM breed_value b
@@ -489,13 +508,25 @@ class BreedValuesResultTableUpdater
                           WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
                             AND b.generation_date = '$generationDate'
                         )i ON r.animal_id = i.animal_id
-                      
+                        LEFT JOIN
+                        (
+                          SELECT b.id, b.animal_id FROM breed_value b
+                            INNER JOIN breed_value_type t ON t.id = b.type_id
+                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                            AND b.generation_date = '$generationDate'
+                        )im ON a.parent_mother_id = im.animal_id
+                        LEFT JOIN
+                        (
+                          SELECT b.id, b.animal_id FROM breed_value b
+                            INNER JOIN breed_value_type t ON t.id = b.type_id
+                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                            AND b.generation_date = '$generationDate'
+                        )if ON a.parent_father_id = if.animal_id                      
                       WHERE
                         i.id ISNULL AND 
                         (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL) AND
                         (
-                            rf.$valueVar ISNULL OR rf.$accuracyVar ISNULL OR
-                            rm.$valueVar ISNULL OR rm.$accuracyVar ISNULL
+                            if.id ISNULL OR im.id ISNULL
                         )
                       )";
         return SqlUtil::updateWithCount($this->conn, $sql);
@@ -616,6 +647,39 @@ class BreedValuesResultTableUpdater
     }
 
 
+    private function updateNormalizedResultTableQuery($valueVar, $generationDate, bool $useBatchProcessing): string {
+        $sqlResultTableValues = "SELECT
+                          b.animal_id,
+                          ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) 
+                                      * (CASE WHEN t.invert_normal_distribution THEN -1 ELSE 1 END)
+                               ) as corrected_value
+                        FROM breed_value b
+                          INNER JOIN breed_value_type t ON t.id = b.type_id
+                          INNER JOIN $this->normalizedResultTableName nr ON nr.animal_id = b.animal_id
+                          INNER JOIN (
+                              SELECT * FROM normal_distribution WHERE is_including_only_alive_animals = FALSE 
+                           )n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
+                        WHERE
+                          b.generation_date = '$generationDate' AND
+                          t.result_table_value_variable = '$valueVar' AND
+                          b.reliability >= t.min_reliability AND
+                          (
+                            (ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation)) 
+                                * (CASE WHEN t.invert_normal_distribution THEN -1 ELSE 1 END)) <> nr.$valueVar OR
+                            nr.$valueVar ISNULL
+                          ) AND
+                          t.use_normal_distribution "
+                        .($useBatchProcessing ? ' LIMIT '.self::BATCH_SIZE : '');
+
+        return "UPDATE $this->normalizedResultTableName
+                SET $valueVar = v.corrected_value
+                FROM (
+                      $sqlResultTableValues   
+                ) as v(animal_id, corrected_value)
+                WHERE $this->normalizedResultTableName.animal_id = v.animal_id";
+    }
+
+
     /**
      * @param string $valueVar
      * @param string $accuracyVar
@@ -627,64 +691,46 @@ class BreedValuesResultTableUpdater
         $this->write('Updating '.$valueVar. ' values in '.$this->normalizedResultTableName.' ... ');
 
         $updateCount = 0;
-        $loopCount = 0;
-        $lastLocalUpdateCount = 0;
-        $repeatedLastLocalUpdateCount = 0;
 
-        $this->logger->notice("Batch processing ".$valueVar);
-        $this->logger->notice("...");
-        do {
-            $sqlResultTableValues = "SELECT
-                          b.animal_id,
-                          ROUND(100 + 
-                                        (b.value - n.mean) 
-                                      * (t.standard_deviation_step_size / n.standard_deviation) 
-                                      * (CASE WHEN t.invert_normal_distribution THEN -1 ELSE 1 END)
-                               ) as corrected_value
-                        FROM breed_value b
-                          INNER JOIN breed_value_type t ON t.id = b.type_id
-                          INNER JOIN $this->normalizedResultTableName nr ON nr.animal_id = b.animal_id
-                          INNER JOIN normal_distribution n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
-                        WHERE
-                          b.generation_date = '$generationDate' AND
-                          t.result_table_value_variable = '$valueVar' AND
-                          (
-                            ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation)) <> nr.$valueVar OR
-                            nr.$valueVar ISNULL
-                          ) AND
-                          t.use_normal_distribution AND
-                          n.is_including_only_alive_animals = FALSE
-                          LIMIT ".self::BATCH_SIZE;
+        if (self::USE_BATCH_PROCESSING) {
 
-            $sql = "UPDATE $this->normalizedResultTableName
-                SET $valueVar = v.corrected_value
-                FROM (
-                      $sqlResultTableValues   
-                ) as v(animal_id, corrected_value)
-                WHERE $this->normalizedResultTableName.animal_id = v.animal_id";
-            $localUpdateCount = SqlUtil::updateWithCount($this->conn, $sql);
-            $updateCount += $localUpdateCount;
+            $loopCount = 0;
+            $lastLocalUpdateCount = 0;
+            $repeatedLastLocalUpdateCount = 0;
 
-            $loopCount++;
-            LoggerUtil::overwriteNotice($this->logger, "Processed ".$updateCount.' batch '.$loopCount);
+            $this->logger->notice("Batch processing ".$valueVar);
+            $this->logger->notice("...");
+            do {
+                $sql = $this->updateNormalizedResultTableQuery($valueVar, $generationDate, true);
+                $localUpdateCount = SqlUtil::updateWithCount($this->conn, $sql);
+                $updateCount += $localUpdateCount;
 
-            if ($localUpdateCount != self::BATCH_SIZE && $localUpdateCount == $lastLocalUpdateCount) {
-                $repeatedLastLocalUpdateCount++;
-            }
+                $loopCount++;
+                LoggerUtil::overwriteNotice($this->logger, "Processed ".$updateCount.' batch '.$loopCount);
 
-            if ($repeatedLastLocalUpdateCount >= self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
-                $errorMessage = "Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x";
-                if ($this->processLog instanceof ProcessLog) {
-                    $this->processLog->addToErrorMessage($errorMessage);
-                    $this->processLog->addToDebuggingData("base64encoded normalizedResultTable sql query: " . base64_encode($sql));
+                if ($localUpdateCount != self::BATCH_SIZE && $localUpdateCount == $lastLocalUpdateCount) {
+                    $repeatedLastLocalUpdateCount++;
                 }
-                $this->logger->error($errorMessage);
-                break;
-            }
 
-            $lastLocalUpdateCount = $localUpdateCount;
+                if ($repeatedLastLocalUpdateCount >= self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
+                    $errorMessage = "Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x";
+                    if ($this->processLog instanceof ProcessLog) {
+                        $this->processLog->addToErrorMessage($errorMessage);
+                        $this->processLog->addToDebuggingData("base64encoded normalizedResultTable sql query: " . base64_encode($sql));
+                    }
+                    $this->logger->error($errorMessage);
+                    break;
+                }
 
-        } while ($localUpdateCount > 0);
+                $lastLocalUpdateCount = $localUpdateCount;
+
+            } while ($localUpdateCount > 0);
+
+        } else {
+            $sql = $this->updateNormalizedResultTableQuery($valueVar, $generationDate, false);
+            $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+        }
+
         $this->logger->notice("Total processed ".$updateCount);
 
         /*
@@ -692,7 +738,7 @@ class BreedValuesResultTableUpdater
          * NOTE! This should be done BEFORE calculating the values for the children,
          * to prevent cascading calculation for children breedValues based on other calculated values
          */
-        $removeCount = $this->setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar);
+        $removeCount = $this->setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar, $generationDate);
         $updateCount += $removeCount;
 
         //Calculate breed values and accuracies of children without one, based on the values of both parents
@@ -716,22 +762,40 @@ class BreedValuesResultTableUpdater
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar)
+    private function setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar, $generationDate)
     {
         $sql = "UPDATE $this->normalizedResultTableName
                     SET $valueVar = NULL
                     WHERE animal_id IN (
                       SELECT r.animal_id
                       FROM $this->normalizedResultTableName r
+                        INNER JOIN animal a ON r.animal_id = a.id
                         LEFT JOIN
                         (
                           SELECT b.id, b.animal_id FROM breed_value b
                             INNER JOIN breed_value_type t ON t.id = b.type_id
                           WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
                         )i ON r.animal_id = i.animal_id
+                        LEFT JOIN
+                        (
+                          SELECT b.id, b.animal_id FROM breed_value b
+                            INNER JOIN breed_value_type t ON t.id = b.type_id
+                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                            AND b.generation_date = '$generationDate'
+                        )im ON a.parent_mother_id = im.animal_id
+                        LEFT JOIN
+                        (
+                          SELECT b.id, b.animal_id FROM breed_value b
+                            INNER JOIN breed_value_type t ON t.id = b.type_id
+                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                            AND b.generation_date = '$generationDate'
+                        )if ON a.parent_father_id = if.animal_id                         
                       WHERE
                         i.id ISNULL AND 
-                        r.$valueVar NOTNULL
+                        r.$valueVar NOTNULL AND
+                        (
+                            if.id ISNULL OR im.id ISNULL
+                        )                            
                       )";
         return SqlUtil::updateWithCount($this->conn, $sql);
     }
