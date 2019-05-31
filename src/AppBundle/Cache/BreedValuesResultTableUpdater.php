@@ -59,6 +59,8 @@ class BreedValuesResultTableUpdater
     const PROCESSING = "Processing ";
     const MISSING_GENERATION_DATE_LABEL = 'missing_generation_date';
 
+    const GENERATION_DATE = 'generation_date';
+
     public function __construct(EntityManagerInterface $em,
                                 Logger $logger,
                                 BreedValueService $breedValueService,
@@ -247,7 +249,7 @@ class BreedValuesResultTableUpdater
                 }
 
                 $this->processLog = $processLogRepository->endProcessLog($this->processLog);
-                $this->write('Finished process for '.$valueVar.', duration: '.$this->processLog->duration());
+                $this->writeFinalLine($valueVar, $this->processLog->duration());
             }
         }
 
@@ -263,6 +265,12 @@ class BreedValuesResultTableUpdater
         $breedIndexUpdateCount = $this->updateResultTableByBreedValueIndexType();
         $messagePrefix = $breedIndexUpdateCount > 0 ? 'In total '.$breedIndexUpdateCount : 'In total NO';
         $this->write($messagePrefix. ' breed Index&Accuracy sets were updated');
+    }
+
+
+    private function writeFinalLine($valueVar, $duration = null) {
+        $durationText = $duration != null ? ', duration: '.$duration : '';
+        $this->write('Finished process for '.$valueVar.$durationText);
     }
 
 
@@ -285,7 +293,7 @@ class BreedValuesResultTableUpdater
                 [],
                 $valueVar, $generationDate, true);
             if ($previousProcessLog) {
-                $this->write('Finished process for '.$valueVar);
+                $this->writeFinalLine($valueVar);
                 return;
             }
         }
@@ -293,7 +301,7 @@ class BreedValuesResultTableUpdater
         $this->processLog = $processLogRepository
             ->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate, $startDate);
         $this->processLog = $processLogRepository->endProcessLog($this->processLog);
-        $this->write('Finished process for '.$valueVar);
+        $this->writeFinalLine($valueVar);
     }
 
     /**
@@ -309,7 +317,7 @@ class BreedValuesResultTableUpdater
         }
 
         $sql = "SELECT generation_date FROM breed_value WHERE id = (SELECT MAX(id) FROM breed_value) LIMIT 1";
-        $generationDateString = $this->conn->query($sql)->fetch()['generation_date'];
+        $generationDateString = $this->conn->query($sql)->fetch()[self::GENERATION_DATE];
         if ($generationDateString === null) {
             throw new \Exception('There are no breed_value records in the database');
         }
@@ -425,7 +433,7 @@ class BreedValuesResultTableUpdater
      */
     private function updateResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate)
     {
-        $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
+        $this->writeUpdatingBreedTypeLine($valueVar, $accuracyVar, $this->resultTableName);
 
         $updateCount = 0;
 
@@ -604,6 +612,12 @@ class BreedValuesResultTableUpdater
     }
 
 
+    private function writeUpdatingBreedTypeLine($valueVar, $accuracyVar, $tableName)
+    {
+        $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$tableName.' ... ');
+    }
+
+
     /**
      * @return int
      */
@@ -615,7 +629,7 @@ class BreedValuesResultTableUpdater
             $valueVar = $snakeCaseType . '_index';
             $accuracyVar = $snakeCaseType . '_accuracy';
 
-            $this->write('Updating '.$valueVar.' and '.$accuracyVar. ' values in '.$this->resultTableName.' ... ');
+            $this->writeUpdatingBreedTypeLine($valueVar, $accuracyVar, $this->resultTableName);
 
             //Update new values
             $sql = "UPDATE result_table_breed_grades
@@ -712,7 +726,7 @@ class BreedValuesResultTableUpdater
      */
     private function updateNormalizedResultTableByBreedValueType($valueVar, $accuracyVar, $generationDate)
     {
-        $this->write('Updating '.$valueVar. ' values in '.$this->normalizedResultTableName.' ... ');
+        $this->writeUpdatingBreedTypeLine($valueVar, $accuracyVar, $this->normalizedResultTableName);
 
         $updateCount = 0;
 
@@ -1067,7 +1081,7 @@ class BreedValuesResultTableUpdater
                 $this->logger->warn('No breedValue records exist for breedValueType: '.$breedValueId);
                 return null;
             }
-            return $result['generation_date'];
+            return $result[self::GENERATION_DATE];
 
         } catch (\Exception $exception) {
             $this->logger->error($exception->getTraceAsString());
@@ -1114,7 +1128,7 @@ class BreedValuesResultTableUpdater
                 $this->logger->warn('No breedIndex records exist for BreedIndexType: '.$breedIndexType);
                 return null;
             }
-            return $result['generation_date'];
+            return $result[self::GENERATION_DATE];
 
         } catch (\Exception $exception) {
             $this->logger->error($exception->getTraceAsString());
