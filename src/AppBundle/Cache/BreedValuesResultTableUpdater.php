@@ -286,7 +286,8 @@ class BreedValuesResultTableUpdater
 
     private function logMissingBreedValues(ProcessLogRepository $processLogRepository, $valueVar,
                                            $generationDate, $startDate) {
-        $this->write('No breed values found for breed_value_type '.$valueVar);
+        $noBreedValuesMessage = 'No breed values found for breed_value_type '.$valueVar;
+        $this->write($noBreedValuesMessage);
 
         if ($generationDate == self::MISSING_GENERATION_DATE_LABEL) {
             $previousProcessLog = $processLogRepository->findBreedValuesResultTableUpdaterProcessLog(
@@ -300,6 +301,7 @@ class BreedValuesResultTableUpdater
 
         $this->processLog = $processLogRepository
             ->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate, $startDate);
+        $this->processLog->addToDescription($noBreedValuesMessage);
         $this->processLog = $processLogRepository->endProcessLog($this->processLog);
         $this->writeFinalLine($valueVar);
     }
