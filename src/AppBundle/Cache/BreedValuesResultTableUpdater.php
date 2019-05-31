@@ -8,6 +8,7 @@ use AppBundle\Constant\BreedIndexDiscriminatorTypeConstant;
 use AppBundle\Entity\BreedIndex;
 use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\ProcessLog;
+use AppBundle\Entity\ProcessLogRepository;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Entity\ResultTableNormalizedBreedGrades;
 use AppBundle\Enumerator\MixBlupType;
@@ -55,6 +56,7 @@ class BreedValuesResultTableUpdater
     const MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT = 3;
 
     const PROCESSING = "Processing ";
+    const MISSING_GENERATION_DATE_LABEL = 'missing_generation_date';
 
     public function __construct(EntityManagerInterface $em,
                                 Logger $logger,
@@ -199,14 +201,19 @@ class BreedValuesResultTableUpdater
             $useNormalDistribution = $result['use_normal_distribution'];
             $analysisTypeNl = $result['analysis_type_nl'];
 
-            $this->write(self::PROCESSING.$valueVar);
-
             if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
+
+                $this->write(self::PROCESSING.$valueVar);
 
                 $generationDate = empty($generationDateString) ?
                     $this->maxGenerationDate($valueVar, $previousProcessLogs) :
                     $generationDateString
                 ;
+
+                if (empty($generationDate)) {
+                    $this->logMissingBreedValues($processLogRepository, $valueVar, self::MISSING_GENERATION_DATE_LABEL);
+                    continue;
+                }
 
                 /** @var ProcessLog $previousProcessLog */
                 $previousProcessLog = $processLogRepository->findBreedValuesResultTableUpdaterProcessLog(
@@ -221,10 +228,7 @@ class BreedValuesResultTableUpdater
 
                 $breedValuesExist = $this->breedValueRecordsExist($valueVar, $generationDate);
                 if (!$breedValuesExist) {
-                    $this->write('No breed values found for breed_value_type '.$valueVar);
-                    $this->processLog = $processLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate);
-                    $this->processLog = $processLogRepository->endProcessLog($this->processLog);
-                    $this->write('Finished process for '.$valueVar.', duration: '.$this->processLog->duration());
+                    $this->logMissingBreedValues($processLogRepository, $valueVar, $generationDate);
                     continue;
                 }
 
@@ -267,6 +271,23 @@ class BreedValuesResultTableUpdater
         }
     }
 
+    private function logMissingBreedValues(ProcessLogRepository $processLogRepository, $valueVar, $generationDate) {
+        $this->write('No breed values found for breed_value_type '.$valueVar);
+
+        if ($generationDate == self::MISSING_GENERATION_DATE_LABEL) {
+            $previousProcessLog = $processLogRepository->findBreedValuesResultTableUpdaterProcessLog(
+                [],
+                $valueVar, $generationDate, true);
+            if ($previousProcessLog) {
+                $this->write('Finished process for '.$valueVar);
+                return;
+            }
+        }
+
+        $this->processLog = $processLogRepository->startBreedValuesResultTableUpdaterProcessLog($valueVar, $generationDate);
+        $this->processLog = $processLogRepository->endProcessLog($this->processLog);
+        $this->write('Finished process for '.$valueVar);
+    }
 
     /**
      * @param string|null $generationDateString
@@ -404,7 +425,7 @@ class BreedValuesResultTableUpdater
                 $repeatedLastLocalUpdateCount++;
             }
 
-            if ($repeatedLastLocalUpdateCount == self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
+            if ($repeatedLastLocalUpdateCount >= self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
                 $errorMessage = "Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x";
                 if ($this->processLog instanceof ProcessLog) {
                     $this->processLog->addToErrorMessage($errorMessage);
@@ -433,7 +454,7 @@ class BreedValuesResultTableUpdater
         $updateCount += $childrenUpdateCount;
 
         $records = $valueVar.' and '.$accuracyVar. ' records';
-        $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.', removed: '.$removeCount.') '. $records. ' updated.': 'No '.$records.' updated.';
+        $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.', removed: '.$removeCount.') '. $records. ' updated.': 'No '.$records.' updated';
         $this->write($message);
 
         if ($this->processLog) {
@@ -632,7 +653,7 @@ class BreedValuesResultTableUpdater
                 $repeatedLastLocalUpdateCount++;
             }
 
-            if ($repeatedLastLocalUpdateCount == self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
+            if ($repeatedLastLocalUpdateCount >= self::MAX_REPEAT_IDENTICAL_BATCH_LOOP_COUNT) {
                 $errorMessage = "Breaking identical loop that was repeated ".$repeatedLastLocalUpdateCount."x";
                 if ($this->processLog instanceof ProcessLog) {
                     $this->processLog->addToErrorMessage($errorMessage);
@@ -660,7 +681,7 @@ class BreedValuesResultTableUpdater
         $updateCount += $childrenUpdateCount;
 
         $records = $valueVar. ' records';
-        $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.', removed: '.$removeCount.') '. $records. ' updated.': 'No '.$records.' updated.';
+        $message = $updateCount > 0 ? $updateCount . ' (children: '.$childrenUpdateCount.', removed: '.$removeCount.') '. $records. ' updated.': 'No '.$records.' updated';
         $this->write($message);
 
         if ($this->processLog) {
