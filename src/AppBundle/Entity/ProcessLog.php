@@ -52,28 +52,28 @@ class ProcessLog
     private $type;
 
     /**
-     * @var string
+     * @var string|null
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $category;
 
     /**
-     * @var integer
+     * @var integer|null
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
      */
     private $categoryId;
 
     /**
-     * @var string
+     * @var string|null
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $subCategory;
 
     /**
-     * @var integer
+     * @var integer|null
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
      */
@@ -89,7 +89,7 @@ class ProcessLog
     private $startDate;
 
     /**
-     * @var DateTime
+     * @var DateTime|null
      * @ORM\Column(type="datetime", options={"default":null}, nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
@@ -176,72 +176,72 @@ class ProcessLog
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getCategory(): string
+    public function getCategory(): ?string
     {
         return $this->category;
     }
 
     /**
-     * @param string $category
+     * @param string|null $category
      * @return ProcessLog
      */
-    public function setCategory(string $category): ProcessLog
+    public function setCategory(?string $category): ProcessLog
     {
         $this->category = $category;
         return $this;
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getCategoryId(): int
+    public function getCategoryId(): ?int
     {
         return $this->categoryId;
     }
 
     /**
-     * @param int $categoryId
+     * @param int|null $categoryId
      * @return ProcessLog
      */
-    public function setCategoryId(int $categoryId): ProcessLog
+    public function setCategoryId(?int $categoryId): ProcessLog
     {
         $this->categoryId = $categoryId;
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getSubCategory(): string
+    public function getSubCategory(): ?string
     {
         return $this->subCategory;
     }
 
     /**
-     * @param string $subCategory
+     * @param string|null $subCategory
      * @return ProcessLog
      */
-    public function setSubCategory(string $subCategory): ProcessLog
+    public function setSubCategory(?string $subCategory): ProcessLog
     {
         $this->subCategory = $subCategory;
         return $this;
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getSubCategoryId(): int
+    public function getSubCategoryId(): ?int
     {
         return $this->subCategoryId;
     }
 
     /**
-     * @param int $subCategoryId
+     * @param int|null $subCategoryId
      * @return ProcessLog
      */
-    public function setSubCategoryId(int $subCategoryId): ProcessLog
+    public function setSubCategoryId(?int $subCategoryId): ProcessLog
     {
         $this->subCategoryId = $subCategoryId;
         return $this;
@@ -284,18 +284,18 @@ class ProcessLog
     }
 
     /**
-     * @return DateTime
+     * @return DateTime|null
      */
-    public function getEndDate(): DateTime
+    public function getEndDate(): ?DateTime
     {
         return $this->endDate;
     }
 
     /**
-     * @param DateTime $endDate
+     * @param DateTime|null $endDate
      * @return ProcessLog
      */
-    public function setEndDate(DateTime $endDate): ProcessLog
+    public function setEndDate(?DateTime $endDate): ProcessLog
     {
         $this->endDate = $endDate;
         return $this;
