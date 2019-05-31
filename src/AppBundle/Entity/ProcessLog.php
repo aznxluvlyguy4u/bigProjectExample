@@ -104,6 +104,27 @@ class ProcessLog
      */
     private $isActive;
 
+    /**
+     * @var string|null
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $description;
+
+    /**
+     * @var string|null
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $errorMessage;
+
+    /**
+     * @var string|null
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $debuggingData;
+
     public function __construct()
     {
         $this->startDate = new \DateTime();
@@ -277,6 +298,60 @@ class ProcessLog
     public function setEndDate(DateTime $endDate): ProcessLog
     {
         $this->endDate = $endDate;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string|null $description
+     * @return ProcessLog
+     */
+    public function setDescription(?string $description): ProcessLog
+    {
+        $this->description = $description;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getErrorMessage(): ?string
+    {
+        return $this->errorMessage;
+    }
+
+    /**
+     * @param string|null $errorMessage
+     * @return ProcessLog
+     */
+    public function setErrorMessage(?string $errorMessage): ProcessLog
+    {
+        $this->errorMessage = $errorMessage;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDebuggingData(): ?string
+    {
+        return $this->debuggingData;
+    }
+
+    /**
+     * @param string|null $debuggingData
+     * @return ProcessLog
+     */
+    public function setDebuggingData(?string $debuggingData): ProcessLog
+    {
+        $this->debuggingData = $debuggingData;
         return $this;
     }
 
