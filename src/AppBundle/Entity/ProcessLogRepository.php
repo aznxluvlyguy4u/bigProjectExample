@@ -27,13 +27,16 @@ class ProcessLogRepository extends BaseRepository {
     /**
      * @param string $breedValueTypeResultTableValue
      * @param string $generationDate
+     * @param DateTime $startDate
      * @return ProcessLog
      * @throws \Doctrine\DBAL\DBALException
      */
-    function startBreedValuesResultTableUpdaterProcessLog(string $breedValueTypeResultTableValue, string $generationDate): ProcessLog {
+    function startBreedValuesResultTableUpdaterProcessLog(string $breedValueTypeResultTableValue,
+                                                          string $generationDate, DateTime $startDate): ProcessLog {
         $breedValueTypeId = $this->getBreedValueTypeId($breedValueTypeResultTableValue);
         $processLog = new ProcessLog();
         $processLog
+            ->setStartDate($startDate)
             ->setTypeId(ProcessLogType::BREED_VALUES_RESULT_TABLE_UPDATER)
             ->setType(ProcessLogType::getName(ProcessLogType::BREED_VALUES_RESULT_TABLE_UPDATER))
             ->setCategory($breedValueTypeResultTableValue)
