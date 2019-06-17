@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse as JsonResponse;
+use AppBundle\Service\ActionLogService;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -78,7 +79,7 @@ class ActionLogAPIController extends APIController
      */
     public function getUserActionTypes(Request $request)
     {
-        return $this->get('api.action_log')->getUserActionTypes($request);
+        return $this->get(ActionLogService::class)->getUserActionTypes($request);
     }
 
 
@@ -181,7 +182,7 @@ class ActionLogAPIController extends APIController
      */
     public function getActionLogs(Request $request)
     {
-        return $this->get('api.action_log')->getActionLogs($request);
+        return $this->get(ActionLogService::class)->getActionLogs($request);
     }
 
 
@@ -234,6 +235,6 @@ class ActionLogAPIController extends APIController
      */
     public function getAccountOwnerIds(Request $request)
     {
-        return $this->get('api.action_log')->getAccountOwnerPersonIds();
+        return $this->get(ActionLogService::class)->getAccountOwnerPersonIds();
     }
 }

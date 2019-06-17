@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Variable;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\TimeUtil;
@@ -194,8 +195,8 @@ class DeclareBirthRepository extends BaseRepository {
     $livestockEwesQueryBuilder = $em->createQueryBuilder();
 
     $livestockEwesQueryBuilder
-      ->select('animal')
-      ->from('AppBundle:Animal', 'animal')
+      ->select(Variable::ANIMAL)
+      ->from('AppBundle:Animal', Variable::ANIMAL)
       ->where(
         $livestockEwesQueryBuilder->expr()->eq('animal.parentMother', $mother->getId())
       );
@@ -274,11 +275,11 @@ class DeclareBirthRepository extends BaseRepository {
 
       $qb = $this->getManager()->createQueryBuilder();
 
-      $qb->select('b','animal','actionBy', 'litter')
+      $qb->select('b',Variable::ANIMAL,Variable::ACTION_BY, Variable::LITTER)
           ->from(DeclareBirth::class, 'b')
-          ->innerJoin('b.animal', 'animal', Join::WITH, $qb->expr()->eq('b.animal', 'animal.id'))
-          ->innerJoin('b.actionBy', 'actionBy', Join::WITH, $qb->expr()->eq('b.actionBy', 'actionBy.id'))
-          ->innerJoin('b.litter', 'litter', Join::WITH, $qb->expr()->eq('b.litter', 'litter.id'))
+          ->innerJoin('b.animal', Variable::ANIMAL, Join::WITH, $qb->expr()->eq('b.animal', 'animal.id'))
+          ->innerJoin('b.actionBy', Variable::ACTION_BY, Join::WITH, $qb->expr()->eq('b.actionBy', 'actionBy.id'))
+          ->innerJoin('b.litter', Variable::LITTER, Join::WITH, $qb->expr()->eq('b.litter', 'litter.id'))
       ;
 
       foreach ($primaryKeys as $primaryKey) {
@@ -287,9 +288,9 @@ class DeclareBirthRepository extends BaseRepository {
 
       $query = $qb->getQuery();
 
-      $query->setFetchMode(Person::class, 'actionBy', ClassMetadata::FETCH_EAGER);
-      $query->setFetchMode(Animal::class, 'animal', ClassMetadata::FETCH_EAGER);
-      $query->setFetchMode(Litter::class, 'litter', ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Person::class, Variable::ACTION_BY, ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Animal::class, Variable::ANIMAL, ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Litter::class, Variable::LITTER, ClassMetadata::FETCH_EAGER);
 
       $births = $query->getResult();
 

@@ -81,6 +81,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
+
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '1: Find locations with highest animal count', "\n",
@@ -171,7 +172,6 @@ class NsfoTestCommand extends ContainerAwareCommand
         $limit = $this->cmdUtil->questionForIntChoice(10, 'Result count');
         $locationId = $this->cmdUtil->questionForIntChoice(0, 'locationId (0 = all locations)');
 
-//        $locationId = abs(intval($this->cmdUtil->questionForIntChoice('LocationId (0 = all locations)', 0)));
         $results = $this->em->getRepository(ResultTableBreedGrades::class)
             ->retrieveAnimalsWithMostBreedValues($limit, $locationId);
         $this->cmdUtil->writeln($results);

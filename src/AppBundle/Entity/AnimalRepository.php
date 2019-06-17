@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Constant\Variable;
 use AppBundle\Criteria\AnimalCriteria;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalTransferStatus;
@@ -554,7 +555,7 @@ class AnimalRepository extends BaseRepository
       $weightDataByAnimalId = SqlUtil::createSearchArrayByKey($animalIdKey, $results);
 
       /** @var Animal $animal */
-      foreach ($animals as $key => $animal) {
+      foreach ($animals as $animal) {
           $id = $animal->getId();
           $weightData = ArrayUtil::get($id, $weightDataByAnimalId);
           if (empty($weightData)) {
@@ -779,7 +780,7 @@ class AnimalRepository extends BaseRepository
 
     $query = $historicAnimalsQuery->getQuery();
     $query->setFetchMode(AnimalResidence::class, 'animal', ClassMetadata::FETCH_EAGER);
-    $query->setFetchMode(Animal::class, 'location', ClassMetadata::FETCH_EAGER);
+    $query->setFetchMode(Animal::class, Variable::LOCATION, ClassMetadata::FETCH_EAGER);
 
     //Returns a list of AnimalResidences
     if (self::USE_REDIS_CACHE) {
@@ -858,7 +859,7 @@ class AnimalRepository extends BaseRepository
 
       $query = $mateQb->getQuery();
       $query->setFetchMode(Mate::class, 'studEwe', ClassMetadata::FETCH_EAGER);
-      $query->setFetchMode(Animal::class, 'location', ClassMetadata::FETCH_EAGER);
+      $query->setFetchMode(Animal::class, Variable::LOCATION, ClassMetadata::FETCH_EAGER);
 
 
       //Returns a list of AnimalResidences
@@ -2157,10 +2158,14 @@ class AnimalRepository extends BaseRepository
      */
     public function findByHealthCheckTaskFromSync(HealthCheckTask $task)
     {
+        /**
+         * NOTE that animals should not be searched by current UBN,
+         * because they might have been moved before the feedback message is going to be processed.
+         */
+
         $animals = $this->findBy([
             'ulnCountryCode' => $task->getUlnCountryCode(),
             'ulnNumber' => $task->getUlnNumber(),
-            'location' => $task->getDestinationLocationId()
         ]);
         return AnimalArrayReader::prioritizeImportedAnimalFromArray($animals);
     }

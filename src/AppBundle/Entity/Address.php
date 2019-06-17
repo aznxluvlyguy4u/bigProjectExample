@@ -410,8 +410,8 @@ abstract class Address
     {
         if(NullChecker::isNull($this->streetName)) { return null; }
         $result = $this->streetName;
-        if(NullChecker::isNotNull($this->addressNumber)) { $result = $result.' '.$this->addressNumber; };
-        if(NullChecker::isNotNull($this->addressNumberSuffix)) { $result = $result.$this->addressNumberSuffix; };
+        if(NullChecker::isNotNull($this->addressNumber)) { $result = $result.' '.$this->addressNumber; }
+        if(NullChecker::isNotNull($this->addressNumberSuffix)) { $result = $result.$this->addressNumberSuffix; }
         return $result;
     }
 }

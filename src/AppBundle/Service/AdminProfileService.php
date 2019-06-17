@@ -40,13 +40,13 @@ class AdminProfileService extends AuthServiceBase implements AdminProfileAPICont
 
     /**
      * @param Request $request
-     * @return JsonResponse
+     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
     public function editAdminProfile(Request $request)
     {
         $admin = $this->getEmployee();
         if (!AdminValidator::isAdmin($admin, AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
+            throw AdminValidator::standardException();
         }
 
         $content = RequestUtil::getContentAsArray($request);

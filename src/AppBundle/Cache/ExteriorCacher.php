@@ -15,35 +15,63 @@ class ExteriorCacher
      * @return int
      */
     public static function updateAllExteriors(Connection $conn){
-        return self::updateExteriors($conn, null);
+        return self::updateExteriors($conn, [], true);
     }
 
 
     /**
-     * $animalIds == null: all exterior values in animalCache are updated
-     * $animalIds count == 0; nothing is updated
-     * $animalIds count > 0: only given animalIds are updated
+     * $processAllRecords == true  && $animalIds == []      : all exterior values in animalCache are updated
+     * $processAllRecords == false && $animalIds count == 0 : nothing is updated
+     * $processAllRecords == false && $animalIds count > 0  : only given animalIds are updated
      *
      * @param Connection $conn
      * @param array $animalIds
+     * @param boolean $processAllRecords
      * @return int
      */
-    public static function updateExteriors(Connection $conn, $animalIds)
+    public static function updateExteriors(Connection $conn, $animalIds, $processAllRecords = false)
     {
-        $updateCount = 0;
-
-        $animalIdFilterString = "";
-        if(is_array($animalIds)) {
-            if(count($animalIds) == 0) {
-                return $updateCount;
-            }
-            else {
-                $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'xx.animal_id').")";
-            }
-        } elseif($animalIds != null) {
-            return $updateCount;
+        if (!self::isInputValid($animalIds, $processAllRecords)) {
+            return 0;
         }
 
+        return
+            self::updateForAnimalsWithoutActiveExteriors($conn, $animalIds, $processAllRecords) +
+            self::updateForAnimalsWithActiveExteriors($conn, $animalIds, $processAllRecords)
+            ;
+    }
+
+
+    /**
+     * @param $animalIds
+     * @param $processAllRecords
+     * @return bool
+     */
+    private static function isInputValid($animalIds, $processAllRecords): bool {
+        if (is_bool($processAllRecords) && $processAllRecords) {
+            $isValid = true;
+        } elseif(is_array($animalIds) && !empty($animalIds)) {
+            $isValid = true;
+        } else {
+            $isValid = false;
+        }
+        return $isValid;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param $animalIds
+     * @param $processAllRecords
+     * @return mixed
+     */
+    private static function updateForAnimalsWithActiveExteriors(Connection $conn, $animalIds, $processAllRecords)
+    {
+        if ($processAllRecords) {
+            $animalIdFilterString = "";
+        } else {
+            $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'xx.animal_id').")";
+        }
 
         $sql = "WITH rows AS (
                 UPDATE animal_cache SET
@@ -96,13 +124,89 @@ class ExteriorCacher
                     (c.exterior_inspector_id NOTNULL AND m.inspector_id ISNULL) OR
                     c.exterior_inspector_id <> m.inspector_id
                   )
-                       -- AND a.location_id = 00000 < filter location_id here when necessary
                 ) AS v(animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearance,
                 height, breast_depth, torso_length, markings, kind, progress, measurement_date, inspector_id) WHERE animal_cache.animal_id = v.animal_id
                   RETURNING 1
                 )
                 SELECT COUNT(*) AS count FROM rows;";
-        $updateCount = $conn->query($sql)->fetch()['count'];
-        return $updateCount;
+        return $conn->query($sql)->fetch()['count'];
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param $animalIds
+     * @param $processAllRecords
+     * @return mixed
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private static function updateForAnimalsWithoutActiveExteriors(Connection $conn, $animalIds, $processAllRecords)
+    {
+        if ($processAllRecords) {
+            $animalIdFilterString1 = "";
+            $animalIdFilterString2 = "";
+        } else {
+            $animalIdsString = " (".SqlUtil::getFilterStringByIdsArray($animalIds,'a.id').")";
+            $animalIdFilterString1 = " AND ".$animalIdsString;
+            $animalIdFilterString2 = " WHERE ".$animalIdsString;
+        }
+
+        $sql = "WITH rows AS (
+                UPDATE animal_cache SET
+                    skull = null,
+                    muscularity = null,
+                    proportion = null,
+                    exterior_type = null,
+                    leg_work = null,
+                    fur = null,
+                    general_appearance = null,
+                    height = null,
+                    breast_depth = null,
+                    torso_length = null,
+                    markings = null,
+                    kind = null,
+                    progress = null,
+                    exterior_measurement_date = null,
+                    exterior_inspector_id = null,
+                    log_date = '".TimeUtil::getTimeStampNow()."'
+                    FROM (
+                        SELECT
+                            a.id,
+                            COALESCE(xcount.value,0) as active_exterior_count,
+                            c.skull NOTNULL OR
+                            c.muscularity NOTNULL OR
+                            c.proportion NOTNULL OR
+                            c.exterior_type NOTNULL OR
+                            c.leg_work NOTNULL OR
+                            c.fur NOTNULL OR
+                            c.general_appearance NOTNULL OR
+                            c.height NOTNULL OR
+                            c.breast_depth NOTNULL OR
+                            c.torso_length NOTNULL OR
+                            c.markings NOTNULL OR
+                            c.kind NOTNULL OR
+                            c.progress NOTNULL OR
+                            c.exterior_measurement_date NOTNULL OR
+                            c.exterior_inspector_id NOTNULL as has_exterior_cache_values
+                        FROM animal a
+                                 INNER JOIN animal_cache c ON c.animal_id = a.id
+                                 LEFT JOIN (
+                            SELECT
+                                COUNT(a.id) as value,
+                                a.id as animal_id
+                            FROM exterior x
+                                     INNER JOIN measurement m ON x.id = m.id
+                                     INNER JOIN animal a on x.animal_id = a.id
+                            WHERE m.is_active = TRUE".$animalIdFilterString1."
+                            GROUP BY a.id
+                        )xcount ON xcount.animal_id = a.id
+                        ".$animalIdFilterString2."
+                    ) AS v(animal_id) WHERE
+                        animal_cache.animal_id = v.animal_id AND
+                        active_exterior_count = 0 AND has_exterior_cache_values
+                    RETURNING 1
+            )
+            SELECT COUNT(*) AS count FROM rows";
+        return $conn->query($sql)->fetch()['count'];
     }
 }

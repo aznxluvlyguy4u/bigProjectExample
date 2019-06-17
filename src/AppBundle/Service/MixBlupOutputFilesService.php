@@ -233,16 +233,24 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         if($this->key != null) {
 
+            $breedTypeFilterString = "";
+            if (!empty($this->currentBreedType)) {
+                $breedTypeArrayString = "'".
+                    implode("','",MixBlupSetting::breedTypeByAnalysis($this->currentBreedType))
+                    ."'";
+                $breedTypeFilterString = " AND t.nl IN ($breedTypeArrayString)";
+                $this->logger->notice("Retrieving breedValues of types $breedTypeArrayString for search array");
+            }
+
             $sql = "SELECT b.id, animal_id, t.nl as dutch_breed_value_type
                     FROM breed_value b
                       INNER JOIN breed_value_type t ON b.type_id = t.id
-                    WHERE generation_date = '".$this->key."'";
+                    WHERE generation_date = '".$this->key."'".$breedTypeFilterString;
             $results = $this->conn->query($sql)->fetchAll();
 
             foreach ($results as $result) {
                 $dutchBreedValueType = $result['dutch_breed_value_type'];
                 $animalId = $result['animal_id'];
-                //$breedValueId = $result['id'];
                 $this->addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueType, $animalId);
             }
         }
@@ -1137,7 +1145,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             $this->logger->notice('WormOutputFilename found in message...');
         }
 
-        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes, true, true, $this->getGenerationDateStringFromKey());
+        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes,
+            true,false,
+            true, true, $this->getGenerationDateStringFromKey());
     }
 
 
