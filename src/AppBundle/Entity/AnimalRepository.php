@@ -2158,10 +2158,14 @@ class AnimalRepository extends BaseRepository
      */
     public function findByHealthCheckTaskFromSync(HealthCheckTask $task)
     {
+        /**
+         * NOTE that animals should not be searched by current UBN,
+         * because they might have been moved before the feedback message is going to be processed.
+         */
+
         $animals = $this->findBy([
             'ulnCountryCode' => $task->getUlnCountryCode(),
             'ulnNumber' => $task->getUlnNumber(),
-            Variable::LOCATION => $task->getDestinationLocationId()
         ]);
         return AnimalArrayReader::prioritizeImportedAnimalFromArray($animals);
     }
