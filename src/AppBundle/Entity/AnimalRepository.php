@@ -2161,7 +2161,7 @@ class AnimalRepository extends BaseRepository
         $animals = $this->findBy([
             'ulnCountryCode' => $task->getUlnCountryCode(),
             'ulnNumber' => $task->getUlnNumber(),
-            Variable::class => $task->getDestinationLocationId()
+            Variable::LOCATION => $task->getDestinationLocationId()
         ]);
         return AnimalArrayReader::prioritizeImportedAnimalFromArray($animals);
     }
