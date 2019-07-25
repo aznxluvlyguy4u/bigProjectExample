@@ -31,11 +31,11 @@ class BreedFormat
     const SIGA_STANDARD_DEVIATION_SCALE = 10; //1 Standard deviation is worth this much points
 
     //Minimum accuracies for the calculation
-    const MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX = 0.40;
+    const MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX = 0.22;
 
     //If the following accuracy are lower, they are ignored in the PedigreeCertificate
-    const MIN_INDEX_ACCURACY = 0.30;
-    const MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT = 0.30; //Valid Growth, MuscleThickness and Fat BreedValues should at least have this accuracy
+    const MIN_INDEX_ACCURACY = 0.22;
+    const MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT = 0.22; //Valid Growth, MuscleThickness and Fat BreedValues should at least have this accuracy
 
     const DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS = 7;
 
