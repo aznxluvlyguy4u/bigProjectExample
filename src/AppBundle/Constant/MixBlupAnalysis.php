@@ -3,12 +3,16 @@
 
 namespace AppBundle\Constant;
 
+use AppBundle\Traits\EnumInfo;
+
 /**
  * Class MixBlupBreedValueType
  * @package AppBundle\Enumerator
  */
 class MixBlupAnalysis
 {
+    use EnumInfo;
+
     //Exterior
     const EXTERIOR_LEG_WORK = 'ExtBeenw';
     const EXTERIOR_MUSCULARITY = 'ExtBesp';

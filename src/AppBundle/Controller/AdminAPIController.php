@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Service\AdminService;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -37,7 +38,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function getAdmins(Request $request)
   {
-      return $this->get('app.admin')->getAdmins($request);
+      return $this->get(AdminService::class)->getAdmins($request);
   }
 
 
@@ -65,7 +66,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
     public function createAdmin(Request $request)
     {
-        return $this->get('app.admin')->createAdmin($request);
+        return $this->get(AdminService::class)->createAdmin($request);
     }
 
 
@@ -93,7 +94,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
     public function editAdmin(Request $request)
     {
-        return $this->get('app.admin')->editAdmin($request);
+        return $this->get(AdminService::class)->editAdmin($request);
     }
 
 
@@ -120,7 +121,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function deactivateAdmin(Request $request)
   {
-      return $this->get('app.admin')->deactivateAdmin($request);
+      return $this->get(AdminService::class)->deactivateAdmin($request);
   }
 
 
@@ -135,7 +136,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function getTemporaryGhostToken(Request $request)
   {
-      return $this->get('app.admin')->getTemporaryGhostToken($request);
+      return $this->get(AdminService::class)->getTemporaryGhostToken($request);
   }
 
   /**
@@ -149,7 +150,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function verifyGhostToken(Request $request)
   {
-      return $this->get('app.admin')->verifyGhostToken($request);
+      return $this->get(AdminService::class)->verifyGhostToken($request);
   }
 
 
@@ -177,6 +178,6 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    */
   public function getAccessLevelTypes(Request $request)
   {
-      return $this->get('app.admin')->getAccessLevelTypes($request);
+      return $this->get(AdminService::class)->getAccessLevelTypes($request);
   }
 }

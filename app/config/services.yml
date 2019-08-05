@@ -9,8 +9,7 @@ services:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
 
-    api.action_log:
-        class: AppBundle\Service\ActionLogService
+    AppBundle\Service\ActionLogService:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.serializer.ir'
@@ -701,9 +700,8 @@ services:
         parent: app.abstract_base.auth
         class: AppBundle\Service\AdminAuthService
 
-    app.admin:
+    AppBundle\Service\AdminService:
         parent: app.abstract_base.auth
-        class: AppBundle\Service\AdminService
 
     app.admin.profile:
         parent: app.abstract_base.auth
