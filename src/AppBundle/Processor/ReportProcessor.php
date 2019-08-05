@@ -8,6 +8,7 @@ use AppBundle\Entity\ReportWorker;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Service\BaseSerializer;
+use AppBundle\Service\Report\AnimalHealthStatusesReportService;
 use AppBundle\Service\Report\AnimalsOverviewReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockReportService;
@@ -61,6 +62,11 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     private $coefficientReportService;
 
     /**
+     * @var AnimalHealthStatusesReportService
+     */
+    private $animalHealthStatusesReportService;
+
+    /**
      * @var AnimalsOverviewReportService
      */
     private $animalsOverviewReportService;
@@ -105,6 +111,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     private $logger;
 
     public function __construct(
+        AnimalHealthStatusesReportService $animalHealthStatusesReportService,
         AnnualActiveLivestockReportService $annualActiveLivestockReportService,
         AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService,
         FertilizerAccountingReport $accountingReport,
@@ -137,6 +144,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->liveStockReportService = $liveStockReportService;
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
+        $this->animalHealthStatusesReportService = $animalHealthStatusesReportService;
     }
 
     public function process(PsrMessage $message, PsrContext $context)
@@ -240,6 +248,11 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $options = $this->serializer->deserializeToObject($data['options'],
                             MembersAndUsersOverviewReportOptions::class, null);
                         $data = $this->membersAndUsersOverviewReport->getReport($options);
+                        break;
+                    }
+                case ReportType::ANIMAL_HEALTH_STATUSES:
+                    {
+                        $data = $this->animalHealthStatusesReportService->getReport();
                         break;
                     }
             }
