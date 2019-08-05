@@ -519,6 +519,9 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaAnimalDetailsReportService
 
+    AppBundle\Service\Report\AnimalHealthStatusesReportService:
+      parent: app.report.base
+
     app.report.vwa.ubns_overview:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaUbnsOverviewReportService
@@ -630,9 +633,10 @@ services:
 
     AppBundle\Processor\ReportProcessor:
         arguments:
-          - '@AppBundle\Service\Report\CompanyRegisterReportService'
+          - '@AppBundle\Service\Report\AnimalHealthStatusesReportService'
           - '@AppBundle\Service\Report\AnnualActiveLivestockReportService'
           - '@AppBundle\Service\Report\AnnualTe100UbnProductionReportService'
+          - '@AppBundle\Service\Report\CompanyRegisterReportService'
           - '@AppBundle\Service\Report\FertilizerAccountingReport'
           - '@app.report.inbreeding_coefficient'
           - '@AppBundle\Service\Report\AnimalsOverviewReportService'

@@ -355,6 +355,20 @@ class ReportService
 
     /**
      * @param Request $request
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse
+     */
+    public function createAnimalHealthStatusReport(Request $request)
+    {
+        $inputForHash = '';
+
+        return $this->processReportAsWorkerTask(
+            [],
+            $request,ReportType::ANIMAL_HEALTH_STATUSES, $inputForHash
+        );
+    }
+
+    /**
+     * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
     public function createAnnualActiveLivestockRamMatesReport(Request $request)
