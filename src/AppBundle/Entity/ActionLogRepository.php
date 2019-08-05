@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Variable;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\CacheService;
@@ -10,6 +11,8 @@ use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query\Expr\Join;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 /**
  * Class ActionLogRepository
@@ -112,16 +115,15 @@ class ActionLogRepository extends BaseRepository
         }
 
         if (!ArrayUtil::containsOnlyDigits($primaryKeys)) {
-            throw new \Exception('Array contains non integers: '.implode(',', $primaryKeys),
-                Response::HTTP_PRECONDITION_FAILED);
+            throw new PreconditionFailedHttpException('Array contains non integers: '.implode(',', $primaryKeys));
         }
 
         $qb = $this->getManager()->createQueryBuilder();
 
-        $qb->select('a','actionBy', 'userAccount')
+        $qb->select('a',Variable::ACTION_BY, Variable::USER_ACCOUNT)
             ->from(ActionLog::class, 'a')
-            ->innerJoin('a.actionBy', 'actionBy', Join::WITH, $qb->expr()->eq('a.actionBy', 'actionBy.id'))
-            ->innerJoin('a.userAccount', 'userAccount', Join::WITH, $qb->expr()->eq('a.userAccount', 'userAccount.id'))
+            ->innerJoin('a.actionBy', Variable::ACTION_BY, Join::WITH, $qb->expr()->eq('a.actionBy', 'actionBy.id'))
+            ->innerJoin('a.userAccount', Variable::USER_ACCOUNT, Join::WITH, $qb->expr()->eq('a.userAccount', 'userAccount.id'))
         ;
 
         foreach ($primaryKeys as $primaryKey) {
@@ -130,8 +132,8 @@ class ActionLogRepository extends BaseRepository
 
         $query = $qb->getQuery();
 
-        $query->setFetchMode(Person::class, 'actionBy', ClassMetadata::FETCH_EAGER);
-        $query->setFetchMode(Person::class, 'userAccount', ClassMetadata::FETCH_EAGER);
+        $query->setFetchMode(Person::class, Variable::ACTION_BY, ClassMetadata::FETCH_EAGER);
+        $query->setFetchMode(Person::class, Variable::USER_ACCOUNT, ClassMetadata::FETCH_EAGER);
 
         $births = $query->getResult();
 

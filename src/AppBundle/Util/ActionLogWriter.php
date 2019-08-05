@@ -225,7 +225,7 @@ class ActionLogWriter
      * @throws \Exception
      */
     public static function createBirth(ObjectManager $em, $requestMessages, ArrayCollection $content,
-                                       Client $client = null, Person $actionBy)
+                                       Person $actionBy, Client $client = null)
     {
         $logs = [];
         $clientOfDeclare = null;
@@ -248,11 +248,9 @@ class ActionLogWriter
             $description = $gender.' '.$uln.' GebDatum '.$dateOfBirth.', moeder: '.$ulnMother. ', vader: '.$ulnFather.$litterData;
 
             $clientOfDeclare = $client;
-            if ($client === null) {
-                if ($requestMessage->getLocation()) {
-                    $clientOfDeclare = $requestMessage->getLocation()->getOwner();
-                    $client = $clientOfDeclare;
-                }
+            if ($client === null && $requestMessage->getLocation()) {
+                $clientOfDeclare = $requestMessage->getLocation()->getOwner();
+                $client = $clientOfDeclare;
             }
 
             $log = new ActionLog($clientOfDeclare, $requestMessage->getActionBy(), UserActionType::DECLARE_BIRTH, false, $description);
@@ -424,7 +422,6 @@ class ActionLogWriter
 
             if (count($company->getLocations()) > 0) {
                 $description = $description . $prefix . 'ubns: ';
-                $prefix = ', ';
 
                 $ubnPrefix = '';
                 /** @var Location $location */
@@ -666,6 +663,9 @@ class ActionLogWriter
      */
     public static function passwordResetRequest(ObjectManager $om, $person, $userActionType, $emailAddress)
     {
+        $isUserEnvironment = true;
+        $isVwaEnvironment = false;
+
         switch ($userActionType) {
             case UserActionType::USER_PASSWORD_RESET:
                 $isUserEnvironment = true;
@@ -680,8 +680,6 @@ class ActionLogWriter
                 $isVwaEnvironment = true;
                 break;
             default:
-                $isUserEnvironment = true;
-                $isVwaEnvironment = false;
                 break;
         }
 

@@ -33,7 +33,7 @@ class AdminOverviewOutput
             return null;
         }
 
-        $res = array(
+        return array(
             "person_id" => $admin->getPersonId(),
             "prefix" => $admin->getPrefix(),
             "first_name" => $admin->getFirstName(),
@@ -41,8 +41,6 @@ class AdminOverviewOutput
             "email_address" => $admin->getEmailAddress(),
             "access_level" => $admin->getAccessLevel()
         );
-
-        return $res;
     }
 
 }

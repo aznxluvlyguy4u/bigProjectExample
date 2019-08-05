@@ -122,12 +122,27 @@ class AnimalArrayReader
             /** @var Animal $animal */
             foreach ($animals as $animal) {
                 //Prioritize imported animal, based on vsmId saved in name column
-                if($animal->getName() != null) { return $animal;
-                    //Then prioritize non-Neuter animal
-                } elseif($animal->getGender() != GenderType::NEUTER && $animal->getGender() != GenderType::O) { return $animal;
-                    //Then prioritize Animal with lowest id
-                } elseif($animal->getId() == $lowestAnimalId) { return $animal; }
+                if($animal->getName() != null) {
+                    return $animal;
+                }
             }
+
+            /** @var Animal $animal */
+            foreach ($animals as $animal) {
+                //Then prioritize non-Neuter animal
+                if($animal->getGender() != GenderType::NEUTER && $animal->getGender() != GenderType::O) {
+                    return $animal;
+                }
+            }
+
+            /** @var Animal $animal */
+            foreach ($animals as $animal) {
+                //Then prioritize Animal with lowest id
+                if($animal->getId() == $lowestAnimalId) {
+                    return $animal;
+                }
+            }
+
             //By default return the first Animal
             return ArrayUtil::firstValue($animals);
 

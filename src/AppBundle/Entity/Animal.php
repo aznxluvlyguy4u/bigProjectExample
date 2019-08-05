@@ -968,9 +968,9 @@ abstract class Animal
      */
     public function isAnimalPublic()
     {
-        $location = $this->getLocation();
-        if($location != null) {
-            $company = $location->getCompany();
+        $currentLocation = $this->getLocation();
+        if($currentLocation != null) {
+            $company = $currentLocation->getCompany();
             if($company != null) {
                 return $company->getIsRevealHistoricAnimals();
             }
@@ -989,7 +989,7 @@ abstract class Animal
      */
     public function getWorkerNumber()
     {
-        return $this->animalOrderNumber;
+        return $this->getAnimalOrderNumber();
     }
 
 
@@ -1084,7 +1084,6 @@ abstract class Animal
     public function __construct()
     {
         $this->arrivals = new ArrayCollection();
-//        $this->children = new ArrayCollection();
         $this->departures = new ArrayCollection();
         $this->imports = new ArrayCollection();
         $this->exports = new ArrayCollection();
@@ -1522,7 +1521,6 @@ abstract class Animal
     public function setParentFather(Ram $parentFather = null)
     {
         $this->parentFather = $parentFather;
-        //$parentFather->getChildren()->add($this);
 
         return $this;
     }
@@ -1574,7 +1572,6 @@ abstract class Animal
     public function setParentMother($parentMother = null)
     {
         $this->parentMother = $parentMother;
-        //$parentMother->getChildren()->add($this);
 
         return $this;
     }

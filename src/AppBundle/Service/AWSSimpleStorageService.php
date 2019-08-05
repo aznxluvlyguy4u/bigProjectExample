@@ -29,7 +29,8 @@ class AWSSimpleStorageService
      * @var Credentials
      */
     private $awsCredentials;
-    
+
+    const BUCKET = 'Bucket';
 
     public function __construct($acccessKeyId, $secretKey, $region, $version, $bucket, $selectedEnvironment, $systemEnvironment)
     {
@@ -127,8 +128,8 @@ class AWSSimpleStorageService
     {
         $key = $this->pathApppendage.$key;
 
-        $result = $this->s3Service->putObject(array(
-            'Bucket' => $this->bucket,
+        $this->s3Service->putObject(array(
+            self::BUCKET => $this->bucket,
             'Key'    => $key,
             'Body'   => $file,
             'ACL'    => 'private', //protect access to the uploaded file
@@ -136,14 +137,12 @@ class AWSSimpleStorageService
         ));
 
         $command = $this->s3Service->getCommand('GetObject', [
-            'Bucket' => $this->bucket,
+            self::BUCKET => $this->bucket,
             'Key' => $key,
         ]);
 
         $request = $this->s3Service->createPresignedRequest($command, '+1day');
-        $url = (string) $request->getUri(); //The S3 download link including the accesstoken
-
-        return $url;
+        return (string) $request->getUri(); //The S3 download link including the accesstoken
     }
 
     /**
@@ -171,12 +170,10 @@ class AWSSimpleStorageService
         $result = null;
         $key = $this->pathApppendage . $filepath;
         // Get the object
-        $result = $this->getS3Client()->getObject(array(
-            'Bucket' => $this->bucket,
+        return $this->getS3Client()->getObject(array(
+            self::BUCKET => $this->bucket,
             'Key'    => $key
         ));
-
-        return $result;
     }
 
 
