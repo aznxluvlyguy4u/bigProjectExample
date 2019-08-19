@@ -234,7 +234,7 @@ class ScanMeasurementsMigrator extends Migrator2017JunServiceBase implements IMi
 
             $inspector = $this->getInspectorByFullname($inspectorFullName);
 
-            $measurementDate = \DateTime::createFromFormat(SqlUtil::DATE_FORMAT, $measurementDateString);
+            $measurementDate = \DateTime::createFromFormat(SqlUtil::DATE_TIME_FORMAT, $measurementDateString);
             if ($measurementDate === null) {
                 throw new \Exception('EMPTY MEASUREMENT DATE! ' . $measurementDateString);
             }

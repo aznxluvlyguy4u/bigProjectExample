@@ -1028,7 +1028,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private function getGenerationDateStringFromKey()
     {
         $generationDateString = strtr($this->key, ['_' => ' ']);
-        if (TimeUtil::isValidDateTime($generationDateString, SqlUtil::DATE_FORMAT)) {
+        if (TimeUtil::isValidDateTime($generationDateString, SqlUtil::DATE_TIME_FORMAT)) {
             return $generationDateString;
         }
         return null;

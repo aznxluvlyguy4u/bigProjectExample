@@ -239,7 +239,7 @@ class LocationRepository extends BaseRepository
       }
       $retrieveAnimalsLocationQb
           ->groupBy('l')
-          ->setParameter('minLogDate', $minLogDate->format(SqlUtil::DATE_FORMAT))
+          ->setParameter('minLogDate', $minLogDate->format(SqlUtil::DATE_TIME_FORMAT))
       ;
 
       $qb = $this->getManager()->createQueryBuilder();
@@ -251,7 +251,7 @@ class LocationRepository extends BaseRepository
           ->andWhere($qb->expr()->eq('location.isActive', 'true'))
           ->andWhere($qb->expr()->notIn('location.id', $retrieveAnimalsLocationQb->getDQL()))
           ->andWhere($qb->expr()->in('location.address', $addressQb->getDQL()))
-          ->setParameter('minLogDate', $minLogDate->format(SqlUtil::DATE_FORMAT))
+          ->setParameter('minLogDate', $minLogDate->format(SqlUtil::DATE_TIME_FORMAT))
       ;
 
       return $qb->getQuery()->getResult();

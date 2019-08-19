@@ -26,7 +26,7 @@ class SqlUtil
 {
     const OR_FILTER = ' OR ';
     const NULL = 'NULL';
-    const DATE_FORMAT = 'Y-m-d H:i:s';
+    const DATE_TIME_FORMAT = 'Y-m-d H:i:s';
 
 
     /**
