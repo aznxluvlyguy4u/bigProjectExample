@@ -510,3 +510,27 @@ REVOKED: Revoked
 REVOKING: Revoking
 PROCESSING: Processing
 AVAILABLE: Available
+
+# Reason general
+NO REASON: No Reason
+OTHER: Other
+
+# Reason of Depart
+REASON OF DEPART: Reason of Depart
+BREEDING/FARM: Breeding/Farm
+RENT: Rent
+"SLAUGHTER MATURE": Slaughter/Pasture
+"SLAUGHTER: UDDER": "Slaughter: Udder"
+"SLAUGHTER: LEGS": "Slaughter: Legs"
+"SLAUGHTER: FOOTROT": "Slaughter: Foot Rot"
+"SLAUGHTER: FERTILITY": "Slaughter: Fertility (production too low)"
+"SLAUGHTER: GUST": "Slaughter: Pseudo Pregnancy"
+"SLAUGHTER: DENTAL": "Slaughter: Dental"
+
+# Reason of Loss
+REASON OF LOSS: Reason of Loss
+ACUTE DEAD: Acute Dead
+DISEASE: Disease
+HEAT CULTIVATE: Heat Cultivate
+EUTHANASIA: Euthanasia
+ANIMAL NO LONGER PRESENT: Animal no longer present on company

@@ -518,3 +518,27 @@ REVOKED: Ingetrokken
 REVOKING: Wordt ingetrokken
 PROCESSING: In Behandeling
 AVAILABLE: Beschikbaar
+
+# Reason general
+NO REASON: Geen Reden
+OTHER: Overig
+
+# Reason of Depart
+REASON OF DEPART: Reden van afvoer
+BREEDING/FARM: Fokkerij/Houderij
+RENT: Verhuur
+"SLAUGHTER MATURE": Slachtrijp/Weiderij
+"SLAUGHTER: UDDER": "Slacht: Uier"
+"SLAUGHTER: LEGS": "Slacht: Beenwerk"
+"SLAUGHTER: FOOTROT": "Slacht: Rotkreupel"
+"SLAUGHTER: FERTILITY": "Slacht: Vruchtbaarheid (te lage productie)"
+"SLAUGHTER: GUST": "Slacht: Gust"
+"SLAUGHTER: DENTAL": "Gebit/Groenkauwer"
+
+# Reason of Loss
+REASON OF LOSS: Reden van sterfte
+ACUTE DEAD: Acuut dood
+DISEASE: Ziekte
+HEAT CULTIVATE: Verwentelen
+EUTHANASIA: Euthanasie
+ANIMAL NO LONGER PRESENT: Dier niet meer op bedrijf aanwezig
