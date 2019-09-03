@@ -139,7 +139,7 @@ FROM animal a
     SELECT
         animal_id,
         d.depart_date,
-        reason.dutch as reason_of_depart
+        COALESCE(reason.dutch,d.reason_of_depart) as reason_of_depart -- If dutch translation cannot be found, use raw value
         -- d.reason_of_depart
     FROM declare_base b
              INNER JOIN declare_depart d on b.id = d.id
@@ -167,7 +167,7 @@ FROM animal a
     SELECT
         animal_id,
         dl.date_of_death,
-        reason.dutch as reason_of_loss
+        COALESCE(reason.dutch,dl.reason_of_loss) as reason_of_loss -- If dutch translation cannot be found, use raw value
         -- dl.reason_of_loss
     FROM declare_base b
              INNER JOIN declare_loss dl on b.id = dl.id
