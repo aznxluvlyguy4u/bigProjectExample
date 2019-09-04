@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 use AppBundle\Constant\TranslationKey;
+use AppBundle\Enumerator\FileType;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -34,11 +35,10 @@ class ReportUtil
         $startDateAutomatedSync = self::startDateForAutomatedSyncAllLocations();
         if (TimeUtil::isDate1BeforeDate2($referenceDate, $startDateAutomatedSync)) {
 
-            $errorMessageMiddle = TranslationKey::CANNOT_BE_OLDER_THAN;
             $errorMessage =
-                ($translator ? $translator->trans($dateLabel) : $dateLabel) .
+                self::trans($dateLabel, $translator) .
                 ' (' . $referenceDate->format(SqlUtil::DATE_FORMAT) . ') ' .
-                ($translator ? $translator->trans($errorMessageMiddle) : strtolower($errorMessageMiddle)) . ' ' .
+                self::trans(TranslationKey::CANNOT_BE_OLDER_THAN, $translator) . ' ' .
                 $startDateAutomatedSync->format(SqlUtil::DATE_FORMAT);
 
             throw new PreconditionFailedHttpException($errorMessage);
@@ -58,9 +58,37 @@ class ReportUtil
     ) {
         if (TimeUtil::isDateInFuture($referenceDate)) {
             throw new PreconditionFailedHttpException(ucfirst(strtolower(
-                ($translator ? $translator->trans($dateLabel) : $dateLabel) . ' ' .
-                ($translator ? $translator->trans(TranslationKey::CANNOT_BE_IN_THE_FUTURE) : TranslationKey::CANNOT_BE_IN_THE_FUTURE)
+                ucfirst(self::trans($dateLabel, $translator)) . ' ' .
+                self::trans( TranslationKey::CANNOT_BE_IN_THE_FUTURE, $translator)
             )));
         }
+    }
+
+
+    public static function validateFileType(
+        $fileType,
+        array $allowedFileTypes = [FileType::CSV, FileType::PDF],
+        ?TranslatorInterface $translator = null
+    ) {
+        if (empty($fileType)) {
+            throw new PreconditionFailedHttpException(
+                ucfirst(self::trans(TranslationKey::FILE_TYPE, $translator)) . ' ' .
+                self::trans(TranslationKey::IS_MISSING, $translator)
+            );
+        }
+
+        if (!in_array($fileType, $allowedFileTypes)) {
+            $errorMessage =
+                ucfirst(self::trans(TranslationKey::INVALID_INPUT, $translator)) . ' ' .
+                self::trans(TranslationKey::FILE_TYPE, $translator) . ': '.$fileType. '. ' .
+                ucfirst(self::trans(TranslationKey::ALLOWED_VALUES, $translator)) . ': ' .
+                implode(',',$allowedFileTypes)
+            ;
+            throw new PreconditionFailedHttpException($errorMessage);
+        }
+    }
+
+    private static function trans($translationKey, ?TranslatorInterface $translator = null) {
+        return $translator ? $translator->trans($translationKey) : $translationKey;
     }
 }

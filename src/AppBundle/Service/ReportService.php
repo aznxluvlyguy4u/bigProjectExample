@@ -595,11 +595,12 @@ class ReportService
         $sampleDateString = $request->query->get(QueryParameter::SAMPLE_DATE);
         $sampleDate = empty($sampleDateString) ? new \DateTime() : new \DateTime($sampleDateString);
 
-        ReportUtil::validateDateIsNotOlderThanOldestAutomatedSync($sampleDate, TranslationKey::SAMPLE_DATE);
-        ReportUtil::validateDateIsNotInTheFuture($sampleDate, TranslationKey::SAMPLE_DATE);
+        ReportUtil::validateDateIsNotOlderThanOldestAutomatedSync($sampleDate, TranslationKey::SAMPLE_DATE, $this->translator);
+        ReportUtil::validateDateIsNotInTheFuture($sampleDate, TranslationKey::SAMPLE_DATE, $this->translator);
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
-
+        $allowedFileTypes = [FileType::CSV];
+        ReportUtil::validateFileType($fileType, $allowedFileTypes, $this->translator);
 
         $options = (new CompanyRegisterReportOptions())
             ->setFileType($fileType)
