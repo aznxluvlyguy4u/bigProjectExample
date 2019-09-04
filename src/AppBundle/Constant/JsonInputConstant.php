@@ -33,6 +33,7 @@ class JsonInputConstant
     const ANIMAL = 'animal';
     const ANIMALS = 'animals';
     const ANIMAL_ID = 'animal_id';
+    const ANIMAL_ID_AND_DATE = 'animal_id_and_date';
     const BIRTH_PROGRESS = 'birth_progress';
     const RAM = 'ram';
     const EWE = 'ewe';
