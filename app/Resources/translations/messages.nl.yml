@@ -283,6 +283,7 @@ NSFO THIRD PARTY UBN OVERVIEW: NSFO DERDEN UBNOVERZICHT
 OVERVIEW: OVERZICHT
 PEDIGREE CERTIFICATES REPORT: AFSTAMMINGSBEWIJS
 REFERENCE DATE: PEILDATUM
+SAMPLE DATE: PEILDATUM
 REFERENCE YEAR: PEILJAAR
 GENERATED ON: GEMAAKT OP
 ROLLING YEARLY AVERAGE: ROLLEND JAARGEMIDDELDE
@@ -477,6 +478,8 @@ NO OPEN DECLARE BIRTHS FOUND. RESENDING IMPOSSIBLE. : Er zijn geen onverwerkte g
 ONLY %openDeclaresResent% OF THE %foundOpenDeclares% WHERE RESENT: Alleen %openDeclaresResent% van de %foundOpenDeclares% gevonden meldingen waren opnieuw verzonden
 INVALID BIRTH WEIGHT %minValue% %maxValue%: Ongeldig geboortegewicht. De waarde voor het geboortegewicht moet zitten tussen %minValue% en %maxValue%
 INVALID TAIL LENGTH %minValue% %maxValue%: Ongeldig staartlengte. De waarde voor de staartlengte moet zitten tussen %minValue% en %maxValue%
+CANNOT BE OLDER THAN: mag niet ouder zijn dan
+CANNOT BE IN THE FUTURE: mag niet in de toekomst liggen
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen

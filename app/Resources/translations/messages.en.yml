@@ -283,6 +283,7 @@ NSFO THIRD PARTY UBN OVERVIEW: NSFO THIRD PARTY UBN OVERVIEW
 OVERVIEW: OVERVIEW
 PEDIGREE CERTIFICATES REPORT: PEDIGREE CERTIFICATES REPORT
 REFERENCE DATE: REFERENCE DATE
+SAMPLE DATE: SAMPLE DATE
 REFERENCE YEAR: REFERENCE YEAR
 GENERATED ON: GENERATED ON
 ROLLING YEARLY AVERAGE: ROLLING YEARLY AVERAGE
@@ -469,6 +470,8 @@ NO OPEN DECLARE BIRTHS FOUND. RESENDING IMPOSSIBLE.: No open declare births foun
 ONLY %openDeclaresResent% OF THE %foundOpenDeclares% WHERE RESENT: Only %openDeclaresResent% of the %foundOpenDeclares% found declares where resent
 INVALID BIRTH WEIGHT %minValue% %maxValue%: Invalid birth weight value. The birth weight value should be between %minValue% and %maxValue%
 INVALID TAIL LENGTH %minValue% %maxValue%: Invalid tail length value. The tail length value should be between %minValue% and %maxValue%
+CANNOT BE OLDER THAN: cannot be older than
+CANNOT BE IN THE FUTURE: cannot be in the future
 
 #Declares
 DECLARE_ARRIVALS: arrivals

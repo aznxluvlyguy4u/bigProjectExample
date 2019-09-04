@@ -7,6 +7,7 @@ use AppBundle\Component\Option\BirthListReportOptions;
 use AppBundle\Component\Option\CompanyRegisterReportOptions;
 use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\ReportWorker;
@@ -29,6 +30,7 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\ReportUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
@@ -593,12 +595,8 @@ class ReportService
         $sampleDateString = $request->query->get(QueryParameter::SAMPLE_DATE);
         $sampleDate = empty($sampleDateString) ? new \DateTime() : new \DateTime($sampleDateString);
 
-
-        if (TimeUtil::isDateInFuture($sampleDate)) {
-            throw new PreconditionFailedHttpException(ucfirst(strtolower(
-                $this->translator->trans('SAMPLE DATE CANNOT BE IN THE FUTURE')
-            )));
-        }
+        ReportUtil::validateDateIsNotOlderThanOldestAutomatedSync($sampleDate, TranslationKey::SAMPLE_DATE);
+        ReportUtil::validateDateIsNotInTheFuture($sampleDate, TranslationKey::SAMPLE_DATE);
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
 
