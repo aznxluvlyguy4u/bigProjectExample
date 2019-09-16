@@ -11,6 +11,7 @@ class QueryParameter
     const BREED_CODE = 'breed_code';
     const CONCAT_VALUE_AND_ACCURACY = 'concat_value_and_accuracy';
     const END_DATE = 'end_date';
+    const SAMPLE_DATE = 'sample_date';
     const FILE_TYPE_QUERY = 'file_type';
     const FORMAL = 'formal';
     const FULL_OUTPUT = 'full_output';

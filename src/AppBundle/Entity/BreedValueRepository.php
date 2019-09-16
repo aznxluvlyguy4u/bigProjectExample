@@ -23,7 +23,7 @@ class BreedValueRepository extends BaseRepository
      */
     public function getReliableBreedValues($breedValueTypeConstant, $generationDate, $isIncludingOnlyAliveAnimals)
     {
-        $generationDateString = $generationDate instanceof \DateTime ? $generationDate->format(SqlUtil::DATE_FORMAT) : $generationDate;
+        $generationDateString = $generationDate instanceof \DateTime ? $generationDate->format(SqlUtil::DATE_TIME_FORMAT) : $generationDate;
         $generationYear = DateUtil::getYearFromDateStringOrDateTime($generationDateString);
 
         if ($generationDate === null || $generationYear === null) {

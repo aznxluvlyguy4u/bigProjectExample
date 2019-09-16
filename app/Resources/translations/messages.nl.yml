@@ -271,10 +271,12 @@ STAR_EWE_3: S3
 #General
 ALL ANIMALS: ALLE DIEREN
 ALL CURRENT ANIMALS: ALLE HUIDIGE DIEREN
+ALLOWED VALUES: toegestane waarden
 AMOUNT: AANTAL
 DATE: DATUM
 BY: PER
 FROM: VAN
+FOR: voor
 PAGE_OF: VAN
 PAGE: PAGINA
 BREED VALUES OVERVIEW: FOKWAARDENOVERZICHT
@@ -282,7 +284,8 @@ NSFO THIRD PARTY ANIMAL OVERVIEW: NSFO DERDEN DIERENOVERZICHT
 NSFO THIRD PARTY UBN OVERVIEW: NSFO DERDEN UBNOVERZICHT
 OVERVIEW: OVERZICHT
 PEDIGREE CERTIFICATES REPORT: AFSTAMMINGSBEWIJS
-REFERENCE DATE: PEILDATUM
+REFERENCE DATE: peildatum
+SAMPLE DATE: peildatum
 REFERENCE YEAR: PEILJAAR
 GENERATED ON: GEMAAKT OP
 ROLLING YEARLY AVERAGE: ROLLEND JAARGEMIDDELDE
@@ -294,6 +297,7 @@ DATEFORMAT: d-m-Y
 TRUE: waar
 FALSE: onwaar
 EVENT DATE: gebeurtenisdatum
+FILE TYPE: bestandstype
 
 #Chart labels
 CHART_LABEL_TOTAL_BORN: Totaal geb. per worp
@@ -327,6 +331,7 @@ ANNUAL_ACTIVE_LIVESTOCK_REPORT: JAARLIJKSE ACTIEVE STALLIJST RAPPORTAGE
 ANNUAL_ACTIVE_LIVESTOCK_RAM_MATES_REPORT: JAARLIJKSE ACTIEVE STALLIJST RAM DEKKINGEN RAPPORTAGE
 ANNUAL_TE100_UBN_PRODUCTION: JAARLIJKSE TE100 UBN PRODUCTIE
 BIRTH_LIST: GEBOORTELIJST
+COMPANY_REGISTER: BEDRIJFSREGISTER
 FERTILIZER_ACCOUNTING: MESTBOEKHOUDING
 NSFO_MEMBERS_AND_USERS_OVERVIEW: NSFO LEDEN EN GEBRUIKERSOVERZICHT
 OFFSPRING_REPORT: NAKOMELINGEN RAPPORTAGE
@@ -476,6 +481,9 @@ NO OPEN DECLARE BIRTHS FOUND. RESENDING IMPOSSIBLE. : Er zijn geen onverwerkte g
 ONLY %openDeclaresResent% OF THE %foundOpenDeclares% WHERE RESENT: Alleen %openDeclaresResent% van de %foundOpenDeclares% gevonden meldingen waren opnieuw verzonden
 INVALID BIRTH WEIGHT %minValue% %maxValue%: Ongeldig geboortegewicht. De waarde voor het geboortegewicht moet zitten tussen %minValue% en %maxValue%
 INVALID TAIL LENGTH %minValue% %maxValue%: Ongeldig staartlengte. De waarde voor de staartlengte moet zitten tussen %minValue% en %maxValue%
+CANNOT BE OLDER THAN: mag niet ouder zijn dan
+CANNOT BE IN THE FUTURE: mag niet in de toekomst liggen
+IS MISSING: ontbreekt
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen
@@ -517,3 +525,27 @@ REVOKED: Ingetrokken
 REVOKING: Wordt ingetrokken
 PROCESSING: In Behandeling
 AVAILABLE: Beschikbaar
+
+# Reason general
+NO REASON: Geen Reden
+OTHER: Overig
+
+# Reason of Depart
+REASON OF DEPART: Reden van afvoer
+BREEDING/FARM: Fokkerij/Houderij
+RENT: Verhuur
+"SLAUGHTER MATURE": Slachtrijp/Weiderij
+"SLAUGHTER: UDDER": "Slacht: Uier"
+"SLAUGHTER: LEGS": "Slacht: Beenwerk"
+"SLAUGHTER: FOOTROT": "Slacht: Rotkreupel"
+"SLAUGHTER: FERTILITY": "Slacht: Vruchtbaarheid (te lage productie)"
+"SLAUGHTER: GUST": "Slacht: Gust"
+"SLAUGHTER: DENTAL": "Gebit/Groenkauwer"
+
+# Reason of Loss
+REASON OF LOSS: Reden van sterfte
+ACUTE DEAD: Acuut dood
+DISEASE: Ziekte
+HEAT CULTIVATE: Verwentelen
+EUTHANASIA: Euthanasie
+ANIMAL NO LONGER PRESENT: Dier niet meer op bedrijf aanwezig

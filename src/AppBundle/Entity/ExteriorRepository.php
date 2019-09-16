@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\Variable;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\Collection;
@@ -18,6 +19,8 @@ class ExteriorRepository extends MeasurementRepository {
     const FILE_NAME = 'exterior_deleted_duplicates';
     const FILE_EXTENSION = '.txt';
     const FILE_NAME_TIME_STAMP_FORMAT = 'Y-m-d_H';
+
+    const DELETE_FROM_EXTERIOR_WHERE_ID = "DELETE FROM exterior WHERE id = ";
 
     /** @var boolean */
     private $isPrintDeletedExteriors;
@@ -36,9 +39,8 @@ class ExteriorRepository extends MeasurementRepository {
     {
         $results = [];
         //null check
-        if(!($animal instanceof Animal)) { return $results; }
-        elseif(!is_int($animal->getId())){ return $results; }
-        
+        if(!($animal instanceof Animal || !is_int($animal->getId()))) { return $results; }
+
         $deletedFilterString = '';
         if($ignoreDeleted) { $deletedFilterString = ' AND m.is_active = TRUE '; }
 
@@ -54,30 +56,30 @@ class ExteriorRepository extends MeasurementRepository {
         foreach ($retrievedMeasurementData as $measurementData)
         {
             $results[$count] = [
-                JsonInputConstant::ID => $measurementData['id'],
-                JsonInputConstant::MEASUREMENT_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue('measurement_date', $measurementData, $nullFiller),
-                JsonInputConstant::HEIGHT => Utils::fillNullOfFloatValue($measurementData['height']),
-                JsonInputConstant::KIND => Utils::fillNullOrEmptyString($measurementData['kind'], $nullFiller),
-                JsonInputConstant::PROGRESS => Utils::fillNullOfFloatValue($measurementData['progress']),
-                JsonInputConstant::SKULL => Utils::fillNullOfFloatValue($measurementData['skull']),
-                JsonInputConstant::MUSCULARITY => Utils::fillNullOfFloatValue($measurementData['muscularity']),
-                JsonInputConstant::PROPORTION => Utils::fillNullOfFloatValue($measurementData['proportion']),
-                JsonInputConstant::EXTERIOR_TYPE => Utils::fillNullOfFloatValue($measurementData['exterior_type']),
-                JsonInputConstant::LEG_WORK => Utils::fillNullOfFloatValue($measurementData['leg_work']),
-                JsonInputConstant::FUR => Utils::fillNullOfFloatValue($measurementData['fur']),
-                JsonInputConstant::GENERAL_APPEARANCE => Utils::fillNullOfFloatValue($measurementData['general_appearance']),
-                JsonInputConstant::BREAST_DEPTH => Utils::fillNullOfFloatValue($measurementData['breast_depth']),
-                JsonInputConstant::TORSO_LENGTH => Utils::fillNullOfFloatValue($measurementData['torso_length']),
-                JsonInputConstant::MARKINGS => Utils::fillNullOfFloatValue($measurementData['markings']),
+                JsonInputConstant::ID => $measurementData[JsonInputConstant::ID],
+                JsonInputConstant::MEASUREMENT_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue(JsonInputConstant::MEASUREMENT_DATE, $measurementData, $nullFiller),
+                JsonInputConstant::HEIGHT => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::HEIGHT]),
+                JsonInputConstant::KIND => Utils::fillNullOrEmptyString($measurementData[JsonInputConstant::KIND], $nullFiller),
+                JsonInputConstant::PROGRESS => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::PROGRESS]),
+                JsonInputConstant::SKULL => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::SKULL]),
+                JsonInputConstant::MUSCULARITY => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::MUSCULARITY]),
+                JsonInputConstant::PROPORTION => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::PROPORTION]),
+                JsonInputConstant::EXTERIOR_TYPE => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::EXTERIOR_TYPE]),
+                JsonInputConstant::LEG_WORK => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::LEG_WORK]),
+                JsonInputConstant::FUR => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::FUR]),
+                JsonInputConstant::GENERAL_APPEARANCE => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::GENERAL_APPEARANCE]),
+                JsonInputConstant::BREAST_DEPTH => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::BREAST_DEPTH]),
+                JsonInputConstant::TORSO_LENGTH => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::TORSO_LENGTH]),
+                JsonInputConstant::MARKINGS => Utils::fillNullOfFloatValue($measurementData[JsonInputConstant::MARKINGS]),
             ];
 
             //Only include inspector key if it exists
-            $personId = $measurementData['person_id'];
+            $personId = $measurementData[JsonInputConstant::PERSON_ID];
             if($personId != null && $personId != '') {
                 $results[$count][JsonInputConstant::INSPECTOR] = [
                     JsonInputConstant::PERSON_ID => $personId,
-                    JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
-                    JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
+                    JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData[JsonInputConstant::FIRST_NAME], $nullFiller),
+                    JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData[JsonInputConstant::LAST_NAME], $nullFiller),
                     JsonInputConstant::TYPE => "Inspector",
                 ];
             }
@@ -139,7 +141,7 @@ class ExteriorRepository extends MeasurementRepository {
             $sql = $sqlBase.$filter;
             $result = $this->getConnection()->query($sql)->fetchAll();
         }
-        return $result == false ? $nullResult : $result;
+        return is_bool($result) && !$result ? $nullResult : $result;
     }
 
 
@@ -157,15 +159,13 @@ class ExteriorRepository extends MeasurementRepository {
         $endTime = new \DateTime($endYear);
 
         $criteria = Criteria::create()
-            ->where(Criteria::expr()->gte('measurementDate', $startTime)) //greater or equal to this startTime
-            ->andWhere(Criteria::expr()->lte('measurementDate', $endTime)) //less or equal to this endTime
-            ->orderBy(['measurementDate' => Criteria::ASC])
+            ->where(Criteria::expr()->gte(Variable::MEASUREMENT_DATE, $startTime)) //greater or equal to this startTime
+            ->andWhere(Criteria::expr()->lte(Variable::MEASUREMENT_DATE, $endTime)) //less or equal to this endTime
+            ->orderBy([Variable::MEASUREMENT_DATE => Criteria::ASC])
         ;
 
-        $measurements = $this->getManager()->getRepository(Exterior::class)
+        return $this->getManager()->getRepository(Exterior::class)
             ->matching($criteria);
-
-        return $measurements;
     }
     
 
@@ -189,7 +189,7 @@ class ExteriorRepository extends MeasurementRepository {
 
             foreach ($results as $result) {
                 $minId = $result['min_id'];
-                $sql = "DELETE FROM exterior WHERE id = '".$minId."'";
+                $sql = self::DELETE_FROM_EXTERIOR_WHERE_ID . "'".$minId."'";
                 $em->getConnection()->exec($sql);
                 $sql = "DELETE FROM measurement WHERE id = '".$minId."'";
                 $em->getConnection()->exec($sql);
@@ -327,31 +327,31 @@ class ExteriorRepository extends MeasurementRepository {
         $em = $this->getManager();
         $hasDeletedAnExterior = false;
 
-        $exterior1Id = $exterior1['measurement_id'];
-        $exterior2Id = $exterior2['measurement_id'];
+        $exterior1Id = $exterior1[JsonInputConstant::MEASUREMENT_ID];
+        $exterior2Id = $exterior2[JsonInputConstant::MEASUREMENT_ID];
         $hasExterior1EmptyHeightKindAndProgress = $this->hasEmptyHeightKindAndProgress($exterior1);
         $hasExterior2EmptyHeightKindAndProgress = $this->hasEmptyHeightKindAndProgress($exterior2);
 
         if($hasExterior1EmptyHeightKindAndProgress && !$hasExterior2EmptyHeightKindAndProgress){
             if($this->isInspectorNotMissing($exterior2, $exterior1) &&
             $this->areNonHeightKindProgressAndInspectorExteriorValuesIdentical($exterior1, $exterior2)) {
-                $sql = "DELETE FROM exterior WHERE id = ".$exterior1Id;
+                $sql = self::DELETE_FROM_EXTERIOR_WHERE_ID . $exterior1Id;
                 $em->getConnection()->exec($sql);
                 $sql = "DELETE FROM measurement WHERE id = ".$exterior1Id;
                 $em->getConnection()->exec($sql);
                 $hasDeletedAnExterior = true;
-                $this->printDeletedRows($exterior1); //FIXME
+                $this->printDeletedRows($exterior1);
             }
 
         } elseif (!$hasExterior1EmptyHeightKindAndProgress && $hasExterior2EmptyHeightKindAndProgress) {
             if($this->isInspectorNotMissing($exterior1, $exterior2) &&
                 $this->areNonHeightKindProgressAndInspectorExteriorValuesIdentical($exterior1, $exterior2)) {
-                $sql = "DELETE FROM exterior WHERE id = ".$exterior2Id;
+                $sql = self::DELETE_FROM_EXTERIOR_WHERE_ID . $exterior2Id;
                 $em->getConnection()->exec($sql);
                 $sql = "DELETE FROM measurement WHERE id = ".$exterior2Id;
                 $em->getConnection()->exec($sql);
                 $hasDeletedAnExterior = true;
-                $this->printDeletedRows($exterior2); //FIXME
+                $this->printDeletedRows($exterior2);
             }
         }
         return $hasDeletedAnExterior;
@@ -379,12 +379,12 @@ class ExteriorRepository extends MeasurementRepository {
                 $this->areNonHeightKindProgressAndInspectorExteriorValuesIdentical($exterior1, $exterior2)) {
                 $sql = "UPDATE measurement SET inspector_id = ".$inspectorId." WHERE id = ".$exterior2Id;
                 $em->getConnection()->exec($sql);
-                $sql = "DELETE FROM exterior WHERE id = ".$exterior1Id;
+                $sql = self::DELETE_FROM_EXTERIOR_WHERE_ID . $exterior1Id;
                 $em->getConnection()->exec($sql);
                 $sql = "DELETE FROM measurement WHERE id = ".$exterior1Id;
                 $em->getConnection()->exec($sql);
                 $hasDeletedAnExterior = true;
-                $this->printDeletedRows($exterior1); //FIXME
+                $this->printDeletedRows($exterior1);
             }
 
         } elseif (!$hasExterior1EmptyHeightKindAndProgress && $hasExterior2EmptyHeightKindAndProgress) {
@@ -392,12 +392,12 @@ class ExteriorRepository extends MeasurementRepository {
                 $this->areNonHeightKindProgressAndInspectorExteriorValuesIdentical($exterior1, $exterior2)) {
                 $sql = "UPDATE measurement SET inspector_id = ".$inspectorId." WHERE id = ".$exterior1Id;
                 $em->getConnection()->exec($sql);
-                $sql = "DELETE FROM exterior WHERE id = ".$exterior2Id;
+                $sql = self::DELETE_FROM_EXTERIOR_WHERE_ID . $exterior2Id;
                 $em->getConnection()->exec($sql);
                 $sql = "DELETE FROM measurement WHERE id = ".$exterior2Id;
                 $em->getConnection()->exec($sql);
                 $hasDeletedAnExterior = true;
-                $this->printDeletedRows($exterior2); //FIXME
+                $this->printDeletedRows($exterior2);
             }
         }
         return $hasDeletedAnExterior;
@@ -414,8 +414,8 @@ class ExteriorRepository extends MeasurementRepository {
         $em = $this->getManager();
         $hasDeletedAnExterior = false;
 
-        $exterior1Id = $exterior1['measurement_id'];
-        $exterior2Id = $exterior2['measurement_id'];
+        $exterior1Id = $exterior1[JsonInputConstant::MEASUREMENT_ID];
+        $exterior2Id = $exterior2[JsonInputConstant::MEASUREMENT_ID];
         $isExterior1ToBeDeleted = $this->areTorsoShiftedPair($exterior2, $exterior1);
         $isExterior2ToBeDeleted = false;
         if(!$isExterior1ToBeDeleted) {
@@ -424,7 +424,7 @@ class ExteriorRepository extends MeasurementRepository {
 
 
         if($isExterior1ToBeDeleted){
-            $sql = "DELETE FROM exterior WHERE id = ".$exterior1Id;
+            $sql = self::DELETE_FROM_EXTERIOR_WHERE_ID . $exterior1Id;
             $em->getConnection()->exec($sql);
             $sql = "DELETE FROM measurement WHERE id = ".$exterior1Id;
             $em->getConnection()->exec($sql);
@@ -432,7 +432,7 @@ class ExteriorRepository extends MeasurementRepository {
             $this->printDeletedRows($exterior1);
 
         } elseif ($isExterior2ToBeDeleted) {
-            $sql = "DELETE FROM exterior WHERE id = ".$exterior2Id;
+            $sql = self::DELETE_FROM_EXTERIOR_WHERE_ID . $exterior2Id;
             $em->getConnection()->exec($sql);
             $sql = "DELETE FROM measurement WHERE id = ".$exterior2Id;
             $em->getConnection()->exec($sql);
@@ -527,7 +527,11 @@ class ExteriorRepository extends MeasurementRepository {
     private function printDeletedRows($input)
     {
         if($this->isPrintDeletedExteriors) {
-            $row = $input['animal_id_and_date'].$input['kind'].$input['progress'].$input['height'].$input['inspector_id'];
+            $row = $input[JsonInputConstant::ANIMAL_ID_AND_DATE].
+                $input[JsonInputConstant::KIND].
+                $input[JsonInputConstant::PROGRESS].
+                $input[JsonInputConstant::HEIGHT].
+                $input[JsonInputConstant::INSPECTOR_ID];
             $filePath = $this->mutationsFolder.'/'.self::FILE_NAME.TimeUtil::getTimeStampNow(self::FILE_NAME_TIME_STAMP_FORMAT).self::FILE_EXTENSION;
             file_put_contents($filePath, $row."\n", FILE_APPEND);
         }
@@ -559,16 +563,10 @@ class ExteriorRepository extends MeasurementRepository {
      */
     private function isInspectorNotMissing($exteriorArrayToKeep, $exteriorArrayToDelete)
     {
-        if($exteriorArrayToDelete['inspector_id'] == null) {
+        if($exteriorArrayToDelete[JsonInputConstant::INSPECTOR_ID] == null) {
             return true;
-
-        } else {
-            if($exteriorArrayToKeep['inspector_id'] != null) {
-                return true;
-            } else {
-                return false;
-            }
         }
+        return $exteriorArrayToKeep[JsonInputConstant::INSPECTOR_ID] != null;
     }
 
 
@@ -579,18 +577,19 @@ class ExteriorRepository extends MeasurementRepository {
      */
     private function getNonContradictingInspectorIdFromAnyExterior($exterior1, $exterior2)
     {
-        $inspectorId1 = $exterior1['inspector_id'];
-        $inspectorId2 = $exterior2['inspector_id'];
+        $inspectorId1 = $exterior1[JsonInputConstant::INSPECTOR_ID];
+        $inspectorId2 = $exterior2[JsonInputConstant::INSPECTOR_ID];
 
         if($inspectorId1 == $inspectorId2) {
-            return $inspectorId1;
+            $result = $inspectorId1;
         } elseif ($inspectorId1 == null && NullChecker::isNotNull($inspectorId2)) {
-            return $inspectorId2;
+            $result = $inspectorId2;
         } elseif (NullChecker::isNotNull($inspectorId1) && $inspectorId2 == null) {
-            return $inspectorId1;
+            $result = $inspectorId1;
         } else {
-            return null;
+            $result = null;
         }
+        return $result;
     }
 
 
@@ -602,19 +601,19 @@ class ExteriorRepository extends MeasurementRepository {
     private function areNonHeightKindProgressAndInspectorExteriorValuesIdentical($exterior1, $exterior2) {
 
         return
-            $exterior1['animal_id'] == $exterior2['animal_id'] &&
-            $exterior1['animal_id_and_date'] == $exterior2['animal_id_and_date'] &&
-            $exterior1['measurement_date'] == $exterior2['measurement_date'] &&
-            $exterior1['skull'] == $exterior2['skull'] &&
-            $exterior1['muscularity'] == $exterior2['muscularity'] &&
-            $exterior1['proportion'] == $exterior2['proportion'] &&
-            $exterior1['exterior_type'] == $exterior2['exterior_type'] &&
-            $exterior1['leg_work'] == $exterior2['leg_work'] &&
-            $exterior1['fur'] == $exterior2['fur'] &&
-            $exterior1['general_appearance'] == $exterior2['general_appearance'] &&
-            $exterior1['breast_depth'] == $exterior2['breast_depth'] &&
-            $exterior1['torso_length'] == $exterior2['torso_length'] &&
-            $exterior1['markings'] == $exterior2['markings'];
+            $exterior1[JsonInputConstant::ANIMAL_ID] == $exterior2[JsonInputConstant::ANIMAL_ID] &&
+            $exterior1[JsonInputConstant::ANIMAL_ID_AND_DATE] == $exterior2[JsonInputConstant::ANIMAL_ID_AND_DATE] &&
+            $exterior1[JsonInputConstant::MEASUREMENT_DATE] == $exterior2[JsonInputConstant::MEASUREMENT_DATE] &&
+            $exterior1[JsonInputConstant::SKULL] == $exterior2[JsonInputConstant::SKULL] &&
+            $exterior1[JsonInputConstant::MUSCULARITY] == $exterior2[JsonInputConstant::MUSCULARITY] &&
+            $exterior1[JsonInputConstant::PROPORTION] == $exterior2[JsonInputConstant::PROPORTION] &&
+            $exterior1[JsonInputConstant::EXTERIOR_TYPE] == $exterior2[JsonInputConstant::EXTERIOR_TYPE] &&
+            $exterior1[JsonInputConstant::LEG_WORK] == $exterior2[JsonInputConstant::LEG_WORK] &&
+            $exterior1[JsonInputConstant::FUR] == $exterior2[JsonInputConstant::FUR] &&
+            $exterior1[JsonInputConstant::GENERAL_APPEARANCE] == $exterior2[JsonInputConstant::GENERAL_APPEARANCE] &&
+            $exterior1[JsonInputConstant::BREAST_DEPTH] == $exterior2[JsonInputConstant::BREAST_DEPTH] &&
+            $exterior1[JsonInputConstant::TORSO_LENGTH] == $exterior2[JsonInputConstant::TORSO_LENGTH] &&
+            $exterior1[JsonInputConstant::MARKINGS] == $exterior2[JsonInputConstant::MARKINGS];
     }
 
 
@@ -626,29 +625,29 @@ class ExteriorRepository extends MeasurementRepository {
     private function areTorsoShiftedPair($exteriorToKeep, $exteriorArrayToDelete) {
 
         $isDifferencesVerified = 
-            NullChecker::numberIsNull($exteriorArrayToDelete['progress']) &&
-            NullChecker::numberIsNull($exteriorArrayToDelete['height']) &&
-            NullChecker::numberIsNull($exteriorArrayToDelete['torso_length'])
-            && $exteriorArrayToDelete['breast_depth'] == $exteriorToKeep['torso_length']
+            NullChecker::numberIsNull($exteriorArrayToDelete[JsonInputConstant::PROGRESS]) &&
+            NullChecker::numberIsNull($exteriorArrayToDelete[JsonInputConstant::HEIGHT]) &&
+            NullChecker::numberIsNull($exteriorArrayToDelete[JsonInputConstant::TORSO_LENGTH])
+            && $exteriorArrayToDelete[JsonInputConstant::BREAST_DEPTH] == $exteriorToKeep[JsonInputConstant::TORSO_LENGTH]
             && $exteriorArrayToDelete['inspector_id'] == null && $exteriorToKeep['inspector_id'] != null;
 
         $isSimilaritiesVerified =
-            $exteriorArrayToDelete['animal_id'] == $exteriorToKeep['animal_id'] &&
-            $exteriorArrayToDelete['animal_id_and_date'] == $exteriorToKeep['animal_id_and_date'] &&
-            $exteriorArrayToDelete['measurement_date'] == $exteriorToKeep['measurement_date'] &&
-            $exteriorArrayToDelete['skull'] == $exteriorToKeep['skull'] &&
-            $exteriorArrayToDelete['muscularity'] == $exteriorToKeep['muscularity'] &&
-            $exteriorArrayToDelete['proportion'] == $exteriorToKeep['proportion'] &&
-            $exteriorArrayToDelete['exterior_type'] == $exteriorToKeep['exterior_type'] &&
-            $exteriorArrayToDelete['leg_work'] == $exteriorToKeep['leg_work'] &&
-            $exteriorArrayToDelete['fur'] == $exteriorToKeep['fur'] &&
-            $exteriorArrayToDelete['general_appearance'] == $exteriorToKeep['general_appearance'];
+            $exteriorArrayToDelete[JsonInputConstant::ANIMAL_ID] == $exteriorToKeep[JsonInputConstant::ANIMAL_ID] &&
+            $exteriorArrayToDelete[JsonInputConstant::ANIMAL_ID_AND_DATE] == $exteriorToKeep[JsonInputConstant::ANIMAL_ID_AND_DATE] &&
+            $exteriorArrayToDelete[JsonInputConstant::MEASUREMENT_DATE] == $exteriorToKeep[JsonInputConstant::MEASUREMENT_DATE] &&
+            $exteriorArrayToDelete[JsonInputConstant::SKULL] == $exteriorToKeep[JsonInputConstant::SKULL] &&
+            $exteriorArrayToDelete[JsonInputConstant::MUSCULARITY] == $exteriorToKeep[JsonInputConstant::MUSCULARITY] &&
+            $exteriorArrayToDelete[JsonInputConstant::PROPORTION] == $exteriorToKeep[JsonInputConstant::PROPORTION] &&
+            $exteriorArrayToDelete[JsonInputConstant::EXTERIOR_TYPE] == $exteriorToKeep[JsonInputConstant::EXTERIOR_TYPE] &&
+            $exteriorArrayToDelete[JsonInputConstant::LEG_WORK] == $exteriorToKeep[JsonInputConstant::LEG_WORK] &&
+            $exteriorArrayToDelete[JsonInputConstant::FUR] == $exteriorToKeep[JsonInputConstant::FUR] &&
+            $exteriorArrayToDelete[JsonInputConstant::GENERAL_APPEARANCE] == $exteriorToKeep[JsonInputConstant::GENERAL_APPEARANCE];
 
 
-        if(NullChecker::isNotNull($exteriorToKeep['kind'])) {
+        if(NullChecker::isNotNull($exteriorToKeep[JsonInputConstant::KIND])) {
             $isNotMissingExtKind = true;
         } else {
-            if(NullChecker::isNull($exteriorArrayToDelete['kind'])) {
+            if(NullChecker::isNull($exteriorArrayToDelete[JsonInputConstant::KIND])) {
                 $isNotMissingExtKind = true;
             } else {
                 $isNotMissingExtKind = false;

@@ -10,6 +10,7 @@ use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\DutchGender;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestTypeIRDutchInformal;
 use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
 use AppBundle\Service\Report\ReportServiceWithBreedValuesBase;
@@ -26,7 +27,8 @@ class SqlUtil
 {
     const OR_FILTER = ' OR ';
     const NULL = 'NULL';
-    const DATE_FORMAT = 'Y-m-d H:i:s';
+    const DATE_TIME_FORMAT = 'Y-m-d H:i:s';
+    const DATE_FORMAT = 'Y-m-d';
 
 
     /**
@@ -877,4 +879,29 @@ class SqlUtil
         return $firstPart . implode($glue, $columnLabelsWithTableAlias) . $lastPart;
     }
 
+
+    private static function activeRequestStateTypes(): array
+    {
+        return [
+            RequestStateType::FINISHED,
+            RequestStateType::FINISHED_WITH_WARNING,
+            RequestStateType::IMPORTED,
+        ];
+    }
+
+
+    public static function activeRequestStateTypesJoinedList(): string
+    {
+        return "'" . implode("','", self::activeRequestStateTypes()) . "'";
+    }
+
+
+    /**
+     * @param array $reasonOfLossTranslationArray
+     * @return string
+     */
+    public static function reasonOfLossOrDepartTranslationValues(array $reasonOfLossTranslationArray)
+    {
+        return SqlUtil::createSqlValuesString($reasonOfLossTranslationArray, false, false);
+    }
 }

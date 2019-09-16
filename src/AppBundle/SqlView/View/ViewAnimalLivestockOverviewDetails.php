@@ -400,7 +400,7 @@ class ViewAnimalLivestockOverviewDetails implements SqlViewInterface
      */
     public function setDateOfBirth($dateOfBirth)
     {
-        $this->dateOfBirth = $dateOfBirth ? $dateOfBirth->format(SqlUtil::DATE_FORMAT) : null;
+        $this->dateOfBirth = $dateOfBirth ? $dateOfBirth->format(SqlUtil::DATE_TIME_FORMAT) : null;
         return $this;
     }
 

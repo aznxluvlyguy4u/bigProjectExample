@@ -27,11 +27,13 @@ class JsonInputConstant
     const IS_ADMIN_ENV = 'is_admin_env';
 
     //Animal
+    const ANIMAL_ORDER_NUMBER = 'animal_order_number';
     const WORK_NUMBER = 'work_number';
     const IS_ALIVE = 'is_alive';
     const ANIMAL = 'animal';
     const ANIMALS = 'animals';
     const ANIMAL_ID = 'animal_id';
+    const ANIMAL_ID_AND_DATE = 'animal_id_and_date';
     const BIRTH_PROGRESS = 'birth_progress';
     const RAM = 'ram';
     const EWE = 'ewe';

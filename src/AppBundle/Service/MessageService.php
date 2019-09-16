@@ -40,17 +40,22 @@ class MessageService extends ControllerServiceBase
     private function getMessageUrlByType($type) {
         switch ($type) {
             case MessageType::DECLARE_ARRIVAL: {
-                return 'main/arrival/history';
+                $messageUrl = 'main/arrival/history';
+                break;
             }
             case MessageType::DECLARE_DEPART: {
-                return 'main/departure/history';
+                $messageUrl = 'main/departure/history';
+                break;
             }
             case MessageType::NEW_INVOICE: {
-                return 'main/invoices/overview';
+                $messageUrl = 'main/invoices/overview';
+                break;
             }
             default:
-                return 'main/messages';
+                $messageUrl = 'main/messages';
+                break;
         }
+        return $messageUrl;
     }
 
     /**

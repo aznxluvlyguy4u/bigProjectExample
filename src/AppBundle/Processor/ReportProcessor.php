@@ -3,6 +3,7 @@
 namespace AppBundle\Processor;
 
 use AppBundle\Component\Option\BirthListReportOptions;
+use AppBundle\Component\Option\CompanyRegisterReportOptions;
 use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Entity\ReportWorker;
 use AppBundle\Enumerator\ReportType;
@@ -14,6 +15,7 @@ use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockReportService;
 use AppBundle\Service\Report\AnnualTe100UbnProductionReportService;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
@@ -102,6 +104,9 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /** @var MembersAndUsersOverviewReportService */
     private $membersAndUsersOverviewReport;
 
+    /** @var CompanyRegisterReportService */
+    private $companyRegisterReportService;
+
     /** @var BaseSerializer */
     private $serializer;
 
@@ -114,6 +119,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         AnimalHealthStatusesReportService $animalHealthStatusesReportService,
         AnnualActiveLivestockReportService $annualActiveLivestockReportService,
         AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService,
+        CompanyRegisterReportService $companyRegisterReportService,
         FertilizerAccountingReport $accountingReport,
         InbreedingCoefficientReportService $coefficientReportService,
         AnimalsOverviewReportService $animalsOverviewReportService,
@@ -144,6 +150,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->liveStockReportService = $liveStockReportService;
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
+        $this->companyRegisterReportService = $companyRegisterReportService;
         $this->animalHealthStatusesReportService = $animalHealthStatusesReportService;
     }
 
@@ -248,6 +255,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $options = $this->serializer->deserializeToObject($data['options'],
                             MembersAndUsersOverviewReportOptions::class, null);
                         $data = $this->membersAndUsersOverviewReport->getReport($options);
+                        break;
+                    }
+                case ReportType::COMPANY_REGISTER:
+                    {
+                        $options = $this->serializer->deserializeToObject($data['options'],
+                            CompanyRegisterReportOptions::class, null);
+                        $data = $this->companyRegisterReportService->getReport($worker->getActionBy(), $worker->getLocation(), $options);
                         break;
                     }
                 case ReportType::ANIMAL_HEALTH_STATUSES:
