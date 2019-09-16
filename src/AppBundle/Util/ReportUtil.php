@@ -91,4 +91,19 @@ class ReportUtil
     private static function trans($translationKey, ?TranslatorInterface $translator = null) {
         return $translator ? $translator->trans($translationKey) : $translationKey;
     }
+
+    public static function translateFileName(TranslatorInterface $translator, $translationKey): string {
+        return self::translateLowerCaseAndSpacesReplacedWithUnderscore($translator, $translationKey);
+    }
+
+    public static function translateColumnHeader(TranslatorInterface $translator, $translationKey): string {
+        return self::translateLowerCaseAndSpacesReplacedWithUnderscore($translator, $translationKey);
+    }
+
+    private static function translateLowerCaseAndSpacesReplacedWithUnderscore(TranslatorInterface $translator, $translationKey): string {
+        $translatedValue = strtolower($translator->trans(strtoupper($translationKey)));
+        return strtr($translatedValue, [
+            ' ' => '_'
+        ]);
+    }
 }

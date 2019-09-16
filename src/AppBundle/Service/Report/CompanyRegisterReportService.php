@@ -9,6 +9,7 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Util\ReportUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\Translation;
 
@@ -29,7 +30,8 @@ class CompanyRegisterReportService extends ReportServiceBase
      */
     public function getReport(Person $person, Location $location, CompanyRegisterReportOptions $options)
     {
-        $this->filename = $this->trans(self::FILE_NAME_REPORT_TYPE).'_'.$location->getUbn();
+        $this->filename = ReportUtil::translateFileName($this->translator, self::FILE_NAME_REPORT_TYPE)
+            . '_'.$location->getUbn();
         $this->folderName = self::FOLDER_NAME;
         $this->extension = $options->getFileType();
 
@@ -80,9 +82,9 @@ class CompanyRegisterReportService extends ReportServiceBase
             Translation::getReasonOfDepartTranslations($this->translator)
         );
 
-        $animalOrderNumberLabel = strtolower($this->translator->trans(strtoupper(JsonInputConstant::ANIMAL_ORDER_NUMBER)));
-        $dateOfBirthLabel = strtolower($this->translator->trans(strtoupper(JsonInputConstant::DATE_OF_BIRTH)));
-        $genderLabel = strtolower($this->translator->trans(strtoupper(JsonInputConstant::GENDER)));
+        $animalOrderNumberLabel = ReportUtil::translateColumnHeader($this->translator, JsonInputConstant::ANIMAL_ORDER_NUMBER);
+        $dateOfBirthLabel = ReportUtil::translateColumnHeader($this->translator,JsonInputConstant::DATE_OF_BIRTH);
+        $genderLabel = ReportUtil::translateColumnHeader($this->translator,JsonInputConstant::GENDER);
 
         return "SELECT
     CONCAT(uln_country_code,uln_number) as uln,
