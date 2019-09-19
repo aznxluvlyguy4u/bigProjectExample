@@ -10,6 +10,7 @@ class DateUtil
     const DATE_STRING_FORMAT_FILENAME = 'Y-m-d_H\hi\ms\s';
     const DEFAULT_SQL_DATE_STRING_FORMAT = 'DD-MM-YYYY';
     const JSON_DATE_TIME_FORMAT = 'Y-m-d\TH:i:sP';
+    const DATE_USER_DISPLAY_FORMAT = 'd-m-Y';
 
 
     /**

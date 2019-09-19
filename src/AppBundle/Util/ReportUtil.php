@@ -37,9 +37,9 @@ class ReportUtil
 
             $errorMessage =
                 self::trans($dateLabel, $translator) .
-                ' (' . $referenceDate->format(SqlUtil::DATE_FORMAT) . ') ' .
+                ' (' . $referenceDate->format(DateUtil::DATE_USER_DISPLAY_FORMAT) . ') ' .
                 self::trans(TranslationKey::CANNOT_BE_OLDER_THAN, $translator) . ' ' .
-                $startDateAutomatedSync->format(SqlUtil::DATE_FORMAT);
+                $startDateAutomatedSync->format(DateUtil::DATE_USER_DISPLAY_FORMAT);
 
             throw new PreconditionFailedHttpException($errorMessage);
         }
