@@ -13,6 +13,7 @@ class TranslationKey
     const INVALID_INPUT = 'INVALID INPUT';
     const IS_MISSING = 'IS MISSING';
     const FILE_TYPE = 'FILE TYPE';
+    const GENERATED_ON = 'GENERATED ON';
     const REFERENCE_DATE = "REFERENCE DATE";
     const SAMPLE_DATE = "SAMPLE DATE";
 }

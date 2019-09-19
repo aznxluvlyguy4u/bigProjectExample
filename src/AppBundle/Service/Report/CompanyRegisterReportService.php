@@ -6,6 +6,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\CompanyRegisterReportOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\FileType;
@@ -30,8 +31,7 @@ class CompanyRegisterReportService extends ReportServiceBase
      */
     public function getReport(Person $person, Location $location, CompanyRegisterReportOptions $options)
     {
-        $this->filename = ReportUtil::translateFileName($this->translator, self::FILE_NAME_REPORT_TYPE)
-            . '_'.$location->getUbn();
+        $this->filename = $this->getCompanyRegisterFileName($location, $options);
         $this->folderName = self::FOLDER_NAME;
         $this->extension = $options->getFileType();
 
@@ -44,6 +44,14 @@ class CompanyRegisterReportService extends ReportServiceBase
         }
 
         return $this->getPdfReport($person, $location, $options);
+    }
+
+    private function getCompanyRegisterFileName(Location $location, CompanyRegisterReportOptions $options): string {
+        return ReportUtil::translateFileName($this->translator, self::FILE_NAME_REPORT_TYPE)
+            . '_'.$location->getUbn() . '_' .
+            ReportUtil::translateFileName($this->translator, TranslationKey::REFERENCE_DATE).
+            $options->getSampleDateString(). '__' .
+            ReportUtil::translateFileName($this->translator, TranslationKey::GENERATED_ON);
     }
 
     /**
@@ -69,7 +77,7 @@ class CompanyRegisterReportService extends ReportServiceBase
     private function getSqlQuery(Location $location, CompanyRegisterReportOptions $options)
     {
         $ubn = $location->getUbn();
-        $sampleDateString = $options->getSampleDate()->format(SqlUtil::DATE_FORMAT);
+        $sampleDateString = $options->getSampleDateString();
         $toCharDateFormat = "'".SqlUtil::TO_CHAR_DATE_FORMAT."'";
 
         $activeRequestStateTypes = SqlUtil::activeRequestStateTypesJoinedList();

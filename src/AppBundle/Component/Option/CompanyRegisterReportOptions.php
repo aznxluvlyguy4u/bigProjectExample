@@ -3,6 +3,7 @@
 
 namespace AppBundle\Component\Option;
 
+use AppBundle\Util\SqlUtil;
 use JMS\Serializer\Annotation as JMS;
 
 class CompanyRegisterReportOptions
@@ -49,6 +50,10 @@ class CompanyRegisterReportOptions
     public function getSampleDate(): \DateTime
     {
         return $this->sampleDate;
+    }
+
+    public function getSampleDateString(): string {
+        return $this->sampleDate->format(SqlUtil::DATE_FORMAT);
     }
 
     /**
