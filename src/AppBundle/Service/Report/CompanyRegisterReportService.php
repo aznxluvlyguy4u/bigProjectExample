@@ -10,6 +10,8 @@ use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\ReportUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\Translation;
@@ -21,6 +23,8 @@ class CompanyRegisterReportService extends ReportServiceBase
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
     const FILE_NAME_REPORT_TYPE = 'COMPANY_REGISTER';
+
+    const DATE_RESULT_NULL_REPLACEMENT = "-";
 
     /**
      * @param Person $person
@@ -38,7 +42,7 @@ class CompanyRegisterReportService extends ReportServiceBase
         if ($options->getFileType() === FileType::CSV) {
             return $this->generateCsvFileBySqlQuery(
                 $this->getFilename(),
-                $this->getSqlQuery($location, $options),
+                $this->getRecordsSqlQuery($location, $options),
                 []
             );
         }
@@ -67,14 +71,14 @@ class CompanyRegisterReportService extends ReportServiceBase
         $reportData['sampleDate'] = $options->getSampleDate();
         $reportData['person'] = $person;
         $reportData['location'] = $location;
-        $reportData['animals'] = $this->conn->query(self::getRecordsSqlQuery($options->getSampleDate(), $location->getId()))->fetchAll();
-        $reportData['summary'] = $this->conn->query(self::getSummarySqlQuery($options->getSampleDate(), $location->getId()))->fetchAll();
+        $reportData['animals'] = $this->conn->query(self::getRecordsSqlQuery($location, $options))->fetchAll();
+        $reportData['summary'] = $this->getReportSummaryData($options->getSampleDate(), $location->getId());
         $reportData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
 
         return $this->getPdfReportBase(self::TWIG_FILE, $reportData, true);
     }
 
-    private function getSqlQuery(Location $location, CompanyRegisterReportOptions $options)
+    private function getRecordsSqlQuery(Location $location, CompanyRegisterReportOptions $options)
     {
         $ubn = $location->getUbn();
         $sampleDateString = $options->getSampleDateString();
@@ -219,51 +223,69 @@ WHERE a.id IN (
     /**
      * @param \DateTime $sampleDate
      * @param int $locationId
-     * @return string
+     * @return array
      */
-    private function getRecordsSqlQuery(\DateTime $sampleDate, int $locationId)
+    private function getReportSummaryData(\DateTime $sampleDate, int $locationId): array
     {
-        return "SELECT
-            va.uln,
-            va.stn,
-            va.animal_order_number as werknummer,
-            va.gender as geslacht,
-            va.dd_mm_yyyy_date_of_birth as geboorte_datum,
-            (CASE WHEN va.gender = 'MALE' THEN
-                  va.dd_mm_yyyy_date_of_birth
-                ELSE null END) as datum_aanvoer,
-            (CASE WHEN va.gender = 'NEUTER' THEN
-                  '693084'
-                ELSE null END) as vorig_ubn,
-            (CASE WHEN va.gender = 'FEMALE' THEN
-                  va.dd_mm_yyyy_date_of_birth
-                ELSE null END) as datum_afvoer,
-            va.dd_mm_yyyy_date_of_death as datum_sterfte,
-            'Slachtrijp/Weiderij' as reden_afvoer_of_sterfte
-            FROM view_animal_livestock_overview_details va
-            LIMIT 50
-        ";
+        $results = $this->getAnimalCounts($sampleDate, $locationId);
+        $results['latest_sync_date_rvo_leading'] = $this->getLatestSyncDate($locationId,true);
+        $results['latest_sync_date'] = $this->getLatestSyncDate($locationId,false);
+
+        $formattedResults= [];
+        $formattedResults[0] = $results;
+        return $formattedResults;
     }
 
-    /**
-     * @param \DateTime $sampleDate
-     * @param int $locationId
-     * @return string
-     */
-    private function getSummarySqlQuery(\DateTime $sampleDate, int $locationId)
-    {
-        return "SELECT
-           230 as total_animal_count_on_reference_date,
-           '01-02-2019' as reference_date,
-           '27-03-2019' as log_date,
-           10 as ewes_one_year_or_older,
-           84 as rams_one_year_or_older,
-           12 as neuters_one_year_or_older,
-           10 as ewes_younger_than_one_year,
-           12 as rams_younger_than_one_year,
-           1 as neuters_younger_than_one_year,
-           '24-03-2019' as latest_sync_date,
-           '23-03-2019' as latest_sync_date_rvo_leading
-        ";
+    private function getAnimalCounts(\DateTime $sampleDate, int $locationId): array {
+        $sampleDateString = "'".$sampleDate->format(SqlUtil::DATE_FORMAT)."'";
+
+        $sql = "SELECT
+    to_char($sampleDateString::date, '".SqlUtil::TO_CHAR_DATE_FORMAT."') as reference_date,
+    to_char(current_date, '".SqlUtil::TO_CHAR_DATE_FORMAT."') as log_date,
+    COALESCE(SUM(count) FILTER ( WHERE type = 'Ewe' AND one_year_or_older ), 0) AS ewes_one_year_or_older,
+    COALESCE(SUM(count) FILTER ( WHERE type = 'Ram' AND one_year_or_older ), 0) AS rams_one_year_or_older,
+    COALESCE(SUM(count) FILTER ( WHERE type = 'Neuter' AND one_year_or_older ), 0) AS neuters_one_year_or_older,
+    COALESCE(SUM(count) FILTER ( WHERE type = 'Ewe' AND one_year_or_older = FALSE ), 0) AS ewes_younger_than_one_year,
+    COALESCE(SUM(count) FILTER ( WHERE type = 'Ram' AND one_year_or_older = FALSE ), 0) AS rams_younger_than_one_year,
+    COALESCE(SUM(count) FILTER ( WHERE type = 'Neuter' AND one_year_or_older = FALSE ), 0) AS neuters_younger_than_one_year,
+    COALESCE(SUM(count) FILTER ( WHERE one_year_or_older ISNULL ), 0) AS animals_missing_date_of_birth,
+    COALESCE(SUM(count), 0) AS total_animal_count_on_reference_date
+FROM (
+         SELECT type,
+                EXTRACT(YEAR FROM AGE($sampleDateString::date, date_of_birth)) > 0 as one_year_or_older,
+                COUNT(*)                                                      as count
+         FROM animal
+         WHERE id IN (
+             SELECT animal_id
+             FROM animal_residence ar
+                      INNER JOIN location l on ar.location_id = l.id
+                      INNER JOIN animal a on ar.animal_id = a.id
+             WHERE is_pending = FALSE
+               AND ar.location_id = $locationId
+               AND
+               --animal is on location on a specific date
+                 (start_date < ($sampleDateString::date + '1 day'::interval) AND
+                  (end_date ISNULL OR (($sampleDateString::date - '1 day'::interval) < end_date)))
+             GROUP BY animal_id
+         )
+         GROUP BY type, one_year_or_older
+     ) as animal_counts;";
+        return $this->conn->query($sql)->fetch();
+    }
+
+
+    private function getLatestSyncDate(int $locationId, bool $mustBeRvoLeading): string {
+        $isRvoLeadingFilter = $mustBeRvoLeading ? " AND is_rvo_leading ": "";
+        $sql = "SELECT
+                    to_char(log_date, '".SqlUtil::TO_CHAR_DATE_FORMAT."') as log_date
+                FROM retrieve_animals
+                WHERE location_id = $locationId AND request_state = '".RequestStateType::FINISHED."'
+                   $isRvoLeadingFilter
+                ORDER BY id DESC LIMIT 1";
+        $result = $this->conn->query($sql)->fetch();
+        if (!is_array($result)) {
+            return self::DATE_RESULT_NULL_REPLACEMENT;
+        }
+        return ArrayUtil::get('log_date', $result, self::DATE_RESULT_NULL_REPLACEMENT);
     }
 }

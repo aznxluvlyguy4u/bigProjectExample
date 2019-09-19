@@ -599,7 +599,7 @@ class ReportService
         ReportUtil::validateDateIsNotInTheFuture($sampleDate, TranslationKey::SAMPLE_DATE, $this->translator);
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
-        $allowedFileTypes = [FileType::CSV];
+        $allowedFileTypes = [FileType::CSV, FileType::PDF];
         ReportUtil::validateFileType($fileType, $allowedFileTypes, $this->translator);
 
         $options = (new CompanyRegisterReportOptions())
