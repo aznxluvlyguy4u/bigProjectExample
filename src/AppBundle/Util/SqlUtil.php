@@ -29,6 +29,7 @@ class SqlUtil
     const NULL = 'NULL';
     const DATE_TIME_FORMAT = 'Y-m-d H:i:s';
     const DATE_FORMAT = 'Y-m-d';
+    const TO_CHAR_DATE_FORMAT = 'DD-MM-YYYY';
 
 
     /**

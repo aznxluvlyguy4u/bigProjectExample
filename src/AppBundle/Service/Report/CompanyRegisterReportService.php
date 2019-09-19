@@ -70,6 +70,7 @@ class CompanyRegisterReportService extends ReportServiceBase
     {
         $ubn = $location->getUbn();
         $sampleDateString = $options->getSampleDate()->format(SqlUtil::DATE_FORMAT);
+        $toCharDateFormat = "'".SqlUtil::TO_CHAR_DATE_FORMAT."'";
 
         $activeRequestStateTypes = SqlUtil::activeRequestStateTypesJoinedList();
         $genderTranslationValues = SqlUtil::genderTranslationValues();
@@ -91,12 +92,12 @@ class CompanyRegisterReportService extends ReportServiceBase
     CONCAT(pedigree_country_code,pedigree_number) as stn,
     a.animal_order_number as $animalOrderNumberLabel,
     gender.dutch as $genderLabel,
-    a.date_of_birth as $dateOfBirthLabel,
+    to_char(a.date_of_birth, $toCharDateFormat) as $dateOfBirthLabel,
     -- a.ubn_of_birth,
     (CASE WHEN arrival.animal_id NOTNULL THEN
               arrival.arrival_date
           WHEN a.ubn_of_birth = '$ubn' THEN
-              a.date_of_birth
+              to_char(a.date_of_birth, $toCharDateFormat)
           ELSE null END) as datum_aanvoer,
     (CASE WHEN arrival.ubn_previous_owner NOTNULL THEN
               arrival.ubn_previous_owner
@@ -114,7 +115,7 @@ FROM animal a
     -- arrival data
     SELECT
         animal_id,
-        arrival_date,
+        to_char(arrival_date, $toCharDateFormat) as arrival_date,
         ubn_previous_owner
     FROM declare_base b
              INNER JOIN declare_arrival da on b.id = da.id
@@ -140,7 +141,7 @@ FROM animal a
     -- select declare depart if on or after reference date
     SELECT
         animal_id,
-        d.depart_date,
+        to_char(d.depart_date, $toCharDateFormat) as depart_date,
         COALESCE(reason.dutch,d.reason_of_depart) as reason_of_depart -- If dutch translation cannot be found, use raw value
         -- d.reason_of_depart
     FROM declare_base b
@@ -168,7 +169,7 @@ FROM animal a
     -- select declare loss if on or after reference date
     SELECT
         animal_id,
-        dl.date_of_death,
+        to_char(dl.date_of_death, $toCharDateFormat) as date_of_death,
         COALESCE(reason.dutch,dl.reason_of_loss) as reason_of_loss -- If dutch translation cannot be found, use raw value
         -- dl.reason_of_loss
     FROM declare_base b
