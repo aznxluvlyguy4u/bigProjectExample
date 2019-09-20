@@ -248,6 +248,9 @@ WHERE a.id IN (
     COALESCE(SUM(count) FILTER ( WHERE type = 'Ewe' AND one_year_or_older = FALSE ), 0) AS ewes_younger_than_one_year,
     COALESCE(SUM(count) FILTER ( WHERE type = 'Ram' AND one_year_or_older = FALSE ), 0) AS rams_younger_than_one_year,
     COALESCE(SUM(count) FILTER ( WHERE type = 'Neuter' AND one_year_or_older = FALSE ), 0) AS neuters_younger_than_one_year,
+    COALESCE(SUM(count) FILTER ( WHERE type = 'Ewe' AND one_year_or_older ISNULL ), 0) AS ewes_missing_date_of_birth,
+    COALESCE(SUM(count) FILTER ( WHERE type = 'Ram' AND one_year_or_older ISNULL ), 0) AS rams_missing_date_of_birth,
+    COALESCE(SUM(count) FILTER ( WHERE type = 'Neuter' AND one_year_or_older ISNULL ), 0) AS neuters_missing_date_of_birth,
     COALESCE(SUM(count) FILTER ( WHERE one_year_or_older ISNULL ), 0) AS animals_missing_date_of_birth,
     COALESCE(SUM(count), 0) AS total_animal_count_on_reference_date
 FROM (

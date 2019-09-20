@@ -60,6 +60,7 @@
                 <th class="center">Totaal</th>
                 <th class="center">Ouder dan 1 jaar</th>
                 <th class="center">Jonger dan 1 jaar</th>
+                {% if summary.animals_missing_date_of_birth > 0 %}<th class="center">Zonder geboortedatum</th>{% endif %}
             </tr>
             </thead>
             <tbody>
@@ -68,18 +69,21 @@
                 <td class="center">{{ summary.rams_one_year_or_older + summary.rams_younger_than_one_year }}</td>
                 <td class="center">{{ summary.rams_one_year_or_older }}</td>
                 <td class="center">{{ summary.rams_younger_than_one_year }}</td>
+                {% if summary.animals_missing_date_of_birth > 0 %}<td class="center">{{ summary.rams_missing_date_of_birth }}</td>{% endif %}
             </tr>
             <tr>
                 <td>Ooien</td>
                 <td class="center">{{ summary.ewes_one_year_or_older + summary.ewes_younger_than_one_year }}</td>
                 <td class="center">{{ summary.ewes_one_year_or_older }}</td>
                 <td class="center">{{ summary.ewes_younger_than_one_year }}</td>
+                {% if summary.animals_missing_date_of_birth > 0 %}<td class="center">{{ summary.ewes_missing_date_of_birth }}</td>{% endif %}
             </tr>
             <tr>
                 <td>Onzijdig</td>
                 <td class="center">{{ summary.neuters_one_year_or_older + summary.neuters_younger_than_one_year }}</td>
                 <td class="center">{{ summary.neuters_one_year_or_older }}</td>
                 <td class="center">{{ summary.neuters_younger_than_one_year }}</td>
+                {% if summary.animals_missing_date_of_birth > 0 %}<td class="center">{{ summary.neuters_missing_date_of_birth }}</td>{% endif %}
             </tr>
             </tbody>
         </table>
