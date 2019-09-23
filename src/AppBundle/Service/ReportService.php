@@ -20,6 +20,7 @@ use AppBundle\Enumerator\WorkerType;
 use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
@@ -93,6 +94,9 @@ class ReportService
     /** @var MembersAndUsersOverviewReportService */
     private $membersAndUsersOverviewReport;
 
+    /** @var InbreedingCoefficientReportService */
+    private $inbreedingCoefficientReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -116,7 +120,8 @@ class ReportService
         PedigreeCertificateReportService $pedigreeCertificateReportService,
         LiveStockReportService $livestockReportService,
         BirthListReportService $birthListReportService,
-        MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+        MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
+        InbreedingCoefficientReportService $inbreedingCoefficientReportService
     )
     {
         $this->em = $em;
@@ -130,6 +135,7 @@ class ReportService
         $this->livestockReportService = $livestockReportService;
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
+        $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
     }
 
     /**
@@ -416,11 +422,23 @@ class ReportService
         $contentAsJson = JSON::encode($content->toArray());
         $inputForHash = $contentAsJson;
 
-        return $this->processReportAsWorkerTask(
-            [
-                'content' => $contentAsJson,
-            ],
-            $request,ReportType::INBREEDING_COEFFICIENT, $inputForHash
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'content' => $contentAsJson,
+                ],
+                $request,ReportType::INBREEDING_COEFFICIENT, $inputForHash
+            );
+        }
+
+        $actionBy = $this->userService->getUser();
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+        $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
+
+        return $this->inbreedingCoefficientReportService->getReport(
+            $actionBy, $content, $fileType, $language
         );
     }
 
