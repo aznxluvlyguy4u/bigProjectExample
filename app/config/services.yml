@@ -629,6 +629,7 @@ services:
           - '@AppBundle\Service\Report\BirthListReportService'
           - '@AppBundle\Service\Report\MembersAndUsersOverviewReportService'
           - '@AppBundle\Service\Report\CompanyRegisterReportService'
+          - '@app.report.inbreeding_coefficient'
 
 
     AppBundle\Processor\ReportProcessor:
