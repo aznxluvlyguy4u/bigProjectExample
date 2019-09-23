@@ -264,35 +264,46 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     }
 
 
+    private function validateEwesArrayInputFormat($ewesArray): array
+    {
+        $requestedEweUlnStrings = [];
+
+        if (empty($ewesArray)) {
+            $this->inputErrors[] = $this->translateErrorMessages(self::EWE_MISSING_INPUT);
+        } else {
+            foreach ($ewesArray as $eweArray)
+            {
+                $ulnString = NullChecker::getUlnStringFromArray($eweArray, null);
+                if($ulnString == null) {
+                    $this->inputErrors[] = $this->translateErrorMessages(self::EWE_MISSING_INPUT);
+                    break;
+                }
+
+
+                $isUlnFormatValid = Validator::verifyUlnFormat($ulnString);
+                if(!$isUlnFormatValid) {
+                    $this->inputErrors[] = $this->translateErrorMessages(self::EWE_ULN_FORMAT_INCORRECT) . ': '.$ulnString;
+                }
+
+                $requestedEweUlnStrings[$ulnString] = $ulnString;
+            }
+        }
+
+        return $requestedEweUlnStrings;
+    }
+
+
     /**
      * @param array $ewesArray
      * @return bool
      */
     private function validateEwesArray($ewesArray)
     {
+        $requestedEweUlnStrings = $this->validateEwesArrayInputFormat($ewesArray);
 
-        $requestedEweUlnStrings = [];
-        foreach ($ewesArray as $eweArray)
-        {
-            $ulnString = NullChecker::getUlnStringFromArray($eweArray, null);
-            if($ulnString == null) {
-                $this->inputErrors[] = $this->translateErrorMessages(self::EWE_MISSING_INPUT);
-                return false;
-            }
-
-
-            $isUlnFormatValid = Validator::verifyUlnFormat($ulnString);
-            if(!$isUlnFormatValid) {
-                $this->inputErrors[] = $this->translateErrorMessages(self::EWE_ULN_FORMAT_INCORRECT) . ': '.$ulnString;
-            }
-
-            $requestedEweUlnStrings[$ulnString] = $ulnString;
+        if (empty($requestedEweUlnStrings)) {
+            return false;
         }
-
-        if (count($this->inputErrors) > 0) {
-            return;
-        }
-
 
         $sql = "SELECT a.id, uln_country_code, uln_number, pedigree_country_code, pedigree_number, a.type, l.ubn, c.owner_id
                 FROM animal a 
@@ -335,19 +346,23 @@ class InbreedingCoefficientReportService extends ReportServiceBase
             }
         }
 
-
-
-        //Check ownership if not admin
-
-        if ($this->client instanceof Client) {
-            $clientId = $this->client->getId();
-            foreach ($this->ewesData as $ulnString => $eweData)
-            if ($clientId !== $eweData['owner_id']) {
-                $this->inputErrors[] = $this->translateErrorMessages(self::EWE_NOT_OF_CLIENT) . ': ' .$ulnString;
-            }
-        }
+        $this->validateEwesOwnerShip();
 
         return true;
+    }
+
+    /**
+     * Check ownership if not admin
+     */
+    private function validateEwesOwnerShip() {
+        if ($this->client instanceof Client) {
+            $clientId = $this->client->getId();
+            foreach ($this->ewesData as $ulnString => $eweData) {
+                if ($clientId !== $eweData['owner_id']) {
+                    $this->inputErrors[] = $this->translateErrorMessages(self::EWE_NOT_OF_CLIENT) . ': ' .$ulnString;
+                }
+            }
+        }
     }
 
 
