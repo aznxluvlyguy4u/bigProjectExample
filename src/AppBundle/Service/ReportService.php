@@ -623,6 +623,18 @@ class ReportService
         return $this->companyRegisterReportService->getReport($actionBy, $location, $options);
     }
 
+    /**
+     * @param Request $request
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function createClientNotesOverviewReport(Request $request)
+    {
+        $actionBy = $this->userService->getUser();
+//        $location = $this->userService->getSelectedLocation($request);
+//        dump($actionBy);
+        dump($request);
+        die('haha');
+    }
 
     /**
      * @param Request $request
