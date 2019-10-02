@@ -1,0 +1,309 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    <!-- set variables -->
+    {% set sample_date = variables.sampleDate %}
+    {% set ubn = variables.location.ubn %}
+    {% set animals = variables.animals %}
+    {% set summary = variables.summary[0] %}
+
+    {% set pageCounter = 0 %}
+    {% set rowsFirstPage = 18 %}
+    {% set rowsPerPage = 25 %}
+    {% set size = variables.animals|length %}
+    {% set pageAmount = 1 %}
+    {% if size > rowsFirstPage %}
+        {% set pageAmount = ((size  - rowsFirstPage) / rowsPerPage) | round(0, 'ceil') +1 %}
+    {% endif %}
+    {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+
+
+    {# HEADER #}
+    {% for page in 1..pageAmount %}
+
+    {% if loop.last %}
+       <div id="page-without-break">
+    {% else %}
+        <div id="page">
+    {% endif %}
+        <div class="header">
+            <div class="nsfo-logo">
+                <img src="{{ imagesDirectory }}"/>
+            </div>
+            <div class="title">
+                Bedrijfsregister
+            </div>
+
+            <div class="date">
+                Peildatum: {{ sample_date | date("d-m-Y") }}
+            </div>
+        </div>
+        <div class="sub-header">
+           <div class="right"> Pagina {{ page }} van {{ pageAmount }}</div>
+        </div>
+
+        {# FIRST PAGE #}
+        {% if page == 1 %}
+        <div class="legend-container">
+            <div class="info">
+                <p> <span>UBN: </span> {{ ubn }}</p>
+            </div>
+
+        </div>
+
+        {# SUMMARY #}
+        <table class="overview-table">
+            <thead>
+            <tr>
+                <th></th>
+                <th class="center">Totaal</th>
+                <th class="center">Ouder dan 1 jaar</th>
+                <th class="center">Jonger dan 1 jaar</th>
+                {% if summary.animals_missing_date_of_birth > 0 %}<th class="center">Zonder geboortedatum</th>{% endif %}
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Rammen</td>
+                <td class="center">{{ summary.total_rams }}</td>
+                <td class="center">{{ summary.rams_one_year_or_older }}</td>
+                <td class="center">{{ summary.rams_younger_than_one_year }}</td>
+                {% if summary.animals_missing_date_of_birth > 0 %}<td class="center">{{ summary.rams_missing_date_of_birth }}</td>{% endif %}
+            </tr>
+            <tr>
+                <td>Ooien</td>
+                <td class="center">{{ summary.total_ewes }}</td>
+                <td class="center">{{ summary.ewes_one_year_or_older }}</td>
+                <td class="center">{{ summary.ewes_younger_than_one_year }}</td>
+                {% if summary.animals_missing_date_of_birth > 0 %}<td class="center">{{ summary.ewes_missing_date_of_birth }}</td>{% endif %}
+            </tr>
+            <tr>
+                <td>Onzijdig</td>
+                <td class="center">{{ summary.total_neuters }}</td>
+                <td class="center">{{ summary.neuters_one_year_or_older }}</td>
+                <td class="center">{{ summary.neuters_younger_than_one_year }}</td>
+                {% if summary.animals_missing_date_of_birth > 0 %}<td class="center">{{ summary.neuters_missing_date_of_birth }}</td>{% endif %}
+            </tr>
+            <tr>
+                <td>Totaal</td>
+                <td class="center">{{ summary.total_animal_count_on_reference_date }}</td>
+                <td class="center">{{ summary.total_one_year_or_older }}</td>
+                <td class="center">{{ summary.total_younger_than_one_year }}</td>
+                {% if summary.animals_missing_date_of_birth > 0 %}<td class="center">{{ summary.total_missing_date_of_birth }}</td>{% endif %}
+            </tr>
+            </tbody>
+        </table>
+        {% endif %}
+
+
+        {# ANIMALS #}
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ULN</th>
+                    <th>STN</th>
+                    <th>Werknummer</th>
+                    <th>Geslacht</th>
+                    <th>Geboortedatum</th>
+                    <th>Vorige UBN</th>
+                    <th>Datum aanvoer</th>
+                    <th>Datum afvoer</th>
+                    <th>Datum sterfte</th>
+                    <th>Reden afvoer of sterfte</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set beginValue = 0 %}
+                {% set endValue = rowsFirstPage-1 %}
+                {% if page == 2 %}
+                    {% set beginValue = (rowsFirstPage-1) + (page - 1) %}
+                    {% set endValue = beginValue + (rowsPerPage-1) %}
+                {% elseif page >= 3 %}
+                    {% set beginValue = ((page - 2) * (rowsPerPage-1)) + (rowsFirstPage-1) + (page - 1) %}
+                    {% set endValue = beginValue + (rowsPerPage-1) %}
+                {% endif %}
+                {% for i in beginValue..endValue %}
+
+                    {% if animals[i] is defined %}
+                    {% set value = animals[i] %}
+
+                    <tr>
+                        <td style="min-width: 32mm; max-width: 32mm">
+                            {{ value.uln }}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.stn }}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.werknummer }}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.geslacht }}
+                        </td>
+                        <td style="min-width: 16mm; max-width: 16mm">
+                            {{ value.geboortedatum | date("d-m-Y") }}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.vorig_ubn }}
+                        </td>
+                        <td style="min-width: 16mm; max-width: 16mm">
+                            {{ value.datum_aanvoer | date("d-m-Y") }}
+                        </td>
+                        <td style="min-width: 16mm; max-width: 16mm">
+                            {{ value.datum_afvoer | date("d-m-Y") }}
+                        </td>
+                        <td style="min-width: 16mm; max-width: 16mm">
+                            {{ value.datum_sterfte | date("d-m-Y") }}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.reden_afvoer_of_sterfte }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+{% endblock %}
+
+{% block stylesheets %}
+
+    <style type="text/css">
+        html {
+            font-family: Sans-Serif;
+            font-stretch: semi-condensed;
+        }
+
+        #page {
+            overflow: hidden;
+            page-break-after: always;
+        }
+
+        #page-without-break {
+            overflow: hidden;
+            page-break-after: avoid;
+        }
+
+        .header {
+            border-bottom: solid 2px #000;
+            font-size: 6mm;
+            width: 100%;
+        }
+
+        .nsfo-logo {
+            display: inline-block;
+            width: 25%;
+        }
+
+        .nsfo-logo img {
+            height: 50px;
+        }
+
+        .title {
+            display: inline-block;
+            vertical-align: top;
+            width: 50%;
+            font-weight: 700;
+            font-size: 7.5mm;
+            text-align: center;
+        }
+
+        .date {
+            display: inline-block;
+            width: 23.8%;
+            text-align: right;
+        }
+
+        .sub-header {
+            padding-top: 1mm;
+            font-size: 4.5mm;
+        }
+
+        .sub-header .left {
+            float: left;
+            white-space: nowrap;
+        }
+
+        .sub-header .right {
+            float: right;
+            white-space: nowrap;
+        }
+
+        .legend-container {
+            position: relative;
+            padding-top: 5mm;
+            font-size: 4.5mm;
+            height: 10mm;
+        }
+
+        .info {
+            position: absolute;
+            left: 0;
+            width: 60%;
+        }
+
+        .legend-container .info p span {
+            font-weight: 700;
+        }
+
+        .legend-container ul {
+            position: absolute;
+            right: 0;
+            padding: 1.5mm;
+            background-color: #efe8dd;
+        }
+
+        .legend-container ul li {
+            list-style: none;
+        }
+
+        li.legend-title {
+            font-weight: 700;
+            padding-bottom: 1.5mm;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 10mm;
+            font-size: 4.1mm;
+            border-collapse: collapse;
+            vertical-align: text-bottom;
+            white-space: nowrap;
+        }
+
+        table.overview-table {
+            margin: 10mm auto 15mm auto;
+            width: 40%;
+        }
+
+        tr {
+            border-bottom: solid 1px #000000;
+        }
+
+        td, th {
+            text-align: left;
+            padding: 1mm 1mm 1mm 1mm;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .single-letter-column {
+           text-align: left;
+           min-width: 2mm;
+           max-width: 2mm;
+        }
+
+        .exterior-column {
+            min-width: 4mm;
+            max-width: 4mm
+        }
+
+    </style>
+
+
+{% endblock %}

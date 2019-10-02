@@ -43,4 +43,5 @@ class QueryParameter
     const DELAY_IN_SECONDS = 'delay_in_seconds';
     const YEAR = 'year';
     const IS_BATCH = "isBatch";
+    const COMPANY_ID = 'company_id';
 }

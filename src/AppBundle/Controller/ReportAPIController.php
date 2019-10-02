@@ -689,7 +689,6 @@ class ReportAPIController extends APIController {
      */
     public function getClientNotesOverviewReport(Request $request)
     {
-//        dump($request);die();
         return $this->get(ReportService::class)->createClientNotesOverviewReport($request);
     }
 
