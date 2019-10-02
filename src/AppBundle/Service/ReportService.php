@@ -4,10 +4,12 @@
 namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\BirthListReportOptions;
+use AppBundle\Component\Option\ClientNotesOverviewReportOptions;
 use AppBundle\Component\Option\CompanyRegisterReportOptions;
 use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\TranslationKey;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\ReportWorker;
@@ -22,6 +24,7 @@ use AppBundle\Enumerator\WorkerType;
 use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
@@ -99,6 +102,9 @@ class ReportService
     /** @var CompanyRegisterReportService */
     private $companyRegisterReportService;
 
+    /** @var ClientNotesOverviewReportService */
+    private $clientNotesOverviewReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -113,6 +119,7 @@ class ReportService
      * @param BirthListReportService $birthListReportService
      * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
      * @param CompanyRegisterReportService $companyRegisterReportService
+     * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -126,7 +133,8 @@ class ReportService
         LiveStockReportService $livestockReportService,
         BirthListReportService $birthListReportService,
         MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
-        CompanyRegisterReportService $companyRegisterReportService
+        CompanyRegisterReportService $companyRegisterReportService,
+        ClientNotesOverviewReportService $clientNotesOverviewReportService
     )
     {
         $this->em = $em;
@@ -141,6 +149,7 @@ class ReportService
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
         $this->companyRegisterReportService = $companyRegisterReportService;
+        $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
     }
 
     /**
@@ -630,10 +639,32 @@ class ReportService
     public function createClientNotesOverviewReport(Request $request)
     {
         $actionBy = $this->userService->getUser();
-//        $location = $this->userService->getSelectedLocation($request);
-//        dump($actionBy);
-        dump($request);
-        die('haha');
+        $companyId = $request->query->get(QueryParameter::COMPANY_ID);
+        $company = $this->em->getRepository(Company::class)
+            ->findOneByCompanyId($companyId);
+
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+        $allowedFileTypes = [FileType::CSV, FileType::PDF];
+        ReportUtil::validateFileType($fileType, $allowedFileTypes, $this->translator);
+
+        $options = (new ClientNotesOverviewReportOptions())
+            ->setFileType($fileType)
+            ->setCompanyId($companyId)
+        ;
+
+        $optionsAsJson = $this->serializer->serializeToJSON($options);
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+//        if ($processAsWorkerTask) {
+//            return $this->processReportAsWorkerTask(
+//                [
+//                    'options' => $optionsAsJson
+//                ],
+//                $request,ReportType::CLIENT_NOTES_OVERVIEW, $optionsAsJson
+//            );
+//        }
+
+        return $this->clientNotesOverviewReportService->getReport($actionBy, $company, $options);
     }
 
     /**
