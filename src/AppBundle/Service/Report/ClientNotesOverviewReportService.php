@@ -9,7 +9,6 @@ use AppBundle\Entity\Company;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Util\ReportUtil;
-use AppBundle\Util\SqlUtil;
 
 class ClientNotesOverviewReportService extends ReportServiceBase
 {
