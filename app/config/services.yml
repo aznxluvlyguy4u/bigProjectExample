@@ -637,6 +637,7 @@ services:
 
     AppBundle\Processor\ReportProcessor:
         arguments:
+          - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
           - '@AppBundle\Service\Report\AnimalHealthStatusesReportService'
           - '@AppBundle\Service\Report\AnnualActiveLivestockReportService'
           - '@AppBundle\Service\Report\AnnualTe100UbnProductionReportService'

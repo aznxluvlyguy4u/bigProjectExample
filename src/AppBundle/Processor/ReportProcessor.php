@@ -3,6 +3,7 @@
 namespace AppBundle\Processor;
 
 use AppBundle\Component\Option\BirthListReportOptions;
+use AppBundle\Component\Option\ClientNotesOverviewReportOptions;
 use AppBundle\Component\Option\CompanyRegisterReportOptions;
 use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Entity\ReportWorker;
@@ -15,6 +16,7 @@ use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockReportService;
 use AppBundle\Service\Report\AnnualTe100UbnProductionReportService;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
@@ -107,6 +109,9 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /** @var CompanyRegisterReportService */
     private $companyRegisterReportService;
 
+    /** @var ClientNotesOverviewReportService */
+    private $clientNotesOverviewReportService;
+
     /** @var BaseSerializer */
     private $serializer;
 
@@ -116,6 +121,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     private $logger;
 
     public function __construct(
+        ClientNotesOverviewReportService $clientNotesOverviewReportService,
         AnimalHealthStatusesReportService $animalHealthStatusesReportService,
         AnnualActiveLivestockReportService $annualActiveLivestockReportService,
         AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService,
@@ -152,6 +158,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
         $this->companyRegisterReportService = $companyRegisterReportService;
         $this->animalHealthStatusesReportService = $animalHealthStatusesReportService;
+        $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
     }
 
     public function process(PsrMessage $message, PsrContext $context)
@@ -267,6 +274,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                 case ReportType::ANIMAL_HEALTH_STATUSES:
                     {
                         $data = $this->animalHealthStatusesReportService->getReport();
+                        break;
+                    }
+                case ReportType::CLIENT_NOTES_OVERVIEW:
+                    {
+                        $options = $this->serializer->deserializeToObject($data['options'],
+                            ClientNotesOverviewReportOptions::class, null);
+                        $data = $this->clientNotesOverviewReportService->getReport($worker->getActionBy(), $options);
                         break;
                     }
             }

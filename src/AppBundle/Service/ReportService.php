@@ -592,7 +592,8 @@ class ReportService
 
     /**
      * @param Request $request
-     * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
+     * @throws \Exception
      */
     public function createCompanyRegisterReport(Request $request)
     {
@@ -634,14 +635,13 @@ class ReportService
 
     /**
      * @param Request $request
-     * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
+     * @throws \Exception
      */
     public function createClientNotesOverviewReport(Request $request)
     {
         $actionBy = $this->userService->getUser();
         $companyId = $request->query->get(QueryParameter::COMPANY_ID);
-        $company = $this->em->getRepository(Company::class)
-            ->findOneByCompanyId($companyId);
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $allowedFileTypes = [FileType::CSV, FileType::PDF];
@@ -655,16 +655,16 @@ class ReportService
         $optionsAsJson = $this->serializer->serializeToJSON($options);
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
-//        if ($processAsWorkerTask) {
-//            return $this->processReportAsWorkerTask(
-//                [
-//                    'options' => $optionsAsJson
-//                ],
-//                $request,ReportType::CLIENT_NOTES_OVERVIEW, $optionsAsJson
-//            );
-//        }
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'options' => $optionsAsJson
+                ],
+                $request,ReportType::CLIENT_NOTES_OVERVIEW, $optionsAsJson
+            );
+        }
 
-        return $this->clientNotesOverviewReportService->getReport($actionBy, $company, $options);
+        return $this->clientNotesOverviewReportService->getReport($actionBy, $options);
     }
 
     /**

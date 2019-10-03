@@ -17,31 +17,31 @@ class ClientNotesOverviewReportService extends ReportServiceBase
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
     const FILE_NAME_REPORT_TYPE = 'CLIENT_NOTES_OVERVIEW_REPORT';
-
     const DATE_RESULT_NULL_REPLACEMENT = "-";
 
     /**
      * @param Person $person
-     * @param Company $company
+     * @param Int $companyId
      * @param ClientNotesOverviewReportOptions $options
      * @return JsonResponse
      * @throws \Exception
      */
-    public function getReport(Person $person, Company $company, ClientNotesOverviewReportOptions $options)
+    public function getReport(Person $person, ClientNotesOverviewReportOptions $options)
     {
+        $company = $this->em->getRepository(Company::class)
+            ->findOneByCompanyId($options->getCompanyId());
+
         $this->filename = $this->getClientNotesOverviewReportFileName($person, $company);
         $this->folderName = self::FOLDER_NAME;
         $this->extension = $options->getFileType();
 
         ReportUtil::validateFileType($this->extension, [FileType::CSV], $this->translator);
 
-        if ($options->getFileType() === FileType::CSV) {
-            return $this->generateCsvFileBySqlQuery(
-                $this->getFilename(),
-                $this->getRecordsSqlQuery($company, $options),
-                ['diergezondheidsprogramma']
-            );
-        }
+        return $this->generateCsvFileBySqlQuery(
+            $this->getFilename(),
+            $this->getRecordsSqlQuery($company, $options),
+            ['diergezondheidsprogramma']
+        );
     }
 
     private function getClientNotesOverviewReportFileName(Person $person, Company $company): string {
@@ -53,11 +53,10 @@ class ClientNotesOverviewReportService extends ReportServiceBase
             ReportUtil::translateFileName($this->translator, TranslationKey::GENERATED_ON);
     }
 
-    private function getRecordsSqlQuery(Company $company, ClientNotesOverviewReportOptions $options)
+    private function getRecordsSqlQuery(Company $company)
     {
         $companyId = $company->getId();
         $notesCount = $company->getNotes()->count();
-
 
         if ($notesCount > 0) {
             return "SELECT
