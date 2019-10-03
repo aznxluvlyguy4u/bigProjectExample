@@ -57,7 +57,6 @@ class ClientNotesOverviewReportService extends ReportServiceBase
     {
         $companyId = $company->getId();
         $notesCount = $company->getNotes()->count();
-        $newLineReplacement = SqlUtil::NEW_LINE_TEX_REPLACEMENT;
 
         if ($notesCount > 0) {
             return "SELECT
@@ -70,7 +69,7 @@ class ClientNotesOverviewReportService extends ReportServiceBase
                 pedigree.pedigree_register_abbreviations as stamboeken,
                 pedigree.breeder_numbers as fokker_nummers,
                 COALESCE(c.animal_health_subscription, false) as diergezondheidsprogramma,
-                regexp_replace(note.note, E'[\\n\\r]+',$newLineReplacement, 'g' ) as notitie
+                CONCAT('\"',note.note,'\"') as notitie
             FROM company_note note
                 INNER JOIN company c ON c.id = note.company_id
                 LEFT JOIN address a ON a.id = c.address_id
