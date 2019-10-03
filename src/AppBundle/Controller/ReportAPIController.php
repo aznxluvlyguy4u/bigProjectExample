@@ -665,11 +665,11 @@ class ReportAPIController extends APIController {
      *   },
      *   parameters={
      *     {
-     *        "name"="sample_date",
+     *        "name"="company_id",
      *        "dataType"="string",
      *        "required"=true,
-     *        "description"="sample date to get animals from",
-     *        "format"="?breed_code=TE100"
+     *        "description"="companyId of a company",
+     *        "format"="?company_id=03379d8ae801f4c48b9497e65dcc28275c09cd0a"
      *     },
      *     {
      *        "name"="file_type",
