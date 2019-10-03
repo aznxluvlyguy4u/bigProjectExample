@@ -13,7 +13,6 @@ use AppBundle\Util\ReportUtil;
 class ClientNotesOverviewReportService extends ReportServiceBase
 {
     const TITLE = 'client_notes_overview_report';
-    const TWIG_FILE = 'Report/client_notes_overview_report.html.twig';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
     const FILE_NAME_REPORT_TYPE = 'CLIENT_NOTES_OVERVIEW_REPORT';
