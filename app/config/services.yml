@@ -633,6 +633,7 @@ services:
           - '@AppBundle\Service\Report\MembersAndUsersOverviewReportService'
           - '@AppBundle\Service\Report\CompanyRegisterReportService'
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
+          - '@app.report.inbreeding_coefficient'
 
 
     AppBundle\Processor\ReportProcessor:
