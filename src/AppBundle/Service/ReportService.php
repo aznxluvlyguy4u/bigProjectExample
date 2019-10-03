@@ -49,6 +49,7 @@ use Enqueue\Util\JSON;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -642,6 +643,15 @@ class ReportService
     {
         $actionBy = $this->userService->getUser();
         $companyId = $request->query->get(QueryParameter::COMPANY_ID);
+        if (empty($companyId)) {
+            throw new BadRequestHttpException("companyId is missing");
+        }
+
+        $company = $this->em->getRepository(Company::class)
+            ->findOneByCompanyId($companyId);
+        if (empty($company)) {
+            throw new BadRequestHttpException("No company was found for given companyId: ".$companyId);
+        }
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $allowedFileTypes = [FileType::CSV, FileType::PDF];
