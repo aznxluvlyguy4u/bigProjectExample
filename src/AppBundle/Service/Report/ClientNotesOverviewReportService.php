@@ -35,13 +35,19 @@ class ClientNotesOverviewReportService extends ReportServiceBase
         $this->folderName = self::FOLDER_NAME;
         $this->extension = $options->getFileType();
 
-        ReportUtil::validateFileType($this->extension, [FileType::CSV], $this->translator);
+        ReportUtil::validateFileType($this->extension, self::allowedFileTypes(), $this->translator);
 
         return $this->generateCsvFileBySqlQuery(
             $this->getFilename(),
             $this->getRecordsSqlQuery($company, $options),
             ['diergezondheidsprogramma']
         );
+    }
+
+    public static function allowedFileTypes(): array {
+        return [
+            FileType::CSV
+        ];
     }
 
     private function getClientNotesOverviewReportFileName(Person $person, Company $company): string {

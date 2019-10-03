@@ -654,8 +654,7 @@ class ReportService
         }
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
-        $allowedFileTypes = [FileType::CSV, FileType::PDF];
-        ReportUtil::validateFileType($fileType, $allowedFileTypes, $this->translator);
+        ReportUtil::validateFileType($fileType, ClientNotesOverviewReportService::allowedFileTypes(), $this->translator);
 
         $options = (new ClientNotesOverviewReportOptions())
             ->setFileType($fileType)
