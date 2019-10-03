@@ -22,7 +22,6 @@ class ClientNotesOverviewReportService extends ReportServiceBase
 
     /**
      * @param Person $person
-     * @param Int $companyId
      * @param ClientNotesOverviewReportOptions $options
      * @return JsonResponse
      * @throws \Exception
