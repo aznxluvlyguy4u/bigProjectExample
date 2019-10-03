@@ -4,10 +4,12 @@
 namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\BirthListReportOptions;
+use AppBundle\Component\Option\ClientNotesOverviewReportOptions;
 use AppBundle\Component\Option\CompanyRegisterReportOptions;
 use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\TranslationKey;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\ReportWorker;
@@ -22,6 +24,7 @@ use AppBundle\Enumerator\WorkerType;
 use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
@@ -47,6 +50,7 @@ use Enqueue\Util\JSON;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -100,6 +104,9 @@ class ReportService
     /** @var CompanyRegisterReportService */
     private $companyRegisterReportService;
 
+    /** @var ClientNotesOverviewReportService */
+    private $clientNotesOverviewReportService;
+
     /** @var InbreedingCoefficientReportService */
     private $inbreedingCoefficientReportService;
 
@@ -117,6 +124,8 @@ class ReportService
      * @param BirthListReportService $birthListReportService
      * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
      * @param CompanyRegisterReportService $companyRegisterReportService
+     * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
+     * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -131,6 +140,7 @@ class ReportService
         BirthListReportService $birthListReportService,
         MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
         CompanyRegisterReportService $companyRegisterReportService,
+        ClientNotesOverviewReportService $clientNotesOverviewReportService,
         InbreedingCoefficientReportService $inbreedingCoefficientReportService
     )
     {
@@ -146,6 +156,7 @@ class ReportService
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
         $this->companyRegisterReportService = $companyRegisterReportService;
+        $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
         $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
     }
 
@@ -601,7 +612,8 @@ class ReportService
 
     /**
      * @param Request $request
-     * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
+     * @throws \Exception
      */
     public function createCompanyRegisterReport(Request $request)
     {
@@ -641,6 +653,47 @@ class ReportService
         return $this->companyRegisterReportService->getReport($actionBy, $location, $options);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createClientNotesOverviewReport(Request $request)
+    {
+        $actionBy = $this->userService->getUser();
+        $companyId = $request->query->get(QueryParameter::COMPANY_ID);
+        if (empty($companyId)) {
+            throw new BadRequestHttpException("companyId is missing");
+        }
+
+        $company = $this->em->getRepository(Company::class)
+            ->findOneByCompanyId($companyId);
+        if (empty($company)) {
+            throw new BadRequestHttpException("No company was found for given companyId: ".$companyId);
+        }
+
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+        ReportUtil::validateFileType($fileType, ClientNotesOverviewReportService::allowedFileTypes(), $this->translator);
+
+        $options = (new ClientNotesOverviewReportOptions())
+            ->setFileType($fileType)
+            ->setCompanyId($companyId)
+        ;
+
+        $optionsAsJson = $this->serializer->serializeToJSON($options);
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'options' => $optionsAsJson
+                ],
+                $request,ReportType::CLIENT_NOTES_OVERVIEW, $optionsAsJson
+            );
+        }
+
+        return $this->clientNotesOverviewReportService->getReport($actionBy, $options);
+    }
 
     /**
      * @param Request $request

@@ -650,6 +650,48 @@ class ReportAPIController extends APIController {
         return $this->get(ReportService::class)->createCompanyRegisterReport($request);
     }
 
+    /**
+     * Generate client notes overview report and return a download link for the csv.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="company_id",
+     *        "dataType"="string",
+     *        "required"=true,
+     *        "description"="companyId of a company",
+     *        "format"="?company_id=03379d8ae801f4c48b9497e65dcc28275c09cd0a"
+     *     },
+     *     {
+     *        "name"="file_type",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose file type, csv or pdf, for report output. CSV is default",
+     *        "format"="?file_type=csv"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate client notes overview report and return a download link for the csv"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/client-notes-overview")
+     * @Method("POST")
+     */
+    public function getClientNotesOverviewReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createClientNotesOverviewReport($request);
+    }
+
 
     /**
      * Generate NSFO members and users overview report and return a download link for the csv.
