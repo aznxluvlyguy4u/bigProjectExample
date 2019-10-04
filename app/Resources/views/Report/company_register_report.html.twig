@@ -10,8 +10,8 @@
     {% set nameAndAddress = variables.nameAndAddress %}
 
     {% set pageCounter = 0 %}
-    {% set rowsFirstPage = 18 %}
-    {% set rowsPerPage = 25 %}
+    {% set rowsFirstPage = 25 %}
+    {% set rowsPerPage = 35 %}
     {% set size = variables.animals|length %}
     {% set pageAmount = 1 %}
     {% if size > rowsFirstPage %}
@@ -106,7 +106,7 @@
                 <tr>
                     <th>ULN</th>
                     <th>STN</th>
-                    <th>Werknr</th>
+                    <th>Werknr.</th>
                     <th>Geslacht</th>
                     <th>Geb.dat.</th>
                     <th>Vorige UBN</th>
