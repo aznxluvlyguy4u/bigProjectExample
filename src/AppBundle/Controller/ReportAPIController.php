@@ -627,7 +627,7 @@ class ReportAPIController extends APIController {
      *        "dataType"="string",
      *        "required"=true,
      *        "description"="sample date to get animals from",
-     *        "format"="?breed_code=TE100"
+     *        "format"="?sample_date=04-10-2019"
      *     },
      *     {
      *        "name"="file_type",

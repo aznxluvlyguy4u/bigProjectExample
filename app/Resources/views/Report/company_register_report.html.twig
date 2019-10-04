@@ -7,6 +7,7 @@
     {% set ubn = variables.location.ubn %}
     {% set animals = variables.animals %}
     {% set summary = variables.summary[0] %}
+    {% set nameAndAddress = variables.nameAndAddress %}
 
     {% set pageCounter = 0 %}
     {% set rowsFirstPage = 18 %}
@@ -40,7 +41,8 @@
             </div>
         </div>
         <div class="sub-header">
-           <div class="right"> Pagina {{ page }} van {{ pageAmount }}</div>
+            <div class="left"> UBN {{ nameAndAddress }} </div>
+            <div class="right"> Pagina {{ page }} van {{ pageAmount }}</div>
         </div>
 
         {# FIRST PAGE #}
@@ -79,7 +81,7 @@
                 {% if summary.animals_missing_date_of_birth > 0 %}<td class="center">{{ summary.ewes_missing_date_of_birth }}</td>{% endif %}
             </tr>
             <tr>
-                <td>Onzijdig</td>
+                <td>Onbekend</td>
                 <td class="center">{{ summary.total_neuters }}</td>
                 <td class="center">{{ summary.neuters_one_year_or_older }}</td>
                 <td class="center">{{ summary.neuters_younger_than_one_year }}</td>
@@ -104,14 +106,14 @@
                 <tr>
                     <th>ULN</th>
                     <th>STN</th>
-                    <th>Werknummer</th>
+                    <th>Werknr</th>
                     <th>Geslacht</th>
-                    <th>Geboortedatum</th>
+                    <th>Geb.dat.</th>
                     <th>Vorige UBN</th>
-                    <th>Datum aanvoer</th>
-                    <th>Datum afvoer</th>
-                    <th>Datum sterfte</th>
-                    <th>Reden afvoer of sterfte</th>
+                    <th>Dat.aanvoer</th>
+                    <th>Dat.afvoer</th>
+                    <th>Dat.sterfte</th>
+                    <th>Reden</th>
                 </tr>
             </thead>
             <tbody>
@@ -268,7 +270,7 @@
         table {
             width: 100%;
             margin-top: 10mm;
-            font-size: 4.1mm;
+            font-size: 3.8mm;
             border-collapse: collapse;
             vertical-align: text-bottom;
             white-space: nowrap;
