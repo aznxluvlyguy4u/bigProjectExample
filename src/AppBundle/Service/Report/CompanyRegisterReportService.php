@@ -38,6 +38,7 @@ class CompanyRegisterReportService extends ReportServiceBase
         $this->filename = $this->getCompanyRegisterFileName($location, $options);
         $this->folderName = self::FOLDER_NAME;
         $this->extension = $options->getFileType();
+        $this->location = $location;
 
         if ($options->getFileType() === FileType::CSV) {
             return $this->generateCsvFileBySqlQuery(
@@ -73,6 +74,7 @@ class CompanyRegisterReportService extends ReportServiceBase
         $reportData['location'] = $location;
         $reportData['animals'] = $this->conn->query(self::getRecordsSqlQuery($location, $options))->fetchAll();
         $reportData['summary'] = $this->getReportSummaryData($options->getSampleDate(), $location->getId());
+        $reportData['nameAndAddress'] = $this->parseNameAddressString($location, $person);
         $reportData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
 
         return $this->getPdfReportBase(self::TWIG_FILE, $reportData, true);
@@ -296,5 +298,18 @@ FROM (
             return self::DATE_RESULT_NULL_REPLACEMENT;
         }
         return ArrayUtil::get('log_date', $result, self::DATE_RESULT_NULL_REPLACEMENT);
+    }
+
+    /**
+     * @param Location $location
+     * @param Person $person
+     * @return string
+     */
+    private function parseNameAddressString(Location $location, Person $person)
+    {
+        $address = $location->getAddress();
+        $streetNameAndNumber = $address->getFullStreetNameAndNumber();
+        $streetNameAndNumber = $streetNameAndNumber != null ? $streetNameAndNumber.', ' : '';
+        return $location->getUbn().', '.$person->getFullName().', '.$streetNameAndNumber.$address->getPostalCode().', '.$address->getCity();
     }
 }
