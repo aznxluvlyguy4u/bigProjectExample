@@ -38,7 +38,6 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
                 $this->getFilename(),
                 $this->getSqlQuery($yearOfBirth, $locale->getId()),
                 []
-//                $this->getBooleanColumns($pedigreeActiveEndDateLimit)
             );
 
         } catch (\Exception $exception) {

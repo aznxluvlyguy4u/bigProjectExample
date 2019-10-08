@@ -311,6 +311,12 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $data = $this->clientNotesOverviewReportService->getReport($worker->getActionBy(), $options);
                         break;
                     }
+                case ReportType::WEIGHTS_PER_YEAR_OF_BIRTH:
+                    {
+                        $yearOfBirth = $data['year_of_birth'];
+                        $data = $this->weightsPerYearOfBirthReportService->getReport($yearOfBirth, $worker->getLocation(), $worker->getActionBy());
+                        break;
+                    }
             }
             $arrayData = JSON::decode($data->getContent());
 

@@ -677,14 +677,14 @@ class ReportService
 
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
-//        if ($processAsWorkerTask) {
-//            return $this->processReportAsWorkerTask(
-//                [
-//                    'year_of_birth' => $yearOfBirth
-//                ],
-//                $request,ReportType::WEIGHTS_PER_YEAR_OF_BIRTH, $inputForHash
-//            );
-//        }
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'year_of_birth' => $yearOfBirth
+                ],
+                $request,ReportType::WEIGHTS_PER_YEAR_OF_BIRTH, $inputForHash
+            );
+        }
 
         return $this->weightsPerYearOfBirthReportService->getReport($yearOfBirth, $location, $actionBy);
     }
