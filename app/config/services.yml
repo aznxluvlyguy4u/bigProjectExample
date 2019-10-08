@@ -512,6 +512,9 @@ services:
     AppBundle\Service\Report\CompanyRegisterReportService:
       parent: app.report.base
 
+    AppBundle\Service\Report\WeightsPerYearOfBirthReportService:
+      parent: app.report.base
+
     AppBundle\Service\Report\MembersAndUsersOverviewReportService:
       parent: app.report.base
 
@@ -634,10 +637,12 @@ services:
           - '@AppBundle\Service\Report\CompanyRegisterReportService'
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
           - '@app.report.inbreeding_coefficient'
+          - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
 
 
     AppBundle\Processor\ReportProcessor:
         arguments:
+          - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
           - '@AppBundle\Service\Report\AnimalHealthStatusesReportService'
           - '@AppBundle\Service\Report\AnnualActiveLivestockReportService'

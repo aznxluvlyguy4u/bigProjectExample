@@ -42,6 +42,7 @@ class QueryParameter
     const IS_MAX_ONCE_A_DAY = 'is_max_once_a_day';
     const DELAY_IN_SECONDS = 'delay_in_seconds';
     const YEAR = 'year';
+    const YEAR_OF_BIRTH = 'year_of_birth';
     const IS_BATCH = "isBatch";
     const COMPANY_ID = 'company_id';
 }
