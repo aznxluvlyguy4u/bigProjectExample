@@ -24,7 +24,7 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
     /**
      * @inheritDoc
      */
-    function getReport(string $yearOfBirth, ?Location $location = null)
+    function getReport(int $yearOfBirth, ?Location $location = null)
     {
         if (!ctype_digit($yearOfBirth)) {
             return ResultUtil::errorResult("Year is not an integer", Response::HTTP_BAD_REQUEST);
@@ -56,7 +56,7 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
      * @param Location|null $location
      * @return string
      */
-    private function getSqlQuery(string $yearOfBirth, ?Location $location = null)
+    private function getSqlQuery(int $yearOfBirth, ?Location $location = null)
     {
         $locationId = $location ? $location->getId() : null;
         $locationFilter = $locationId ? "AND a.location_id = $locationId -- location filter (for user)" : "";
