@@ -56,7 +56,7 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
      * @param Location|null $location
      * @return string
      */
-    private function getSqlQuery(string $yearOfBirth, ?Location $location = null)
+    private function getSqlQuery(string $yearOfBirth, Location $location = null)
     {
         $locationId = $location ? $location->getId() : null;
         $locationFilter = $locationId ? "AND a.location_id = $locationId -- location filter (for user)" : "";
