@@ -9,6 +9,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Util\ReportUtil;
 use AppBundle\Util\ResultUtil;
+use Symfony\Component\HttpFoundation\Response;
 
 class WeightsPerYearOfBirthReportService extends ReportServiceBase
 {
@@ -25,6 +26,10 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
      */
     function getReport(string $yearOfBirth, Location $location = null)
     {
+        if (!ctype_digit($yearOfBirth)) {
+            return ResultUtil::errorResult("Year is not an integer", Response::HTTP_BAD_REQUEST);
+        }
+
         try {
             $this->filename = $this->getWeightsPerYearOfBirthFileName($location);
             $this->extension = FileType::CSV;
