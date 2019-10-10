@@ -24,11 +24,13 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
     /**
      * @inheritDoc
      */
-    function getReport(string $yearOfBirth, ?Location $location = null)
+    function getReport($yearOfBirth, ?Location $location = null)
     {
-        if (!ctype_digit($yearOfBirth)) {
+        if (!ctype_digit($yearOfBirth) && !is_int($yearOfBirth)) {
             return ResultUtil::errorResult("Year is not an integer", Response::HTTP_BAD_REQUEST);
         }
+
+        $yearOfBirthAsInt = intval($yearOfBirth);
 
         try {
             $this->filename = $this->getWeightsPerYearOfBirthFileName($location);
@@ -36,7 +38,7 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
 
             return $this->generateCsvFileBySqlQuery(
                 $this->getFilename(),
-                $this->getSqlQuery($yearOfBirth, $location),
+                $this->getSqlQuery($yearOfBirthAsInt, $location),
                 []
             );
         } catch (\Exception $exception) {
@@ -52,11 +54,11 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
     }
 
     /**
-     * @param string $yearOfBirth
+     * @param int $yearOfBirth
      * @param Location|null $location
      * @return string
      */
-    private function getSqlQuery(string $yearOfBirth, ?Location $location = null)
+    private function getSqlQuery(int $yearOfBirth, ?Location $location = null)
     {
         $locationId = $location ? $location->getId() : null;
         $locationFilter = $locationId ? "AND a.location_id = $locationId -- location filter (for user)" : "";
