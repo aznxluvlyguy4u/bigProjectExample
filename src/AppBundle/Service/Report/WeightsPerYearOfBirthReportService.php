@@ -51,9 +51,14 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
      * @param Location|null $location
      * @return string
      */
-    private function getSqlQuery(string $yearOfBirth, Location $location = null)
+    private function getSqlQuery(string $yearOfBirth, ?Location $location = null)
     {
-        $locationId = is_null($location) ? "IS NOT NULL" : $location->getId();
+        $locationId = $location ? $location->getId() : null;
+        $locationFilter = $locationId ? "AND a.location_id = $locationId -- location filter (for user)" : "";
+
+        $mainFilter = "     AND a.is_alive
+                            AND date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
+                            $locationFilter";
 
         return "SELECT
             va.uln,
@@ -115,10 +120,7 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
                                 INNER JOIN animal a ON a.id = w.animal_id
                                  INNER JOIN measurement m on w.id = m.id
                         WHERE (is_revoked = FALSE AND is_active AND is_birth_weight)
-                            --GENERAL FILTER
-                            AND a.is_alive
-                            AND date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
-                            AND a.location_id = $locationId -- location filter (for user);
+                            $mainFilter
                         GROUP BY w.animal_id
                     )first_date_birth_weight ON first_date_birth_weight.animal_id = w.animal_id AND first_date_birth_weight.min_measurement_date = m.measurement_date
                     WHERE is_revoked = FALSE AND is_active AND is_birth_weight
@@ -156,10 +158,7 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
                             INNER JOIN animal a ON a.id = w.animal_id
                             INNER JOIN measurement m on w.id = m.id
                          WHERE is_revoked = FALSE AND is_active AND is_birth_weight = FALSE
-                           --GENERAL FILTER
-                            AND a.is_alive
-                            AND date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
-                            AND a.location_id = $locationId -- location filter (for user)
+                           $mainFilter
                          GROUP BY animal_id
                      )weights
                          LEFT JOIN weight w1 ON w1.id = weights.weight_ids[1]
@@ -184,9 +183,7 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
                          LEFT JOIN measurement wd10 ON wd10.id = weights.weight_ids[10]
             )weight_data ON weight_data.animal_id = a.id
         WHERE (birth_weight_measurement.weight NOTNULL OR weight_data.weight_measurement_1 NOTNULL)
-            AND a.is_alive
-            AND date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
-            AND a.location_id = $locationId -- location filter (for user);
+            $mainFilter
         ";
     }
 }
