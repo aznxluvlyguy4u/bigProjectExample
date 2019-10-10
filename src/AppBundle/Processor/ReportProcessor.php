@@ -314,7 +314,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                 case ReportType::WEIGHTS_PER_YEAR_OF_BIRTH:
                     {
                         $yearOfBirth = $data['year_of_birth'];
-                        $data = $this->weightsPerYearOfBirthReportService->getReport($yearOfBirth, $worker->getLocation(), $worker->getActionBy());
+                        $data = $this->weightsPerYearOfBirthReportService->getReport($yearOfBirth, $worker->getLocation());
                         break;
                     }
             }

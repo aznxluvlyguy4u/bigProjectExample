@@ -4,13 +4,11 @@
 namespace AppBundle\Service\Report;
 
 
+use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\Person;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Util\LitterUtil;
+use AppBundle\Util\ReportUtil;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Util\TimeUtil;
 
 class WeightsPerYearOfBirthReportService extends ReportServiceBase
 {
@@ -25,33 +23,38 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
     /**
      * @inheritDoc
      */
-    function getReport(string $yearOfBirth, Location $locale, Person $actionBy)
+    function getReport(string $yearOfBirth, Location $location = null)
     {
-
         try {
-
-            $this->filename = $this->translate(self::TITLE).'_'.$locale->getUbn();
+            $this->filename = $this->getWeightsPerYearOfBirthFileName($location);
             $this->extension = FileType::CSV;
-
 
             return $this->generateCsvFileBySqlQuery(
                 $this->getFilename(),
-                $this->getSqlQuery($yearOfBirth, $locale->getId()),
+                $this->getSqlQuery($yearOfBirth, $location),
                 []
             );
-
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
         }
     }
 
+    private function getWeightsPerYearOfBirthFileName($location): string {
+        $ubn = is_null($location) ? "" : $location->getUbn() . '_';
+        return ReportUtil::translateFileName($this->translator, self::FILE_NAME_REPORT_TYPE)
+            . '_'. $ubn .
+            ReportUtil::translateFileName($this->translator, TranslationKey::GENERATED_ON);
+    }
+
     /**
      * @param string $yearOfBirth
-     * @param Int $locationId
+     * @param Location|null $location
      * @return string
      */
-    private function getSqlQuery(string $yearOfBirth, Int $locationId)
+    private function getSqlQuery(string $yearOfBirth, Location $location = null)
     {
+        $locationId = is_null($location) ? "IS NOT NULL" : $location->getId();
+
         return "SELECT
             va.uln,
             NULLIF(va.stn,'') as stn,
@@ -97,8 +100,8 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
                 FROM weight w
                          INNER JOIN measurement m ON m.id = w.id
                 WHERE is_revoked = FALSE AND is_active AND is_birth_weight
-                  -- Only the id's of all first birth weight on the first found measurement date
-                  AND w.id IN (
+                    -- Only the id's of all first birth weight on the first found measurement date
+                    AND w.id IN (
                     SELECT
                         --w.animal_id,
                         MIN(w.id) as measurement_id

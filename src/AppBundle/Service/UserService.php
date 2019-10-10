@@ -127,6 +127,17 @@ class UserService
         }
     }
 
+    /**
+     * @param Request $request
+     * @return bool
+     * @throws \Exception
+     */
+    public function isRequestFromUserFrontend(Request $request)
+    {
+        $owner = $this->getAccountOwner($request);
+        return !is_null($owner);
+    }
+
 
     /**
      * @param string|null $tokenCode

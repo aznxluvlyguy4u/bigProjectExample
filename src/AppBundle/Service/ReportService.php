@@ -660,21 +660,30 @@ class ReportService
         return $this->companyRegisterReportService->getReport($actionBy, $location, $options);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
     public function createWeightsPerYearOfBirthReport(Request $request)
     {
-        $actionBy = $this->userService->getUser();
-        $location = $this->userService->getSelectedLocation($request);
+        /** @var Location $location */
+        $location = null;
 
-        NullChecker::checkLocation($location);
+        // not admin
+        if ($this->userService->isRequestFromUserFrontend($request)) {
+            $location = $this->userService->getSelectedLocation($request);
+            NullChecker::checkLocation($location);
+        }
 
         $yearOfBirth = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR_OF_BIRTH, null);
+
         if (!$yearOfBirth) {
             return ResultUtil::errorResult('Invalid year of birth', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
-        $inputForHash = $yearOfBirth . $location->getUbn();
-
+        $ubn = is_null($location) ? "" : $location->getUbn();
+        $inputForHash = $yearOfBirth . $ubn;
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
         if ($processAsWorkerTask) {
@@ -686,7 +695,7 @@ class ReportService
             );
         }
 
-        return $this->weightsPerYearOfBirthReportService->getReport($yearOfBirth, $location, $actionBy);
+        return $this->weightsPerYearOfBirthReportService->getReport($yearOfBirth, $location);
     }
 
     /**
