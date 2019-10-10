@@ -25,6 +25,7 @@ use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
 use AppBundle\Service\Report\OffspringReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
+use AppBundle\Service\Report\WeightsPerYearOfBirthReportService;
 use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
@@ -112,6 +113,9 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /** @var ClientNotesOverviewReportService */
     private $clientNotesOverviewReportService;
 
+    /** @var WeightsPerYearOfBirthReportService */
+    private $weightsPerYearOfBirthReportService;
+
     /** @var BaseSerializer */
     private $serializer;
 
@@ -120,7 +124,30 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      */
     private $logger;
 
+    /**
+     * ReportProcessor constructor.
+     * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
+     * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
+     * @param AnimalHealthStatusesReportService $animalHealthStatusesReportService
+     * @param AnnualActiveLivestockReportService $annualActiveLivestockReportService
+     * @param AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService
+     * @param CompanyRegisterReportService $companyRegisterReportService
+     * @param FertilizerAccountingReport $accountingReport
+     * @param InbreedingCoefficientReportService $coefficientReportService
+     * @param AnimalsOverviewReportService $animalsOverviewReportService
+     * @param AnnualActiveLivestockRamMatesReportService $annualActiveLivestockRamMatesReportService
+     * @param OffspringReportService $offspringReportService
+     * @param PedigreeRegisterOverviewReportService $pedigreeRegisterOverviewReportService
+     * @param PedigreeCertificateReportService $pedigreeCertificateReportService
+     * @param LiveStockReportService $liveStockReportService
+     * @param BirthListReportService $birthListReportService
+     * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+     * @param EntityManager $em
+     * @param Logger $logger
+     * @param BaseSerializer $serializer
+     */
     public function __construct(
+        WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
         ClientNotesOverviewReportService $clientNotesOverviewReportService,
         AnimalHealthStatusesReportService $animalHealthStatusesReportService,
         AnnualActiveLivestockReportService $annualActiveLivestockReportService,
@@ -159,6 +186,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->companyRegisterReportService = $companyRegisterReportService;
         $this->animalHealthStatusesReportService = $animalHealthStatusesReportService;
         $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
+        $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
     }
 
     public function process(PsrMessage $message, PsrContext $context)
@@ -281,6 +309,12 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $options = $this->serializer->deserializeToObject($data['options'],
                             ClientNotesOverviewReportOptions::class, null);
                         $data = $this->clientNotesOverviewReportService->getReport($worker->getActionBy(), $options);
+                        break;
+                    }
+                case ReportType::WEIGHTS_PER_YEAR_OF_BIRTH:
+                    {
+                        $yearOfBirth = $data['year_of_birth'];
+                        $data = $this->weightsPerYearOfBirthReportService->getReport($yearOfBirth, $worker->getLocation());
                         break;
                     }
             }

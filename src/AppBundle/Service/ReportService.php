@@ -30,6 +30,7 @@ use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
+use AppBundle\Service\Report\WeightsPerYearOfBirthReportService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\DateUtil;
@@ -110,6 +111,9 @@ class ReportService
     /** @var InbreedingCoefficientReportService */
     private $inbreedingCoefficientReportService;
 
+    /** @var WeightsPerYearOfBirthReportService */
+    private $weightsPerYearOfBirthReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -126,6 +130,7 @@ class ReportService
      * @param CompanyRegisterReportService $companyRegisterReportService
      * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
      * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
+     * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -141,7 +146,8 @@ class ReportService
         MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
         CompanyRegisterReportService $companyRegisterReportService,
         ClientNotesOverviewReportService $clientNotesOverviewReportService,
-        InbreedingCoefficientReportService $inbreedingCoefficientReportService
+        InbreedingCoefficientReportService $inbreedingCoefficientReportService,
+        WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
     )
     {
         $this->em = $em;
@@ -158,6 +164,7 @@ class ReportService
         $this->companyRegisterReportService = $companyRegisterReportService;
         $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
         $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
+        $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
     }
 
     /**
@@ -651,6 +658,44 @@ class ReportService
         }
 
         return $this->companyRegisterReportService->getReport($actionBy, $location, $options);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createWeightsPerYearOfBirthReport(Request $request)
+    {
+        /** @var Location $location */
+        $location = null;
+
+        // not admin
+        if ($this->userService->isRequestFromUserFrontend($request)) {
+            $location = $this->userService->getSelectedLocation($request);
+            NullChecker::checkLocation($location);
+        }
+
+        $yearOfBirth = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR_OF_BIRTH, null);
+
+        if (!$yearOfBirth) {
+            return ResultUtil::errorResult('Invalid year of birth', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $ubn = is_null($location) ? "" : $location->getUbn();
+        $inputForHash = $yearOfBirth . $ubn;
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'year_of_birth' => $yearOfBirth
+                ],
+                $request,ReportType::WEIGHTS_PER_YEAR_OF_BIRTH, $inputForHash
+            );
+        }
+
+        return $this->weightsPerYearOfBirthReportService->getReport($yearOfBirth, $location);
     }
 
     /**
