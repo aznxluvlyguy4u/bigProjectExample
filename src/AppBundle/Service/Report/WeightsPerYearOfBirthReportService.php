@@ -22,7 +22,9 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
     const PERCENTAGES_DECIMAL_COUNT = 0;
 
     /**
-     * @inheritDoc
+     * @param $yearOfBirth
+     * @param Location|null $location
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
     function getReport($yearOfBirth, ?Location $location = null)
     {
