@@ -700,11 +700,11 @@ class ReportAPIController extends APIController {
      *   },
      *   parameters={
      *     {
-     *        "name"="year_of_birth",
+     *        "name"="pedigree_register",
      *        "dataType"="string",
-     *        "required"=true,
-     *        "description"="year of birth to get weights from",
-     *        "format"="?year_of_birth=2019"
+     *        "required"=false,
+     *        "description"="filter on pedigree register abbreviation, default = empty (no pedigree register filter)",
+     *        "format"="?pedigree_register=nts"
      *     }
      *   },
      *   resource = true,
