@@ -25,10 +25,10 @@ class PopRepInputFileService extends ReportServiceBase
     const LABEL_ANIMAL_HEALTH_SUBSCRIPTION = 'diergezondheid';
 
     /**
-     * @param string $pedigreeRegisterAbbreviation
+     * @param $pedigreeRegisterAbbreviation
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
-    function getReport(string $pedigreeRegisterAbbreviation)
+    function getReport($pedigreeRegisterAbbreviation)
     {
 
 
