@@ -7,6 +7,7 @@ namespace AppBundle\Service\Report;
 use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Util\ReportUtil;
 use AppBundle\Util\ResultUtil;
 
@@ -20,14 +21,19 @@ class PopRepInputFileService extends ReportServiceBase
     const AVERAGES_DECIMAL_COUNT = 2;
     const PERCENTAGES_DECIMAL_COUNT = 0;
 
+    const LABEL_HAS_ACTIVE_PEDIGREE_REGISTER = 'heeft_actief_stamboek';
+    const LABEL_ANIMAL_HEALTH_SUBSCRIPTION = 'diergezondheid';
+
     /**
-     * @param PedigreeRegister $pedigreeRegister
+     * @param string $pedigreeRegisterAbbreviation
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
-    function getReport(PedigreeRegister $pedigreeRegister)
+    function getReport(string $pedigreeRegisterAbbreviation)
     {
-        $pedigreeRegisterAbbreviation = $pedigreeRegister->getAbbreviation();
+
+
         try {
+            $pedigreeRegister = $this->validatePedigreeRegisterAbbreviationAndGetPedigreeRegister($pedigreeRegisterAbbreviation);
             $this->filename = $this->getPopRepInputFileFileName($pedigreeRegisterAbbreviation);
             $this->extension = FileType::TXT;
 
@@ -42,11 +48,29 @@ class PopRepInputFileService extends ReportServiceBase
         }
     }
 
+    private function validatePedigreeRegisterAbbreviationAndGetPedigreeRegister($pedigreeRegisterAbbreviation)
+    {
+        if (empty($pedigreeRegisterAbbreviation)) {
+            return;
+        }
+
+        $pedigreeRegisterAbbreviation = strtoupper($pedigreeRegisterAbbreviation);
+        $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)
+            ->findOneByAbbreviation($pedigreeRegisterAbbreviation);
+
+        if (!$pedigreeRegister) {
+            throw new InvalidPedigreeRegisterAbbreviationHttpException($this->translator,strval($pedigreeRegisterAbbreviation));
+        }
+
+        return $pedigreeRegister;
+    }
+
     private function getPopRepInputFileFileName($pedigreeRegisterAbbreviation): string {
         return ReportUtil::translateFileName($this->translator, self::FILE_NAME_REPORT_TYPE)
             . '_'. $pedigreeRegisterAbbreviation . '_'.
             ReportUtil::translateFileName($this->translator, TranslationKey::GENERATED_ON);
     }
+
 
     /**
      * @param int $pedigreeRegisterId

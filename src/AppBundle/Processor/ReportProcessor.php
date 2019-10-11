@@ -326,8 +326,8 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     }
                 case ReportType::POPREP_INPUT_FILE:
                     {
-                        $pedigreeRegister = $data['pedigree_register'];
-                        $data = $this->popRepInputFileService->getReport($pedigreeRegister);
+                        $pedigreeRegisterAbbreviation = $data['pedigree_register_abbreviation'];
+                        $data = $this->popRepInputFileService->getReport($pedigreeRegisterAbbreviation);
                         break;
                     }
             }

@@ -383,6 +383,9 @@ class ReportService
             }
         }
 
+        // Set file type as TXT. This value will be saved in the ReportWorker table
+        $request->query->set(QueryParameter::FILE_TYPE_QUERY, FileType::TXT);
+
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
         $inputForHash = $pedigreeRegisterAbbreviation;
@@ -390,13 +393,13 @@ class ReportService
         if ($processAsWorkerTask) {
             return $this->processReportAsWorkerTask(
                 [
-                    'pedigree_register' => $pedigreeRegister
+                    'pedigree_register_abbreviation' => $pedigreeRegisterAbbreviation
                 ],
                 $request,ReportType::POPREP_INPUT_FILE, $inputForHash
             );
         }
 
-        return $this->popRepInputFileService->getReport($pedigreeRegister);
+        return $this->popRepInputFileService->getReport($pedigreeRegisterAbbreviation);
     }
 
     /**
