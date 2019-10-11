@@ -686,6 +686,41 @@ class ReportAPIController extends APIController {
     }
 
     /**
+     * Generate company register report and return a download link for the pdf.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="year_of_birth",
+     *        "dataType"="string",
+     *        "required"=true,
+     *        "description"="year of birth to get weights from",
+     *        "format"="?year_of_birth=2019"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate weights per year of birth report and return a download link for the csv"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/poprep-input-file")
+     * @Method("POST")
+     */
+    public function getPopRepReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createPopRepReport($request);
+    }
+
+    /**
      * Generate client notes overview report and return a download link for the csv.
      *
      * @ApiDoc(
