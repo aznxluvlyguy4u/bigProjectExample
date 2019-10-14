@@ -152,6 +152,25 @@ class LocationHealth
      * @JMS\Type("string")
      * @Expose
      */
+    private $currentCaeStatus;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $currentCaeEndDate;
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
     private $currentFootRotStatus;
 
     /**
@@ -365,6 +384,54 @@ class LocationHealth
         return $this->currentCaseousLymphadenitisEndDate;
     }
 
+    /**
+     * Set currentCaeStatus
+     *
+     * @param string $currentCaeStatus
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentCaeStatus($currentCaeStatus)
+    {
+        $this->currentCaeStatus = $currentCaeStatus;
+
+        return $this;
+    }
+
+    /**
+     * Get currentCaeStatus
+     *
+     * @return string
+     */
+    public function getCurrentCaeStatus()
+    {
+        return $this->currentCaeStatus;
+    }
+
+    /**
+     * Set currentCaeEndDate
+     *
+     * @param \DateTime $currentCaeEndDate
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentCaeEndDate($currentCaeEndDate)
+    {
+        $this->currentCaeEndDate = $currentCaeEndDate;
+
+        return $this;
+    }
+
+    /**
+     * Get currentCaeEndDate
+     *
+     * @return \DateTime
+     */
+    public function getCurrentCaeEndDate()
+    {
+        return $this->currentCaeEndDate;
+    }
+    
     /**
      * Set currentFootRotStatus
      *
