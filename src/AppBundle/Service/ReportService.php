@@ -31,6 +31,7 @@ use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
+use AppBundle\Service\Report\PopRepInputFileService;
 use AppBundle\Service\Report\WeightsPerYearOfBirthReportService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
@@ -118,6 +119,9 @@ class ReportService
     /** @var WeightsPerYearOfBirthReportService */
     private $weightsPerYearOfBirthReportService;
 
+    /** @var PopRepInputFileService */
+    private $popRepInputFileService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -136,6 +140,7 @@ class ReportService
      * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
      * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
+     * @param PopRepInputFileService $popRepInputFileService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -153,7 +158,8 @@ class ReportService
         CompanyRegisterReportService $companyRegisterReportService,
         ClientNotesOverviewReportService $clientNotesOverviewReportService,
         InbreedingCoefficientReportService $inbreedingCoefficientReportService,
-        WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
+        WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
+        PopRepInputFileService $popRepInputFileService
     )
     {
         $this->em = $em;
@@ -172,6 +178,7 @@ class ReportService
         $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
         $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
         $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
+        $this->popRepInputFileService = $popRepInputFileService;
     }
 
     /**
@@ -359,6 +366,52 @@ class ReportService
 
     /**
      * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createPopRepReport(Request $request)
+    {
+        $actionBy = $this->userService->getUser();
+
+        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN)) {
+            throw AdminValidator::standardException();
+        }
+
+        $pedigreeRegisterAbbreviation = $request->query->get(QueryParameter::PEDIGREE_REGISTER);
+
+        if ($pedigreeRegisterAbbreviation == null) {
+            throw new BadRequestHttpException('Missing pedigree register');
+        }
+
+        $pedigreeRegisterAbbreviation = strtoupper($pedigreeRegisterAbbreviation);
+        $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)
+            ->findOneByAbbreviation($pedigreeRegisterAbbreviation);
+
+        if (!$pedigreeRegister) {
+            throw new InvalidPedigreeRegisterAbbreviationHttpException($this->translator,strval($pedigreeRegisterAbbreviation));
+        }
+
+        // Set file type as TXT. This value will be saved in the ReportWorker table
+        $request->query->set(QueryParameter::FILE_TYPE_QUERY, FileType::TXT);
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        $inputForHash = $pedigreeRegisterAbbreviation;
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'pedigree_register_abbreviation' => $pedigreeRegisterAbbreviation
+                ],
+                $request,ReportType::POPREP_INPUT_FILE, $inputForHash
+            );
+        }
+
+        return $this->popRepInputFileService->getReport($pedigreeRegisterAbbreviation);
+    }
+
+    /**
+     * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
     public function createOffspringReport(Request $request)
@@ -505,7 +558,8 @@ class ReportService
 
     /**
      * @param Request $request
-     * @return \AppBundle\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
+     * @throws \Exception
      */
     public function createInbreedingCoefficientsReport(Request $request)
     {
@@ -535,7 +589,8 @@ class ReportService
 
     /**
      * @param Request $request
-     * @return \AppBundle\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
+     * @throws \Exception
      */
     public function createFertilizerAccountingReport(Request $request)
     {
@@ -553,7 +608,8 @@ class ReportService
 
     /**
      * @param Request $request
-     * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @throws \Exception
      */
     public function createAnnualTe100UbnProductionReport(Request $request)
     {
