@@ -16,6 +16,7 @@ use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockReportService;
 use AppBundle\Service\Report\AnnualTe100UbnProductionReportService;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
@@ -108,10 +109,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /** @var MembersAndUsersOverviewReportService */
     private $membersAndUsersOverviewReport;
 
+    /** @var EweCardReportService */
+    private $eweCardReportService;
+
     /** @var CompanyRegisterReportService */
     private $companyRegisterReportService;
 
-    /** @var EweCardReportService */
+    /** @var ClientNotesOverviewReportService */
     private $clientNotesOverviewReportService;
 
     /** @var WeightsPerYearOfBirthReportService */
@@ -130,9 +134,10 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 
     /**
      * ReportProcessor constructor.
+     * @param EweCardReportService $eweCardReportService
      * @param PopRepInputFileService $popRepInputFileService
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
-     * @param EweCardReportService $clientNotesOverviewReportService
+     * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
      * @param AnimalHealthStatusesReportService $animalHealthStatusesReportService
      * @param AnnualActiveLivestockReportService $annualActiveLivestockReportService
      * @param AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService
@@ -152,9 +157,10 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      * @param BaseSerializer $serializer
      */
     public function __construct(
+        EweCardReportService $eweCardReportService,
         PopRepInputFileService $popRepInputFileService,
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
-        EweCardReportService $clientNotesOverviewReportService,
+        ClientNotesOverviewReportService $clientNotesOverviewReportService,
         AnimalHealthStatusesReportService $animalHealthStatusesReportService,
         AnnualActiveLivestockReportService $annualActiveLivestockReportService,
         AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService,
@@ -193,6 +199,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->animalHealthStatusesReportService = $animalHealthStatusesReportService;
         $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
         $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
+        $this->eweCardReportService = $eweCardReportService;
         $this->popRepInputFileService = $popRepInputFileService;
     }
 
@@ -297,6 +304,12 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $options = $this->serializer->deserializeToObject($data['options'],
                             MembersAndUsersOverviewReportOptions::class, null);
                         $data = $this->membersAndUsersOverviewReport->getReport($options);
+                        break;
+                    }
+                case ReportType::EWE_CARD:
+                    {
+                        $content = new ArrayCollection(json_decode($data['content'], true));
+                        $data = $this->eweCardReportService->getReport($worker->getActionBy(), $worker->getLocation(), $content);
                         break;
                     }
                 case ReportType::COMPANY_REGISTER:

@@ -25,6 +25,7 @@ use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\EweCardReportService;
+use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
@@ -103,10 +104,13 @@ class ReportService
     /** @var MembersAndUsersOverviewReportService */
     private $membersAndUsersOverviewReport;
 
+    /** @var EweCardReportService  */
+    private $eweCardReportService;
+
     /** @var CompanyRegisterReportService */
     private $companyRegisterReportService;
 
-    /** @var EweCardReportService */
+    /** @var ClientNotesOverviewReportService */
     private $clientNotesOverviewReportService;
 
     /** @var InbreedingCoefficientReportService */
@@ -131,8 +135,9 @@ class ReportService
      * @param LiveStockReportService $livestockReportService
      * @param BirthListReportService $birthListReportService
      * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+     * @param EweCardReportService $eweCardReportService
      * @param CompanyRegisterReportService $companyRegisterReportService
-     * @param EweCardReportService $clientNotesOverviewReportService
+     * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
      * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
      * @param PopRepInputFileService $popRepInputFileService
@@ -149,8 +154,9 @@ class ReportService
         LiveStockReportService $livestockReportService,
         BirthListReportService $birthListReportService,
         MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
+        EweCardReportService $eweCardReportService,
         CompanyRegisterReportService $companyRegisterReportService,
-        EweCardReportService $clientNotesOverviewReportService,
+        ClientNotesOverviewReportService $clientNotesOverviewReportService,
         InbreedingCoefficientReportService $inbreedingCoefficientReportService,
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
         PopRepInputFileService $popRepInputFileService
@@ -167,6 +173,7 @@ class ReportService
         $this->livestockReportService = $livestockReportService;
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
+        $this->eweCardReportService = $eweCardReportService;
         $this->companyRegisterReportService = $companyRegisterReportService;
         $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
         $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
@@ -431,6 +438,52 @@ class ReportService
             $request,ReportType::OFFSPRING, $inputForHash
         );
     }
+
+
+    /**
+     * @param Request $request
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse
+     */
+    public function createEweCardReport(Request $request)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+        $animalsArray = $content->get(JsonInputConstant::EWES);
+
+        if (!is_array($animalsArray)) {
+            return ResultUtil::errorResult("'".JsonInputConstant::EWES."' key is missing in body", Response::HTTP_BAD_REQUEST);
+        }
+
+        if (count($animalsArray) === 0) {
+            return ResultUtil::errorResult("Empty input", Response::HTTP_BAD_REQUEST);
+        }
+
+        $contentAsJson = JSON::encode($content->toArray());
+        $inputForHash = $contentAsJson;
+
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, EweCardReportService::defaultFileType());
+        ReportUtil::validateFileType($fileType, EweCardReportService::allowedFileTypes(), $this->translator);
+
+        $location = $this->userService->getSelectedLocation($request);
+        $actionBy = $this->userService->getUser();
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+                return $this->processReportAsWorkerTask(
+                    [
+                        'content' => $contentAsJson
+                    ],
+                    $request,ReportType::EWE_CARD, $inputForHash
+            );
+        }
+
+        $report = $this->eweCardReportService->getReport($actionBy, $location, $content);
+        if ($report instanceof Response) {
+            return $report;
+        }
+        return ResultUtil::successResult($report);
+    }
+
 
     /**
      * @param Request $request
