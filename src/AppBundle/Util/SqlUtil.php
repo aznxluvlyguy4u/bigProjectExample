@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\IsoCountry;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\BreedTypeDutch;
@@ -669,6 +670,11 @@ class SqlUtil
     public static function genderTranslationValues()
     {
         return SqlUtil::createSqlValuesString(DutchGender::getConstants(), true, true);
+    }
+
+
+    public static function isoCountryAlphaTwoToNumericMapping() {
+        return SqlUtil::createSqlValuesString(IsoCountry::numericByAlpha2(), false, false);
     }
 
 
