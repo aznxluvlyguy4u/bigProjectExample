@@ -85,6 +85,12 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
              maedi_visna_details.max_log_date as datum_laatste_wijziging_status_zwoegerziekte,
              COALESCE(maedi_visna_details.is_manual_edit, FALSE) as is_handmatige_wijziging_status_zwoegerziekte,
              maedi_visna_details.reason_of_edit as reden_wijziging_status_zwoegerziekte,
+             cl_details.max_log_date as datum_laatste_wijziging_status_cl,
+             COALESCE(cl_details.is_manual_edit, FALSE) as is_handmatige_wijziging_status_cl,
+             cl_details.reason_of_edit as reden_wijziging_status_cl,
+             cae_details.max_log_date as datum_laatste_wijziging_status_cae,
+             COALESCE(cae_details.is_manual_edit, FALSE) as is_handmatige_wijziging_status_cae,
+             cae_details.reason_of_edit as reden_wijziging_status_cae,
              arrival_details.count_arrivals_last_12_months as aantal_aanvoeren_laatste_12_maanden,
              import_details.count_imports_last_12_months as aantal_imports_laatste_12_maanden,
              -- When a status was changed to NOT free/resistant
@@ -136,6 +142,12 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
             LEFT JOIN (
                 ".self::selectQueryMaediVisnaDetails()."
               )maedi_visna_details ON maedi_visna_details.location_health_id = lh.id
+            LEFT JOIN (
+                ".self::selectQueryCaseousLymphadenitisDetails()."
+              )cl_details ON cl_details.location_health_id = lh.id
+            LEFT JOIN (
+                ".self::selectQueryCaeDetails()."
+              )cae_details ON cae_details.location_health_id = lh.id
             LEFT JOIN (
               ".self::selectQueryArrivalDetails()."
             )arrival_details ON arrival_details.location_id = l.id
@@ -292,6 +304,40 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
             GROUP BY location_health_id
             )last_maedi_visna ON last_maedi_visna.max_id = maedi_visna.id
         AND last_maedi_visna.location_health_id = maedi_visna.location_health_id";
+    }
+
+    private static function selectQueryCaseousLymphadenitisDetails(): string {
+        return "SELECT
+            cl.location_health_id,
+            cl.log_date as max_log_date,
+            cl.reason_of_edit,
+            COALESCE(cl.is_manual_edit, FALSE) as is_manual_edit
+        FROM caseous_lymphadenitis cl
+            INNER JOIN (
+            SELECT
+              location_health_id,
+              MAX(id) as max_id
+            FROM caseous_lymphadenitis cl
+            GROUP BY location_health_id
+            )last_cl ON last_cl.max_id = cl.id
+        AND last_cl.location_health_id = cl.location_health_id";
+    }
+
+    private static function selectQueryCaeDetails(): string {
+        return "SELECT
+            cae.location_health_id,
+            cae.log_date as max_log_date,
+            cae.reason_of_edit,
+            COALESCE(cae.is_manual_edit, FALSE) as is_manual_edit
+        FROM cae
+            INNER JOIN (
+            SELECT
+              location_health_id,
+              MAX(id) as max_id
+            FROM cae
+            GROUP BY location_health_id
+            )last_cae ON last_cae.max_id = cae.id
+        AND last_cae.location_health_id = cae.location_health_id";
     }
 
     private static function selectQueryArrivalDetails(): string {
