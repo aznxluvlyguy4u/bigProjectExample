@@ -16,7 +16,7 @@ use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockReportService;
 use AppBundle\Service\Report\AnnualTe100UbnProductionReportService;
 use AppBundle\Service\Report\BirthListReportService;
-use AppBundle\Service\Report\ClientNotesOverviewReportService;
+use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
@@ -110,7 +110,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /** @var CompanyRegisterReportService */
     private $companyRegisterReportService;
 
-    /** @var ClientNotesOverviewReportService */
+    /** @var EweCardReportService */
     private $clientNotesOverviewReportService;
 
     /** @var WeightsPerYearOfBirthReportService */
@@ -127,7 +127,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /**
      * ReportProcessor constructor.
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
-     * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
+     * @param EweCardReportService $clientNotesOverviewReportService
      * @param AnimalHealthStatusesReportService $animalHealthStatusesReportService
      * @param AnnualActiveLivestockReportService $annualActiveLivestockReportService
      * @param AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService
@@ -148,7 +148,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      */
     public function __construct(
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
-        ClientNotesOverviewReportService $clientNotesOverviewReportService,
+        EweCardReportService $clientNotesOverviewReportService,
         AnimalHealthStatusesReportService $animalHealthStatusesReportService,
         AnnualActiveLivestockReportService $annualActiveLivestockReportService,
         AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService,

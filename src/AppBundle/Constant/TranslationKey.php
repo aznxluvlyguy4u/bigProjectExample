@@ -14,6 +14,7 @@ class TranslationKey
     const IS_MISSING = 'IS MISSING';
     const FILE_TYPE = 'FILE TYPE';
     const GENERATED_ON = 'GENERATED ON';
+    const NO_ANIMAL_FOUND_FOR_GIVEN_ULN = 'NO ANIMAL FOUND FOR GIVEN ULN';
     const REFERENCE_DATE = "REFERENCE DATE";
     const SAMPLE_DATE = "SAMPLE DATE";
 }

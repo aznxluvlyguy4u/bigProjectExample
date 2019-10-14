@@ -24,7 +24,7 @@ use AppBundle\Enumerator\WorkerType;
 use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
-use AppBundle\Service\Report\ClientNotesOverviewReportService;
+use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
@@ -105,7 +105,7 @@ class ReportService
     /** @var CompanyRegisterReportService */
     private $companyRegisterReportService;
 
-    /** @var ClientNotesOverviewReportService */
+    /** @var EweCardReportService */
     private $clientNotesOverviewReportService;
 
     /** @var InbreedingCoefficientReportService */
@@ -128,7 +128,7 @@ class ReportService
      * @param BirthListReportService $birthListReportService
      * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
      * @param CompanyRegisterReportService $companyRegisterReportService
-     * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
+     * @param EweCardReportService $clientNotesOverviewReportService
      * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
      */
@@ -145,7 +145,7 @@ class ReportService
         BirthListReportService $birthListReportService,
         MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
         CompanyRegisterReportService $companyRegisterReportService,
-        ClientNotesOverviewReportService $clientNotesOverviewReportService,
+        EweCardReportService $clientNotesOverviewReportService,
         InbreedingCoefficientReportService $inbreedingCoefficientReportService,
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
     )
@@ -718,7 +718,7 @@ class ReportService
         }
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
-        ReportUtil::validateFileType($fileType, ClientNotesOverviewReportService::allowedFileTypes(), $this->translator);
+        ReportUtil::validateFileType($fileType, EweCardReportService::allowedFileTypes(), $this->translator);
 
         $options = (new ClientNotesOverviewReportOptions())
             ->setFileType($fileType)
