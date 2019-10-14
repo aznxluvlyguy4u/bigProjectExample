@@ -518,6 +518,9 @@ services:
     AppBundle\Service\Report\MembersAndUsersOverviewReportService:
       parent: app.report.base
 
+    AppBundle\Service\Report\PopRepInputFileService:
+      parent: app.report.base
+
     AppBundle\Service\Report\ClientNotesOverviewReportService:
       parent: app.report.base
 
@@ -638,10 +641,12 @@ services:
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
           - '@app.report.inbreeding_coefficient'
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
+          - '@AppBundle\Service\Report\PopRepInputFileService'
 
 
     AppBundle\Processor\ReportProcessor:
         arguments:
+          - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
           - '@AppBundle\Service\Report\AnimalHealthStatusesReportService'
