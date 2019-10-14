@@ -77,7 +77,7 @@ class OfficeApiConnector extends BaseApiConnector
 
         if (is_array($arrayOfString)) {
             foreach ($arrayOfString as $officeArray) {
-                $offices[] = $this->createOffice($officeArray);;
+                $offices[] = $this->createOffice($officeArray);
             }
         } else {
             $offices[] = $this->createOffice($arrayOfString);

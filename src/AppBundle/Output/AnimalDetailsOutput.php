@@ -255,7 +255,7 @@ class AnimalDetailsOutput extends OutputServiceBase
             "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal, $replacementString),
             "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
-            "declare_log" => $this->getLog($animal, $animal->getLocation(), $replacementString),
+            "declare_log" => $this->getLog($animal, $replacementString),
             "child_count" => $animalRepository->offspringCount($animal),
             "production" => $production,
         ];
@@ -456,15 +456,13 @@ class AnimalDetailsOutput extends OutputServiceBase
 
 
     /**
-     * @param ObjectManager $this->getManager()
      * @param Animal $animal
-     * @param Location $location
      * @param string $replacementText
      * @return array
      */
-    private function getLog(Animal $animal, $location, $replacementText)
+    private function getLog(Animal $animal, $replacementText)
     {
-        return $this->getManager()->getRepository(DeclareBase::class)->getLog($animal, $location, $replacementText);
+        return $this->getManager()->getRepository(DeclareBase::class)->getLog($animal, $replacementText);
     }
 
 }

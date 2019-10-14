@@ -10,7 +10,6 @@ use AppBundle\Component\MixBlup\ReproductionInstructionFiles;
 use AppBundle\Component\MixBlup\WormResistanceInstructionFiles;
 use AppBundle\Constant\MixBlupAnalysis;
 
-
 /**
  * Class MixBlupParseInstruction
  * @package AppBundle\Setting
@@ -108,8 +107,7 @@ class MixBlupParseInstruction
      */
     public static function getIndirect($breedValueType, $isRelani = true)
     {
-        switch ($breedValueType)
-        {
+        switch ($breedValueType) {
             case MixBlupAnalysis::BIRTH_PROGRESS:
                 $model = ReproductionInstructionFiles::getIndirectProgressModel($isRelani);
                 break;
@@ -120,6 +118,7 @@ class MixBlupParseInstruction
 
             default:
                 $model = [];
+                break;
         }
         return array_keys($model);
 

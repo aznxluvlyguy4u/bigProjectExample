@@ -27,7 +27,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class AdminService extends AuthServiceBase implements AdminAPIControllerInterface
 {
-    const timeLimitInMinutes = 3;
+    const TIME_LIMIT_IN_MINUTES = 3;
 
     /**
      * @param Request $request
@@ -54,7 +54,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
     {
         $actionBy = $this->getEmployee();
         if (!AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
+            throw AdminValidator::standardException();
         }
 
         $content = RequestUtil::getContentAsArray($request);
@@ -272,7 +272,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
                         } else {
                             $now = new \DateTime();
                             $timeExpiredInMinutes = ($now->getTimestamp() - $ghostToken->getCreationDateTime()->getTimeStamp())/60;
-                            $isGhostTokenExpired = $timeExpiredInMinutes > self::timeLimitInMinutes;
+                            $isGhostTokenExpired = $timeExpiredInMinutes > self::TIME_LIMIT_IN_MINUTES;
 
                             if ($isGhostTokenExpired){
                                 $this->getManager()->remove($ghostToken);

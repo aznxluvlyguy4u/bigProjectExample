@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\Variable;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\Criteria;
 
@@ -54,6 +55,7 @@ class TailLengthRepository extends MeasurementRepository {
         //Measurement Criteria
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('animal', $animal))
+            ->andWhere(Criteria::expr()->eq(Variable::IS_ACTIVE, true))
             ->orderBy(['measurementDate' => Criteria::DESC])
             ->setMaxResults(1);
 

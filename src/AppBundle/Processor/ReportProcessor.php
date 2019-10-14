@@ -3,17 +3,22 @@
 namespace AppBundle\Processor;
 
 use AppBundle\Component\Option\BirthListReportOptions;
+use AppBundle\Component\Option\ClientNotesOverviewReportOptions;
+use AppBundle\Component\Option\CompanyRegisterReportOptions;
 use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Entity\ReportWorker;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Service\BaseSerializer;
+use AppBundle\Service\Report\AnimalHealthStatusesReportService;
 use AppBundle\Service\Report\AnimalsOverviewReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockReportService;
 use AppBundle\Service\Report\AnnualTe100UbnProductionReportService;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\EweCardReportService;
+use AppBundle\Service\Report\ClientNotesOverviewReportService;
+use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
@@ -21,6 +26,7 @@ use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
 use AppBundle\Service\Report\OffspringReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
 use AppBundle\Service\Report\PedigreeRegisterOverviewReportService;
+use AppBundle\Service\Report\WeightsPerYearOfBirthReportService;
 use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
@@ -62,6 +68,11 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     private $coefficientReportService;
 
     /**
+     * @var AnimalHealthStatusesReportService
+     */
+    private $animalHealthStatusesReportService;
+
+    /**
      * @var AnimalsOverviewReportService
      */
     private $animalsOverviewReportService;
@@ -100,6 +111,15 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /** @var EweCardReportService */
     private $eweCardReportService;
 
+    /** @var CompanyRegisterReportService */
+    private $companyRegisterReportService;
+
+    /** @var ClientNotesOverviewReportService */
+    private $clientNotesOverviewReportService;
+
+    /** @var WeightsPerYearOfBirthReportService */
+    private $weightsPerYearOfBirthReportService;
+
     /** @var BaseSerializer */
     private $serializer;
 
@@ -108,10 +128,37 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      */
     private $logger;
 
+    /**
+     * ReportProcessor constructor.
+     * @param EweCardReportService $eweCardReportService
+     * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
+     * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
+     * @param AnimalHealthStatusesReportService $animalHealthStatusesReportService
+     * @param AnnualActiveLivestockReportService $annualActiveLivestockReportService
+     * @param AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService
+     * @param CompanyRegisterReportService $companyRegisterReportService
+     * @param FertilizerAccountingReport $accountingReport
+     * @param InbreedingCoefficientReportService $coefficientReportService
+     * @param AnimalsOverviewReportService $animalsOverviewReportService
+     * @param AnnualActiveLivestockRamMatesReportService $annualActiveLivestockRamMatesReportService
+     * @param OffspringReportService $offspringReportService
+     * @param PedigreeRegisterOverviewReportService $pedigreeRegisterOverviewReportService
+     * @param PedigreeCertificateReportService $pedigreeCertificateReportService
+     * @param LiveStockReportService $liveStockReportService
+     * @param BirthListReportService $birthListReportService
+     * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+     * @param EntityManager $em
+     * @param Logger $logger
+     * @param BaseSerializer $serializer
+     */
     public function __construct(
         EweCardReportService $eweCardReportService,
+        WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
+        ClientNotesOverviewReportService $clientNotesOverviewReportService,
+        AnimalHealthStatusesReportService $animalHealthStatusesReportService,
         AnnualActiveLivestockReportService $annualActiveLivestockReportService,
         AnnualTe100UbnProductionReportService $annualTe100UbnProductionReportService,
+        CompanyRegisterReportService $companyRegisterReportService,
         FertilizerAccountingReport $accountingReport,
         InbreedingCoefficientReportService $coefficientReportService,
         AnimalsOverviewReportService $animalsOverviewReportService,
@@ -142,6 +189,10 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->liveStockReportService = $liveStockReportService;
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
+        $this->companyRegisterReportService = $companyRegisterReportService;
+        $this->animalHealthStatusesReportService = $animalHealthStatusesReportService;
+        $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
+        $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
         $this->eweCardReportService = $eweCardReportService;
     }
 
@@ -252,6 +303,31 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     {
                         $content = new ArrayCollection(json_decode($data['content'], true));
                         $data = $this->eweCardReportService->getReport($worker->getLocation(), $content);
+                        break;
+                    }
+                case ReportType::COMPANY_REGISTER:
+                    {
+                        $options = $this->serializer->deserializeToObject($data['options'],
+                            CompanyRegisterReportOptions::class, null);
+                        $data = $this->companyRegisterReportService->getReport($worker->getActionBy(), $worker->getLocation(), $options);
+                        break;
+                    }
+                case ReportType::ANIMAL_HEALTH_STATUSES:
+                    {
+                        $data = $this->animalHealthStatusesReportService->getReport();
+                        break;
+                    }
+                case ReportType::CLIENT_NOTES_OVERVIEW:
+                    {
+                        $options = $this->serializer->deserializeToObject($data['options'],
+                            ClientNotesOverviewReportOptions::class, null);
+                        $data = $this->clientNotesOverviewReportService->getReport($worker->getActionBy(), $options);
+                        break;
+                    }
+                case ReportType::WEIGHTS_PER_YEAR_OF_BIRTH:
+                    {
+                        $yearOfBirth = $data['year_of_birth'];
+                        $data = $this->weightsPerYearOfBirthReportService->getReport($yearOfBirth, $worker->getLocation());
                         break;
                     }
             }

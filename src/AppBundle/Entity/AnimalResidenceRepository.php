@@ -2,7 +2,7 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
+use AppBundle\Constant\Variable;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -28,16 +28,15 @@ class AnimalResidenceRepository extends BaseRepository {
         }
 
         return $this->findOneBy([
-            'location' => $location,
-            'animal' => $animal,
-            'endDate' => $endDate
+            Variable::LOCATION => $location,
+            Variable::ANIMAL => $animal,
+            Variable::END_DATE => $endDate
         ]);
     }
 
     public function getLastByNullEndDate(Animal $animal)
     {
-        $repository = $this->getManager()->getRepository(Constant::ANIMAL_RESIDENCE_REPOSITORY);
-        $results = $this->findBy(array('endDate' => null, 'animal_id' => $animal->getId()));
+        $results = $this->findBy(array(Variable::END_DATE => null, 'animal_id' => $animal->getId()));
 
         if(sizeof($results) == 0) {
             return null;
@@ -63,9 +62,9 @@ class AnimalResidenceRepository extends BaseRepository {
         }
 
         $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('location', $location))
-            ->andWhere(Criteria::expr()->eq('animal', $animal))
-            ->orderBy(['startDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
+            ->where(Criteria::expr()->eq(Variable::LOCATION, $location))
+            ->andWhere(Criteria::expr()->eq(Variable::ANIMAL, $animal))
+            ->orderBy([Variable::START_DATE => Criteria::DESC, Variable::LOG_DATE => Criteria::DESC])
             ->setMaxResults(1);
 
         /** @var ArrayCollection $results */
@@ -94,10 +93,10 @@ class AnimalResidenceRepository extends BaseRepository {
         }
 
         $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('location', $location))
-            ->andWhere(Criteria::expr()->eq('animal', $animal))
-            ->andWhere(Criteria::expr()->isNull('endDate'))
-            ->orderBy(['startDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
+            ->where(Criteria::expr()->eq(Variable::LOCATION, $location))
+            ->andWhere(Criteria::expr()->eq(Variable::ANIMAL, $animal))
+            ->andWhere(Criteria::expr()->isNull(Variable::END_DATE))
+            ->orderBy([Variable::START_DATE => Criteria::DESC, Variable::LOG_DATE => Criteria::DESC])
             ->setMaxResults(1);
 
         /** @var ArrayCollection $results */

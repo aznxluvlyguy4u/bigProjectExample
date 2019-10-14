@@ -11,6 +11,7 @@ class QueryParameter
     const BREED_CODE = 'breed_code';
     const CONCAT_VALUE_AND_ACCURACY = 'concat_value_and_accuracy';
     const END_DATE = 'end_date';
+    const SAMPLE_DATE = 'sample_date';
     const FILE_TYPE_QUERY = 'file_type';
     const FORMAL = 'formal';
     const FULL_OUTPUT = 'full_output';
@@ -41,5 +42,7 @@ class QueryParameter
     const IS_MAX_ONCE_A_DAY = 'is_max_once_a_day';
     const DELAY_IN_SECONDS = 'delay_in_seconds';
     const YEAR = 'year';
+    const YEAR_OF_BIRTH = 'year_of_birth';
     const IS_BATCH = "isBatch";
+    const COMPANY_ID = 'company_id';
 }

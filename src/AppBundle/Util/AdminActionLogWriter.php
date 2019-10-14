@@ -30,7 +30,11 @@ class AdminActionLogWriter
 {
     const IS_USER_ENVIRONMENT = false;
     const NULL_REPLACEMENT_TEXT = 'LEEG';
+    const DATE_FORMAT = 'Y-m-d';
 
+    const DESCRIPTION_MID_KEY_DUTCH = ', beschrijving: ';
+    const INSPECTOR_MID_KEY = ', Inspecteur: ';
+    
     /**
      * @param EntityManagerInterface $em
      * @param Client $client
@@ -159,7 +163,7 @@ class AdminActionLogWriter
             'id: '.$template->getId()
             .', type: '.$template->getDutchType()
             .', ubn: '.$template->getUbn('')
-            .', beschrijving: '.$template->getDescription()
+            .self::DESCRIPTION_MID_KEY_DUTCH.$template->getDescription()
         ;
 
         $log = new ActionLog($accountOwner, $admin, UserActionType::TREATMENT_TEMPLATE_DELETE, true, $description, self::IS_USER_ENVIRONMENT);
@@ -182,7 +186,7 @@ class AdminActionLogWriter
             'id: '.$template->getId()
             .', type: '.$template->getDutchType()
             .', ubn: '.$template->getUbn('')
-            .', beschrijving: '.$template->getDescription()
+            .self::DESCRIPTION_MID_KEY_DUTCH.$template->getDescription()
         ;
 
         $log = new ActionLog($accountOwner, $admin, UserActionType::TREATMENT_TEMPLATE_REACTIVATE, true, $description, self::IS_USER_ENVIRONMENT);
@@ -233,7 +237,7 @@ class AdminActionLogWriter
         $description =
             'id: '.$treatmentType->getId()
             .', type: '.$treatmentType->getDutchType()
-            .', beschrijving: '.$treatmentType->getDescription()
+            .self::DESCRIPTION_MID_KEY_DUTCH.$treatmentType->getDescription()
         ;
 
         $log = new ActionLog(null, $admin, UserActionType::TREATMENT_TYPE_DELETE, true, $description, self::IS_USER_ENVIRONMENT);
@@ -339,7 +343,7 @@ class AdminActionLogWriter
         $description = $ubn
             . $inspection->getInspectionSubject()
             . $inspection->getOrderNumber()
-            . $inspection->getRequestDate()->format('Y-m-d')
+            . $inspection->getRequestDate()->format(self::DATE_FORMAT)
             . $inspection->getStatus()
         ;
 
@@ -364,7 +368,7 @@ class AdminActionLogWriter
         $description = $ubn
             . $inspection->getInspectionSubject()
             . $inspection->getOrderNumber()
-            . $inspection->getRequestDate()->format('Y-m-d')
+            . $inspection->getRequestDate()->format(self::DATE_FORMAT)
             . $inspection->getStatus()
         ;
 
@@ -506,9 +510,9 @@ class AdminActionLogWriter
     {
         if ($exterior->getAnimal() === null) { throw new \Exception('Exterior must have an Animal. Exterior id: ',$exterior->getId()); }
 
-        $inspectorName = $exterior->getInspector() !== null ? ', Inspecteur: ' . $exterior->getInspector()->getFullName() : '';
+        $inspectorName = $exterior->getInspector() !== null ? self::INSPECTOR_MID_KEY . $exterior->getInspector()->getFullName() : '';
 
-        $description = $exterior->getAnimal()->getUln() . ' '. $exterior->getMeasurementDate()->format('Y-m-d') . ' '
+        $description = $exterior->getAnimal()->getUln() . ' '. $exterior->getMeasurementDate()->format(self::DATE_FORMAT) . ' '
             . $exterior->getKind()
             . ', KOP ' . $exterior->getSkull()
             . ', ONT ' . $exterior->getProgress()
@@ -545,7 +549,7 @@ class AdminActionLogWriter
     {
         if ($newExterior->getAnimal() === null) { throw new \Exception('Exterior must have an Animal. Exterior id: ',$newExterior->getId()); }
 
-        $inspectorName = $newExterior->getInspector() !== null ? ', Inspecteur: ' . $newExterior->getInspector()->getFullName() : '';
+        $inspectorName = $newExterior->getInspector() !== null ? self::INSPECTOR_MID_KEY . $newExterior->getInspector()->getFullName() : '';
 
         $description = '';
         $prefix = '';
@@ -559,8 +563,8 @@ class AdminActionLogWriter
         }
 
         if ($newExterior->getMeasurementDate() !== $oldExterior->getMeasurementDate()) {
-            $description = $description . $prefix . $oldExterior->getMeasurementDate()->format('Y-m-d')
-                . ' => '.$newExterior->getMeasurementDate()->format('Y-m-d');
+            $description = $description . $prefix . $oldExterior->getMeasurementDate()->format(self::DATE_FORMAT)
+                . ' => '.$newExterior->getMeasurementDate()->format(self::DATE_FORMAT);
             $prefix = ', ';
         }
 
@@ -655,9 +659,9 @@ class AdminActionLogWriter
     {
         if ($exterior->getAnimal() === null) { throw new \Exception('Exterior must have an Animal. Exterior id: ',$exterior->getId()); }
 
-        $inspectorName = $exterior->getInspector() !== null ? ', Inspecteur: ' . $exterior->getInspector()->getFullName() : '';
+        $inspectorName = $exterior->getInspector() !== null ? self::INSPECTOR_MID_KEY . $exterior->getInspector()->getFullName() : '';
 
-        $description = $exterior->getAnimal()->getUln() . ' '. $exterior->getMeasurementDate()->format('Y-m-d') . ' '
+        $description = $exterior->getAnimal()->getUln() . ' '. $exterior->getMeasurementDate()->format(self::DATE_FORMAT) . ' '
             . $exterior->getKind()
             . ', KOP ' . $exterior->getSkull()
             . ', ONT ' . $exterior->getProgress()
@@ -833,13 +837,14 @@ class AdminActionLogWriter
      */
     private static function formatLogChangeValue($value): string
     {
+        $returnValue = $value;
         if ($value === null) {
-            return self::NULL_REPLACEMENT_TEXT;
+            $returnValue = self::NULL_REPLACEMENT_TEXT;
         } elseif ($value instanceof \DateTime) {
-            return $value->format(DateUtil::DATE_STRING_FORMAT_FILENAME);
+            $returnValue = $value->format(DateUtil::DATE_STRING_FORMAT_FILENAME);
         } elseif (is_bool($value)) {
-            return StringUtil::getBooleanAsString($value);
+            $returnValue = StringUtil::getBooleanAsString($value);
         }
-        return $value;
+        return $returnValue;
     }
 }

@@ -38,7 +38,7 @@ class ReportType
     const I_AND_R = 22; # Report number 12
     const POPREP_INPUT_FILE = 23; # Report number 14
     const REASONS_DEPART_AND_LOSS = 24; # Report number 15
-    const WEIGHTS_PER_BIRTH_YEAR = 25; # Report number 17
+    const WEIGHTS_PER_YEAR_OF_BIRTH = 25; # Report number 17
     const TREATMENTS = 26; # Report number 19
     const MODEL_EXPORT_CERTIFICATE = 27; # Report number 20
     const ACTION_LOG = 28;

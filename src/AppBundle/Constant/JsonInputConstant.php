@@ -27,11 +27,13 @@ class JsonInputConstant
     const IS_ADMIN_ENV = 'is_admin_env';
 
     //Animal
+    const ANIMAL_ORDER_NUMBER = 'animal_order_number';
     const WORK_NUMBER = 'work_number';
     const IS_ALIVE = 'is_alive';
     const ANIMAL = 'animal';
     const ANIMALS = 'animals';
     const ANIMAL_ID = 'animal_id';
+    const ANIMAL_ID_AND_DATE = 'animal_id_and_date';
     const BIRTH_PROGRESS = 'birth_progress';
     const RAM = 'ram';
     const EWE = 'ewe';
@@ -88,6 +90,7 @@ class JsonInputConstant
     const PARENT_TYPES = 'parent_types';
     const EXCLUDE_MOTHER = 'exclude_mother';
     const EXCLUDE_FATHER = 'exclude_father';
+    const SURROGATE_MOTHER = 'surrogate_mother';
     const GENERATIONS = 'generations';
     const SEPARATOR = 'separator';
     const ULNS_WITHOUT_FOUND_ANIMALS = 'ulns_without_found_animals';
@@ -242,6 +245,7 @@ class JsonInputConstant
     const BIRTH_WEIGHT = 'birth_weight';
     const IS_VALID_20WEEK_WEIGHT_MEASUREMENT = 'is_valid_20_week_weight_measurement';
     const IS_REVOKED = 'is_revoked';
+    const RESET_MEASUREMENT_DATE_USING_DATE_OF_BIRTH = 'reset_measurement_date_using_date_of_birth';
 
     //BodyFat measurements
     const FAT1 = 'fat1';

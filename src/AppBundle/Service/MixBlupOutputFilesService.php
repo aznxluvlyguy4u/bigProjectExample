@@ -155,6 +155,10 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     /** @var array */
     private $missingAnimalIds;
     /** @var array */
+    private $validatedAnimalIds;
+    /** @var array */
+    private $animalIdsInOutputFile;
+    /** @var array */
     private $hasFilenameArray;
 
     public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, MixBlupOutputQueueService $queueService,
@@ -229,16 +233,24 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         if($this->key != null) {
 
+            $breedTypeFilterString = "";
+            if (!empty($this->currentBreedType)) {
+                $breedTypeArrayString = "'".
+                    implode("','",MixBlupSetting::breedTypeByAnalysis($this->currentBreedType))
+                    ."'";
+                $breedTypeFilterString = " AND t.nl IN ($breedTypeArrayString)";
+                $this->logger->notice("Retrieving breedValues of types $breedTypeArrayString for search array");
+            }
+
             $sql = "SELECT b.id, animal_id, t.nl as dutch_breed_value_type
                     FROM breed_value b
                       INNER JOIN breed_value_type t ON b.type_id = t.id
-                    WHERE generation_date = '".$this->key."'";
+                    WHERE generation_date = '".$this->key."'".$breedTypeFilterString;
             $results = $this->conn->query($sql)->fetchAll();
 
             foreach ($results as $result) {
                 $dutchBreedValueType = $result['dutch_breed_value_type'];
                 $animalId = $result['animal_id'];
-                //$breedValueId = $result['id'];
                 $this->addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueType, $animalId);
             }
         }
@@ -300,6 +312,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                 $unsuccessfulUnzips = [];
                 $successfulUnzips = [];
+                $hasBothRelaniTypeFilesInZip = [];
 
                 foreach($this->relsol as $zipFileName){
 
@@ -312,32 +325,43 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->relaniDirectAndIndirectExists =
                         file_exists($this->getResultsFolder() . Filename::RELANI_DIRECT) &&
                         file_exists($this->getResultsFolder() . Filename::RELANI_INDIRECT);
-                    $successfulUnzip = $solaniExists && ($relaniExists || $this->relaniDirectAndIndirectExists);
 
-                    if($successfulUnzip) {
-                        $this->logger->notice('Unzip was successful!');
 
-                        $this->resetSearchArrays();
-
-                        $this->parseSolaniFiles();
-
-                        if($this->relaniDirectAndIndirectExists) {
-                            $this->logger->notice('Found separate direct and indirect Relani files');
-                            $this->parseRelaniDirectFiles();
-                            $this->parseRelaniIndirectFiles();
-                            $this->processDirectBreedValues();
-                            $this->processIndirectBreedValues();
-                        } else {
-                            $this->parseRelaniFiles();
-                            $this->processBreedValues();
-                        }
-
-                        $this->purgeResultsFolder();
-                        $successfulUnzips[] = $zipFileName;
-                    } else {
-                        $this->logger->notice('Unzip failed');
-                        $unsuccessfulUnzips[] = $zipFileName;
+                    if ($relaniExists && $this->relaniDirectAndIndirectExists) {
+                        $this->logger->error($this->currentBreedType. ' has normal and (in)direct Relani files.
+                        Thus something when wrong during the MiXBLUP output files processing');
                         $this->errors[] = $this->currentBreedType;
+                        $hasBothRelaniTypeFilesInZip[] = $this->currentBreedType;
+                    } else {
+                        $successfulUnzip = $solaniExists && ($relaniExists || $this->relaniDirectAndIndirectExists);
+
+                        if($successfulUnzip) {
+                            $this->logger->notice('Unzip was successful!');
+
+                            $this->resetSearchArrays();
+
+                            $this->runBreedValueTypeCustomPreparationLogic();
+
+                            $this->parseSolaniFiles();
+
+                            if($this->relaniDirectAndIndirectExists) {
+                                $this->logger->notice('Found separate direct and indirect Relani files');
+                                $this->parseRelaniDirectFiles();
+                                $this->parseRelaniIndirectFiles();
+                                $this->processDirectBreedValues();
+                                $this->processIndirectBreedValues();
+                            } else {
+                                $this->parseRelaniFiles();
+                                $this->processBreedValues();
+                            }
+
+                            $this->purgeResultsFolder();
+                            $successfulUnzips[] = $zipFileName;
+                        } else {
+                            $this->logger->notice('Unzip failed');
+                            $unsuccessfulUnzips[] = $zipFileName;
+                            $this->errors[] = $this->currentBreedType;
+                        }
                     }
                 }
 
@@ -391,6 +415,68 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         }
 
         return false;
+    }
+
+
+    private function runBreedValueTypeCustomPreparationLogic()
+    {
+        if ($this->currentBreedType == MixBlupAnalysis::TAIL_LENGTH) {
+            $this->printRunCustomPreparationLogicHeader();
+            $this->extractAnimalIdsFromSolaniFiles();
+
+            $sql = "SELECT id, breed_code FROM animal 
+                    WHERE breed_code LIKE '%CF%' -- any breedCode containing CF
+                      AND id IN (".implode(',',$this->animalIdsInOutputFile).")";
+            $res = $this->conn->query($sql)->fetchAll();
+            $this->validatedAnimalIds = SqlUtil::getSingleValueGroupedSqlResults('id',$res, true,false);
+        }
+    }
+
+
+    private function printRunCustomPreparationLogicHeader()
+    {
+        $this->logger->notice("=== Running CUSTOM ".$this->currentBreedType." preparation logic ===");
+    }
+
+
+    private function extractAnimalIdsFromSolaniFiles()
+    {
+        $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), Filename::SOLANI);
+
+        $totalRowCount = count($ssv);
+        if($totalRowCount === 0) {
+            $this->logger->notice(Filename::SOLANI . ' is empty');
+            return;
+        }
+
+        $dutchBreedValueTypes = MixBlupParseInstruction::get($this->currentBreedType, true);
+        if(count($dutchBreedValueTypes) === 0) {
+            $this->logger->error($this->currentBreedType . ' extracted currentBreedType is not a valid MixBlupAnalysis type');
+            return;
+        }
+
+        $firstColumnIndex = $this->getFirstColumnIndex($ssv[0]);
+        if($firstColumnIndex === null) {
+            $this->logger->error($this->currentBreedType . ' first record is blank');
+            return;
+        }
+
+        $this->logger->notice('Extracting animalIds from '.Filename::SOLANI.' file for '.$this->currentBreedType. ' ... ');
+        $this->logger->notice(' ... '); //Line to overwrite
+        $this->logger->notice(' ... '); //Line to overwrite
+
+        $rowCount = 0;
+        $this->animalIdsInOutputFile = [];
+
+        foreach ($ssv as $row) {
+            $animalId = $row[$firstColumnIndex];
+            $this->animalIdsInOutputFile[$animalId] = $animalId;
+            $rowCount++;
+            if($rowCount%self::PRINT_BATCH_SIZE === 0) {
+                $this->overwriteNotice('animalId records scanned: '.$rowCount);
+            }
+        }
+        $this->logger->notice('Total animalIds found: '.count($this->animalIdsInOutputFile));
     }
 
 
@@ -464,6 +550,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             }
             
             $this->zip->close();
+
+            $extractedFiles = array_diff(scandir($this->getResultsFolder()), array('.', '..'));
+            $this->logger->notice("Extracted files:");
+            foreach($extractedFiles as $extractedFile) {
+                $this->logger->notice($extractedFile);
+            }
+
             return true;
         }
         return false;
@@ -518,10 +611,18 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             $this->solani[$dutchBreedValueType] = [];
         }
 
+        $onlyImportValidatedAnimalIds = $this->onlyImportValidatedAnimalIds();
+
         foreach ($ssv as $row) {
 
             $rowCount++;
             $animalId = $row[$firstColumnIndex];
+
+            if ($onlyImportValidatedAnimalIds && !key_exists($animalId, $this->validatedAnimalIds)) {
+                $recordsSkippedCount++;
+                continue;
+            }
+
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
                 //0-indexed solani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
                 $key = $ordinal+self::ZERO_INDEXED_SOLANI_COLUMN+$firstColumnIndex;
@@ -549,6 +650,11 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         if(self::TEST_COLUMN_ALIGNMENT) { dump($this->solani); }
 
         $this->logger->notice('Solani records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCount);
+    }
+
+
+    private function onlyImportValidatedAnimalIds() {
+        return $this->currentBreedType == MixBlupAnalysis::TAIL_LENGTH;
     }
 
 
@@ -640,10 +746,18 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             }
         }
 
+        $onlyImportValidatedAnimalIds = $this->onlyImportValidatedAnimalIds();
+
         foreach ($ssv as $row) {
 
             $rowCount++;
             $animalId = $row[$firstColumnIndex];
+
+            if ($onlyImportValidatedAnimalIds && !key_exists($animalId, $this->validatedAnimalIds)) {
+                $recordsSkippedCount++;
+                continue;
+            }
+
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
 
                 //0-indexed relani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
@@ -914,7 +1028,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private function getGenerationDateStringFromKey()
     {
         $generationDateString = strtr($this->key, ['_' => ' ']);
-        if (TimeUtil::isValidDateTime($generationDateString, SqlUtil::DATE_FORMAT)) {
+        if (TimeUtil::isValidDateTime($generationDateString, SqlUtil::DATE_TIME_FORMAT)) {
             return $generationDateString;
         }
         return null;
@@ -1031,7 +1145,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             $this->logger->notice('WormOutputFilename found in message...');
         }
 
-        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes, true, true, $this->getGenerationDateStringFromKey());
+        $this->breedValuesResultTableUpdater->update($detectedAnalysisTypes,
+            true,false,
+            true, true, $this->getGenerationDateStringFromKey());
     }
 
 

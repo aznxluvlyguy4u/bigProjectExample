@@ -464,7 +464,7 @@ class BatchInvoiceService extends ControllerServiceBase
         if(!$controlDate) {
             return ResultUtil::errorResult('Date cannot be empty', Response::HTTP_PRECONDITION_REQUIRED);
         }
-        $dateString = $controlDate->format(SqlUtil::DATE_FORMAT);
+        $dateString = $controlDate->format(SqlUtil::DATE_TIME_FORMAT);
 
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getManager()->getRepository(Animal::class);

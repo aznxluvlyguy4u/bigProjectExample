@@ -444,6 +444,33 @@ class ReportAPIController extends APIController {
 
 
     /**
+     * Generate animal health status report.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate animal health status report"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/animal-health-status")
+     * @Method("GET")
+     */
+    public function getAnimalHealthStatusReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createAnimalHealthStatusReport($request);
+    }
+
+
+    /**
      * Generate pedigree register xls report by abbreviation in query parameter 'type'
      *
      * @ApiDoc(
@@ -605,6 +632,125 @@ class ReportAPIController extends APIController {
     public function getBirthListReport(Request $request)
     {
         return $this->get(ReportService::class)->createBirthListReport($request);
+    }
+
+    /**
+     * Generate company register report and return a download link for the pdf.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="sample_date",
+     *        "dataType"="string",
+     *        "required"=true,
+     *        "description"="sample date to get animals from",
+     *        "format"="?sample_date=04-10-2019"
+     *     },
+     *     {
+     *        "name"="file_type",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose file type, csv or pdf, for report output. PDF is default",
+     *        "format"="?file_type=csv"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate company register report and return a download link for the pdf"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/company-register")
+     * @Method("POST")
+     */
+    public function getCompanyRegisterReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createCompanyRegisterReport($request);
+    }
+
+    /**
+     * Generate company register report and return a download link for the pdf.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="year_of_birth",
+     *        "dataType"="string",
+     *        "required"=true,
+     *        "description"="year of birth to get weights from",
+     *        "format"="?year_of_birth=2019"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate weights per year of birth report and return a download link for the csv"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/weights-per-year-of-birth")
+     * @Method("POST")
+     */
+    public function getWeightsPerYearOfBirthReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createWeightsPerYearOfBirthReport($request);
+    }
+
+    /**
+     * Generate client notes overview report and return a download link for the csv.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="company_id",
+     *        "dataType"="string",
+     *        "required"=true,
+     *        "description"="companyId of a company",
+     *        "format"="?company_id=03379d8ae801f4c48b9497e65dcc28275c09cd0a"
+     *     },
+     *     {
+     *        "name"="file_type",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose file type, csv or pdf, for report output. CSV is default",
+     *        "format"="?file_type=csv"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate client notes overview report and return a download link for the csv"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/client-notes-overview")
+     * @Method("POST")
+     */
+    public function getClientNotesOverviewReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createClientNotesOverviewReport($request);
     }
 
 

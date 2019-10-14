@@ -36,7 +36,7 @@ class BreedIndexRepository extends BaseRepository {
 
         $qbBase
             ->andWhere(
-                $qb->expr()->eq('b.generationDate', "'".($generationDate->format(SqlUtil::DATE_FORMAT))."'")
+                $qb->expr()->eq('b.generationDate', "'".($generationDate->format(SqlUtil::DATE_TIME_FORMAT))."'")
             );
 
         return $qb->getQuery()->getResult();
@@ -52,7 +52,7 @@ class BreedIndexRepository extends BaseRepository {
      */
     protected function getBreedIndexValues($generationDate, $isIncludingOnlyAliveAnimals, $breedIndexType)
     {
-        $generationDateString = $generationDate instanceof \DateTime ? $generationDate->format(SqlUtil::DATE_FORMAT) : $generationDate;
+        $generationDateString = $generationDate instanceof \DateTime ? $generationDate->format(SqlUtil::DATE_TIME_FORMAT) : $generationDate;
 
         $animalJoin = $isIncludingOnlyAliveAnimals ? 'INNER JOIN animal a ON b.animal_id = a.id': '';
         $animalIsAliveFilter = $isIncludingOnlyAliveAnimals ? 'AND a.is_alive = TRUE' : '';

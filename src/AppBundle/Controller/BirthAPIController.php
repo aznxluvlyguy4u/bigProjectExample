@@ -97,7 +97,40 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
 
     /**
+     * Resend one OPEN birth declaration to RVO that are missing a response message.
+     *
+     * Only for SuperAdmin
+     *
+     * @ApiDoc(
+     *   section = "Births",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Resend OPEN birth declarations to RVO that are missing a response message"
+     * )
+     * Create a new DeclareBirth request
+     * @param Request $request the request object
+     * @param int $litterId
+     * @return JsonResponse
+     * @Route("/{litterId}", requirements={"litterId"="\d+"})
+     * @Method("POST")
+     */
+    public function resendCreateBirths(Request $request, $litterId)
+    {
+        return $this->get(BirthService::class)->resendCreateBirthsByLitterId($litterId);
+    }
+
+
+    /**
      * Resend OPEN birth declarations to RVO that are missing a response message.
+     *
+     * Only for developer.
      *
      * @ApiDoc(
      *   section = "Births",
@@ -118,9 +151,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      * @Route("/resend")
      * @Method("POST")
      */
-    public function resendCreateBirth(Request $request)
+    public function resendAllCreateBirths(Request $request)
     {
-        return $this->get(BirthService::class)->resendCreateBirth($request);
+        return $this->get(BirthService::class)->resendAllCreateBirths($request);
     }
 
 

@@ -857,6 +857,13 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                     $this->updateCurrentActionLogMessage($actionLogLabelLocation, $ubnCurrentLocation, $ubnNewLocation);
                 }
 
+                if ($retrievedAnimal->getTransferState() !== null) {
+                    $this->updateCurrentActionLogMessage('transferState',
+                        $retrievedAnimal->getTransferState(),
+                        null);
+                    $retrievedAnimal->setTransferState(null);
+                }
+
                 $retrievedAnimal->setLocation($newLocation);
                 break;
 
@@ -1076,7 +1083,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      */
     private function extractCurrentAnimalIdData(Animal $animal)
     {
-        $this->currentAnimalIdLogPrefix = 'animal[id: '.$animal->getId() . ', uln: ' . $animal->getUln().']: ';
+        $this->currentAnimalIdLogPrefix = self::getAnimalEditLogPrefix($animal);
     }
 
 
@@ -1086,6 +1093,15 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             ActionLogWriter::updateAnimalDetailsAdminEnvironment($this->getManager(), $this->getUser(), $this->currentAnimalIdLogPrefix .$this->currentActionLogMessage);
         }
         $this->clearCurrentActionLogMessage();
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return string
+     */
+    public static function getAnimalEditLogPrefix(Animal $animal): string {
+        return 'animal[id: '.$animal->getId() . ', uln: ' . $animal->getUln().']: ';
     }
 
 

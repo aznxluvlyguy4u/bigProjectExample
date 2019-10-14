@@ -4,8 +4,12 @@
 namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Option\BirthListReportOptions;
+use AppBundle\Component\Option\ClientNotesOverviewReportOptions;
+use AppBundle\Component\Option\CompanyRegisterReportOptions;
 use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\TranslationKey;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\ReportWorker;
@@ -21,13 +25,18 @@ use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\EweCardReportService;
+use AppBundle\Service\Report\ClientNotesOverviewReportService;
+use AppBundle\Service\Report\CompanyRegisterReportService;
+use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
 use AppBundle\Service\Report\PedigreeCertificateReportService;
+use AppBundle\Service\Report\WeightsPerYearOfBirthReportService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\ReportUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
@@ -43,7 +52,7 @@ use Enqueue\Util\JSON;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -97,6 +106,18 @@ class ReportService
     /** @var EweCardReportService  */
     private $eweCardReportService;
 
+    /** @var CompanyRegisterReportService */
+    private $companyRegisterReportService;
+
+    /** @var ClientNotesOverviewReportService */
+    private $clientNotesOverviewReportService;
+
+    /** @var InbreedingCoefficientReportService */
+    private $inbreedingCoefficientReportService;
+
+    /** @var WeightsPerYearOfBirthReportService */
+    private $weightsPerYearOfBirthReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -111,6 +132,10 @@ class ReportService
      * @param BirthListReportService $birthListReportService
      * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
      * @param EweCardReportService $eweCardReportService
+     * @param CompanyRegisterReportService $companyRegisterReportService
+     * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
+     * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
+     * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -124,7 +149,11 @@ class ReportService
         LiveStockReportService $livestockReportService,
         BirthListReportService $birthListReportService,
         MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
-        EweCardReportService $eweCardReportService
+        EweCardReportService $eweCardReportService,
+        CompanyRegisterReportService $companyRegisterReportService,
+        ClientNotesOverviewReportService $clientNotesOverviewReportService,
+        InbreedingCoefficientReportService $inbreedingCoefficientReportService,
+        WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
     )
     {
         $this->em = $em;
@@ -139,6 +168,10 @@ class ReportService
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
         $this->eweCardReportService = $eweCardReportService;
+        $this->companyRegisterReportService = $companyRegisterReportService;
+        $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
+        $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
+        $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
     }
 
     /**
@@ -396,6 +429,20 @@ class ReportService
 
     /**
      * @param Request $request
+     * @return \AppBundle\Component\HttpFoundation\JsonResponse
+     */
+    public function createAnimalHealthStatusReport(Request $request)
+    {
+        $inputForHash = '';
+
+        return $this->processReportAsWorkerTask(
+            [],
+            $request,ReportType::ANIMAL_HEALTH_STATUSES, $inputForHash
+        );
+    }
+
+    /**
+     * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
     public function createAnnualActiveLivestockRamMatesReport(Request $request)
@@ -466,11 +513,23 @@ class ReportService
         $contentAsJson = JSON::encode($content->toArray());
         $inputForHash = $contentAsJson;
 
-        return $this->processReportAsWorkerTask(
-            [
-                'content' => $contentAsJson,
-            ],
-            $request,ReportType::INBREEDING_COEFFICIENT, $inputForHash
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'content' => $contentAsJson,
+                ],
+                $request,ReportType::INBREEDING_COEFFICIENT, $inputForHash
+            );
+        }
+
+        $actionBy = $this->userService->getUser();
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+        $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
+
+        return $this->inbreedingCoefficientReportService->getReport(
+            $actionBy, $content, $fileType, $language
         );
     }
 
@@ -606,6 +665,128 @@ class ReportService
         return $this->birthListReportService->getReport($actionBy, $location, $options);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createCompanyRegisterReport(Request $request)
+    {
+        $actionBy = $this->userService->getUser();
+        $location = $this->userService->getSelectedLocation($request);
+
+        NullChecker::checkLocation($location);
+
+        $sampleDateString = $request->query->get(QueryParameter::SAMPLE_DATE);
+        $sampleDate = empty($sampleDateString) ? new \DateTime() : new \DateTime($sampleDateString);
+
+        ReportUtil::validateDateIsNotOlderThanOldestAutomatedSync($sampleDate, TranslationKey::SAMPLE_DATE, $this->translator);
+        ReportUtil::validateDateIsNotInTheFuture($sampleDate, TranslationKey::SAMPLE_DATE, $this->translator);
+
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+        $allowedFileTypes = [FileType::CSV, FileType::PDF];
+        ReportUtil::validateFileType($fileType, $allowedFileTypes, $this->translator);
+
+        $options = (new CompanyRegisterReportOptions())
+            ->setFileType($fileType)
+            ->setSampleDate($sampleDate)
+        ;
+
+        $optionsAsJson = $this->serializer->serializeToJSON($options);
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'options' => $optionsAsJson
+                ],
+                $request,ReportType::COMPANY_REGISTER, $optionsAsJson
+            );
+        }
+
+        return $this->companyRegisterReportService->getReport($actionBy, $location, $options);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createWeightsPerYearOfBirthReport(Request $request)
+    {
+        /** @var Location $location */
+        $location = null;
+
+        // not admin
+        if ($this->userService->isRequestFromUserFrontend($request)) {
+            $location = $this->userService->getSelectedLocation($request);
+            NullChecker::checkLocation($location);
+        }
+
+        $yearOfBirth = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR_OF_BIRTH, null);
+
+        if (!$yearOfBirth) {
+            return ResultUtil::errorResult('Invalid year of birth', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $ubn = is_null($location) ? "" : $location->getUbn();
+        $inputForHash = $yearOfBirth . $ubn;
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'year_of_birth' => $yearOfBirth
+                ],
+                $request,ReportType::WEIGHTS_PER_YEAR_OF_BIRTH, $inputForHash
+            );
+        }
+
+        return $this->weightsPerYearOfBirthReportService->getReport($yearOfBirth, $location);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createClientNotesOverviewReport(Request $request)
+    {
+        $actionBy = $this->userService->getUser();
+        $companyId = $request->query->get(QueryParameter::COMPANY_ID);
+        if (empty($companyId)) {
+            throw new BadRequestHttpException("companyId is missing");
+        }
+
+        $company = $this->em->getRepository(Company::class)
+            ->findOneByCompanyId($companyId);
+        if (empty($company)) {
+            throw new BadRequestHttpException("No company was found for given companyId: ".$companyId);
+        }
+
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+        ReportUtil::validateFileType($fileType, ClientNotesOverviewReportService::allowedFileTypes(), $this->translator);
+
+        $options = (new ClientNotesOverviewReportOptions())
+            ->setFileType($fileType)
+            ->setCompanyId($companyId)
+        ;
+
+        $optionsAsJson = $this->serializer->serializeToJSON($options);
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'options' => $optionsAsJson
+                ],
+                $request,ReportType::CLIENT_NOTES_OVERVIEW, $optionsAsJson
+            );
+        }
+
+        return $this->clientNotesOverviewReportService->getReport($actionBy, $options);
+    }
 
     /**
      * @param Request $request

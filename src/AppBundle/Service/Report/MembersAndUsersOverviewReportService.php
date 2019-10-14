@@ -108,6 +108,8 @@ class MembersAndUsersOverviewReportService extends ReportServiceBase
   locations.ubns,
   prb.breeder_numbers as fokkersnummers, --breeder_numbers
   owner.email_address as emailadressen, --email_address
+  NULLIF(owner.cellphone_number,'') as mobielnummer_eigenaar,
+  NULLIF(c.telephone_number,'') as telefoonnummer_bedrijf,
   -- NAW
   c.company_name as bedrijfsnaam, --company_name
   TRIM(CONCAT(ca.street_name,' ',ca.address_number,ca.address_number_suffix)) as bedrijf_adres, --company_address
@@ -117,6 +119,8 @@ class MembersAndUsersOverviewReportService extends ReportServiceBase
   -- country.id as company_country_id,
   CONCAT($quotedDoubleQuote,TRIM(CONCAT(owner.first_name,' ',owner.last_name)),$quotedDoubleQuote) as primaire_contactpersoon, --primary_contact_person
   secondary_users.other_active_users as andere_actieve_gebruikers, --other_active_users
+  NULLIF(secondary_users.secondary_email_addresses,'') as emailadressen_secundaire_gebruikers,
+  NULLIF(secondary_users.secondary_cellphone_numbers,'') as telefoonnummers_secundaire_gebruikers,
   pra.company_id NOTNULL as ".self::LABEL_HAS_ACTIVE_PEDIGREE_REGISTER.", --has_active_pedigree_register
   pra.pedigree_register_abbreviations as stamboeken, --pedigree_registers
   c.animal_health_subscription as ".self::LABEL_ANIMAL_HEALTH_SUBSCRIPTION.", --animal_health_subscription
@@ -167,7 +171,9 @@ FROM company c
                     TRIM(CONCAT(p.first_name,' ',p.last_name))
                     ORDER BY p.first_name, p.last_name
                   ) AS TEXT)
-              ) as other_active_users
+              ) as other_active_users,
+            array_to_string(array_agg(p.email_address),',') as secondary_email_addresses,
+            array_to_string(array_agg(p.cellphone_number),',') as secondary_cellphone_numbers
           FROM client
                  INNER JOIN person p on client.id = p.id
           WHERE client.employer_id NOTNULL AND p.is_active

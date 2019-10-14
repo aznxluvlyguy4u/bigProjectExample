@@ -345,7 +345,7 @@ class TimeUtil
      * @param string $format
      * @return bool
      */
-    public static function isValidDateTime($dateTime, $format = SqlUtil::DATE_FORMAT)
+    public static function isValidDateTime($dateTime, $format = SqlUtil::DATE_TIME_FORMAT)
     {
         $d = \DateTime::createFromFormat($format, $dateTime);
         return $d && $d->format($format) == $dateTime;

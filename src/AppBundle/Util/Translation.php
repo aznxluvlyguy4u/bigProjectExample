@@ -12,7 +12,10 @@ use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\PredicateTypeDutch;
+use AppBundle\Enumerator\ReasonOfDepartType;
+use AppBundle\Enumerator\ReasonOfLossType;
 use AppBundle\Enumerator\TreatmentTypeOption;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * This class translates the English used in the API to Dutch values displayed in the output.
@@ -226,4 +229,23 @@ class Translation
         ]);
     }
 
+
+    public static function getReasonOfLossTranslations(TranslatorInterface $translator): array
+    {
+        return self::getTranslationsFromEnums(ReasonOfLossType::getConstants(), $translator);
+    }
+
+    public static function getReasonOfDepartTranslations(TranslatorInterface $translator): array
+    {
+        return self::getTranslationsFromEnums(ReasonOfDepartType::getConstants(), $translator);
+    }
+
+    private static function getTranslationsFromEnums(array $enums, TranslatorInterface $translator): array
+    {
+        $translations = [];
+        foreach ($enums as $enum) {
+            $translations[$enum] = $translator->trans($enum);
+        }
+        return $translations;
+    }
 }

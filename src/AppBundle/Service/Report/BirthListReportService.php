@@ -83,6 +83,7 @@ class BirthListReportService extends ReportServiceBase
      * @param Location $location
      * @param BirthListReportOptions $options
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
+     * @throws \Doctrine\DBAL\DBALException
      */
     private function getPdfReport(Location $location, BirthListReportOptions $options)
     {
@@ -109,6 +110,7 @@ class BirthListReportService extends ReportServiceBase
      * @param BirthListReportOptions $options
      * @param int $testRamsToAdd
      * @return array
+     * @throws \Doctrine\DBAL\DBALException
      */
     private function getReportData(Location $location, BirthListReportOptions $options, int $testRamsToAdd = 0): array
     {

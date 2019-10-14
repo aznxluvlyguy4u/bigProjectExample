@@ -9,8 +9,7 @@ services:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
 
-    api.action_log:
-        class: AppBundle\Service\ActionLogService
+    AppBundle\Service\ActionLogService:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@app.serializer.ir'
@@ -517,12 +516,24 @@ services:
           arguments:
             - '@AppBundle\Report\PedigreeCertificates'
 
+    AppBundle\Service\Report\CompanyRegisterReportService:
+      parent: app.report.base
+
+    AppBundle\Service\Report\WeightsPerYearOfBirthReportService:
+      parent: app.report.base
+
     AppBundle\Service\Report\MembersAndUsersOverviewReportService:
+      parent: app.report.base
+
+    AppBundle\Service\Report\ClientNotesOverviewReportService:
       parent: app.report.base
 
     app.report.vwa.animal_details:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaAnimalDetailsReportService
+
+    AppBundle\Service\Report\AnimalHealthStatusesReportService:
+      parent: app.report.base
 
     app.report.vwa.ubns_overview:
         parent: app.report.base
@@ -631,12 +642,21 @@ services:
           - '@AppBundle\Service\Report\BirthListReportService'
           - '@AppBundle\Service\Report\MembersAndUsersOverviewReportService'
           - '@AppBundle\Service\Report\EweCardReportService'
+          - '@AppBundle\Service\Report\CompanyRegisterReportService'
+          - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
+          - '@app.report.inbreeding_coefficient'
+          - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
 
 
     AppBundle\Processor\ReportProcessor:
         arguments:
+          - '@AppBundle\Service\Report\EweCardReportService'
+          - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
+          - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
+          - '@AppBundle\Service\Report\AnimalHealthStatusesReportService'
           - '@AppBundle\Service\Report\AnnualActiveLivestockReportService'
           - '@AppBundle\Service\Report\AnnualTe100UbnProductionReportService'
+          - '@AppBundle\Service\Report\CompanyRegisterReportService'
           - '@AppBundle\Service\Report\FertilizerAccountingReport'
           - '@app.report.inbreeding_coefficient'
           - '@AppBundle\Service\Report\AnimalsOverviewReportService'
@@ -705,9 +725,8 @@ services:
         parent: app.abstract_base.auth
         class: AppBundle\Service\AdminAuthService
 
-    app.admin:
+    AppBundle\Service\AdminService:
         parent: app.abstract_base.auth
-        class: AppBundle\Service\AdminService
 
     app.admin.profile:
         parent: app.abstract_base.auth
@@ -918,6 +937,9 @@ services:
     app.measurement:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MeasurementService
+
+    AppBundle\Service\BirthMeasurementService:
+      parent: app.abstract_base.controller
 
     app.messages:
         parent: app.abstract_base.controller

@@ -16,6 +16,7 @@ use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -36,6 +37,8 @@ class NsfoTestCommand extends ContainerAwareCommand
     private $em;
     /** @var Connection $conn */
     private $conn;
+    /** @var Logger */
+    private $logger;
     /** @var OutputInterface */
     private $output;
     /** @var CommandUtil */
@@ -65,6 +68,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         $this->em = $em;
         $this->output = $output;
         $this->conn = $em->getConnection();
+        $this->logger = $this->getContainer()->get('logger');
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
@@ -76,6 +80,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
+
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
@@ -167,7 +172,6 @@ class NsfoTestCommand extends ContainerAwareCommand
         $limit = $this->cmdUtil->questionForIntChoice(10, 'Result count');
         $locationId = $this->cmdUtil->questionForIntChoice(0, 'locationId (0 = all locations)');
 
-//        $locationId = abs(intval($this->cmdUtil->questionForIntChoice('LocationId (0 = all locations)', 0)));
         $results = $this->em->getRepository(ResultTableBreedGrades::class)
             ->retrieveAnimalsWithMostBreedValues($limit, $locationId);
         $this->cmdUtil->writeln($results);
