@@ -702,7 +702,7 @@ class ReportAPIController extends APIController {
      *     {
      *        "name"="pedigree_register",
      *        "dataType"="string",
-     *        "required"=false,
+     *        "required"=true,
      *        "description"="filter on pedigree register abbreviation, default = empty (no pedigree register filter)",
      *        "format"="?pedigree_register=nts"
      *     }

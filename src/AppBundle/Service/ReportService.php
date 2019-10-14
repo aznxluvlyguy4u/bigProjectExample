@@ -371,16 +371,17 @@ class ReportService
         }
 
         $pedigreeRegisterAbbreviation = $request->query->get(QueryParameter::PEDIGREE_REGISTER);
-        /** @var PedigreeRegister $pedigreeRegister */
-        $pedigreeRegister = null;
-        if ($pedigreeRegisterAbbreviation !== null) {
-            $pedigreeRegisterAbbreviation = strtoupper($pedigreeRegisterAbbreviation);
-            $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)
-                ->findOneByAbbreviation($pedigreeRegisterAbbreviation);
 
-            if (!$pedigreeRegister) {
-                throw new InvalidPedigreeRegisterAbbreviationHttpException($this->translator,strval($pedigreeRegisterAbbreviation));
-            }
+        if ($pedigreeRegisterAbbreviation == null) {
+            throw new BadRequestHttpException('Missing pedigree register');
+        }
+
+        $pedigreeRegisterAbbreviation = strtoupper($pedigreeRegisterAbbreviation);
+        $pedigreeRegister = $this->em->getRepository(PedigreeRegister::class)
+            ->findOneByAbbreviation($pedigreeRegisterAbbreviation);
+
+        if (!$pedigreeRegister) {
+            throw new InvalidPedigreeRegisterAbbreviationHttpException($this->translator,strval($pedigreeRegisterAbbreviation));
         }
 
         // Set file type as TXT. This value will be saved in the ReportWorker table

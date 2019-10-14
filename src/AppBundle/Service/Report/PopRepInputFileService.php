@@ -10,6 +10,7 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Util\ReportUtil;
 use AppBundle\Util\ResultUtil;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class PopRepInputFileService extends ReportServiceBase
 {
@@ -51,7 +52,7 @@ class PopRepInputFileService extends ReportServiceBase
     private function validatePedigreeRegisterAbbreviationAndGetPedigreeRegister($pedigreeRegisterAbbreviation)
     {
         if (empty($pedigreeRegisterAbbreviation)) {
-            return;
+            throw new BadRequestHttpException('Missing pedigree register');
         }
 
         $pedigreeRegisterAbbreviation = strtoupper($pedigreeRegisterAbbreviation);
