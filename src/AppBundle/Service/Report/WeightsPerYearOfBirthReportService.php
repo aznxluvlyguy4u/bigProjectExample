@@ -9,6 +9,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Util\ReportUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
 use Symfony\Component\HttpFoundation\Response;
 
 class WeightsPerYearOfBirthReportService extends ReportServiceBase
@@ -69,6 +70,8 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
                             AND date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
                             $locationFilter";
 
+        $dateFormat = "'".SqlUtil::TO_CHAR_DATE_FORMAT."'";
+
         return "SELECT
             va.uln,
             NULLIF(va.stn,'') as stn,
@@ -80,27 +83,27 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
             va.pedigree_register_abbreviation as stamboek,
             NULLIF(CONCAT(father.pedigree_country_code,father.pedigree_number),'') as stn_vader,
             NULLIF(CONCAT(mother.pedigree_country_code,mother.pedigree_number),'') as stn_moeder,
-            to_char(birth_weight_measurement.measurement_date, 'DD-MM-YYYY') as meting_datum_geboortegewicht,
+            to_char(birth_weight_measurement.measurement_date, $dateFormat) as meting_datum_geboortegewicht,
             birth_weight_measurement.weight as geboortegewicht,
-            weight_data.measurement_date_1 as datum_meting_1,
+            to_char(weight_data.measurement_date_1, $dateFormat) as datum_meting_1,
             weight_data.weight_measurement_1 as gewicht_meting_1,
-            weight_data.measurement_date_2 as datum_meting_2,
+            to_char(weight_data.measurement_date_2,$dateFormat) as datum_meting_2,
             weight_data.weight_measurement_2 as gewicht_meting_2,
-            weight_data.measurement_date_3 as datum_meting_3,
+            to_char(weight_data.measurement_date_3, $dateFormat) as datum_meting_3,
             weight_data.weight_measurement_3 as gewicht_meting_3,
-            weight_data.measurement_date_4 as datum_meting_4,
+            to_char(weight_data.measurement_date_4, $dateFormat) as datum_meting_4,
             weight_data.weight_measurement_4 as gewicht_meting_4,
-            weight_data.measurement_date_5 as datum_meting_5,
+            to_char(weight_data.measurement_date_5, $dateFormat) as datum_meting_5,
             weight_data.weight_measurement_5 as gewicht_meting_5,
-            weight_data.measurement_date_6 as datum_meting_6,
+            to_char(weight_data.measurement_date_6, $dateFormat) as datum_meting_6,
             weight_data.weight_measurement_6 as gewicht_meting_6,
-            weight_data.measurement_date_7 as datum_meting_7,
+            to_char(weight_data.measurement_date_7, $dateFormat) as datum_meting_7,
             weight_data.weight_measurement_7 as gewicht_meting_7,
-            weight_data.measurement_date_8 as datum_meting_8,
+            to_char(weight_data.measurement_date_8, $dateFormat) as datum_meting_8,
             weight_data.weight_measurement_8 as gewicht_meting_8,
-            weight_data.measurement_date_9 as datum_meting_9,
+            to_char(weight_data.measurement_date_9, $dateFormat) as datum_meting_9,
             weight_data.weight_measurement_9 as gewicht_meting_9,
-            weight_data.measurement_date_10 as datum_meting_10,
+            to_char(weight_data.measurement_date_10, $dateFormat) as datum_meting_10,
             weight_data.weight_measurement_10 as gewicht_meting_10
         FROM animal a
             INNER JOIN view_animal_livestock_overview_details va ON va.animal_id = a.id
