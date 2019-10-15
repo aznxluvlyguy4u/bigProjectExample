@@ -51,7 +51,12 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
      */
     private function getBooleanColumns()
     {
-        return ['is_handmatige_wijziging_status_zwoegerziekte'];
+        return [
+            'is_handmatige_wijziging_status_zwoegerziekte',
+            'is_handmatige_wijziging_status_scrapie',
+            'is_handmatige_wijziging_status_cae',
+            'is_handmatige_wijziging_status_cl',
+        ];
     }
 
     /**
