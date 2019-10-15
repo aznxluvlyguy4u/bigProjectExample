@@ -51,7 +51,12 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
      */
     private function getBooleanColumns()
     {
-        return ['is_handmatige_wijziging_status_zwoegerziekte'];
+        return [
+            'is_handmatige_wijziging_status_zwoegerziekte',
+            'is_handmatige_wijziging_status_scrapie',
+            'is_handmatige_wijziging_status_cae',
+            'is_handmatige_wijziging_status_cl',
+        ];
     }
 
     /**
@@ -85,30 +90,42 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
              maedi_visna_details.max_log_date as datum_laatste_wijziging_status_zwoegerziekte,
              COALESCE(maedi_visna_details.is_manual_edit, FALSE) as is_handmatige_wijziging_status_zwoegerziekte,
              maedi_visna_details.reason_of_edit as reden_wijziging_status_zwoegerziekte,
+             scrapie_details.max_log_date as datum_laatste_wijziging_status_scrapie,
+             COALESCE(scrapie_details.is_manual_edit, FALSE) as is_handmatige_wijziging_status_scrapie,
+             scrapie_details.reason_of_edit as reden_wijziging_status_scrapie,
+             cl_details.max_log_date as datum_laatste_wijziging_status_cl,
+             COALESCE(cl_details.is_manual_edit, FALSE) as is_handmatige_wijziging_status_cl,
+             cl_details.reason_of_edit as reden_wijziging_status_cl,
+             cae_details.max_log_date as datum_laatste_wijziging_status_cae,
+             COALESCE(cae_details.is_manual_edit, FALSE) as is_handmatige_wijziging_status_cae,
+             cae_details.reason_of_edit as reden_wijziging_status_cae,
              arrival_details.count_arrivals_last_12_months as aantal_aanvoeren_laatste_12_maanden,
              import_details.count_imports_last_12_months as aantal_imports_laatste_12_maanden,
-             -- When a status was changed to NOT free/resistant
+             
+       -- When a status was changed to NOT free/resistant
              maedi_visna_health_status_demotion.demotion_duration
-              as duration_maedi_visna_health_status_demotion,
+              as duur_maedi_visna_status_verlaging, -- duration_maedi_visna_health_status_demotion
              caseous_lymphadenitis_health_status_demotion.demotion_duration
-               as duration_caseous_lymphadenitis_health_status_demotion,
+               as duur_caseous_lymphadenitis_status_verlaging, -- duration_caseous_lymphadenitis_health_status_demotion
              'data_niet_beschikbaar'
-               as duration_cae_health_status_demotion,
+               as duur_cae_status_verlaging, -- duration_cae_health_status_demotion
              scrapie_health_status_demotion.demotion_duration
-               as duration_scrapie_health_status_demotion,       
+               as duur_scrapie_status_verlaging, -- duration_scrapie_health_status_demotion      
              foot_rot_health_status_demotion.demotion_duration
-               as duration_foot_rot_health_status_demotion,
+               as duur_foot_rot_status_verlaging, -- duration_foot_rot_health_status_demotion
+             
              -- When a status was changed to free/resistant but in the last 12 months had a demotion
              maedi_visna_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-              as duration_maedi_visna_health_status_promotion_with_demotion_in_last_12_months,
+              as duur_maedi_visna_status_verhoging_jonger_dan_12_maanden, -- duration_maedi_visna_health_status_promotion_with_demotion_in_last_12_months
              caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-               as duration_caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months,
+               as duur_caseous_lymphadenitis_status_verhoging_jonger_dan_12_maanden, -- duration_caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months
              'data_niet_beschikbaar'
-               as duration_cae_health_status_promotion_with_demotion_in_last_12_months,
+               as duur_cae_status_verhoging_jonger_dan_12_maanden, -- duration_cae_health_status_promotion_with_demotion_in_last_12_months
              scrapie_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-               as duration_scrapie_health_status_promotion_with_demotion_in_last_12_months,       
+               as duur_scrapie_status_verhoging_jonger_dan_12_maanden, -- duration_scrapie_health_status_promotion_with_demotion_in_last_12_months
              foot_rot_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-               as duration_foot_rot_health_status_promotion_with_demotion_in_last_12_months,
+               as duur_foot_rot_status_verhoging_jonger_dan_12_maanden, -- duration_foot_rot_health_status_promotion_with_demotion_in_last_12_months
+             
              -- When any status promotion or demotion took place
              last_maedi_visna.date_last_change_maedi_visna as datum_laatste_wijziging_zwoegerziekte,
              null as datum_laatste_wijziging_cae,
@@ -136,6 +153,15 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
             LEFT JOIN (
                 ".self::selectQueryMaediVisnaDetails()."
               )maedi_visna_details ON maedi_visna_details.location_health_id = lh.id
+            LEFT JOIN (
+                ".self::selectQueryScapieDetails()."
+              )scrapie_details ON scrapie_details.location_health_id = lh.id              
+            LEFT JOIN (
+                ".self::selectQueryCaseousLymphadenitisDetails()."
+              )cl_details ON cl_details.location_health_id = lh.id
+            LEFT JOIN (
+                ".self::selectQueryCaeDetails()."
+              )cae_details ON cae_details.location_health_id = lh.id
             LEFT JOIN (
               ".self::selectQueryArrivalDetails()."
             )arrival_details ON arrival_details.location_id = l.id
@@ -292,6 +318,57 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
             GROUP BY location_health_id
             )last_maedi_visna ON last_maedi_visna.max_id = maedi_visna.id
         AND last_maedi_visna.location_health_id = maedi_visna.location_health_id";
+    }
+
+    private static function selectQueryCaseousLymphadenitisDetails(): string {
+        return "SELECT
+            cl.location_health_id,
+            cl.log_date as max_log_date,
+            cl.reason_of_edit,
+            COALESCE(cl.is_manual_edit, FALSE) as is_manual_edit
+        FROM caseous_lymphadenitis cl
+            INNER JOIN (
+            SELECT
+              location_health_id,
+              MAX(id) as max_id
+            FROM caseous_lymphadenitis cl
+            GROUP BY location_health_id
+            )last_cl ON last_cl.max_id = cl.id
+        AND last_cl.location_health_id = cl.location_health_id";
+    }
+
+    private static function selectQueryScapieDetails(): string {
+        return "SELECT
+            scrapie.location_health_id,
+            scrapie.log_date as max_log_date,
+            scrapie.reason_of_edit,
+            COALESCE(scrapie.is_manual_edit, FALSE) as is_manual_edit
+        FROM scrapie
+            INNER JOIN (
+            SELECT
+              location_health_id,
+              MAX(id) as max_id
+            FROM scrapie
+            GROUP BY location_health_id
+            )last_scrapie ON last_scrapie.max_id = scrapie.id
+        AND last_scrapie.location_health_id = scrapie.location_health_id";
+    }
+    
+    private static function selectQueryCaeDetails(): string {
+        return "SELECT
+            cae.location_health_id,
+            cae.log_date as max_log_date,
+            cae.reason_of_edit,
+            COALESCE(cae.is_manual_edit, FALSE) as is_manual_edit
+        FROM cae
+            INNER JOIN (
+            SELECT
+              location_health_id,
+              MAX(id) as max_id
+            FROM cae
+            GROUP BY location_health_id
+            )last_cae ON last_cae.max_id = cae.id
+        AND last_cae.location_health_id = cae.location_health_id";
     }
 
     private static function selectQueryArrivalDetails(): string {
