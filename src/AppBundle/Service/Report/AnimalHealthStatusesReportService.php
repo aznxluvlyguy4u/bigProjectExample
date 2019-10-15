@@ -85,6 +85,9 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
              maedi_visna_details.max_log_date as datum_laatste_wijziging_status_zwoegerziekte,
              COALESCE(maedi_visna_details.is_manual_edit, FALSE) as is_handmatige_wijziging_status_zwoegerziekte,
              maedi_visna_details.reason_of_edit as reden_wijziging_status_zwoegerziekte,
+             scrapie_details.max_log_date as datum_laatste_wijziging_status_scrapie,
+             COALESCE(scrapie_details.is_manual_edit, FALSE) as is_handmatige_wijziging_status_scrapie,
+             scrapie_details.reason_of_edit as reden_wijziging_status_scrapie,
              cl_details.max_log_date as datum_laatste_wijziging_status_cl,
              COALESCE(cl_details.is_manual_edit, FALSE) as is_handmatige_wijziging_status_cl,
              cl_details.reason_of_edit as reden_wijziging_status_cl,
@@ -142,6 +145,9 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
             LEFT JOIN (
                 ".self::selectQueryMaediVisnaDetails()."
               )maedi_visna_details ON maedi_visna_details.location_health_id = lh.id
+            LEFT JOIN (
+                ".self::selectQueryScapieDetails()."
+              )scrapie_details ON scrapie_details.location_health_id = lh.id              
             LEFT JOIN (
                 ".self::selectQueryCaseousLymphadenitisDetails()."
               )cl_details ON cl_details.location_health_id = lh.id
@@ -323,6 +329,23 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
         AND last_cl.location_health_id = cl.location_health_id";
     }
 
+    private static function selectQueryScapieDetails(): string {
+        return "SELECT
+            scrapie.location_health_id,
+            scrapie.log_date as max_log_date,
+            scrapie.reason_of_edit,
+            COALESCE(scrapie.is_manual_edit, FALSE) as is_manual_edit
+        FROM scrapie
+            INNER JOIN (
+            SELECT
+              location_health_id,
+              MAX(id) as max_id
+            FROM scrapie
+            GROUP BY location_health_id
+            )last_scrapie ON last_scrapie.max_id = scrapie.id
+        AND last_scrapie.location_health_id = scrapie.location_health_id";
+    }
+    
     private static function selectQueryCaeDetails(): string {
         return "SELECT
             cae.location_health_id,
