@@ -18,21 +18,29 @@ class SectionUtil
      */
     public static function getSectionType($breedType, $nullFiller = '')
     {
-        if (
-            $breedType === BreedType::PURE_BRED     // Volbloed
-         || $breedType === BreedType::REGISTER      // Register
-         || $breedType === BreedType::BLIND_FACTOR  // Blindfactor
-        ) {
+        if (in_array($breedType, self::mainSectionBreedTypes())) {
             return self::MAIN_SECTION;
         }
 
-        if (
-            $breedType === BreedType::SECONDARY_REGISTER // Hulpboek
-         || $breedType === BreedType::UNDETERMINED       // Onbepaald
-        ) {
+        if (in_array($breedType, self::secondarySectionBreedTypes())) {
             return self::COMPLEMENTARY_SECTION;
         }
 
         return $nullFiller;
+    }
+
+    public static function mainSectionBreedTypes(): array {
+        return [
+            BreedType::PURE_BRED,       // Volbloed
+            BreedType::REGISTER,        // Register
+            BreedType::BLIND_FACTOR,    // Blindfactor
+        ];
+    }
+
+    public static function secondarySectionBreedTypes(): array {
+        return [
+            BreedType::SECONDARY_REGISTER,  // Hulpboek
+            BreedType::UNDETERMINED,        // Onbepaald
+        ];
     }
 }

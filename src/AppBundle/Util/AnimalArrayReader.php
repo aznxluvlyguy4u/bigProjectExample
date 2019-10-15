@@ -8,10 +8,13 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\GenderType;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\EntityManagerInterface;
 
 class AnimalArrayReader
 {
@@ -185,5 +188,55 @@ class AnimalArrayReader
             return $ulnCountryCode.$ulnNumber;
         }
         return $nullReplacement;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Collection $content
+     * @return array|int[]
+     */
+    public static function getAnimalsInContentArray(EntityManagerInterface $em, Collection $content): array
+    {
+        $animalIds = [];
+
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $em->getRepository(Animal::class);
+
+        foreach ($content->getKeys() as $key) {
+            if ($key == Constant::ANIMALS_NAMESPACE) {
+                $animalArrays = $content->get($key);
+
+                foreach ($animalArrays as $animalArray) {
+                    $ulnNumber = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
+                    $ulnCountryCode = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+                    $animalId = $animalRepository->sqlQueryAnimalIdByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
+
+                    $animalIds[] = $animalId;
+                }
+            }
+        }
+
+        return $animalIds;
+    }
+
+
+    public static function getFirstUlnFromAnimalsArray(Collection $content): ?string {
+        foreach ($content->getKeys() as $key) {
+            if ($key == Constant::ANIMALS_NAMESPACE) {
+                $animalArrays = $content->get($key);
+
+                if (count($animalArrays) != 1) {
+                    break;
+                }
+
+                foreach ($animalArrays as $animalArray) {
+                    $ulnNumber = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
+                    $ulnCountryCode = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+                    return $ulnCountryCode.$ulnNumber;
+                }
+            }
+        }
+        return null;
     }
 }

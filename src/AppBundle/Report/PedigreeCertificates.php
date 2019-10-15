@@ -3,16 +3,13 @@
 namespace AppBundle\Report;
 
 
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Output\BreedValuesOutput;
+use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -73,7 +70,7 @@ class PedigreeCertificates extends ReportBase
         $this->reports = array();
         $this->client = $client;
 
-        $animalIds = self::getAnimalsInContentArray($this->em, $content);
+        $animalIds = AnimalArrayReader::getAnimalsInContentArray($this->em, $content);
         $this->animalCount = 0;
 
         if($client == null && $location == null) { //user is admin
@@ -99,35 +96,6 @@ class PedigreeCertificates extends ReportBase
         $this->breedValuesOutput->clearPrivateValues();
     }
 
-
-    /**
-     * @param ObjectManager $em
-     * @param Collection $content
-     * @return array
-     */
-    private function getAnimalsInContentArray(ObjectManager $em, Collection $content)
-    {
-        $animalIds = [];
-        
-        /** @var AnimalRepository $animalRepository */
-        $animalRepository = $em->getRepository(Animal::class);
-
-        foreach ($content->getKeys() as $key) {
-            if ($key == Constant::ANIMALS_NAMESPACE) {
-                $animalArrays = $content->get($key);
-
-                foreach ($animalArrays as $animalArray) {
-                    $ulnNumber = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
-                    $ulnCountryCode = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
-                    $animalId = $animalRepository->sqlQueryAnimalIdByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
-
-                    $animalIds[] = $animalId;
-                }
-            }
-        }
-        
-        return $animalIds;
-    }
 
     /**
      * Array of arrays containing properly labelled variables for twig file.
