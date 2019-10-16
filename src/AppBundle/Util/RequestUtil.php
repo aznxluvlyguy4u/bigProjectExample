@@ -65,22 +65,39 @@ class RequestUtil
 
     /**
      * @param Request $request
-     * @param string $queryParameter
-     * @param mixed $nullResult
+     * @param $queryParameter
+     * @param null $nullResult
+     * @param bool $validateNotEmpty
+     * @param bool $validateFormat
      * @return \DateTime|null
+     * @throws \Exception
      */
-    public static function getDateQuery(Request $request, $queryParameter, $nullResult = null)
+    public static function getDateQuery(Request $request, $queryParameter, $nullResult = null,
+                                        bool $validateNotEmpty = false,
+                                        bool $validateFormat = false
+    )
     {
         $queryValue = $request->query->get($queryParameter);
+        $isEmptyValue = false;
+
         if($queryValue == null) {
-            return $nullResult;
+            $isEmptyValue = true;
         } else {
-            if(!DateUtil::isFormatDDMMYYYY($queryValue)) {
-                if (!DateUtil::isFormatYYYYMMDD($queryValue)) {
-                    return $nullResult;
+            if(!DateUtil::isFormatDDMMYYYY($queryValue) && !DateUtil::isFormatYYYYMMDD($queryValue)) {
+                if ($validateFormat) {
+                    throw new BadRequestHttpException($queryParameter . " has an invalid format: ".$queryValue);
                 }
+                $isEmptyValue = true;
             }
         }
+
+        if ($isEmptyValue) {
+            if ($validateNotEmpty) {
+                throw new BadRequestHttpException($queryParameter . " cannot be empty");
+            }
+            return $nullResult;
+        }
+
         return new \DateTime($queryValue);
     }
 
