@@ -366,9 +366,7 @@ class ReportService
     {
         $actionBy = $this->userService->getUser();
 
-        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN)) {
-            throw AdminValidator::standardException();
-        }
+        AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN, true);
 
         $pedigreeRegisterAbbreviation = $request->query->get(QueryParameter::PEDIGREE_REGISTER);
 
@@ -812,9 +810,7 @@ class ReportService
     {
         $actionBy = $this->userService->getUser();
 
-        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN)) {
-            throw AdminValidator::standardException();
-        }
+        AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN, true);
 
         $referenceDateString = $request->query->get(QueryParameter::REFERENCE_DATE);
         $referenceDate = empty($referenceDateString) ? new \DateTime() : new \DateTime($referenceDateString);

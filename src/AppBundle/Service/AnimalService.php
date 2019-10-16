@@ -113,9 +113,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     public function createAnimal(Request $request)
     {
         $actionBy = $this->getUser();
-        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
+        AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN, true);
 
         $animalArray = RequestUtil::getContentAsArray($request)->toArray();
 

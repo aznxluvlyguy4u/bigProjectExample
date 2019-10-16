@@ -53,9 +53,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
     public function createAdmin(Request $request)
     {
         $actionBy = $this->getEmployee();
-        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN)) {
-            throw AdminValidator::standardException();
-        }
+        AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN, true);
 
         $content = RequestUtil::getContentAsArray($request);
 
@@ -109,9 +107,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
     public function editAdmin(Request $request)
     {
         $actionBy = $this->getEmployee();
-        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
+        AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN, true);
 
         $content = RequestUtil::getContentAsArray($request);
         $log = AdminActionLogWriter::editAdmin($this->getManager(), $actionBy, $content);
@@ -156,9 +152,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
     public function deactivateAdmin(Request $request)
     {
         $actionBy = $this->getEmployee();
-        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
+        AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN, true);
 
         $content = RequestUtil::getContentAsArray($request);
 
