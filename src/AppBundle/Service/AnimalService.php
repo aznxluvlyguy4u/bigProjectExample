@@ -368,23 +368,22 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
     public function findAnimal(Request $request)
     {
-        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
+        AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN, true);
 
         $data = RequestUtil::getContentAsArray($request);
         $uln = $data->get('uln');
         if (is_string($uln)) {
             $uln = strtoupper(strtr($uln, [' ' => '']));
         }
-        if(!Validator::verifyUlnFormat($uln)) {
-            return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
+        if (!Validator::verifyUlnFormat($uln)) {
+            throw new BadRequestHttpException('Dit is geen geldige ULN.');
         }
 
         try {
             $animal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
-            if(!$animal)
-                return ResultUtil::errorResult('Dit dier bestaat niet.', Response::HTTP_BAD_REQUEST);
+            if (!$animal) {
+                throw new BadRequestHttpException('Dit dier bestaat niet.');
+            }
 
             $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
             return ResultUtil::successResult($minimizedOutput);
@@ -394,15 +393,23 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
     }
 
+
+    private function getUbnsFromPlainTextInput(ArrayCollection $content) {
+        $ubns = [];
+        if ($content->containsKey(JsonInputConstant::UBNS)) {
+            $ubns = $content->get(JsonInputConstant::UBNS);
+        }
+        return $ubns;
+    }
+
+
     /**
      * @param Request $request
      * @return JsonResponse|bool
      */
     private function getAnimalsByPlainTextInput(Request $request)
     {
-        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
+        AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN, true);
 
         $validationResult = $this->validateAnimalsByPlainTextInputRequest($request);
         if ($validationResult instanceof JsonResponse) {
@@ -413,10 +420,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $plainTextInput = StringUtil::preparePlainTextInput($content->get(JsonInputConstant::PLAIN_TEXT_INPUT));
         $separator = $content->get(JsonInputConstant::SEPARATOR);
 
-        $ubns = [];
-        if ($content->containsKey(JsonInputConstant::UBNS)) {
-            $ubns = $content->get(JsonInputConstant::UBNS);
-        }
+        $ubns = $this->getUbnsFromPlainTextInput($content);
 
         $incorrectInputs = [];
 
