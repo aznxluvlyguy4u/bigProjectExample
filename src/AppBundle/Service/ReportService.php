@@ -762,16 +762,21 @@ class ReportService
     public function createClientNotesOverviewReport(Request $request)
     {
         $actionBy = $this->userService->getUser();
-        $companyId = $request->query->get(QueryParameter::COMPANY_ID);
-        if (empty($companyId)) {
-            throw new BadRequestHttpException("companyId is missing");
+        $companyId = $request->query->get(
+            QueryParameter::COMPANY_ID,
+            ClientNotesOverviewReportOptions::getCompanyIdEmptyValue()
+        );
+
+        if (!empty($companyId)) {
+            $company = $this->em->getRepository(Company::class)
+                ->findOneByCompanyId($companyId);
+            if (empty($company)) {
+                throw new BadRequestHttpException("No company was found for given companyId: ".$companyId);
+            }
         }
 
-        $company = $this->em->getRepository(Company::class)
-            ->findOneByCompanyId($companyId);
-        if (empty($company)) {
-            throw new BadRequestHttpException("No company was found for given companyId: ".$companyId);
-        }
+        $startDate = RequestUtil::getDateQuery($request,QueryParameter::START_DATE, null, true, true);
+        $endDate = RequestUtil::getDateQuery($request,QueryParameter::END_DATE, null, true, true);
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         ReportUtil::validateFileType($fileType, ClientNotesOverviewReportService::allowedFileTypes(), $this->translator);
@@ -779,6 +784,8 @@ class ReportService
         $options = (new ClientNotesOverviewReportOptions())
             ->setFileType($fileType)
             ->setCompanyId($companyId)
+            ->setStartDate($startDate)
+            ->setEndDate($endDate)
         ;
 
         $optionsAsJson = $this->serializer->serializeToJSON($options);
