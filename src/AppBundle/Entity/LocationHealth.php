@@ -75,6 +75,14 @@ class LocationHealth
     /**
      * @var ArrayCollection
      *
+     * @ORM\OneToMany(targetEntity="Cae", mappedBy="locationHealth")
+     * @ORM\OrderBy({"checkDate" = "ASC"})
+     */
+    private $caes;
+
+    /**
+     * @var ArrayCollection
+     *
      * @ORM\OneToMany(targetEntity="FootRot", mappedBy="locationHealth")
      * @ORM\OrderBy({"checkDate" = "ASC"})
      */
@@ -144,6 +152,25 @@ class LocationHealth
      * @JMS\Type("string")
      * @Expose
      */
+    private $currentCaeStatus;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $currentCaeEndDate;
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
     private $currentFootRotStatus;
 
     /**
@@ -175,6 +202,7 @@ class LocationHealth
         $this->maediVisnas = new ArrayCollection();
         $this->scrapies = new ArrayCollection();
         $this->caseousLymphadenitis = new ArrayCollection();
+        $this->caes = new ArrayCollection();
         $this->footRots = new ArrayCollection();
     }
 
@@ -357,6 +385,54 @@ class LocationHealth
     }
 
     /**
+     * Set currentCaeStatus
+     *
+     * @param string $currentCaeStatus
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentCaeStatus($currentCaeStatus)
+    {
+        $this->currentCaeStatus = $currentCaeStatus;
+
+        return $this;
+    }
+
+    /**
+     * Get currentCaeStatus
+     *
+     * @return string
+     */
+    public function getCurrentCaeStatus()
+    {
+        return $this->currentCaeStatus;
+    }
+
+    /**
+     * Set currentCaeEndDate
+     *
+     * @param \DateTime $currentCaeEndDate
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentCaeEndDate($currentCaeEndDate)
+    {
+        $this->currentCaeEndDate = $currentCaeEndDate;
+
+        return $this;
+    }
+
+    /**
+     * Get currentCaeEndDate
+     *
+     * @return \DateTime
+     */
+    public function getCurrentCaeEndDate()
+    {
+        return $this->currentCaeEndDate;
+    }
+    
+    /**
      * Set currentFootRotStatus
      *
      * @param string $currentFootRotStatus
@@ -521,15 +597,15 @@ class LocationHealth
     }
 
     /**
-     * Add caseousLymphadeniti
+     * Add caseousLymphadenitis
      *
-     * @param \AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti
+     * @param CaseousLymphadenitis $caseousLymphadenitis
      *
      * @return LocationHealth
      */
-    public function addCaseousLymphadeniti(\AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti)
+    public function addCaseousLymphadenitis(CaseousLymphadenitis $caseousLymphadenitis)
     {
-        $this->caseousLymphadenitis[] = $caseousLymphadeniti;
+        $this->caseousLymphadenitis->add($caseousLymphadenitis);
 
         return $this;
     }
@@ -537,21 +613,55 @@ class LocationHealth
     /**
      * Remove caseousLymphadeniti
      *
-     * @param \AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti
+     * @param CaseousLymphadenitis $caseousLymphadenitis
      */
-    public function removeCaseousLymphadeniti(\AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti)
+    public function removeCaseousLymphadenitis(CaseousLymphadenitis $caseousLymphadenitis)
     {
-        $this->caseousLymphadenitis->removeElement($caseousLymphadeniti);
+        $this->caseousLymphadenitis->removeElement($caseousLymphadenitis);
     }
 
     /**
-     * Get caseousLymphadenitis
+     * Get caseousLymphadeniti
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return ArrayCollection
      */
-    public function getCaseousLymphadenitis()
+    public function getCaseousLymphadeniti()
     {
         return $this->caseousLymphadenitis;
+    }
+
+    /**
+     * Add cae
+     *
+     * @param Cae $cae
+     *
+     * @return LocationHealth
+     */
+    public function addCae(Cae $cae)
+    {
+        $this->caes->add($cae);
+
+        return $this;
+    }
+
+    /**
+     * Remove cae
+     *
+     * @param Cae $caseousLymphadeniti
+     */
+    public function removeCae(Cae $cae)
+    {
+        $this->caes->removeElement($cae);
+    }
+
+    /**
+     * Get cae
+     *
+     * @return ArrayCollection
+     */
+    public function getCaes()
+    {
+        return $this->caes;
     }
 
     /**
