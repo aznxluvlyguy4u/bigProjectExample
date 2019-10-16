@@ -130,23 +130,25 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $newAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, $clazz, false);
 
         $uln = $newAnimal->getUln();
-        if(!Validator::verifyUlnFormat($uln)) {
-            return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
+        if (!Validator::verifyUlnFormat($uln)) {
+            throw new BadRequestHttpException('Dit is geen geldige ULN.');
         }
 
         $existingAnimal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
-        if(!empty($existingAnimal))
-            return ResultUtil::errorResult('Dit dier bestaat al.', Response::HTTP_BAD_REQUEST);
+        if (!empty($existingAnimal)) {
+            throw new BadRequestHttpException('Dit dier bestaat al.');
+        }
 
-        if (empty($newAnimal->getDateOfBirth()))
-            return ResultUtil::errorResult('Vul een geboortedatum in.', Response::HTTP_BAD_REQUEST);
+        if (empty($newAnimal->getDateOfBirth())) {
+            throw new BadRequestHttpException('Vul een geboortedatum in.');
+        }
 
         if ($newAnimal->getNLing() === '' || $newAnimal->getNLing() === null) {
             $newAnimal->setNLing(null);
         } elseif (!is_int($newAnimal->getNLing()) && !ctype_digit($newAnimal->getNLing())) {
-            return ResultUtil::errorResult('n-Ling moet een integer zijn', Response::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('n-Ling moet een integer zijn');
         } elseif ($newAnimal->getNLing() < Animal::MIN_N_LING_VALUE || Animal::MAX_N_LING_VALUE < $newAnimal->getNLing()) {
-            return ResultUtil::errorResult($this->translateUcFirstLower('THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7').': '.$newAnimal->getNLing(), Response::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException($this->translateUcFirstLower('THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7').': '.$newAnimal->getNLing());
         }
 
 
@@ -173,11 +175,13 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         $newAnimal = AnimalDetailsBatchUpdaterService::cleanUpAnimalInputValues($newAnimal);
 
-        if (!BreedCodeUtil::isValidBreedCodeString($newAnimal->getBreedCode()) && $newAnimal->getBreedCode() !== null)
-            return ResultUtil::errorResult('Ongeldige rascode', Response::HTTP_BAD_REQUEST);
+        if (!BreedCodeUtil::isValidBreedCodeString($newAnimal->getBreedCode()) && $newAnimal->getBreedCode() !== null) {
+            throw new BadRequestHttpException('Ongeldige rascode');
+        }
 
-        if (!Validator::hasValidBreedType($newAnimal->getBreedType(), true))
-            return ResultUtil::errorResult('Ongeldige rastype', Response::HTTP_BAD_REQUEST);
+        if (!Validator::hasValidBreedType($newAnimal->getBreedType(), true)) {
+            throw new BadRequestHttpException('Ongeldige rastype');
+        }
 
         try {
             $newAnimal->setAnimalOrderNumber(StringUtil::getLast5CharactersFromString($newAnimal->getUlnNumber()));
