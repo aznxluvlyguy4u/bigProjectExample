@@ -27,7 +27,7 @@
 
     {% for animal in variables %}
 
-        <div class="container mb-4 p-2">
+        <div class="container p-2">
 
             {# calc averages #}
             {% set offspringCount = animal.offspring|length %}
@@ -84,7 +84,7 @@
         {# NEXT PAGE BREAK #}
         <div style="page-break-after: always"></div>
 
-        <div class="container mb-4 p-2">
+        <div class="container p-2">
 
             {# SUB INFO #}
             {% set vars = {
@@ -119,6 +119,9 @@
             {% endembed %}
 
         </div>
+
+        {# NEXT PAGE BREAK #}
+        <div style="page-break-after: always"></div>
 
     {% endfor %}
 
