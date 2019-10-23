@@ -302,12 +302,12 @@ class ReportService
             $contentAsJson = JSON::encode($content->toArray());
             $inputForHash = $contentAsJson;
 
-            return $this->processReportAsWorkerTask(
-                [
-                    'content' => $contentAsJson,
-                ],
-                $request,ReportType::PEDIGREE_CERTIFICATE, $inputForHash
-            );
+//            return $this->processReportAsWorkerTask(
+//                [
+//                    'content' => $contentAsJson,
+//                ],
+//                $request,ReportType::PEDIGREE_CERTIFICATE, $inputForHash
+//            );
         }
 
         return $this->createPedigreeCertificatesWithoutWorker($request);
@@ -334,6 +334,32 @@ class ReportService
         $content = empty($content) ? RequestUtil::getContentAsArray($request) : $content;
 
         $report = $this->pedigreeCertificateReportService->getReport($person, $location, $fileType, $content, $language);
+        if ($report instanceof Response) {
+            return $report;
+        }
+        return ResultUtil::successResult($report);
+    }
+
+    /**
+     * @param Request $request
+     * @param  $content
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    private function createEweCardsWithoutWorker(Request $request, $content = null)
+    {
+        $person = $this->userService->getUser();
+
+        if(!AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
+            $person = $this->userService->getAccountOwner($request);
+        }
+
+        $location = $this->userService->getSelectedLocation($request);
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+        $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
+        $content = empty($content) ? RequestUtil::getContentAsArray($request) : $content;
+
+        $report = $this->eweCardReportService->getReport($person, $location, $fileType, $content, $language);
         if ($report instanceof Response) {
             return $report;
         }
@@ -442,15 +468,16 @@ class ReportService
 
     /**
      * @param Request $request
-     * @return \AppBundle\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
+     * @throws \Exception
      */
     public function createEweCardReport(Request $request)
     {
         $content = RequestUtil::getContentAsArray($request);
-        $animalsArray = $content->get(JsonInputConstant::EWES);
+        $animalsArray = $content->get(JsonInputConstant::ANIMALS);
 
         if (!is_array($animalsArray)) {
-            return ResultUtil::errorResult("'".JsonInputConstant::EWES."' key is missing in body", Response::HTTP_BAD_REQUEST);
+            return ResultUtil::errorResult("'".JsonInputConstant::ANIMALS."' key is missing in body", Response::HTTP_BAD_REQUEST);
         }
 
         if (count($animalsArray) === 0) {
@@ -468,20 +495,47 @@ class ReportService
 
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
-        if ($processAsWorkerTask) {
-                return $this->processReportAsWorkerTask(
-                    [
-                        'content' => $contentAsJson
-                    ],
-                    $request,ReportType::EWE_CARD, $inputForHash
-            );
-        }
+//        if ($processAsWorkerTask) {
+//                return $this->processReportAsWorkerTask(
+//                    [
+//                        'content' => $contentAsJson
+//                    ],
+//                    $request,ReportType::EWE_CARD, $inputForHash
+//            );
+//        }
+
+//        dump($actionBy);
+//        dump($location);die('asdfgh');
 
         $report = $this->eweCardReportService->getReport($actionBy, $location, $content);
         if ($report instanceof Response) {
             return $report;
         }
         return ResultUtil::successResult($report);
+
+
+
+//        $content = RequestUtil::getContentAsArray($request);
+//
+//        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+//
+//        if ($processAsWorkerTask) {
+//            $location = $this->userService->getSelectedLocation($request);
+//            $company = $location ? $location->getCompany() : null;
+//            $this->ulnValidator->pedigreeCertificateUlnsInputValidation($content, $this->userService->getUser(), $company);
+//
+//            $contentAsJson = JSON::encode($content->toArray());
+//            $inputForHash = $contentAsJson;
+//
+//            return $this->processReportAsWorkerTask(
+//                [
+//                    'content' => $contentAsJson,
+//                ],
+//                $request,ReportType::PEDIGREE_CERTIFICATE, $inputForHash
+//            );
+//        }
+//
+//        return $this->createPedigreeCertificatesWithoutWorker($request);
     }
 
 
@@ -827,7 +881,7 @@ class ReportService
         }
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
-        ReportUtil::validateFileType($fileType, EweCardReportService::allowedFileTypes(), $this->translator);
+        ReportUtil::validateFileType($fileType, ClientNotesOverviewReportService::allowedFileTypes(), $this->translator);
 
         $options = (new ClientNotesOverviewReportOptions())
             ->setFileType($fileType)

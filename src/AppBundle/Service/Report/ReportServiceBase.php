@@ -23,7 +23,6 @@ use AppBundle\Validation\UlnValidatorInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Snappy\GeneratorInterface;
-use Knp\Snappy\Pdf;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Filesystem\Filesystem;
@@ -430,14 +429,14 @@ class ReportServiceBase
                                         array $customPdfOptions = [], array $additionalData = [])
     {
     	  $twigInput = ArrayUtil::concatArrayValues(
-    	  	[
-			      [
-			      	'variables' => $data,
-				      'displayReportPdfOutputAsHtml' => $this->displayReportPdfOutputAsHtml
-			      ],
-			      $additionalData
-		      ],
-		      false
+                [
+                    [
+                        'variables' => $data,
+                        'displayReportPdfOutputAsHtml' => $this->displayReportPdfOutputAsHtml
+                    ],
+                    $additionalData
+                ],
+                false
 	      );
 
         $html = $this->renderView($twigFile, $twigInput);

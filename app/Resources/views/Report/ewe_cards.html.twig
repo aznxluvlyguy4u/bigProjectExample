@@ -2,7 +2,8 @@
 
 {% block bootstrap %}
     {% if displayReportPdfOutputAsHtml %}
-        <link rel="stylesheet" href='{{ asset('assets/bootstrap-3.3.7-dist/css/bootstrap.min.css') }}'>
+        {#<link rel="stylesheet" href='{{ asset('assets/bootstrap-3.3.7-dist/css/bootstrap.min.css') }}'>#}
+        <link rel="stylesheet" href="{{ bootstrap_css }}">
     {% else %}
         <link rel="stylesheet" href="{{ bootstrap_css }}">
     {% endif %}
@@ -14,7 +15,9 @@
         {% set fullStar = asset('assets/images/baseline-star-24px.svg') %}
         {% set halfStar = asset('assets/images/baseline-star_half-24px.svg') %}
         {% set emptyStar = asset('assets/images/baseline-star_border-24px.svg') %}
-        {% set logoPath = asset('assets/images/nsfo-logo@2x.png') %}
+        {#{% set logoPath = asset('assets/images/nsfo-logo@2x.png') %}#}
+
+        {% set logoPath = images_dir~'/nsfo-logo@2x.png' %}
     {% else %}
         {% set fullStar = images_dir~'/baseline-star-24px.svg' %}
         {% set halfStar = images_dir~'/baseline-star_half-24px.svg' %}
@@ -22,265 +25,100 @@
         {% set logoPath = images_dir~'/nsfo-logo@2x.png' %}
     {% endif %}
 
+    {% for animal in variables %}
+
+        <div class="container mb-4 p-2">
+
+            {# calc averages #}
+            {% set offspringCount = animal.offspring|length %}
+            {% set totalBirthWeight = 0 %}
+            {% set totalWeaningWeight = 0 %}
+            {% set totalDeliveryWeight = 0 %}
+            {% set totalAverageGrowth = 0 %}
+            {% set totalSaldo = 0 %}
+            {% set totalPricePerKg = 0 %}
+
+            {% for offspring in animal.offspring %}
+                {% set totalBirthWeight = totalBirthWeight + offspring.birth_weight|number_format(2) %}
+                {% set totalWeaningWeight = totalWeaningWeight + offspring.weaning_weight|number_format(2) %}
+                {% set totalDeliveryWeight = totalDeliveryWeight + offspring.delivery_weight|number_format(2) %}
+                {% set totalAverageGrowth = totalAverageGrowth + offspring.average_growth|number_format(2) %}
+                {% set totalSaldo = totalSaldo + offspring.saldo|number_format(2) %}
+                {% set totalPricePerKg = totalPricePerKg + offspring.price_per_kg|number_format(2) %}
+            {% endfor %}
+
+            {% set maxRowsPage1 = 28 %}
 
 
-    {% for certificate in variables %}
+            {# HEADER INFO #}
+            {% set vars = {
+                'animal' : animal
+            } %}
+            {% embed "/Report/ewe_cards_parts/header_info.html.twig" with vars %}
+            {% endembed %}
 
-        <div class="container mb-4 bg-gray">
-            <div class="row pt-4">
+            {# MAIN ANIMAL DETAIL #}
+            {% set vars = {
+                'animal' : animal
+            } %}
+            {% embed "/Report/ewe_cards_parts/main_animal_detail.html.twig" with vars %}
+            {% endembed %}
 
-                {# LEFT HALF #}
-                <div class="col-xs-6">
-                    <div class="pl-3 pr-2">
-
-                        {# FIRST TAB#}
-                        <div class="row">
-                            <div class="col-xs-8">
-                                <img class="img-responsive"  src="{{ logoPath }}" alt="">
-                                <h1 class="mt-2 mb-4"><b>AFSTAMMINGSBEWIJS</b></h1>
-                            </div>
-
-                            {# MAIN ANIMAL DETAIL #}
-                            {% set vars = {
-                                'animal' : certificate.animals.c,
-                                'title' : 'DIER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/main_animal_detail.html.twig" with vars %}
-                            {% endembed %}
-
-                            {# BREEDER DETAIL #}
-                            {% set vars = {
-                                'certificate' : certificate,
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/breeder_detail.html.twig" with vars %}
-                            {% endembed %}
-
-                            {# EXPLANATION DETAIL #}
-                            {% set vars = {
-                                'certificate' : certificate,
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/explanations_detail.html.twig" with vars %}
-                            {% endembed %}
-
-                        </div>
-                    </div>
-
-                </div>
-
-                {# RIGHT HALF #}
-                <div class="col-xs-6">
-
-                    <div class="pl-2 pr-3">
-
-                        {# FIRST GENERATEON FATHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.f,
-                            'title' : '1<sup>e</sup> GENERATIE-VADER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2_parts/1e_generation_animal_detail.html.twig" with vars %}
-                        {% endembed %}
-
-
-                        {# SECOND GENERATEON FATHERs FATHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.ff,
-                            'title' : '2<sup>e</sup> GENERATIE-VADERS VADER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
-                        {% endembed %}
-
-
-                        {# SECOND GENERATEON FATHERs MOTHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.fm,
-                            'title' : '2<sup>e</sup> GENERATIE-VADERS MOEDER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
-                        {% endembed %}
-
-
-                        {# FIRST GENERATEON MOTHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.m,
-                            'title' : '1<sup>e</sup> GENERATIE-MOEDER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2_parts/1e_generation_animal_detail.html.twig" with vars %}
-                        {% endembed %}
-
-
-                        {# SECOND GENERATEON MOTHERS FATHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.mf,
-                            'title' : '2<sup>e</sup> GENERATIE-MOEDERS VADER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
-                        {% endembed %}
-
-
-                        {# SECOND GENERATEON MOTHERS MOTHER #}
-                        {% set vars = {
-                            'animal' : certificate.animals.mm,
-                            'title' : '2<sup>e</sup> GENERATIE-MOEDERS MOEDER'
-                        } %}
-                        {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_minified.html.twig" with vars %}
-                        {% endembed %}
-
-
-                    </div>
-                </div>
-            </div>
-
-            {# footer #}
-            <div class="row">
-                <div class="col-xs-12">
-                    <div class="footer text-center">
-                        NEDERLANDSE SCHAPEN - EN GEITENFOKKERS ORGANISATIE&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;WWW.NSFO.NL&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;BLAD 1 VAN 2&nbsp;&nbsp;&nbsp;{% if certificate.animals.c.name != '-' %}{{ certificate.animals.c.name }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.gender != '-' %}{{ certificate.animals.c.gender | upper }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.pedigree != '-' %}{{ 'STAMBOEKNR. '~certificate.animals.c.pedigree }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{{ 'UNIEK LEVERSNR. '~certificate.animals.c.uln }}
-                    </div>
-                </div>
-            </div>
+            {# OFFSPRINGS PAGE 1 #}
+            {% set vars = {
+                'animal' : animal,
+                'showAverage' : offspringCount < maxRowsPage1,
+                'offspringCount' : offspringCount,
+                'totalBirthWeight' : totalBirthWeight,
+                'totalWeaningWeight' : totalWeaningWeight,
+                'totalDeliveryWeight' : totalDeliveryWeight,
+                'totalAverageGrowth' : totalAverageGrowth,
+                'totalSaldo' : totalSaldo,
+                'totalPricePerKg' : totalPricePerKg,
+                'maxRowsPage1' : maxRowsPage1,
+            } %}
+            {% embed "/Report/ewe_cards_parts/offsprings_page_1.html.twig" with vars %}
+            {% endembed %}
         </div>
 
+        {# NEXT PAGE BREAK #}
         <div style="page-break-after: always"></div>
 
+        <div class="container mb-4 p-2">
 
+            {# SUB INFO #}
+            {% set vars = {
+                'animal' : animal
+            } %}
+            {% embed "/Report/ewe_cards_parts/sub_info_page_2.html.twig" with vars %}
+            {% endembed %}
 
-        {# SECOND PAGE #}
+            {% if offspringCount > maxRowsPage1 %}
+                {# OFFSPRINGS PAGE 2 #}
+                {% set vars = {
+                    'animal' : animal,
+                    'offspringCount' : offspringCount,
+                    'totalBirthWeight' : totalBirthWeight,
+                    'totalWeaningWeight' : totalWeaningWeight,
+                    'totalDeliveryWeight' : totalDeliveryWeight,
+                    'totalAverageGrowth' : totalAverageGrowth,
+                    'totalSaldo' : totalSaldo,
+                    'totalPricePerKg' : totalPricePerKg,
+                    'maxRowsPage1' : maxRowsPage1
+                } %}
+                {% embed "/Report/ewe_cards_parts/offsprings_page_2.html.twig" with vars %}
+                {% endembed %}
+            {% endif %}
 
-        <div class="container">
-
-            <div class="row" style="position:relative">
-                <div class="cross">
-                    <div class="cross-wrapper">
-                        <div class="cross-verticle"></div>
-                        <div class="cross-horizontal"></div>
-                    </div>
-                </div>
-                {# LEFT HALF #}
-                <div class="col-xs-6">
-                    <div class="row pl-3 pr-2">
-                        <div class=" col-xs-12 bg-gray mb-5">
-                            {# 2e GENERATEON FATHERs FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.ff,
-                                'title' : '2<sup>e</sup> GENERATIE-VADERS VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON FATHERs FATHER FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.fff,
-                                'title' : '3<sup>e</sup> GENERATIE-VADERS VADER VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON FATHERs FATHER MOTHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.ffm,
-                                'title' : '3<sup>e</sup> GENERATIE-VADERS VADER MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-                        </div>
-
-                        <div class=" col-xs-12 bg-gray">
-                            {# 2e GENERATEON MOTHERs FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.mf,
-                                'title' : '2<sup>e</sup> GENERATIE-MOEDERS VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON MOTHERs FATHER FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.mff,
-                                'title' : '3<sup>e</sup> GENERATIE-MOEDERS VADER VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON MOTHERs FATHER MOTHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.mfm,
-                                'title' : '3<sup>e</sup> GENERATIE-MOEDERS VADER MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-                        </div>
-                    </div>
-                </div>
-
-
-                {# RIGHT HALF #}
-                <div class="col-xs-6">
-                    <div class="row pl-2 pr-3">
-
-                        <div class=" col-xs-12 bg-gray mb-5">
-                            {# 2e GENERATEON FATHERs MOTHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.fm,
-                                'title' : '2<sup>e</sup> GENERATIE-VADERS MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON FATHERs MOTHER FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.fmf,
-                                'title' : '3<sup>e</sup> GENERATIE-VADERS MOEDER VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON FATHERs MOTHER MOTHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.fmm,
-                                'title' : '3<sup>e</sup> GENERATIE-VADERS MOEDER MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-                        </div>
-
-                        <div class=" col-xs-12 bg-gray">
-                            {# 2e GENERATION MOTHERS MOTHER #}
-                            {% set vars = {
-                                'animal' : certificate.animals.mm,
-                                'title' : '2<sup>e</sup> GENERATIE - MOEDERS MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/2e_generation_animal_detail.html.twig" with vars %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON MOTHERs MOTHER FATHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.mmf,
-                                'title' : '3<sup>e</sup> GENERATIE-MOEDERS MOEDER VADER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-
-                            {# 3e GENERATEON MOTHERS MOTHER MOTHER #}
-                            {% set data = {
-                                'animal' : certificate.animals.mmm,
-                                'title' : '3<sup>e</sup> GENERATIE-MOEDERS MOEDER MOEDER'
-                            } %}
-                            {% embed "/Report/pedigree_certificates2_parts/3e_generation_animal_detail.html.twig" with data %}
-                            {% endembed %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {# footer #}
-            <div class="row">
-                <div class="col-xs-12 pt-4">
-                    <div class="fieldName pull-right">BLAD 2 VAN 2&nbsp;&nbsp;&nbsp;{% if certificate.animals.c.name != '-' %}{{ certificate.animals.c.name }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.gender != '-' %}{{ certificate.animals.c.gender | upper }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{% if certificate.animals.c.pedigree != '-' %}{{ 'STAMBOEKNR. '~certificate.animals.c.pedigree }}&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;{% endif %}{{ 'UNIEK LEVERSNR. '~certificate.animals.c.uln }}</div>
-                </div>
-            </div>
+            {# TREATMENTS #}
+            {% set vars = {
+                'animal' : animal,
+                'showBorderTop' : offspringCount < maxRowsPage1
+            } %}
+            {% embed "/Report/ewe_cards_parts/treatment_info.html.twig" with vars %}
+            {% endembed %}
 
         </div>
-        <div style="page-break-after: always"></div>
 
     {% endfor %}
 
@@ -311,6 +149,31 @@
 
         .bg-gray {
             background-color: #EDEDEE;
+        }
+
+        .table.border-0 td, .table.border-0 th {
+            border: none;
+        }
+
+        .table.px-0 td, .table.px-0 th {
+            padding-left: 0px !important;
+            padding-right: 0px !important;
+        }
+
+        .table.py-0 td, .table.py-0 th {
+            padding-top: 0px !important;
+            padding-bottom: 0px !important;
+        }
+
+        .height-0 {
+            margin: 0;
+            opacity: 0;
+            height: 0;
+            line-height: 0
+        }
+
+        .w-100 {
+            width: 100%;
         }
 
         .col-25 {
@@ -441,6 +304,11 @@
             margin-top: 12px !important;
         }
 
+        .my-0 {
+            margin-top: 0px !important;
+            margin-bottom: 0px !important;
+        }
+
         .ml-1 {
             margin-left: 5px !important;
         }
@@ -468,7 +336,19 @@
         }
 
         .bordered {
-            border: 2px solid #009E66;
+            border: 1px solid black;
+        }
+
+        .border-top-0 {
+            border-top: none;
+        }
+
+        .border-top-1 {
+            border-top: 1px solid black;
+        }
+
+        .border-bottom-1 {
+            border-bottom: 1px solid black;
         }
 
         .inner-bordered {
@@ -482,25 +362,21 @@
         h1 {
             font-family: 'opensans';
             font-size: 25px;
-            color: #009E66;
         }
 
         h2 {
             font-family: 'Myriad Pro';
             font-size: 14px;
-            color: white;
         }
 
         h3 {
             font-family: 'brandonGrotesqueMedium';
             font-size: 13px;
-            color: #009E66;
         }
 
         h4 {
             font-family: 'crimson-text-roman';
             font-size: 10px;
-            color: white;
         }
 
         .blockHeader {

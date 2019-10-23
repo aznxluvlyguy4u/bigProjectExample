@@ -1,0 +1,419 @@
+{# DIERGEGEVENS #}
+<div class="row">
+
+    <div class="col-xs-12 p-2 bordered">
+
+        {# TITLE #}
+        <div class="row">
+            <div class="col-xs-12 py-1">
+                <h2 class="display-inline"><ins><b>Diergegevens</b></ins></h2>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            {# LEFT HALF #}
+            <div class="col-xs-5">
+                {# First block #}
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Werknummer</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.animal_order_number }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">naam</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.nickname }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Uniek levensnr.</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.uln_country_code ~ ' ' ~  animal.animalAndProduction.uln_number }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Stamboeknr.</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.pedigree_country_code ~ ' ' ~  animal.animalAndProduction.pedigree_number }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Geboortedatum</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.date_of_birth }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Geboren als</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.n_ling ~ '-ling' }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Geslacht</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.gender_dutch }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Aanvoerdatum</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap"></div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Afvoerdatum</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap"></div>
+                </div>
+
+            </div>
+
+            {#RIGHT HALF#}
+            <div class="col-xs-5">
+                {# First block #}
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Vader</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.dad_uln_country_code ~ ' ' ~ animal.animalAndProduction.dad_uln_number }}&nbsp;&nbsp;&nbsp;&nbsp;{{ animal.animalAndProduction.dad_pedigree_country_code ~ ' ' ~ animal.animalAndProduction.dad_pedigree_number }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Naam vader</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.dad_nickname }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Moeder</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.mom_uln_country_code ~ ' ' ~ animal.animalAndProduction.mom_uln_number }}&nbsp;&nbsp;&nbsp;&nbsp;{{ animal.animalAndProduction.mom_pedigree_country_code ~ ' ' ~ animal.animalAndProduction.mom_pedigree_number }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Naam moeder</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.mom_nickname }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Opfok</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.opfok }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Fokker</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.breeder_name }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Blindfactor</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.blindness_factor }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Scrapiegenotype</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.scrapie_genotype }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 text-nowrap">Predicaat</div>
+                    <div class="col-xs-1">:</div>
+                    <div class="col-xs-8 text-nowrap">{{ animal.animalAndProduction.formatted_predicate }}</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-5">
+                <div class="row">
+                    <div class="col-xs-6 text-nowrap">{{ 'Ras: ' ~ animal.animalAndProduction.breed_code }}</div>
+                    <div class="col-xs-6 text-nowrap">{{ 'Rasstatus: ' ~ animal.animalAndProduction.breed_type | trans | title }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-5">
+                <div class="row">
+                    <div class="col-xs-6 text-nowrap">{{ 'Sectie in stamboek: ' ~ animal.animalAndProduction.section_type }}</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    {# PRODUCTIEGEGEVENS #}
+    <div class="col-xs-12 p-2 bordered border-top-0">
+
+        {# TITLE #}
+        <div class="row">
+            <div class="col-xs-12 py-1">
+                <h2 class="display-inline"><ins><b>Productiegegevens</b></ins></h2>
+            </div>
+        </div>
+
+        {# TOTOAALPRODUCTIE #}
+        <div class="row">
+            <div class="col-xs-12 py-1">TOTAALPRODUCTIE</div>
+        </div>
+
+        {# 1e ROW #}
+        <div class="row">
+
+            <div class="col-xs-3">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Worpnummer</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.litter_nummer }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-3">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Totaal geboren</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.animal_total_born }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-3">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Totaal groot</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.total_matured }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-3">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Totaal dood</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.total_deaths }}</div>
+                </div>
+            </div>
+
+        </div>
+
+
+        {# 2e ROW #}
+        <div class="row mb-2">
+
+            <div class="col-xs-3">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Worpindex</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.litter_index }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-3">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. TWT</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_twt }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-3">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Groot voor anderen</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.matured_for_others }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-3">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Groot bij anderen</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.matured_at_others }}</div>
+                </div>
+            </div>
+
+        </div>
+
+
+
+        {# GEMIDDELDE PRODUCTIE #}
+        <div class="row">
+            <div class="col-xs-12 py-1">GEMIDDELDE PRODUCTIE</div>
+        </div>
+
+        {# 1e ROW #}
+        <div class="row">
+
+            <div class="col-xs-4">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. worpgroote</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_litter_size }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-4">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. levend/worp</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_alive_per_litter }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-4">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. dood/worp</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_deaths_litter }}</div>
+                </div>
+            </div>
+
+        </div>
+
+        {# 2e ROW #}
+        <div class="row">
+
+            <div class="col-xs-4">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. levend/jaar</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_alive_per_year }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-4">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. groot/jaar</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_matured_per_year }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-4">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. groot/maand</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_matured_per_month }}</div>
+                </div>
+            </div>
+
+        </div>
+
+        {# 3e ROW #}
+        <div class="row">
+
+            <div class="col-xs-4">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. geb.gewicht lam (kg)</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_birth_weight }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-4">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. speengew. lam (kg)</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_weaning_weight }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-4">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. speenlft. lam (d)</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_weaning_age_in_days }}</div>
+                </div>
+            </div>
+
+        </div>
+
+        {# 4e ROW #}
+        <div class="row mb-2">
+
+            <div class="col-xs-4">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. groei tot spenen (g/d)</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_growth_until_weaning }}</div>
+                </div>
+            </div>
+
+            <div class="col-xs-8">
+                <div class="row">
+                    <div class="col-xs-8 text-nowrap">Gem. groei spenen van alle gezoogde lamemeren (g/d)</div>
+                    <div class="col-xs-4 text-nowrap">{{ animal.animalAndProduction.average_weaning_growth_of_all_sucklings }}</div>
+                </div>
+            </div>
+
+        </div>
+
+
+        {# FOKWAARDEN PRODUCTIE #}
+        <div class="row">
+            <div class="col-xs-12 py-1">FOKWAARDEN PRODUCTIE (Datum evaluatie: {{ animal.animalAndProduction.breed_value_evaluation_date }})</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12">
+
+                <table class="table border-0 px-0 py-0 mb-1">
+
+                    <thead>
+                        <tr>
+                            <td>Totaal geboren</td>
+                            <td>Doodgeboren</td>
+                            <td>Tussenlamtijd</td>
+                            <td>Geb.gewicht</td>
+                            <td>8 wk gewicht</td>
+                            <td>20 wk gewicht</td>
+                            <td>Spierdikte</td>
+                            <td>Vetdikte</td>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>
+                                {{ ((animal.animalAndProduction.total_born | first) == '-' ? '' : '+') ~
+                                animal.animalAndProduction.total_born | number_format(2) ~ '/' ~
+                                ( (animal.animalAndProduction.total_born_accuracy | number_format(2)) * 100 ) }}
+                            </td>
+                            <td>
+                                {{ ((animal.animalAndProduction.still_born | first) == '-' ? '' : '+') ~
+                                animal.animalAndProduction.still_born | number_format(2) ~ '/' ~
+                                ( (animal.animalAndProduction.still_born_accuracy | number_format(2)) * 100 ) }}
+                            </td>
+                            <td>
+                                {{ ((animal.animalAndProduction.birth_interval | first) == '-' ? '' : '+') ~
+                                animal.animalAndProduction.birth_interval | number_format(2) ~ '/' ~
+                                ( (animal.animalAndProduction.birth_interval_accuracy | number_format(2)) * 100 ) }}
+                            </td>
+                            <td>
+                                {{ ((animal.animalAndProduction.birth_weight | first) == '-' ? '' : '+') ~
+                                animal.animalAndProduction.birth_weight | number_format(2) ~ '/' ~
+                                ( (animal.animalAndProduction.birth_weight_accuracy | number_format(2)) * 100 ) }}
+                            </td>
+                            <td>
+                                {{ ((animal.animalAndProduction.weight_at8weeks | first) == '-' ? '' : '+') ~
+                                animal.animalAndProduction.weight_at8weeks | number_format(2) ~ '/' ~
+                                ( (animal.animalAndProduction.weight_at8weeks_accuracy | number_format(2)) * 100 ) }}
+                            </td>
+                            <td>
+                                {{ ((animal.animalAndProduction.weight_at20weeks | first) == '-' ? '' : '+') ~
+                                animal.animalAndProduction.weight_at20weeks | number_format(2) ~ '/' ~
+                                ( (animal.animalAndProduction.weight_at20weeks_accuracy | number_format(2)) * 100 ) }}
+                            </td>
+                            <td>
+                                {{ ((animal.animalAndProduction.muscle_thickness | first) == '-' ? '' : '+') ~
+                                animal.animalAndProduction.muscle_thickness | number_format(2) ~ '/' ~
+                                ( (animal.animalAndProduction.muscle_thickness_accuracy | number_format(2)) * 100 ) }}
+                            </td>
+                            <td>
+                                {{ ((animal.animalAndProduction.fat_thickness | first) == '-' ? '' : '+') ~
+                                animal.animalAndProduction.fat_thickness | number_format(2) ~ '/' ~
+                                ( (animal.animalAndProduction.fat_thickness_accuracy | number_format(2)) * 100 ) }}
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12">
+                * = als 1 jarige geworpen
+            </div>
+        </div>
+
+    </div>
+</div>
