@@ -2,8 +2,7 @@
 
 {% block bootstrap %}
     {% if displayReportPdfOutputAsHtml %}
-        {#<link rel="stylesheet" href='{{ asset('assets/bootstrap-3.3.7-dist/css/bootstrap.min.css') }}'>#}
-        <link rel="stylesheet" href="{{ bootstrap_css }}">
+        <link rel="stylesheet" href='{{ asset('assets/bootstrap-3.3.7-dist/css/bootstrap.min.css') }}'>
     {% else %}
         <link rel="stylesheet" href="{{ bootstrap_css }}">
     {% endif %}
@@ -15,9 +14,7 @@
         {% set fullStar = asset('assets/images/baseline-star-24px.svg') %}
         {% set halfStar = asset('assets/images/baseline-star_half-24px.svg') %}
         {% set emptyStar = asset('assets/images/baseline-star_border-24px.svg') %}
-        {#{% set logoPath = asset('assets/images/nsfo-logo@2x.png') %}#}
-
-        {% set logoPath = images_dir~'/nsfo-logo@2x.png' %}
+        {% set logoPath = asset('assets/images/nsfo-logo@2x.png') %}
     {% else %}
         {% set fullStar = images_dir~'/baseline-star-24px.svg' %}
         {% set halfStar = images_dir~'/baseline-star_half-24px.svg' %}

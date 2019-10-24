@@ -51,9 +51,7 @@ class EweCardReportService extends ReportServiceBase
      */
     private function getPdfReport(Person $actionBy, Location $location, ArrayCollection $content)
     {
-
         $data = $this->getAnimalData($content);
-//dump($data);die('wtf');
 
         $additionalData = [
             'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/css/bootstrap.min.css',
@@ -98,30 +96,12 @@ class EweCardReportService extends ReportServiceBase
     }
 
     public function getAnimalData(ArrayCollection $content) {
-        $useTestValues = true;
-        
-        if ($useTestValues) {
-            $animalIds = [
-                46469,
-                46473,
-                47033,
-                149365,
-                151776,
-                152697,
-                179020,
-                181666,
-                182617,
-                198917,
-                548002
-            ];
-        } else {
-            $animalIds = AnimalArrayReader::getAnimalsInContentArray($this->em, $content);
-        }
+
+        $animalIds = AnimalArrayReader::getAnimalsInContentArray($this->em, $content);
 
         $animalAndProductionValues = $this->getAnimalAndProductionData($animalIds);
-        $offspringData = $this->getOffspringData($animalIds);
 
-//        $offspringData = array_merge($offspringData, $offspringData, $offspringData);
+        $offspringData = $this->getOffspringData($animalIds);
 
         $treatments = $this->getTreatmentsData($animalIds);
 

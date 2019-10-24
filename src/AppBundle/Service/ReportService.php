@@ -302,12 +302,12 @@ class ReportService
             $contentAsJson = JSON::encode($content->toArray());
             $inputForHash = $contentAsJson;
 
-//            return $this->processReportAsWorkerTask(
-//                [
-//                    'content' => $contentAsJson,
-//                ],
-//                $request,ReportType::PEDIGREE_CERTIFICATE, $inputForHash
-//            );
+            return $this->processReportAsWorkerTask(
+                [
+                    'content' => $contentAsJson,
+                ],
+                $request,ReportType::PEDIGREE_CERTIFICATE, $inputForHash
+            );
         }
 
         return $this->createPedigreeCertificatesWithoutWorker($request);
@@ -495,47 +495,20 @@ class ReportService
 
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
-//        if ($processAsWorkerTask) {
-//                return $this->processReportAsWorkerTask(
-//                    [
-//                        'content' => $contentAsJson
-//                    ],
-//                    $request,ReportType::EWE_CARD, $inputForHash
-//            );
-//        }
-
-//        dump($actionBy);
-//        dump($location);die('asdfgh');
+        if ($processAsWorkerTask) {
+                return $this->processReportAsWorkerTask(
+                    [
+                        'content' => $contentAsJson
+                    ],
+                    $request,ReportType::EWE_CARD, $inputForHash
+            );
+        }
 
         $report = $this->eweCardReportService->getReport($actionBy, $location, $content);
         if ($report instanceof Response) {
             return $report;
         }
         return ResultUtil::successResult($report);
-
-
-
-//        $content = RequestUtil::getContentAsArray($request);
-//
-//        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
-//
-//        if ($processAsWorkerTask) {
-//            $location = $this->userService->getSelectedLocation($request);
-//            $company = $location ? $location->getCompany() : null;
-//            $this->ulnValidator->pedigreeCertificateUlnsInputValidation($content, $this->userService->getUser(), $company);
-//
-//            $contentAsJson = JSON::encode($content->toArray());
-//            $inputForHash = $contentAsJson;
-//
-//            return $this->processReportAsWorkerTask(
-//                [
-//                    'content' => $contentAsJson,
-//                ],
-//                $request,ReportType::PEDIGREE_CERTIFICATE, $inputForHash
-//            );
-//        }
-//
-//        return $this->createPedigreeCertificatesWithoutWorker($request);
     }
 
 
