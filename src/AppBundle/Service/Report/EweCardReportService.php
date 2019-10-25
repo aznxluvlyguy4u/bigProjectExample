@@ -276,6 +276,8 @@ class EweCardReportService extends ReportServiceBase
             vd.dd_mm_yyyy_date_of_birth,
             a.uln_country_code as uln_country_code,
             a.uln_number as uln_number,
+            a.lambar as lambar,
+            a.surrogate_id as surrogate_id,
             NULLIF(COALESCE(a.uln_country_code, a.uln_number),'') as uln,
             dad.uln_country_code as dad_uln_country_code,
             dad.uln_number as dad_uln_number,

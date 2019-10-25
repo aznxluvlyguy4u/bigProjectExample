@@ -340,32 +340,6 @@ class ReportService
         return ResultUtil::successResult($report);
     }
 
-    /**
-     * @param Request $request
-     * @param  $content
-     * @return JsonResponse
-     * @throws \Exception
-     */
-    private function createEweCardsWithoutWorker(Request $request, $content = null)
-    {
-        $person = $this->userService->getUser();
-
-        if(!AdminValidator::isAdmin($person, AccessLevelType::ADMIN)) {
-            $person = $this->userService->getAccountOwner($request);
-        }
-
-        $location = $this->userService->getSelectedLocation($request);
-        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
-        $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
-        $content = empty($content) ? RequestUtil::getContentAsArray($request) : $content;
-
-        $report = $this->eweCardReportService->getReport($person, $location, $fileType, $content, $language);
-        if ($report instanceof Response) {
-            return $report;
-        }
-        return ResultUtil::successResult($report);
-    }
-
 
     /**
      * @param Request $request

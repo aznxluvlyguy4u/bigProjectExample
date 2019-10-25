@@ -90,8 +90,8 @@
             {% embed "/Report/ewe_cards_parts/sub_info_page_2.html.twig" with vars %}
             {% endembed %}
 
+            {# OFFSPRINGS PAGE 2 #}
             {% if offspringCount > maxRowsPage1 %}
-                {# OFFSPRINGS PAGE 2 #}
                 {% set vars = {
                     'animal' : animal,
                     'offspringCount' : offspringCount,

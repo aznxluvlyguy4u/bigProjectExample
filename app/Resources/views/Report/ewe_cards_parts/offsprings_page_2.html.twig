@@ -23,6 +23,7 @@
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <td></td>
                                     <td colspan='3'>Gewicht</td>
                                     <td>Gem.</td>
                                     <td></td>
@@ -37,6 +38,7 @@
                                     <td>dood</td>
                                     <td>gesl.</td>
                                     <td>lamnummer</td>
+                                    <td></td>
                                     <td>geb.</td>
                                     <td>/speen</td>
                                     <td>/aflev</td>
@@ -56,6 +58,14 @@
                                     <td>{{ firstOffspring.stillborn_count }}</td>
                                     <td>{{ firstOffspring.gender_dutch }}</td>
                                     <td>{{ firstOffspring.uln_country_code ~ ' ' ~ firstOffspring.uln_number }}</td>
+                                    <td>
+                                        {% if firstOffspring.surrogate_id %}
+                                            P
+                                        {% elseif firstOffspring.lambar %}
+                                            L
+                                        {% else %}
+                                        {% endif %}
+                                    </td>
                                     <td>{{ firstOffspring.birth_weight }}</td>
                                     <td>{{ firstOffspring.weaning_weight }}</td>
                                     <td>{{ firstOffspring.delivery_weight }}</td>
@@ -90,6 +100,7 @@
                                     <td>dood</td>
                                     <td>gesl.</td>
                                     <td>lamnummer</td>
+                                    <td></td>
                                     <td>geb.</td>
                                     <td>/speen</td>
                                     <td>/aflev</td>
@@ -119,6 +130,14 @@
                                         <td>{{ firstOfLitter == true ? offspring.stillborn_count : '' }}</td>
                                         <td>{{ offspring.gender_dutch }}</td>
                                         <td>{{ offspring.uln_country_code ~ ' ' ~ offspring.uln_number }}</td>
+                                        <td>
+                                            {% if offspring.surrogate_id %}
+                                                P
+                                            {% elseif offspring.lambar %}
+                                                L
+                                            {% else %}
+                                            {% endif %}
+                                        </td>
                                         <td>{{ offspring.birth_weight }}</td>
                                         <td>{{ offspring.weaning_weight }}</td>
                                         <td>{{ offspring.delivery_weight }}</td>
@@ -135,6 +154,7 @@
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <td></td>
                                     <td class="text-center  border-top-1">Gem.</td>
                                     <td class="border-top-1">{{ (totalBirthWeight / offspringCount) | number_format(1) }}</td>
                                     <td class="border-top-1">{{ (totalWeaningWeight / offspringCount) | number_format(1) }}</td>
@@ -146,7 +166,7 @@
                                 </tr>
 
                                 <tr>
-                                    <td colspan="5">L = Lambar, P = Pleegmoeder</td>
+                                    <td colspan="6">L = Lambar, P = Pleegmoeder</td>
                                     <td class="text-center">Tot.</td>
                                     <td></td>
                                     <td></td>
