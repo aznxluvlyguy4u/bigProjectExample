@@ -44,12 +44,25 @@
                 {% set totalPricePerKg = totalPricePerKg + offspring.price_per_kg|number_format(2) %}
             {% endfor %}
 
+            {# calc pages needed for offspring #}
             {% set maxRowsPage1 = 28 %}
+            {% set maxRowsPagex = 60 %}
+            {% set maxCombinedRowsPage1 = 25 %}
+            {% set maxCombinedRowsPagex = 57 %}
+            {% set offspringPages =  offspringCount > maxRowsPage1 ? ((offspringCount - maxRowsPage1) / maxRowsPagex) |round(0, 'ceil') : 0 %}
 
+            {# calc pages needed for treatments #}
+            {% set treatmentCount = animal.treatments|length %}
+            {% set treatmentRowsPage1 = 0 %}
+            {% set treatmentPages = 0 %}
+
+            {# page counter #}
+            {% set pageNumber = 1 %}
 
             {# HEADER INFO #}
             {% set vars = {
-                'animal' : animal
+                'animal' : animal,
+                'pageNumber' : pageNumber
             } %}
             {% embed "/Report/ewe_cards_parts/header_info.html.twig" with vars %}
             {% endembed %}
@@ -64,7 +77,7 @@
             {# OFFSPRINGS PAGE 1 #}
             {% set vars = {
                 'animal' : animal,
-                'showAverage' : offspringCount < maxRowsPage1,
+                'showAverage' : offspringCount <= maxRowsPage1,
                 'offspringCount' : offspringCount,
                 'totalBirthWeight' : totalBirthWeight,
                 'totalWeaningWeight' : totalWeaningWeight,
@@ -76,49 +89,131 @@
             } %}
             {% embed "/Report/ewe_cards_parts/offsprings_page_1.html.twig" with vars %}
             {% endembed %}
-        </div>
-
-        {# NEXT PAGE BREAK #}
-        <div style="page-break-after: always"></div>
-
-        <div class="container p-2">
-
-            {# SUB INFO #}
-            {% set vars = {
-                'animal' : animal
-            } %}
-            {% embed "/Report/ewe_cards_parts/sub_info_page_2.html.twig" with vars %}
-            {% endembed %}
-
-            {# OFFSPRINGS PAGE 2 #}
-            {% if offspringCount > maxRowsPage1 %}
-                {% set vars = {
-                    'animal' : animal,
-                    'offspringCount' : offspringCount,
-                    'totalBirthWeight' : totalBirthWeight,
-                    'totalWeaningWeight' : totalWeaningWeight,
-                    'totalDeliveryWeight' : totalDeliveryWeight,
-                    'totalAverageGrowth' : totalAverageGrowth,
-                    'totalSaldo' : totalSaldo,
-                    'totalPricePerKg' : totalPricePerKg,
-                    'maxRowsPage1' : maxRowsPage1
-                } %}
-                {% embed "/Report/ewe_cards_parts/offsprings_page_2.html.twig" with vars %}
-                {% endembed %}
-            {% endif %}
 
             {# TREATMENTS #}
-            {% set vars = {
-                'animal' : animal,
-                'showBorderTop' : offspringCount < maxRowsPage1
-            } %}
-            {% embed "/Report/ewe_cards_parts/treatment_info.html.twig" with vars %}
-            {% endembed %}
+            {% if offspringCount < maxCombinedRowsPage1 %}
+
+                {# recalc remaning treatment pages #}
+                {% set treatmentRowsPage1 = maxCombinedRowsPage1 - offspringCount %}
+                {% set treatmentPages =  treatmentCount > treatmentRowsPage1 ? ((treatmentCount - treatmentRowsPage1) / maxRowsPagex) |round(0, 'ceil') : 0 %}
+
+                {% set vars = {
+                    'animal' : animal,
+                    'offset' : 0,
+                    'limit' : treatmentRowsPage1,
+                    'showBorderTop' : false
+                } %}
+                {% embed "/Report/ewe_cards_parts/treatment_info.html.twig" with vars %}
+                {% endembed %}
+
+            {% endif %}
 
         </div>
 
         {# NEXT PAGE BREAK #}
         <div style="page-break-after: always"></div>
+
+
+        {# SECOND PAGE #}
+        {% if offspringPages > 0 %}
+            {% for page in 1..offspringPages %}
+
+                {# calc offset per page and remainingOffsprings #}
+                {% set offset = (maxRowsPage1 + ((page-1) * maxRowsPagex)) %}
+                {% set remainingOffsprings = animal.offspring|length - offset %}
+                {% set pageNumber = pageNumber + 1 %}
+
+                <div class="container p-2">
+
+                    {# SUB INFO #}
+                    {% set vars = {
+                        'animal' : animal,
+                        'pageNumber' : pageNumber
+                    } %}
+                    {% embed "/Report/ewe_cards_parts/sub_info_page_2.html.twig" with vars %}
+                    {% endembed %}
+
+                    {# OFFSPRINGS PAGE x #}
+                    {% set vars = {
+                        'animal' : animal,
+                        'offspringCount' : offspringCount,
+                        'totalBirthWeight' : totalBirthWeight,
+                        'totalWeaningWeight' : totalWeaningWeight,
+                        'totalDeliveryWeight' : totalDeliveryWeight,
+                        'totalAverageGrowth' : totalAverageGrowth,
+                        'totalSaldo' : totalSaldo,
+                        'totalPricePerKg' : totalPricePerKg,
+                        'maxRowsPage1' : maxRowsPage1,
+                        'maxRowsPagex' : maxRowsPagex,
+                        'page': page,
+                        'loop': loop,
+                        'offset': offset
+                    } %}
+                    {% embed "/Report/ewe_cards_parts/offsprings_page_2.html.twig" with vars %}
+                    {% endembed %}
+
+                    {# TREATMENTS #}
+                    {% if remainingOffsprings < maxCombinedRowsPagex and loop.last %}
+
+                        {# recalc remaning treatment pages #}
+                        {% set treatmentRowsPage1 = maxCombinedRowsPagex - remainingOffsprings %}
+                        {% set treatmentPages =  treatmentCount > treatmentRowsPage1 ? ((treatmentCount - treatmentRowsPage1) / maxRowsPagex) |round(0, 'ceil') : 0 %}
+
+                        {% set vars = {
+                            'animal' : animal,
+                            'offset' : 0,
+                            'limit' : treatmentRowsPage1,
+                            'showBorderTop' : false
+                        } %}
+                        {% embed "/Report/ewe_cards_parts/treatment_info.html.twig" with vars %}
+                        {% endembed %}
+
+                    {% endif %}
+
+                </div>
+
+                {# NEXT PAGE BREAK #}
+                <div style="page-break-after: always"></div>
+
+            {% endfor %}
+        {% endif %}
+
+        {# SHOW REMAINING TREATMENTS IF ANY #}
+        {% if treatmentPages > 0 %}
+            {% for page in 1..treatmentPages %}
+
+                {# calc offset per page and remainingOffsprings #}
+                {% set offset = (treatmentRowsPage1 + ((page-1) * maxRowsPagex)) %}
+                {% set remainingOffsprings = animal.offspring|length - offset %}
+                {% set pageNumber = pageNumber + 1 %}
+
+                <div class="container p-2">
+
+                    {# SUB INFO #}
+                    {% set vars = {
+                        'animal' : animal,
+                        'pageNumber' : pageNumber
+                    } %}
+                    {% embed "/Report/ewe_cards_parts/sub_info_page_2.html.twig" with vars %}
+                    {% endembed %}
+
+                    {# REMAINING TREATMENTS #}
+                    {% set vars = {
+                        'animal' : animal,
+                        'offset' : offset,
+                        'limit' : maxRowsPagex,
+                        'showBorderTop' : true
+                    } %}
+                    {% embed "/Report/ewe_cards_parts/treatment_info.html.twig" with vars %}
+                    {% endembed %}
+
+                </div>
+
+                {# NEXT PAGE BREAK #}
+                <div style="page-break-after: always"></div>
+
+            {% endfor %}
+        {% endif %}
 
     {% endfor %}
 

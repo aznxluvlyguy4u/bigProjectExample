@@ -17,18 +17,10 @@
                         <table class="w-100 border-0 px-0 py-0 mb-1">
                             <thead>
                                 <tr class="text-nowrap">
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
+                                    <td colspan="7"></td>
                                     <td colspan='3'>Gewicht</td>
                                     <td>Gem.</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
+                                    <td colspan="3"></td>
                                 </tr>
 
                                 <tr class="text-nowrap">
@@ -37,8 +29,7 @@
                                     <td>geb.</td>
                                     <td>dood</td>
                                     <td>gesl.</td>
-                                    <td>lamnummer</td>
-                                    <td></td>
+                                    <td colspan="2">lamnummer</td>
                                     <td>geb.</td>
                                     <td>/speen</td>
                                     <td>/aflev</td>
@@ -74,8 +65,8 @@
                                     <td>{{ firstOffspring.saldo }}</td>
                                     <td>{{ firstOffspring.price_per_kg }}</td>
                                 </tr>
-
                             </tbody>
+
                         </table>
                     </div>
                 </div>
@@ -99,8 +90,7 @@
                                     <td>geb.</td>
                                     <td>dood</td>
                                     <td>gesl.</td>
-                                    <td>lamnummer</td>
-                                    <td></td>
+                                    <td colspan="2">lamnummer</td>
                                     <td>geb.</td>
                                     <td>/speen</td>
                                     <td>/aflev</td>
@@ -115,7 +105,8 @@
                                 {% set currentDateOfBirth = null %}
                                 {% set firstOfLitter = false %}
 
-                                {% for offspring in animal.offspring|slice(maxRowsPage1, (animal.offspring|length + 1)) %}
+                                {# LOOP THROUGH ANIMAL OFFSPRINGS #}
+                                {% for offspring in animal.offspring|slice(offset, maxRowsPagex) %}
                                     {% if offspring.dd_mm_yyyy_date_of_birth != currentDateOfBirth %}
                                         {% set currentDateOfBirth = offspring.dd_mm_yyyy_date_of_birth %}
                                         {% set firstOfLitter = true %}
@@ -148,34 +139,27 @@
                                     </tr>
                                 {% endfor %}
 
-                                <tr class="pt-3 text-nowrap">
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td class="text-center  border-top-1">Gem.</td>
-                                    <td class="border-top-1">{{ (totalBirthWeight / offspringCount) | number_format(1) }}</td>
-                                    <td class="border-top-1">{{ (totalWeaningWeight / offspringCount) | number_format(1) }}</td>
-                                    <td class="border-top-1">{{ (totalDeliveryWeight / offspringCount) | number_format(1) }}</td>
-                                    <td class="border-top-1">{{ (totalAverageGrowth / offspringCount) | number_format(0) }}</td>
-                                    <td class="border-top-1"></td>
-                                    <td class="border-top-1">{{ (totalSaldo / offspringCount) | number_format(2) }}</td>
-                                    <td class="border-top-1">{{ (totalPricePerKg / offspringCount) | number_format(2) }}</td>
-                                </tr>
+                                {# AVERAGES #}
+                                {% if loop.last %}
+                                    <tr class="pt-3 text-nowrap">
+                                        <td colspan="5"></td>
+                                        <td colspan="2" class="text-center  border-top-1">Gem.</td>
+                                        <td class="border-top-1">{{ (totalBirthWeight / offspringCount) | number_format(1) }}</td>
+                                        <td class="border-top-1">{{ (totalWeaningWeight / offspringCount) | number_format(1) }}</td>
+                                        <td class="border-top-1">{{ (totalDeliveryWeight / offspringCount) | number_format(1) }}</td>
+                                        <td colspan="2" class="border-top-1">{{ (totalAverageGrowth / offspringCount) | number_format(0) }}</td>
+                                        <td class="border-top-1">{{ (totalSaldo / offspringCount) | number_format(2) }}</td>
+                                        <td class="border-top-1">{{ (totalPricePerKg / offspringCount) | number_format(2) }}</td>
+                                    </tr>
 
-                                <tr>
-                                    <td colspan="6">L = Lambar, P = Pleegmoeder</td>
-                                    <td class="text-center">Tot.</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td>{{ totalSaldo | number_format(2) }}</td>
-                                    <td></td>
-                                </tr>
+                                    {# FOOTER #}
+                                    <tr>
+                                        <td colspan="5">L = Lambar, P = Pleegmoeder</td>
+                                        <td colspan="2" class="text-center">Tot.</td>
+                                        <td colspan="5"></td>
+                                        <td colspan="2">{{ totalSaldo | number_format(2) }}</td>
+                                    </tr>
+                                {% endif %}
 
                             </tbody>
                         </table>

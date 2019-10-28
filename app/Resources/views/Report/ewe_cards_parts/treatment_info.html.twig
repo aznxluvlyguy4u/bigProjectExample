@@ -28,12 +28,10 @@
                                 </tr>
                             </thead>
 
-                            {% set firstTreatment = (animal.treatments | first) %}
-
                             <tbody>
-                                {% for treatment in animal.treatments %}
+                                {% for treatment in animal.treatments|slice(offset, limit) %}
 
-                                    <tr class="height-0">
+                                    <tr class="height-0 text-nowrap">
                                         <td>{{ treatment.treatment_date }}</td>
                                         <td>{{ treatment.category }}</td>
                                         <td>{{ treatment.sub_category }}</td>
@@ -72,9 +70,9 @@
 
                             <tbody>
 
-                                {% for treatment in animal.treatments %}
+                                {% for treatment in animal.treatments|slice(offset, limit) %}
 
-                                    <tr>
+                                    <tr class="text-nowrap">
                                         <td>{{ treatment.treatment_date }}</td>
                                         <td>{{ treatment.category }}</td>
                                         <td>{{ treatment.sub_category }}</td>
