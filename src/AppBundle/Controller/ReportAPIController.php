@@ -737,15 +737,29 @@ class ReportAPIController extends APIController {
      *     {
      *        "name"="company_id",
      *        "dataType"="string",
-     *        "required"=true,
-     *        "description"="companyId of a company",
+     *        "required"=false,
+     *        "description"="companyId of a company. If parameter is missing then data for all companies is returned",
      *        "format"="?company_id=03379d8ae801f4c48b9497e65dcc28275c09cd0a"
+     *     },
+     *     {
+     *        "name"="start_date",
+     *        "dataType"="date",
+     *        "required"=true,
+     *        "description"="minimum creationDate of company notes",
+     *        "format"="?start_date=2017-01-02"
+     *     },
+     *     {
+     *        "name"="end_date",
+     *        "dataType"="date",
+     *        "required"=true,
+     *        "description"="maximum creationDate of company notes",
+     *        "format"="?end_date=2018-02-03"
      *     },
      *     {
      *        "name"="file_type",
      *        "dataType"="string",
      *        "required"=false,
-     *        "description"="Choose file type, csv or pdf, for report output. CSV is default",
+     *        "description"="Only csv is allowed and is the default is this query parameter is missing",
      *        "format"="?file_type=csv"
      *     }
      *   },

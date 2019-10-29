@@ -26,6 +26,8 @@ class CsvFromSqlResultsWriterService
     const NEW_LINE = "\n";
     const BOOLEAN_NULL_REPLACEMENT_VALUE = null;
 
+    const DATA_IS_EMPTY_ERROR = "DATA IS EMPTY";
+
     /** @var ObjectManager|EntityManagerInterface */
     private $em;
     /** @var Connection */
@@ -264,7 +266,7 @@ class CsvFromSqlResultsWriterService
         }
 
         if ($isDataMissing) {
-            throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
+            throw new \Exception(self::DATA_IS_EMPTY_ERROR, Response::HTTP_NOT_FOUND);
         }
     }
 
