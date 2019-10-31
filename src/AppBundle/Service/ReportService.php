@@ -23,6 +23,7 @@ use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
 use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
+use AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
@@ -118,6 +119,9 @@ class ReportService
     /** @var PopRepInputFileService */
     private $popRepInputFileService;
 
+    /** @var AnimalFeaturesPerYearOfBirthReportService */
+    private $animalFeaturesPerYearOfBirthReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -136,6 +140,7 @@ class ReportService
      * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
      * @param PopRepInputFileService $popRepInputFileService
+     * @param AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -153,7 +158,8 @@ class ReportService
         ClientNotesOverviewReportService $clientNotesOverviewReportService,
         InbreedingCoefficientReportService $inbreedingCoefficientReportService,
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
-        PopRepInputFileService $popRepInputFileService
+        PopRepInputFileService $popRepInputFileService,
+        AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
     )
     {
         $this->em = $em;
@@ -172,6 +178,7 @@ class ReportService
         $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
         $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
         $this->popRepInputFileService = $popRepInputFileService;
+        $this->animalFeaturesPerYearOfBirthReportService = $animalFeaturesPerYearOfBirthReportService;
     }
 
     /**
@@ -428,6 +435,43 @@ class ReportService
             ],
             $request,ReportType::OFFSPRING, $inputForHash
         );
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createAnimalFeaturesPerYearOfBirthReport(Request $request)
+    {
+        /** @var Location $location */
+        $location = null;
+
+        // not admin
+        if ($this->userService->isRequestFromUserFrontend($request)) {
+            $location = $this->userService->getSelectedLocation($request);
+            NullChecker::checkLocation($location);
+        }
+
+        $yearOfBirth = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR_OF_BIRTH, null);
+
+        if (!$yearOfBirth) {
+            return ResultUtil::errorResult('Invalid year of birth', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
+
+        $ubn = is_null($location) ? "" : $location->getUbn();
+        $inputForHash = $yearOfBirth . $ubn;
+
+        return $this->processReportAsWorkerTask(
+            [
+                'year_of_birth' => $yearOfBirth,
+                'concat_value_and_accuracy' => $concatValueAndAccuracy
+            ],
+            $request,ReportType::ANIMAL_FEATURES_PER_YEAR_OF_BIRTH, $inputForHash
+        );
+//        return $this->animalFeaturesPerYearOfBirthReportService->getReport($yearOfBirth, $location, $concatValueAndAccuracy);
     }
 
     /**

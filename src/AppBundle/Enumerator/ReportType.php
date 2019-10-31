@@ -29,7 +29,7 @@ class ReportType
     const ANIMAL_HEALTH_STATUSES = 13; # Report number 11
     const QUICK_VIEW_KPIS = 14; # Report number 21
     const COMPANY_REGISTER = 15; # Report number 22
-    const MARKS_PER_ANIMAL_PER_BIRTH_YEAR = 16; # Report number 16
+    const ANIMAL_FEATURES_PER_YEAR_OF_BIRTH = 16; # Report number 16
     const CLIENT_NOTES_OVERVIEW = 17; # Report number 18
     const STAR_EWES = 18; # Report number 13
     const COMBI_FORMS_VKI_AND_TRANSPORT_DOCUMENTS = 19; # Report number 24
