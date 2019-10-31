@@ -975,12 +975,12 @@ LEFT JOIN (
                   aa.pedigree_register_abbreviation as ".$this->translateColumnHeader('pedigree_register').",
                   dad.stn as ".$this->translateColumnHeader('f_stn').",
                   mom.stn as ".$this->translateColumnHeader('m_stn').",
-                  CASE WHEN a.surrogate_id IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('surrogate mother').",
+                  CASE WHEN a.surrogate_id IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('surrogate_mother').",
                   a.lambar as ".$this->translateColumnHeader('lambar').",
                   c.birth_weight as ".$this->translateColumnHeader('birth_weight').",
                   $selectBirthProgress as ".$this->translateColumnHeader('birth_progress').",
                   aa.tail_length as ".$this->translateColumnHeader('tail_length').",
-                  EXTRACT(YEAR FROM AGE(NOW(), a.date_of_birth)) as ".$this->translateColumnHeader('age in years').",
+                  EXTRACT(YEAR FROM AGE(NOW(), a.date_of_birth)) as ".$this->translateColumnHeader('age_in_years').",
                   
                   -- aantal worpen ontbreekt
                   9 as litter_nummer,
@@ -1005,9 +1005,9 @@ LEFT JOIN (
                   2020-02-02 as ".$this->translateColumnHeader('scan_date').",
                   
                   -- vader gescand logic unsure
-                  CASE WHEN dad.muscle_thickness IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('father scanned').",
+                  CASE WHEN dad.muscle_thickness IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('father_scanned').",
                   -- vader gescand logic unsure
-                  CASE WHEN mom.muscle_thickness IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('mother scanned').",
+                  CASE WHEN mom.muscle_thickness IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('mother_scanned').",
                   
                   aa.skull as ".$this->translateColumnHeader('skull').",
                   aa.progress as ".$this->translateColumnHeader('progress').",
@@ -1062,9 +1062,11 @@ LEFT JOIN (
     public function getAnimalFeaturesPerYearOfBirthReportBooleanColumns()
     {
         return [
-            $this->translateColumnHeader('surrogate mother'),
+            $this->translateColumnHeader('surrogate_mother'),
             $this->translateColumnHeader('lambar'),
-            $this->translateColumnHeader('scanned')
+            $this->translateColumnHeader('scanned'),
+            $this->translateColumnHeader('mother_scanned'),
+            $this->translateColumnHeader('father_scanned'),
         ];
     }
 

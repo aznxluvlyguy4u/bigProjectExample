@@ -3,10 +3,10 @@
 
 namespace AppBundle\Service\Report;
 
-
-use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Util\ReportUtil;
 use AppBundle\Util\ResultUtil;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -42,7 +42,7 @@ class AnimalFeaturesPerYearOfBirthReportService extends ReportServiceWithBreedVa
                 true,
                 true
             );
-            $this->filename = $this->translate(self::FILENAME);
+            $this->filename = $this->getAnimalFeaturesPerYearOfBirthFileName($location);
             $this->extension = FileType::CSV;
 
             return $this->generateCsvFileBySqlQuery(
@@ -54,5 +54,12 @@ class AnimalFeaturesPerYearOfBirthReportService extends ReportServiceWithBreedVa
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
         }
+    }
+
+    private function getAnimalFeaturesPerYearOfBirthFileName($location): string {
+        $ubn = is_null($location) ? "" : $location->getUbn() . '_';
+        return ReportUtil::translateFileName($this->translator, self::FILENAME)
+            . '_'. $ubn .
+            ReportUtil::translateFileName($this->translator, TranslationKey::GENERATED_ON);
     }
 }

@@ -471,7 +471,6 @@ class ReportService
             ],
             $request,ReportType::ANIMAL_FEATURES_PER_YEAR_OF_BIRTH, $inputForHash
         );
-//        return $this->animalFeaturesPerYearOfBirthReportService->getReport($yearOfBirth, $location, $concatValueAndAccuracy);
     }
 
     /**
