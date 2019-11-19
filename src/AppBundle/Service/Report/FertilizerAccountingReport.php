@@ -18,6 +18,39 @@ use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Background information
+ *
+ * https://www.rvo.nl/onderwerpen/agrarisch-ondernemen/mestbeleid/mest/gebruiksnormen/veelgestelde-vragen
+ *
+ * animalsCountMonthlyFirstDay = animals for every first day of the month (for the previous 12 months)
+ * animalsCountYearlyAverage = SUM (animalsCountMonthlyFirstDay) / 12
+ *
+ * stikstofCorrectie = animalsCountYearlyAverage_per_category * phosphateCorrection_per_category
+ *
+ *
+ * Forfaitaire stikstof- en fosfaatgehalten in dierlijke mest 2019-2021
+ * https://www.rvo.nl/sites/default/files/2018/01/Tabel-5-Forfaitaire-stikstof-en-fosfaatgehalten-in-dierlijke-mest-2018.pdf
+ *
+ * Tabel Diergebonden forfaitaire gehalten 2019-2021
+ * https://www.rvo.nl/sites/default/files/2019/01/Tabel-4-Diergebonden-forfaitaire-gehalten%202019-2021.pdf
+ *
+ * Schaap 55
+ *  Type | Categorie                                | excretie m^3 | kg stikstof | kg fosfaat |
+ *   550 | Schapen voor de vlees- en melkproductie  |     0.5      |     9.9     |     3.3    |
+ *   551 | Vleesschapen                             |     0.15     |     0.9     |     0.3    |
+ *   552 | Opfokooien                               |      -       |     7.2     |     2.2    |
+ *
+ * Type 550
+ * Schapen voor de vlees- en melkproductie (alle vrouwelijke schapen die ten minste eenmaal hebben gelammerd, inclusief
+ * alle schapen tot ca. 4 maanden, voor zover gehouden op het bedrijf waar deze schapen geboren zijn en rammen)
+ *
+ * Type 551
+ * Vleesschapen tot ca. 4 maanden, gehouden op bedrijven waar ze niet zijn geboren
+ *
+ * Type 552
+ * Opfokooien, weideschapen en vleesschapen van ca. 4 maanden en ouder
+ */
 class FertilizerAccountingReport extends ReportServiceBase
 {
     const TITLE = 'fertilizer_accounting';
