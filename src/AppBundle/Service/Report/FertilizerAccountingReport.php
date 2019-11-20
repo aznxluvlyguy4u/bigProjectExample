@@ -11,6 +11,8 @@ use AppBundle\Enumerator\FertilizerCategory;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\DateUtil;
+use AppBundle\Util\DsvWriterUtil;
+use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
@@ -91,15 +93,18 @@ class FertilizerAccountingReport extends ReportServiceBase
             $this->setFileAndFolderNames();
 
             $sql = $this->query();
+            $data = $this->em->getConnection()->query($sql)->fetch();
+
             if ($this->extension === FileType::PDF) {
-                $data = $this->em->getConnection()->query($sql)->fetch();
                 return $this->getPdfReport($data);
             } else {
-                return $this->generateCsvFileBySqlQuery(
-                    $this->getFilename(),
-                    $sql,
-                    []
-                );
+                return $this->createCsvReport($data);
+
+//                return $this->generateCsvFileBySqlQuery(
+//                    $this->getFilename(),
+//                    $sql,
+//                    []
+//                );
             }
 
             throw new \Exception('INVALID FILE TYPE', Response::HTTP_PRECONDITION_REQUIRED);
@@ -131,6 +136,77 @@ class FertilizerAccountingReport extends ReportServiceBase
         $this->folderName = self::FOLDER_NAME;
         $this->filename = $this->translateColumnHeader(self::FILENAME).'-'.$this->getUbn()
             .'__'.$this->newestReferenceDateString.'--'.$this->oldestReferenceDateString.'_'.$this->translateColumnHeader('GENERATED ON');
+    }
+
+
+    private function createCsvReport(array $data) {
+        $csvFormattedData = [];
+
+        $yearlyDateRange = $this->oldestReferenceDateString.' => '.$this->newestReferenceDateString;
+
+        $typeKey = 'type';
+        $timespan = $this->trans('TIMESPAN');
+        $numberKey = '#';
+        $referenceDateKey = strtolower($this->trans('REFERENCE DATE'));
+
+        $yearTranslation = strtolower($this->trans('YEAR'));
+        $monthTranslation = strtolower($this->trans('MONTH'));
+        $animalCountTranslation = strtolower($this->trans('ANIMAL COUNT'));
+
+        $csvFormattedData[] = [
+            $numberKey => 0,
+            $timespan => $yearTranslation,
+            $typeKey => $animalCountTranslation,
+            $referenceDateKey => $yearlyDateRange,
+            FertilizerCategory::_550 => $data[$this->yearlyAverageCountKey(FertilizerCategory::_550)],
+            FertilizerCategory::_551 => $data[$this->yearlyAverageCountKey(FertilizerCategory::_551)],
+            FertilizerCategory::_552 => $data[$this->yearlyAverageCountKey(FertilizerCategory::_552)],
+        ];
+
+        $csvFormattedData[] = [
+            $numberKey => 0,
+            $timespan => $yearTranslation,
+            $typeKey => strtolower($this->trans('NITROGEN')).' (kg)',
+            $referenceDateKey => $yearlyDateRange,
+            FertilizerCategory::_550 => $data[$this->yearlyNitrogenKey(FertilizerCategory::_550)],
+            FertilizerCategory::_551 => $data[$this->yearlyNitrogenKey(FertilizerCategory::_551)],
+            FertilizerCategory::_552 => $data[$this->yearlyNitrogenKey(FertilizerCategory::_552)],
+        ];
+
+        $csvFormattedData[] = [
+            $numberKey => 0,
+            $timespan => $yearTranslation,
+            $typeKey => strtolower($this->trans('PHOSPHATE')).' (kg)',
+            $referenceDateKey => $yearlyDateRange,
+            FertilizerCategory::_550 => $data[$this->yearlyPhosphateKey(FertilizerCategory::_550)],
+            FertilizerCategory::_551 => $data[$this->yearlyPhosphateKey(FertilizerCategory::_551)],
+            FertilizerCategory::_552 => $data[$this->yearlyPhosphateKey(FertilizerCategory::_552)],
+        ];
+
+        foreach ($this->referenceDateStringsByMonth as $month => $referenceDate) {
+            $csvFormattedData[] = [
+                $numberKey => $month,
+                $timespan => $monthTranslation,
+                $typeKey => $animalCountTranslation,
+                $referenceDateKey => $data[$this->monthKey($month)],
+                FertilizerCategory::_550 => $data[$this->monthlyCountKey($month,FertilizerCategory::_550)],
+                FertilizerCategory::_551 => $data[$this->monthlyCountKey($month,FertilizerCategory::_551)],
+                FertilizerCategory::_552 => $data[$this->monthlyCountKey($month,FertilizerCategory::_552)],
+            ];
+        }
+        $filepath = $this->getFertilizerAccountingFilepath();
+        DsvWriterUtil::writeNestedRecordToFile($csvFormattedData, $filepath);
+        $this->deactivateColumnHeaderTranslation();
+
+        return $this->uploadReportFileToS3($filepath);
+    }
+
+    /**
+     * @return string
+     */
+    private function getFertilizerAccountingFilepath()
+    {
+        return FilesystemUtil::concatDirAndFilename($this->getCacheSubFolder(),$this->getFilename());
     }
 
 
@@ -294,6 +370,10 @@ class FertilizerAccountingReport extends ReportServiceBase
         return $categoryLabel."_".$category."_".$monthLabel."_".$month."_".$countLabel;
     }
 
+    private function monthKey(int $month): string {
+        return "month_".$month;
+    }
+
     /**
      * @return string
      * @throws \Exception
@@ -353,27 +433,39 @@ class FertilizerAccountingReport extends ReportServiceBase
         $result = "";
         foreach ($this->referenceDateStringsByMonth as $month => $referenceDateString) {
             $referenceDate = (new \DateTime($referenceDateString))->format(DateUtil::DATE_USER_DISPLAY_FORMAT);
-            $result .= "'$referenceDate' as month_$month".SqlUtil::SELECT_ROW_SEPARATOR;
+            $result .= "'$referenceDate' as ".$this->monthKey($month).SqlUtil::SELECT_ROW_SEPARATOR;
         }
         return $result;
     }
 
+    private function yearlyAverageCountKey(int $fertilizerCategory): string {
+        return "yearly_".$fertilizerCategory."_average";
+    }
+
     private function averageCountSelect(int $fertilizerCategory): string {
-        return SqlUtil::ROUND_PREFIX . $this->averageSelectPart($fertilizerCategory).",".self::ANIMAL_COUNT_DECIMAL_PRECISION.") as yearly_".$fertilizerCategory."_average,
+        return SqlUtil::ROUND_PREFIX . $this->averageSelectPart($fertilizerCategory).",".self::ANIMAL_COUNT_DECIMAL_PRECISION.") as ".$this->yearlyAverageCountKey($fertilizerCategory).",
         ";
+    }
+
+    private function yearlyPhosphateKey(int $fertilizerCategory): string {
+        return "yearly_".$fertilizerCategory."_phosphate_kg";
     }
 
     private function phosphateSelect(int $fertilizerCategory): string {
         return SqlUtil::ROUND_PREFIX . $this->averageSelectPart($fertilizerCategory)." * ".
             self::getPhosphateKgFlatRateExcretionStandard($fertilizerCategory)
-            .",".self::PHOSPHATE_DECIMAL_PRECISION.") as yearly_".$fertilizerCategory."_phosphate_kg,
+            .",".self::PHOSPHATE_DECIMAL_PRECISION.") as ".$this->yearlyPhosphateKey($fertilizerCategory).",
             ";
+    }
+
+    private function yearlyNitrogenKey(int $fertilizerCategory): string {
+        return "yearly_".$fertilizerCategory."_nitrogen_kg";
     }
 
     private function nitrogenSelect(int $fertilizerCategory): string {
         return SqlUtil::ROUND_PREFIX . $this->averageSelectPart($fertilizerCategory)." * ".
             self::getNitrogenKgFlatRateExcretionStandard($fertilizerCategory)
-            .",".self::NITROGEN_DECIMAL_PRECISION.") as yearly_".$fertilizerCategory."_nitrogen_kg,
+            .",".self::NITROGEN_DECIMAL_PRECISION.") as ".$this->yearlyNitrogenKey($fertilizerCategory).",
             ";
     }
 
