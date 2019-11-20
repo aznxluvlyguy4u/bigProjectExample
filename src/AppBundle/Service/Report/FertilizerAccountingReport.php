@@ -6,6 +6,7 @@ namespace AppBundle\Service\Report;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FertilizerCategory;
 use AppBundle\Enumerator\FileType;
@@ -13,6 +14,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\ReportUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
@@ -80,6 +82,11 @@ class FertilizerAccountingReport extends ReportServiceBase
     /** @var array */
     private $referenceDateStringsByMonth = [];
 
+    public function validateReferenceDate(\DateTime $referenceDate) {
+        ReportUtil::validateDateIsNotOlderThanOldestAutomatedSync($referenceDate, TranslationKey::REFERENCE_DATE, $this->translator);
+        ReportUtil::validateDateIsNotInTheFuture($referenceDate, TranslationKey::REFERENCE_DATE, $this->translator);
+    }
+
     /**
      * @inheritDoc
      */
@@ -99,12 +106,6 @@ class FertilizerAccountingReport extends ReportServiceBase
                 return $this->getPdfReport($data);
             } else {
                 return $this->createCsvReport($data);
-
-//                return $this->generateCsvFileBySqlQuery(
-//                    $this->getFilename(),
-//                    $sql,
-//                    []
-//                );
             }
 
             throw new \Exception('INVALID FILE TYPE', Response::HTTP_PRECONDITION_REQUIRED);

@@ -557,6 +557,8 @@ class ReportService
 
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
+        $this->fertilizerAccountingReport->validateReferenceDate($referenceDate);
+        
         if ($processAsWorkerTask) {
             return $this->processReportAsWorkerTask(
                 [
