@@ -26,6 +26,7 @@ use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
+use AppBundle\Service\Report\FertilizerAccountingReport;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
@@ -118,6 +119,9 @@ class ReportService
     /** @var PopRepInputFileService */
     private $popRepInputFileService;
 
+    /** @var FertilizerAccountingReport */
+    private $fertilizerAccountingReport;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -136,6 +140,7 @@ class ReportService
      * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
      * @param PopRepInputFileService $popRepInputFileService
+     * @param FertilizerAccountingReport $fertilizerAccountingReport
      */
     public function __construct(
         ProducerInterface $producer,
@@ -153,7 +158,8 @@ class ReportService
         ClientNotesOverviewReportService $clientNotesOverviewReportService,
         InbreedingCoefficientReportService $inbreedingCoefficientReportService,
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
-        PopRepInputFileService $popRepInputFileService
+        PopRepInputFileService $popRepInputFileService,
+        FertilizerAccountingReport $fertilizerAccountingReport
     )
     {
         $this->em = $em;
@@ -172,6 +178,7 @@ class ReportService
         $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
         $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
         $this->popRepInputFileService = $popRepInputFileService;
+        $this->fertilizerAccountingReport = $fertilizerAccountingReport;
     }
 
     /**
@@ -548,12 +555,21 @@ class ReportService
         $referenceDateString = $referenceDate->format('y-m-d H:i:s');
         $inputForHash = $referenceDateString;
 
-        return $this->processReportAsWorkerTask(
-            [
-                'reference_date' => $referenceDateString,
-            ],
-            $request,ReportType::FERTILIZER_ACCOUNTING, $inputForHash
-        );
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'reference_date' => $referenceDateString,
+                ],
+                $request,ReportType::FERTILIZER_ACCOUNTING, $inputForHash
+            );
+        }
+
+        $location = $this->userService->getSelectedLocation($request);
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+
+        return $this->fertilizerAccountingReport->getReport($location, $referenceDate, $fileType);
     }
 
     /**

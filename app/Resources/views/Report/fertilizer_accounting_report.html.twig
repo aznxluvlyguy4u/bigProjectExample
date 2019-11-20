@@ -4,8 +4,7 @@
 
     <!-- set variables -->
     {% set date = variables.date %}
-    {% set months = variables.months %}
-    {% set totals = variables.totals %}
+    {% set values = variables.values %}
     {% set ubn = variables.ubn %}
     {% set footnote = variables.footnote %}
     {% set columnHeaders = variables.columnHeaders %}
@@ -49,21 +48,78 @@
                 </tr>
             </thead>
             <tbody>
-
-
-            {% for firstDateStringOfMonth, records in months %}
                 <tr>
-                    <td>
-                        {{ firstDateStringOfMonth }}
-                    </td>
-                    {% for animalCategory, animalCount in records %}
-                            <td>
-                                {{ animalCount }}
-                            </td>
-                    {% endfor %}
+                    <td>{{ values.month_1 }}</td>
+                    <td>{{ values.category_550_month_1_count }}</td>
+                    <td>{{ values.category_551_month_1_count }}</td>
+                    <td>{{ values.category_552_month_1_count }}</td>
                 </tr>
-            {% endfor %}
-
+                <tr>
+                    <td>{{ values.month_2 }}</td>
+                    <td>{{ values.category_550_month_2_count }}</td>
+                    <td>{{ values.category_551_month_2_count }}</td>
+                    <td>{{ values.category_552_month_2_count }}</td>
+                </tr>
+                <tr>
+                    <td>{{ values.month_3 }}</td>
+                    <td>{{ values.category_550_month_3_count }}</td>
+                    <td>{{ values.category_551_month_3_count }}</td>
+                    <td>{{ values.category_552_month_3_count }}</td>
+                </tr>
+                <tr>
+                    <td>{{ values.month_4 }}</td>
+                    <td>{{ values.category_550_month_4_count }}</td>
+                    <td>{{ values.category_551_month_4_count }}</td>
+                    <td>{{ values.category_552_month_4_count }}</td>
+                </tr>
+                <tr>
+                    <td>{{ values.month_5 }}</td>
+                    <td>{{ values.category_550_month_5_count }}</td>
+                    <td>{{ values.category_551_month_5_count }}</td>
+                    <td>{{ values.category_552_month_5_count }}</td>
+                </tr>
+                <tr>
+                    <td>{{ values.month_6 }}</td>
+                    <td>{{ values.category_550_month_6_count }}</td>
+                    <td>{{ values.category_551_month_6_count }}</td>
+                    <td>{{ values.category_552_month_6_count }}</td>
+                </tr>
+                <tr>
+                    <td>{{ values.month_7 }}</td>
+                    <td>{{ values.category_550_month_7_count }}</td>
+                    <td>{{ values.category_551_month_7_count }}</td>
+                    <td>{{ values.category_552_month_7_count }}</td>
+                </tr>
+                <tr>
+                    <td>{{ values.month_8 }}</td>
+                    <td>{{ values.category_550_month_8_count }}</td>
+                    <td>{{ values.category_551_month_8_count }}</td>
+                    <td>{{ values.category_552_month_8_count }}</td>
+                </tr>
+                <tr>
+                    <td>{{ values.month_9 }}</td>
+                    <td>{{ values.category_550_month_9_count }}</td>
+                    <td>{{ values.category_551_month_9_count }}</td>
+                    <td>{{ values.category_552_month_9_count }}</td>
+                </tr>
+                <tr>
+                    <td>{{ values.month_10 }}</td>
+                    <td>{{ values.category_550_month_10_count }}</td>
+                    <td>{{ values.category_551_month_10_count }}</td>
+                    <td>{{ values.category_552_month_10_count }}</td>
+                </tr>
+                <tr>
+                    <td>{{ values.month_11 }}</td>
+                    <td>{{ values.category_550_month_11_count }}</td>
+                    <td>{{ values.category_551_month_11_count }}</td>
+                    <td>{{ values.category_552_month_11_count }}</td>
+                </tr>
+                <tr>
+                    <td>{{ values.month_12 }}</td>
+                    <td>{{ values.category_550_month_12_count }}</td>
+                    <td>{{ values.category_551_month_12_count }}</td>
+                    <td>{{ values.category_552_month_12_count }}</td>
+                </tr>
             </tbody>
         </table>
 
@@ -84,26 +140,52 @@
             </thead>
             <tbody>
 
-            {% for animalCategory, records in totals %}
                 <tr>
-                    <td>
-                        {{ animalCategory }}
-                    </td>
-                    {% for key, value in records %}
-                        <td>
-                            {#{{ key }} : {{ value }}#} {# DEACTIVATE THIS TO TEST IF THE DATA MATCHES THE COLUMN HEADERS #}
-                            {{ value }}
-                        </td>
-                    {% endfor %}
+                    <td>550</td>
+                    <td>{{ values.yearly_550_average }}</td>
+                    <td>{{ values.yearly_550_nitrogen_kg }}</td>
+                    <td>{{ values.yearly_550_phosphate_kg }}</td>
                 </tr>
-            {% endfor %}
+                <tr>
+                    <td>551</td>
+                    <td>{{ values.yearly_551_average }}</td>
+                    <td>{{ values.yearly_551_nitrogen_kg }}</td>
+                    <td>{{ values.yearly_551_phosphate_kg }}</td>
+                </tr>
+                <tr>
+                    <td>552</td>
+                    <td>{{ values.yearly_552_average }}</td>
+                    <td>{{ values.yearly_552_nitrogen_kg }}</td>
+                    <td>{{ values.yearly_552_phosphate_kg }}</td>
+                </tr>
 
             </tbody>
         </table>
 
         <hr>
 
-        <p class="info">{{ variables.footnote }}</p>
+        <div>
+            <h3 class="category-title">Toelichting diercategorieën</h3>
+            <div class="category-description">
+                <h4>Diercategorie 550</h4>
+                <p>Schapen voor de vlees- en melkproductie
+                    (alle vrouwelijke schapen die ten minste eenmaal hebben gelammerd,
+                    inclusief alle schapen tot ca. 4 maanden, voor zover gehouden
+                    op het bedrijf waar deze schapen geboren zijn en rammen van minimaal 1 jaar oud).</p>
+            </div>
+            <div class="category-description">
+                <h4>Diercategorie 551</h4>
+                <p>Vleesschapen tot ca. 4 maanden, gehouden op bedrijven waar ze niet zijn geboren.</p>
+            </div>
+            <div class="category-description">
+                <h4>Diercategorie 552</h4>
+                <p>Alle dieren (opfokooien, weideschapen en vleesschapen) van ca. 4 maanden en ouder die niet in categorie 550 of 551 vallen.</p>
+            </div>
+
+        </div>
+        <div class="info">
+            <p>{{ variables.footnote }}</p>
+        </div>
 
     </div>
 
@@ -169,9 +251,25 @@
         }
 
         .info {
-            position: absolute;
             left: 6cm;
-            width: 60%;
+            margin-top: 50px;
+            width: 100%;
+        }
+
+        .category-title {
+            text-align: center;
+        }
+
+        .category-description {
+            left: 6cm;
+            width: 100%;
+            margin-top: 0px;
+        }
+
+        .category-description h4 {
+            line-height: 100%;
+            margin-top: 10px;
+            margin-bottom: 10px;
         }
 
         .legend-container .info p span {

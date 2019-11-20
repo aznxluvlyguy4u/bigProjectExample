@@ -642,6 +642,7 @@ services:
           - '@app.report.inbreeding_coefficient'
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\PopRepInputFileService'
+          - '@AppBundle\Service\Report\FertilizerAccountingReport'
 
 
     AppBundle\Processor\ReportProcessor:

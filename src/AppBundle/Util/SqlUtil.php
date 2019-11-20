@@ -31,6 +31,9 @@ class SqlUtil
     const DATE_FORMAT = 'Y-m-d';
     const TO_CHAR_DATE_FORMAT = 'DD-MM-YYYY';
 
+    const SELECT_ROW_SEPARATOR = ",
+               ";
+    const ROUND_PREFIX = "ROUND(";
 
     /**
      * @param Connection $conn
