@@ -57,12 +57,12 @@ class InbreedingCoefficientUpdaterService
 
     /**
      * @param array|ParentIdsPair[] $parentIdsPairs
-     * @param bool $regenerate
+     * @param bool $recalculate
      * @param bool $findGlobalMatch
      */
     private function generateInbreedingCoefficientBase(
         array $parentIdsPairs,
-        bool $regenerate = false,
+        bool $recalculate = false,
         bool $findGlobalMatch = false
     ) {
         $this->resetCounts();
@@ -75,7 +75,7 @@ class InbreedingCoefficientUpdaterService
         foreach ($parentIdsPairs as $parentIdsPair) {
             $this->generateInbreedingCoefficientForPair(
                 $parentIdsPair,
-                $regenerate,
+                $recalculate,
                 $findGlobalMatch
             );
 
@@ -102,7 +102,7 @@ class InbreedingCoefficientUpdaterService
 
     private function generateInbreedingCoefficientForPair(
         ParentIdsPair $parentIdsPairs,
-        bool $regenerate = false,
+        bool $recalculate = false,
         bool $findGlobalMatch = false
     ) {
         $ramId = $parentIdsPairs->getRamId();
@@ -114,7 +114,7 @@ class InbreedingCoefficientUpdaterService
         $pairExists = $this->inbreedingCoefficientRepository->exists($ramId, $eweId);
 
         if ($pairExists) {
-            if ($regenerate) {
+            if ($recalculate) {
                 $updateExisting = true;
             }
         } else {
@@ -127,11 +127,17 @@ class InbreedingCoefficientUpdaterService
 
             $inbreedingCoefficient = $this->inbreedingCoefficientRepository->findByPair($ramId, $eweId);
             if ($inbreedingCoefficient) {
-                $inbreedingCoefficient
-                    ->setValue($value)
-                    ->setFindGlobalMatches($findGlobalMatch)
-                    ->refreshUpdatedAt();
-                $this->em->persist($inbreedingCoefficient);
+                // only update if values have changed
+                if (!$inbreedingCoefficient->equalsPrimaryVariableValues(
+                    $findGlobalMatch,
+                    $value
+                )) {
+                    $inbreedingCoefficient
+                        ->setValue($value)
+                        ->setFindGlobalMatches($findGlobalMatch)
+                        ->refreshUpdatedAt();
+                    $this->em->persist($inbreedingCoefficient);
+                }
             } else {
                 $createNew = true;
             }

@@ -4,6 +4,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\NumberUtil;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -320,5 +321,12 @@ class InbreedingCoefficient
         return $this->updatedAt;
     }
 
-
+    public function equalsPrimaryVariableValues(
+        bool $isFindGlobalMatches,
+        float $value
+    ): bool
+    {
+        return $this->isFindGlobalMatches() === $isFindGlobalMatches &&
+            NumberUtil::areFloatsEqual($value, $this->getValue());
+    }
 }
