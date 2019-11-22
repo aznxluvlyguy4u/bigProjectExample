@@ -483,6 +483,9 @@ services:
     AppBundle\Service\Report\OffspringReportService:
         parent: app.report.breedvalues.base
 
+    AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService:
+        parent: app.report.breedvalues.base
+
     app.report.pedigree_certificates:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeCertificateReportService
@@ -643,10 +646,12 @@ services:
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\FertilizerAccountingReport'
+          - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
 
 
     AppBundle\Processor\ReportProcessor:
         arguments:
+          - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
