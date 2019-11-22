@@ -78,14 +78,14 @@ class InbreedingCoefficient
 
     /**
      * @var boolean
-     * @ORM\Column(type="boolean", options={"default":false})
+     * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
      * @Assert\NotBlank
      */
     private $recalculate;
 
     /**
      * @var boolean
-     * @ORM\Column(type="boolean", options={"default":false})
+     * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
      * @Assert\NotBlank
      */
     private $findGlobalMatches;
