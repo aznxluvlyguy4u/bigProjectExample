@@ -201,11 +201,55 @@ class InbreedingCoefficientUpdaterService
     }
 
     public function matchAnimals($animalIds) {
-        // TODO
+        // TODO apply animalIds filter
+
+        // TODO Apply LIMIT and process per batch like for BreedValues
+
+        $sql = "UPDATE animal SET
+                  inbreeding_coefficient_id = v.inbreeding_coefficient_id,
+                  inbreeding_coefficient_match_updated_at = NOW()
+                FROM (
+                         SELECT
+                             animal.id,
+                             ic.id
+                         FROM inbreeding_coefficient ic
+                                  INNER JOIN (
+                             SELECT
+                                 id,
+                                 parent_mother_id,
+                                 parent_father_id
+                             FROM animal
+                             WHERE parent_father_id NOTNULL AND parent_mother_id NOTNULL
+                               AND inbreeding_coefficient_match_updated_at ISNULL
+                         )animal ON animal.parent_father_id = ic.ram_id AND animal.parent_mother_id = ic.ewe_id
+                ) as v(animal_id, inbreeding_coefficient_id)
+                WHERE animal.id = v.animal_id;";
     }
 
     public function matchLitters($litterIds) {
-        // TODO
+        // TODO apply $litterIds filter
+
+        // TODO Apply LIMIT and process per batch like for BreedValues
+
+        $sql = "UPDATE litter SET
+                  inbreeding_coefficient_id = v.inbreeding_coefficient_id,
+                  inbreeding_coefficient_match_updated_at = NOW()
+                FROM (
+                         SELECT
+                             litter.id,
+                             ic.id
+                         FROM inbreeding_coefficient ic
+                                  INNER JOIN (
+                             SELECT
+                                 id,
+                                 animal_father_id,
+                                 animal_mother_id
+                             FROM litter
+                             WHERE animal_father_id NOTNULL AND animal_mother_id NOTNULL
+                               AND inbreeding_coefficient_match_updated_at ISNULL
+                         )litter ON litter.animal_father_id = ic.ram_id AND litter.animal_mother_id = ic.ewe_id
+                ) as v(litter_id, inbreeding_coefficient_id)
+                WHERE litter.id = v.litter_id;";
     }
 
     public function matchAnimalsGlobal() {
