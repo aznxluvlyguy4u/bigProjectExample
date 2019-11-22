@@ -1156,6 +1156,11 @@ services:
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
 
+    AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+
     AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor
         parent: app.abstract_base.direct_processor

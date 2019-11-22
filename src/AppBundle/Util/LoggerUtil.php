@@ -3,6 +3,7 @@
 
 namespace AppBundle\Util;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Monolog\Logger;
 
 /**
@@ -34,5 +35,18 @@ class LoggerUtil
     {
         $logger->notice(sprintf(self::OVERWRITE_FORMAT, self::OVERWRITE_ARGS));
         $logger->notice($line);
+    }
+
+
+    /**
+     * @param LoggerInterface $logger
+     * @param string $line
+     */
+    public static function overwriteDebugLoggerInterface(LoggerInterface $logger, $line)
+    {
+        $logger->debug(
+            sprintf(self::OVERWRITE_FORMAT,self::OVERWRITE_ARGS)
+        );
+        $logger->debug($line);
     }
 }

@@ -11,6 +11,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\Locale;
 use AppBundle\Report\InbreedingCoefficientReportData;
+use AppBundle\Setting\InbreedingCoefficientSetting;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
@@ -21,9 +22,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class InbreedingCoefficientReportService extends ReportServiceBase
 {
-    const GENERATION_OF_ASCENDANTS = 7;
-    const MAX_GENERATION_OF_ASCENDANTS = 8;
-
     const TITLE = 'inbreeding coefficient report';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
@@ -172,12 +170,12 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         $input = $this->content->get(JsonInputConstant::GENERATIONS);
         if (is_int($input) || ctype_digit($input)) {
             $this->generationOfAscendants = intval($input);
-            if ($this->generationOfAscendants > self::MAX_GENERATION_OF_ASCENDANTS) {
+            if ($this->generationOfAscendants > InbreedingCoefficientSetting::MAX_GENERATION_OF_ASCENDANTS) {
                 $this->inputErrors[] = $this->translateErrorMessages(self::MAX_GENERATIONS_LIMIT_EXCEEDED);
                 return;
             }
         } else {
-            $this->generationOfAscendants = self::GENERATION_OF_ASCENDANTS;
+            $this->generationOfAscendants = InbreedingCoefficientSetting::DEFAULT_GENERATION_OF_ASCENDANTS;
         }
     }
 
