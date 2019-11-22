@@ -13,7 +13,20 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * Class InbreedingCoefficient
  * @ORM\Table(name="inbreeding_coefficient",indexes={
- *     @ORM\Index(name="inbreeding_coefficient_idx", columns={"ram_id", "ewe_id", "pair_id"})
+ *     @ORM\Index(
+ *          name="inbreeding_coefficient_idx",
+ *          columns={"ram_id", "ewe_id", "pair_id"}
+ *     ),
+ *     @ORM\Index(
+ *          name="inbreeding_coefficient_find_global_matches_idx",
+ *          columns={"ram_id", "ewe_id", "pair_id"},
+ *          options={"where": "find_global_matches"}
+ *     ),
+ *     @ORM\Index(
+ *          name="inbreeding_coefficient_recalculate_idx",
+ *          columns={"ram_id", "ewe_id", "pair_id"},
+ *          options={"where": "recalculate"}
+ *     )
  * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\InbreedingCoefficientRepository")
  * @package AppBundle\Entity
@@ -71,6 +84,13 @@ class InbreedingCoefficient
     private $recalculate;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", options={"default":false})
+     * @Assert\NotBlank
+     */
+    private $findGlobalMatches;
+
+    /**
      * @var ArrayCollection|Animal[]
      *
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="inbreedingCoefficient", fetch="EXTRA_LAZY")
@@ -103,6 +123,7 @@ class InbreedingCoefficient
     public function __construct()
     {
         $this->recalculate = false;
+        $this->findGlobalMatches = false;
         $this->refreshUpdatedAt();
         $this->animals = new ArrayCollection();
         $this->litters = new ArrayCollection();
@@ -211,6 +232,24 @@ class InbreedingCoefficient
     public function setRecalculate(bool $recalculate): InbreedingCoefficient
     {
         $this->recalculate = $recalculate;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFindGlobalMatches(): bool
+    {
+        return $this->findGlobalMatches;
+    }
+
+    /**
+     * @param bool $findGlobalMatches
+     * @return InbreedingCoefficient
+     */
+    public function setFindGlobalMatches(bool $findGlobalMatches): InbreedingCoefficient
+    {
+        $this->findGlobalMatches = $findGlobalMatches;
         return $this;
     }
 
