@@ -175,7 +175,7 @@ class InbreedingCoefficientReportData extends ReportBase
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = $this->getPedigreeString($eweArray);
 
             $inbreedingCoefficientResult = new InbreedingCoefficientOffspring($this->em,
-                $this->ramData, $eweArray, [], [], [], $this->parentAscendants);
+                $this->ramData, $eweArray, [], [], $this->parentAscendants);
 
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT] = $inbreedingCoefficientResult->getValue();
         }

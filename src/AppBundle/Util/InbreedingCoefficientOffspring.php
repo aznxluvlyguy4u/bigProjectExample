@@ -57,11 +57,10 @@ class InbreedingCoefficientOffspring
      * @param array $eweData
      * @param array $parentSearchArray
      * @param array $childrenSearchArray
-     * @param array $animalDataById
      * @param array $ascendants
      */
     public function __construct(ObjectManager $em, $ramData, $eweData, $parentSearchArray = [], $childrenSearchArray = [],
-                                $animalDataById, $ascendants = [])
+                                $ascendants = [])
     {
         $this->em = $em;
         $this->animalRepository = $em->getRepository(Animal::class);
@@ -287,9 +286,8 @@ class InbreedingCoefficientOffspring
                             $this->em,
                             $this->animalDataById[$animalId],
                             $this->parentSearchArray,
-                            $this->childrenSearchArray,
-                            $this->animalDataById
-                    );
+                            $this->childrenSearchArray
+                        );
                     $this->commonAncestorsInbreedingCoefficient[$animalId] = $commonAncestorInbreedingCoefficientResult->getValue();
                 }
             }
@@ -392,15 +390,14 @@ class InbreedingCoefficient
      * @param array $animalData
      * @param array $parentSearchArray
      * @param array $childrenSearchArray
-     * @param array $animalDataById
      */
-    public function __construct(ObjectManager $em, $animalData, $parentSearchArray, $childrenSearchArray, $animalDataById)
+    public function __construct(ObjectManager $em, $animalData, $parentSearchArray, $childrenSearchArray)
     {
         $ramData = ArrayUtil::get('father', $animalData, []);
         $eweData = ArrayUtil::get('mother', $animalData, []);
 
         $this->inbreedingCoefficientOffspring = new InbreedingCoefficientOffspring($em, $ramData, $eweData,
-            $parentSearchArray, $childrenSearchArray, $animalDataById);
+            $parentSearchArray, $childrenSearchArray);
     }
 
     /**
