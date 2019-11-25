@@ -36,7 +36,7 @@ class InbreedingCoefficientRepository extends BaseRepository {
 
     /**
      * @param array|ParentIdsPair[] $parentIdsPairs
-     * @return array
+     * @return array|InbreedingCoefficient[]
      */
     function findByPairs(array $parentIdsPairs): array
     {
@@ -60,5 +60,13 @@ class InbreedingCoefficientRepository extends BaseRepository {
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @param int
+     * @return array|ParentIdsPair[]
+     */
+    function findParentIdsPairsWithMissingInbreedingCoefficient(int $limit): array {
+
     }
 }

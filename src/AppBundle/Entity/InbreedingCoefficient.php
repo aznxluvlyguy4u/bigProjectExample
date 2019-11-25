@@ -22,11 +22,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          name="inbreeding_coefficient_find_global_matches_idx",
  *          columns={"ram_id", "ewe_id", "pair_id"},
  *          options={"where": "find_global_matches"}
- *     ),
- *     @ORM\Index(
- *          name="inbreeding_coefficient_recalculate_idx",
- *          columns={"ram_id", "ewe_id", "pair_id"},
- *          options={"where": "recalculate"}
  *     )
  * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\InbreedingCoefficientRepository")
@@ -82,13 +77,6 @@ class InbreedingCoefficient
      * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
      * @Assert\NotBlank
      */
-    private $recalculate;
-
-    /**
-     * @var boolean
-     * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
-     * @Assert\NotBlank
-     */
     private $findGlobalMatches;
 
     /**
@@ -123,7 +111,6 @@ class InbreedingCoefficient
      */
     public function __construct()
     {
-        $this->recalculate = false;
         $this->findGlobalMatches = false;
         $this->refreshUpdatedAt();
         $this->animals = new ArrayCollection();
@@ -215,24 +202,6 @@ class InbreedingCoefficient
     public function setValue(float $value): InbreedingCoefficient
     {
         $this->value = $value;
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isRecalculate(): bool
-    {
-        return $this->recalculate;
-    }
-
-    /**
-     * @param bool $recalculate
-     * @return InbreedingCoefficient
-     */
-    public function setRecalculate(bool $recalculate): InbreedingCoefficient
-    {
-        $this->recalculate = $recalculate;
         return $this;
     }
 
