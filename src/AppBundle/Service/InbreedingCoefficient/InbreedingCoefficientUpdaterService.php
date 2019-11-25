@@ -21,7 +21,7 @@ use Psr\Log\LoggerInterface;
 
 class InbreedingCoefficientUpdaterService
 {
-    private const BATCH_SIZE = 25;
+    private const BATCH_SIZE = 10;
 
     /** @var EntityManagerInterface */
     private $em;
@@ -52,10 +52,6 @@ class InbreedingCoefficientUpdaterService
     }
 
 
-    public static function getParentPairs() {
-        // TODO entities or just ids?
-    }
-
     private function resetCounts() {
         $this->newCount = 0;
         $this->updateCount = 0;
@@ -68,16 +64,20 @@ class InbreedingCoefficientUpdaterService
      * @param array|ParentIdsPair[] $parentIdsPairs
      * @param bool $recalculate
      * @param bool $findGlobalMatch
+     * @param bool $isPartOfParentLoop
      */
     private function generateInbreedingCoefficientBase(
         array $parentIdsPairs,
         bool $recalculate = false,
-        bool $findGlobalMatch = false
+        bool $findGlobalMatch = false,
+        bool $isPartOfParentLoop = false
     ) {
-        $this->resetCounts();
+        if (!$isPartOfParentLoop) {
+            $this->resetCounts();
+        }
 
         if (empty($parentIdsPairs)) {
-            $this->logger->debug('No parentIdsPairs found, thus no inbreedcoefficients processed');
+            $this->logger->debug('No parentIdsPairs found, thus no inbreeding coefficients processed');
             return;
         }
 
@@ -96,7 +96,10 @@ class InbreedingCoefficientUpdaterService
         }
         $this->em->flush();
         $this->writeBatchCount();
-        $this->resetCounts();
+
+        if (!$isPartOfParentLoop) {
+            $this->resetCounts();
+        }
     }
 
     private function writeBatchCount() {
@@ -361,11 +364,34 @@ class InbreedingCoefficientUpdaterService
         }
     }
 
-    public function generateForAllAnimals() {
-        // TODO
+    public function generateForAllAnimalsAndLitters() {
+        $this->generateForAllAnimalsAndLittersBase(false);
     }
 
-    public function generateForAllLitters() {
-        // TODO
+    /**
+     * Only processed if the animal or litter records max updatedAt date is before today.
+     * This makes sure these values will be skipped if they were already processed on the same day.
+     * Which is useful if the command is rerun after a crash on the same day.
+     */
+    public function regenerateForAllAnimalsAndLitters() {
+        $maxUpdatedAt = new \DateTime('today');
+        $this->generateForAllAnimalsAndLittersBase(true, $maxUpdatedAt);
+    }
+
+    private function generateForAllAnimalsAndLittersBase(bool $recalculate, ?\DateTime $maxUpdatedAt = null) {
+        $this->resetCounts();
+        do {
+            if ($recalculate) {
+                $parentIdsPairs = $this->inbreedingCoefficientRepository->findParentIdsPairsBeforeMaxInbreedingCoefficientUpdatedAt(self::BATCH_SIZE, $maxUpdatedAt);
+            } else {
+                $parentIdsPairs = $this->inbreedingCoefficientRepository->findParentIdsPairsWithMissingInbreedingCoefficient(self::BATCH_SIZE);
+            }
+            $this->generateInbreedingCoefficientBase($parentIdsPairs, $recalculate,true, true);
+
+            $this->matchAnimalsAndLittersGlobal();
+
+        } while(!empty($parentIdsPairs));
+        $this->writeBatchCount();
+        $this->resetCounts();
     }
 }

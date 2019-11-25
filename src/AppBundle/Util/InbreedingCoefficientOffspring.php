@@ -182,28 +182,42 @@ class InbreedingCoefficientOffspring
             return;
         }
 
+        $dateOfBirthKey = PedigreeUtil::DATE_OF_BIRTH_SELECT_KEY;
+        $motherKey = 'mother';
+        $fatherKey = 'father';
+
         $animalId = ArrayUtil::get('id', $ascendantsSet, null);
+        $animalDateOfBirth = ArrayUtil::getDateFromString($dateOfBirthKey, $ascendantsSet, null);
 
         if (is_int($animalId) && is_array($ascendantsSet)) {
             if (!key_exists($animalId, $this->animalDataById)) {
 
                 foreach (array_keys($ascendantsSet) as $key) {
-                    if ($key !== 'father' && $key !== 'mother') {
+                    if ($key !== $fatherKey && $key !== $motherKey) {
                         $this->animalDataById[$animalId][$key] = $ascendantsSet[$key];
                     }
                 }
             }
         }
 
-        foreach (['father','mother'] as $parentKey) {
+        foreach ([$fatherKey, $motherKey] as $parentKey) {
 
             $parentArray = ArrayUtil::get($parentKey, $ascendantsSet, []);
             $parentId = ArrayUtil::get('id', $parentArray);
 
-            $this->addToChildrenSearchArrays($animalId, $parentId);
-            $this->addToParentsSearchArrays($animalId, $parentId);
+            $parentDateOfBirth = ArrayUtil::getDateFromString(PedigreeUtil::DATE_OF_BIRTH_SELECT_KEY, $parentArray, null);
 
-            $this->fillAnimalByIdAndChildrenAndParentSearchArrays($parentArray);
+            /**
+             * NOTE!
+             * If the parent is younger than the child, this is not a valid parent!
+             * These fake parents have to be excluded from the search data, to prevent infinite loops!
+             */
+            if ($animalDateOfBirth > $parentDateOfBirth) {
+                $this->addToChildrenSearchArrays($animalId, $parentId);
+                $this->addToParentsSearchArrays($animalId, $parentId);
+
+                $this->fillAnimalByIdAndChildrenAndParentSearchArrays($parentArray);
+            }
         }
     }
 

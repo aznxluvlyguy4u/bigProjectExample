@@ -21,7 +21,7 @@ class ArrayUtil
     private static $nestedKey;
 
     /**
-     * Get null checked value value from an array
+     * Get null checked value from an array
      * 
      * @param $key
      * @param array $array
@@ -36,6 +36,25 @@ class ArrayUtil
             }
         }
         return $nullReplacement;
+    }
+
+
+    /**
+     * Get null checked DateTime value created from a string value from an array
+     *
+     * @param $key
+     * @param array $array
+     * @param \DateTime|null $nullReplacement
+     * @return \DateTime|null
+     */
+    public static function getDateFromString($key, array $array, ?\DateTime $nullReplacement = null): ?\DateTime
+    {
+        $value = self::get($key, $array, $nullReplacement);
+        if (empty($value)) {
+            return $nullReplacement;
+        } else {
+            return new \DateTime($value);
+        }
     }
 
 
