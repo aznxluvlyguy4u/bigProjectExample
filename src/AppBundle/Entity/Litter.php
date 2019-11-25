@@ -858,4 +858,11 @@ class Litter extends DeclareNsfoBase
         }
         return $animalIds;
     }
+
+
+    public function getChildrenIds(): array {
+        return array_map(function(Animal $animal) {
+            return $animal->getId();
+        }, $this->children->toArray());
+    }
 }

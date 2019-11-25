@@ -799,6 +799,9 @@ services:
           - method: setInternalQueueService
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
+          - method: setInbreedingCoefficientUpdaterService
+            arguments:
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
 
     app.breed_type:
         parent: app.abstract_base.controller
