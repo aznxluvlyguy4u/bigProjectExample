@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\model\ParentIdsPair;
+
 /**
  * Class InbreedingCoefficientRepository
  * @package AppBundle\Entity
@@ -21,14 +23,42 @@ class InbreedingCoefficientRepository extends BaseRepository {
     }
 
     /**
-     * @param int $ramId
-     * @param int $eweId
+     * @param ParentIdsPair $parentIdsPair
      * @return InbreedingCoefficient|null
      */
-    function findByPair(int $ramId, int $eweId): ?InbreedingCoefficient {
+    function findByPair(ParentIdsPair $parentIdsPair): ?InbreedingCoefficient
+    {
         return $this->findOneBy([
-           'ram' => $ramId,
-           'ewe' => $eweId
+           'ram' => $parentIdsPair->getRamId(),
+           'ewe' => $parentIdsPair->getEweId()
         ]);
+    }
+
+    /**
+     * @param array|ParentIdsPair[] $parentIdsPairs
+     * @return array
+     */
+    function findByPairs(array $parentIdsPairs): array
+    {
+        if (empty($parentIdsPairs)) {
+            return [];
+        }
+
+        $qb = $this->getManager()->createQueryBuilder();
+
+        $qb
+            ->select('i')
+            ->from (InbreedingCoefficient::class, 'i');
+
+        foreach ($parentIdsPairs as $parentIdsPair) {
+            $qb->orWhere($qb->expr()->andX(
+                $qb->expr()->andX(
+                    $qb->expr()->eq('i.ram', $parentIdsPair->getRamId()),
+                    $qb->expr()->eq('i.ewe', $parentIdsPair->getEweId())
+                )
+            ));
+        }
+
+        return $qb->getQuery()->getResult();
     }
 }
