@@ -505,6 +505,10 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\InbreedingCoefficientReportService
         lazy: true
+        calls:
+          - method: setInbreedingCoefficientUpdaterService
+            arguments:
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
 
     AppBundle\Service\Report\FertilizerAccountingReport:
         parent: app.report.base

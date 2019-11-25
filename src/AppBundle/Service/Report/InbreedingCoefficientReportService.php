@@ -7,17 +7,21 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\InbreedingCoefficient;
+use AppBundle\Entity\InbreedingCoefficientRepository;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\Locale;
+use AppBundle\model\ParentIdsPair;
 use AppBundle\Report\InbreedingCoefficientReportData;
-use AppBundle\Setting\InbreedingCoefficientSetting;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class InbreedingCoefficientReportService extends ReportServiceBase
@@ -46,8 +50,6 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     const EWE_FOUND_BUT_NOT_EWE = 'STUD EWE: ANIMAL WAS FOUND FOR GIVEN ULN, BUT WAS NOT AN EWE ENTITY';
     const EWE_NOT_OF_CLIENT     = 'STUD EWE: FOUND EWE DOES NOT BELONG TO CLIENT';
 
-    const MAX_GENERATIONS_LIMIT_EXCEEDED     = 'MAX GENERATIONS LIMIT OF 8 EXCEEDED';
-
     //Validation
     const MAX_EWES_COUNT = 50; // -1 = no limit, also update error message when updating max count
     const EWES_COUNT_EXCEEDS_MAX = 'THE AMOUNT OF SELECTED EWES EXCEEDED 50';
@@ -59,8 +61,11 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     private $ramData;
     /** @var array */
     private $ewesData;
-    /** @var int */
-    private $generationOfAscendants;
+
+    /** @var InbreedingCoefficientUpdaterService */
+    private $inbreedingCoefficientUpdaterService;
+    /** @var ParentIdsPair[]|array */
+    private $parentIdsPairs;
 
     /** @var InbreedingCoefficientReportData */
     private $reportResults;
@@ -80,6 +85,13 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         Locale::NL => 'inteeltcoeffient rapportage',
     ];
 
+    /**
+     * @param InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService
+     */
+    public function setInbreedingCoefficientUpdaterService(InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService)
+    {
+        $this->inbreedingCoefficientUpdaterService = $inbreedingCoefficientUpdaterService;
+    }
 
     /**
      * @param Person $person
@@ -104,8 +116,12 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         $this->setFileName();
         $this->setFolderName();
 
-        $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->translator, $this->ramData, $this->ewesData,
-            $this->generationOfAscendants, $this->client);
+        $this->generateAndRetrieveInbreedingCoefficients();
+        $existingInbreedingCoefficients = $this->getExistingInbreedingCoefficients();
+
+        $this->reportResults = new InbreedingCoefficientReportData($this->em, $this->translator, $this->ramData,
+            $this->ewesData, $existingInbreedingCoefficients,
+            $this->client);
 
         if ($fileType === FileType::CSV) {
             return $this->getCsvReport();
@@ -137,6 +153,44 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     }
 
 
+    private function generateAndRetrieveInbreedingCoefficients(int $loopCount = 0)
+    {
+        $maxTries = 5;
+
+        try {
+            $existingInbreedingCoefficients = $this->getExistingInbreedingCoefficients();
+
+            /** @var int[]|array $inbreedingCoefficientKeys */
+            $inbreedingCoefficientKeys = array_map(function(InbreedingCoefficient $inbreedingCoefficient) {
+                return $inbreedingCoefficient->getPairId();
+            }, $existingInbreedingCoefficients);
+
+            $pairsWithoutInbreedingCoefficient = [];
+            foreach ($this->parentIdsPairs as $parentIdsPair) {
+                $inbreedingCoefficientKey = InbreedingCoefficient::generatePairId($parentIdsPair->getRamId(), $parentIdsPair->getEweId());
+                if (!in_array($parentIdsPair, $inbreedingCoefficientKeys) && !key_exists($inbreedingCoefficientKey, $pairsWithoutInbreedingCoefficient)) {
+                    $pairsWithoutInbreedingCoefficient[$inbreedingCoefficientKey] = $parentIdsPair;
+                }
+            }
+
+            $this->inbreedingCoefficientUpdaterService->generateInbreedingCoefficients($pairsWithoutInbreedingCoefficient,false);
+        } catch (UniqueConstraintViolationException $exception) {
+            if ($loopCount <= $maxTries) {
+                $this->generateAndRetrieveInbreedingCoefficients(++$loopCount);
+            }
+        }
+    }
+
+
+    /**
+     * @return array|InbreedingCoefficient[]
+     */
+    private function getExistingInbreedingCoefficients(): array {
+        /** @var InbreedingCoefficientRepository $inbreedingCoefficientRepository */
+        $inbreedingCoefficientRepository = $this->em->getRepository(InbreedingCoefficient::class);
+        return $inbreedingCoefficientRepository->findByPairs($this->parentIdsPairs);
+    }
+
 
     private function retrieveAndValidateInput()
     {
@@ -161,24 +215,23 @@ class InbreedingCoefficientReportService extends ReportServiceBase
 
 
         $this->validateEwesArray($ewesArray);
-        $this->validateGenerations();
+
+        $this->setParentIdsPairs();
     }
 
 
-    private function validateGenerations()
-    {
-        $input = $this->content->get(JsonInputConstant::GENERATIONS);
-        if (is_int($input) || ctype_digit($input)) {
-            $this->generationOfAscendants = intval($input);
-            if ($this->generationOfAscendants > InbreedingCoefficientSetting::MAX_GENERATION_OF_ASCENDANTS) {
-                $this->inputErrors[] = $this->translateErrorMessages(self::MAX_GENERATIONS_LIMIT_EXCEEDED);
-                return;
+    private function setParentIdsPairs() {
+        $this->parentIdsPairs = [];
+        $ramId = $this->ramData['id'];
+        foreach ($this->ewesData as $eweData) {
+            $eweId = $eweData['id'];
+            $key = $ramId . '-' . $eweId;
+            if (key_exists($key, $this->parentIdsPairs)) {
+                continue;
             }
-        } else {
-            $this->generationOfAscendants = InbreedingCoefficientSetting::DEFAULT_GENERATION_OF_ASCENDANTS;
+            $this->parentIdsPairs[] = new ParentIdsPair($ramId, $eweId);
         }
     }
-
 
 
     /**

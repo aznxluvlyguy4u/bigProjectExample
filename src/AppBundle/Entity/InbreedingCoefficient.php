@@ -167,7 +167,7 @@ class InbreedingCoefficient
         return $this;
     }
 
-    private static function generatePairId(int $ramId, int $eweId): string {
+    public static function generatePairId(int $ramId, int $eweId): string {
         return $ramId . '-' . $eweId;
     }
 
