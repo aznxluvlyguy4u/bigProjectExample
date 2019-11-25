@@ -610,6 +610,37 @@ class SqlUtil
     }
 
     /**
+     * @param array $values
+     * @param array $valueIsBetweenSingleQuotationMarksArray
+     * @param bool $valueIsBetweenSingleQuotationMarksDefault
+     * @return string|null
+     */
+    public static function valueStringFromNestedArray(
+        $values = [],
+        $valueIsBetweenSingleQuotationMarksDefault = false,
+        $valueIsBetweenSingleQuotationMarksArray = []
+    )
+    {
+        if(count($values) === 0) { return null; }
+
+        $valuesString = "";
+        $setSeparator = "";
+        foreach ($values as $valueSet) {
+            $valuesString .= $setSeparator."(";
+            $valuesSeparator = "";
+            foreach ($valueSet as $key => $value) {
+                $valueIsBetweenSingleQuotationMarks = boolval(ArrayUtil::get($key, $valueIsBetweenSingleQuotationMarksArray, $valueIsBetweenSingleQuotationMarksDefault));
+                $quotationMark = $valueIsBetweenSingleQuotationMarks ? "'" : '';
+                $valuesString .= $valuesSeparator.$quotationMark.$value.$quotationMark;
+                $valuesSeparator = ',';
+            }
+            $valuesString .= ")";
+            $setSeparator = ',';
+        }
+        return $valuesString;
+    }
+
+    /**
      * @param array $dutchByEnglishValues
      * @param bool $isOnlyCapitalizeFirstLetterKey
      * @param bool $isOnlyCapitalizeFirstLetterValue
