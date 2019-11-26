@@ -177,6 +177,8 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         } catch (UniqueConstraintViolationException $exception) {
             if ($loopCount <= $maxTries) {
                 $this->generateAndRetrieveInbreedingCoefficients(++$loopCount);
+            } else {
+                throw $exception;
             }
         }
     }
