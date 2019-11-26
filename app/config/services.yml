@@ -624,6 +624,16 @@ services:
           - '@logger'
           - '@translator'
 
+    AppBundle\Service\TaskService:
+      arguments:
+        - '@enqueue.producer'
+        - '@app.serializer.base'
+        - '@doctrine.orm.entity_manager'
+        - '@app.user'
+        - '@translator'
+        - '@logger'
+        - '@AppBundle\Validation\UlnValidatorInterface'
+
     AppBundle\Service\ReportService:
         arguments:
           - '@enqueue.producer'

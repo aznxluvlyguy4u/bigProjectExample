@@ -10,12 +10,20 @@ use Doctrine\Common\Collections\Criteria;
 class UpdateAnimalDataWorkerRepository extends BaseRepository {
 
     /**
+     * @param Person $user
+     * @param Person|null $accountOwner
      * @param int|null $limit
      * @return array|mixed
      */
-    function getTasks(?int $limit = null)
+    function getTasks(Person $user, ?Person $accountOwner, ?int $limit = null)
     {
-        if ($limit < 1) {
+        if (!$user) {
+            return [];
+        }
+
+        $isAdminEnvironment = $accountOwner == null;
+
+        if ($limit && $limit < 1) {
             return [];
         }
 
