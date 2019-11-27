@@ -631,15 +631,30 @@ services:
           - '@logger'
           - '@translator'
 
+    AppBundle\Service\Task\StarEwesCalculationTaskService:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+
     AppBundle\Service\TaskService:
-      arguments:
-        - '@enqueue.producer'
-        - '@app.serializer.base'
-        - '@doctrine.orm.entity_manager'
-        - '@app.user'
-        - '@translator'
-        - '@logger'
-        - '@AppBundle\Validation\UlnValidatorInterface'
+        arguments:
+          - '@enqueue.producer'
+          - '@app.serializer.base'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@translator'
+          - '@logger'
+          - '@AppBundle\Validation\UlnValidatorInterface'
+
+    AppBundle\Processor\TaskProcessor:
+        arguments:
+          - '@AppBundle\Service\Task\StarEwesCalculationTaskService'
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '@app.serializer.base'
+        tags:
+          - {name: 'enqueue.client.processor'}
+
 
     AppBundle\Service\ReportService:
         arguments:

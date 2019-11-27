@@ -3,7 +3,6 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Service\ReportService;
 use AppBundle\Service\TaskService;
 use AppBundle\Util\ResultUtil;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -43,5 +42,31 @@ class TaskAPIController extends APIController {
     public function getTasks(Request $request)
     {
         return ResultUtil::successResult($this->get(TaskService::class)->getTasks($request));
+    }
+
+    /**
+     * Calculate star ewes.
+     *
+     * @ApiDoc(
+     *   section = "Tasks",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Start a worker task to calculate star ewes"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/star-ewes-calculation")
+     * @Method("GET")
+     */
+    public function getStarEwesCalculationTask(Request $request)
+    {
+        return $this->get(TaskService::class)->createCalculateStarEwesTask($request);
     }
 }

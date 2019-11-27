@@ -3,58 +3,21 @@
 
 namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Component\Option\BirthListReportOptions;
-use AppBundle\Component\Option\ClientNotesOverviewReportOptions;
-use AppBundle\Component\Option\CompanyRegisterReportOptions;
-use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Constant\TranslationKey;
-use AppBundle\Entity\Company;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\PedigreeRegister;
-use AppBundle\Entity\ReportWorker;
-use AppBundle\Entity\Token;
 use AppBundle\Entity\UpdateAnimalDataWorker;
 use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\JmsGroup;
-use AppBundle\Enumerator\QueryParameter;
-use AppBundle\Enumerator\ReportType;
+use AppBundle\Enumerator\UpdateType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
-use AppBundle\Exception\InvalidBreedCodeHttpException;
-use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
-use AppBundle\Service\Report\BirthListReportService;
-use AppBundle\Service\Report\ClientNotesOverviewReportService;
-use AppBundle\Service\Report\CompanyRegisterReportService;
-use AppBundle\Service\Report\InbreedingCoefficientReportService;
-use AppBundle\Service\Report\LiveStockReportService;
-use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
-use AppBundle\Service\Report\PedigreeCertificateReportService;
-use AppBundle\Service\Report\PopRepInputFileService;
-use AppBundle\Service\Report\WeightsPerYearOfBirthReportService;
-use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\BreedCodeUtil;
-use AppBundle\Util\DateUtil;
-use AppBundle\Util\NullChecker;
-use AppBundle\Util\ReportUtil;
-use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Util\StringUtil;
-use AppBundle\Util\TimeUtil;
-use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\UlnValidatorInterface;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMException;
 use Enqueue\Client\ProducerInterface;
-use Enqueue\Util\JSON;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
 class TaskService
@@ -93,7 +56,7 @@ class TaskService
     private $ulnValidator;
 
     /**
-     * ReportService constructor.
+     * TaskService constructor.
      * @param ProducerInterface $producer
      * @param BaseSerializer $serializer
      * @param EntityManager $em
@@ -133,5 +96,148 @@ class TaskService
 
         $workers = $this->em->getRepository(UpdateAnimalDataWorker::class)->getTasks($user, $accountOwner);
         return $this->serializer->getDecodedJson($workers,[JmsGroup::BASIC],true);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createCalculateStarEwesTask(Request $request)
+    {
+        if(!AdminValidator::isAdmin($this->userService->getUser(), AccessLevelType::SUPER_ADMIN)) { //validate if user is at least a SUPER_ADMIN
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $inputForHash = UpdateType::STAR_EWES;
+
+        return $this->processTaskAsWorkerTask(
+            [],
+            $request,UpdateType::STAR_EWES, $inputForHash
+        );
+    }
+
+    private function processTaskAsWorkerTask(array $messageBodyAsArray, Request $request, string $updateType, string $inputForHash)
+    {
+        $workerId = null;
+        try {
+
+            if ($this->isSimilarNonExpiredTaskAlreadyInProgress($request, $updateType, $inputForHash)) {
+                return $this->updateWorkerInProgressAlreadyExistErrorResponse();
+            }
+
+            $workerId = $this->createWorker($request, $updateType, $inputForHash);
+            if (!$workerId) {
+                return ResultUtil::errorResult('Could not create worker.', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $messageBodyAsArray['worker_id'] = $workerId;
+            $this->producer->sendCommand(WorkerAction::UPDATE_ANIMAL_DATA, $messageBodyAsArray);
+        }
+        catch(\Exception $e) {
+            $this->processWorkerError($e, $workerId);
+            return ResultUtil::internalServerError();
+        }
+        return ResultUtil::successResult('OK');
+    }
+
+    /**
+     * @param Request $request
+     * @param int $updateType
+     * @param string $inputForHash
+     * @return bool
+     * @throws \Exception
+     */
+    private function isSimilarNonExpiredTaskAlreadyInProgress(Request $request, int $updateType, string $inputForHash): bool
+    {
+        $updateWorkerHash = $this->getUpdateAnimalDataWorkerHash($request, $updateType, $inputForHash);
+
+        return $this->em->getRepository(UpdateAnimalDataWorker::class)->isSimilarNonExpiredTaskAlreadyInProgress($updateWorkerHash);
+    }
+
+    /**
+     * @return JsonResponse
+     */
+    private function updateWorkerInProgressAlreadyExistErrorResponse(): JsonResponse
+    {
+        $message = $this->translator->trans('A SIMILAR TASK IS ALREADY BEING GENERATED');
+        return ResultUtil::errorResult($message, Response::HTTP_PRECONDITION_REQUIRED);
+    }
+
+    private function createWorker(Request $request, int $updateType, $inputForHash = '') : ?int
+    {
+        try {
+            $updateWorker = new UpdateAnimalDataWorker();
+            $updateWorker->setOwner($this->userService->getAccountOwner($request));
+            $updateWorker->setActionBy($this->userService->getUser());
+            $updateWorker->setLocation($this->userService->getSelectedLocation($request));
+            $updateWorker->setUpdateType($updateType);
+            $updateWorker->setHash($this->getUpdateAnimalDataWorkerHash($request, $updateType, $inputForHash));
+
+            $this->em->persist($updateWorker);
+            $this->em->flush();
+
+            return $updateWorker->getId();
+        }
+        catch(\Exception $e) {
+            $this->logExceptionAsError($e);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param \Exception $e
+     * @param int|null $workerId
+     */
+    private function processWorkerError(\Exception $e, int $workerId = null)
+    {
+        $this->logExceptionAsError($e);
+        if ($workerId) {
+            $workerRecord = $this->em->getRepository(UpdateAnimalDataWorker::class)->find($workerId);
+            if ($workerRecord) {
+                try {
+                    $this->em->remove($workerRecord);
+                    $this->em->flush();
+                } catch (ORMException $ORMException) {
+                    $this->logExceptionAsError($ORMException);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param int $updateType
+     * @param string $inputForHash
+     * @return string
+     * @throws \Exception
+     */
+    private function getUpdateAnimalDataWorkerHash(Request $request, int $updateType, string $inputForHash): string
+    {
+        $workerType = WorkerType::UPDATE_ANIMAL_DATA;
+
+        $accountOwner = $this->userService->getAccountOwner($request);
+        $user = $this->userService->getUser();
+        $location = $this->userService->getSelectedLocation($request);
+
+        $metaDataForHash =
+            $workerType.'-'.
+            $updateType.'-'.
+            $user->getId().'-'.
+            ($accountOwner ? $accountOwner->getId() : '0').'-'.
+            ($location ? $location->getId() : '0')
+        ;
+
+        return hash('sha256', $inputForHash . $metaDataForHash);
+    }
+
+    /**
+     * @param \Exception $exception
+     */
+    public function logExceptionAsError($exception)
+    {
+        $this->logger->error($exception->getMessage());
+        $this->logger->error($exception->getTraceAsString());
     }
 }

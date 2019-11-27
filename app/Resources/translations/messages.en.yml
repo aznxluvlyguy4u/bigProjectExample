@@ -516,6 +516,7 @@ DECLARE_ARRIVAL_NOTIFICATION_MESSAGE: Automatically issued an arrival notificati
 DECLARE_DEPART_NOTIFICATION_MESSAGE: Automatically issued a departure notification
 NEW_INVOICE_NOTIFICATION_MESSAGE: U just received a new invoice
 A SIMILAR REPORT IS ALREADY BEING GENERATED: A similar report is already being generated
+A SIMILAR TASK IS ALREADY BEING GENERATED: A similar task is already being generated
 THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7: The following n-lings should have a value between 0 and 7
 SHOULD BE: should be
 
