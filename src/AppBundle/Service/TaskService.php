@@ -103,7 +103,7 @@ class TaskService
      * @return JsonResponse
      * @throws \Exception
      */
-    public function createCalculateStarEwesTask(Request $request)
+    public function createStarEwesCalculationTask(Request $request)
     {
         if(!AdminValidator::isAdmin($this->userService->getUser(), AccessLevelType::SUPER_ADMIN)) { //validate if user is at least a SUPER_ADMIN
             return AdminValidator::getStandardErrorResponse();
@@ -114,6 +114,44 @@ class TaskService
         return $this->processTaskAsWorkerTask(
             [],
             $request,UpdateType::STAR_EWES, $inputForHash
+        );
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createInbreedingCoefficientCalculationTask(Request $request)
+    {
+        if(!AdminValidator::isAdmin($this->userService->getUser(), AccessLevelType::SUPER_ADMIN)) { //validate if user is at least a SUPER_ADMIN
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $inputForHash = UpdateType::INBREEDING_COEFFICIENT_CALCULATION;
+
+        return $this->processTaskAsWorkerTask(
+            [],
+            $request,UpdateType::INBREEDING_COEFFICIENT_CALCULATION, $inputForHash
+        );
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createInbreedingCoefficientRecalculationTask(Request $request)
+    {
+        if(!AdminValidator::isAdmin($this->userService->getUser(), AccessLevelType::SUPER_ADMIN)) { //validate if user is at least a SUPER_ADMIN
+            return AdminValidator::getStandardErrorResponse();
+        }
+
+        $inputForHash = UpdateType::INBREEDING_COEFFICIENT_RECALCULATION;
+
+        return $this->processTaskAsWorkerTask(
+            [],
+            $request,UpdateType::INBREEDING_COEFFICIENT_RECALCULATION, $inputForHash
         );
     }
 

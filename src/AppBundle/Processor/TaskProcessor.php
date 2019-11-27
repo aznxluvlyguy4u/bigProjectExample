@@ -6,6 +6,7 @@ use AppBundle\Entity\UpdateAnimalDataWorker;
 use AppBundle\Enumerator\UpdateType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Service\BaseSerializer;
+use AppBundle\Service\Task\InbreedingCoefficientCalculationTaskService;
 use AppBundle\Service\Task\StarEwesCalculationTaskService;
 use AppBundle\Util\ResultUtil;
 use Doctrine\ORM\EntityManager;
@@ -32,6 +33,9 @@ class TaskProcessor implements PsrProcessor, CommandSubscriberInterface
     /** @var StarEwesCalculationTaskService */
     private $starEwesCalculationTaskService;
 
+    /** @var InbreedingCoefficientCalculationTaskService */
+    private $inbreedingCoefficientCalculationTaskService;
+
     /**
      * @var Logger
      */
@@ -39,12 +43,14 @@ class TaskProcessor implements PsrProcessor, CommandSubscriberInterface
 
     /**
      * ReportProcessor constructor.
+     * @param InbreedingCoefficientCalculationTaskService $inbreedingCoefficientCalculationTaskService
      * @param StarEwesCalculationTaskService $starEwesCalculationTaskService
      * @param EntityManager $em
      * @param Logger $logger
      * @param BaseSerializer $serializer
      */
     public function __construct(
+        InbreedingCoefficientCalculationTaskService $inbreedingCoefficientCalculationTaskService,
         StarEwesCalculationTaskService $starEwesCalculationTaskService,
         EntityManager $em,
         Logger $logger,
@@ -55,6 +61,7 @@ class TaskProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->logger = $logger;
         $this->serializer = $serializer;
         $this->starEwesCalculationTaskService = $starEwesCalculationTaskService;
+        $this->inbreedingCoefficientCalculationTaskService = $inbreedingCoefficientCalculationTaskService;
     }
 
     public function process(PsrMessage $message, PsrContext $context)
@@ -81,6 +88,16 @@ class TaskProcessor implements PsrProcessor, CommandSubscriberInterface
                 case UpdateType::STAR_EWES:
                     {
                         $data = $this->starEwesCalculationTaskService->calculate($actionBy, $location);
+                        break;
+                    }
+                case UpdateType::INBREEDING_COEFFICIENT_CALCULATION:
+                    {
+                        $data = $this->inbreedingCoefficientCalculationTaskService->calculate();
+                        break;
+                    }
+                case UpdateType::INBREEDING_COEFFICIENT_RECALCULATION:
+                    {
+                        $data = $this->inbreedingCoefficientCalculationTaskService->recalculate();
                         break;
                     }
             }

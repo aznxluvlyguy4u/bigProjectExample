@@ -636,6 +636,12 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@logger'
 
+    AppBundle\Service\Task\InbreedingCoefficientCalculationTaskService:
+      arguments:
+        - '@doctrine.orm.entity_manager'
+        - '@logger'
+        - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
+
     AppBundle\Service\TaskService:
         arguments:
           - '@enqueue.producer'
@@ -648,6 +654,7 @@ services:
 
     AppBundle\Processor\TaskProcessor:
         arguments:
+          - '@AppBundle\Service\Task\InbreedingCoefficientCalculationTaskService'
           - '@AppBundle\Service\Task\StarEwesCalculationTaskService'
           - '@doctrine.orm.entity_manager'
           - '@logger'

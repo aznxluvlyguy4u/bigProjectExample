@@ -67,6 +67,58 @@ class TaskAPIController extends APIController {
      */
     public function getStarEwesCalculationTask(Request $request)
     {
-        return $this->get(TaskService::class)->createCalculateStarEwesTask($request);
+        return $this->get(TaskService::class)->createStarEwesCalculationTask($request);
+    }
+
+    /**
+     * Calculate inbreeding coefficient.
+     *
+     * @ApiDoc(
+     *   section = "Tasks",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Start a worker task to calculate inbreeding coefficient"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/inbreeding-coefficient-calculation")
+     * @Method("GET")
+     */
+    public function getInbreedingCoefficientCalculationTask(Request $request)
+    {
+        return $this->get(TaskService::class)->createInbreedingCoefficientCalculationTask($request);
+    }
+
+    /**
+     * Calculate inbreeding coefficient.
+     *
+     * @ApiDoc(
+     *   section = "Tasks",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Start a worker task to calculate inbreeding coefficient"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/inbreeding-coefficient-recalculation")
+     * @Method("GET")
+     */
+    public function getInbreedingCoefficientRecalculationTask(Request $request)
+    {
+        return $this->get(TaskService::class)->createInbreedingCoefficientRecalculationTask($request);
     }
 }
