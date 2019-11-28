@@ -368,24 +368,18 @@ class InbreedingCoefficientUpdaterService
         $this->generateForAllAnimalsAndLittersBase(false);
     }
 
-    /**
-     * Only processed if the animal or litter records max updatedAt date is before today.
-     * This makes sure these values will be skipped if they were already processed on the same day.
-     * Which is useful if the command is rerun after a crash on the same day.
-     */
     public function regenerateForAllAnimalsAndLitters() {
-        $maxUpdatedAt = new \DateTime('today');
-        $this->generateForAllAnimalsAndLittersBase(true, $maxUpdatedAt);
+        $this->generateForAllAnimalsAndLittersBase(true);
     }
 
-    private function generateForAllAnimalsAndLittersBase(bool $recalculate, ?\DateTime $maxUpdatedAt = null) {
+    private function generateForAllAnimalsAndLittersBase(bool $recalculate) {
+        if ($recalculate) {
+            $this->inbreedingCoefficientRepository->clearMatchUpdatedAt();
+        }
+
         $this->resetCounts();
         do {
-            if ($recalculate) {
-                $parentIdsPairs = $this->inbreedingCoefficientRepository->findParentIdsPairsBeforeMaxInbreedingCoefficientUpdatedAt(self::BATCH_SIZE, $maxUpdatedAt);
-            } else {
-                $parentIdsPairs = $this->inbreedingCoefficientRepository->findParentIdsPairsWithMissingInbreedingCoefficient(self::BATCH_SIZE);
-            }
+            $parentIdsPairs = $this->inbreedingCoefficientRepository->findParentIdsPairsWithMissingInbreedingCoefficient(self::BATCH_SIZE, $recalculate);
             $this->generateInbreedingCoefficientBase($parentIdsPairs, $recalculate,true, true);
 
             $this->matchAnimalsAndLittersGlobal();
