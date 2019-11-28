@@ -19,12 +19,6 @@ class PopRepInputFileService extends ReportServiceBase
     const FILENAME = self::TITLE;
     const FILE_NAME_REPORT_TYPE = 'POPREP INPUT FILE';
 
-    const AVERAGES_DECIMAL_COUNT = 2;
-    const PERCENTAGES_DECIMAL_COUNT = 0;
-
-    const LABEL_HAS_ACTIVE_PEDIGREE_REGISTER = 'heeft_actief_stamboek';
-    const LABEL_ANIMAL_HEALTH_SUBSCRIPTION = 'diergezondheid';
-
     /**
      * @param $pedigreeRegisterAbbreviation
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
@@ -41,7 +35,8 @@ class PopRepInputFileService extends ReportServiceBase
             return $this->generateCsvFileBySqlQuery(
                 $this->getFilename(),
                 $this->getSqlQuery($pedigreeRegister->getId()),
-                []
+                [],
+                false
             );
 
         } catch (\Exception $exception) {

@@ -230,9 +230,10 @@ class CsvFromSqlResultsWriterService
      * @param string $selectQuery
      * @param string $filepath
      * @param array $booleanColumns
+     * @param bool $includeHeaderRow
      * @throws \Exception
      */
-    public function writeToFileFromSqlQuery($selectQuery, $filepath, $booleanColumns = [])
+    public function writeToFileFromSqlQuery($selectQuery, $filepath, $booleanColumns = [], $includeHeaderRow = true)
     {
         $isDataMissing = false;
 
@@ -244,7 +245,10 @@ class CsvFromSqlResultsWriterService
 
                 $firstRow = $this->translateSqlResultBooleanValue($firstRow, $booleanColumns);
 
-                DsvWriterUtil::writeNestedRowToFile($filepath, array_keys($firstRow)); //write headers
+                if ($includeHeaderRow) {
+                    DsvWriterUtil::writeNestedRowToFile($filepath, array_keys($firstRow)); //write headers
+                }
+
                 DsvWriterUtil::writeNestedRowToFile($filepath, $firstRow);
             } else {
                 $isDataMissing = true;

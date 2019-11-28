@@ -367,16 +367,17 @@ class ReportServiceBase
      * @param string $filenameWithExtension
      * @param string $selectQuery
      * @param array $booleanColumns
+     * @param bool $includeHeaderRow
      * @return JsonResponse
      * @throws \Exception
      */
-    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery, $booleanColumns = [])
+    protected function generateCsvFileBySqlQuery($filenameWithExtension, $selectQuery, $booleanColumns = [], $includeHeaderRow = true)
     {
         $dir = CsvFromSqlResultsWriterService::csvCacheDir($this->cacheDir);
 
         $localFilePath = FilesystemUtil::concatDirAndFilename($dir, $filenameWithExtension);
 
-        $this->csvWriter->writeToFileFromSqlQuery($selectQuery, $localFilePath, $booleanColumns);
+        $this->csvWriter->writeToFileFromSqlQuery($selectQuery, $localFilePath, $booleanColumns, $includeHeaderRow);
 
         return $this->uploadReportFileToS3($localFilePath);
     }
