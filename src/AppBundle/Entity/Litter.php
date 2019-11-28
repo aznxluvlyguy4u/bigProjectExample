@@ -249,6 +249,28 @@ class Litter extends DeclareNsfoBase
     private $updatedGeneDiversity;
 
     /**
+     * @var InbreedingCoefficient|null
+     * @ORM\ManyToOne(targetEntity="InbreedingCoefficient", inversedBy="litters", fetch="LAZY")
+     * @JMS\Type("AppBundle\Entity\InbreedingCoefficient")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     * @JMS\MaxDepth(depth=1)
+     */
+    public $inbreedingCoefficient;
+
+    /**
+     * Last dateTime when inbreedingCoefficient was matched with this animal
+     *
+     * @var DateTime|null
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    public $inbreedingCoefficientMatchUpdatedAt;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
@@ -779,6 +801,43 @@ class Litter extends DeclareNsfoBase
 
 
     /**
+     * @return InbreedingCoefficient|null
+     */
+    public function getInbreedingCoefficient(): ?InbreedingCoefficient
+    {
+        return $this->inbreedingCoefficient;
+    }
+
+    /**
+     * @param InbreedingCoefficient|null $inbreedingCoefficient
+     * @return Litter
+     */
+    public function setInbreedingCoefficient(?InbreedingCoefficient $inbreedingCoefficient): Litter
+    {
+        $this->inbreedingCoefficient = $inbreedingCoefficient;
+        return $this;
+    }
+
+    /**
+     * @return DateTime|null
+     */
+    public function getInbreedingCoefficientMatchUpdatedAt(): ?DateTime
+    {
+        return $this->inbreedingCoefficientMatchUpdatedAt;
+    }
+
+    /**
+     * @param DateTime|null $inbreedingCoefficientMatchUpdatedAt
+     * @return Litter
+     */
+    public function setInbreedingCoefficientMatchUpdatedAt(?DateTime $inbreedingCoefficientMatchUpdatedAt): Litter
+    {
+        $this->inbreedingCoefficientMatchUpdatedAt = $inbreedingCoefficientMatchUpdatedAt;
+        return $this;
+    }
+
+
+    /**
      * @return array
      */
     public function getAllAnimalIds(): array
@@ -798,5 +857,12 @@ class Litter extends DeclareNsfoBase
             }
         }
         return $animalIds;
+    }
+
+
+    public function getChildrenIds(): array {
+        return array_map(function(Animal $animal) {
+            return $animal->getId();
+        }, $this->children->toArray());
     }
 }

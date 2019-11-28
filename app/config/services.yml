@@ -483,6 +483,9 @@ services:
     AppBundle\Service\Report\OffspringReportService:
         parent: app.report.breedvalues.base
 
+    AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService:
+        parent: app.report.breedvalues.base
+
     app.report.pedigree_certificates:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeCertificateReportService
@@ -502,6 +505,10 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\InbreedingCoefficientReportService
         lazy: true
+        calls:
+          - method: setInbreedingCoefficientUpdaterService
+            arguments:
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
 
     AppBundle\Service\Report\FertilizerAccountingReport:
         parent: app.report.base
@@ -624,6 +631,38 @@ services:
           - '@logger'
           - '@translator'
 
+    AppBundle\Service\Task\StarEwesCalculationTaskService:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+
+    AppBundle\Service\Task\InbreedingCoefficientCalculationTaskService:
+      arguments:
+        - '@doctrine.orm.entity_manager'
+        - '@logger'
+        - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
+
+    AppBundle\Service\TaskService:
+        arguments:
+          - '@enqueue.producer'
+          - '@app.serializer.base'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@translator'
+          - '@logger'
+          - '@AppBundle\Validation\UlnValidatorInterface'
+
+    AppBundle\Processor\TaskProcessor:
+        arguments:
+          - '@AppBundle\Service\Task\InbreedingCoefficientCalculationTaskService'
+          - '@AppBundle\Service\Task\StarEwesCalculationTaskService'
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '@app.serializer.base'
+        tags:
+          - {name: 'enqueue.client.processor'}
+
+
     AppBundle\Service\ReportService:
         arguments:
           - '@enqueue.producer'
@@ -643,10 +682,12 @@ services:
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\FertilizerAccountingReport'
+          - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
 
 
     AppBundle\Processor\ReportProcessor:
         arguments:
+          - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
@@ -794,6 +835,9 @@ services:
           - method: setInternalQueueService
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
+          - method: setInbreedingCoefficientUpdaterService
+            arguments:
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
 
     app.breed_type:
         parent: app.abstract_base.controller
@@ -1150,6 +1194,11 @@ services:
           - method: setInternalQueueService
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
+
+    AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor
