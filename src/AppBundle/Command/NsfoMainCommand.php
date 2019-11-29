@@ -644,7 +644,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 30: DatabaseDataFixer::removeAnimalsFromLocationAndAnimalResidence($this->conn, $this->cmdUtil); break;
             case 31: DatabaseDataFixer::killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss($this->conn, $this->cmdUtil); break;
             case 32: DatabaseDataFixer::killAliveAnimalsWithADateOfDeath($this->conn, $this->cmdUtil); break;
-            case 33: DatabaseDataFixer::removeDuplicateAnimalResidences($this->conn, $this->cmdUtil); break;
+            case 33: DatabaseDataFixer::removeDuplicateAnimalResidences($this->conn, $this->getLogger()); break;
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 

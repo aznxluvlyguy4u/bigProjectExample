@@ -11,6 +11,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FertilizerCategory;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\FilesystemUtil;
@@ -99,6 +100,9 @@ class FertilizerAccountingReport extends ReportServiceBase
             $this->initializeReferenceDateValues($referenceDate);
             $this->setFileAndFolderNames();
 
+            /** Do this before running the report query */
+            $this->fixAnimalResidenceRecords($location->getId());
+
             $sql = $this->query();
             $data = $this->em->getConnection()->query($sql)->fetch();
 
@@ -137,6 +141,11 @@ class FertilizerAccountingReport extends ReportServiceBase
         $this->folderName = self::FOLDER_NAME;
         $this->filename = $this->translateColumnHeader(self::FILENAME).'-'.$this->getUbn()
             .'__'.$this->newestReferenceDateString.'--'.$this->oldestReferenceDateString.'_'.$this->translateColumnHeader('GENERATED ON');
+    }
+
+
+    private function fixAnimalResidenceRecords(int $locationId) {
+        DatabaseDataFixer::removeDuplicateAnimalResidences($this->conn, $this->logger, $locationId);
     }
 
 

@@ -9,6 +9,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class DatabaseDataFixer
@@ -665,15 +666,41 @@ class DatabaseDataFixer
 
     /**
      * @param Connection $conn
-     * @param CommandUtil $cmdUtil
+     * @param LoggerInterface $logger
+     * @param int|null $locationId
      * @return int
      */
-    public static function removeDuplicateAnimalResidences(Connection $conn, $cmdUtil)
+    public static function removeDuplicateAnimalResidences(Connection $conn, LoggerInterface $logger, ?int $locationId = null)
     {
-        $cmdUtil->writeln('Delete duplicate animal_residences');
-        $cmdUtil->writeln('ignoring hours in startDate and endDate');
+        $logger->info('Delete duplicate animal_residences');
+        $logger->info('ignoring hours in startDate and endDate');
+
+        $whereLocationFilter = '';
+        $andLocationFilter = '';
+        if ($locationId) {
+            $whereLocationFilter = 'WHERE location_id = '.$locationId;
+            $andLocationFilter = 'AND location_id = '.$locationId;
+        }
 
         $sqls = [
+            "Delete duplicate animal residences where at least one is closed and the others are not" =>
+            "DELETE FROM animal_residence WHERE id IN (
+                SELECT
+                    r.id as duplicate_unclosed_residence_id
+                FROM animal_residence r
+                         INNER JOIN (
+                    SELECT
+                        ar.animal_id,
+                        ar.start_date,
+                        bool_or(ar.end_date NOTNULL AND is_pending = FALSE) as has_residence_with_end_date
+                    FROM animal_residence ar
+                    $whereLocationFilter
+                    GROUP BY ar.animal_id, ar.start_date HAVING COUNT(*) > 1
+                )duplicate ON duplicate.animal_id = r.animal_id AND duplicate.start_date = r.start_date
+                WHERE duplicate.has_residence_with_end_date AND r.end_date ISNULL
+                  $andLocationFilter
+                ORDER BY r.animal_id, r.start_date
+                )",
             "Delete duplicate animal residences by animal, location, dates, country and is_pending" =>
             "DELETE FROM animal_residence WHERE id IN (
                   -- WHERE end date is null
@@ -688,7 +715,7 @@ class DatabaseDataFixer
                                    r.country, r.is_pending,
                                    MIN(id) as min_id
                                  FROM animal_residence r
-                                 WHERE r.end_date ISNULL
+                                 WHERE r.end_date ISNULL $andLocationFilter
                                  GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
                                    --DATE(r.end_date),
                                    r.country, r.is_pending HAVING COUNT(*) > 1
@@ -699,7 +726,7 @@ class DatabaseDataFixer
                                      r.country = rr.country AND
                                      r.is_pending = rr.is_pending AND
                                      rr.id <> r.min_id
-                  WHERE rr.end_date ISNULL
+                  WHERE rr.end_date ISNULL $andLocationFilter
                 
                   UNION
                 
@@ -714,7 +741,7 @@ class DatabaseDataFixer
                                    DATE(r.end_date) as end_date,
                                    r.country, r.is_pending,
                                    MIN(id) as min_id
-                                 FROM animal_residence r
+                                 FROM animal_residence r $whereLocationFilter
                                  GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
                                    DATE(r.end_date),
                                    r.country, r.is_pending HAVING COUNT(*) > 1
@@ -725,6 +752,7 @@ class DatabaseDataFixer
                                      r.country = rr.country AND
                                      r.is_pending = rr.is_pending AND
                                      rr.id <> r.min_id
+                                     $andLocationFilter
                 )",
             "Delete pending animal residences which have a duplicate non pending version" =>
             "DELETE FROM animal_residence WHERE id IN (
@@ -738,7 +766,7 @@ class DatabaseDataFixer
                                r.country,
                                MIN(id) as min_id
                              FROM animal_residence r
-                             WHERE r.end_date ISNULL
+                             WHERE r.end_date ISNULL $andLocationFilter
                              GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
                                r.country
                              HAVING COUNT(*) = 2
@@ -752,7 +780,7 @@ class DatabaseDataFixer
                      r.start_date = DATE(r_pending.start_date) AND
                      r.country = r_pending.country
               WHERE r_not_pending.end_date ISNULL AND r_pending.end_date ISNULL
-                    AND r_not_pending.is_pending = FALSE AND r_pending.is_pending
+                    AND r_not_pending.is_pending = FALSE AND r_pending.is_pending $andLocationFilter
             
               UNION
             
@@ -766,7 +794,7 @@ class DatabaseDataFixer
                                DATE(r.end_date) as end_date,
                                r.country,
                                MIN(id) as min_id
-                             FROM animal_residence r
+                             FROM animal_residence r $whereLocationFilter
                              GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
                                DATE(r.end_date),
                                r.country
@@ -781,7 +809,7 @@ class DatabaseDataFixer
                      r.location_id = r_pending.location_id AND
                      r.start_date = DATE(r_pending.start_date) AND
                      r.country = r_pending.country
-              WHERE r_not_pending.is_pending = FALSE AND r_pending.is_pending
+              WHERE r_not_pending.is_pending = FALSE AND r_pending.is_pending $andLocationFilter
             )
 "
         ];
@@ -789,14 +817,14 @@ class DatabaseDataFixer
         $totalDeleteCount = 0;
 
         foreach ($sqls as $title => $sql) {
-            $cmdUtil->writeln($title);
+            $logger->info($title);
             $deleteCount = SqlUtil::updateWithCount($conn, $sql);
             $totalDeleteCount += $deleteCount;
-            $cmdUtil->writeln('Deleted '.$deleteCount.'|'.$totalDeleteCount.' [sub|total]');
+            $logger->info('Deleted '.$deleteCount.'|'.$totalDeleteCount.' [sub|total]');
         }
 
         $countPrefix = $totalDeleteCount === 0 ? 'No' : $totalDeleteCount ;
-        $cmdUtil->writeln($countPrefix.' duplicate animal_residences deleted in total');
+        $logger->info($countPrefix.' duplicate animal_residences deleted in total');
 
         if($totalDeleteCount > 0) { DoctrineUtil::updateTableSequence($conn, ['animal_residence']); }
 
