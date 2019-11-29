@@ -126,7 +126,7 @@ class InbreedingCoefficientUpdaterService
         $pairExists = $this->inbreedingCoefficientRepository->exists($ramId, $eweId);
 
         if ($pairExists) {
-            if ($recalculate) {
+            if ($recalculate || $findGlobalMatch) {
                 $updateExisting = true;
             }
         } else {
@@ -135,21 +135,29 @@ class InbreedingCoefficientUpdaterService
 
 
         if ($updateExisting) {
-            $value = $this->getInbreedingCoefficientValue($ramId, $eweId);
+            $inbreedingCoefficient = $this->inbreedingCoefficientRepository->findByPair($parentIdsPairs);
 
-            $inbreedingCoefficient = $this->inbreedingCoefficientRepository->findByPair($ramId, $eweId);
             if ($inbreedingCoefficient) {
-                // only update if values have changed
-                if (!$inbreedingCoefficient->equalsPrimaryVariableValues(
-                    $findGlobalMatch,
-                    $value
-                )) {
+
+                if ($recalculate) {
+                    $value = $this->getInbreedingCoefficientValue($ramId, $eweId);
+                    // only update if values have changed
+                    if (!$inbreedingCoefficient->equalsPrimaryVariableValues(
+                        $findGlobalMatch,
+                        $value
+                    )) {
+                        $inbreedingCoefficient
+                            ->setValue($value)
+                            ->setFindGlobalMatches($findGlobalMatch)
+                            ->refreshUpdatedAt();
+                        $this->em->persist($inbreedingCoefficient);
+                    }
+                } else {
                     $inbreedingCoefficient
-                        ->setValue($value)
-                        ->setFindGlobalMatches($findGlobalMatch)
-                        ->refreshUpdatedAt();
+                        ->setFindGlobalMatches($findGlobalMatch);
                     $this->em->persist($inbreedingCoefficient);
                 }
+
             } else {
                 $createNew = true;
             }
