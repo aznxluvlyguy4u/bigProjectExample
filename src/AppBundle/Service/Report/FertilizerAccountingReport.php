@@ -112,8 +112,6 @@ class FertilizerAccountingReport extends ReportServiceBase
                 return $this->createCsvReport($data);
             }
 
-            throw new \Exception('INVALID FILE TYPE', Response::HTTP_PRECONDITION_REQUIRED);
-
         } catch (\Exception $exception) {
             $this->logger->error($exception->getTraceAsString());
             $this->logger->error($exception->getMessage());
