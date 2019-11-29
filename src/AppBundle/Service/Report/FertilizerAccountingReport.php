@@ -420,7 +420,9 @@ class FertilizerAccountingReport extends ReportServiceBase
                          " . $this->isResidenceSelectResult() . "
                          r.*
                      FROM animal_residence r
+                        INNER JOIN animal a ON a.id = r.animal_id
                      WHERE r.location_id = ".$this->getLocationId()." AND r.is_pending = FALSE
+                     AND (a.date_of_death ISNULL OR a.date_of_death >= '$this->oldestReferenceDateString')
                      AND (r.end_date ISNULL OR r.end_date >= '$this->oldestReferenceDateString')
                      AND (r.start_date <= '$this->newestReferenceDateString')
                  )a GROUP BY animal_id
@@ -503,6 +505,8 @@ class FertilizerAccountingReport extends ReportServiceBase
         $referenceDateOfMonth = $this->referenceDateStringsByMonth[$month];
         return "(start_date NOTNULL AND end_date NOTNULL) AND DATE(start_date) <= '$referenceDateOfMonth' AND DATE(end_date) >= '$referenceDateOfMonth' OR --closed residence
         (start_date NOTNULL AND end_date ISNULL) AND DATE(start_date) <= '$referenceDateOfMonth' --open residence
+        AND (a.date_of_death ISNULL OR a.date_of_death >= '$this->oldestReferenceDateString')
+        AND (a.date_of_birth NOTNULL AND a.date_of_birth <= '$referenceDateOfMonth')
          as ".$this->residenceKey($month).SqlUtil::SELECT_ROW_SEPARATOR;
     }
 
