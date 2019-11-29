@@ -678,8 +678,8 @@ class DatabaseDataFixer
         $whereLocationFilter = '';
         $andLocationFilter = '';
         if ($locationId) {
-            $whereLocationFilter = 'WHERE location_id = '.$locationId;
-            $andLocationFilter = 'AND location_id = '.$locationId;
+            $whereLocationFilter = 'WHERE r.location_id = '.$locationId;
+            $andLocationFilter = 'AND r.location_id = '.$locationId;
         }
 
         $sqls = [
@@ -690,12 +690,12 @@ class DatabaseDataFixer
                 FROM animal_residence r
                          INNER JOIN (
                     SELECT
-                        ar.animal_id,
-                        ar.start_date,
-                        bool_or(ar.end_date NOTNULL AND is_pending = FALSE) as has_residence_with_end_date
-                    FROM animal_residence ar
+                        r.animal_id,
+                        r.start_date,
+                        bool_or(r.end_date NOTNULL AND is_pending = FALSE) as has_residence_with_end_date
+                    FROM animal_residence r
                     $whereLocationFilter
-                    GROUP BY ar.animal_id, ar.start_date HAVING COUNT(*) > 1
+                    GROUP BY r.animal_id, r.start_date HAVING COUNT(*) > 1
                 )duplicate ON duplicate.animal_id = r.animal_id AND duplicate.start_date = r.start_date
                 WHERE duplicate.has_residence_with_end_date AND r.end_date ISNULL
                   $andLocationFilter
@@ -780,7 +780,7 @@ class DatabaseDataFixer
                      r.start_date = DATE(r_pending.start_date) AND
                      r.country = r_pending.country
               WHERE r_not_pending.end_date ISNULL AND r_pending.end_date ISNULL
-                    AND r_not_pending.is_pending = FALSE AND r_pending.is_pending $andLocationFilter
+                    AND r_not_pending.is_pending = FALSE AND r_pending.is_pending
             
               UNION
             
@@ -809,7 +809,7 @@ class DatabaseDataFixer
                      r.location_id = r_pending.location_id AND
                      r.start_date = DATE(r_pending.start_date) AND
                      r.country = r_pending.country
-              WHERE r_not_pending.is_pending = FALSE AND r_pending.is_pending $andLocationFilter
+              WHERE r_not_pending.is_pending = FALSE AND r_pending.is_pending
             )
 "
         ];
