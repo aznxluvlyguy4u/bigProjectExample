@@ -23,10 +23,12 @@ use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
 use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
+use AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
+use AppBundle\Service\Report\FertilizerAccountingReport;
 use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Service\Report\LiveStockReportService;
 use AppBundle\Service\Report\MembersAndUsersOverviewReportService;
@@ -122,6 +124,12 @@ class ReportService
     /** @var PopRepInputFileService */
     private $popRepInputFileService;
 
+    /** @var FertilizerAccountingReport */
+    private $fertilizerAccountingReport;
+
+    /** @var AnimalFeaturesPerYearOfBirthReportService */
+    private $animalFeaturesPerYearOfBirthReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -141,6 +149,8 @@ class ReportService
      * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
      * @param PopRepInputFileService $popRepInputFileService
+     * @param FertilizerAccountingReport $fertilizerAccountingReport
+     * @param AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -159,7 +169,9 @@ class ReportService
         ClientNotesOverviewReportService $clientNotesOverviewReportService,
         InbreedingCoefficientReportService $inbreedingCoefficientReportService,
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
-        PopRepInputFileService $popRepInputFileService
+        PopRepInputFileService $popRepInputFileService,
+        FertilizerAccountingReport $fertilizerAccountingReport,
+        AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
     )
     {
         $this->em = $em;
@@ -179,6 +191,8 @@ class ReportService
         $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
         $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
         $this->popRepInputFileService = $popRepInputFileService;
+        $this->fertilizerAccountingReport = $fertilizerAccountingReport;
+        $this->animalFeaturesPerYearOfBirthReportService = $animalFeaturesPerYearOfBirthReportService;
     }
 
     /**
@@ -373,9 +387,7 @@ class ReportService
     {
         $actionBy = $this->userService->getUser();
 
-        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN)) {
-            throw AdminValidator::standardException();
-        }
+        AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN, true);
 
         $pedigreeRegisterAbbreviation = $request->query->get(QueryParameter::PEDIGREE_REGISTER);
 
@@ -485,6 +497,42 @@ class ReportService
         return ResultUtil::successResult($report);
     }
 
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createAnimalFeaturesPerYearOfBirthReport(Request $request)
+    {
+        /** @var Location $location */
+        $location = null;
+
+        // not admin
+        if ($this->userService->isRequestFromUserFrontend($request)) {
+            $location = $this->userService->getSelectedLocation($request);
+            NullChecker::checkLocation($location);
+        }
+
+        $yearOfBirth = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR_OF_BIRTH, null);
+
+        if (!$yearOfBirth) {
+            return ResultUtil::errorResult('Invalid year of birth', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
+
+        $ubn = is_null($location) ? "" : $location->getUbn();
+        $inputForHash = $yearOfBirth . $ubn;
+
+        return $this->processReportAsWorkerTask(
+            [
+                'year_of_birth' => $yearOfBirth,
+                'concat_value_and_accuracy' => $concatValueAndAccuracy
+            ],
+            $request,ReportType::ANIMAL_FEATURES_PER_YEAR_OF_BIRTH, $inputForHash
+        );
+    }
 
     /**
      * @param Request $request
@@ -604,12 +652,23 @@ class ReportService
         $referenceDateString = $referenceDate->format('y-m-d H:i:s');
         $inputForHash = $referenceDateString;
 
-        return $this->processReportAsWorkerTask(
-            [
-                'reference_date' => $referenceDateString,
-            ],
-            $request,ReportType::FERTILIZER_ACCOUNTING, $inputForHash
-        );
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        $this->fertilizerAccountingReport->validateReferenceDate($referenceDate);
+        
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'reference_date' => $referenceDateString,
+                ],
+                $request,ReportType::FERTILIZER_ACCOUNTING, $inputForHash
+            );
+        }
+
+        $location = $this->userService->getSelectedLocation($request);
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
+
+        return $this->fertilizerAccountingReport->getReport($location, $referenceDate, $fileType);
     }
 
     /**
@@ -816,16 +875,21 @@ class ReportService
     public function createClientNotesOverviewReport(Request $request)
     {
         $actionBy = $this->userService->getUser();
-        $companyId = $request->query->get(QueryParameter::COMPANY_ID);
-        if (empty($companyId)) {
-            throw new BadRequestHttpException("companyId is missing");
+        $companyId = $request->query->get(
+            QueryParameter::COMPANY_ID,
+            ClientNotesOverviewReportOptions::getCompanyIdEmptyValue()
+        );
+
+        if (!empty($companyId)) {
+            $company = $this->em->getRepository(Company::class)
+                ->findOneByCompanyId($companyId);
+            if (empty($company)) {
+                throw new BadRequestHttpException("No company was found for given companyId: ".$companyId);
+            }
         }
 
-        $company = $this->em->getRepository(Company::class)
-            ->findOneByCompanyId($companyId);
-        if (empty($company)) {
-            throw new BadRequestHttpException("No company was found for given companyId: ".$companyId);
-        }
+        $startDate = RequestUtil::getDateQuery($request,QueryParameter::START_DATE, null, true, true);
+        $endDate = RequestUtil::getDateQuery($request,QueryParameter::END_DATE, null, true, true);
 
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         ReportUtil::validateFileType($fileType, ClientNotesOverviewReportService::allowedFileTypes(), $this->translator);
@@ -833,6 +897,8 @@ class ReportService
         $options = (new ClientNotesOverviewReportOptions())
             ->setFileType($fileType)
             ->setCompanyId($companyId)
+            ->setStartDate($startDate)
+            ->setEndDate($endDate)
         ;
 
         $optionsAsJson = $this->serializer->serializeToJSON($options);
@@ -859,9 +925,7 @@ class ReportService
     {
         $actionBy = $this->userService->getUser();
 
-        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN)) {
-            throw AdminValidator::standardException();
-        }
+        AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN, true);
 
         $referenceDateString = $request->query->get(QueryParameter::REFERENCE_DATE);
         $referenceDate = empty($referenceDateString) ? new \DateTime() : new \DateTime($referenceDateString);

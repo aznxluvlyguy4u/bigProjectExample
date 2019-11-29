@@ -43,8 +43,7 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
     function editBirthMeasurements(Request $request, $animalId)
     {
         $actionBy = $this->getUser();
-        $isAdmin = AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN);
-        if (!$isAdmin) { throw AdminValidator::standardException(); }
+        AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN, true);
 
         $animal = $this->getAnimal($animalId);
         $content = $this->getContent($request);

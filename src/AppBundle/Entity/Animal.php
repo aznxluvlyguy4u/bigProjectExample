@@ -1079,6 +1079,28 @@ abstract class Animal
 
 
     /**
+     * @var InbreedingCoefficient|null
+     * @ORM\ManyToOne(targetEntity="InbreedingCoefficient", inversedBy="animals", fetch="LAZY")
+     * @JMS\Type("AppBundle\Entity\InbreedingCoefficient")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     * @JMS\MaxDepth(depth=1)
+     */
+    public $inbreedingCoefficient;
+
+    /**
+     * Last dateTime when inbreedingCoefficient was matched with this animal
+     *
+     * @var DateTime|null
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    public $inbreedingCoefficientMatchUpdatedAt;
+
+    /**
      * Animal constructor.
      */
     public function __construct()
@@ -3295,6 +3317,43 @@ abstract class Animal
         $this->animalRelocations = $animalRelocations;
         return $this;
     }
+
+    /**
+     * @return InbreedingCoefficient|null
+     */
+    public function getInbreedingCoefficient(): ?InbreedingCoefficient
+    {
+        return $this->inbreedingCoefficient;
+    }
+
+    /**
+     * @param InbreedingCoefficient|null $inbreedingCoefficient
+     * @return Animal
+     */
+    public function setInbreedingCoefficient(?InbreedingCoefficient $inbreedingCoefficient): Animal
+    {
+        $this->inbreedingCoefficient = $inbreedingCoefficient;
+        return $this;
+    }
+
+    /**
+     * @return DateTime|null
+     */
+    public function getInbreedingCoefficientMatchUpdatedAt(): ?DateTime
+    {
+        return $this->inbreedingCoefficientMatchUpdatedAt;
+    }
+
+    /**
+     * @param DateTime|null $inbreedingCoefficientMatchUpdatedAt
+     * @return Animal
+     */
+    public function setInbreedingCoefficientMatchUpdatedAt(?DateTime $inbreedingCoefficientMatchUpdatedAt): Animal
+    {
+        $this->inbreedingCoefficientMatchUpdatedAt = $inbreedingCoefficientMatchUpdatedAt;
+        return $this;
+    }
+
 
 
 

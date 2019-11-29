@@ -18,6 +18,8 @@ class PedigreeUtil
     const MOTHER_PARAM = 'm';
     const DEFAULT_MASTER_KEY = 'uln';// PedigreeMasterKey::ULN;
 
+    const DATE_OF_BIRTH_SELECT_KEY = 'dateofbirth';
+
     /** @var ObjectManager|EntityManagerInterface */
     private $em;
 
@@ -223,9 +225,8 @@ class PedigreeUtil
         $sql = 'SELECT '.implode(', ', self::ulnSelectString($generationLimit))
              .' FROM animal '.self::CHILD_PARAM
              .' '.implode(' ', self::joinParents($generationLimit))
-             .' WHERE '.SqlUtil::getFilterStringByIdsArray($animalIds, self::CHILD_PARAM.'.id');
+             .' WHERE '.SqlUtil::getFilterStringByIdsArray($animalIds, self::CHILD_PARAM.'.id')
         ;
-
         if(count($animalIds) === 1) {
             return $conn->query($sql)->fetch();
         }
@@ -274,6 +275,7 @@ class PedigreeUtil
     {
         return
             $animalParameter.'.id as '.$animalParameter.'_id'
+            .', DATE('.$animalParameter.'.date_of_birth) as '.$animalParameter.'_'.self::DATE_OF_BIRTH_SELECT_KEY
             .', CONCAT('.$animalParameter.'.uln_country_code,'.$animalParameter.'.uln_number) as '.$animalParameter.'_uln'
             .', CONCAT('.$animalParameter.'.pedigree_country_code,'.$animalParameter.'.pedigree_number) as '.$animalParameter.'_stn'
             ;

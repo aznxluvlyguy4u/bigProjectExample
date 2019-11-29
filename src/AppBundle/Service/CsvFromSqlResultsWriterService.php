@@ -26,6 +26,8 @@ class CsvFromSqlResultsWriterService
     const NEW_LINE = "\n";
     const BOOLEAN_NULL_REPLACEMENT_VALUE = null;
 
+    const DATA_IS_EMPTY_ERROR = "DATA IS EMPTY";
+
     /** @var ObjectManager|EntityManagerInterface */
     private $em;
     /** @var Connection */
@@ -228,9 +230,10 @@ class CsvFromSqlResultsWriterService
      * @param string $selectQuery
      * @param string $filepath
      * @param array $booleanColumns
+     * @param bool $includeHeaderRow
      * @throws \Exception
      */
-    public function writeToFileFromSqlQuery($selectQuery, $filepath, $booleanColumns = [])
+    public function writeToFileFromSqlQuery($selectQuery, $filepath, $booleanColumns = [], $includeHeaderRow = true)
     {
         $isDataMissing = false;
 
@@ -242,7 +245,10 @@ class CsvFromSqlResultsWriterService
 
                 $firstRow = $this->translateSqlResultBooleanValue($firstRow, $booleanColumns);
 
-                DsvWriterUtil::writeNestedRowToFile($filepath, array_keys($firstRow)); //write headers
+                if ($includeHeaderRow) {
+                    DsvWriterUtil::writeNestedRowToFile($filepath, array_keys($firstRow)); //write headers
+                }
+
                 DsvWriterUtil::writeNestedRowToFile($filepath, $firstRow);
             } else {
                 $isDataMissing = true;
@@ -264,7 +270,7 @@ class CsvFromSqlResultsWriterService
         }
 
         if ($isDataMissing) {
-            throw new \Exception('DATA IS EMPTY', Response::HTTP_BAD_REQUEST);
+            throw new \Exception(self::DATA_IS_EMPTY_ERROR, Response::HTTP_NOT_FOUND);
         }
     }
 

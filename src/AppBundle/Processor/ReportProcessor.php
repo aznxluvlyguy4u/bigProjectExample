@@ -10,6 +10,7 @@ use AppBundle\Entity\ReportWorker;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Service\BaseSerializer;
+use AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService;
 use AppBundle\Service\Report\AnimalHealthStatusesReportService;
 use AppBundle\Service\Report\AnimalsOverviewReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
@@ -124,6 +125,9 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /** @var PopRepInputFileService */
     private $popRepInputFileService;
 
+    /** @var AnimalFeaturesPerYearOfBirthReportService */
+    private $animalFeaturesPerYearOfBirthService;
+
     /** @var BaseSerializer */
     private $serializer;
 
@@ -134,6 +138,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 
     /**
      * ReportProcessor constructor.
+     * @param AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthService
      * @param EweCardReportService $eweCardReportService
      * @param PopRepInputFileService $popRepInputFileService
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
@@ -157,6 +162,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      * @param BaseSerializer $serializer
      */
     public function __construct(
+        AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthService,
         EweCardReportService $eweCardReportService,
         PopRepInputFileService $popRepInputFileService,
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
@@ -201,6 +207,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
         $this->eweCardReportService = $eweCardReportService;
         $this->popRepInputFileService = $popRepInputFileService;
+        $this->animalFeaturesPerYearOfBirthService = $animalFeaturesPerYearOfBirthService;
     }
 
     public function process(PsrMessage $message, PsrContext $context)
@@ -341,6 +348,13 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     {
                         $pedigreeRegisterAbbreviation = $data['pedigree_register_abbreviation'];
                         $data = $this->popRepInputFileService->getReport($pedigreeRegisterAbbreviation);
+                        break;
+                    }
+                case ReportType::ANIMAL_FEATURES_PER_YEAR_OF_BIRTH:
+                    {
+                        $yearOfBirth = $data['year_of_birth'];
+                        $concatValueAndAccuracy = $data['concat_value_and_accuracy'];
+                        $data = $this->animalFeaturesPerYearOfBirthService->getReport($concatValueAndAccuracy, $yearOfBirth, $worker->getLocation());
                         break;
                     }
             }

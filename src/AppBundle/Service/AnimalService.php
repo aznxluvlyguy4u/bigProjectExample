@@ -113,9 +113,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     public function createAnimal(Request $request)
     {
         $actionBy = $this->getUser();
-        if (!AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
+        AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN, true);
 
         $animalArray = RequestUtil::getContentAsArray($request)->toArray();
 
@@ -132,23 +130,25 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $newAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, $clazz, false);
 
         $uln = $newAnimal->getUln();
-        if(!Validator::verifyUlnFormat($uln)) {
-            return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
+        if (!Validator::verifyUlnFormat($uln)) {
+            throw new BadRequestHttpException('Dit is geen geldige ULN.');
         }
 
         $existingAnimal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
-        if(!empty($existingAnimal))
-            return ResultUtil::errorResult('Dit dier bestaat al.', Response::HTTP_BAD_REQUEST);
+        if (!empty($existingAnimal)) {
+            throw new BadRequestHttpException('Dit dier bestaat al.');
+        }
 
-        if (empty($newAnimal->getDateOfBirth()))
-            return ResultUtil::errorResult('Vul een geboortedatum in.', Response::HTTP_BAD_REQUEST);
+        if (empty($newAnimal->getDateOfBirth())) {
+            throw new BadRequestHttpException('Vul een geboortedatum in.');
+        }
 
         if ($newAnimal->getNLing() === '' || $newAnimal->getNLing() === null) {
             $newAnimal->setNLing(null);
         } elseif (!is_int($newAnimal->getNLing()) && !ctype_digit($newAnimal->getNLing())) {
-            return ResultUtil::errorResult('n-Ling moet een integer zijn', Response::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('n-Ling moet een integer zijn');
         } elseif ($newAnimal->getNLing() < Animal::MIN_N_LING_VALUE || Animal::MAX_N_LING_VALUE < $newAnimal->getNLing()) {
-            return ResultUtil::errorResult($this->translateUcFirstLower('THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7').': '.$newAnimal->getNLing(), Response::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException($this->translateUcFirstLower('THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7').': '.$newAnimal->getNLing());
         }
 
 
@@ -175,11 +175,13 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         $newAnimal = AnimalDetailsBatchUpdaterService::cleanUpAnimalInputValues($newAnimal);
 
-        if (!BreedCodeUtil::isValidBreedCodeString($newAnimal->getBreedCode()) && $newAnimal->getBreedCode() !== null)
-            return ResultUtil::errorResult('Ongeldige rascode', Response::HTTP_BAD_REQUEST);
+        if (!BreedCodeUtil::isValidBreedCodeString($newAnimal->getBreedCode()) && $newAnimal->getBreedCode() !== null) {
+            throw new BadRequestHttpException('Ongeldige rascode');
+        }
 
-        if (!Validator::hasValidBreedType($newAnimal->getBreedType(), true))
-            return ResultUtil::errorResult('Ongeldige rastype', Response::HTTP_BAD_REQUEST);
+        if (!Validator::hasValidBreedType($newAnimal->getBreedType(), true)) {
+            throw new BadRequestHttpException('Ongeldige rastype');
+        }
 
         try {
             $newAnimal->setAnimalOrderNumber(StringUtil::getLast5CharactersFromString($newAnimal->getUlnNumber()));
@@ -366,23 +368,22 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
     public function findAnimal(Request $request)
     {
-        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
+        AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN, true);
 
         $data = RequestUtil::getContentAsArray($request);
         $uln = $data->get('uln');
         if (is_string($uln)) {
             $uln = strtoupper(strtr($uln, [' ' => '']));
         }
-        if(!Validator::verifyUlnFormat($uln)) {
-            return ResultUtil::errorResult('Dit is geen geldige ULN.', Response::HTTP_BAD_REQUEST);
+        if (!Validator::verifyUlnFormat($uln)) {
+            throw new BadRequestHttpException('Dit is geen geldige ULN.');
         }
 
         try {
             $animal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
-            if(!$animal)
-                return ResultUtil::errorResult('Dit dier bestaat niet.', Response::HTTP_BAD_REQUEST);
+            if (!$animal) {
+                throw new BadRequestHttpException('Dit dier bestaat niet.');
+            }
 
             $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
             return ResultUtil::successResult($minimizedOutput);
@@ -392,15 +393,23 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
     }
 
+
+    private function getUbnsFromPlainTextInput(ArrayCollection $content) {
+        $ubns = [];
+        if ($content->containsKey(JsonInputConstant::UBNS)) {
+            $ubns = $content->get(JsonInputConstant::UBNS);
+        }
+        return $ubns;
+    }
+
+
     /**
      * @param Request $request
      * @return JsonResponse|bool
      */
     private function getAnimalsByPlainTextInput(Request $request)
     {
-        if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN)) {
-            return AdminValidator::getStandardErrorResponse();
-        }
+        AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN, true);
 
         $validationResult = $this->validateAnimalsByPlainTextInputRequest($request);
         if ($validationResult instanceof JsonResponse) {
@@ -411,10 +420,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $plainTextInput = StringUtil::preparePlainTextInput($content->get(JsonInputConstant::PLAIN_TEXT_INPUT));
         $separator = $content->get(JsonInputConstant::SEPARATOR);
 
-        $ubns = [];
-        if ($content->containsKey(JsonInputConstant::UBNS)) {
-            $ubns = $content->get(JsonInputConstant::UBNS);
-        }
+        $ubns = $this->getUbnsFromPlainTextInput($content);
 
         $incorrectInputs = [];
 
