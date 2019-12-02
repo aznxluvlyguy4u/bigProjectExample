@@ -113,9 +113,8 @@ class CompanyRegisterReportService extends ReportServiceBase
                   WHEN a.ubn_of_birth = '$ubn' THEN
                       to_char(a.date_of_birth, $toCharDateFormat)
                   ELSE null END) as datum_aanvoer,
-            (CASE WHEN arrival.ubn_previous_owner NOTNULL THEN
-                      arrival.ubn_previous_owner
-                  ELSE null END) as vorig_ubn,
+            arrival.ubn_previous_owner as vorig_ubn,             
+            depart.ubn_new_owner as ubn_bestemming,             
             (CASE WHEN loss.date_of_death ISNULL THEN
                       depart.depart_date
                   ELSE null END) as datum_afvoer,
@@ -156,6 +155,7 @@ class CompanyRegisterReportService extends ReportServiceBase
             SELECT
                 animal_id,
                 to_char(d.depart_date, $toCharDateFormat) as depart_date,
+                d.ubn_new_owner,
                 COALESCE(reason.dutch,d.reason_of_depart) as reason_of_depart -- If dutch translation cannot be found, use raw value
                 -- d.reason_of_depart
             FROM declare_base b
