@@ -127,11 +127,16 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
                as duur_rotkreupel_status_verhoging_laatste_12_maanden, -- duration_foot_rot_health_status_promotion_with_demotion_in_last_12_months
              
              -- When any status promotion or demotion took place
-             last_maedi_visna.date_last_change_maedi_visna as datum_laatste_wijziging_zwoegerziekte,
-             null as datum_laatste_wijziging_cae,
-             last_caseous_lymphadenitis.date_last_change_caseous_lymphadenitis as datum_laatste_wijziging_cl,
-             last_scrapie.date_last_change_scrapie as datum_laatste_wijziging_scrapie,
-             last_foot_rot.date_last_change_foot_rot as datum_laatste_wijziging_rotkreupel,
+             last_maedi_visna.log_date_last_change_maedi_visna as logdatum_laatste_wijziging_zwoegerziekte,
+             last_maedi_visna.check_date_last_change_maedi_visna as datum_tot_laatste_wijziging_zwoegerziekte,
+             null as logdatum_laatste_wijziging_cae,
+             null as datum_vanaf_laatste_wijziging_cae,
+             last_caseous_lymphadenitis.log_date_last_change_caseous_lymphadenitis as logdatum_laatste_wijziging_cl,
+             last_caseous_lymphadenitis.check_date_last_change_caseous_lymphadenitis as datum_tot_laatste_wijziging_cl,
+             last_scrapie.log_date_last_change_scrapie as logdatum_laatste_wijziging_scrapie,
+             last_scrapie.check_date_last_change_scrapie as datum_vanaf_laatste_wijziging_scrapie,
+             last_foot_rot.log_date_last_change_foot_rot as logdatum_laatste_wijziging_rotkreupel,
+             last_foot_rot.check_date_last_change_foot_rot as datum_tot_laatste_wijziging_rotkreupel,
              'geen data' as datum_volgende_bloedonderzoek_zwoegerziekte,
              'geen data' as datum_volgende_bloedonderzoek_cae,
              'geen data' as datum_volgende_bloedonderzoek_cl
@@ -423,7 +428,8 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
 
         return "SELECT
             last_$illness.location_health_id,
-            last_$illness.log_date as date_last_change_$illness
+            last_$illness.log_date as log_date_last_change_$illness,
+            last_$illness.check_date as check_date_last_change_$illness
         FROM $illness last_$illness
         INNER JOIN (
            SELECT
