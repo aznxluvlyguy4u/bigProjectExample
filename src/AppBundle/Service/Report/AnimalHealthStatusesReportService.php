@@ -154,7 +154,7 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
                 ".self::selectQueryMaediVisnaDetails()."
               )maedi_visna_details ON maedi_visna_details.location_health_id = lh.id
             LEFT JOIN (
-                ".self::selectQueryScapieDetails()."
+                ".self::selectQueryScrapieDetails()."
               )scrapie_details ON scrapie_details.location_health_id = lh.id              
             LEFT JOIN (
                 ".self::selectQueryCaseousLymphadenitisDetails()."
@@ -337,7 +337,7 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
         AND last_cl.location_health_id = cl.location_health_id";
     }
 
-    private static function selectQueryScapieDetails(): string {
+    private static function selectQueryScrapieDetails(): string {
         return "SELECT
             scrapie.location_health_id,
             scrapie.log_date as max_log_date,
