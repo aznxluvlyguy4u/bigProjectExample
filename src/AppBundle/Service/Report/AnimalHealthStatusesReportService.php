@@ -133,7 +133,7 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
              foot_rot_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
                as duur_rotkreupel_status_verhoging_laatste_12_maanden, -- duration_foot_rot_health_status_promotion_with_demotion_in_last_12_months
              
-             -- When any status promotion or demotion took place
+             -- last time when any status promotion or demotion took place
              last_maedi_visna.log_date_last_change_maedi_visna as logdatum_laatste_wijziging_zwoegerziekte,
              last_maedi_visna.check_date_last_change_maedi_visna as datum_tot_laatste_wijziging_zwoegerziekte,
              null as logdatum_laatste_wijziging_cae,
@@ -144,6 +144,19 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
              last_scrapie.check_date_last_change_scrapie as datum_vanaf_laatste_wijziging_scrapie,
              last_foot_rot.log_date_last_change_foot_rot as logdatum_laatste_wijziging_rotkreupel,
              last_foot_rot.check_date_last_change_foot_rot as datum_tot_laatste_wijziging_rotkreupel,
+       
+             -- second last time when any status promotion or demotion took place
+             second_last_maedi_visna.log_date_last_change_maedi_visna as logdatum_voorlaatste_wijziging_zwoegerziekte,
+             second_last_maedi_visna.check_date_last_change_maedi_visna as datum_tot_voorlaatste_wijziging_zwoegerziekte,
+             null as logdatum_voorlaatste_wijziging_cae,
+             null as datum_vanaf_voorlaatste_wijziging_cae,
+             second_last_caseous_lymphadenitis.log_date_last_change_caseous_lymphadenitis as logdatum_voorlaatste_wijziging_cl,
+             second_last_caseous_lymphadenitis.check_date_last_change_caseous_lymphadenitis as datum_tot_voorlaatste_wijziging_cl,
+             second_last_scrapie.log_date_last_change_scrapie as logdatum_voorlaatste_wijziging_scrapie,
+             second_last_scrapie.check_date_last_change_scrapie as datum_vanaf_voorlaatste_wijziging_scrapie,
+             second_last_foot_rot.log_date_last_change_foot_rot as logdatum_voorlaatste_wijziging_rotkreupel,
+             second_last_foot_rot.check_date_last_change_foot_rot as datum_tot_voorlaatste_wijziging_rotkreupel,
+       
              'geen data' as datum_volgende_bloedonderzoek_zwoegerziekte,
              'geen data' as datum_volgende_bloedonderzoek_cae,
              'geen data' as datum_volgende_bloedonderzoek_cl
@@ -192,6 +205,18 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
               LEFT JOIN (
               ".self::selectQueryLastIllness(self::CASEOUS_LYMPHADENITIS)."
             )last_caseous_lymphadenitis ON last_caseous_lymphadenitis.location_health_id = lh.id
+            LEFT JOIN (
+              ".self::selectQuerySecondLastIllness(self::MAEDI_VISNA)."
+            )second_last_maedi_visna ON second_last_maedi_visna.location_health_id = lh.id
+            LEFT JOIN (
+              ".self::selectQuerySecondLastIllness(self::SCRAPIE)."
+            )second_last_scrapie ON second_last_scrapie.location_health_id = lh.id
+            LEFT JOIN (
+              ".self::selectQuerySecondLastIllness(self::FOOT_ROT)."
+            )second_last_foot_rot ON second_last_foot_rot.location_health_id = lh.id
+            LEFT JOIN (
+              ".self::selectQuerySecondLastIllness(self::CASEOUS_LYMPHADENITIS)."
+            )second_last_caseous_lymphadenitis ON second_last_caseous_lymphadenitis.location_health_id = lh.id
             LEFT JOIN (
               ".self::illnessHealthStatusPromotionWithDemotionInLast12Months(self::MAEDI_VISNA)."
               )maedi_visna_health_status_promotion_with_demotion_in_last_12_months ON
@@ -453,7 +478,7 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
         $secondLastIllnessFilter = $isSecondLastIllness ? " WHERE i.id NOT IN (
             SELECT
                 MAX(id) as last_id_for_each_location_health
-            FROM maedi_visna i
+            FROM $illness i
             GROUP BY location_health_id
         ) " : "";
 
