@@ -116,15 +116,15 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
              
              -- When a status was changed to free/resistant but in the last 12 months had a demotion
              maedi_visna_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-              as duur_maedi_visna_status_verhoging_jonger_dan_12_maanden, -- duration_maedi_visna_health_status_promotion_with_demotion_in_last_12_months
+              as duur_maedi_visna_status_verhoging_laatste_12_maanden, -- duration_maedi_visna_health_status_promotion_with_demotion_in_last_12_months
              caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-               as duur_cl_status_verhoging_jonger_dan_12_maanden, -- duration_caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months
+               as duur_cl_status_verhoging_laatste_12_maanden, -- duration_caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months
              'data_niet_beschikbaar'
-               as duur_cae_status_verhoging_jonger_dan_12_maanden, -- duration_cae_health_status_promotion_with_demotion_in_last_12_months
+               as duur_cae_status_verhoging_laatste_12_maanden, -- duration_cae_health_status_promotion_with_demotion_in_last_12_months
              scrapie_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-               as duur_scrapie_status_verhoging_jonger_dan_12_maanden, -- duration_scrapie_health_status_promotion_with_demotion_in_last_12_months
+               as duur_scrapie_status_verhoging_laatste_12_maanden, -- duration_scrapie_health_status_promotion_with_demotion_in_last_12_months
              foot_rot_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-               as duur_rotkreupel_status_verhoging_jonger_dan_12_maanden, -- duration_foot_rot_health_status_promotion_with_demotion_in_last_12_months
+               as duur_rotkreupel_status_verhoging_laatste_12_maanden, -- duration_foot_rot_health_status_promotion_with_demotion_in_last_12_months
              
              -- When any status promotion or demotion took place
              last_maedi_visna.date_last_change_maedi_visna as datum_laatste_wijziging_zwoegerziekte,
