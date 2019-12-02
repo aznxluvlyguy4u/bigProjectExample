@@ -14,6 +14,13 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
 
+
+    const CAE = 'cae';
+    const CASEOUS_LYMPHADENITIS = 'caseous_lymphadenitis';
+    const FOOT_ROT = 'foot_rot';
+    const MAEDI_VISNA = 'maedi_visna';
+    const SCRAPIE = 'scrapie';
+
     /**
      * @inheritDoc
      */
@@ -174,47 +181,47 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
               ".self::selectQueryImportDetails()."
             )import_details ON import_details.location_id = l.id
             LEFT JOIN (
-                ".self::selectQueryLastIllness('maedi_visna')."
+                ".self::selectQueryLastIllness(self::MAEDI_VISNA)."
               )last_maedi_visna ON last_maedi_visna.location_health_id = lh.id
               LEFT JOIN (
-                ".self::selectQueryLastIllness('scrapie')."
+                ".self::selectQueryLastIllness(self::SCRAPIE)."
               )last_scrapie ON last_scrapie.location_health_id = lh.id
               LEFT JOIN (
-                ".self::selectQueryLastIllness('foot_rot')."
+                ".self::selectQueryLastIllness(self::FOOT_ROT)."
               )last_foot_rot ON last_foot_rot.location_health_id = lh.id
               LEFT JOIN (
-              ".self::selectQueryLastIllness('caseous_lymphadenitis')."
+              ".self::selectQueryLastIllness(self::CASEOUS_LYMPHADENITIS)."
             )last_caseous_lymphadenitis ON last_caseous_lymphadenitis.location_health_id = lh.id
             LEFT JOIN (
-              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months('maedi_visna')."
+              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months(self::MAEDI_VISNA)."
               )maedi_visna_health_status_promotion_with_demotion_in_last_12_months ON
               maedi_visna_health_status_promotion_with_demotion_in_last_12_months.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months('scrapie')."
+              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months(self::SCRAPIE)."
               )scrapie_health_status_promotion_with_demotion_in_last_12_months ON
               scrapie_health_status_promotion_with_demotion_in_last_12_months.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months('foot_rot')."
+              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months(self::FOOT_ROT)."
               )foot_rot_health_status_promotion_with_demotion_in_last_12_months ON
               foot_rot_health_status_promotion_with_demotion_in_last_12_months.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months('caseous_lymphadenitis')."
+              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months(self::CASEOUS_LYMPHADENITIS)."
               )caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months ON
               caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusDemotion('maedi_visna')."
+              ".self::illnessHealthStatusDemotion(self::MAEDI_VISNA)."
               )maedi_visna_health_status_demotion ON
               maedi_visna_health_status_demotion.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusDemotion('scrapie')."
+              ".self::illnessHealthStatusDemotion(self::SCRAPIE)."
               )scrapie_health_status_demotion ON
               scrapie_health_status_demotion.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusDemotion('foot_rot')."
+              ".self::illnessHealthStatusDemotion(self::FOOT_ROT)."
               )foot_rot_health_status_demotion ON
               foot_rot_health_status_demotion.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusDemotion('caseous_lymphadenitis')."
+              ".self::illnessHealthStatusDemotion(self::CASEOUS_LYMPHADENITIS)."
               )caseous_lymphadenitis_health_status_demotion ON
               caseous_lymphadenitis_health_status_demotion.location_health_id = l.location_health_id;"
             ;
@@ -421,10 +428,34 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
     /**
      * @param string $illness
      * @return string
-     * @throws \Exception
      */
     private static function selectQueryLastIllness(string $illness): string {
+        return self::selectQueryIllnessBase($illness, false);
+    }
+
+    /**
+     * @param string $illness
+     * @return string
+     */
+    private static function selectQuerySecondLastIllness(string $illness): string {
+        return self::selectQueryIllnessBase($illness, true);
+    }
+
+    /**
+     * @param string $illness
+     * @param bool $isSecondLastIllness
+     * @return string
+     * @throws \Exception
+     */
+    private static function selectQueryIllnessBase(string $illness, bool $isSecondLastIllness): string {
         self::validateIllnessVariable($illness);
+
+        $secondLastIllnessFilter = $isSecondLastIllness ? " WHERE i.id NOT IN (
+            SELECT
+                MAX(id) as last_id_for_each_location_health
+            FROM maedi_visna i
+            GROUP BY location_health_id
+        ) " : "";
 
         return "SELECT
             last_$illness.location_health_id,
@@ -436,20 +467,21 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
              location_health_id,
              MAX(id) as last_id
            FROM $illness i
+           $secondLastIllnessFilter
            GROUP BY location_health_id
         )max ON max.last_id = last_$illness.id";
     }
 
     private static function validateIllnessVariable(string $illness) {
-        if ($illness == 'cae') {
+        if ($illness == self::CAE) {
             throw new \Exception("cae is not implemented yet in database");
         }
 
         if (
-            $illness !== 'maedi_visna' &&
-            $illness !== 'scrapie' &&
-            $illness !== 'foot_rot' &&
-            $illness !== 'caseous_lymphadenitis'
+            $illness !== self::MAEDI_VISNA &&
+            $illness !== self::SCRAPIE &&
+            $illness !== self::FOOT_ROT &&
+            $illness !== self::CASEOUS_LYMPHADENITIS
         ) {
             throw new \Exception("Invalid illness type");
         }
