@@ -1086,6 +1086,8 @@ class ReportService
                 return $this->createPedigreeCertificatesWithoutWorker($request, $content);
             case ReportType::BIRTH_LIST:
                 return $this->createBirthListReport($request);
+            case ReportType::COMPANY_REGISTER:
+                return $this->createCompanyRegisterReport($request);
             default:
                 throw new PreconditionFailedHttpException('INVALID REPORT TYPE'
                     .'. '.$this->getValidTestReportTypesErrorMessage());
