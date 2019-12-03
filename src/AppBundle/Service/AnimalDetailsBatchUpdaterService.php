@@ -36,6 +36,12 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     private $currentAnimalIdLogPrefix;
     /** @var boolean */
     private $anyValueWasUpdated;
+
+    /** @var boolean */
+    private $anyAnimalWasRelocated;
+    /** @var array|Location[] */
+    private $locationsWithRelocations;
+
     /** @var boolean */
     private $anyCurrentAnimalValueWasUpdated;
     /** @var Ram|Ewe[] */
@@ -509,6 +515,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
         }
 
+        foreach ($this->locationsWithRelocations as $locationsWithRelocation) {
+            $this->clearLivestockCacheForLocation($locationsWithRelocation);
+        }
+
         return [
             JsonInputConstant::UPDATED => $updatedAnimals,
             JsonInputConstant::NOT_UPDATED => $nonUpdatedAnimals,
@@ -833,6 +843,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             case QueryType::DELETE:
                 $this->updateCurrentActionLogMessage($actionLogLabelLocation, $currentLocation->getUbn(), $this->getEmptyLabel());
                 $retrievedAnimal->setLocation(null);
+                $this->anyAnimalWasRelocated = true;
                 break;
 
             case QueryType::UPDATE:
@@ -843,6 +854,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 if ($newLocation === null) {
                     return ResultUtil::errorResult($this->getNoLocationFoundForUbnErrorMessage($ubnNewLocation, $newLocationId), Response::HTTP_PRECONDITION_REQUIRED);
                 }
+
+                $this->addToLocationsWithRelocation($newLocation);
+                $this->addToLocationsWithRelocation($currentLocation);
 
                 $ubnCurrentLocation = $currentLocation ? $currentLocation->getUbn() : $this->getEmptyLabel();
 
@@ -858,6 +872,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 }
 
                 $retrievedAnimal->setLocation($newLocation);
+                $this->anyAnimalWasRelocated = true;
                 break;
 
             default:
@@ -962,6 +977,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 $retrievedAnimal->getTransferState(),
                 null);
             $retrievedAnimal->setTransferState(null);
+            $this->anyAnimalWasRelocated = true;
         }
     }
 
@@ -1072,6 +1088,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     {
         $this->parentIdsForWhichTheirAndTheirChildrenGeneticDiversityValuesShouldBeUpdated = [];
         $this->anyValueWasUpdated = false;
+        $this->anyAnimalWasRelocated = false;
+        $this->locationsWithRelocations = [];
         $this->clearCurrentActionLogMessage();
     }
 
@@ -1082,6 +1100,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         $this->anyCurrentAnimalValueWasUpdated = false;
     }
 
+    private function addToLocationsWithRelocation(Location $location) {
+        $this->locationsWithRelocations[$location->getId()] = $location;
+    }
 
     /**
      * @param Animal $animal
