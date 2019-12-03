@@ -1024,8 +1024,7 @@ LEFT JOIN (
                   aa.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('measurement_date').",
                   aa.formatted_predicate as ".$this->translateColumnHeader('predicate').",
 
-
-                  -- inteeltpercentage van dier zelf ontbreekt
+                  ic.value as inteeltcoefficient,
 
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
@@ -1038,6 +1037,7 @@ LEFT JOIN (
                   LEFT JOIN result_table_breed_grades bg ON bg.animal_id = a.id
                   LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
+                  LEFT JOIN inbreeding_coefficient ic ON ic.id = a.inbreeding_coefficient_id
                   LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
                 ".$this->breedValuesPlusSignsQueryJoinPart."
                 " . $mainFilter;
