@@ -21,7 +21,7 @@ use Psr\Log\LoggerInterface;
 
 class InbreedingCoefficientUpdaterService
 {
-    private const BATCH_SIZE = 10;
+    private const BATCH_SIZE = 25;
 
     /** @var EntityManagerInterface */
     private $em;
