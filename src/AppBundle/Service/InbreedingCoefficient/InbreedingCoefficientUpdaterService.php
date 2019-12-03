@@ -21,7 +21,7 @@ use Psr\Log\LoggerInterface;
 
 class InbreedingCoefficientUpdaterService
 {
-    private const BATCH_SIZE = 10;
+    private const BATCH_SIZE = 25;
 
     /** @var EntityManagerInterface */
     private $em;
@@ -126,7 +126,7 @@ class InbreedingCoefficientUpdaterService
         $pairExists = $this->inbreedingCoefficientRepository->exists($ramId, $eweId);
 
         if ($pairExists) {
-            if ($recalculate) {
+            if ($recalculate || $findGlobalMatch) {
                 $updateExisting = true;
             }
         } else {
@@ -135,21 +135,29 @@ class InbreedingCoefficientUpdaterService
 
 
         if ($updateExisting) {
-            $value = $this->getInbreedingCoefficientValue($ramId, $eweId);
+            $inbreedingCoefficient = $this->inbreedingCoefficientRepository->findByPair($parentIdsPairs);
 
-            $inbreedingCoefficient = $this->inbreedingCoefficientRepository->findByPair($ramId, $eweId);
             if ($inbreedingCoefficient) {
-                // only update if values have changed
-                if (!$inbreedingCoefficient->equalsPrimaryVariableValues(
-                    $findGlobalMatch,
-                    $value
-                )) {
+
+                if ($recalculate) {
+                    $value = $this->getInbreedingCoefficientValue($ramId, $eweId);
+                    // only update if values have changed
+                    if (!$inbreedingCoefficient->equalsPrimaryVariableValues(
+                        $findGlobalMatch,
+                        $value
+                    )) {
+                        $inbreedingCoefficient
+                            ->setValue($value)
+                            ->setFindGlobalMatches($findGlobalMatch)
+                            ->refreshUpdatedAt();
+                        $this->em->persist($inbreedingCoefficient);
+                    }
+                } else {
                     $inbreedingCoefficient
-                        ->setValue($value)
-                        ->setFindGlobalMatches($findGlobalMatch)
-                        ->refreshUpdatedAt();
+                        ->setFindGlobalMatches($findGlobalMatch);
                     $this->em->persist($inbreedingCoefficient);
                 }
+
             } else {
                 $createNew = true;
             }
@@ -231,7 +239,6 @@ class InbreedingCoefficientUpdaterService
     }
 
     private function matchAnimalsAndLittersBase($animalFilter = "", $litterFilter = "", $findGlobalMatches = false) {
-        $batchLimit = self::BATCH_SIZE;
         $this->resetCounts();
 
         if (!empty($animalFilter)) {
@@ -265,8 +272,7 @@ class InbreedingCoefficientUpdaterService
                                AND inbreeding_coefficient_match_updated_at ISNULL
                                       $animalFilter
                          )animal ON animal.parent_father_id = ic.ram_id AND animal.parent_mother_id = ic.ewe_id
-                         $inbreedingCoefficientFilter
-                        LIMIT $batchLimit";
+                         $inbreedingCoefficientFilter";
             $animalSelectResult = $this->em->getConnection()->query($animalSelectSql)->fetchAll();
 
             $litterSelectSql = "SELECT
@@ -283,8 +289,7 @@ class InbreedingCoefficientUpdaterService
                                    AND inbreeding_coefficient_match_updated_at ISNULL
                                           $litterFilter
                              )litter ON litter.animal_father_id = ic.ram_id AND litter.animal_mother_id = ic.ewe_id
-                             $inbreedingCoefficientFilter
-                             LIMIT $batchLimit";
+                             $inbreedingCoefficientFilter";
             $litterSelectResult = $this->em->getConnection()->query($litterSelectSql)->fetchAll();
 
             if (!empty($animalSelectResult)) {

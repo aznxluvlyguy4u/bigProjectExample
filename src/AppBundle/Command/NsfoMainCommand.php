@@ -30,6 +30,7 @@ use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
 use AppBundle\Service\CacheService;
 use AppBundle\Service\ExcelService;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
 use AppBundle\Service\Migration\LambMeatIndexMigrator;
 use AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator;
 use AppBundle\Service\Migration\WormResistanceIndexMigrator;
@@ -200,7 +201,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case MainCommandUtil::FIX_DATABASE_VALUES: $this->fixDatabaseValuesOptions($options); break;
             case 7: $this->getContainer()->get('app.cli.gender_changer')->run($this->cmdUtil); break;
             case 8: $this->initializeDatabaseValuesOptions(); break;
-            case 9: $this->fillMissingDataOptions(); break;
+            case 9: $this->fillMissingDataOptions($options); break;
             case 10: $this->dataMigrationOptions(); break;
             case 11: $this->runMixblupCliOptions($this->cmdUtil); break;
             case 12: $this->getContainer()->get('app.cli.internal_worker.depart')->run($this->cmdUtil); break;
@@ -643,7 +644,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 30: DatabaseDataFixer::removeAnimalsFromLocationAndAnimalResidence($this->conn, $this->cmdUtil); break;
             case 31: DatabaseDataFixer::killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss($this->conn, $this->cmdUtil); break;
             case 32: DatabaseDataFixer::killAliveAnimalsWithADateOfDeath($this->conn, $this->cmdUtil); break;
-            case 33: DatabaseDataFixer::removeDuplicateAnimalResidences($this->conn, $this->cmdUtil); break;
+            case 33: DatabaseDataFixer::removeDuplicateAnimalResidences($this->conn, $this->getLogger()); break;
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
@@ -708,21 +709,28 @@ class NsfoMainCommand extends ContainerAwareCommand
     }
 
 
-    public function fillMissingDataOptions()
+    public function fillMissingDataOptions(array $options = [])
     {
         $this->initializeMenu(self::FILL_MISSING_DATA);
 
-        $option = $this->cmdUtil->generateMultiLineQuestion([
-            'Choose option: ', "\n",
-            self::LINE_THICK, "\n",
-            '1: Birth Weight and TailLength', "\n",
-            '2: UbnOfBirth (string) in Animal', "\n",
-            '3: Fill empty breedCode, breedType and pedigree (stn) data for all declareBirth animals (no data is overwritten)', "\n",
-            '4: Fill empty scrapieGenotype data for all declareBirth animals currently on livestocks (no data is overwritten)', "\n",
-            '5: Fill missing pedigreeRegisterIds by breedNumber in STN (no data is overwritten)', "\n",
-            "\n",
-            'other: exit submenu', "\n"
-        ], self::DEFAULT_OPTION);
+        if (empty($options)) {
+            $option = $this->cmdUtil->generateMultiLineQuestion([
+                'Choose option: ', "\n",
+                self::LINE_THICK, "\n",
+                '1: Birth Weight and TailLength', "\n",
+                '2: UbnOfBirth (string) in Animal', "\n",
+                '3: Fill empty breedCode, breedType and pedigree (stn) data for all declareBirth animals (no data is overwritten)', "\n",
+                '4: Fill empty scrapieGenotype data for all declareBirth animals currently on livestocks (no data is overwritten)', "\n",
+                '5: Fill missing pedigreeRegisterIds by breedNumber in STN (no data is overwritten)', "\n",
+                self::LINE_THIN, "\n",
+                '6: Inbreeding coefficients, generate if empty', "\n",
+                "\n",
+                'other: exit submenu', "\n"
+            ], self::DEFAULT_OPTION);
+        } else {
+            $option = array_shift($options);
+            $this->exitAfterRun = true;
+        }
 
         switch ($option) {
             case 1: $this->getContainer()->get('app.datafix.birth.measurements.missing')->run(); break;
@@ -730,8 +738,12 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 3: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->run($this->cmdUtil); break;
             case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScrapieGenotypeReprocessor')->run($this->cmdUtil); break;
             case 5: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->batchMatchMissingPedigreeRegisterByBreederNumberInStn(); break;
+            case 6: $this->getContainer()->get(InbreedingCoefficientUpdaterService::class)->generateForAllAnimalsAndLitters(); break;
 
             default: $this->writeMenuExit(); return;
+        }
+        if ($this->exitAfterRun) {
+            die;
         }
         $this->fillMissingDataOptions();
     }

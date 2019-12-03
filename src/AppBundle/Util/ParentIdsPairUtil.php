@@ -4,41 +4,26 @@
 namespace AppBundle\Util;
 
 
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\Litter;
 use AppBundle\model\ParentIdsPair;
 
 class ParentIdsPairUtil
 {
+    const EWE_ID = 'ewe_id';
+    const RAM_ID = 'ram_id';
+
     /**
      * All animals in collection should have both a mother and father
      *
-     * @param array|Animal[] $animals
+     * @param array $result
      * @return array|ParentIdsPair[]
      */
-    public static function fromAnimals(array $animals): array {
-        $parentIdsPairs = array_map(function(Animal $animal) {
+    public static function fromSqlResult(array $result): array {
+        $parentIdsPairs = array_map(function(array $result) {
             return new ParentIdsPair(
-                $animal->getParentFatherId(),
-                $animal->getParentMotherId()
+                $result[self::RAM_ID],
+                $result[self::EWE_ID]
             );
-        }, $animals);
-        return self::uniqueParentIdsPairs($parentIdsPairs);
-    }
-
-    /**
-     * All litters in collection should have both a mother and father
-     *
-     * @param array|Litter[] $litters
-     * @return array|ParentIdsPair[]
-     */
-    public static function fromLitters(array $litters): array {
-        $parentIdsPairs = array_map(function(Litter $litter) {
-            return new ParentIdsPair(
-                $litter->getAnimalFather()->getId(),
-                $litter->getAnimalMother()->getId()
-            );
-        }, $litters);
+        }, $result);
         return self::uniqueParentIdsPairs($parentIdsPairs);
     }
 

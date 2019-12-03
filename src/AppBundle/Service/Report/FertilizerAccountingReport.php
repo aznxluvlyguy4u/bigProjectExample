@@ -11,6 +11,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FertilizerCategory;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\FilesystemUtil;
@@ -99,6 +100,9 @@ class FertilizerAccountingReport extends ReportServiceBase
             $this->initializeReferenceDateValues($referenceDate);
             $this->setFileAndFolderNames();
 
+            /** Do this before running the report query */
+            $this->fixAnimalResidenceRecords($location->getId());
+
             $sql = $this->query();
             $data = $this->em->getConnection()->query($sql)->fetch();
 
@@ -107,8 +111,6 @@ class FertilizerAccountingReport extends ReportServiceBase
             } else {
                 return $this->createCsvReport($data);
             }
-
-            throw new \Exception('INVALID FILE TYPE', Response::HTTP_PRECONDITION_REQUIRED);
 
         } catch (\Exception $exception) {
             $this->logger->error($exception->getTraceAsString());
@@ -137,6 +139,11 @@ class FertilizerAccountingReport extends ReportServiceBase
         $this->folderName = self::FOLDER_NAME;
         $this->filename = $this->translateColumnHeader(self::FILENAME).'-'.$this->getUbn()
             .'__'.$this->newestReferenceDateString.'--'.$this->oldestReferenceDateString.'_'.$this->translateColumnHeader('GENERATED ON');
+    }
+
+
+    private function fixAnimalResidenceRecords(int $locationId) {
+        DatabaseDataFixer::removeDuplicateAnimalResidences($this->conn, $this->logger, $locationId);
     }
 
 
@@ -420,7 +427,9 @@ class FertilizerAccountingReport extends ReportServiceBase
                          " . $this->isResidenceSelectResult() . "
                          r.*
                      FROM animal_residence r
+                        INNER JOIN animal a ON a.id = r.animal_id
                      WHERE r.location_id = ".$this->getLocationId()." AND r.is_pending = FALSE
+                     AND (a.date_of_death ISNULL OR a.date_of_death >= '$this->oldestReferenceDateString')
                      AND (r.end_date ISNULL OR r.end_date >= '$this->oldestReferenceDateString')
                      AND (r.start_date <= '$this->newestReferenceDateString')
                  )a GROUP BY animal_id
@@ -503,6 +512,8 @@ class FertilizerAccountingReport extends ReportServiceBase
         $referenceDateOfMonth = $this->referenceDateStringsByMonth[$month];
         return "(start_date NOTNULL AND end_date NOTNULL) AND DATE(start_date) <= '$referenceDateOfMonth' AND DATE(end_date) >= '$referenceDateOfMonth' OR --closed residence
         (start_date NOTNULL AND end_date ISNULL) AND DATE(start_date) <= '$referenceDateOfMonth' --open residence
+        AND (a.date_of_death ISNULL OR a.date_of_death >= '$this->oldestReferenceDateString')
+        AND (a.date_of_birth NOTNULL AND a.date_of_birth <= '$referenceDateOfMonth')
          as ".$this->residenceKey($month).SqlUtil::SELECT_ROW_SEPARATOR;
     }
 
