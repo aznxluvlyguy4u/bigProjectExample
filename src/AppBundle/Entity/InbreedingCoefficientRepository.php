@@ -77,53 +77,39 @@ class InbreedingCoefficientRepository extends BaseRepository {
      * @param bool $recalculate
      * @return array
      */
-    function findParentIdsPairsWithMissingInbreedingCoefficient(int $limit, bool $recalculate): array {
-        $qb = $this->getManager()->createQueryBuilder();
+    function findParentIdsPairsWithMissingInbreedingCoefficient(int $limit, bool $recalculate): array
+    {
+        $ramIdKey = ParentIdsPairUtil::RAM_ID;
+        $eweIdKey = ParentIdsPairUtil::EWE_ID;
 
-        $qb
-            ->select('a')
-            ->from (Animal::class, 'a')
-            ->andWhere(
-                $qb->expr()->andX(
-                    $qb->expr()->isNotNull('a.parentFather'),
-                    $qb->expr()->isNotNull('a.parentMother')
-                )
-            );
-
-        if ($recalculate)
-        {
-            $qb->andWhere($qb->expr()->isNull('a.inbreedingCoefficientMatchUpdatedAt'));
-        } else {
-            $qb->andWhere($qb->expr()->isNull('a.inbreedingCoefficient'));
+        $filterPrefix = 'AND inbreeding_coefficient_id ISNULL';
+        if ($recalculate) {
+            $filterPrefix = 'AND inbreeding_coefficient_match_updated_at ISNULL';
         }
 
-        $qb->setMaxResults($limit);
+        $pairsFromAnimalSql = "SELECT
+                                    parent_father_id as $ramIdKey,
+                                    parent_mother_id as $eweIdKey
+                                FROM animal
+                                WHERE parent_mother_id NOTNULL AND parent_father_id NOTNULL
+                                      $filterPrefix
+                                GROUP BY parent_father_id, parent_mother_id
+                                LIMIT $limit";
 
-        $animals = $qb->getQuery()->getResult();
+        $pairs = $this->getConnection()->query($pairsFromAnimalSql)->fetchAll();
 
-        if (empty($animals)) {
-            $qb
-                ->select('l')
-                ->from (Litter::class, 'l')
-                ->andWhere(
-                    $qb->expr()->andX(
-                        $qb->expr()->isNotNull('l.animalFather'),
-                        $qb->expr()->isNotNull('l.animalMother')
-                    )
-                );
+        if (empty($pairs)) {
+            $pairsFromAnimalSql = "SELECT
+                                    animal_father_id as $ramIdKey,
+                                    animal_mother_id as $eweIdKey
+                                FROM litter
+                                WHERE animal_father_id NOTNULL AND animal_mother_id NOTNULL
+                                      AND $filterPrefix ISNULL
+                                GROUP BY animal_father_id, animal_mother_id
+                                LIMIT $limit";
 
-            if ($recalculate)
-            {
-                $qb->andWhere($qb->expr()->isNull('l.inbreedingCoefficientMatchUpdatedAt'));
-            } else {
-                $qb->andWhere($qb->expr()->isNull('l.inbreedingCoefficient'));
-            }
-
-            $qb->setMaxResults($limit);
-            $litters = $qb->getQuery()->getResult();
-            return ParentIdsPairUtil::fromLitters($litters);
-        } else {
-            return ParentIdsPairUtil::fromAnimals($animals);
+            $pairs = $this->getConnection()->query($pairsFromAnimalSql)->fetchAll();
         }
+        return ParentIdsPairUtil::fromSqlResult($pairs);
     }
 }
