@@ -990,8 +990,8 @@ LEFT JOIN (
                   20 as animal_total_born_alive,
                   -- aantal grootgebrachte lammeren ontbreekt
                   30 as animal_total_matured,
-                  -- scanned date logic unsure
-                  CASE WHEN aa.muscle_thickness IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('scanned').",
+
+                  CASE WHEN a.scan_measurement_set_id IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('scanned').",
                   
                   
                   aa.fat1 as ".$this->translateColumnHeader('fat1').",
@@ -999,15 +999,11 @@ LEFT JOIN (
                   aa.fat3 as ".$this->translateColumnHeader('fat3').",
                   aa.muscle_thickness as ".$this->translateColumnHeader('muscle_thickness').",
                   
-                  -- scan gewicht logic unsure
-                  c.last_weight as ".$this->translateColumnHeader('scan_weight').",
-                  -- scan date ontbreekt
-                  2020-02-02 as ".$this->translateColumnHeader('scan_date').",
+                  scan_weight.weight as ".$this->translateColumnHeader('scan_weight').",
+                  to_char(scan_measurement_set_details.measurement_date, 'DD-MM-YYYY') as ".$this->translateColumnHeader('scan_date').",
                   
-                  -- vader gescand logic unsure
-                  CASE WHEN dad.muscle_thickness IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('father_scanned').",
-                  -- vader gescand logic unsure
-                  CASE WHEN mom.muscle_thickness IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('mother_scanned').",
+                  CASE WHEN dad.scan_measurement_set_id IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('father_scanned').",
+                  CASE WHEN mom.scan_measurement_set_id IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('mother_scanned').",
                   
                   aa.skull as ".$this->translateColumnHeader('skull').",
                   aa.progress as ".$this->translateColumnHeader('progress').",
@@ -1038,6 +1034,11 @@ LEFT JOIN (
                   LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
                   LEFT JOIN inbreeding_coefficient ic ON ic.id = a.inbreeding_coefficient_id
+                  LEFT JOIN scan_measurement_set ON scan_measurement_set.id = a.scan_measurement_set_id
+                  LEFT JOIN measurement as scan_measurement_set_details ON scan_measurement_set_details.id = a.scan_measurement_set_id
+                  LEFT JOIN body_fat ON body_fat.id = scan_measurement_set.body_fat_id
+                  LEFT JOIN weight as scan_weight ON scan_weight.id = scan_measurement_set.scan_weight_id
+                  LEFT JOIN muscle_thickness ON muscle_thickness.id = scan_measurement_set.muscle_thickness_id
                   LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
                 ".$this->breedValuesPlusSignsQueryJoinPart."
                 " . $mainFilter;
