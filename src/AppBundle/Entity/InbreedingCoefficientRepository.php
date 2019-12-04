@@ -161,7 +161,7 @@ WHERE dnb.ubn = $ubn)";
                                     animal_mother_id as $eweIdKey
                                 FROM litter
                                 WHERE animal_father_id NOTNULL AND animal_mother_id NOTNULL
-                                      AND $litterFilterPrefix ISNULL
+                                      $litterFilterPrefix
                                 GROUP BY animal_father_id, animal_mother_id
                                 LIMIT $limit";
 
