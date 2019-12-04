@@ -393,4 +393,29 @@ class InbreedingCoefficientUpdaterService
         $this->writeBatchCount();
         $this->resetCounts();
     }
+
+    public function generateForAnimalsAndLittersOfUbn(string $ubn) {
+        $this->generateForLocationAnimalsAndLittersBase(false, $ubn);
+    }
+
+    public function regenerateForAnimalsAndLittersOfUbn(string $ubn) {
+        $this->generateForLocationAnimalsAndLittersBase(true, $ubn);
+    }
+
+    private function generateForLocationAnimalsAndLittersBase(bool $recalculate, string $ubn) {
+        if ($recalculate) {
+            $this->inbreedingCoefficientRepository->clearMatchUpdatedAt($ubn);
+        }
+
+        $this->resetCounts();
+        do {
+            $parentIdsPairs = $this->inbreedingCoefficientRepository->findParentIdsPairsWithMissingInbreedingCoefficient(self::BATCH_SIZE, $recalculate, $ubn);
+            $this->generateInbreedingCoefficientBase($parentIdsPairs, $recalculate,true, true);
+
+            $this->matchAnimalsAndLittersGlobal();
+
+        } while(!empty($parentIdsPairs));
+        $this->writeBatchCount();
+        $this->resetCounts();
+    }
 }
