@@ -273,6 +273,7 @@ class SqlView
                 a.ubn_of_birth,
                 a.location_of_birth_id,
                 a.location_id,
+                a.scan_measurement_set_id,
                 NULLIF(CONCAT(
                            COALESCE(CAST(c.production_age AS TEXT), '-'),'/',
                            COALESCE(CAST(c.litter_count AS TEXT), '-'),'/',
