@@ -983,14 +983,10 @@ LEFT JOIN (
                   aa.tail_length as ".$this->translateColumnHeader('tail_length').",
                   EXTRACT(YEAR FROM AGE(NOW(), a.date_of_birth)) as ".$this->translateColumnHeader('age_in_years').",
                   
-                  -- aantal worpen ontbreekt
-                  9 as litter_nummer,
-                  -- totaal aantal geboren lammeren ontbreekt
-                  19 as animal_total_born,
-                  -- aantal levend geboren lammeren ontbreekt
-                  20 as animal_total_born_alive,
-                  -- aantal grootgebrachte lammeren ontbreekt
-                  30 as animal_total_matured,
+                  grouped_litters.litter_count as aantal_worpen,
+                  grouped_litters.total_born_count as totaal_aantal_geboren_lammeren,
+                  grouped_litters.born_alive_count as aantal_levend_geboren_lammeren,
+                  grouped_litters.suckle_count as gezoogd_grootgebrachte_lammeren,
 
                   CASE WHEN a.scan_measurement_set_id IS NULL THEN false ELSE true END as ".$this->translateColumnHeader('scanned').",                                                              
                   scan_measurements.fat1 as ".$this->translateColumnHeader('fat1').",
@@ -1034,6 +1030,31 @@ LEFT JOIN (
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
                   LEFT JOIN inbreeding_coefficient ic ON ic.id = a.inbreeding_coefficient_id
                   LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
+                  LEFT JOIN (
+                      SELECT
+                               animal_father_id as animal_id,
+                               COUNT(*) as litter_count,
+                               COALESCE(SUM(born_alive_count + stillborn_count), 0) as total_born_count,
+                               COALESCE(SUM(born_alive_count), 0) as born_alive_count,
+                               COALESCE(SUM(suckle_count), 0) as suckle_count
+                        FROM litter
+                        WHERE status IN ('COMPLETED', 'IMPORTED')
+                          AND animal_father_id NOTNULL
+                        GROUP BY animal_father_id
+                        
+                        UNION
+                        
+                        SELECT
+                            animal_mother_id as animal_id,
+                            COUNT(*) as litter_count,
+                            COALESCE(SUM(born_alive_count + stillborn_count), 0) as total_born_count,
+                            COALESCE(SUM(born_alive_count), 0) as born_alive_count,
+                            COALESCE(SUM(suckle_count), 0) as suckle_count
+                        FROM litter
+                        WHERE status IN ('COMPLETED', 'IMPORTED')
+                          AND animal_mother_id NOTNULL
+                        GROUP BY animal_mother_id
+                  )grouped_litters ON grouped_litters.animal_id = a.id
                 ".$this->breedValuesPlusSignsQueryJoinPart."
                 " . $mainFilter;
 
