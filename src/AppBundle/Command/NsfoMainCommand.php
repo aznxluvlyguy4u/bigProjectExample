@@ -615,7 +615,8 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '50: Fill missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015', "\n\n",
 
                 '================== SCAN MEASUREMENTS ===================', "\n",
-                '60: Create scan measurement set records for unlinked scan measurements', "\n\n",
+                '60: Create scan measurement set records for unlinked scan measurements', "\n",
+                '61: Link latest scan measurement set records to animals', "\n\n",
 
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
@@ -653,6 +654,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
             case 60: MeasurementsUtil::createNewScanMeasurementSetsByUnlinkedData($this->em, $this->getLogger()); break;
+            case 61: MeasurementsUtil::linkLatestScanMeasurementsToAnimals($this->conn, $this->getLogger()); break;
 
             default: $this->writeMenuExit(); return;
         }

@@ -356,4 +356,31 @@ class MeasurementsUtil
         $countsMatchingInspector = empty($results) ? 'No': count($results);
         $logger->debug($countsMatchingInspector.' unlinked data sets found with '.$inspectorMatchingPrefix.'matching inspectors');
     }
+
+    public static function linkLatestScanMeasurementsToAnimals(Connection $connection, LoggerInterface $logger) {
+        $sql = "UPDATE animal SET scan_measurement_set_id = v.scan_measurement_set_id
+FROM (
+         SELECT
+             scan_measurement_set.animal_id,
+             MAX(scan_measurement_set.id) as scan_measurement_set_id
+         FROM scan_measurement_set
+                  INNER JOIN measurement m on scan_measurement_set.id = m.id
+                  INNER JOIN (
+             SELECT
+                 animal_id,
+                 max(animal_id_and_date) as max_animal_id_data
+             FROM scan_measurement_set scan_set
+                      INNER JOIN measurement m on scan_set.id = m.id
+                      INNER JOIN animal a on scan_set.animal_id = a.id
+             WHERE a.scan_measurement_set_id ISNULL AND m.is_active
+             GROUP BY animal_id
+         )scan_set ON scan_set.animal_id = scan_measurement_set.animal_id AND m.animal_id_and_date = max_animal_id_data
+         WHERE m.is_active
+         GROUP BY scan_measurement_set.animal_id
+    )AS v(animal_id, scan_measurement_set_id)
+WHERE animal.id = v.animal_id";
+        $updateCount = SqlUtil::updateWithCount($connection, $sql);
+        $updateCountText = empty($updateCount) ? 'No' : '';
+        $logger->debug($updateCountText.' latest scan_measurement_set records matched to animals');
+    }
 }
