@@ -15,6 +15,7 @@ class SqlView
 
     const VIEW_PERSON_FULL_NAME = 'view_person_full_name';
     const VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS = 'view_animal_livestock_overview_details';
+    const VIEW_SCAN_MEASUREMENTS = 'view_scan_measurements';
     const VIEW_LITTER_DETAILS = 'view_litter_details';
     const VIEW_LOCATION_DETAILS = 'view_location_details';
     const VIEW_NAME_AND_ADDRESS_DETAILS = 'view_name_and_address_details';
@@ -98,6 +99,7 @@ class SqlView
             case self::VIEW_MINIMAL_PARENT_DETAILS: return self::minimalParentDetails();
             case self::VIEW_PEDIGREE_REGISTER_ABBREVIATION: return self::pedigreeRegisterAbbreviation();
             case self::VIEW_PERSON_FULL_NAME: return self::personFullName();
+            case self::VIEW_SCAN_MEASUREMENTS: return self::scanMeasurements();
             default: return null;
         }
     }
@@ -496,5 +498,35 @@ class SqlView
                   LEFT JOIN address ca ON ca.id = c.address_id
                   LEFT JOIN person owner ON owner.id = c.owner_id
                   LEFT JOIN country on ca.country_details_id = country.id";
+    }
+
+
+    private static function scanMeasurements(): string {
+        return "SELECT
+    s.animal_id,
+    m.log_date,
+    m.measurement_date,
+    to_char(m.measurement_date, 'DD-MM-YYYY') as dd_mm_yyyy_measurement_date,
+    w_details.is_active as is_scan_weight_active,
+    w.weight,
+    t.muscle_thickness,
+    fat1.fat as fat1,
+    fat2.fat as fat2,
+    fat3.fat as fat3,
+    m.inspector_id,
+    NULLIF(TRIM(CONCAT(inspector.first_name,' ',inspector.last_name)),'') as inspector,
+    m.action_by_id,
+    NULLIF(TRIM(CONCAT(action_by.first_name,' ',action_by.last_name)),'') as action_by
+FROM scan_measurement_set s
+        LEFT JOIN measurement m ON m.id = s.id
+        LEFT JOIN weight w ON w.id = s.scan_weight_id
+        LEFT JOIN measurement w_details ON w_details.id = w.id
+        LEFT JOIN muscle_thickness t ON t.id = s.muscle_thickness_id
+        LEFT JOIN body_fat bf ON bf.id = s.body_fat_id
+        LEFT JOIN fat1 ON bf.fat1_id = fat1.id
+        LEFT JOIN fat2 ON bf.fat2_id = fat2.id
+        LEFT JOIN fat3 ON bf.fat3_id = fat3.id
+        LEFT JOIN person inspector ON inspector.id = m.inspector_id
+        LEFT JOIN person action_by ON action_by.id = m.action_by_id";
     }
 }
