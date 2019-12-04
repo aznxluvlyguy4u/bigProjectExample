@@ -47,6 +47,12 @@ class Weight extends Measurement
      */
     private $isRevoked;
 
+    /**
+     * @var ScanMeasurementSet
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="scanWeight")
+     */
+    private $scanMeasurementSet;
+
    /**
     * Weight constructor.
     */
@@ -178,7 +184,24 @@ class Weight extends Measurement
     {
         $this->isRevoked = $isRevoked;
     }
-    
+
+    /**
+     * @return ScanMeasurementSet
+     */
+    public function getScanMeasurementSet(): ScanMeasurementSet
+    {
+        return $this->scanMeasurementSet;
+    }
+
+    /**
+     * @param ScanMeasurementSet $scanMeasurementSet
+     * @return Weight
+     */
+    public function setScanMeasurementSet(ScanMeasurementSet $scanMeasurementSet): Weight
+    {
+        $this->scanMeasurementSet = $scanMeasurementSet;
+        return $this;
+    }
     
     /**
      * @param mixed $weight

@@ -25,7 +25,7 @@ class ScanMeasurementSet extends Measurement
     /**
      * @var Weight
      *
-     * @ORM\ManyToOne(targetEntity="Weight", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="Weight", inversedBy="scanMeasurementSet", cascade={"persist"})
      * @ORM\JoinColumn(name="scan_weight_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Weight")
      */
@@ -34,7 +34,7 @@ class ScanMeasurementSet extends Measurement
     /**
      * @var BodyFat
      *
-     * @ORM\ManyToOne(targetEntity="BodyFat", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="BodyFat", cascade={"persist"})
      * @ORM\JoinColumn(name="body_fat_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\BodyFat")
      */
@@ -43,7 +43,7 @@ class ScanMeasurementSet extends Measurement
     /**
      * @var MuscleThickness
      *
-     * @ORM\ManyToOne(targetEntity="MuscleThickness", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="MuscleThickness", cascade={"persist"})
      * @ORM\JoinColumn(name="muscle_thickness_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\MuscleThickness")
      */
