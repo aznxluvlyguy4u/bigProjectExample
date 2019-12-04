@@ -10,6 +10,62 @@ use AppBundle\model\ScanMeasurementsUnlinkedData;
  */
 class ScanMeasurementSetRepository  extends MeasurementRepository{
 
+    const INSERT_BATCH_SIZE = 100;
+
+    /**
+     * @param array|ScanMeasurementsUnlinkedData[] $unlinkedDataSets
+     */
+    function persistNewByUnlinkedDataSets(array $unlinkedDataSets)
+    {
+        if (empty($unlinkedDataSets)) {
+            return;
+        }
+
+        $loopCount = 0;
+        foreach ($unlinkedDataSets as $unlinkedDataSet) {
+
+            if ($this->findOneBy([
+                'animalIdAndDate' => $unlinkedDataSet->animalIdAndDate,
+                'isActive' => true
+            ])) {
+                continue;
+            }
+
+            /** @var Animal $animalByReference */
+            $animalByReference = $this->getEntityManager()->getReference(Animal::class, $unlinkedDataSet->animalId);
+
+            /** @var Inspector|null $inspector */
+            $inspector = $unlinkedDataSet->scanInspectorId != null ?
+                $this->getEntityManager()->getReference(Inspector::class, $unlinkedDataSet->scanInspectorId)
+            : null;
+
+            /** @var Weight $scanWeightByReference */
+            $scanWeightByReference = $this->getEntityManager()->getReference(Weight::class, $unlinkedDataSet->scanWeightId);
+            /** @var BodyFat $bodyFatByReference */
+            $bodyFatByReference = $this->getEntityManager()->getReference(BodyFat::class, $unlinkedDataSet->bodyFatId);
+            /** @var MuscleThickness $muscleThicknessByReference */
+            $muscleThicknessByReference = $this->getEntityManager()->getReference(MuscleThickness::class, $unlinkedDataSet->muscleThicknessId);
+
+            $scanSet = new ScanMeasurementSet();
+            $scanSet
+                ->setAnimal($animalByReference)
+                ->setScanWeight($scanWeightByReference)
+                ->setBodyFat($bodyFatByReference)
+                ->setMuscleThickness($muscleThicknessByReference)
+                // Measurement entity Setters
+                ->setMeasurementDate($unlinkedDataSet->measurementDate)
+                ->setInspector($inspector)
+                ->setAnimalIdAndDateByAnimalAndDateTime($animalByReference, $unlinkedDataSet->measurementDate)
+            ;
+
+            $this->getEntityManager()->persist($scanSet);
+
+            if(++$loopCount%self::INSERT_BATCH_SIZE == 0) { $this->flush(); }
+
+        }
+        $this->flush();
+    }
+
     /**
      * @return array|ScanMeasurementsUnlinkedData[]
      */
@@ -101,7 +157,7 @@ class ScanMeasurementSetRepository  extends MeasurementRepository{
      * @return array|ScanMeasurementsUnlinkedData[]
      */
     function getUnlinkedScanDataWithNonMatchingInspectors(): array {
-        $sql = $this->unlinkedScanDataQueryBase(true,
+        $sql = $this->unlinkedScanDataQueryBase(false,
             "  AND NOT (
         (
                 m.inspector_id ISNULL AND fat.inspector_id ISNULL AND muscle.inspector_id ISNULL

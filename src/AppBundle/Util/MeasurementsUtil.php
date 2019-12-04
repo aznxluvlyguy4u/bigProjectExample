@@ -5,11 +5,14 @@ namespace AppBundle\Util;
 
 use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\ScanMeasurementSet;
 use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Enumerator\WeightType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class MeasurementsUtil
 {    
@@ -336,5 +339,21 @@ class MeasurementsUtil
         }
 
         return $output;
+    }
+
+
+    public static function createNewScanMeasurementSetsByUnlinkedData(EntityManagerInterface $em, LoggerInterface $logger) {
+        $unlinkedDataSetsWithMatchingInspectors = $em->getRepository(ScanMeasurementSet::class)->getUnlinkedScanDataWithMatchingInspectors();
+        self::printScanMeasurementSetsResult($logger, $unlinkedDataSetsWithMatchingInspectors, true);
+        $em->getRepository(ScanMeasurementSet::class)->persistNewByUnlinkedDataSets($unlinkedDataSetsWithMatchingInspectors);
+
+        $unlinkedDataSetsWithNonMatchingInspectors = $em->getRepository(ScanMeasurementSet::class)->getUnlinkedScanDataWithNonMatchingInspectors();
+        self::printScanMeasurementSetsResult($logger, $unlinkedDataSetsWithNonMatchingInspectors, false);
+    }
+
+    private static function printScanMeasurementSetsResult(LoggerInterface $logger, array $results, bool $areInspectorsMatching) {
+        $inspectorMatchingPrefix = $areInspectorsMatching ? '' : 'non-';
+        $countsMatchingInspector = empty($results) ? 'No': count($results);
+        $logger->debug($countsMatchingInspector.' unlinked data sets found with '.$inspectorMatchingPrefix.'matching inspectors');
     }
 }

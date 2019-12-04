@@ -613,6 +613,10 @@ class NsfoMainCommand extends ContainerAwareCommand
 
                 '================== DECLARES ===================', "\n",
                 '50: Fill missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015', "\n\n",
+
+                '================== SCAN MEASUREMENTS ===================', "\n",
+                '60: Create scan measurement set records for unlinked scan measurements', "\n\n",
+
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
         } else {
@@ -647,6 +651,8 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 33: DatabaseDataFixer::removeDuplicateAnimalResidences($this->conn, $this->getLogger()); break;
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
+
+            case 60: MeasurementsUtil::createNewScanMeasurementSetsByUnlinkedData($this->em, $this->getLogger()); break;
 
             default: $this->writeMenuExit(); return;
         }
