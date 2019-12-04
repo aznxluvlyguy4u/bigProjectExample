@@ -991,7 +991,7 @@ LEFT JOIN (
                   -- aantal grootgebrachte lammeren ontbreekt
                   30 as animal_total_matured,
 
-                  CASE WHEN a.scan_measurement_set_id IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('scanned').",
+                  CASE WHEN a.scan_measurement_set_id IS NULL THEN false ELSE true END as ".$this->translateColumnHeader('scanned').",
                   
                   
                   aa.fat1 as ".$this->translateColumnHeader('fat1').",
@@ -1002,8 +1002,8 @@ LEFT JOIN (
                   scan_weight.weight as ".$this->translateColumnHeader('scan_weight').",
                   to_char(scan_measurement_set_details.measurement_date, 'DD-MM-YYYY') as ".$this->translateColumnHeader('scan_date').",
                   
-                  CASE WHEN dad.scan_measurement_set_id IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('father_scanned').",
-                  CASE WHEN mom.scan_measurement_set_id IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('mother_scanned').",
+                  CASE WHEN dad.scan_measurement_set_id IS NULL THEN false ELSE true END as ".$this->translateColumnHeader('father_scanned').",
+                  CASE WHEN mom.scan_measurement_set_id IS NULL THEN false ELSE true END as ".$this->translateColumnHeader('mother_scanned').",
                   
                   aa.skull as ".$this->translateColumnHeader('skull').",
                   aa.progress as ".$this->translateColumnHeader('progress').",
