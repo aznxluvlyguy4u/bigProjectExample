@@ -69,6 +69,8 @@ class ScanMeasurementsMigrator extends Migrator2017JunServiceBase implements IMi
     {
         parent::run($cmdUtil);
 
+        throw new \Exception('The logic for this migration is outdated. Please also create a scan_measurement_set record and link it to the correct animal');
+
         $this->currentKey = $this->cmdUtil->questionForIntChoice(0, 'data import record');
 
         $this->writeLn('====== PRE migration fixes ======');
