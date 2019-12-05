@@ -47,9 +47,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     /** @var boolean */
     private $anyCurrentAnimalValueWasUpdated;
     /** @var boolean */
-    private $updateInbreedingCoefficient;
+    private $updateInbreedingCoefficient = false;
     /** @var array */
-    private $animalsIdsForWhichInbreedingCoefficientShouldBeUpdated;
+    private $animalsIdsForWhichInbreedingCoefficientShouldBeUpdated = [];
     /** @var Ram|Ewe[] */
     private $newParentsById;
     /** @var Location[] */
@@ -162,6 +162,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         $this->getManager()->getConnection()->setAutoCommit(false);
 
         try {
+
+            $this->updateInbreedingCoefficient = false;
+            $this->animalsIdsForWhichInbreedingCoefficientShouldBeUpdated = [];
 
             $updateAnimalResults = $this->updateValues($animalsWithNewValues, $currentAnimalsResult);
             if ($updateAnimalResults instanceof JsonResponse) {
@@ -622,7 +625,6 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     {
         $this->clearCurrentActionLogMessage();
         $this->extractCurrentAnimalIdData($retrievedAnimal);
-        $this->updateInbreedingCoefficient = false;
 
         /* Update Parents */
 
