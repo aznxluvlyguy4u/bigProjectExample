@@ -94,7 +94,7 @@ class InbreedingCoefficientUpdaterService
                 $this->writeBatchCount();
             }
         }
-//        dump($this->em->getUnitOfWork()->getScheduledEntityInsertions());
+
         $this->em->flush();
         $this->writeBatchCount();
 
