@@ -144,6 +144,10 @@ services:
 
     AppBundle\Service\AnimalDetailsBatchUpdaterService:
         parent: app.abstract_base.controller
+        calls:
+          - method: setInbreedingCoefficientUpdaterService
+            arguments:
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
 
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
