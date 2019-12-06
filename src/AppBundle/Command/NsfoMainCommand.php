@@ -723,7 +723,9 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '4: Fill empty scrapieGenotype data for all declareBirth animals currently on livestocks (no data is overwritten)', "\n",
                 '5: Fill missing pedigreeRegisterIds by breedNumber in STN (no data is overwritten)', "\n",
                 self::LINE_THIN, "\n",
-                '6: Inbreeding coefficients, generate if empty', "\n",
+                '6: Inbreeding coefficients, generate if empty, all', "\n",
+                '7: Inbreeding coefficients, generate if empty, for given ubn', "\n",
+                '8: Inbreeding coefficients, regenerate if empty, for given ubn', "\n",
                 "\n",
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
@@ -739,6 +741,8 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScrapieGenotypeReprocessor')->run($this->cmdUtil); break;
             case 5: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->batchMatchMissingPedigreeRegisterByBreederNumberInStn(); break;
             case 6: $this->getContainer()->get(InbreedingCoefficientUpdaterService::class)->generateForAllAnimalsAndLitters(); break;
+            case 7: $this->getContainer()->get(InbreedingCoefficientUpdaterService::class)->generateForAnimalsAndLittersOfUbn($this->askForUbn()); break;
+            case 8: $this->getContainer()->get(InbreedingCoefficientUpdaterService::class)->regenerateForAnimalsAndLittersOfUbn($this->askForUbn()); break;
 
             default: $this->writeMenuExit(); return;
         }
@@ -971,6 +975,9 @@ class NsfoMainCommand extends ContainerAwareCommand
         );
     }
 
+    private function askForUbn(): string {
+        return $this->cmdUtil->generateQuestion('insert ubn (default: '.self::DEFAULT_UBN.')', self::DEFAULT_UBN);
+    }
 
     private function printBreedValuesAllUbns()
     {
@@ -986,7 +993,7 @@ class NsfoMainCommand extends ContainerAwareCommand
     private function printBreedValuesByUbn()
     {
         do {
-            $ubn = $this->cmdUtil->generateQuestion('insert ubn (default: '.self::DEFAULT_UBN.')', self::DEFAULT_UBN);
+            $ubn = $this->askForUbn();
         } while(!ctype_digit($ubn) && !is_int($ubn));
         $this->cmdUtil->writeln('Generating breedValues csv file for UBN: '.$ubn.' ...');
         $this->getBreedValuePrinter()->printBreedValuesByUbn($ubn);
