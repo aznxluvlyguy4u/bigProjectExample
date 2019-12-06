@@ -253,19 +253,8 @@ class InbreedingCoefficientUpdaterService
                          )animal ON animal.parent_father_id = ic.ram_id AND animal.parent_mother_id = ic.ewe_id";
             $animalSelectResult = $this->em->getConnection()->query($animalSelectSql)->fetchAll();
 
-            if (!empty($animalSelectResult)) {
-                $valuesString = SqlUtil::valueStringFromNestedArray($animalSelectResult, false);
-
-                $updateAnimalSql = "UPDATE animal SET
-                  inbreeding_coefficient_id = v.inbreeding_coefficient_id,
-                  inbreeding_coefficient_match_updated_at = NOW()
-                FROM (
-                         VALUES $valuesString
-                ) as v(animal_id, inbreeding_coefficient_id)
-                WHERE animal.id = v.animal_id";
-                $animalUpdatedCount = SqlUtil::updateWithCount($this->em->getConnection(), $updateAnimalSql);
-                $this->matchAnimalCount += $animalUpdatedCount;
-            }
+            $animalUpdatedCount = $this->updateAnimalBySelectResult($animalSelectResult);
+            $this->matchAnimalCount += $animalUpdatedCount;
         }
 
         if (!empty($litterIds)) {
@@ -287,20 +276,8 @@ class InbreedingCoefficientUpdaterService
                              )litter ON litter.animal_father_id = ic.ram_id AND litter.animal_mother_id = ic.ewe_id";
             $litterSelectResult = $this->em->getConnection()->query($litterSelectSql)->fetchAll();
 
-            if (!empty($litterSelectResult)) {
-                $valuesString = SqlUtil::valueStringFromNestedArray($litterSelectResult, false);
-
-                $updateLitterSql = "UPDATE litter SET
-                  inbreeding_coefficient_id = v.inbreeding_coefficient_id,
-                  inbreeding_coefficient_match_updated_at = NOW()
-                FROM (
-                         VALUES $valuesString
-                ) as v(litter_id, inbreeding_coefficient_id)
-                WHERE litter.id = v.litter_id";
-
-                $litterUpdatedCount = SqlUtil::updateWithCount($this->em->getConnection(), $updateLitterSql);
-                $this->matchLitterCount += $litterUpdatedCount;
-            }
+            $litterUpdatedCount = $this->updateLitterBySelectResult($litterSelectResult);
+            $this->matchLitterCount += $litterUpdatedCount;
         }
 
         $this->logger->debug("Animals matched with inbreeding coefficient: "
@@ -335,6 +312,11 @@ class InbreedingCoefficientUpdaterService
                          WHERE ic.find_global_matches";
             $animalSelectResult = $this->em->getConnection()->query($animalSelectSql)->fetchAll();
 
+            $animalUpdatedCount = $this->updateAnimalBySelectResult($animalSelectResult);
+            $updatedCount += $animalUpdatedCount;
+            $this->matchAnimalCount += $animalUpdatedCount;
+
+
             $litterSelectSql = "SELECT
                                  litter.id as litter_id,
                                  ic.id as inbreeding_coefficient_id
@@ -351,36 +333,10 @@ class InbreedingCoefficientUpdaterService
                              WHERE ic.find_global_matches";
             $litterSelectResult = $this->em->getConnection()->query($litterSelectSql)->fetchAll();
 
-            if (!empty($animalSelectResult)) {
-                $valuesString = SqlUtil::valueStringFromNestedArray($animalSelectResult, false);
+            $litterUpdatedCount = $this->updateLitterBySelectResult($litterSelectResult);
+            $updatedCount += $litterUpdatedCount;
+            $this->matchLitterCount += $litterUpdatedCount;
 
-                $updateAnimalSql = "UPDATE animal SET
-                  inbreeding_coefficient_id = v.inbreeding_coefficient_id,
-                  inbreeding_coefficient_match_updated_at = NOW()
-                FROM (
-                         VALUES $valuesString
-                ) as v(animal_id, inbreeding_coefficient_id)
-                WHERE animal.id = v.animal_id";
-                $animalUpdatedCount = SqlUtil::updateWithCount($this->em->getConnection(), $updateAnimalSql);
-                $updatedCount += $animalUpdatedCount;
-                $this->matchAnimalCount += $animalUpdatedCount;
-            }
-
-            if (!empty($litterSelectResult)) {
-                $valuesString = SqlUtil::valueStringFromNestedArray($litterSelectResult, false);
-
-                $updateLitterSql = "UPDATE litter SET
-                      inbreeding_coefficient_id = v.inbreeding_coefficient_id,
-                      inbreeding_coefficient_match_updated_at = NOW()
-                    FROM (
-                             VALUES $valuesString
-                    ) as v(litter_id, inbreeding_coefficient_id)
-                    WHERE litter.id = v.litter_id";
-
-                $litterUpdatedCount = SqlUtil::updateWithCount($this->em->getConnection(), $updateLitterSql);
-                $updatedCount += $litterUpdatedCount;
-                $this->matchLitterCount += $litterUpdatedCount;
-            }
 
             $inbreedingCoefficientIdsFromAnimals = array_unique(array_map(function(array $array) {
                 return $array['inbreeding_coefficient_id'];
@@ -422,6 +378,41 @@ class InbreedingCoefficientUpdaterService
               updated_at = NOW()
             WHERE find_global_matches = true";
         $this->em->getConnection()->query($updateInbreedingCoefficientSql)->execute();
+    }
+
+    private function updateAnimalBySelectResult(array $animalSelectResult): int {
+        if (empty($animalSelectResult)) {
+            return 0;
+        }
+
+        $valuesString = SqlUtil::valueStringFromNestedArray($animalSelectResult, false);
+
+        $updateAnimalSql = "UPDATE animal SET
+                  inbreeding_coefficient_id = v.inbreeding_coefficient_id,
+                  inbreeding_coefficient_match_updated_at = NOW()
+                FROM (
+                         VALUES $valuesString
+                ) as v(animal_id, inbreeding_coefficient_id)
+                WHERE animal.id = v.animal_id";
+        return intval(SqlUtil::updateWithCount($this->em->getConnection(), $updateAnimalSql));
+    }
+
+    private function updateLitterBySelectResult(array $litterSelectResult): int {
+        if (empty($litterSelectResult)) {
+            return 0;
+        }
+
+        $valuesString = SqlUtil::valueStringFromNestedArray($litterSelectResult, false);
+
+        $updateLitterSql = "UPDATE litter SET
+                      inbreeding_coefficient_id = v.inbreeding_coefficient_id,
+                      inbreeding_coefficient_match_updated_at = NOW()
+                    FROM (
+                             VALUES $valuesString
+                    ) as v(litter_id, inbreeding_coefficient_id)
+                    WHERE litter.id = v.litter_id";
+
+        return intval(SqlUtil::updateWithCount($this->em->getConnection(), $updateLitterSql));
     }
 
     public function generateForAllAnimalsAndLitters() {
