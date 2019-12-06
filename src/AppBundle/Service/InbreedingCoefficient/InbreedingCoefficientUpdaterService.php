@@ -94,6 +94,7 @@ class InbreedingCoefficientUpdaterService
                 $this->writeBatchCount();
             }
         }
+
         $this->em->flush();
         $this->writeBatchCount();
 
@@ -224,35 +225,95 @@ class InbreedingCoefficientUpdaterService
         $this->generateInbreedingCoefficientBase($parentIdsPairs, true, $findGlobalMatch);
     }
 
-    public function matchAnimalsAndLitters($animalIds, $litterIds) {
-        $animalIdsString = SqlUtil::getFilterListString($animalIds, false);
-        $animalFilter = "id IN ($animalIdsString)";
+    public function matchAnimalsAndLitters($animalIds = [], $litterIds = []) {
 
-        $litterIdsString = SqlUtil::getFilterListString($litterIds, false);
-        $litterFilter = "id IN ($litterIdsString)";
+        if (empty($animalIds) && empty($litterIds)) {
+            return;
+        }
 
-        $this->matchAnimalsAndLittersBase($animalFilter, $litterFilter, false);
+        $this->resetCounts();
+
+        if (!empty($animalIds)) {
+            $animalIdsString = SqlUtil::getFilterListString($animalIds, false);
+            $animalFilter = " AND id IN ($animalIdsString)";
+
+
+            $animalSelectSql = "SELECT
+                             animal.id as animal_id,
+                             ic.id as inbreeding_coefficient_id
+                         FROM inbreeding_coefficient ic
+                         INNER JOIN (
+                             SELECT
+                                 id,
+                                 parent_mother_id,
+                                 parent_father_id
+                             FROM animal
+                             WHERE parent_father_id NOTNULL AND parent_mother_id NOTNULL
+                                      $animalFilter
+                         )animal ON animal.parent_father_id = ic.ram_id AND animal.parent_mother_id = ic.ewe_id";
+            $animalSelectResult = $this->em->getConnection()->query($animalSelectSql)->fetchAll();
+
+            if (!empty($animalSelectResult)) {
+                $valuesString = SqlUtil::valueStringFromNestedArray($animalSelectResult, false);
+
+                $updateAnimalSql = "UPDATE animal SET
+                  inbreeding_coefficient_id = v.inbreeding_coefficient_id,
+                  inbreeding_coefficient_match_updated_at = NOW()
+                FROM (
+                         VALUES $valuesString
+                ) as v(animal_id, inbreeding_coefficient_id)
+                WHERE animal.id = v.animal_id";
+                $animalUpdatedCount = SqlUtil::updateWithCount($this->em->getConnection(), $updateAnimalSql);
+                $this->matchAnimalCount += $animalUpdatedCount;
+            }
+        }
+
+        if (!empty($litterIds)) {
+            $litterIdsString = SqlUtil::getFilterListString($litterIds, false);
+            $litterFilter = " AND id IN ($litterIdsString)";
+
+            $litterSelectSql = "SELECT
+                                 litter.id as litter_id,
+                                 ic.id as inbreeding_coefficient_id
+                             FROM inbreeding_coefficient ic
+                             INNER JOIN (
+                                 SELECT
+                                     id,
+                                     animal_father_id,
+                                     animal_mother_id
+                                 FROM litter
+                                 WHERE animal_father_id NOTNULL AND animal_mother_id NOTNULL
+                                          $litterFilter
+                             )litter ON litter.animal_father_id = ic.ram_id AND litter.animal_mother_id = ic.ewe_id";
+            $litterSelectResult = $this->em->getConnection()->query($litterSelectSql)->fetchAll();
+
+            if (!empty($litterSelectResult)) {
+                $valuesString = SqlUtil::valueStringFromNestedArray($litterSelectResult, false);
+
+                $updateLitterSql = "UPDATE litter SET
+                  inbreeding_coefficient_id = v.inbreeding_coefficient_id,
+                  inbreeding_coefficient_match_updated_at = NOW()
+                FROM (
+                         VALUES $valuesString
+                ) as v(litter_id, inbreeding_coefficient_id)
+                WHERE litter.id = v.litter_id";
+
+                $litterUpdatedCount = SqlUtil::updateWithCount($this->em->getConnection(), $updateLitterSql);
+                $this->matchLitterCount += $litterUpdatedCount;
+            }
+        }
+
+        $this->logger->debug("Animals matched with inbreeding coefficient: "
+            .$this->matchAnimalCount.' animals, '
+            .$this->matchLitterCount.' litters, '
+            .($this->matchAnimalCount + $this->matchLitterCount).' total'
+        );
+
+        $this->resetCounts();
     }
 
     public function matchAnimalsAndLittersGlobal() {
-        $this->matchAnimalsAndLittersBase("", "", true);
-    }
-
-    private function matchAnimalsAndLittersBase($animalFilter = "", $litterFilter = "", $findGlobalMatches = false) {
         $this->resetCounts();
-
-        if (!empty($animalFilter)) {
-            $animalFilter = "AND ".$animalFilter;
-        }
-
-        if (!empty($litterFilter)) {
-            $litterFilter = "AND ".$litterFilter;
-        }
-
-        $inbreedingCoefficientFilter = "";
-        if ($findGlobalMatches) {
-            $inbreedingCoefficientFilter = "WHERE ic.find_global_matches";
-        }
 
         do {
 
@@ -269,10 +330,9 @@ class InbreedingCoefficientUpdaterService
                                  parent_father_id
                              FROM animal
                              WHERE parent_father_id NOTNULL AND parent_mother_id NOTNULL
-                               AND inbreeding_coefficient_match_updated_at ISNULL
-                                      $animalFilter
+                                AND inbreeding_coefficient_match_updated_at ISNULL
                          )animal ON animal.parent_father_id = ic.ram_id AND animal.parent_mother_id = ic.ewe_id
-                         $inbreedingCoefficientFilter";
+                         WHERE ic.find_global_matches";
             $animalSelectResult = $this->em->getConnection()->query($animalSelectSql)->fetchAll();
 
             $litterSelectSql = "SELECT
@@ -286,10 +346,9 @@ class InbreedingCoefficientUpdaterService
                                      animal_mother_id
                                  FROM litter
                                  WHERE animal_father_id NOTNULL AND animal_mother_id NOTNULL
-                                   AND inbreeding_coefficient_match_updated_at ISNULL
-                                          $litterFilter
+                                    AND inbreeding_coefficient_match_updated_at ISNULL
                              )litter ON litter.animal_father_id = ic.ram_id AND litter.animal_mother_id = ic.ewe_id
-                             $inbreedingCoefficientFilter";
+                             WHERE ic.find_global_matches";
             $litterSelectResult = $this->em->getConnection()->query($litterSelectSql)->fetchAll();
 
             if (!empty($animalSelectResult)) {
@@ -323,27 +382,25 @@ class InbreedingCoefficientUpdaterService
                 $this->matchLitterCount += $litterUpdatedCount;
             }
 
-            if ($findGlobalMatches) {
-                $inbreedingCoefficientIdsFromAnimals = array_unique(array_map(function(array $array) {
-                    return $array['inbreeding_coefficient_id'];
-                }, $animalSelectResult));
+            $inbreedingCoefficientIdsFromAnimals = array_unique(array_map(function(array $array) {
+                return $array['inbreeding_coefficient_id'];
+            }, $animalSelectResult));
 
-                $inbreedingCoefficientIdsFromLitters = array_unique(array_map(function(array $array) {
-                    return $array['inbreeding_coefficient_id'];
-                }, $litterSelectResult));
+            $inbreedingCoefficientIdsFromLitters = array_unique(array_map(function(array $array) {
+                return $array['inbreeding_coefficient_id'];
+            }, $litterSelectResult));
 
-                $inbreedingCoefficientIds = ArrayUtil::concatArrayValues([
-                    $inbreedingCoefficientIdsFromAnimals, $inbreedingCoefficientIdsFromLitters
-                ]);
+            $inbreedingCoefficientIds = ArrayUtil::concatArrayValues([
+                $inbreedingCoefficientIdsFromAnimals, $inbreedingCoefficientIdsFromLitters
+            ]);
 
-                if (!empty($inbreedingCoefficientIds)) {
-                    $inbreedingCoefficientIdValuesString = SqlUtil::getIdsFilterListString($inbreedingCoefficientIds);
-                    $updateInbreedingCoefficientSql = "UPDATE inbreeding_coefficient SET
-                  find_global_matches = false,
-                  updated_at = NOW()
-                WHERE inbreeding_coefficient.id IN ($inbreedingCoefficientIdValuesString)";
-                    $this->em->getConnection()->query($updateInbreedingCoefficientSql)->execute();
-                }
+            if (!empty($inbreedingCoefficientIds)) {
+                $inbreedingCoefficientIdValuesString = SqlUtil::getIdsFilterListString($inbreedingCoefficientIds);
+                $updateInbreedingCoefficientSql = "UPDATE inbreeding_coefficient SET
+              find_global_matches = false,
+              updated_at = NOW()
+            WHERE inbreeding_coefficient.id IN ($inbreedingCoefficientIdValuesString)";
+                $this->em->getConnection()->query($updateInbreedingCoefficientSql)->execute();
             }
 
         } while($updatedCount > 0);
@@ -356,17 +413,15 @@ class InbreedingCoefficientUpdaterService
 
         $this->resetCounts();
 
-        if ($findGlobalMatches) {
-            /*
-             * Clear find_global_matched = true for inbreeding_coefficient
-             * where animal or litter data was not updated, because it was not needed to be updated
-             */
-            $updateInbreedingCoefficientSql = "UPDATE inbreeding_coefficient SET
-                  find_global_matches = false,
-                  updated_at = NOW()
-                WHERE find_global_matches = true";
-            $this->em->getConnection()->query($updateInbreedingCoefficientSql)->execute();
-        }
+        /*
+         * Clear find_global_matched = true for inbreeding_coefficient
+         * where animal or litter data was not updated, because it was not needed to be updated
+         */
+        $updateInbreedingCoefficientSql = "UPDATE inbreeding_coefficient SET
+              find_global_matches = false,
+              updated_at = NOW()
+            WHERE find_global_matches = true";
+        $this->em->getConnection()->query($updateInbreedingCoefficientSql)->execute();
     }
 
     public function generateForAllAnimalsAndLitters() {
@@ -385,6 +440,31 @@ class InbreedingCoefficientUpdaterService
         $this->resetCounts();
         do {
             $parentIdsPairs = $this->inbreedingCoefficientRepository->findParentIdsPairsWithMissingInbreedingCoefficient(self::BATCH_SIZE, $recalculate);
+            $this->generateInbreedingCoefficientBase($parentIdsPairs, $recalculate,true, true);
+
+            $this->matchAnimalsAndLittersGlobal();
+
+        } while(!empty($parentIdsPairs));
+        $this->writeBatchCount();
+        $this->resetCounts();
+    }
+
+    public function generateForAnimalsAndLittersOfUbn(string $ubn) {
+        $this->generateForLocationAnimalsAndLittersBase(false, $ubn);
+    }
+
+    public function regenerateForAnimalsAndLittersOfUbn(string $ubn) {
+        $this->generateForLocationAnimalsAndLittersBase(true, $ubn);
+    }
+
+    private function generateForLocationAnimalsAndLittersBase(bool $recalculate, string $ubn) {
+        if ($recalculate) {
+            $this->inbreedingCoefficientRepository->clearMatchUpdatedAt($ubn);
+        }
+
+        $this->resetCounts();
+        do {
+            $parentIdsPairs = $this->inbreedingCoefficientRepository->findParentIdsPairsWithMissingInbreedingCoefficient(self::BATCH_SIZE, $recalculate, $ubn);
             $this->generateInbreedingCoefficientBase($parentIdsPairs, $recalculate,true, true);
 
             $this->matchAnimalsAndLittersGlobal();

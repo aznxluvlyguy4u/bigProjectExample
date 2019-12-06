@@ -278,4 +278,16 @@ class TaskService
         $this->logger->error($exception->getMessage());
         $this->logger->error($exception->getTraceAsString());
     }
+
+    /**
+     * @return \DateTime
+     * @throws \Exception
+     */
+    public static function getMaxNonExpiredDate(): \DateTime
+    {
+        $date = new \DateTime();//now
+        $interval = new \DateInterval('P7D');// P[eriod] 1 D[ay]
+        $date->sub($interval);
+        return $date;
+    }
 }
