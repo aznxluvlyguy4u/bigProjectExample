@@ -137,11 +137,13 @@ WHERE dnb.ubn = $ubn)";
 
         $pairsFromAnimalSql = "SELECT
                                     parent_father_id as $ramIdKey,
-                                    parent_mother_id as $eweIdKey
+                                    parent_mother_id as $eweIdKey,
+                                    sum(location_id)
                                 FROM animal
                                 WHERE parent_mother_id NOTNULL AND parent_father_id NOTNULL
                                       $animalFilterPrefix
                                 GROUP BY parent_father_id, parent_mother_id
+                                ORDER BY sum(location_id)
                                 LIMIT $limit";
 
         $pairs = $this->getConnection()->query($pairsFromAnimalSql)->fetchAll();
