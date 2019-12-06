@@ -1,6 +1,8 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Service\TaskService;
+use AppBundle\Util\DateUtil;
 use Doctrine\Common\Collections\Criteria;
 
 /**
@@ -11,17 +13,16 @@ class UpdateAnimalDataWorkerRepository extends BaseRepository {
 
     /**
      * @param Person $user
-     * @param Person|null $accountOwner
      * @param int|null $limit
      * @return array|mixed
+     * @throws \Exception
      */
-    function getTasks(Person $user, ?Person $accountOwner, ?int $limit = null)
+    function getTasks(Person $user, ?int $limit = null)
     {
         if (!$user) {
             return [];
         }
 
-        $isAdminEnvironment = $accountOwner == null;
 
         if ($limit && $limit < 1) {
             return [];
@@ -30,6 +31,15 @@ class UpdateAnimalDataWorkerRepository extends BaseRepository {
         $qb = $this->getManager()->createQueryBuilder();
         $qb->select('w')
             ->from(UpdateAnimalDataWorker::class, 'w')
+            ->where(
+                $qb->expr()->andX(
+                    $qb->expr()->gte('w.startedAt', DateUtil::getQueryBuilderFormat(TaskService::getMaxNonExpiredDate())),
+                    $qb->expr()->isNotNull('w.finishedAt')
+                )
+            )
+            ->orWhere(
+                $qb->expr()->isNull('w.finishedAt')
+            )
             ->orderBy('w.startedAt', Criteria::DESC)
             ->setMaxResults($limit)
         ;
