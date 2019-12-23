@@ -282,6 +282,9 @@ FROM (
                        $sampleDateString <= DATE(end_date)
                     )
                  )
+               -- extra residence safety check by date of birth and death
+               AND (a.date_of_death ISNULL OR DATE(a.date_of_death) >= $sampleDateString)
+               AND (a.date_of_birth NOTNULL AND DATE(a.date_of_birth) <= $sampleDateString)
              GROUP BY animal_id
          )
          GROUP BY type, one_year_or_older
