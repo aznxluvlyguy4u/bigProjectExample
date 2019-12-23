@@ -7,6 +7,7 @@ namespace AppBundle\Util;
 use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\EditTypeEnum;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
 use Psr\Log\LoggerInterface;
@@ -664,23 +665,22 @@ class DatabaseDataFixer
     }
 
 
+    public static function fixAnimalResidenceRecords(Connection $conn, LoggerInterface $logger) {
+        self::removeDuplicateAnimalResidences($conn, $logger);
+        // Always remove ALL duplicates first before closing the residences!
+        self::closeOpenResidencesWithMatchedOlderResidence($conn, $logger);
+    }
+
+
     /**
      * @param Connection $conn
      * @param LoggerInterface $logger
-     * @param int|null $locationId
      * @return int
      */
-    public static function removeDuplicateAnimalResidences(Connection $conn, LoggerInterface $logger, ?int $locationId = null)
+    private static function removeDuplicateAnimalResidences(Connection $conn, LoggerInterface $logger)
     {
         $logger->info('Delete duplicate animal_residences');
         $logger->info('ignoring hours in startDate and endDate');
-
-        $whereLocationFilter = '';
-        $andLocationFilter = '';
-        if ($locationId) {
-            $whereLocationFilter = 'WHERE r.location_id = '.$locationId;
-            $andLocationFilter = 'AND r.location_id = '.$locationId;
-        }
 
         $sqls = [
             "Delete duplicate animal residences where at least one is closed and the others are not" =>
@@ -691,14 +691,16 @@ class DatabaseDataFixer
                          INNER JOIN (
                     SELECT
                         r.animal_id,
-                        r.start_date,
+                        DATE(r.start_date) as start_date,
+                        r.location_id,
                         bool_or(r.end_date NOTNULL AND is_pending = FALSE) as has_residence_with_end_date
                     FROM animal_residence r
-                    $whereLocationFilter
-                    GROUP BY r.animal_id, r.start_date HAVING COUNT(*) > 1
-                )duplicate ON duplicate.animal_id = r.animal_id AND duplicate.start_date = r.start_date
+                    GROUP BY r.animal_id, r.location_id, DATE(r.start_date) HAVING COUNT(*) > 1
+                )duplicate ON 
+                    duplicate.animal_id = r.animal_id AND 
+                    duplicate.location_id = r.location_id AND 
+                    DATE(duplicate.start_date) = DATE(r.start_date)
                 WHERE duplicate.has_residence_with_end_date AND r.end_date ISNULL
-                  $andLocationFilter
                 ORDER BY r.animal_id, r.start_date
                 )",
             "Delete duplicate animal residences by animal, location, dates, country and is_pending" =>
@@ -715,7 +717,7 @@ class DatabaseDataFixer
                                    r.country, r.is_pending,
                                    MIN(id) as min_id
                                  FROM animal_residence r
-                                 WHERE r.end_date ISNULL $andLocationFilter
+                                 WHERE r.end_date ISNULL
                                  GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
                                    --DATE(r.end_date),
                                    r.country, r.is_pending HAVING COUNT(*) > 1
@@ -726,7 +728,7 @@ class DatabaseDataFixer
                                      r.country = rr.country AND
                                      r.is_pending = rr.is_pending AND
                                      rr.id <> r.min_id
-                  WHERE rr.end_date ISNULL $andLocationFilter
+                  WHERE rr.end_date ISNULL
                 
                   UNION
                 
@@ -741,7 +743,7 @@ class DatabaseDataFixer
                                    DATE(r.end_date) as end_date,
                                    r.country, r.is_pending,
                                    MIN(id) as min_id
-                                 FROM animal_residence r $whereLocationFilter
+                                 FROM animal_residence r
                                  GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
                                    DATE(r.end_date),
                                    r.country, r.is_pending HAVING COUNT(*) > 1
@@ -752,7 +754,6 @@ class DatabaseDataFixer
                                      r.country = rr.country AND
                                      r.is_pending = rr.is_pending AND
                                      rr.id <> r.min_id
-                                     $andLocationFilter
                 )",
             "Delete pending animal residences which have a duplicate non pending version" =>
             "DELETE FROM animal_residence WHERE id IN (
@@ -766,7 +767,7 @@ class DatabaseDataFixer
                                r.country,
                                MIN(id) as min_id
                              FROM animal_residence r
-                             WHERE r.end_date ISNULL $andLocationFilter
+                             WHERE r.end_date ISNULL
                              GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
                                r.country
                              HAVING COUNT(*) = 2
@@ -794,7 +795,7 @@ class DatabaseDataFixer
                                DATE(r.end_date) as end_date,
                                r.country,
                                MIN(id) as min_id
-                             FROM animal_residence r $whereLocationFilter
+                             FROM animal_residence r
                              GROUP BY r.animal_id, r.location_id, DATE(r.start_date),
                                DATE(r.end_date),
                                r.country
@@ -831,6 +832,54 @@ class DatabaseDataFixer
         return $totalDeleteCount;
     }
 
+    private static function closeOpenResidencesWithMatchedOlderResidence(Connection $conn, LoggerInterface $logger)
+    {
+        $editTypeEnum = EditTypeEnum::WORKER_EDIT;
+
+        $subQuery = "SELECT DENSE_RANK() OVER (PARTITION BY r.animal_id ORDER BY start_date ASC) AS animal_residence_ordinal,
+                    r.*
+             FROM animal_residence r
+             WHERE is_pending = FALSE
+               AND r.animal_id IN (
+                 SELECT animal_id
+                 FROM animal_residence r
+                 WHERE is_pending = FALSE
+                 GROUP BY animal_id
+                 HAVING COUNT(*) > 1
+             )";
+
+        $sql = "UPDATE
+                    animal_residence
+                SET
+                    end_date_edit_type = $editTypeEnum,
+                    end_date = v.new_end_date
+                FROM (
+                         SELECT
+                             lr.id as older_residence_id,
+                             lr.animal_id,
+                             -- lr.location_id as older_location_id,
+                             -- rr.location_id as younger_location_id,
+                             -- lr.start_date as older_residence_start_date,
+                             rr.start_date as younger_residence_start_date
+                         FROM (
+                                  $subQuery
+                              ) lr -- left record, with earlier start_date
+                                  INNER JOIN (
+                             $subQuery
+                         ) rr -- right record, with later start_date
+                                             ON lr.animal_id = rr.animal_id AND
+                                                lr.animal_residence_ordinal + 1 = rr.animal_residence_ordinal
+                         WHERE lr.end_date ISNULL
+                         ) as v(older_residence_id, animal_id, new_end_date)
+                WHERE
+                      v.older_residence_id = animal_residence.id AND
+                      v.animal_id = animal_residence.animal_id AND
+                      animal_residence.end_date ISNULL
+                ";
+
+        $updateCount = SqlUtil::updateWithCount($conn, $sql);
+        $logger->info('Residences closed by matched younger residences: '.$updateCount);
+    }
 
     /**
      * @param Connection $conn
