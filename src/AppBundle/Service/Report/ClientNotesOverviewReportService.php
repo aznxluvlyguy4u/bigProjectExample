@@ -68,8 +68,8 @@ class ClientNotesOverviewReportService extends ReportServiceBase
         $startDateString = $options->getStartDateString();
         $endDateString = $options->getEndDateString();
 
-        $creationDateFilter = " note.creation_date < ('$endDateString'::date + '1 day'::interval) AND
-                  ('$startDateString'::date - '1 day'::interval) < note.creation_date ";
+        $creationDateFilter = " '$startDateString' <= DATE(note.creation_date) AND "
+            ." DATE(note.creation_date) <= '$endDateString' ";
 
         $companyFilter = empty($company) ? "" : " AND note.company_id = ".$company->getId()." ";
 
