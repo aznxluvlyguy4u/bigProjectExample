@@ -40,6 +40,9 @@ class CompanyRegisterReportService extends ReportServiceBase
         $this->extension = $options->getFileType();
         $this->location = $location;
 
+        /** Do this before running the report query */
+        $this->fixAnimalResidenceRecords();
+
         if ($options->getFileType() === FileType::CSV) {
             return $this->generateCsvFileBySqlQuery(
                 $this->getFilename(),
