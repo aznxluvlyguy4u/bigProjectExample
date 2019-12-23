@@ -691,12 +691,16 @@ class DatabaseDataFixer
                          INNER JOIN (
                     SELECT
                         r.animal_id,
-                        r.start_date,
+                        DATE(r.start_date) as start_date,
+                        r.location_id,
                         bool_or(r.end_date NOTNULL AND is_pending = FALSE) as has_residence_with_end_date
                     FROM animal_residence r
                     $whereLocationFilter
-                    GROUP BY r.animal_id, r.start_date HAVING COUNT(*) > 1
-                )duplicate ON duplicate.animal_id = r.animal_id AND duplicate.start_date = r.start_date
+                    GROUP BY r.animal_id, r.location_id, DATE(r.start_date) HAVING COUNT(*) > 1
+                )duplicate ON 
+                    duplicate.animal_id = r.animal_id AND 
+                    duplicate.location_id = r.location_id AND 
+                    DATE(duplicate.start_date) = DATE(r.start_date)
                 WHERE duplicate.has_residence_with_end_date AND r.end_date ISNULL
                   $andLocationFilter
                 ORDER BY r.animal_id, r.start_date
