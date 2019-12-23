@@ -609,10 +609,10 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
                 '31: Kill resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss', "\n",
                 '32: Kill alive animals with a date_of_death, even if they don\'t have a declare loss', "\n",
-                '33: Remove duplicate animal residences', "\n\n",
+                '33: Fix animal residences: 1. first remove duplicates, then 2. close open residences with matched younger residences', "\n\n",
 
                 '================== DECLARES ===================', "\n",
-                '50: Fill missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015', "\n\n",
+                '50: Fill missing messageNumbers in DeclareResponseBases where errorCode = IDR-00015', "\n\n",
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
         } else {
@@ -644,7 +644,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 30: DatabaseDataFixer::removeAnimalsFromLocationAndAnimalResidence($this->conn, $this->cmdUtil); break;
             case 31: DatabaseDataFixer::killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss($this->conn, $this->cmdUtil); break;
             case 32: DatabaseDataFixer::killAliveAnimalsWithADateOfDeath($this->conn, $this->cmdUtil); break;
-            case 33: DatabaseDataFixer::removeDuplicateAnimalResidences($this->conn, $this->getLogger()); break;
+            case 33: DatabaseDataFixer::fixAnimalResidenceRecords($this->conn, $this->getLogger()); break;
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 

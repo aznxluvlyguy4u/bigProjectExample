@@ -40,6 +40,9 @@ class CompanyRegisterReportService extends ReportServiceBase
         $this->extension = $options->getFileType();
         $this->location = $location;
 
+        /** Do this before running the report query */
+        $this->fixAnimalResidenceRecords();
+
         if ($options->getFileType() === FileType::CSV) {
             return $this->generateCsvFileBySqlQuery(
                 $this->getFilename(),
@@ -146,7 +149,7 @@ class CompanyRegisterReportService extends ReportServiceBase
                         INNER JOIN location l on da.location_id = l.id
                     WHERE l.ubn = '$ubn' AND animal_id NOTNULL AND
                         b.request_state IN ($activeRequestStateTypes) AND
-                        da.arrival_date < ('$sampleDateString'::date + '1 day'::interval)
+                        DATE(da.arrival_date) <= '$sampleDateString'
                     GROUP BY animal_id
                 )
             )arrival ON arrival.animal_id = a.id
@@ -175,7 +178,7 @@ class CompanyRegisterReportService extends ReportServiceBase
                         INNER JOIN location l on d.location_id = l.id
                     WHERE l.ubn = '$ubn' AND animal_id NOTNULL AND
                         b.request_state IN ($activeRequestStateTypes) AND
-                        ('$sampleDateString'::date - '1 day'::interval) < d.depart_date
+                        '$sampleDateString' <= DATE(d.depart_date)
                     GROUP BY animal_id
                 )
             )depart ON depart.animal_id = a.id
@@ -193,17 +196,17 @@ class CompanyRegisterReportService extends ReportServiceBase
                 WHERE l.ubn = '$ubn' AND
                     b.request_state IN ($activeRequestStateTypes) AND
                     b.id IN (
-                        -- Select the declare depart with the highest arrivalDate before or on the referenceDate
+                        -- Select the declare loss with the lower dateOfDeath before or on the referenceDate
                         SELECT
                             -- animal_id, --each declare id only represents one animal
                             MIN(b.id) as min_declare_id
-                            -- it is assumed that newer declareDeparts always have a depart_date greater or equal to the older declareDeparts
+                            -- it is assumed that newer declareLosses always have a date_of_death greater or equal to the older declareLosses
                         FROM declare_base b
                             INNER JOIN declare_loss dl on b.id = dl.id
                             INNER JOIN location l on dl.location_id = l.id
                         WHERE l.ubn = '$ubn' AND animal_id NOTNULL AND
                             b.request_state IN ($activeRequestStateTypes) AND
-                            ('$sampleDateString'::date - '1 day'::interval) < dl.date_of_death
+                            DATE(dl.date_of_death) <= '$sampleDateString'
                         GROUP BY animal_id
                     )
             )loss ON loss.animal_id = a.id
@@ -216,7 +219,7 @@ class CompanyRegisterReportService extends ReportServiceBase
             WHERE is_pending = FALSE AND
                     l.ubn = '$ubn' AND
               --animal is on location on a specific date
-                (start_date < ('$sampleDateString'::date + '1 day'::interval) AND (end_date ISNULL OR (('$sampleDateString'::date - '1 day'::interval) < end_date)))
+                  (DATE(start_date) <= '$sampleDateString') AND (end_date ISNULL OR '$sampleDateString' <= DATE(end_date))
             GROUP BY animal_id
             )
         ;";
@@ -275,8 +278,16 @@ FROM (
                AND ar.location_id = $locationId
                AND
                --animal is on location on a specific date
-                 (start_date < ($sampleDateString::date + '1 day'::interval) AND
-                  (end_date ISNULL OR (($sampleDateString::date - '1 day'::interval) < end_date)))
+                 (
+                    DATE(start_date) <= $sampleDateString AND
+                    (
+                       end_date ISNULL OR
+                       $sampleDateString <= DATE(end_date)
+                    )
+                 )
+               -- extra residence safety check by date of birth and death
+               AND (a.date_of_death ISNULL OR DATE(a.date_of_death) >= $sampleDateString)
+               AND (a.date_of_birth NOTNULL AND DATE(a.date_of_birth) <= $sampleDateString)
              GROUP BY animal_id
          )
          GROUP BY type, one_year_or_older
