@@ -165,7 +165,7 @@ class StoredProcedure
     LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS mom_breed_types(english, dutch_first_letter) ON m.breed_type = mom_breed_types.english
     LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS dad_breed_types(english, dutch_first_letter) ON f.breed_type = dad_breed_types.english
   ".$filterString;
-
+dump($sql);die;
         return $sql;
     }
 
