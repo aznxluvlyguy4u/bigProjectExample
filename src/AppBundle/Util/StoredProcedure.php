@@ -4,7 +4,6 @@
 namespace AppBundle\Util;
 
 
-use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EnumInfo;
 use Doctrine\DBAL\Connection;
@@ -94,13 +93,13 @@ class StoredProcedure
      */
     public static function createLiveStockReportSqlBase($locationId = 'locationId', array $ulnFilter = [], $matchLocationIdOfSelectedAnimals = true)
     {
-        $transferStateFilter = " AND (a.transfer_state ISNULL OR a.transfer_state <> '".AnimalTransferStatus::TRANSFERRING."') ";
+        $transferStateFilter = SqlUtil::livestockTransferStateFilter(true);
 
         $filterString = "WHERE a.is_alive = true $transferStateFilter AND a.location_id = ".$locationId." ORDER BY a.animal_order_number ASC";
 
         $ulnCount = count($ulnFilter);
         if ($ulnCount > 0) {
-            $filterString = "WHERE a.is_alive = true $transferStateFilter AND ".SqlUtil::getUlnQueryFilter($ulnFilter, 'a.');
+            $filterString = "WHERE a.is_alive = true $transferStateFilter AND (".SqlUtil::getUlnQueryFilter($ulnFilter, 'a.').")";
 
             if ($matchLocationIdOfSelectedAnimals) {
                 $filterString = $filterString ." a.location_id = ".$locationId;
@@ -166,7 +165,7 @@ class StoredProcedure
     LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS mom_breed_types(english, dutch_first_letter) ON m.breed_type = mom_breed_types.english
     LEFT JOIN (VALUES ".SqlUtil::breedTypeFirstLetterOnlyTranslationValues().") AS dad_breed_types(english, dutch_first_letter) ON f.breed_type = dad_breed_types.english
   ".$filterString;
-
+dump($sql);die;
         return $sql;
     }
 
