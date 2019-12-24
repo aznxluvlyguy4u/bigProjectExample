@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EnumInfo;
 use Doctrine\DBAL\Connection;
@@ -93,11 +94,13 @@ class StoredProcedure
      */
     public static function createLiveStockReportSqlBase($locationId = 'locationId', array $ulnFilter = [], $matchLocationIdOfSelectedAnimals = true)
     {
-        $filterString = "WHERE a.is_alive = true AND a.location_id = ".$locationId." ORDER BY a.animal_order_number ASC";
+        $transferStateFilter = " AND (a.transfer_state ISNULL OR a.transfer_state <> '".AnimalTransferStatus::TRANSFERRING."') ";
+
+        $filterString = "WHERE a.is_alive = true $transferStateFilter AND a.location_id = ".$locationId." ORDER BY a.animal_order_number ASC";
 
         $ulnCount = count($ulnFilter);
         if ($ulnCount > 0) {
-            $filterString = "WHERE a.is_alive = true AND ".SqlUtil::getUlnQueryFilter($ulnFilter, 'a.');
+            $filterString = "WHERE a.is_alive = true $transferStateFilter AND ".SqlUtil::getUlnQueryFilter($ulnFilter, 'a.');
 
             if ($matchLocationIdOfSelectedAnimals) {
                 $filterString = $filterString ." a.location_id = ".$locationId;
