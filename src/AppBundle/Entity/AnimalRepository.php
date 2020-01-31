@@ -396,9 +396,9 @@ class AnimalRepository extends BaseRepository
                                                      $onlyIncludeAliveEwes = true)
   {
       $clazz = Ewe::class;
-      $isAlive = $onlyIncludeAliveEwes ? null : true;
+      //$isAlive = $onlyIncludeAliveEwes ? null : true;
 
-      $query = $this->getLivestockQuery($location, $isAlive, $clazz, false);
+      $query = $this->getLivestockQuery($location, $onlyIncludeAliveEwes, $clazz, false);
       $query->setFetchMode(Mate::class, 'studEwe', ClassMetadata::FETCH_EAGER);
       $query->setFetchMode(Ram::class, 'parentFather', ClassMetadata::FETCH_EXTRA_LAZY);
       $query->setFetchMode(Ewe::class, 'parentMother', ClassMetadata::FETCH_EXTRA_LAZY);
