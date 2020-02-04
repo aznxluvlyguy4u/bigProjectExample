@@ -7,8 +7,10 @@ namespace AppBundle\Service\DataFix;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Measurement;
+use AppBundle\Entity\MuscleThickness;
 use AppBundle\model\measurements\BodyFatData;
 use AppBundle\model\measurements\MeasurementData;
+use AppBundle\model\measurements\MuscleThicknessData;
 use AppBundle\Util\ClassUtil;
 
 class DuplicateMeasurementsFixer extends DuplicateFixerBase
@@ -188,7 +190,59 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
 
     private function deactivateDuplicateMuscleThickness()
     {
+        $automatedProcess = $this->em->getRepository(Employee::class)->getAutomatedProcess();
 
+        $measurementsFixedCount = 0;
+        $className = "muscle thicknesses";
+
+        $muscleThicknessGroupedByAnimalAndDate = $this->em->getRepository(MuscleThickness::class)->getContradictingMuscleThicknesses();
+
+        if (empty($muscleThicknessGroupedByAnimalAndDate)) {
+            $this->logger->notice("No duplicate $className found");
+            return;
+        }
+
+
+        /** @var MuscleThicknessData[] $muscleThicknessGroup */
+        foreach ($muscleThicknessGroupedByAnimalAndDate as $muscleThicknessGroup)
+        {
+            $sortedLogDates = self::getSortedLogDates($muscleThicknessGroup);
+            $sortedIds = self::getSortedIds($muscleThicknessGroup);
+
+            $prioritizedMuscleThicknessGroup = array_map(function (MuscleThicknessData $muscleThicknessData) use ($sortedLogDates, $sortedIds) {
+                $priorityLevel = 0;
+
+                $priorityLevel += self::getLogDataPriorityValue($muscleThicknessData->logDate, $sortedLogDates);
+
+                if ($muscleThicknessData->hasInspector()) {
+                    $priorityLevel += self::PRIORITY_WEIGHT_HAS_INSPECTOR;
+                }
+
+                $priorityLevel += self::getIdPriorityValue($muscleThicknessData->id, $sortedIds);
+
+                $muscleThicknessData->priorityLevel = $priorityLevel;
+
+                return $muscleThicknessData;
+            }, $muscleThicknessGroup);
+
+
+            $maxPriorityLevel = self::getMaxPriorityLevel($muscleThicknessGroup);
+
+            /** @var MuscleThicknessData $muscleThicknessData */
+            foreach ($prioritizedMuscleThicknessGroup as $muscleThicknessData)
+            {
+                if ($muscleThicknessData->priorityLevel == $maxPriorityLevel) {
+                    $this->logger->notice("Keep $className with id: ".$muscleThicknessData->id);
+                    continue;
+                }
+
+                $this->deactivateMeasurement($muscleThicknessData->id, $automatedProcess);
+
+                $measurementsFixedCount++;
+                $this->logger->notice("Delete $className with id: ".$muscleThicknessData->id);
+            }
+        }
+        $this->logger->notice("Deactivated duplicate $className: ".$measurementsFixedCount);
     }
 
     private function deactivateDuplicateWeight()
