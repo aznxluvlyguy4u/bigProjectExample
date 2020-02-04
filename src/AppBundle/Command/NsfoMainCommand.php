@@ -29,6 +29,7 @@ use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
 use AppBundle\Service\CacheService;
+use AppBundle\Service\DataFix\DuplicateMeasurementsFixer;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
 use AppBundle\Service\Migration\LambMeatIndexMigrator;
@@ -615,8 +616,9 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '50: Fill missing messageNumbers in DeclareResponseBases where errorCode = IDR-00015', "\n\n",
 
                 '================== SCAN MEASUREMENTS ===================', "\n",
-                '60: Create scan measurement set records for unlinked scan measurements', "\n",
-                '61: Link latest scan measurement set records to animals', "\n\n",
+                '60: Fix duplicate measurements', "\n",
+                '61: Create scan measurement set records for unlinked scan measurements', "\n",
+                '62: Link latest scan measurement set records to animals', "\n\n",
 
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
@@ -653,8 +655,9 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
-            case 60: MeasurementsUtil::createNewScanMeasurementSetsByUnlinkedData($this->em, $this->getLogger()); break;
-            case 61: MeasurementsUtil::linkLatestScanMeasurementsToAnimals($this->conn, $this->getLogger()); break;
+            case 60: $this->getContainer()->get(DuplicateMeasurementsFixer::class)->deactivateDuplicateMeasurements(); break;
+            case 61: MeasurementsUtil::createNewScanMeasurementSetsByUnlinkedData($this->em, $this->getLogger(), $this->getContainer()->get(DuplicateMeasurementsFixer::class)); break;
+            case 62: MeasurementsUtil::linkLatestScanMeasurementsToAnimals($this->conn, $this->getLogger()); break;
 
             default: $this->writeMenuExit(); return;
         }

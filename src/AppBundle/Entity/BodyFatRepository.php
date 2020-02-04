@@ -6,6 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Enumerator\MeasurementType;
+use AppBundle\model\measurements\BodyFatData;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\NumberUtil;
@@ -41,7 +42,7 @@ class BodyFatRepository extends MeasurementRepository {
                   LEFT JOIN person p ON p.id = m.inspector_id
                 WHERE bf.animal_id = ".$animal->getId();
         $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
-        
+
         foreach ($retrievedMeasurementData as $measurementData)
         {
             $results[] = [
@@ -123,7 +124,7 @@ class BodyFatRepository extends MeasurementRepository {
         $fat1 = $bodyFats[MeasurementConstant::ONE];
         $fat2 = $bodyFats[MeasurementConstant::TWO];
         $fat3 = $bodyFats[MeasurementConstant::THREE];
-        
+
         if($fat1 == 0 && $fat2 == 0 && $fat3 == 0) {
             return '';
         } else {
@@ -150,7 +151,7 @@ class BodyFatRepository extends MeasurementRepository {
               GROUP BY m.measurement_date, m.type, b.animal_id, m.inspector_id, fat1.fat, fat2.fat, fat3.fat
               HAVING COUNT(*) > 1";
             $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
-            
+
             foreach ($results as $result) {
                 $this->deleteBodyFatMeasurement($result['min_id']);
                 $count++;
@@ -187,6 +188,7 @@ class BodyFatRepository extends MeasurementRepository {
 
 
         $measurementsFixedCount = 0;
+        /** @var BodyFatData[] $bodyFatGroup */
         foreach ($bodyFatsGroupedByAnimalAndDate as $bodyFatGroup) {
 
             if(count($bodyFatGroup) == 2) {
@@ -229,23 +231,6 @@ class BodyFatRepository extends MeasurementRepository {
 
 
     /**
-     * @param array $bodyFatMeasurement
-     * @return bool
-     */
-    private function areAllFatValuesOne($bodyFatMeasurement)
-    {
-        $fat1 = floatval($bodyFatMeasurement[JsonInputConstant::FAT1]);
-        $fat2 = floatval($bodyFatMeasurement[JsonInputConstant::FAT2]);
-        $fat3 = floatval($bodyFatMeasurement[JsonInputConstant::FAT3]);
-        $accuracy = 0.0001;
-
-        return  NumberUtil::areFloatsEqual($fat1, 1.0, $accuracy) &&
-                NumberUtil::areFloatsEqual($fat2, 1.0, $accuracy) &&
-                NumberUtil::areFloatsEqual($fat3, 1.0, $accuracy);
-    }
-
-
-    /**
      * @param $bodyFatId
      * @throws \Doctrine\DBAL\DBALException
      */
@@ -273,19 +258,19 @@ class BodyFatRepository extends MeasurementRepository {
 
 
     /**
-     * @param bool $isGetGroupedByAnimalAndDate
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function getContradictingBodyFats($isGetGroupedByAnimalAndDate = false)
+    public function getContradictingBodyFats()
     {
-        $sql = "SELECT n.id as id, a.id as animal_id, n.animal_id_and_date, n.measurement_date, 
+        $sql = "SELECT n.id as id, a.id as animal_id, n.animal_id_and_date, n.measurement_date, n.log_date,
                         fat1.fat as fat1,  fat2.fat as fat2, fat3.fat as fat3, n.inspector_id
                   FROM measurement n
                   INNER JOIN (
                                SELECT m.animal_id_and_date
                                FROM measurement m
                                  INNER JOIN body_fat x ON m.id = x.id
+                               WHERE m.is_active
                                GROUP BY m.animal_id_and_date
                                HAVING (COUNT(*) > 1)
                              ) t on t.animal_id_and_date = n.animal_id_and_date
@@ -293,15 +278,15 @@ class BodyFatRepository extends MeasurementRepository {
                   INNER JOIN fat1 ON z.fat1_id = fat1.id
                   INNER JOIN fat2 ON z.fat2_id = fat2.id
                   INNER JOIN fat3 ON z.fat3_id = fat3.id
-                  LEFT JOIN animal a ON a.id = z.animal_id";
+                  LEFT JOIN animal a ON a.id = z.animal_id
+                  WHERE n.is_active";
         $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
-        if($isGetGroupedByAnimalAndDate) {
-            return $this->groupSqlMeasurementResultsByAnimalIdAndDate($results);
-        } else {
-            return $results;
-        }
+        $resultsAsDataObject = array_map(function ($bodyFatsInArray) {
+            return new BodyFatData($bodyFatsInArray);
+        }, $results);
 
+        return $this->groupSqlMeasurementObjectResultsByAnimalIdAndDate($resultsAsDataObject);
     }
 
 
@@ -375,11 +360,11 @@ class BodyFatRepository extends MeasurementRepository {
         if( !(NullChecker::floatIsNotZero($fat1Value) && NullChecker::floatIsNotZero($fat2Value) && NullChecker::floatIsNotZero($fat3Value)) ) {
             return false; //Insert is unsuccessful
         }
-        
+
         $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
         $animalId = $parts[MeasurementConstant::ANIMAL_ID];
         $measurementDateString = $parts[MeasurementConstant::DATE];
-        
+
         $isInsertParentSuccessful = $this->insertNewMeasurementInParentTable($animalIdAndDate, $measurementDateString, MeasurementType::BODY_FAT, $inspectorId);
         $bodyFatId = $this->getMaxId();
         if($isInsertParentSuccessful) {

@@ -10,6 +10,7 @@ use AppBundle\Util\SqlBatchProcessorWithProgressBar;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Logger;
 
 /**
  * Class DuplicateFixerBase
@@ -33,6 +34,8 @@ class DuplicateFixerBase
     protected $cmdUtil;
     /** @var Connection */
     protected $conn;
+    /** @var Logger */
+    protected $logger;
 
     /** @var array */
     protected $tableNames;
@@ -43,10 +46,11 @@ class DuplicateFixerBase
      * DuplicateAnimalsFixer constructor.
      * @param ObjectManager $em
      */
-    public function __construct(ObjectManager $em)
+    public function __construct(ObjectManager $em, Logger $logger)
     {
         $this->em = $em;
         $this->conn = $this->em->getConnection();
+        $this->logger = $logger;
 
         $this->animalRepository = $this->em->getRepository(Animal::class);
     }

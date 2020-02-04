@@ -9,13 +9,14 @@ use AppBundle\Entity\ScanMeasurementSet;
 use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Enumerator\WeightType;
+use AppBundle\Service\DataFix\DuplicateMeasurementsFixer;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 class MeasurementsUtil
-{    
+{
     /**
      * @param Connection $conn
      * @param bool $isRegenerateFilledValues
@@ -128,8 +129,8 @@ class MeasurementsUtil
      */
     public static function isValidBodyFatValues($fat1, $fat2, $fat3, $hasValid20WeeksWeightMeasurement)
     {
-        return self::isValidFatValue($fat1, $hasValid20WeeksWeightMeasurement) 
-            && self::isValidFatValue($fat2, $hasValid20WeeksWeightMeasurement) 
+        return self::isValidFatValue($fat1, $hasValid20WeeksWeightMeasurement)
+            && self::isValidFatValue($fat2, $hasValid20WeeksWeightMeasurement)
             && self::isValidFatValue($fat3, $hasValid20WeeksWeightMeasurement);
     }
 
@@ -174,7 +175,7 @@ class MeasurementsUtil
                 } else {
                     return false;
                 }
-                    
+
             case WeightType::EIGHT_WEEKS:
                 if(MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_VALUE <= $weight && $weight <= MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_VALUE) {
                     return true;
@@ -261,12 +262,12 @@ class MeasurementsUtil
         $latestKind = null;
         $kinds = [];
         $isLatestKind = true;
-        foreach ($results as $result) {            
+        foreach ($results as $result) {
             $kind = $result['kind'];
             if(NullChecker::isNull($kind)) { $kind = null; }
-            
+
             $kinds[$kind] = $kind;
-            
+
             if($isLatestKind) {
                 $latestKind = $kind;
                 $isLatestKind = false;
@@ -311,7 +312,7 @@ class MeasurementsUtil
             || $hkExists || $hhExists //adding $hkExists && $hhExists in case of incomplete exterior data
         ) { $kindsForOutput[] = ExteriorKind::HK_; }
 
-        
+
         if($currentKind != null && !in_array($currentKind, $kindsForOutput)) {
             $kindsForOutput[] = $currentKind;
         }
@@ -342,7 +343,13 @@ class MeasurementsUtil
     }
 
 
-    public static function createNewScanMeasurementSetsByUnlinkedData(EntityManagerInterface $em, LoggerInterface $logger) {
+    public static function createNewScanMeasurementSetsByUnlinkedData(
+        EntityManagerInterface $em,
+        LoggerInterface $logger,
+        DuplicateMeasurementsFixer $duplicateMeasurementsFixer
+    ) {
+        $duplicateMeasurementsFixer->deactivateDuplicateMeasurements();
+
         $unlinkedDataSetsWithMatchingInspectors = $em->getRepository(ScanMeasurementSet::class)->getUnlinkedScanDataWithMatchingInspectors();
         self::printScanMeasurementSetsResult($logger, $unlinkedDataSetsWithMatchingInspectors, true);
         $em->getRepository(ScanMeasurementSet::class)->persistNewByUnlinkedDataSets($unlinkedDataSetsWithMatchingInspectors);
