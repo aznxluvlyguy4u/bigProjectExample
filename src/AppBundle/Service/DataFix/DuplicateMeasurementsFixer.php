@@ -9,6 +9,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Measurement;
 use AppBundle\model\measurements\BodyFatData;
 use AppBundle\model\measurements\MeasurementData;
+use AppBundle\Util\ClassUtil;
 
 class DuplicateMeasurementsFixer extends DuplicateFixerBase
 {
@@ -90,14 +91,38 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
     }
 
 
-    private function deactivateMeasurement(int $measurementId, Employee $automatedProcess)
+    private function deactivateMeasurement(?int $measurementId, Employee $automatedProcess, bool $flush = true)
     {
-        $bodyFat = $this->em->getRepository(Measurement::class)->find($measurementId);
-        $bodyFat->setDeleteDate(new \DateTime());
-        $bodyFat->setDeletedBy($automatedProcess);
-        $bodyFat->setIsActive(false);
-        $this->em->persist($bodyFat);
-        $this->em->flush();
+        if ($measurementId == null) {
+            return;
+        }
+
+        /** @var Measurement $measurement */
+        $measurement = $this->em->getRepository(Measurement::class)->find($measurementId);
+
+        if ($measurement->isIsActive()) {
+            $measurement->setDeleteDate(new \DateTime());
+            $measurement->setDeletedBy($automatedProcess);
+            $measurement->setIsActive(false);
+        }
+
+        if ($measurement instanceof BodyFat) {
+            $fat1Id = $measurement->getFat1() ? $measurement->getFat1()->getId() : null;
+            $fat2Id = $measurement->getFat2() ? $measurement->getFat2()->getId() : null;
+            $fat3Id = $measurement->getFat3() ? $measurement->getFat3()->getId() : null;
+
+            self::deactivateMeasurement($fat1Id, $automatedProcess, false);
+            self::deactivateMeasurement($fat2Id, $automatedProcess, false);
+            self::deactivateMeasurement($fat3Id, $automatedProcess, false);
+        }
+
+        $this->em->persist($measurement);
+
+        if ($flush) {
+            $this->em->flush();
+        }
+        $className = ClassUtil::getShortName($measurement);
+        $this->logger->notice("Deleted $className measurement with id: $measurementId");
     }
 
 
@@ -155,9 +180,7 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
                 }
 
                 $this->deactivateMeasurement($bodyFatData->id, $automatedProcess);
-
                 $measurementsFixedCount++;
-                $this->logger->notice('Delete body fat with id: '.$bodyFatData->id);
             }
         }
         $this->logger->notice('Deactivated duplicate body fats: '.$measurementsFixedCount);
