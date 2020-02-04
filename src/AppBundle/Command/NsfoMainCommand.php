@@ -609,7 +609,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
                 '31: Kill resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss', "\n",
                 '32: Kill alive animals with a date_of_death, even if they don\'t have a declare loss', "\n",
-                '33: Fix animal residences: 1. first remove duplicates, then 2. close open residences with matched younger residences', "\n\n",
+                '33: Fix animal residences: 1. remove duplicates, 2. close open residences by next residence, 3. close open residences by date of death', "\n\n",
 
                 '================== DECLARES ===================', "\n",
                 '50: Fill missing messageNumbers in DeclareResponseBases where errorCode = IDR-00015', "\n\n",

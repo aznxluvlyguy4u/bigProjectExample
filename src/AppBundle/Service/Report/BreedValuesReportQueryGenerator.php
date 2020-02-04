@@ -391,11 +391,13 @@ class BreedValuesReportQueryGenerator
         $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
             $ignoreHiddenBreedValueTypes);
 
-        $filterString = "WHERE a.is_alive = true AND a.location_id = ".$locationId." ";
+        $transferStateFilter = SqlUtil::livestockTransferStateFilter(true);
+
+        $filterString = "WHERE a.is_alive = true $transferStateFilter AND a.location_id = ".$locationId." ";
 
         $ulnCount = count($ulnFilter);
         if ($ulnCount > 0) {
-            $filterString = "WHERE ".SqlUtil::getUlnQueryFilter($ulnFilter, 'a.');
+            $filterString = "WHERE (".SqlUtil::getUlnQueryFilter($ulnFilter, 'a.').") ".$transferStateFilter;
 
             if ($matchLocationIdOfSelectedAnimals) {
                 $filterString = $filterString ." a.location_id = ".$locationId;

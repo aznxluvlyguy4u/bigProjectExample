@@ -56,6 +56,41 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
             ReportUtil::translateFileName($this->translator, TranslationKey::GENERATED_ON);
     }
 
+
+    private static function locationFilter(?Location $location, bool $includeDeclareWeightCheck): string {
+        $locationId = $location ? $location->getId() : null;
+
+        $declareWeightCheck = "";
+        if ($includeDeclareWeightCheck) {
+            $activeRequestStateTypes = SqlUtil::activeRequestStateTypesJoinedList();
+            $declareWeightCheck = "w.id IN (
+                        SELECT weight_measurement_id
+                        FROM declare_weight w
+                                 INNER JOIN declare_nsfo_base dnb on w.id = dnb.id
+                        WHERE w.location_id = $locationId AND dnb.request_state IN ($activeRequestStateTypes)
+                        GROUP BY weight_measurement_id
+                    )
+                    OR";
+        }
+
+        return $locationId ?
+            "AND (
+                    a.location_id = $locationId
+                    OR
+                    a.location_of_birth_id = $locationId
+                    OR
+                    $declareWeightCheck
+                    a.id IN (
+                            SELECT animal_id
+                            FROM animal_residence
+                            WHERE a.location_id = $locationId AND is_pending = FALSE
+                            GROUP BY animal_id
+                        )
+                ) -- location filter (for user) "
+            : "";
+    }
+
+
     /**
      * @param int $yearOfBirth
      * @param Location|null $location
@@ -63,12 +98,9 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
      */
     private function getSqlQuery(int $yearOfBirth, ?Location $location = null)
     {
-        $locationId = $location ? $location->getId() : null;
-        $locationFilter = $locationId ? "AND a.location_id = $locationId -- location filter (for user)" : "";
-
-        $mainFilter = "     AND a.is_alive
-                            AND date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
-                            $locationFilter";
+        $primaryAnimalQueryFilter = "     AND date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
+                            ";
+        $primaryWeightQueryFilter = $primaryAnimalQueryFilter . self::locationFilter($location, true);
 
         $dateFormat = "'".SqlUtil::TO_CHAR_DATE_FORMAT."'";
 
@@ -132,7 +164,7 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
                                 INNER JOIN animal a ON a.id = w.animal_id
                                  INNER JOIN measurement m on w.id = m.id
                         WHERE (is_revoked = FALSE AND is_active AND is_birth_weight)
-                            $mainFilter
+                            $primaryWeightQueryFilter
                         GROUP BY w.animal_id
                     )first_date_birth_weight ON first_date_birth_weight.animal_id = w.animal_id AND first_date_birth_weight.min_measurement_date = m.measurement_date
                     WHERE is_revoked = FALSE AND is_active AND is_birth_weight
@@ -170,7 +202,7 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
                             INNER JOIN animal a ON a.id = w.animal_id
                             INNER JOIN measurement m on w.id = m.id
                          WHERE is_revoked = FALSE AND is_active AND is_birth_weight = FALSE
-                           $mainFilter
+                           $primaryWeightQueryFilter
                          GROUP BY animal_id
                      )weights
                          LEFT JOIN weight w1 ON w1.id = weights.weight_ids[1]
@@ -195,7 +227,7 @@ class WeightsPerYearOfBirthReportService extends ReportServiceBase
                          LEFT JOIN measurement wd10 ON wd10.id = weights.weight_ids[10]
             )weight_data ON weight_data.animal_id = a.id
         WHERE (birth_weight_measurement.weight NOTNULL OR weight_data.weight_measurement_1 NOTNULL)
-            $mainFilter
+            $primaryAnimalQueryFilter
         ";
     }
 }
