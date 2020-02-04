@@ -6,9 +6,11 @@ namespace AppBundle\Service\DataFix;
 
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Exterior;
 use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\model\measurements\BodyFatData;
+use AppBundle\model\measurements\ExteriorData;
 use AppBundle\model\measurements\MeasurementData;
 use AppBundle\model\measurements\MuscleThicknessData;
 use AppBundle\Util\ClassUtil;
@@ -245,17 +247,66 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
         $this->logger->notice("Deactivated duplicate $className: ".$measurementsFixedCount);
     }
 
+    private function deactivateDuplicateExterior()
+    {
+        $automatedProcess = $this->em->getRepository(Employee::class)->getAutomatedProcess();
+
+        $measurementsFixedCount = 0;
+        $className = "exterior";
+
+        $exteriorsGroupedByAnimalAndDate = $this->em->getRepository(Exterior::class)->getContradictingExteriors();
+
+        if (empty($exteriorsGroupedByAnimalAndDate)) {
+            $this->logger->notice("No duplicate $className found");
+            return;
+        }
+
+
+        /** @var ExteriorData[] $exteriorGroup */
+        foreach ($exteriorsGroupedByAnimalAndDate as $exteriorGroup)
+        {
+            $sortedLogDates = self::getSortedLogDates($exteriorGroup);
+            $sortedIds = self::getSortedIds($exteriorGroup);
+
+            $prioritizedExteriorGroup = array_map(function (ExteriorData $exteriorData) use ($sortedLogDates, $sortedIds) {
+                $priorityLevel = 0;
+
+                $priorityLevel += self::getLogDataPriorityValue($exteriorData->logDate, $sortedLogDates);
+
+                if ($exteriorData->hasInspector()) {
+                    $priorityLevel += self::PRIORITY_WEIGHT_HAS_INSPECTOR;
+                }
+
+                $priorityLevel += self::getIdPriorityValue($exteriorData->id, $sortedIds);
+
+                $exteriorData->priorityLevel = $priorityLevel;
+
+                return $exteriorData;
+            }, $exteriorGroup);
+
+
+            $maxPriorityLevel = self::getMaxPriorityLevel($exteriorGroup);
+
+            /** @var ExteriorData $exteriorData */
+            foreach ($prioritizedExteriorGroup as $exteriorData)
+            {
+                if ($exteriorData->priorityLevel == $maxPriorityLevel) {
+                    $this->logger->notice("Keep $className with id: ".$exteriorData->id);
+                    continue;
+                }
+
+                $this->deactivateMeasurement($exteriorData->id, $automatedProcess);
+
+                $measurementsFixedCount++;
+                $this->logger->notice("Delete $className with id: ".$exteriorData->id);
+            }
+        }
+        $this->logger->notice("Deactivated duplicate $className: ".$measurementsFixedCount);
+    }
+
     private function deactivateDuplicateWeight()
     {
 
     }
-
-    private function deactivateDuplicateExterior()
-    {
-
-    }
-
-
-
 
 }
