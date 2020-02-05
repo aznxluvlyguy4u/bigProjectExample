@@ -9,6 +9,8 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MuscleThickness;
+use AppBundle\Entity\ScanMeasurementInterface;
+use AppBundle\Entity\Weight;
 use AppBundle\model\measurements\BodyFatData;
 use AppBundle\model\measurements\ExteriorData;
 use AppBundle\model\measurements\MeasurementData;
@@ -110,14 +112,29 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
             $measurement->setIsActive(false);
         }
 
-        if ($measurement instanceof BodyFat) {
-            $fat1Id = $measurement->getFat1() ? $measurement->getFat1()->getId() : null;
-            $fat2Id = $measurement->getFat2() ? $measurement->getFat2()->getId() : null;
-            $fat3Id = $measurement->getFat3() ? $measurement->getFat3()->getId() : null;
+        switch (true) {
+            case $measurement instanceof BodyFat:
 
-            self::deactivateMeasurement($fat1Id, $automatedProcess, false);
-            self::deactivateMeasurement($fat2Id, $automatedProcess, false);
-            self::deactivateMeasurement($fat3Id, $automatedProcess, false);
+                $fat1Id = $measurement->getFat1() ? $measurement->getFat1()->getId() : null;
+                $fat2Id = $measurement->getFat2() ? $measurement->getFat2()->getId() : null;
+                $fat3Id = $measurement->getFat3() ? $measurement->getFat3()->getId() : null;
+
+                self::deactivateMeasurement($fat1Id, $automatedProcess, false);
+                self::deactivateMeasurement($fat2Id, $automatedProcess, false);
+                self::deactivateMeasurement($fat3Id, $automatedProcess, false);
+
+                break;
+
+            case $measurement instanceof Weight:
+                $measurement->setIsRevoked(true);
+
+                break;
+            default:
+                break;
+        }
+
+        if ($measurement instanceof ScanMeasurementInterface) {
+            $measurement->setScanMeasurementSet(null);
         }
 
         $this->em->persist($measurement);
