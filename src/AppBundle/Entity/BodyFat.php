@@ -49,7 +49,7 @@ class BodyFat extends Measurement implements ScanMeasurementInterface
     private $fat3;
 
     /**
-     * @var ScanMeasurementSet
+     * @var ScanMeasurementSet|null
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="bodyFat")
      */
     private $scanMeasurementSet;
@@ -184,9 +184,9 @@ class BodyFat extends Measurement implements ScanMeasurementInterface
     }
 
     /**
-     * @return ScanMeasurementSet
+     * @return ScanMeasurementSet|null
      */
-    public function getScanMeasurementSet(): ScanMeasurementSet
+    public function getScanMeasurementSet(): ?ScanMeasurementSet
     {
         return $this->scanMeasurementSet;
     }
@@ -195,7 +195,7 @@ class BodyFat extends Measurement implements ScanMeasurementInterface
      * @param ScanMeasurementSet $scanMeasurementSet
      * @return BodyFat
      */
-    public function setScanMeasurementSet(ScanMeasurementSet $scanMeasurementSet): BodyFat
+    public function setScanMeasurementSet(?ScanMeasurementSet $scanMeasurementSet): BodyFat
     {
         $this->scanMeasurementSet = $scanMeasurementSet;
         return $this;

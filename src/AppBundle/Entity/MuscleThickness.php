@@ -32,7 +32,7 @@ class MuscleThickness extends Measurement implements ScanMeasurementInterface
     private $animal;
 
     /**
-     * @var ScanMeasurementSet
+     * @var ScanMeasurementSet|null
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="muscleThickness")
      */
     private $scanMeasurementSet;
@@ -120,9 +120,9 @@ class MuscleThickness extends Measurement implements ScanMeasurementInterface
     }
 
     /**
-     * @return ScanMeasurementSet
+     * @return ScanMeasurementSet|null
      */
-    public function getScanMeasurementSet(): ScanMeasurementSet
+    public function getScanMeasurementSet(): ?ScanMeasurementSet
     {
         return $this->scanMeasurementSet;
     }
@@ -131,7 +131,7 @@ class MuscleThickness extends Measurement implements ScanMeasurementInterface
      * @param ScanMeasurementSet $scanMeasurementSet
      * @return MuscleThickness
      */
-    public function setScanMeasurementSet(ScanMeasurementSet $scanMeasurementSet): MuscleThickness
+    public function setScanMeasurementSet(?ScanMeasurementSet $scanMeasurementSet): MuscleThickness
     {
         $this->scanMeasurementSet = $scanMeasurementSet;
         return $this;
