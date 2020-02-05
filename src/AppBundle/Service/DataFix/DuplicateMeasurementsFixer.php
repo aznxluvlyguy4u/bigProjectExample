@@ -32,8 +32,8 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
         $this->logger->notice('Deleting duplicate measurements...');
 
         $this->deactivateDuplicateBodyFats();
-        $this->deactivateDuplicateExterior();
-        $this->deactivateDuplicateMuscleThickness();
+        $this->deactivateDuplicateExteriors();
+        $this->deactivateDuplicateMuscleThicknesses();
         $this->deactivateDuplicateWeights();
     }
 
@@ -209,7 +209,7 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
         $this->logger->notice('Deactivated duplicate body fats: '.$measurementsFixedCount);
     }
 
-    private function deactivateDuplicateMuscleThickness()
+    private function deactivateDuplicateMuscleThicknesses()
     {
         $automatedProcess = $this->em->getRepository(Employee::class)->getAutomatedProcess();
 
@@ -266,7 +266,7 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
         $this->logger->notice("Deactivated duplicate $className: ".$measurementsFixedCount);
     }
 
-    private function deactivateDuplicateExterior()
+    private function deactivateDuplicateExteriors()
     {
         $automatedProcess = $this->em->getRepository(Employee::class)->getAutomatedProcess();
 
