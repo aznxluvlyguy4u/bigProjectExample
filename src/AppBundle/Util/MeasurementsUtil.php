@@ -350,7 +350,9 @@ class MeasurementsUtil
     ) {
         $duplicateMeasurementsFixer->deactivateDuplicateMeasurements();
 
+        $logger->notice("=== Create new scan measurement sets by unlinked data ===");
         $unlinkedDataSetsWithMatchingInspectors = $em->getRepository(ScanMeasurementSet::class)->getUnlinkedScanDataWithMatchingInspectors();
+
         self::printScanMeasurementSetsResult($logger, $unlinkedDataSetsWithMatchingInspectors, true);
         $em->getRepository(ScanMeasurementSet::class)->persistNewByUnlinkedDataSets($unlinkedDataSetsWithMatchingInspectors);
 
@@ -361,7 +363,7 @@ class MeasurementsUtil
     private static function printScanMeasurementSetsResult(LoggerInterface $logger, array $results, bool $areInspectorsMatching) {
         $inspectorMatchingPrefix = $areInspectorsMatching ? '' : 'non-';
         $countsMatchingInspector = empty($results) ? 'No': count($results);
-        $logger->debug($countsMatchingInspector.' unlinked data sets found with '.$inspectorMatchingPrefix.'matching inspectors');
+        $logger->notice($countsMatchingInspector.' unlinked data sets found with '.$inspectorMatchingPrefix.'matching inspectors');
     }
 
     public static function linkLatestScanMeasurementsToAnimals(Connection $connection, LoggerInterface $logger) {

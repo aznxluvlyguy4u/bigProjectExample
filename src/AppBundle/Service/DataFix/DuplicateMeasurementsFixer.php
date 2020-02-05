@@ -15,11 +15,13 @@ use AppBundle\model\measurements\BodyFatData;
 use AppBundle\model\measurements\ExteriorData;
 use AppBundle\model\measurements\MeasurementData;
 use AppBundle\model\measurements\MuscleThicknessData;
+use AppBundle\model\measurements\WeightData;
 use AppBundle\Util\ClassUtil;
 
 class DuplicateMeasurementsFixer extends DuplicateFixerBase
 {
     const PRIORITY_WEIGHT_ALL_VALUES_ARE_ONE = 10;
+    const PRIORITY_WEIGHT_IS_BIRTH_WEIGHT = 20;
     const PRIORITY_WEIGHT_LOG_DATE = 2;
     const PRIORITY_WEIGHT_HAS_INSPECTOR = 6;
     const PRIORITY_WEIGHT_MEASUREMENT_ID = 1;
@@ -32,7 +34,7 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
         $this->deactivateDuplicateBodyFats();
         $this->deactivateDuplicateExterior();
         $this->deactivateDuplicateMuscleThickness();
-        $this->deactivateDuplicateWeight();
+        $this->deactivateDuplicateWeights();
     }
 
 
@@ -321,9 +323,65 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
         $this->logger->notice("Deactivated duplicate $className: ".$measurementsFixedCount);
     }
 
-    private function deactivateDuplicateWeight()
+    private function deactivateDuplicateWeights()
     {
+        $automatedProcess = $this->em->getRepository(Employee::class)->getAutomatedProcess();
 
+        $measurementsFixedCount = 0;
+        $className = "weights";
+
+        $weightsGroupedByAnimalAndDate = $this->em->getRepository(Weight::class)->getContradictingWeights();
+
+        if (empty($weightsGroupedByAnimalAndDate)) {
+            $this->logger->notice("No duplicate $className found");
+            return;
+        }
+
+
+        /** @var WeightData[] $weightGroup */
+        foreach ($weightsGroupedByAnimalAndDate as $weightGroup)
+        {
+            $sortedLogDates = self::getSortedLogDates($weightGroup);
+            $sortedIds = self::getSortedIds($weightGroup);
+
+            $prioritizedWeightGroup = array_map(function (WeightData $weightData) use ($sortedLogDates, $sortedIds) {
+                $priorityLevel = 0;
+
+                $priorityLevel += self::getLogDataPriorityValue($weightData->logDate, $sortedLogDates);
+
+                if ($weightData->hasInspector()) {
+                    $priorityLevel += self::PRIORITY_WEIGHT_HAS_INSPECTOR;
+                }
+
+                if ($weightData->isBirthWeight) {
+                    $priorityLevel += self::PRIORITY_WEIGHT_IS_BIRTH_WEIGHT;
+                }
+
+                $priorityLevel += self::getIdPriorityValue($weightData->id, $sortedIds);
+
+                $weightData->priorityLevel = $priorityLevel;
+
+                return $weightData;
+            }, $weightGroup);
+
+
+            $maxPriorityLevel = self::getMaxPriorityLevel($weightGroup);
+
+            /** @var WeightData $weightData */
+            foreach ($prioritizedWeightGroup as $weightData)
+            {
+                if ($weightData->priorityLevel == $maxPriorityLevel) {
+                    $this->logger->notice("Keep $className with id: ".$weightData->id);
+                    continue;
+                }
+
+                $this->deactivateMeasurement($weightData->id, $automatedProcess);
+
+                $measurementsFixedCount++;
+                $this->logger->notice("Delete $className with id: ".$weightData->id);
+            }
+        }
+        $this->logger->notice("Deactivated duplicate $className: ".$measurementsFixedCount);
     }
 
 }
