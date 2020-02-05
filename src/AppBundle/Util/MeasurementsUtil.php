@@ -390,6 +390,6 @@ FROM (
 WHERE animal.id = v.animal_id";
         $updateCount = SqlUtil::updateWithCount($connection, $sql);
         $updateCountText = empty($updateCount) ? 'No' : '';
-        $logger->debug($updateCountText.' latest scan_measurement_set records matched to animals');
+        $logger->notice($updateCountText.' latest scan_measurement_set records matched to animals');
     }
 }
