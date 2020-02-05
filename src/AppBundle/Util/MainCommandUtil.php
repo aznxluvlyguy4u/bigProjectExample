@@ -14,6 +14,7 @@ class MainCommandUtil
      * Main menu
      */
     const FIX_DATABASE_VALUES = 6;
+    const INITIALIZE_DATABASE_VALUES = 8;
     const PROCESSOR_LOCKER_OPTIONS = 14;
 
     /*
