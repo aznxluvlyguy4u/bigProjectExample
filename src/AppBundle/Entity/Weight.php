@@ -12,7 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\WeightRepository")
  * @package AppBundle\Entity
  */
-class Weight extends Measurement
+class Weight extends Measurement implements ScanMeasurementInterface
 {
     use EntityClassInfo;
 
@@ -56,11 +56,11 @@ class Weight extends Measurement
    /**
     * Weight constructor.
     */
-    public function __construct() 
+    public function __construct()
     {
       parent::__construct();
-        
-      $this->isRevoked = false;  
+
+      $this->isRevoked = false;
       $this->weight = 0.00;
     }
 
@@ -202,7 +202,7 @@ class Weight extends Measurement
         $this->scanMeasurementSet = $scanMeasurementSet;
         return $this;
     }
-    
+
     /**
      * @param mixed $weight
      * @return bool
