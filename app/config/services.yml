@@ -71,6 +71,7 @@ services:
           - '%environment%' #currentEnv
           - '%kernel.environment%'
           - true
+          - '%aws_sqs_deactivate_ssl%'
 
     AppBundle\Service\AwsFeedbackQueueService:
         parent: app.aws.queueservice.workers_base

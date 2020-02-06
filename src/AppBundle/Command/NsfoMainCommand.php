@@ -725,6 +725,10 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             default: $this->writeMenuExit(); return;
         }
+        if ($this->exitAfterRun) {
+            die;
+        }
+
         $this->initializeDatabaseValuesOptions();
     }
 
