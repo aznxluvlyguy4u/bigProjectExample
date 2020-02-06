@@ -67,11 +67,15 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
         $this->selectedEnvironment = $selectedEnvironment;
         $this->queueId = $this->selectQueueIdByEnvironment($queueIdPrefix, $this->selectedEnvironment);
 
-        $sqsConfig = array(
+        $sqsConfig = [
             'region'  => $this->region,
             'version' => $this->version,
             'credentials' => $this->awsCredentials
-        );
+        ];
+
+        if ($currentEnvironment === Environment::DEV || $currentEnvironment === Environment::LOCAL) {
+            $sqsConfig['http'] = [ 'verify' => false ];
+        }
 
         $sqsClient = new SqsClient($sqsConfig);
         $this->queueService = $sqsClient;
