@@ -26,6 +26,7 @@ parameters:
     aws_secret_key: ~
     aws_sqs_region: ~
     aws_sqs_version: ~
+    aws_sqs_deactivate_ssl: false
     aws_sqs_queue_exteral_prefix: ~
     aws_sqs_queue_interal_prefix: ~
     aws_sqs_queue_feedback_prefix: ~
