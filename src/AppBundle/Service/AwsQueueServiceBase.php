@@ -76,10 +76,10 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
             'credentials' => $this->awsCredentials
         ];
 
-        if ($currentEnvironment === Environment::DEV || $currentEnvironment === Environment::LOCAL) {
+        if ($deactivateSsl) {
             $sqsConfig['http'] = [ 'verify' => false ];
         }
-dump($sqsConfig);die;
+
         $sqsClient = new SqsClient($sqsConfig);
         $this->queueService = $sqsClient;
 
