@@ -525,13 +525,19 @@ class ReportService
         $ubn = is_null($location) ? "" : $location->getUbn();
         $inputForHash = $yearOfBirth . $ubn;
 
-        return $this->processReportAsWorkerTask(
-            [
-                'year_of_birth' => $yearOfBirth,
-                'concat_value_and_accuracy' => $concatValueAndAccuracy
-            ],
-            $request,ReportType::ANIMAL_FEATURES_PER_YEAR_OF_BIRTH, $inputForHash
-        );
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'year_of_birth' => $yearOfBirth,
+                    'concat_value_and_accuracy' => $concatValueAndAccuracy
+                ],
+                $request,ReportType::ANIMAL_FEATURES_PER_YEAR_OF_BIRTH, $inputForHash
+            );
+        }
+
+        return $this->animalFeaturesPerYearOfBirthReportService->getReport($concatValueAndAccuracy, $yearOfBirth, $location);
     }
 
     /**
@@ -655,7 +661,7 @@ class ReportService
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
         $this->fertilizerAccountingReport->validateReferenceDate($referenceDate);
-        
+
         if ($processAsWorkerTask) {
             return $this->processReportAsWorkerTask(
                 [

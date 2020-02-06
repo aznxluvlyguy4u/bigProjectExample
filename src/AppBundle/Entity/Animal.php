@@ -859,6 +859,22 @@ abstract class Animal
     protected $treatments;
 
     /**
+     * @var ScanMeasurementSet
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", cascade={"persist", "remove"})
+     * @ORM\JoinColumn(name="scan_measurement_set_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\ScanMeasurementSet")
+     */
+    protected $scanMeasurementSet;
+
+    /**
+     * @var ArrayCollection
+     * @ORM\OrderBy({"id" = "DESC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\ScanMeasurementSet>")
+     */
+    protected $scanMeasurementSetHistory;
+
+    /**
      * @var string
      * @Assert\Length(max = 20)
      * @JMS\Type("string")
@@ -2804,6 +2820,42 @@ abstract class Animal
         }
 
         return $this->exteriorMeasurements;
+    }
+
+    /**
+     * @return ScanMeasurementSet
+     */
+    public function getScanMeasurementSet(): ScanMeasurementSet
+    {
+        return $this->scanMeasurementSet;
+    }
+
+    /**
+     * @param ScanMeasurementSet $scanMeasurementSet
+     * @return Animal
+     */
+    public function setScanMeasurementSet(ScanMeasurementSet $scanMeasurementSet): Animal
+    {
+        $this->scanMeasurementSet = $scanMeasurementSet;
+        return $this;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getScanMeasurementSetHistory(): ArrayCollection
+    {
+        return $this->scanMeasurementSetHistory;
+    }
+
+    /**
+     * @param ArrayCollection $scanMeasurementSetHistory
+     * @return Animal
+     */
+    public function setScanMeasurementSetHistory(ArrayCollection $scanMeasurementSetHistory): Animal
+    {
+        $this->scanMeasurementSetHistory = $scanMeasurementSetHistory;
+        return $this;
     }
 
     /**

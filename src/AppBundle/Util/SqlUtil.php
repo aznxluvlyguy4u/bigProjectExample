@@ -7,6 +7,7 @@ namespace AppBundle\Util;
 use AppBundle\Constant\IsoCountry;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\DutchGender;
@@ -497,6 +498,12 @@ class SqlUtil
             $prefix = ' OR ';
         }
         return $filterString;
+    }
+
+
+    public static function livestockTransferStateFilter(bool $prependWithAnd = false): string {
+        $prefix = $prependWithAnd ? " AND" : "";
+        return $prefix . " (a.transfer_state ISNULL OR a.transfer_state <> '".AnimalTransferStatus::TRANSFERRING."') ";
     }
 
 

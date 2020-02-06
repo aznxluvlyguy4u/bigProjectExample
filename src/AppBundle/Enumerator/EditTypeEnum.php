@@ -14,4 +14,6 @@ class EditTypeEnum
     const ADMIN_CREATE = 1;
     const DEV_DATABASE_EDIT = 2;
     const WORKER_EDIT = 3;
+    const CLOSE_END_DATE_BY_NEXT_RECORD = 4;
+    const CLOSE_END_DATE_BY_DATE_OF_DEATH = 5;
 }

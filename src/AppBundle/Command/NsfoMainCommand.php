@@ -29,6 +29,7 @@ use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
 use AppBundle\Service\CacheService;
+use AppBundle\Service\DataFix\DuplicateMeasurementsFixer;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
 use AppBundle\Service\Migration\LambMeatIndexMigrator;
@@ -170,7 +171,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '5: '.strtolower(self::FIX_DUPLICATE_ANIMALS), "\n",
                 MainCommandUtil::FIX_DATABASE_VALUES.': '.strtolower(self::FIX_DATABASE_VALUES), "\n",
                 '7: '.strtolower(self::GENDER_CHANGE), "\n",
-                '8: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
+                MainCommandUtil::INITIALIZE_DATABASE_VALUES.': '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
                 '9: '.strtolower(self::FILL_MISSING_DATA), "\n",
                 self::LINE_THIN, "\n",
                 '10: '.strtolower(CommandTitle::DATA_MIGRATION), "\n",
@@ -200,7 +201,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 5: $this->fixDuplicateAnimalsOptions(); break;
             case MainCommandUtil::FIX_DATABASE_VALUES: $this->fixDatabaseValuesOptions($options); break;
             case 7: $this->getContainer()->get('app.cli.gender_changer')->run($this->cmdUtil); break;
-            case 8: $this->initializeDatabaseValuesOptions(); break;
+            case MainCommandUtil::INITIALIZE_DATABASE_VALUES: $this->initializeDatabaseValuesOptions($options); break;
             case 9: $this->fillMissingDataOptions($options); break;
             case 10: $this->dataMigrationOptions(); break;
             case 11: $this->runMixblupCliOptions($this->cmdUtil); break;
@@ -609,10 +610,16 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
                 '31: Kill resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss', "\n",
                 '32: Kill alive animals with a date_of_death, even if they don\'t have a declare loss', "\n",
-                '33: Fix animal residences: 1. first remove duplicates, then 2. close open residences with matched younger residences', "\n\n",
+                '33: Fix animal residences: 1. remove duplicates, 2. close open residences by next residence, 3. close open residences by date of death', "\n\n",
 
                 '================== DECLARES ===================', "\n",
                 '50: Fill missing messageNumbers in DeclareResponseBases where errorCode = IDR-00015', "\n\n",
+
+                '================== SCAN MEASUREMENTS ===================', "\n",
+                '60: Fix duplicate measurements', "\n",
+                '61: Create scan measurement set records for unlinked scan measurements', "\n",
+                '62: Link latest scan measurement set records to animals', "\n\n",
+
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
         } else {
@@ -648,6 +655,10 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
+            case 60: $this->getDuplicateMeasurementsFixer()->deactivateDuplicateMeasurements(); break;
+            case 61: MeasurementsUtil::createNewScanMeasurementSetsByUnlinkedData($this->em, $this->getLogger(), $this->getDuplicateMeasurementsFixer()); break;
+            case 62: MeasurementsUtil::linkLatestScanMeasurementsToAnimals($this->conn, $this->getLogger()); break;
+
             default: $this->writeMenuExit(); return;
         }
         if ($this->exitAfterRun) {
@@ -656,31 +667,40 @@ class NsfoMainCommand extends ContainerAwareCommand
         $this->fixDatabaseValuesOptions();
     }
 
+    private function getDuplicateMeasurementsFixer(): DuplicateMeasurementsFixer
+    {
+        return $this->getContainer()->get(DuplicateMeasurementsFixer::class);
+    }
 
-    public function initializeDatabaseValuesOptions()
+    public function initializeDatabaseValuesOptions(array $options = [])
     {
         $this->initializeMenu(self::INITIALIZE_DATABASE_VALUES);
 
-        $option = $this->cmdUtil->generateMultiLineQuestion([
-            'Choose option: ', "\n",
-            self::LINE_THICK, "\n",
-            '1: BirthProgress', "\n",
-            '2: is_rvo_message boolean in action_log', "\n",
-            '3: TreatmentType', "\n",
-            '4: LedgerCategory', "\n",
-            '5: ScrapieGenotypeSource', "\n",
-            '6: PedigreeCodes & PedigreeRegister-PedigreeCode relationships', "\n",
-            '7: Initialize batch invoice invoice rules', "\n",
-            '8: EditType', "\n",
-            self::LINE_THICK, "\n",
-            '10: StoredProcedures: initialize if not exist', "\n",
-            '11: StoredProcedures: overwrite all', "\n",
-            '12: SqlViews: initialize if not exist', "\n",
-            '13: SqlViews: overwrite all', "\n",
-            "\n",
+        if (empty($options)) {
+            $option = $this->cmdUtil->generateMultiLineQuestion([
+                'Choose option: ', "\n",
+                self::LINE_THICK, "\n",
+                '1: BirthProgress', "\n",
+                '2: is_rvo_message boolean in action_log', "\n",
+                '3: TreatmentType', "\n",
+                '4: LedgerCategory', "\n",
+                '5: ScrapieGenotypeSource', "\n",
+                '6: PedigreeCodes & PedigreeRegister-PedigreeCode relationships', "\n",
+                '7: Initialize batch invoice invoice rules', "\n",
+                '8: EditType', "\n",
+                self::LINE_THICK, "\n",
+                '10: StoredProcedures: initialize if not exist', "\n",
+                '11: StoredProcedures: overwrite all', "\n",
+                '12: SqlViews: initialize if not exist', "\n",
+                '13: SqlViews: overwrite all', "\n",
+                "\n",
 
-            'other: exit submenu', "\n"
-        ], self::DEFAULT_OPTION);
+                'other: exit submenu', "\n"
+            ], self::DEFAULT_OPTION);
+        } else {
+            $option = array_shift($options);
+            $this->exitAfterRun = true;
+        }
 
         $storedProcedureIntializer = $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer');
 

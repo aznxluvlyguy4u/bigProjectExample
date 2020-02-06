@@ -197,6 +197,7 @@ services:
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.datafix.animals.duplicate:
         parent: app.datafix.base.duplicate
@@ -209,6 +210,9 @@ services:
     app.datafix.animals.exterminator:
         parent: app.datafix.base.duplicate
         class: AppBundle\Service\DataFix\AnimalExterminator
+
+    AppBundle\Service\DataFix\DuplicateMeasurementsFixer:
+      parent: app.datafix.base.duplicate
 
     app.datafix.ubn:
         parent: app.datafix.base.duplicate

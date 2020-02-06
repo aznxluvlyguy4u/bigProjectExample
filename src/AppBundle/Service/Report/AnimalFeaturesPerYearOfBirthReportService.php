@@ -6,6 +6,7 @@ namespace AppBundle\Service\Report;
 use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Util\LitterUtil;
 use AppBundle\Util\ReportUtil;
 use AppBundle\Util\ResultUtil;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,6 +36,8 @@ class AnimalFeaturesPerYearOfBirthReportService extends ReportServiceWithBreedVa
 
             $this->concatValueAndAccuracy = $concatValueAndAccuracy;
 
+            $this->fixRelatedData();
+
             $sql = $this->breedValuesReportQueryGenerator->createAnimalFeaturesPerYearOfBirthReportQuery(
                 $yearOfBirthAsInt,
                 $location,
@@ -54,6 +57,10 @@ class AnimalFeaturesPerYearOfBirthReportService extends ReportServiceWithBreedVa
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
         }
+    }
+
+    private function fixRelatedData() {
+        LitterUtil::updateSuckleCount($this->conn);
     }
 
     private function getAnimalFeaturesPerYearOfBirthFileName($location): string {

@@ -22,7 +22,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *                        "MuscleThickness" = "MuscleThickness",
  *                        "TailLength" = "TailLength",
  *                        "Weight" = "Weight",
- *                        "PerformanceMeasurement" = "PerformanceMeasurement",
+ *                        "ScanMeasurementSet" = "ScanMeasurementSet",
  *                        "Exterior" = "Exterior"
  * })
  * @JMS\Discriminator(field = "type", disabled=false, map = {
@@ -33,7 +33,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              "MuscleThickness" : "AppBundle\Entity\MuscleThickness",
  *                   "TailLength" : "AppBundle\Entity\TailLength",
  *                       "Weight" : "AppBundle\Entity\Weight",
- *       "PerformanceMeasurement" : "AppBundle\Entity\PerformanceMeasurement",
+ *           "ScanMeasurementSet" : "AppBundle\Entity\ScanMeasurementSet",
  *                     "Exterior" : "AppBundle\Entity\Exterior"},
  *     groups = {
  *     "BASIC",
