@@ -215,11 +215,14 @@ class CompanyRegisterReportService extends ReportServiceBase
             SELECT
                 animal_id
             FROM animal_residence ar
+                     INNER JOIN animal a ON ar.animal_id = a.id
                      INNER JOIN location l on ar.location_id = l.id
             WHERE is_pending = FALSE AND
                     l.ubn = '$ubn' AND
               --animal is on location on a specific date
                   (DATE(start_date) <= '$sampleDateString') AND (end_date ISNULL OR '$sampleDateString' <= DATE(end_date))
+                    AND (a.date_of_death ISNULL OR a.date_of_death >= '$sampleDateString')
+                    AND (a.date_of_birth NOTNULL AND a.date_of_birth <= '$sampleDateString')
             GROUP BY animal_id
             )
         ;";

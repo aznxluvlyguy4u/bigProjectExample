@@ -2,17 +2,13 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Constant\MeasurementConstant;
-use AppBundle\Enumerator\MeasurementType;
-use AppBundle\Util\MeasurementsUtil;
-use AppBundle\Util\NullChecker;
+use AppBundle\model\measurements\WeightData;
 use AppBundle\Util\NumberUtil;
-use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\DBAL\DBALException;
 
 /**
  * Class WeightRepository
@@ -55,8 +51,8 @@ class WeightRepository extends MeasurementRepository {
         }
         return $results;
     }
-    
-    
+
+
     /**
      * @param Animal $animal
      * @return float
@@ -186,93 +182,12 @@ class WeightRepository extends MeasurementRepository {
     }
 
 
-    /**
-     * @return int
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public function deleteDuplicates()
-    {
-        $em = $this->getManager();
-
-        //SearchArray
-        $sql = "SELECT weight_measurement_id FROM declare_weight";
-        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
-        $weightIdsInDeclareWeight = [];
-        foreach ($results as $result) {
-            $weightId = intval($result['weight_measurement_id']);
-            $weightIdsInDeclareWeight[$weightId] = $weightId;
-        }
-
-        $count = 0;
-        
-        $hasDuplicates = true;
-        while($hasDuplicates) {
-            $sql = "
-              SELECT MIN(measurement.id) as min_id, MAX(measurement.id) as max_id, COUNT(*), measurement_date, animal_id, weight, is_birth_weight, is_revoked
-              FROM measurement INNER JOIN weight x ON measurement.id = x.id
-              GROUP BY measurement_date, type, x.animal_id, x.weight, x.is_birth_weight, x.is_revoked
-              HAVING COUNT(*) > 1";
-            $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
-
-            foreach ($results as $result) {
-                $minId = $result['min_id'];
-                $maxId = $result['max_id'];
-
-                $idToDelete = !array_key_exists($minId, $weightIdsInDeclareWeight) ? $minId : (!array_key_exists($maxId, $weightIdsInDeclareWeight) ? $maxId: null);
-
-                //Never delete declared weights
-                if($idToDelete != null) {
-                    $sql = "DELETE FROM weight WHERE id = '".$idToDelete."'";
-                    $em->getConnection()->exec($sql);
-                    $sql = "DELETE FROM measurement WHERE id = '".$idToDelete."'";
-                    $em->getConnection()->exec($sql);
-
-                //if all duplicate weights are declared weights, revoke one of them
-                } else {
-                    $sql = "UPDATE weight SET is_revoked = TRUE WHERE id = '".$maxId."'";
-                    $em->getConnection()->exec($sql);
-                }
-
-                $count++;
-            }
-            if(count($results) == 0) { $hasDuplicates = false; }
-        }
-        return $count;
-    }
-
-
-    /**
-     * @return array
-     */
-    public function fixMeasurements()
-    {
-        $weightsFixedToBirthWeight = $this->fixBirthWeightsNotMarkedAsBirthWeight();
-        $birthWeightsIncorrectlyMarkedAsBirthWeight = $this->fixWeightsIncorrectlyMarkedAsBirthWeight();
-        $revokeBirthWeightsAbove10kg = $this->revokeBirthWeightsAbove10kg();
-        $fixedContradictingWeightsCount = $this->fixContradictingMeasurements();
-
-        $totalCount = $weightsFixedToBirthWeight + $birthWeightsIncorrectlyMarkedAsBirthWeight +
-                        $revokeBirthWeightsAbove10kg + $fixedContradictingWeightsCount;
-
-        if($totalCount > 0) {
-            $message = 'Fixed Weights, set to BirthWeight: ' . $weightsFixedToBirthWeight
-                .'|Fixed birthWeight to just Weight: ' . $birthWeightsIncorrectlyMarkedAsBirthWeight
-                .'|Revoke birthWeights > 10kg: ' . $revokeBirthWeightsAbove10kg
-                .'|Fixed contradicting weights: ' . $fixedContradictingWeightsCount;
-        } else {
-            $message = 'No weight fixes implemented';
-        }
-
-        return [Constant::COUNT => $totalCount, Constant::MESSAGE_NAMESPACE => $message];
-    }
-
-
     private function fixContradictingMeasurements()
     {
         $em = $this->getManager();
 
         $isGetGroupedByAnimalAndDate = true;
-        $weightsGroupedByAnimalAndDate = $this->getContradictingWeights($isGetGroupedByAnimalAndDate);
+        $weightsGroupedByAnimalAndDate = $this->getContradictingWeightsOldVersion($isGetGroupedByAnimalAndDate);
 
         $floatComparisonAccuracy = 0.001;
         $measurementsFixedCount = 0;
@@ -305,7 +220,7 @@ class WeightRepository extends MeasurementRepository {
                 $weightId2 = $weightValues[1][JsonInputConstant::ID];
                 $weight1HasDecimals = NumberUtil::hasDecimals($weight1);
                 $weight2HasDecimals = NumberUtil::hasDecimals($weight2);
-                
+
                 if($weight1HasDecimals && !$weight2HasDecimals) {
                     //First round to nearest. If that doesn't work, round down
                     $roundedWeight1 = round($weight1);
@@ -336,109 +251,12 @@ class WeightRepository extends MeasurementRepository {
         return $measurementsFixedCount;
     }
 
-
-    /**
-     * @return int
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    private function revokeBirthWeightsAbove10kg()
-    {
-        $em = $this->getManager();
-
-        $sql = "SELECT COUNT(id) FROM weight w WHERE w.is_birth_weight = TRUE AND w.is_revoked = FALSE AND w.weight > 10.0";
-        $count = $em->getConnection()->query($sql)->fetch()['count'];
-
-        $sql = "UPDATE weight SET is_revoked = TRUE WHERE is_birth_weight = TRUE AND is_revoked = FALSE AND weight > 10.0";
-        $em->getConnection()->exec($sql);
-
-        return $count;
-    }
-
-
-    /**
-     * @return int
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    private function fixBirthWeightsNotMarkedAsBirthWeight()
-    {
-        $em = $this->getManager();
-
-        //First find the measurements
-        $sql = "
-              SELECT w.id FROM measurement m
-                LEFT JOIN weight w ON m.id = w.id
-                LEFT JOIN animal a ON a.id = w.animal_id
-              WHERE DATE(m.measurement_date) = DATE(a.date_of_birth) AND w.is_birth_weight = false";
-        $results = $em->getConnection()->query($sql)->fetchAll();
-        
-        foreach($results as $result)
-        {
-            $sql = "UPDATE weight SET is_birth_weight = true WHERE id = ".$result['id'];
-            $em->getConnection()->exec($sql);
-        }
-        
-        return count($results);
-    }
-
-
-    /**
-     * @return int
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    private function fixWeightsIncorrectlyMarkedAsBirthWeight()
-    {
-        $em = $this->getManager();
-
-        //First find the measurements
-        $sql = "
-              SELECT w.id FROM measurement m
-                LEFT JOIN weight w ON m.id = w.id
-                LEFT JOIN animal a ON a.id = w.animal_id
-              WHERE DATE(m.measurement_date) <> DATE(a.date_of_birth) AND w.is_birth_weight = true";
-        $results = $em->getConnection()->query($sql)->fetchAll();
-
-        foreach($results as $result)
-        {
-            $sql = "UPDATE weight SET is_birth_weight = false WHERE id = ".$result['id'];
-            $em->getConnection()->exec($sql);
-        }
-
-        return count($results);
-    }
-
-
-    /**
-     * @return int
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public function getIncorrectBirthWeightBooleansInWeightsCount()
-    {
-        $em = $this->getManager();
-        
-        $sql = "
-              SELECT w.id FROM measurement m
-                LEFT JOIN weight w ON m.id = w.id
-                LEFT JOIN animal a ON a.id = w.animal_id
-              WHERE DATE(m.measurement_date) = DATE(a.date_of_birth) AND w.is_birth_weight = false";
-        $results1 = $em->getConnection()->query($sql)->fetchAll();
-
-        $sql = "
-              SELECT w.id FROM measurement m
-                LEFT JOIN weight w ON m.id = w.id
-                LEFT JOIN animal a ON a.id = w.animal_id
-              WHERE DATE(m.measurement_date) <> DATE(a.date_of_birth) AND w.is_birth_weight = true";
-        $results2 = $em->getConnection()->query($sql)->fetchAll();
-        
-        return count($results1) + count($results2);
-    }
-
-
     /**
      * @param bool $isGetGroupedByAnimalAndDate
      * @return array
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    public function getContradictingWeights($isGetGroupedByAnimalAndDate = false)
+    public function getContradictingWeightsOldVersion($isGetGroupedByAnimalAndDate = false)
     {
         $sql = "SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.date_of_birth FROM measurement n
                   INNER JOIN (
@@ -459,92 +277,34 @@ class WeightRepository extends MeasurementRepository {
         } else {
             return $results;
         }
-
     }
-
 
     /**
      * @return array
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    public function getContradictingWeightsForExportFile()
+    public function getContradictingWeights()
     {
-        $em = $this->getManager();
-
-        $sql = "
-              SELECT n.id as metingId, a.id as dier_id, DATE(n.measurement_date) as meetdatum, DATE(a.date_of_birth) as geboortedatum,
-                  z.weight as gewicht, is_birth_weight as is_geboortegewicht,
-                  CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, i.last_name as inspector
+        $sql = "SELECT n.id as id, a.id as animal_id, n.animal_id_and_date, n.measurement_date, n.log_date, n.inspector_id,
+                       weight.weight, weight.is_birth_weight, n.is_active
                 FROM measurement n
-                  INNER JOIN (
-                               SELECT m.animal_id_and_date
-                               FROM measurement m
-                                 INNER JOIN (
-                                              SELECT y.id FROM weight y  WHERE y.is_revoked = false
-                                            ) x ON m.id = x.id
-                               GROUP BY m.animal_id_and_date
-                               HAVING (COUNT(*) > 1)
-                             ) t on t.animal_id_and_date = n.animal_id_and_date
-                  INNER JOIN weight z ON z.id = n.id
-                  INNER JOIN animal a ON a.id = z.animal_id
-                  LEFT JOIN person i ON i.id = n.inspector_id";
-        return $em->getConnection()->query($sql)->fetchAll();
-    }
-
-
-    /**
-     * @param bool $isGetGroupedByAnimalAndDate
-     * @param bool $isIncludeRevokedWeights
-     * @return array
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public function getAllWeightsBySql($isGetGroupedByAnimalAndDate = false, $isIncludeRevokedWeights = true)
-    {
-        if($isIncludeRevokedWeights) {
-            $filter = '';
-        } else {
-            $filter = "WHERE is_revoked = false";
-        }
-        
-        $sql = "SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.name as vsm_id, a.date_of_birth, p.last_name as inspector_last_name FROM measurement n
-                  INNER JOIN weight z ON z.id = n.id
-                  INNER JOIN animal a ON a.id = z.animal_id
-                  LEFT JOIN person p ON p.id = n.inspector_id ".$filter;
+                         INNER JOIN (
+                    SELECT m.animal_id_and_date
+                    FROM measurement m
+                             INNER JOIN weight ON m.id = weight.id
+                    WHERE m.is_active
+                    GROUP BY m.animal_id_and_date
+                    HAVING (COUNT(*) > 1)
+                ) t on t.animal_id_and_date = n.animal_id_and_date
+                         INNER JOIN weight ON n.id = weight.id
+                         LEFT JOIN animal a ON a.id = weight.animal_id
+                WHERE n.is_active";
         $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
-        if($isGetGroupedByAnimalAndDate) {
-            return $this->groupSqlMeasurementResultsByAnimalIdAndDate($results);
-        } else {
-            return $results;
-        }
+        $resultsAsDataObject = array_map(function ($weightsInArray) {
+            return new WeightData($weightsInArray);
+        }, $results);
 
-    }
-
-
-    /**
-     * @param string $animalIdAndDate
-     * @param int $inspectorId
-     * @param float $weightValue
-     * @param bool $isBirthWeight
-     * @param bool $isRevoked
-     * @return bool
-     */
-    public function insertNewWeight($animalIdAndDate, $weightValue, $inspectorId = null, $isBirthWeight = false, $isRevoked = false)
-    {
-        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
-        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
-        $measurementDateString = $parts[MeasurementConstant::DATE];
-
-        $isBirthWeight = StringUtil::getBooleanAsString($isBirthWeight);
-        $isRevoked = StringUtil::getBooleanAsString($isRevoked);
-        
-        $isInsertSuccessful = false;
-        $isInsertParentSuccessful = $this->insertNewMeasurementInParentTable($animalIdAndDate, $measurementDateString, MeasurementType::WEIGHT, $inspectorId);
-        if($isInsertParentSuccessful && NullChecker::floatIsNotZero($weightValue)) {
-            $sql = "INSERT INTO weight (id, animal_id, weight, is_birth_weight, is_revoked) VALUES (currval('measurement_id_seq'),'".$animalId."','".$weightValue."',".$isBirthWeight.",".$isRevoked.")";
-            $this->getManager()->getConnection()->exec($sql);
-            $isInsertSuccessful = true;
-        }
-        return $isInsertSuccessful;
+        return $this->groupSqlMeasurementObjectResultsByAnimalIdAndDate($resultsAsDataObject);
     }
 }

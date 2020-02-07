@@ -858,11 +858,11 @@ LEFT JOIN (
                   c.birth_weight as ".$this->translateColumnHeader('birth_weight').",
                   $selectBirthProgress as ".$this->translateColumnHeader('birth_progress').",
                   aa.tail_length as ".$this->translateColumnHeader('tail_length').",
-                  aa.fat1 as ".$this->translateColumnHeader('fat1').",
-                  aa.fat2 as ".$this->translateColumnHeader('fat2').",
-                  aa.fat3 as ".$this->translateColumnHeader('fat3').",
-                  aa.muscle_thickness as ".$this->translateColumnHeader('muscle_thickness').",
-                  c.last_weight as ".$this->translateColumnHeader('scan_weight').",
+                  scan_measurements.fat1 as ".$this->translateColumnHeader('fat1').",
+                  scan_measurements.fat2 as ".$this->translateColumnHeader('fat2').",
+                  scan_measurements.fat3 as ".$this->translateColumnHeader('fat3').",
+                  scan_measurements.muscle_thickness as ".$this->translateColumnHeader('muscle_thickness').",
+                  scan_measurements.weight as ".$this->translateColumnHeader('scan_weight').",
                   aa.skull as ".$this->translateColumnHeader('skull').",
                   aa.progress as ".$this->translateColumnHeader('progress').",
                   aa.muscularity as ".$this->translateColumnHeader('muscularity').",
@@ -912,6 +912,7 @@ LEFT JOIN (
 
                 FROM animal a
                   INNER JOIN view_animal_livestock_overview_details aa ON a.id = aa.animal_id
+                  LEFT JOIN view_scan_measurements scan_measurements ON a.id = scan_measurements.animal_id
                   LEFT JOIN view_animal_livestock_overview_details mom ON a.parent_mother_id = mom.animal_id
                   LEFT JOIN view_animal_livestock_overview_details dad ON a.parent_father_id = dad.animal_id
                   LEFT JOIN location l ON l.id = a.location_id
@@ -984,32 +985,21 @@ LEFT JOIN (
                   aa.tail_length as ".$this->translateColumnHeader('tail_length').",
                   EXTRACT(YEAR FROM AGE(NOW(), a.date_of_birth)) as ".$this->translateColumnHeader('age_in_years').",
                   
-                  -- aantal worpen ontbreekt
-                  9 as litter_nummer,
-                  -- totaal aantal geboren lammeren ontbreekt
-                  19 as animal_total_born,
-                  -- aantal levend geboren lammeren ontbreekt
-                  20 as animal_total_born_alive,
-                  -- aantal grootgebrachte lammeren ontbreekt
-                  30 as animal_total_matured,
-                  -- scanned date logic unsure
-                  CASE WHEN aa.muscle_thickness IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('scanned').",
+                  grouped_litters.litter_count as aantal_worpen,
+                  grouped_litters.total_born_count as totaal_aantal_geboren_lammeren,
+                  grouped_litters.born_alive_count as aantal_levend_geboren_lammeren,
+                  grouped_litters.suckle_count as gezoogd_grootgebrachte_lammeren,
+
+                  CASE WHEN a.scan_measurement_set_id IS NULL THEN false ELSE true END as ".$this->translateColumnHeader('scanned').",                                                              
+                  scan_measurements.fat1 as ".$this->translateColumnHeader('fat1').",
+                  scan_measurements.fat2 as ".$this->translateColumnHeader('fat2').",
+                  scan_measurements.fat3 as ".$this->translateColumnHeader('fat3').",
+                  scan_measurements.muscle_thickness as ".$this->translateColumnHeader('muscle_thickness').",
+                  scan_measurements.weight as ".$this->translateColumnHeader('scan_weight').",
+                  scan_measurements.dd_mm_yyyy_measurement_date as ".$this->translateColumnHeader('scan_date').",
                   
-                  
-                  aa.fat1 as ".$this->translateColumnHeader('fat1').",
-                  aa.fat2 as ".$this->translateColumnHeader('fat2').",
-                  aa.fat3 as ".$this->translateColumnHeader('fat3').",
-                  aa.muscle_thickness as ".$this->translateColumnHeader('muscle_thickness').",
-                  
-                  -- scan gewicht logic unsure
-                  c.last_weight as ".$this->translateColumnHeader('scan_weight').",
-                  -- scan date ontbreekt
-                  2020-02-02 as ".$this->translateColumnHeader('scan_date').",
-                  
-                  -- vader gescand logic unsure
-                  CASE WHEN dad.muscle_thickness IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('father_scanned').",
-                  -- vader gescand logic unsure
-                  CASE WHEN mom.muscle_thickness IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('mother_scanned').",
+                  CASE WHEN dad.scan_measurement_set_id IS NULL THEN false ELSE true END as ".$this->translateColumnHeader('father_scanned').",
+                  CASE WHEN mom.scan_measurement_set_id IS NULL THEN false ELSE true END as ".$this->translateColumnHeader('mother_scanned').",
                   
                   aa.skull as ".$this->translateColumnHeader('skull').",
                   aa.progress as ".$this->translateColumnHeader('progress').",
@@ -1026,13 +1016,13 @@ LEFT JOIN (
                   aa.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('measurement_date').",
                   aa.formatted_predicate as ".$this->translateColumnHeader('predicate').",
 
-
-                  -- inteeltpercentage van dier zelf ontbreekt
+                  ic.value as inteeltcoefficient,
 
                   --BREED VALUES
                   ".$this->breedValuesSelectQueryPart."
                 FROM animal a
                   INNER JOIN view_animal_livestock_overview_details aa ON a.id = aa.animal_id
+                  LEFT JOIN view_scan_measurements scan_measurements ON a.id = scan_measurements.animal_id
                   LEFT JOIN view_animal_livestock_overview_details mom ON a.parent_mother_id = mom.animal_id
                   LEFT JOIN view_animal_livestock_overview_details dad ON a.parent_father_id = dad.animal_id
                   LEFT JOIN location l ON l.id = a.location_id
@@ -1040,7 +1030,33 @@ LEFT JOIN (
                   LEFT JOIN result_table_breed_grades bg ON bg.animal_id = a.id
                   LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
+                  LEFT JOIN inbreeding_coefficient ic ON ic.id = a.inbreeding_coefficient_id
                   LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
+                  LEFT JOIN (
+                      SELECT
+                               animal_father_id as animal_id,
+                               COUNT(*) as litter_count,
+                               COALESCE(SUM(born_alive_count + stillborn_count), 0) as total_born_count,
+                               COALESCE(SUM(born_alive_count), 0) as born_alive_count,
+                               COALESCE(SUM(suckle_count), 0) as suckle_count
+                        FROM litter
+                        WHERE status IN ('COMPLETED', 'IMPORTED')
+                          AND animal_father_id NOTNULL
+                        GROUP BY animal_father_id
+                        
+                        UNION
+                        
+                        SELECT
+                            animal_mother_id as animal_id,
+                            COUNT(*) as litter_count,
+                            COALESCE(SUM(born_alive_count + stillborn_count), 0) as total_born_count,
+                            COALESCE(SUM(born_alive_count), 0) as born_alive_count,
+                            COALESCE(SUM(suckle_count), 0) as suckle_count
+                        FROM litter
+                        WHERE status IN ('COMPLETED', 'IMPORTED')
+                          AND animal_mother_id NOTNULL
+                        GROUP BY animal_mother_id
+                  )grouped_litters ON grouped_litters.animal_id = a.id
                 ".$this->breedValuesPlusSignsQueryJoinPart."
                 " . $mainFilter;
 

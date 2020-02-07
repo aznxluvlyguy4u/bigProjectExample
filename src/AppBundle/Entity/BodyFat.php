@@ -11,7 +11,7 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\BodyFatRepository")
  * @package AppBundle\Entity
  */
-class BodyFat extends Measurement
+class BodyFat extends Measurement implements ScanMeasurementInterface
 {
     use EntityClassInfo;
 
@@ -47,6 +47,12 @@ class BodyFat extends Measurement
      * @JMS\Type("AppBundle\Entity\Fat3")
      */
     private $fat3;
+
+    /**
+     * @var ScanMeasurementSet|null
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="bodyFat")
+     */
+    private $scanMeasurementSet;
 
     /**
     * BodyFat constructor.
@@ -177,6 +183,23 @@ class BodyFat extends Measurement
         return $this->fat3;
     }
 
+    /**
+     * @return ScanMeasurementSet|null
+     */
+    public function getScanMeasurementSet(): ?ScanMeasurementSet
+    {
+        return $this->scanMeasurementSet;
+    }
+
+    /**
+     * @param ScanMeasurementSet $scanMeasurementSet
+     * @return BodyFat
+     */
+    public function setScanMeasurementSet(?ScanMeasurementSet $scanMeasurementSet): BodyFat
+    {
+        $this->scanMeasurementSet = $scanMeasurementSet;
+        return $this;
+    }
 
     /**
      * @param mixed $bodyFat

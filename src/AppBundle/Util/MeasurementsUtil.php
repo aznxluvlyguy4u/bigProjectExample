@@ -5,14 +5,18 @@ namespace AppBundle\Util;
 
 use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\ScanMeasurementSet;
 use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Enumerator\WeightType;
+use AppBundle\Service\DataFix\DuplicateMeasurementsFixer;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class MeasurementsUtil
-{    
+{
     /**
      * @param Connection $conn
      * @param bool $isRegenerateFilledValues
@@ -125,8 +129,8 @@ class MeasurementsUtil
      */
     public static function isValidBodyFatValues($fat1, $fat2, $fat3, $hasValid20WeeksWeightMeasurement)
     {
-        return self::isValidFatValue($fat1, $hasValid20WeeksWeightMeasurement) 
-            && self::isValidFatValue($fat2, $hasValid20WeeksWeightMeasurement) 
+        return self::isValidFatValue($fat1, $hasValid20WeeksWeightMeasurement)
+            && self::isValidFatValue($fat2, $hasValid20WeeksWeightMeasurement)
             && self::isValidFatValue($fat3, $hasValid20WeeksWeightMeasurement);
     }
 
@@ -171,7 +175,7 @@ class MeasurementsUtil
                 } else {
                     return false;
                 }
-                    
+
             case WeightType::EIGHT_WEEKS:
                 if(MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_VALUE <= $weight && $weight <= MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_VALUE) {
                     return true;
@@ -258,12 +262,12 @@ class MeasurementsUtil
         $latestKind = null;
         $kinds = [];
         $isLatestKind = true;
-        foreach ($results as $result) {            
+        foreach ($results as $result) {
             $kind = $result['kind'];
             if(NullChecker::isNull($kind)) { $kind = null; }
-            
+
             $kinds[$kind] = $kind;
-            
+
             if($isLatestKind) {
                 $latestKind = $kind;
                 $isLatestKind = false;
@@ -308,7 +312,7 @@ class MeasurementsUtil
             || $hkExists || $hhExists //adding $hkExists && $hhExists in case of incomplete exterior data
         ) { $kindsForOutput[] = ExteriorKind::HK_; }
 
-        
+
         if($currentKind != null && !in_array($currentKind, $kindsForOutput)) {
             $kindsForOutput[] = $currentKind;
         }
@@ -336,5 +340,56 @@ class MeasurementsUtil
         }
 
         return $output;
+    }
+
+
+    public static function createNewScanMeasurementSetsByUnlinkedData(
+        EntityManagerInterface $em,
+        LoggerInterface $logger,
+        DuplicateMeasurementsFixer $duplicateMeasurementsFixer
+    ) {
+        $duplicateMeasurementsFixer->deactivateDuplicateMeasurements();
+
+        $logger->notice("=== Create new scan measurement sets by unlinked data ===");
+        $unlinkedDataSetsWithMatchingInspectors = $em->getRepository(ScanMeasurementSet::class)->getUnlinkedScanDataWithMatchingInspectors();
+
+        self::printScanMeasurementSetsResult($logger, $unlinkedDataSetsWithMatchingInspectors, true);
+        $em->getRepository(ScanMeasurementSet::class)->persistNewByUnlinkedDataSets($unlinkedDataSetsWithMatchingInspectors);
+
+        $unlinkedDataSetsWithNonMatchingInspectors = $em->getRepository(ScanMeasurementSet::class)->getUnlinkedScanDataWithNonMatchingInspectors();
+        self::printScanMeasurementSetsResult($logger, $unlinkedDataSetsWithNonMatchingInspectors, false);
+    }
+
+    private static function printScanMeasurementSetsResult(LoggerInterface $logger, array $results, bool $areInspectorsMatching) {
+        $inspectorMatchingPrefix = $areInspectorsMatching ? '' : 'non-';
+        $countsMatchingInspector = empty($results) ? 'No': count($results);
+        $logger->notice($countsMatchingInspector.' unlinked data sets found with '.$inspectorMatchingPrefix.'matching inspectors');
+    }
+
+    public static function linkLatestScanMeasurementsToAnimals(Connection $connection, LoggerInterface $logger) {
+        $sql = "UPDATE animal SET scan_measurement_set_id = v.scan_measurement_set_id
+FROM (
+         SELECT
+             scan_measurement_set.animal_id,
+             MAX(scan_measurement_set.id) as scan_measurement_set_id
+         FROM scan_measurement_set
+                  INNER JOIN measurement m on scan_measurement_set.id = m.id
+                  INNER JOIN (
+             SELECT
+                 animal_id,
+                 max(animal_id_and_date) as max_animal_id_data
+             FROM scan_measurement_set scan_set
+                      INNER JOIN measurement m on scan_set.id = m.id
+                      INNER JOIN animal a on scan_set.animal_id = a.id
+             WHERE a.scan_measurement_set_id ISNULL AND m.is_active
+             GROUP BY animal_id
+         )scan_set ON scan_set.animal_id = scan_measurement_set.animal_id AND m.animal_id_and_date = max_animal_id_data
+         WHERE m.is_active
+         GROUP BY scan_measurement_set.animal_id
+    )AS v(animal_id, scan_measurement_set_id)
+WHERE animal.id = v.animal_id";
+        $updateCount = SqlUtil::updateWithCount($connection, $sql);
+        $updateCountText = empty($updateCount) ? 'No' : '';
+        $logger->notice($updateCountText.' latest scan_measurement_set records matched to animals');
     }
 }
