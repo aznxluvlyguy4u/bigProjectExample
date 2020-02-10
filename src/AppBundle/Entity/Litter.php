@@ -75,11 +75,25 @@ class Litter extends DeclareNsfoBase
      * The number designating then place in an ordered sequence of litters for a specific ewe
      * starting at 1.
      *
+     * Includes abortions and pseudo pregnancies
+     *
      * @var integer
      * @ORM\Column(type="integer", nullable=true, options={"default":null})
      * @JMS\Type("integer")
      */
     private $litterOrdinal;
+
+    /**
+     * The number designating then place in an ordered sequence of litters for a specific ewe
+     * starting at 1.
+     *
+     * DOES NOT Include abortions and pseudo pregnancies
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $standardLitterOrdinal;
 
     /**
      * @var integer
@@ -139,7 +153,7 @@ class Litter extends DeclareNsfoBase
 
     /**
      * @var ArrayCollection
-     * 
+     *
      * @ORM\OneToMany(targetEntity="Stillborn", mappedBy="litter", cascade={"persist"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Stillborn>")
      * @JMS\Groups({
@@ -376,6 +390,22 @@ class Litter extends DeclareNsfoBase
     public function setLitterOrdinal($litterOrdinal)
     {
         $this->litterOrdinal = $litterOrdinal;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getStandardLitterOrdinal()
+    {
+        return $this->standardLitterOrdinal;
+    }
+
+    /**
+     * @param integer $standardLitterOrdinal
+     */
+    public function setStandardLitterOrdinal($standardLitterOrdinal)
+    {
+        $this->standardLitterOrdinal = $standardLitterOrdinal;
     }
 
     /**
@@ -734,7 +764,7 @@ class Litter extends DeclareNsfoBase
         $this->updatedGeneDiversity = $updatedGeneDiversity;
         return $this;
     }
-    
+
 
     /**
      * @return string
