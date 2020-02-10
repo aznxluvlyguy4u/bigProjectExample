@@ -124,6 +124,17 @@ class Litter extends DeclareNsfoBase
     private $bornAliveCount;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     */
+    private $cumulativeBornAliveCount;
+
+    /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
      * @JMS\Groups({
@@ -296,6 +307,7 @@ class Litter extends DeclareNsfoBase
         $this->logDate = new \DateTime();
         $this->stillbornCount = 0;
         $this->bornAliveCount = 0;
+        $this->cumulativeBornAliveCount = 0;
         $this->declareBirths = new ArrayCollection();
         $this->updatedGeneDiversity = false;
     }
@@ -438,6 +450,22 @@ class Litter extends DeclareNsfoBase
     public function setBornAliveCount($bornAliveCount)
     {
         $this->bornAliveCount = $bornAliveCount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCumulativeBornAliveCount()
+    {
+        return $this->cumulativeBornAliveCount;
+    }
+
+    /**
+     * @param int $cumulativeBornAliveCount
+     */
+    public function setCumulativeBornAliveCount($cumulativeBornAliveCount)
+    {
+        $this->cumulativeBornAliveCount = $cumulativeBornAliveCount;
     }
 
     /**
