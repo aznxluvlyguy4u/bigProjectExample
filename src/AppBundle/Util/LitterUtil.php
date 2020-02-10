@@ -245,6 +245,15 @@ class LitterUtil
     }
 
 
+    private static function getLitterAnimalMotherIdFilter($litterId = null, string $litterAlias = 'l'): string
+    {
+        return ctype_digit($litterId) || is_int($litterId) ?
+            " AND $litterAlias.animal_mother_id IN (" .
+            "      SELECT animal_mother_id FROM litter WHERE id = ".$litterId." " .
+            "    ) " : '';
+    }
+
+
     /**
      * @param Connection $conn
      * @param int|string $litterId
@@ -252,10 +261,7 @@ class LitterUtil
      */
     public static function updateLitterOrdinals(Connection $conn, $litterId = null)
     {
-        $animalMotherIdFilter = ctype_digit($litterId) || is_int($litterId) ?
-            " AND l.animal_mother_id IN (\n" +
-            "      SELECT animal_mother_id FROM litter WHERE id = ".$litterId."\n" +
-            "    ) " : '';
+        $animalMotherIdFilter = self::getLitterAnimalMotherIdFilter($litterId);
 
         $sqlGlobalLitter = "UPDATE litter SET litter_ordinal = v.calc_litter_ordinal
                 FROM (
@@ -305,6 +311,33 @@ class LitterUtil
     {
         $sql = "UPDATE litter SET litter_ordinal = NULL, standard_litter_ordinal = NULL
                 WHERE (status = '".RequestStateType::REVOKED."' OR status = '".RequestStateType::INCOMPLETE."') AND litter_ordinal NOTNULL";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    public static function updateCumulativeBornAliveCount(Connection $conn, $litterId = null)
+    {
+        $animalMotherIdFilter = self::getLitterAnimalMotherIdFilter($litterId);
+
+        $activeRequestStateTypes = SqlUtil::activeRequestStateTypesForLittersJoinedList();
+
+        $sql = "UPDATE litter SET cumulative_born_alive_count = v.new_cumulative_born_alive_count
+FROM (
+         SELECT
+             l.id,
+             cumulative_born_alive_count,
+             SUM(l.born_alive_count) OVER (PARTITION BY animal_mother_id ORDER BY standard_litter_ordinal) as count
+         FROM litter l
+                  INNER JOIN declare_nsfo_base dnb on l.id = dnb.id
+         WHERE dnb.request_state IN ($activeRequestStateTypes)
+           $animalMotherIdFilter
+           AND standard_litter_ordinal NOTNULL
+         ORDER BY animal_mother_id, standard_litter_ordinal
+) AS v (litter_id, current_cumulative_born_alive_count, new_cumulative_born_alive_count)
+WHERE litter.id = v.litter_id AND (
+    v.current_cumulative_born_alive_count ISNULL OR
+    v.current_cumulative_born_alive_count <> new_cumulative_born_alive_count
+    )";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 

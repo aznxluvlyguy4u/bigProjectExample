@@ -57,6 +57,7 @@ class LitterMigrator extends Migrator2017JunServiceBase implements IMigratorServ
 
         $this->writeLn('====== POST migration updates ======');
         $this->cmdUtil->writeln(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
+        $this->cmdUtil->writeln(LitterUtil::updateCumulativeBornAliveCount($this->conn).' litterOrdinals updated');
         $this->cmdUtil->writeln( ProductionCacher::updateAllProductionValues($this->conn) . ' production values updated');
         $this->cmdUtil->writeln( NLingCacher::updateAllNLingValues($this->conn) . ' n-ling values updated');
     }
