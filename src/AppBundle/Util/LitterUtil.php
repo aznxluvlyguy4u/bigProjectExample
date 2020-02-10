@@ -168,7 +168,7 @@ class LitterUtil
      * Ewes with abortions and pseudopregnancies cannot give milk, while an ewe with only stillborns can.
      * Because the imported data from VSM has no registered surrogate mothers, the suckleCount will only be calculated
      * for litters registered in this current NSFO system.
-     * 
+     *
      * @param Connection $conn
      * @param null $litterId
      * @return int
@@ -257,7 +257,7 @@ class LitterUtil
             "      SELECT animal_mother_id FROM litter WHERE id = ".$litterId."\n" +
             "    ) " : '';
 
-        $sql = "UPDATE litter SET litter_ordinal = v.calc_litter_ordinal
+        $sqlGlobalLitter = "UPDATE litter SET litter_ordinal = v.calc_litter_ordinal
                 FROM (
                   SELECT l.id as litter_id,
                     DENSE_RANK() OVER (PARTITION BY animal_mother_id ORDER BY litter_date ASC) AS calc_litter_ordinal
@@ -272,7 +272,28 @@ class LitterUtil
                 ) AS v(litter_id, calc_litter_ordinal)
                 WHERE litter.id = litter_id
                   AND (litter.litter_ordinal ISNULL OR litter.litter_ordinal <> v.calc_litter_ordinal)";
-        return SqlUtil::updateWithCount($conn, $sql);
+        $globalLitterUpdateCount = SqlUtil::updateWithCount($conn, $sqlGlobalLitter);
+
+        $sqlStandardLitter = "UPDATE litter SET standard_litter_ordinal = v.calc_standard_litter_ordinal
+                FROM (
+                  SELECT l.id as litter_id,
+                    DENSE_RANK() OVER (PARTITION BY animal_mother_id ORDER BY litter_date ASC) AS calc_standard_litter_ordinal
+                  FROM litter l
+                  WHERE is_pseudo_pregnancy = FALSE AND is_abortion = FALSE AND
+                    animal_mother_id
+                    IN (
+                        SELECT animal_mother_id FROM litter
+                        WHERE standard_litter_ordinal ISNULL AND
+                              (status = '".RequestStateType::COMPLETED."' OR status = '".RequestStateType::IMPORTED."')
+                        GROUP BY animal_mother_id
+                      ) AND (status = '".RequestStateType::COMPLETED."' OR status = '".RequestStateType::IMPORTED."') ".$animalMotherIdFilter."
+                  ORDER BY animal_mother_id ASC, litter_date ASC
+                ) AS v(litter_id, calc_standard_litter_ordinal)
+                WHERE litter.id = litter_id
+                  AND (litter.standard_litter_ordinal ISNULL OR litter.standard_litter_ordinal <> v.calc_standard_litter_ordinal)";
+        $standardLitterUpdateCount = SqlUtil::updateWithCount($conn, $sqlStandardLitter);
+
+        return $globalLitterUpdateCount + $standardLitterUpdateCount;
     }
 
 
@@ -282,7 +303,7 @@ class LitterUtil
      */
     public static function removeLitterOrdinalFromRevokedLitters(Connection $conn)
     {
-        $sql = "UPDATE litter SET litter_ordinal = NULL
+        $sql = "UPDATE litter SET litter_ordinal = NULL, standard_litter_ordinal = NULL
                 WHERE (status = '".RequestStateType::REVOKED."' OR status = '".RequestStateType::INCOMPLETE."') AND litter_ordinal NOTNULL";
         return SqlUtil::updateWithCount($conn, $sql);
     }
@@ -334,7 +355,7 @@ class LitterUtil
 
     /**
      * NOTE! Update litterOrdinals first!
-     * 
+     *
      * @param Connection $conn
      * @param null $litterId
      * @return int
@@ -342,7 +363,7 @@ class LitterUtil
     public static function updateBirthInterVal(Connection $conn, $litterId = null)
     {
         $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND l.id = '.$litterId.' ' : '';
-        
+
         $sql = "UPDATE litter SET birth_interval = v.calc_birth_interval
                 FROM (
                        SELECT l.id as litter_id, DATE(l.litter_date)-DATE(previous_litter.litter_date) as calc_birth_interval
@@ -362,7 +383,7 @@ class LitterUtil
         $sql = "UPDATE litter SET birth_interval = NULL
                 WHERE (litter_ordinal <= 1 OR litter_ordinal ISNULL) AND birth_interval NOTNULL ".$litterIdFilter;
         $updateRevokedBirthIntervals = SqlUtil::updateWithCount($conn, $sql);
-        
+
         return $updateIncongruentBirthIntervals + $updateRevokedBirthIntervals;
     }
 
