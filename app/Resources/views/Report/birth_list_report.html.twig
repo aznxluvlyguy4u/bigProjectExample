@@ -48,7 +48,7 @@
         </div>
         <div class="sub-header">
            <div class="left">{{ d.owner }}, {{ d.address }}, {{ d.postal_code }}, {{ d.city }}</div>
-           <div class="right">{{ 'PAGE' | trans | capitalize }} {{ page }} {{ 'PAGE_OF' | trans | lower }} {{ pageAmount }}  &nbsp;&nbsp;&nbsp; {{ 'DATE' | trans | capitalize }}: {{ date }}</div>
+           <div class="right">{{ 'PAGE' | trans | capitalize }} {{ page }} {{ 'PAGE_OF' | trans | lower }} {{ pageAmount }}  &nbsp;&nbsp; {{ 'DATE' | trans | capitalize }}: {{ date }}</div>
         </div>
 
         {% if not loop.last %}
