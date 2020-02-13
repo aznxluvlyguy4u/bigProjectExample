@@ -365,6 +365,19 @@ class Litter extends DeclareNsfoBase
     private $hasMinimumOffspringMuscularity;
 
     /**
+     * The StarEwe base points:
+     * - only based on the offspring exterior.generalAppearance conversion table values
+     * - NO StarEwe prerequisites were taken into account for this base value
+     * - Bonus points bases on the Predicate values of the sons are NOT included
+     *
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $starEweBasePoints;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
@@ -387,6 +400,7 @@ class Litter extends DeclareNsfoBase
         $this->gradeRamCount = 0;
         $this->preferentRamCount = 0;
         $this->hasMinimumOffspringMuscularity = false;
+        $this->starEweBasePoints = 0;
     }
 
     /**
@@ -1094,6 +1108,24 @@ class Litter extends DeclareNsfoBase
     public function setHasMinimumOffspringMuscularity(bool $hasMinimumOffspringMuscularity): Litter
     {
         $this->hasMinimumOffspringMuscularity = $hasMinimumOffspringMuscularity;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStarEweBasePoints(): int
+    {
+        return $this->starEweBasePoints;
+    }
+
+    /**
+     * @param  int  $starEweBasePoints
+     * @return Litter
+     */
+    public function setStarEweBasePoints(int $starEweBasePoints): Litter
+    {
+        $this->starEweBasePoints = $starEweBasePoints;
         return $this;
     }
 
