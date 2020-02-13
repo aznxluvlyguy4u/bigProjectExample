@@ -296,6 +296,53 @@ class Litter extends DeclareNsfoBase
     public $inbreedingCoefficientMatchUpdatedAt;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $ewesWithDefinitiveExteriorCount;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $ramsWithDefinitiveExteriorCount;
+
+    /**
+     * Sons that have a VG exterior, if the father has no definitive exterior yet.
+     * If the father has a definitive exterior, then the count should be zero.
+     *
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $vgRamsIfFatherNoDefExteriorCount;
+
+    /**
+     * Sons that have a DEFINITIVE_PREMIUM_RAM (DP) breed type.
+     *
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $definitivePrimeRamCount;
+
+    /**
+     * Sons that have a GRADE_RAM (DP) breed type.
+     *
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $gradeRamCount;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
