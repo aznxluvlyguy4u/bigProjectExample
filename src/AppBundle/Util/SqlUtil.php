@@ -10,7 +10,9 @@ use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\DutchGender;
+use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestTypeIRDutchInformal;
 use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
@@ -951,6 +953,32 @@ class SqlUtil
     public static function activeRequestStateTypesForLittersJoinedList(): string
     {
         return "'" . implode("','", self::activeRequestStateTypesForLitters()) . "'";
+    }
+
+
+    public static function definitiveExteriorKindsJoinedList(): string
+    {
+        return "'" . implode("','",
+                [
+                    ExteriorKind::DD_,
+                    ExteriorKind::DF_,
+                    ExteriorKind::HH_,
+                    ExteriorKind::HK_,
+                ]
+            ) . "'";
+    }
+
+
+    public static function predicateTypePreferentJoinedList(): string
+    {
+        return "'" . implode("','",
+                [
+                    PredicateType::PREFERENT,
+                    PredicateType::PREFERENT_1,
+                    PredicateType::PREFERENT_2,
+                    PredicateType::PREFERENT_A,
+                ]
+            ) . "'";
     }
 
 

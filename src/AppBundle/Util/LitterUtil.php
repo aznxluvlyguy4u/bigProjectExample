@@ -5,6 +5,9 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Entity\DeclareBirthRepository;
+use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\ExteriorKind;
+use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
 use Monolog\Logger;
@@ -525,4 +528,207 @@ WHERE litter.id = v.litter_id AND (
 
         return $littersDeleted;
     }
+
+
+    public static function updateLitterOffspringExteriorValues(Connection $conn, $litterId = null, ?Logger $logger = null)
+    {
+        if ($logger) {
+            $updateType = !empty($litterId) && is_int($litterId) ? "litter with id $litterId" : "ALL litters";
+            $logger->notice("Update $updateType offspring exterior values ...");
+        }
+
+        $litterIdFilter = !empty($litterId) && is_int($litterId) ? " AND litter.id = $litterId " : '';
+        $subLitterIdFilter = !empty($litterId) && is_int($litterId) ? " AND litter_id = $litterId " : '';
+
+        $ramType = AnimalObjectType::Ram;
+        $eweType = AnimalObjectType::Ewe;
+
+        $minimumPercentageOfOffspringWithEnoughMuscularity = 75;
+        $minimumMuscularityOfOffspring = 80;
+
+        $predicateTypePreferentJoinedList = SqlUtil::predicateTypePreferentJoinedList();
+        $definitiveExteriorKindsJoinedList = SqlUtil::definitiveExteriorKindsJoinedList();
+
+        $sql = "UPDATE
+    litter
+SET
+    ewes_with_definitive_exterior_count = v.ewes_with_definitive_exterior_count,
+    rams_with_definitive_exterior_count = v.rams_with_definitive_exterior_count,
+    vg_rams_if_father_no_def_exterior_count = v.vg_rams_if_father_no_def_exterior_count,
+    definitive_prime_ram_count = v.definitive_prime_ram_count,
+    grade_ram_count = v.grade_ram_count,
+    preferent_ram_count = v.preferent_ram_count,
+    has_minimum_offspring_muscularity = v.has_minimum_offspring_muscularity
+FROM (
+         SELECT
+             l.id,
+             COALESCE(definitive_ewes_count, 0) as definitive_ewes_count,
+             COALESCE(definitive_rams_count, 0) as definitive_rams_count,
+             COALESCE(vg_exterior_rams_if_father_no_definitive_exterior_count, 0) as vg_exterior_rams_if_father_no_definitive_exterior_count,
+             COALESCE(definitive_prime_rams.definitive_prime_ram_count, 0) as definitive_prime_ram_count,
+             COALESCE(grade_rams.grade_ram_count, 0) as grade_ram_count,
+             COALESCE(preferent_rams.preferent_ram_count, 0) as preferent_ram_count,
+             COALESCE(minimum_muscularity.has_80_minimum_muscularity, false) as has_80_minimum_muscularity
+         FROM litter l
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as definitive_ewes_count
+             FROM animal a
+                      INNER JOIN (
+                 SELECT
+                     e.animal_id
+                 FROM exterior e
+                          INNER JOIN measurement m on e.id = m.id
+                 WHERE m.is_active AND
+                         kind IN ($definitiveExteriorKindsJoinedList)
+                 GROUP BY e.animal_id
+             )definitive_exterior ON definitive_exterior.animal_id = a.id
+             WHERE litter_id NOTNULL AND a.type = '$eweType' $subLitterIdFilter
+             GROUP BY litter_id
+         )definitive_ewes ON definitive_ewes.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as definitive_rams_count
+             FROM animal a
+                      INNER JOIN (
+                 SELECT
+                     e.animal_id
+                 FROM exterior e
+                          INNER JOIN measurement m on e.id = m.id
+                 WHERE m.is_active AND
+                         kind IN ($definitiveExteriorKindsJoinedList)
+                 GROUP BY e.animal_id
+             )definitive_exterior ON definitive_exterior.animal_id = a.id
+             WHERE litter_id NOTNULL AND a.type = '$ramType' $subLitterIdFilter
+             GROUP BY litter_id
+         )definitive_rams ON definitive_rams.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as vg_exterior_rams_if_father_no_definitive_exterior_count
+             FROM animal a
+                      INNER JOIN (
+                 SELECT
+                     e_offspring.animal_id
+                 FROM exterior e_offspring
+                          INNER JOIN measurement m_offspring on e_offspring.id = m_offspring.id
+                 WHERE m_offspring.is_active AND
+                         e_offspring.kind = '".ExteriorKind::VG_."'
+
+                 GROUP BY e_offspring.animal_id
+             )vg_exterior ON vg_exterior.animal_id = a.id
+             WHERE litter_id NOTNULL AND a.type = '$ramType' AND
+                     litter_id IN (
+                     -- litters with a father that has a definitive exterior
+                     SELECT
+                         litter.id
+                     FROM exterior e
+                              INNER JOIN measurement m on e.id = m.id
+                              INNER JOIN animal dad on e.animal_id = dad.id
+                              INNER JOIN litter ON litter.animal_father_id = dad.id
+                     WHERE m.is_active AND
+                             kind IN ($definitiveExteriorKindsJoinedList)
+                     GROUP BY litter.id
+                 ) $subLitterIdFilter
+             GROUP BY litter_id
+         )vg_exterior_rams_if_father_no_definitive_exterior ON vg_exterior_rams_if_father_no_definitive_exterior.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as definitive_prime_ram_count
+             FROM animal
+             WHERE breed_type = '".PredicateType::DEFINITIVE_PREMIUM_RAM."' $subLitterIdFilter
+             GROUP BY litter_id
+         )definitive_prime_rams ON definitive_prime_rams.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as grade_ram_count
+             FROM animal
+             WHERE breed_type = '".PredicateType::GRADE_RAM."' $subLitterIdFilter
+             GROUP BY litter_id
+         )grade_rams ON grade_rams.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as preferent_ram_count
+             FROM animal
+             WHERE breed_type IN ($predicateTypePreferentJoinedList) $subLitterIdFilter
+             GROUP BY litter_id
+         )preferent_rams ON preferent_rams.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 definitive_offspring.litter_id,
+                 definitive_offspring_count,
+                 COALESCE(has_80_minimum_muscularity_count,0) as has_80_minimum_muscularity_count,
+                 ((COALESCE(has_80_minimum_muscularity_count,0) * 100) / definitive_offspring_count) > $minimumPercentageOfOffspringWithEnoughMuscularity
+                                                              as has_80_minimum_muscularity
+             FROM (
+                      SELECT
+                          litter_id,
+                          COUNT(*) as definitive_offspring_count
+                      FROM animal a
+                               INNER JOIN (
+                          SELECT
+                              e.animal_id
+                          FROM exterior e
+                                   INNER JOIN measurement m on e.id = m.id
+                          WHERE m.is_active AND
+                                  kind IN ($definitiveExteriorKindsJoinedList)
+                          GROUP BY e.animal_id
+                      )definitive_exterior ON definitive_exterior.animal_id = a.id
+                      WHERE litter_id NOTNULL $subLitterIdFilter
+                      GROUP BY litter_id
+                  )definitive_offspring
+                      LEFT JOIN (
+                 SELECT
+                     litter_id,
+                     COUNT(*) as has_80_minimum_muscularity_count
+                 FROM animal a
+                          INNER JOIN (
+                     SELECT
+                         e.animal_id
+                     FROM exterior e
+                              INNER JOIN measurement m on e.id = m.id
+                     WHERE m.is_active AND
+                             kind IN ($definitiveExteriorKindsJoinedList)
+                       AND muscularity >= $minimumMuscularityOfOffspring
+                     GROUP BY e.animal_id
+                 )definitive_exterior ON definitive_exterior.animal_id = a.id
+                 WHERE litter_id NOTNULL $subLitterIdFilter
+                 GROUP BY litter_id
+             )minimum_muscularity ON minimum_muscularity.litter_id = definitive_offspring.litter_id
+         )minimum_muscularity ON minimum_muscularity.litter_id = l.id
+         WHERE (
+                           l.ewes_with_definitive_exterior_count <> COALESCE(definitive_ewes_count, 0) OR
+                           l.rams_with_definitive_exterior_count <> COALESCE(definitive_rams_count, 0) OR
+                           l.vg_rams_if_father_no_def_exterior_count <> COALESCE(vg_exterior_rams_if_father_no_definitive_exterior_count, 0) OR
+                           l.definitive_prime_ram_count <> COALESCE(definitive_prime_rams.definitive_prime_ram_count, 0) OR
+                           l.grade_ram_count <> COALESCE(grade_rams.grade_ram_count, 0) OR
+                           l.preferent_ram_count <> COALESCE(preferent_rams.preferent_ram_count, 0) OR
+                           l.has_minimum_offspring_muscularity <> COALESCE(minimum_muscularity.has_80_minimum_muscularity, false)
+                   )
+) AS v(
+            litter_id,
+            ewes_with_definitive_exterior_count,
+            rams_with_definitive_exterior_count,
+            vg_rams_if_father_no_def_exterior_count,
+            definitive_prime_ram_count,
+            grade_ram_count,
+            preferent_ram_count,
+            has_minimum_offspring_muscularity
+    ) WHERE litter.id = v.litter_id $litterIdFilter";
+
+        $updateCount = SqlUtil::updateWithCount($conn, $sql);
+
+        if ($logger) {
+            $logger->notice("$updateCount litters updated with new offspring exterior count values");
+        }
+
+        return $updateCount;
+    }
+
+
 }
