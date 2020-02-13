@@ -343,6 +343,28 @@ class Litter extends DeclareNsfoBase
     private $gradeRamCount;
 
     /**
+     * Sons that have a breed type in (
+     * - PREFERENT
+     * - PREFERENT_1
+     * - PREFERENT_2
+     * - PREFERENT_A
+     * ).
+     *
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $preferentRamCount;
+
+    /**
+     * @var bool
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $hasMinimumOffspringMuscularity;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
@@ -357,6 +379,14 @@ class Litter extends DeclareNsfoBase
         $this->cumulativeBornAliveCount = 0;
         $this->declareBirths = new ArrayCollection();
         $this->updatedGeneDiversity = false;
+
+        $this->ewesWithDefinitiveExteriorCount = 0;
+        $this->ramsWithDefinitiveExteriorCount = 0;
+        $this->vgRamsIfFatherNoDefExteriorCount = 0;
+        $this->definitivePrimeRamCount = 0;
+        $this->gradeRamCount = 0;
+        $this->preferentRamCount = 0;
+        $this->hasMinimumOffspringMuscularity = false;
     }
 
     /**
@@ -941,6 +971,131 @@ class Litter extends DeclareNsfoBase
         return $this;
     }
 
+    /**
+     * @return int
+     */
+    public function getEwesWithDefinitiveExteriorCount(): int
+    {
+        return $this->ewesWithDefinitiveExteriorCount;
+    }
+
+    /**
+     * @param  int  $ewesWithDefinitiveExteriorCount
+     * @return Litter
+     */
+    public function setEwesWithDefinitiveExteriorCount(int $ewesWithDefinitiveExteriorCount): Litter
+    {
+        $this->ewesWithDefinitiveExteriorCount = $ewesWithDefinitiveExteriorCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRamsWithDefinitiveExteriorCount(): int
+    {
+        return $this->ramsWithDefinitiveExteriorCount;
+    }
+
+    /**
+     * @param  int  $ramsWithDefinitiveExteriorCount
+     * @return Litter
+     */
+    public function setRamsWithDefinitiveExteriorCount(int $ramsWithDefinitiveExteriorCount): Litter
+    {
+        $this->ramsWithDefinitiveExteriorCount = $ramsWithDefinitiveExteriorCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getVgRamsIfFatherNoDefExteriorCount(): int
+    {
+        return $this->vgRamsIfFatherNoDefExteriorCount;
+    }
+
+    /**
+     * @param  int  $vgRamsIfFatherNoDefExteriorCount
+     * @return Litter
+     */
+    public function setVgRamsIfFatherNoDefExteriorCount(int $vgRamsIfFatherNoDefExteriorCount): Litter
+    {
+        $this->vgRamsIfFatherNoDefExteriorCount = $vgRamsIfFatherNoDefExteriorCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDefinitivePrimeRamCount(): int
+    {
+        return $this->definitivePrimeRamCount;
+    }
+
+    /**
+     * @param  int  $definitivePrimeRamCount
+     * @return Litter
+     */
+    public function setDefinitivePrimeRamCount(int $definitivePrimeRamCount): Litter
+    {
+        $this->definitivePrimeRamCount = $definitivePrimeRamCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getGradeRamCount(): int
+    {
+        return $this->gradeRamCount;
+    }
+
+    /**
+     * @param  int  $gradeRamCount
+     * @return Litter
+     */
+    public function setGradeRamCount(int $gradeRamCount): Litter
+    {
+        $this->gradeRamCount = $gradeRamCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPreferentRamCount(): int
+    {
+        return $this->preferentRamCount;
+    }
+
+    /**
+     * @param  int  $preferentRamCount
+     * @return Litter
+     */
+    public function setPreferentRamCount(int $preferentRamCount): Litter
+    {
+        $this->preferentRamCount = $preferentRamCount;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHasMinimumOffspringMuscularity(): bool
+    {
+        return $this->hasMinimumOffspringMuscularity;
+    }
+
+    /**
+     * @param  bool  $hasMinimumOffspringMuscularity
+     * @return Litter
+     */
+    public function setHasMinimumOffspringMuscularity(bool $hasMinimumOffspringMuscularity): Litter
+    {
+        $this->hasMinimumOffspringMuscularity = $hasMinimumOffspringMuscularity;
+        return $this;
+    }
 
     /**
      * @return array
