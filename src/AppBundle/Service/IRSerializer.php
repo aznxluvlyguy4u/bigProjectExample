@@ -882,8 +882,9 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($contentArray);
         $declareTagReplace = new DeclareTagReplace();
 
-        $declareTagReplace->setReplaceDate($replaceDate);
+        $tag = $contentArray['tag'];
 
+        $declareTagReplace->setReplaceDate(new \DateTime($tag['replaced_at']));
         $declareTagReplace->setUlnCountryCodeToReplace($retrievedAnimal->getUlnCountryCode());
         $declareTagReplace->setUlnNumberToReplace($retrievedAnimal->getUlnNumber());
         $declareTagReplace->setAnimalOrderNumberToReplace($retrievedAnimal->getAnimalOrderNumber());
@@ -894,7 +895,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
         $tagsRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
 
         //create filter to search tag
-        $tag = $contentArray['tag'];
         $tagFilter = array("ulnCountryCode" =>  $ulnCountryCodeReplacement = $tag['uln_country_code'],
           "ulnNumber" => $ulnNumberReplacement= $tag['uln_number']);
 
@@ -912,6 +912,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 $declareTagReplace->setUlnNumberReplacement($fetchedTag->getUlnNumber());
                 $declareTagReplace->setAnimalOrderNumberReplacement($fetchedTag->getAnimalOrderNumber());
                 $fetchedTag->setTagStatus(TagStateType::REPLACING);
+                $fetchedTag->setReplacedAt(new \DateTime($tag['replaced_at']));
                 $this->entityManager->persist($fetchedTag);
                 $this->entityManager->flush();
             }
