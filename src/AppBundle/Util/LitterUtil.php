@@ -529,8 +529,13 @@ WHERE litter.id = v.litter_id AND (
         return $littersDeleted;
     }
 
+    public static function updateLitterOffspringExteriorAndStarEweValues(Connection $conn, $litterId = null, ?Logger $logger = null): int
+    {
+        $updateCount = self::updateLitterOffspringExteriorValues($conn, $litterId, $logger);
+        return $updateCount + self::updateLitterStarEweBasePoints($conn, $litterId, $logger);
+    }
 
-    public static function updateLitterOffspringExteriorValues(Connection $conn, $litterId = null, ?Logger $logger = null)
+    private static function updateLitterOffspringExteriorValues(Connection $conn, $litterId = null, ?Logger $logger = null): int
     {
         if ($logger) {
             $updateType = !empty($litterId) && is_int($litterId) ? "litter with id $litterId" : "ALL litters";
@@ -731,4 +736,137 @@ FROM (
     }
 
 
+    private static function updateLitterStarEweBasePoints(Connection $conn, $litterId = null, ?Logger $logger = null): int
+    {
+        if ($logger) {
+            $updateType = !empty($litterId) && is_int($litterId) ? "litter with id $litterId" : "ALL litters";
+            $logger->notice("Update $updateType starEweBasePoints ...");
+        }
+
+        $litterIdFilter = !empty($litterId) && is_int($litterId) ? " AND l.id = $litterId " : '';
+        $subLitterIdFilter = !empty($litterId) && is_int($litterId) ? " AND litter_id = $litterId " : '';
+
+        $definitiveExteriorKindsJoinedList = SqlUtil::definitiveExteriorKindsJoinedList();
+
+        $ramType = AnimalObjectType::Ram;
+        $eweType = AnimalObjectType::Ewe;
+
+        $sql = "UPDATE litter SET star_ewe_base_points = v.star_ewe_base_points
+FROM (   
+         SELECT
+             l.id as litter_id,
+             COALESCE(definitive_graded_daughters.star_ewe_points, 0) +
+             COALESCE(definitive_graded_sons.star_ewe_points, 0) +
+             COALESCE(preliminary_graded_sons.star_ewe_points, 0) as star_ewe_base_points
+         FROM litter l
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 SUM(star_ewe_points) as star_ewe_points
+             FROM (
+                      SELECT
+                          animal.litter_id,
+                          CASE
+                              WHEN 75 <= e.general_appearance AND e.general_appearance <= 79 THEN
+                                  1
+                              WHEN 80 <= e.general_appearance AND e.general_appearance <= 84 THEN
+                                  3
+                              WHEN 85 <= e.general_appearance AND e.general_appearance <= 89 THEN
+                                  5
+                              WHEN 90 <= e.general_appearance THEN
+                                  6
+                              ELSE 0 END
+                              as star_ewe_points
+                      FROM animal
+                               INNER JOIN exterior e on animal.id = e.animal_id
+                               INNER JOIN measurement m on e.id = m.id
+                      WHERE m.is_active AND e.general_appearance NOTNULL AND 75 <= e.general_appearance
+                        AND litter_id NOTNULL $subLitterIdFilter AND animal.type = '$eweType'
+                        AND kind IN ($definitiveExteriorKindsJoinedList)
+                  )ewe_star_ewe_points
+             GROUP BY litter_id
+         )definitive_graded_daughters ON definitive_graded_daughters.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 SUM(star_ewe_points) as star_ewe_points
+             FROM (
+                      SELECT
+                          animal.litter_id,
+                          CASE
+                              WHEN 75 <= e.general_appearance AND e.general_appearance <= 79 THEN
+                                  2
+                              WHEN 80 <= e.general_appearance AND e.general_appearance <= 84 THEN
+                                  4
+                              WHEN 85 <= e.general_appearance AND e.general_appearance <= 89 THEN
+                                  6
+                              WHEN 90 <= e.general_appearance THEN
+                                  7
+                              ELSE 0 END
+                              as star_ewe_points
+                      FROM animal
+                               INNER JOIN exterior e on animal.id = e.animal_id
+                               INNER JOIN measurement m on e.id = m.id
+                      WHERE m.is_active AND e.general_appearance NOTNULL AND litter_id NOTNULL $subLitterIdFilter AND animal.type = '$ramType'
+                        AND kind IN ($definitiveExteriorKindsJoinedList)
+                  )ram_star_ewe_points
+             GROUP BY litter_id
+         )definitive_graded_sons ON definitive_graded_sons.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 SUM(star_ewe_points) as star_ewe_points
+             FROM (
+                      SELECT
+                          animal.litter_id,
+                          CASE
+                              WHEN 75 <= e.general_appearance AND e.general_appearance <= 79 THEN
+                                  0
+                              WHEN 80 <= e.general_appearance AND e.general_appearance <= 84 THEN
+                                  1
+                              WHEN 85 <= e.general_appearance AND e.general_appearance <= 89 THEN
+                                  2
+                              WHEN 90 <= e.general_appearance THEN
+                                  2
+                              ELSE 0 END
+                              as star_ewe_points
+                      FROM animal
+                        INNER JOIN (
+                          SELECT
+                              animal_id,
+                              general_appearance
+                          FROM (
+                                   SELECT
+                                       animal_id,
+                                       MAX(e.general_appearance) as general_appearance,
+                                       SUM(CASE WHEN kind = '".ExteriorKind::VG_."' THEN 1 ELSE 0 END) as vg_count
+                                   FROM animal
+                                            INNER JOIN exterior e on animal.id = e.animal_id
+                                            INNER JOIN measurement m on e.id = m.id
+                                   WHERE m.is_active AND e.general_appearance NOTNULL AND litter_id NOTNULL AND animal.type = '$ramType'
+                                   GROUP BY e.animal_id
+                                   -- only include animals that are NOT definitively graded yet
+                                   HAVING SUM(CASE WHEN (kind IN ($definitiveExteriorKindsJoinedList)) THEN 1 ELSE 0 END) = 0
+                               )exteriors
+                          WHERE exteriors.vg_count > 0
+                          )e ON e.animal_id = animal.id
+                        WHERE litter_id NOTNULL AND animal.type = '$ramType'
+                  )ram_star_ewe_points
+             GROUP BY litter_id
+         )preliminary_graded_sons ON preliminary_graded_sons.litter_id = l.id
+         WHERE l.star_ewe_base_points <> (
+                 COALESCE(definitive_graded_daughters.star_ewe_points, 0) +
+                 COALESCE(definitive_graded_sons.star_ewe_points, 0) +
+                 COALESCE(preliminary_graded_sons.star_ewe_points, 0)
+             ) $litterIdFilter
+     ) AS v(litter_id, star_ewe_base_points) WHERE litter.id = v.litter_id";
+
+        $updateCount = SqlUtil::updateWithCount($conn, $sql);
+
+        if ($logger) {
+            $logger->notice("$updateCount litters updated with new starEweBasePoints");
+        }
+
+        return $updateCount;
+    }
 }
