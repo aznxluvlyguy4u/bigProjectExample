@@ -960,10 +960,10 @@ class SqlUtil
     {
         return "'" . implode("','",
                 [
-                    ExteriorKind::DD_,
-                    ExteriorKind::DF_,
-                    ExteriorKind::HH_,
-                    ExteriorKind::HK_,
+                    ExteriorKind::DD_, // direct definitief
+                    ExteriorKind::DF_, // definitieve keuring
+                    ExteriorKind::HH_, // herhaalde keuring
+                    ExteriorKind::HK_, // herkeuring
                 ]
             ) . "'";
     }
