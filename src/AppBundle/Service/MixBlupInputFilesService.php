@@ -249,6 +249,8 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
 
             $this->logger->notice(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
             $this->logger->notice(LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn).' litterOrdinals removed from revoked litters');
+            $this->logger->notice(LitterUtil::updateCumulativeBornAliveCount($this->conn).' litterOrdinals updated');
+            $this->logger->notice(LitterUtil::updateLitterOffspringExteriorAndStarEweValues($this->conn).' litter offspring exterior and starEwePoints updated');
 
             if ($this->runIncludesFertility()) {
                 $this->logger->notice(LitterUtil::updateSuckleCount($this->conn).' suckleCounts updated');
@@ -259,7 +261,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         }
     }
 
-    
+
     /**
      * Writes the instructionFile-, dataFile- and pedigreeFile data to their respective text input files.
      * Note! Old files are automatically purged.
