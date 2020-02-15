@@ -3,10 +3,9 @@
 
 namespace AppBundle\Service\Task;
 
-use AppBundle\Entity\Location;
-use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\BreedType;
+use AppBundle\Enumerator\PredicateType;
 use AppBundle\Util\LitterUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
@@ -38,17 +37,15 @@ class StarEwesCalculationTaskService
     }
 
     /**
-     * @param Person $person
-     * @param Location|null $location
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
-    function calculate(Person $person, ?Location $location = null)
+    function calculate()
     {
-        // LOGIC HERE!!
         try {
             $this->prepareLitterData();
+            $updateCount = $this->updateStarEweValues();
 
-            return ResultUtil::successResult('ok');
+            return ResultUtil::successResult('Star ewes update count: '.$updateCount);
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
         }
@@ -67,6 +64,34 @@ class StarEwesCalculationTaskService
         $this->logger->notice($cumulativeBornAliveCountUpdates.' cumulativeBornAliveCount values updated');
 
         LitterUtil::updateLitterOffspringExteriorAndStarEweValues($this->em->getConnection(), null, $this->logger);
+    }
+
+
+    private function updateStarEweValues(): int
+    {
+        $sql = "UPDATE
+    animal
+SET
+    previous_predicate = predicate,
+    previous_predicate_score = predicate_score,
+    predicate = '".PredicateType::STAR_EWE."',
+    predicate_score = v.star_ewe_points_including_bonus_points_of_sons,
+    predicate_updated_at = NOW()
+FROM (
+            ".self::queryStarEweQualifiedEwesWithPoints()."
+         )
+    AS v
+    (
+        star_ewe_id,
+        star_ewe_base_points,
+        star_ewe_points_including_bonus_points_of_sons
+    )
+WHERE
+      animal.id = v.star_ewe_id AND
+      (animal.predicate_score ISNULL OR animal.predicate_score < v.star_ewe_points_including_bonus_points_of_sons)";
+        $updateCount = SqlUtil::updateWithCount($this->em->getConnection(), $sql);
+        $this->logger->notice("Star Ewe values updated: ".$updateCount);
+        return $updateCount;
     }
 
 
