@@ -690,7 +690,7 @@ abstract class Animal
     protected $breeder;
 
     /**
-     * @var string
+     * @var string|null
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -701,7 +701,7 @@ abstract class Animal
     protected $predicate;
 
     /**
-     * @var integer
+     * @var integer|null
      * @JMS\Type("integer")
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Groups({
@@ -710,6 +710,29 @@ abstract class Animal
      * })
      */
     protected $predicateScore;
+
+    /**
+     * @var DateTime|null
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    protected $predicateUpdatedAt;
+
+    /**
+     * @var string|null
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $previousPredicate;
+
+    /**
+     * @var integer|null
+     * @JMS\Type("integer")
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    protected $previousPredicateScore;
 
     /**
      * @var string
@@ -2712,6 +2735,60 @@ abstract class Animal
     }
 
     /**
+     * @return DateTime|null
+     */
+    public function getPredicateUpdatedAt(): ?DateTime
+    {
+        return $this->predicateUpdatedAt;
+    }
+
+    /**
+     * @param  DateTime|null  $predicateUpdatedAt
+     * @return Animal
+     */
+    public function setPredicateUpdatedAt(?DateTime $predicateUpdatedAt): Animal
+    {
+        $this->predicateUpdatedAt = $predicateUpdatedAt;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPreviousPredicate(): ?string
+    {
+        return $this->previousPredicate;
+    }
+
+    /**
+     * @param  string|null  $previousPredicate
+     * @return Animal
+     */
+    public function setPreviousPredicate(?string $previousPredicate): Animal
+    {
+        $this->previousPredicate = $previousPredicate;
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getPreviousPredicateScore(): ?int
+    {
+        return $this->previousPredicateScore;
+    }
+
+    /**
+     * @param  int|null  $previousPredicateScore
+     * @return Animal
+     */
+    public function setPreviousPredicateScore(?int $previousPredicateScore): Animal
+    {
+        $this->previousPredicateScore = $previousPredicateScore;
+        return $this;
+    }
+
+    /**
      * Set scrapieGenotype
      *
      * @param string $scrapieGenotype
@@ -2783,7 +2860,7 @@ abstract class Animal
     public function setMyoMax($myoMax)
     {
         $this->myoMax = $myoMax;
-    }    
+    }
 
     /**
      * Add exteriorMeasurement
