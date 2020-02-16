@@ -21,6 +21,7 @@ class SqlView
     const VIEW_NAME_AND_ADDRESS_DETAILS = 'view_name_and_address_details';
     const VIEW_MINIMAL_PARENT_DETAILS = 'view_minimal_parent_details';
     const VIEW_PEDIGREE_REGISTER_ABBREVIATION = 'view_pedigree_register_abbreviation';
+    const VIEW_BREED_VALUE_MAX_GENERATION_DATE = 'view_breed_value_max_generation_date';
 
 
     /**
@@ -98,6 +99,7 @@ class SqlView
             case self::VIEW_NAME_AND_ADDRESS_DETAILS: return self::nameAndAddressDetailsQuery();
             case self::VIEW_MINIMAL_PARENT_DETAILS: return self::minimalParentDetails();
             case self::VIEW_PEDIGREE_REGISTER_ABBREVIATION: return self::pedigreeRegisterAbbreviation();
+            case self::VIEW_BREED_VALUE_MAX_GENERATION_DATE: return self::breedValueMaxGenerationDate();
             case self::VIEW_PERSON_FULL_NAME: return self::personFullName();
             case self::VIEW_SCAN_MEASUREMENTS: return self::scanMeasurements();
             default: return null;
@@ -528,5 +530,16 @@ FROM scan_measurement_set s
         LEFT JOIN fat3 ON bf.fat3_id = fat3.id
         LEFT JOIN person inspector ON inspector.id = m.inspector_id
         LEFT JOIN person action_by ON action_by.id = m.action_by_id";
+    }
+
+
+    private static function breedValueMaxGenerationDate(): string
+    {
+        return "SELECT
+       to_char(generation_date, 'DD-MM-YYYY') as dd_mm_yyyy,
+       generation_date::date as date,
+       generation_date as date_time,
+       DATE_PART('year', generation_date) as year
+FROM breed_value WHERE generation_date NOTNULL ORDER BY id DESC LIMIT 1";
     }
 }
