@@ -895,7 +895,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 }
 
                 $this->addToLocationsWithRelocation($newLocation);
-                $this->addToLocationsWithRelocation($currentLocation);
+                if ($currentLocation !== null) {
+                    $this->addToLocationsWithRelocation($currentLocation);
+                }
 
                 $ubnCurrentLocation = $currentLocation ? $currentLocation->getUbn() : $this->getEmptyLabel();
 
