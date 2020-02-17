@@ -480,6 +480,7 @@ class AnimalRepository extends BaseRepository
             $animals = $serializer->deserializeArrayOfObjects($cacheService->getItem($cacheId), $clazz);
         } else {
             $animals = $query->getResult();
+            $this->setProductionValues($animals);
 
             $standardJmsGroups = [JmsGroup::BASIC, JmsGroup::LIVESTOCK];
             $jmsGroups = count($extraJmsGroups) > 0 ? ArrayUtil::concatArrayValues([$extraJmsGroups, $standardJmsGroups], true): $standardJmsGroups;
@@ -493,6 +494,42 @@ class AnimalRepository extends BaseRepository
     }
 
     return $animals;
+  }
+
+
+    /**
+     * @param array|Animal[]  $animals
+     */
+  public function setProductionValues(array &$animals)
+  {
+      if (empty($animals)) {
+          return;
+      }
+
+      $animalIds = array_map(function(Animal $animal) {
+          return $animal->getId();
+      }, $animals);
+
+      $idsAsString = SqlUtil::getIdsFilterListString($animalIds);
+
+      $sql = "SELECT
+    animal_id,
+    production
+FROM view_animal_livestock_overview_details
+WHERE animal_id IN (
+    $idsAsString
+    )";
+      $productionValues = $this->getConnection()->query($sql)->fetchAll();
+
+      foreach ($animals as $animal)
+      {
+          $selectAnimalId = $animal->getId();
+          $productionValueResult = array_filter($productionValues, function ($record) use ($selectAnimalId){
+             return intval($record['animal_id']) === $selectAnimalId;
+          });
+          $productionValue = array_shift($productionValueResult)['production'];
+          $animal->production = $productionValue;
+      }
   }
 
 

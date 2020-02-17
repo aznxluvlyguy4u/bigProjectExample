@@ -1140,6 +1140,17 @@ abstract class Animal
     public $inbreedingCoefficientMatchUpdatedAt;
 
     /**
+     * @var string|null
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
+     *     "LIVESTOCK"
+     * })
+     */
+    public $production;
+
+    /**
      * Animal constructor.
      */
     public function __construct()
