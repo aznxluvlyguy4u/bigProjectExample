@@ -912,6 +912,7 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
                 $declareTagReplace->setUlnNumberReplacement($fetchedTag->getUlnNumber());
                 $declareTagReplace->setAnimalOrderNumberReplacement($fetchedTag->getAnimalOrderNumber());
                 $fetchedTag->setTagStatus(TagStateType::REPLACING);
+                $fetchedTag->setReplacedAt(new \DateTime($tag['replaced_at']));
                 $this->entityManager->persist($fetchedTag);
                 $this->entityManager->flush();
             }

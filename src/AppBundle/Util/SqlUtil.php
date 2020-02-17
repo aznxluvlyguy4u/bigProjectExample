@@ -10,7 +10,9 @@ use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\DutchGender;
+use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestTypeIRDutchInformal;
 use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
@@ -138,7 +140,7 @@ class SqlUtil
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         if($output != null) { $output->writeln('Data retrieved!'); }
-        
+
         if(count($results) == 0) { return; }
         NullChecker::createFolderPathIfNull($outputFolderPath);
 
@@ -278,7 +280,7 @@ class SqlUtil
         $idFilterString = '';
         if(!is_array($idsArray)) { return $idFilterString; }
         if(count($idsArray) == 0) { return $idFilterString; }
-        
+
         foreach ($idsArray as $id) {
             if(is_int($id) || ctype_digit($id)) {
                 $idFilterString = $idFilterString.' '.$prefix.' = '.$id.self::OR_FILTER;
@@ -311,19 +313,19 @@ class SqlUtil
         $groupedResults = [];
         if(!is_array($results)) { return $groupedResults; }
         if(count($results) == 0) { return $groupedResults; }
-        
+
         $columnHeaders = self::getColumnHeadersFromSqlResults($results);
-        
+
         foreach ($results as $result) {
             foreach ($columnHeaders as $columnHeader) {
-                
+
                 if(array_key_exists($columnHeader, $groupedResults)) {
                     $group = $groupedResults[$columnHeader];
                 } else {
                     $group = [];
                 }
                 $group[] = $result[$columnHeader];
-                $groupedResults[$columnHeader] = $group;                                
+                $groupedResults[$columnHeader] = $group;
             }
         }
         return $groupedResults;
@@ -935,6 +937,48 @@ class SqlUtil
     public static function activeRequestStateTypesJoinedList(): string
     {
         return "'" . implode("','", self::activeRequestStateTypes()) . "'";
+    }
+
+
+    private static function activeRequestStateTypesForLitters(): array
+    {
+        return [
+            RequestStateType::COMPLETED,
+            RequestStateType::FINISHED,
+            RequestStateType::FINISHED_WITH_WARNING,
+            RequestStateType::IMPORTED,
+        ];
+    }
+
+    public static function activeRequestStateTypesForLittersJoinedList(): string
+    {
+        return "'" . implode("','", self::activeRequestStateTypesForLitters()) . "'";
+    }
+
+
+    public static function definitiveExteriorKindsJoinedList(): string
+    {
+        return "'" . implode("','",
+                [
+                    ExteriorKind::DD_, // direct definitief
+                    ExteriorKind::DF_, // definitieve keuring
+                    ExteriorKind::HH_, // herhaalde keuring
+                    ExteriorKind::HK_, // herkeuring
+                ]
+            ) . "'";
+    }
+
+
+    public static function predicateTypePreferentJoinedList(): string
+    {
+        return "'" . implode("','",
+                [
+                    PredicateType::PREFERENT,
+                    PredicateType::PREFERENT_1,
+                    PredicateType::PREFERENT_2,
+                    PredicateType::PREFERENT_A,
+                ]
+            ) . "'";
     }
 
 

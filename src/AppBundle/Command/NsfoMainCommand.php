@@ -461,8 +461,10 @@ class NsfoMainCommand extends ContainerAwareCommand
             '8: BatchUpdate remove suckleCount from REVOKED Litters', "\n\n",
             '9: BatchUpdate litterOrdinals in Litters, update all incongruous values', "\n",
             '10: BatchUpdate remove litterOrdinals from REVOKED Litters', "\n\n",
-            '11: BatchUpdate gestationPeriods in Litters, update all incongruous values (incl. revoked litters and mates)', "\n",
-            '12: BatchUpdate birthIntervals in Litters, update all incongruous values (incl. revoked litters and mates NOTE! Update litterOrdinals first!)', "\n\n",
+            '11: BatchUpdate cumulativeBornAliveCount in Litters, update all incongruous values. NOTE! Update litterOrdinals first!', "\n",
+            '12: BatchUpdate updateLitterOffspringExteriorValues and starEweBasePoints in Litters, update all incongruous values.', "\n",
+            '13: BatchUpdate gestationPeriods in Litters, update all incongruous values (incl. revoked litters and mates)', "\n",
+            '14: BatchUpdate birthIntervals in Litters, update all incongruous values (incl. revoked litters and mates NOTE! Update litterOrdinals first!)', "\n\n",
 
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
@@ -479,8 +481,10 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 8: $this->writeLn(LitterUtil::removeSuckleCountFromRevokedLitters($this->conn).' suckleCounts removed from revoked litters'); break;
             case 9: $this->writeLn(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated'); break;
             case 10: $this->writeLn(LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn).' litterOrdinals removed from revoked litters'); break;
-            case 11: $this->writeLn(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated'); break;
-            case 12: $this->writeLn(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated'); break;
+            case 11: $this->writeLn(LitterUtil::updateCumulativeBornAliveCount($this->conn).' cumulativeBornAliveCount updated'); break;
+            case 12: LitterUtil::updateLitterOffspringExteriorAndStarEweValues($this->conn, null, $this->getLogger()); break;
+            case 13: $this->writeLn(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated'); break;
+            case 14: $this->writeLn(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated'); break;
 
             default: $this->writeMenuExit(); return;
         }

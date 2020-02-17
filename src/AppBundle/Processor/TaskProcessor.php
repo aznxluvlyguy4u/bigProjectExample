@@ -87,7 +87,7 @@ class TaskProcessor implements PsrProcessor, CommandSubscriberInterface
             switch ($updateType) {
                 case UpdateType::STAR_EWES:
                     {
-                        $data = $this->starEwesCalculationTaskService->calculate($actionBy, $location);
+                        $data = $this->starEwesCalculationTaskService->calculate();
                         break;
                     }
                 case UpdateType::INBREEDING_COEFFICIENT_CALCULATION:
