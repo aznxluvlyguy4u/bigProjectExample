@@ -215,6 +215,7 @@ class AnimalDetailsOutput extends OutputServiceBase
             "name" => Utils::fillNullOrEmptyString($animal->getName(), $replacementString),
 	          "nickname" => Utils::fillNullOrEmptyString($animal->getNickname(), $replacementString),
             Constant::DATE_OF_BIRTH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $replacementString),
+            Constant::DATE_OF_DEATH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfDeath(), $replacementString),
             "inbred_coefficient" => Utils::fillNullOrEmptyString("", $replacementString),
             Constant::GENDER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getGender(), $replacementString),
             "litter_size" => Utils::fillNullOrEmptyString($litterSize, $replacementString),
