@@ -955,7 +955,6 @@ LEFT JOIN (
 
         $mainFilter =
                     "WHERE
-                        a.is_alive AND
                         date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
                         $locationFilter
                     ";
