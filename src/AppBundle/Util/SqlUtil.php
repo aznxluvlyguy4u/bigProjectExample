@@ -14,6 +14,7 @@ use AppBundle\Enumerator\DutchGender;
 use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\PredicateType;
+use AppBundle\Enumerator\ReasonOfDepartType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestTypeIRDutchInformal;
 use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
@@ -983,6 +984,34 @@ class SqlUtil
                     PredicateType::PREFERENT_1,
                     PredicateType::PREFERENT_2,
                     PredicateType::PREFERENT_A,
+                ]
+            ) . "'";
+    }
+
+
+    public static function breedingReasonsOfDepart(): string
+    {
+        return "'" . implode("','",
+                [
+                    ReasonOfDepartType::BREEDING_FARM, // Fokkerij/Houderij
+                ]
+            ) . "'";
+    }
+
+
+    public static function slaughterReasonsOfDepart(): string
+    {
+        return "'" . implode("','",
+                [
+                    ReasonOfDepartType::SLAUGHTER_MATURE,
+                    ReasonOfDepartType::SLAUGHTER_UDDER,
+                    ReasonOfDepartType::SLAUGHTER_LEGS,
+                    ReasonOfDepartType::SLAUGHTER_FOOTROT,
+                    ReasonOfDepartType::SLAUGHTER_FERTILITY,
+                    ReasonOfDepartType::SLAUGHTER_GUST,
+                    ReasonOfDepartType::SLAUGHTER_DENTAL,
+                    ReasonOfDepartType::SLAUGHTER_DENTAL,
+                    ReasonOfDepartType::SLAUGHTER_DENTAL,
                 ]
             ) . "'";
     }

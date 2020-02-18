@@ -7,7 +7,9 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
+use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\OffspringMaturityType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ReportUtil;
@@ -51,7 +53,7 @@ class EweCardReportService extends ReportServiceBase
      */
     private function getPdfReport(Person $actionBy, Location $location, ArrayCollection $content)
     {
-        $data = $this->getAnimalData($content);
+        $data = $this->getAnimalData($content, $location);
 
         $additionalData = [
             'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/css/bootstrap.min.css',
@@ -95,13 +97,13 @@ class EweCardReportService extends ReportServiceBase
         return $fileName;
     }
 
-    public function getAnimalData(ArrayCollection $content) {
+    public function getAnimalData(ArrayCollection $content, Location $location) {
 
         $animalIds = AnimalArrayReader::getAnimalsInContentArray($this->em, $content);
 
-        $animalAndProductionValues = $this->getAnimalAndProductionData($animalIds);
+        $animalAndProductionValues = $this->getAnimalAndProductionData($animalIds, $location);
 
-        $offspringData = $this->getOffspringData($animalIds);
+        $offspringData = $this->getOffspringData($animalIds, $location);
 
         $treatments = $this->getTreatmentsData($animalIds);
 
@@ -146,10 +148,11 @@ class EweCardReportService extends ReportServiceBase
 
     /**
      * @param array $animalIds
+     * @param Location $location
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function getAnimalAndProductionData(array $animalIds): array
+    private function getAnimalAndProductionData(array $animalIds, Location $location): array
     {
         $animalIdsArrayString = $this->getAnimalIdsArrayString($animalIds);
         $genderTranslationValues = SqlUtil::genderTranslationValues();
@@ -199,32 +202,60 @@ class EweCardReportService extends ReportServiceBase
             dad.nickname as dad_nickname, --naam vader
             dad.pedigree_country_code as dad_pedigree_country_code, --pedigree country code vader
             dad.pedigree_number as dad_pedigree_number, --pedigree number vader
-            'Pleegmoeder' as opfok, --opfok = Pleegmoeder / Lambar
-            'Braams' as breeder_name,
+            (
+                CASE WHEN a.surrogate_id NOTNULL THEN
+                         'Pleegmoeder'
+                     WHEN a.lambar = TRUE THEN
+                         'Lambar'
+                     ELSE
+                         ''
+                    END
+            ) as opfok,
+            COALESCE(vl.owner_full_name, '') as breeder_name,
             a.blindness_factor,
             a.scrapie_genotype,
             vd.formatted_predicate,
-            true as has_given_birth_as_one_year_old,
-            9 as litter_nummer,
-            27 as animal_total_born,
-            19 as total_matured,
-            1 as total_deaths,
-            1.48 as litter_index,
-            247 as average_twt,
-            0 as matured_for_others,
-            0 as matured_at_others,
-            3.0 as average_litter_size,
-            4.3 as average_alive_per_year,
-            3.2 as average_birth_weight,
-            192 as average_growth_until_weaning, -- groei tot spenen
-            2.9 as average_alive_per_litter,
-            3.1 as average_matured_per_year,
-            15.5 as average_weaning_weight,
-            0.1 as average_deaths_litter,
-            0.3 as average_matured_per_month,
-            64 as average_weaning_age_in_days,
-            192 as average_weaning_growth_of_all_sucklings,
-            '18-06-2018' as breed_value_evaluation_date,
+            c.gave_birth_as_one_year_old as has_given_birth_as_one_year_old,
+
+            litters_kpi.litter_index as litter_index,
+            litters_kpi.average_twt as average_twt,
+
+            grouped_litter_data_by_litter.litter_number as litter_nummer,
+            grouped_litter_data_by_litter.animal_total_born as animal_total_born,
+            grouped_litter_data_by_litter.total_deaths as total_deaths,
+            grouped_litter_data_by_litter.average_litter_size as average_litter_size,
+            grouped_litter_data_by_litter.average_alive_per_litter as average_alive_per_litter,       
+            grouped_litter_data_by_litter.average_deaths_litter as average_deaths_litter,       
+       
+            grouped_weights.average_birth_weight as average_birth_weight,
+       
+            CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
+                grouped_litter_data_by_litter.total_born_alive / view_ewe_litter_age.day_standardized_years
+            ELSE
+               '-' 
+            END as average_alive_per_year,
+             
+            (own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) as total_matured,       
+            other_offspring_matured_as_surrogate.count as matured_for_others,
+            own_offspring_matured_at_other_surrogate.count as matured_at_others,
+            CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
+                (own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_months
+            ELSE
+               '-' 
+            END as average_matured_per_month,
+            
+            CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
+                (own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_years
+            ELSE
+               '-' 
+            END as average_matured_per_year,
+            
+            -- weaning/'spenen'-data is not available
+            '-' as average_growth_until_weaning, -- groei tot spenen
+            '-' as average_weaning_weight,
+            '-' as average_weaning_age_in_days,
+            '-' as average_weaning_growth_of_all_sucklings, 
+            (SELECT dd_mm_yyyy FROM view_breed_value_max_generation_date) as breed_value_evaluation_date,
             -- fokwaarden
             r.total_born,
             r.total_born_accuracy,
@@ -245,14 +276,58 @@ class EweCardReportService extends ReportServiceBase
         FROM animal a
                  INNER JOIN view_animal_livestock_overview_details vd ON vd.animal_id = a.id
                  INNER JOIN result_table_breed_grades r ON r.animal_id = a.id
+                 LEFT JOIN animal_cache c ON c.animal_id = a.id
                  LEFT JOIN animal mom ON mom.id = a.parent_mother_id
                  LEFT JOIN animal dad ON dad.id = a.parent_father_id
                  LEFT JOIN (VALUES $genderTranslationValues) AS gender(english, dutch) ON a.type = gender.english
                  LEFT JOIN (VALUES $isoCountryAlphaTwoToNumericMapping) AS iso_country(alpha2, numeric) ON a.uln_country_code = iso_country.alpha2
+                 LEFT JOIN view_location_details vl on a.location_of_birth_id = vl.location_id
+                 LEFT JOIN (
+                     SELECT
+                        animal_mother_id,
+                        ROUND(AVG(birth_weight)::numeric,2) as average_birth_weight
+                    FROM animal_cache c
+                             INNER JOIN animal a ON c.animal_id = a.id
+                             INNER JOIN litter l ON l.id = a.litter_id
+                    WHERE birth_weight NOTNULL
+                    GROUP BY animal_mother_id
+                 )grouped_weights ON grouped_weights.animal_mother_id = a.id
+                LEFT JOIN (
+                    SELECT
+                        animal_mother_id,
+                        ROUND(AVG(birth_interval)) as average_twt,
+                        ROUND(365/AVG(birth_interval),2) as litter_index
+                    FROM litter l
+                    WHERE standard_litter_ordinal > 1 AND birth_interval NOTNULL
+                    GROUP BY animal_mother_id
+                )litters_kpi ON litters_kpi.animal_mother_id = a.id
+                LEFT JOIN (
+                         SELECT
+                             animal_mother_id,
+                             MAX(standard_litter_ordinal) as litter_number,
+                             SUM(born_alive_count + stillborn_count) as animal_total_born,
+                             SUM(born_alive_count) as total_born_alive,
+                             SUM(stillborn_count) as total_deaths,
+                             ROUND(AVG(born_alive_count + stillborn_count),2) as average_litter_size,
+                             ROUND(AVG(born_alive_count),2) as average_alive_per_litter,
+                             ROUND(AVG(stillborn_count),2) as average_deaths_litter
+                         FROM litter l
+                         GROUP BY animal_mother_id
+                )grouped_litter_data_by_litter ON grouped_litter_data_by_litter.animal_mother_id = a.id
+                LEFT JOIN (
+                    ".self::queryMaturedCount($location,OffspringMaturityType::OWN_OFFSPRING_MATURED_AS_OWN_MOTHER)."
+                )own_offspring_matured_as_own_mother ON own_offspring_matured_as_own_mother.maturing_mother_id = a.id
+                LEFT JOIN (
+                    ".self::queryMaturedCount($location,OffspringMaturityType::OWN_OFFSPRING_MATURED_AT_OTHER_SURROGATE)."
+                )own_offspring_matured_at_other_surrogate ON own_offspring_matured_at_other_surrogate.maturing_mother_id = a.id                
+                LEFT JOIN (
+                    ".self::queryMaturedCount($location,OffspringMaturityType::OTHER_OFFSPRING_MATURED_AS_SURROGATE)."
+                )other_offspring_matured_as_surrogate ON other_offspring_matured_as_surrogate.maturing_mother_id = a.id
+                LEFT JOIN view_ewe_litter_age ON view_ewe_litter_age.ewe_id = a.id       
         WHERE a.location_id NOTNULL AND a.is_alive
           AND r.total_born NOTNULL
           AND r.weight_at20weeks NOTNULL
-          AND a.type = 'Ewe'
+          AND a.type = '".AnimalObjectType::Ewe."'
           AND a.id IN $animalIdsArrayString";
 
         return $this->conn->query($sql)->fetchAll();
@@ -263,7 +338,7 @@ class EweCardReportService extends ReportServiceBase
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function getOffspringData(array $animalIds): array
+    private function getOffspringData(array $animalIds, Location $location): array
     {
         $animalIdsArrayString = $this->getAnimalIdsArrayString($animalIds);
         $genderTranslationValues = SqlUtil::genderTranslationValues();
@@ -285,13 +360,13 @@ class EweCardReportService extends ReportServiceBase
             litter.born_alive_count + litter.stillborn_count as total_born,
             litter.stillborn_count, --dood
             gender.dutch as gender_dutch,
-            a.type = 'Ram' as has_l_value,
+            a.type = '".AnimalObjectType::Ram."' as has_l_value,
             --gewicht
             3.0 as birth_weight,
             11.0 as weaning_weight,
             41.0 as delivery_weight,
             259 as average_growth,
-            'Slacht' as destination,
+            COALESCE(transport.destination,'') as destination,
             --EUR
             '' as saldo, --currently an empty string placeholder
             '' as price_per_kg --currently an empty string placeholder
@@ -300,12 +375,159 @@ class EweCardReportService extends ReportServiceBase
             LEFT JOIN litter ON litter.id = a.litter_id
             LEFT JOIN animal dad ON dad.id = a.parent_father_id
             LEFT JOIN (VALUES $genderTranslationValues) AS gender(english, dutch) ON a.type = gender.english
+            LEFT JOIN (".self::queryAnimalDestination($location).")transport ON transport.animal_id = a.id
         WHERE
             a.parent_mother_id IN $animalIdsArrayString
         ORDER BY vd.date_of_birth ASC
 ";
 
         return $this->conn->query($sql)->fetchAll();
+    }
+
+
+    private static function queryAnimalDestination(Location $location): string
+    {
+        return "SELECT
+    transport.animal_id,
+    transport.destination
+FROM (
+    ".self::lastDepartOrLossSubQuery($location,true)."
+)transport
+INNER JOIN (
+    SELECT
+        transport.animal_id,
+        MAX(transport.declare_id) as max_declare_id
+    FROM (
+             ".self::lastDepartOrLossSubQuery($location,false)."
+         )transport
+             INNER JOIN (
+        SELECT
+            animal_id,
+            MAX(depart_date) as max_depart_date
+        FROM (
+                 ".self::lastDepartOrLossSubQuery($location,false)."
+             )transport
+        GROUP BY transport.animal_id
+    )transport_max_date ON transport_max_date.animal_id = transport.animal_id AND transport_max_date.max_depart_date = transport.depart_date
+    GROUP BY transport.animal_id
+)transport_last_declare ON transport_last_declare.animal_id = transport.animal_id AND transport_last_declare.max_declare_id = transport.declare_id";
+    }
+
+
+    private static function lastDepartOrLossSubQuery(Location $location, bool $includeDestinationValue): string
+    {
+        $ubn = $location->getUbn();
+
+        $breedingReasonsOfDepart = SqlUtil::breedingReasonsOfDepart();
+        $slaughterReasonsOfDepart = SqlUtil::slaughterReasonsOfDepart();
+
+        $departDestinationValue = $includeDestinationValue ? "CASE WHEN reason_of_depart IN ($breedingReasonsOfDepart) THEN
+                      'Fok'
+                  WHEN reason_of_depart IN ($slaughterReasonsOfDepart) THEN
+                      'Slacht'
+                  ELSE
+                      ''
+                  END as destination," : "";
+
+        $lossDestinationValue = $includeDestinationValue ? "'Dood' as destination,": "";
+
+        $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
+
+        return "SELECT
+                     $departDestinationValue
+                     db.id as declare_id,
+                     animal_id,
+                     depart_date
+                 FROM declare_depart depart
+                          INNER JOIN declare_base db on depart.id = db.id
+                 WHERE db.request_state IN ($activeRequestStates) AND db.ubn = '$ubn'
+                 UNION
+                 SELECT
+                     $lossDestinationValue
+                     db.id as declare_id,
+                     animal_id,
+                     date_of_death as depart_date
+                 FROM declare_loss loss
+                          INNER JOIN declare_base db on loss.id = db.id
+                 WHERE db.request_state IN ($activeRequestStates) AND db.ubn = '$ubn'";
+    }
+
+
+    /**
+     * @param Location $location
+     * @param string has to be from the enum OffspringMaturityType
+     * @return string
+     */
+    private static function queryMaturedCount(Location $location, string $offspringMaturityType): string
+    {
+        $maturityDaysLimit = 90;
+
+        $ubn = $location->getUbn();
+        $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
+
+        switch ($offspringMaturityType) {
+            case OffspringMaturityType::OWN_OFFSPRING_MATURED_AS_OWN_MOTHER:
+                $selectAndGroupBy = 'a.parent_mother_id';
+                $mainFilterAnimal = 'mom';
+                $mainFilterHasSurrogate = ' AND a.surrogate_id ISNULL';
+                break;
+            case OffspringMaturityType::OWN_OFFSPRING_MATURED_AT_OTHER_SURROGATE:
+                $selectAndGroupBy = 'a.parent_mother_id';
+                $mainFilterAnimal = 'mom';
+                $mainFilterHasSurrogate = ' AND a.surrogate_id NOTNULL';
+                break;
+            case OffspringMaturityType::OTHER_OFFSPRING_MATURED_AS_SURROGATE:
+                $selectAndGroupBy = 'a.surrogate_id';
+                $mainFilterAnimal = 'surrogate';
+                $mainFilterHasSurrogate = ' AND a.surrogate_id NOTNULL';
+                break;
+            default:
+                throw new \Exception("Unsupported OffspringMaturityType for queryMaturedCount(), input: ".$offspringMaturityType);
+        }
+
+        return "SELECT
+            $selectAndGroupBy as maturing_mother_id,
+            COUNT(*) as count
+        FROM animal a
+                 INNER JOIN animal mom ON mom.id = a.parent_mother_id
+                 LEFT JOIN animal surrogate ON surrogate.id = a.surrogate_id
+                 INNER JOIN (
+                    -- Depart before 90 days age
+                    SELECT
+                        animal_id
+                    FROM animal a
+                             INNER JOIN declare_depart depart on a.id = depart.animal_id
+                             INNER JOIN declare_base db on depart.id = db.id
+                    WHERE db.request_state IN ($activeRequestStates)
+                      AND db.ubn = '$ubn'
+                      AND a.date_of_birth NOTNULL
+                      AND (EXTRACT(DAYS FROM (depart_date - a.date_of_birth)) < $maturityDaysLimit)
+        
+        
+                    GROUP BY animal_id
+        
+                    UNION
+        
+                    -- At least on 90 days old, still alive and still on location
+                    SELECT
+                        r.animal_id
+                    FROM animal_residence r
+                             INNER JOIN location l ON l.id = r.location_id
+                             INNER JOIN animal a on r.animal_id = a.id
+                    WHERE l.ubn = '$ubn'
+                      --Check residences that are related to the birth and do not end before 90 days
+                      AND EXTRACT(DAYS FROM (start_date - a.date_of_birth)) <= 1
+                      AND (
+                            end_date ISNULL OR $maturityDaysLimit <= EXTRACT(DAYS FROM (end_date - a.date_of_birth))
+                        )
+                      --Must be alive until at least 90 days
+                      AND (
+                            a.date_of_death ISNULL OR
+                            (a.date_of_death NOTNULl AND (EXTRACT(DAYS FROM (a.date_of_death - a.date_of_birth)) > $maturityDaysLimit))
+                        )
+                )matured_animal ON matured_animal.animal_id = a.id
+        WHERE ($mainFilterAnimal.ubn_of_birth = '$ubn') $mainFilterHasSurrogate
+        GROUP BY $selectAndGroupBy";
     }
 
 

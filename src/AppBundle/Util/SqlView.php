@@ -16,6 +16,7 @@ class SqlView
     const VIEW_PERSON_FULL_NAME = 'view_person_full_name';
     const VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS = 'view_animal_livestock_overview_details';
     const VIEW_SCAN_MEASUREMENTS = 'view_scan_measurements';
+    const VIEW_EWE_LITTER_AGE = 'view_ewe_litter_age';
     const VIEW_LITTER_DETAILS = 'view_litter_details';
     const VIEW_LOCATION_DETAILS = 'view_location_details';
     const VIEW_NAME_AND_ADDRESS_DETAILS = 'view_name_and_address_details';
@@ -95,6 +96,7 @@ class SqlView
         switch ($viewName) {
             case self::VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS: return self::animalLiveStockOverviewDetails();
             case self::VIEW_LITTER_DETAILS: return self::litterDetails();
+            case self::VIEW_EWE_LITTER_AGE: return self::eweLitterAge();
             case self::VIEW_LOCATION_DETAILS: return self::locationDetails();
             case self::VIEW_NAME_AND_ADDRESS_DETAILS: return self::nameAndAddressDetailsQuery();
             case self::VIEW_MINIMAL_PARENT_DETAILS: return self::minimalParentDetails();
@@ -541,5 +543,30 @@ FROM scan_measurement_set s
        generation_date as date_time,
        DATE_PART('year', generation_date) as year
 FROM breed_value WHERE generation_date NOTNULL ORDER BY id DESC LIMIT 1";
+    }
+
+    private static function eweLitterAge(): string
+    {
+        return "SELECT
+    mom.id as ewe_id,
+    mom.date_of_birth,
+    litter.litter_date,
+    EXTRACT(YEAR FROM AGE(litter.litter_date, mom.date_of_birth)) as date_accurate_years,
+    EXTRACT(YEAR FROM AGE(litter.litter_date, mom.date_of_birth)) * 12 +
+    EXTRACT(MONTH FROM AGE(litter.litter_date, mom.date_of_birth)) as date_accurate_months,
+    EXTRACT(DAYS FROM (litter.litter_date - mom.date_of_birth)) / 365 * 12 as day_standardized_months,
+    EXTRACT(DAYS FROM (litter.litter_date - mom.date_of_birth)) / 365 as day_standardized_years,
+    EXTRACT(DAYS FROM (litter.litter_date - mom.date_of_birth)) as days
+FROM litter
+    INNER JOIN animal mom ON mom.id = litter.animal_mother_id
+    INNER JOIN (
+        SELECT
+            animal_mother_id,
+            MAX(standard_litter_ordinal) as max_standard_litter_ordinal
+        FROM litter
+        GROUP BY animal_mother_id
+    )last_litter ON last_litter.max_standard_litter_ordinal = litter.standard_litter_ordinal
+ AND last_litter.animal_mother_id = litter.animal_mother_id
+ WHERE mom.date_of_birth NOTNULL and litter.litter_date NOTNULL";
     }
 }
