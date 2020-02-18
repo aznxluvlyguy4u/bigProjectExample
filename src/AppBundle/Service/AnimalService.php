@@ -33,6 +33,7 @@ use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
+use AppBundle\SqlView\View\ViewAnimalLivestockOverviewDetails;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\BreedCodeUtil;
@@ -1046,7 +1047,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $output = $this->getBaseSerializer()->getDecodedJson($animal, [JmsGroup::BASIC]);
         return ResultUtil::successResult($output);
     }
-    
+
     /**
      * @param Request $request
      * @return JsonResponse|Animal|null
