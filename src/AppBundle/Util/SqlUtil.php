@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\IsoCountry;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\AnimalTransferStatus;
@@ -13,6 +14,7 @@ use AppBundle\Enumerator\DutchGender;
 use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\PredicateType;
+use AppBundle\Enumerator\ReasonOfDepartType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestTypeIRDutchInformal;
 use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
@@ -715,6 +717,11 @@ class SqlUtil
     }
 
 
+    public static function isoCountryAlphaTwoToNumericMapping() {
+        return SqlUtil::createSqlValuesString(IsoCountry::numericByAlpha2(), false, false);
+    }
+
+
     /**
      * @param bool $isInformal
      * @return string
@@ -977,6 +984,17 @@ class SqlUtil
                     PredicateType::PREFERENT_1,
                     PredicateType::PREFERENT_2,
                     PredicateType::PREFERENT_A,
+                ]
+            ) . "'";
+    }
+
+
+    public static function breedingReasonsOfDepart(): string
+    {
+        return "'" . implode("','",
+                [
+                    ReasonOfDepartType::BREEDING_FARM, // Fokkerij/Houderij
+                    ReasonOfDepartType::RENT,          // Verhuur
                 ]
             ) . "'";
     }

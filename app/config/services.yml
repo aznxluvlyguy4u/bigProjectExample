@@ -525,6 +525,9 @@ services:
     AppBundle\Service\Report\BirthListReportService:
       parent: app.report.base
 
+    AppBundle\Service\Report\EweCardReportService:
+      parent: app.report.base
+
     AppBundle\Service\Report\CompanyRegisterReportService:
       parent: app.report.base
 
@@ -685,6 +688,7 @@ services:
           - '@app.report.livestock'
           - '@AppBundle\Service\Report\BirthListReportService'
           - '@AppBundle\Service\Report\MembersAndUsersOverviewReportService'
+          - '@AppBundle\Service\Report\EweCardReportService'
           - '@AppBundle\Service\Report\CompanyRegisterReportService'
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
           - '@app.report.inbreeding_coefficient'
@@ -697,6 +701,7 @@ services:
     AppBundle\Processor\ReportProcessor:
         arguments:
           - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
+          - '@AppBundle\Service\Report\EweCardReportService'
           - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'

@@ -16,11 +16,13 @@ class SqlView
     const VIEW_PERSON_FULL_NAME = 'view_person_full_name';
     const VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS = 'view_animal_livestock_overview_details';
     const VIEW_SCAN_MEASUREMENTS = 'view_scan_measurements';
+    const VIEW_EWE_LITTER_AGE = 'view_ewe_litter_age';
     const VIEW_LITTER_DETAILS = 'view_litter_details';
     const VIEW_LOCATION_DETAILS = 'view_location_details';
     const VIEW_NAME_AND_ADDRESS_DETAILS = 'view_name_and_address_details';
     const VIEW_MINIMAL_PARENT_DETAILS = 'view_minimal_parent_details';
     const VIEW_PEDIGREE_REGISTER_ABBREVIATION = 'view_pedigree_register_abbreviation';
+    const VIEW_BREED_VALUE_MAX_GENERATION_DATE = 'view_breed_value_max_generation_date';
 
 
     /**
@@ -94,10 +96,12 @@ class SqlView
         switch ($viewName) {
             case self::VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS: return self::animalLiveStockOverviewDetails();
             case self::VIEW_LITTER_DETAILS: return self::litterDetails();
+            case self::VIEW_EWE_LITTER_AGE: return self::eweLitterAge();
             case self::VIEW_LOCATION_DETAILS: return self::locationDetails();
             case self::VIEW_NAME_AND_ADDRESS_DETAILS: return self::nameAndAddressDetailsQuery();
             case self::VIEW_MINIMAL_PARENT_DETAILS: return self::minimalParentDetails();
             case self::VIEW_PEDIGREE_REGISTER_ABBREVIATION: return self::pedigreeRegisterAbbreviation();
+            case self::VIEW_BREED_VALUE_MAX_GENERATION_DATE: return self::breedValueMaxGenerationDate();
             case self::VIEW_PERSON_FULL_NAME: return self::personFullName();
             case self::VIEW_SCAN_MEASUREMENTS: return self::scanMeasurements();
             default: return null;
@@ -528,5 +532,41 @@ FROM scan_measurement_set s
         LEFT JOIN fat3 ON bf.fat3_id = fat3.id
         LEFT JOIN person inspector ON inspector.id = m.inspector_id
         LEFT JOIN person action_by ON action_by.id = m.action_by_id";
+    }
+
+
+    private static function breedValueMaxGenerationDate(): string
+    {
+        return "SELECT
+       to_char(generation_date, 'DD-MM-YYYY') as dd_mm_yyyy,
+       generation_date::date as date,
+       generation_date as date_time,
+       DATE_PART('year', generation_date) as year
+FROM breed_value WHERE generation_date NOTNULL ORDER BY id DESC LIMIT 1";
+    }
+
+    private static function eweLitterAge(): string
+    {
+        return "SELECT
+    mom.id as ewe_id,
+    mom.date_of_birth,
+    litter.litter_date,
+    EXTRACT(YEAR FROM AGE(litter.litter_date, mom.date_of_birth)) as date_accurate_years,
+    EXTRACT(YEAR FROM AGE(litter.litter_date, mom.date_of_birth)) * 12 +
+    EXTRACT(MONTH FROM AGE(litter.litter_date, mom.date_of_birth)) as date_accurate_months,
+    EXTRACT(DAYS FROM (litter.litter_date - mom.date_of_birth)) / 365 * 12 as day_standardized_months,
+    EXTRACT(DAYS FROM (litter.litter_date - mom.date_of_birth)) / 365 as day_standardized_years,
+    EXTRACT(DAYS FROM (litter.litter_date - mom.date_of_birth)) as days
+FROM litter
+    INNER JOIN animal mom ON mom.id = litter.animal_mother_id
+    INNER JOIN (
+        SELECT
+            animal_mother_id,
+            MAX(standard_litter_ordinal) as max_standard_litter_ordinal
+        FROM litter
+        GROUP BY animal_mother_id
+    )last_litter ON last_litter.max_standard_litter_ordinal = litter.standard_litter_ordinal
+ AND last_litter.animal_mother_id = litter.animal_mother_id
+ WHERE mom.date_of_birth NOTNULL and litter.litter_date NOTNULL";
     }
 }

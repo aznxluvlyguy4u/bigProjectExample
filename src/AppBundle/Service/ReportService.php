@@ -25,6 +25,7 @@ use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
@@ -105,6 +106,9 @@ class ReportService
     /** @var MembersAndUsersOverviewReportService */
     private $membersAndUsersOverviewReport;
 
+    /** @var EweCardReportService  */
+    private $eweCardReportService;
+
     /** @var CompanyRegisterReportService */
     private $companyRegisterReportService;
 
@@ -139,6 +143,7 @@ class ReportService
      * @param LiveStockReportService $livestockReportService
      * @param BirthListReportService $birthListReportService
      * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+     * @param EweCardReportService $eweCardReportService
      * @param CompanyRegisterReportService $companyRegisterReportService
      * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
      * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
@@ -159,6 +164,7 @@ class ReportService
         LiveStockReportService $livestockReportService,
         BirthListReportService $birthListReportService,
         MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
+        EweCardReportService $eweCardReportService,
         CompanyRegisterReportService $companyRegisterReportService,
         ClientNotesOverviewReportService $clientNotesOverviewReportService,
         InbreedingCoefficientReportService $inbreedingCoefficientReportService,
@@ -179,6 +185,7 @@ class ReportService
         $this->livestockReportService = $livestockReportService;
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
+        $this->eweCardReportService = $eweCardReportService;
         $this->companyRegisterReportService = $companyRegisterReportService;
         $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
         $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
@@ -443,6 +450,53 @@ class ReportService
             $request,ReportType::OFFSPRING, $inputForHash
         );
     }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createEweCardReport(Request $request)
+    {
+        $content = RequestUtil::getContentAsArray($request);
+        $animalsArray = $content->get(JsonInputConstant::ANIMALS);
+
+        if (!is_array($animalsArray)) {
+            return ResultUtil::errorResult("'".JsonInputConstant::ANIMALS."' key is missing in body", Response::HTTP_BAD_REQUEST);
+        }
+
+        if (count($animalsArray) === 0) {
+            return ResultUtil::errorResult("Empty input", Response::HTTP_BAD_REQUEST);
+        }
+
+        $contentAsJson = JSON::encode($content->toArray());
+        $inputForHash = $contentAsJson;
+
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, EweCardReportService::defaultFileType());
+        ReportUtil::validateFileType($fileType, EweCardReportService::allowedFileTypes(), $this->translator);
+
+        $location = $this->userService->getSelectedLocation($request);
+        $actionBy = $this->userService->getUser();
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+                return $this->processReportAsWorkerTask(
+                    [
+                        'content' => $contentAsJson
+                    ],
+                    $request,ReportType::EWE_CARD, $inputForHash
+            );
+        }
+
+        $report = $this->eweCardReportService->getReport($actionBy, $location, $content);
+        if ($report instanceof Response) {
+            return $report;
+        }
+        return ResultUtil::successResult($report);
+    }
+
 
     /**
      * @param Request $request
