@@ -51,6 +51,7 @@ class JsonInputConstant
     const DATE_OF_BIRTH = 'date_of_birth';
     const UBN_OF_BIRTH = 'ubn_of_birth';
     const GENDER = 'gender';
+    const INBREEDING_COEFFICIENT = 'inbreeding_coefficient';
     const IS_REVEAL_HISTORIC_ANIMALS = 'is_reveal_historic_animals';
     const IS_HISTORIC_ANIMAL = 'is_historic_animal';
     const IS_PUBLIC = 'is_public';

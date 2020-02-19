@@ -115,11 +115,27 @@ class AnimalDetailsOutput extends OutputServiceBase
             $ulnFather = Utils::getUlnStringFromAnimal($father);
         }
 
+        $litterSize = $replacementString;
+        $suckleCount = $replacementString;
         $litter = $animal->getLitter();
-        if ($litter == null) {
-            $litterSize = $replacementString;
-        } else {
+        if ($litter) {
             $litterSize = $litter->getSize();
+            $suckleCount = $litter->getSuckleCount();
+        }
+
+        //Birth
+        $translatedCountryName = $replacementString;
+        $countryDetailsOfBirth = $animal->getCountryDetailsOfBirth();
+        if ($countryDetailsOfBirth) {
+            $countryName = $countryDetailsOfBirth->getName();
+            $translatedCountryName = $this->getTranslator()->trans($countryName);
+        }
+
+
+        $inbreedingCoefficientValue = $replacementString;
+        $inbreedingCoefficient = $animal->getInbreedingCoefficient();
+        if ($inbreedingCoefficient) {
+            $inbreedingCoefficientValue = $inbreedingCoefficient->getValue();
         }
 
         /** @var BodyFatRepository $bodyFatRepository */
@@ -216,9 +232,10 @@ class AnimalDetailsOutput extends OutputServiceBase
 	          "nickname" => Utils::fillNullOrEmptyString($animal->getNickname(), $replacementString),
             Constant::DATE_OF_BIRTH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $replacementString),
             Constant::DATE_OF_DEATH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfDeath(), $replacementString),
-            "inbred_coefficient" => Utils::fillNullOrEmptyString("", $replacementString),
+            JsonInputConstant::INBREEDING_COEFFICIENT => Utils::fillNullOrEmptyString($inbreedingCoefficientValue, $replacementString),
             Constant::GENDER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getGender(), $replacementString),
             "litter_size" => Utils::fillNullOrEmptyString($litterSize, $replacementString),
+            JsonInputConstant::SUCKLE_COUNT => Utils::fillNullOrEmptyString($suckleCount, $replacementString),
             Constant::MOTHER_NAMESPACE => Utils::fillNullOrEmptyString($ulnMother, $replacementString),
             Constant::FATHER_NAMESPACE => Utils::fillNullOrEmptyString($ulnFather, $replacementString),
             "rearing" => Utils::fillNullOrEmptyString("", $replacementString),
@@ -229,6 +246,9 @@ class AnimalDetailsOutput extends OutputServiceBase
             "predicate" => Utils::fillNullOrEmptyString($predicate, $replacementString),
             "breed_status" => Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
             JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
+
+            JsonInputConstant::COUNTRY_OF_BIRTH => Utils::fillNullOrEmptyString($translatedCountryName, $replacementString),
+
             "measurement" =>
                 array(
                     "measurement_date" => Utils::fillNullOrEmptyString($bodyFat['date'], $replacementString),

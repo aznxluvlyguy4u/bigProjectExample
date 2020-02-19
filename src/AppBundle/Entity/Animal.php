@@ -2201,6 +2201,17 @@ abstract class Animal
     }
 
     /**
+     * @return Country|null
+     */
+    public function getCountryDetailsOfBirth(): ?Country
+    {
+        if ($this->getLocationOfBirth()) {
+            return $this->getLocationOfBirth()->getCountryDetails();
+        }
+        return null;
+    }
+
+    /**
      * @return string
      */
     public function getTransferState()
