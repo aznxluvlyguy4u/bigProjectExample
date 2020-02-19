@@ -177,11 +177,11 @@ class VsmMigratorService extends Migrator2017JunServiceBase
         /* UPDATE LITTER VALUES */
         //BatchUpdate heterosis and recombination values, non-updated only
         GeneDiversityUpdater::updateAll($this->conn, false, $this->cmdUtil);
-        $this->writeLn(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
+        $this->writeLn(LitterUtil::updateAllLitterOrdinals($this->conn).' litterOrdinals updated');
         $this->writeLn(LitterUtil::updateCumulativeBornAliveCount($this->conn).' litterOrdinals updated');
         $this->writeLn(LitterUtil::updateLitterOffspringExteriorAndStarEweValues($this->conn). ' litter offspring exterior and starEwePoints updated');
         $this->writeLn(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated');
-        $this->writeLn(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated');
+        $this->writeLn(LitterUtil::updateAllBirthInterVal($this->conn).' birthIntervals updated');
     }
 
 

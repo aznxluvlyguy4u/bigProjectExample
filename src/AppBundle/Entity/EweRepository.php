@@ -22,7 +22,7 @@ class EweRepository extends AnimalRepository {
     public function generateLitterIds($motherId)
     {
         if(ctype_digit($motherId) || is_int($motherId)) {
-            return LitterUtil::updateLitterOrdinals($this->getConnection(), $motherId);
+            return LitterUtil::updateLitterOrdinalsByMotherIds($this->getConnection(), [$motherId]);
         }
         return 0;
     }
@@ -68,7 +68,7 @@ class EweRepository extends AnimalRepository {
 
         } elseif ($animalData[Constant::TYPE_NAMESPACE] == Constant::PEDIGREE_NAMESPACE) {
             return $this->findEweByPedigreeCountryCodeAndNumber($animalData[JsonInputConstant::PEDIGREE_COUNTRY_CODE], $animalData[JsonInputConstant::PEDIGREE_NUMBER]);
-            
+
         } else {
             return null;
         }

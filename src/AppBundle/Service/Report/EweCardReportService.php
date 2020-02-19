@@ -12,6 +12,7 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\OffspringMaturityType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\LitterUtil;
 use AppBundle\Util\ReportUtil;
 use AppBundle\Util\SectionUtil;
 use AppBundle\Util\SqlUtil;
@@ -28,6 +29,9 @@ class EweCardReportService extends ReportServiceBase
 
     const EWE_ID = 'ewe_id';
 
+    /** @var array|int[] */
+    private $animalIds;
+
     /**
      * @param $actionBy
      * @param Location $location
@@ -38,11 +42,23 @@ class EweCardReportService extends ReportServiceBase
     {
         $this->ulnValidator->validateUlns($content->get(Constant::ANIMALS_NAMESPACE));
 
+        $this->animalIds = AnimalArrayReader::getAnimalsInContentArray($this->em, $content);
+
+        $this->prepareData();
+
         $this->filename = $this->getEweCardReportFileName($content);
         $this->folderName = self::FOLDER_NAME;
         $this->extension = self::defaultFileType();
 
-        return $this->getPdfReport($actionBy, $location, $content);
+        return $this->getPdfReport($actionBy, $location);
+    }
+
+    private function prepareData()
+    {
+        $ordinalUpdateCount = LitterUtil::updateLitterOrdinalsByMotherIds($this->conn, $this->animalIds);
+        $this->logger->notice("Updated $ordinalUpdateCount ordinals");
+        $birthIntervalsUpdated = LitterUtil::updateBirthInterValByMotherIds($this->conn, $this->animalIds);
+        $this->logger->notice("Updated $birthIntervalsUpdated birthIntervals");
     }
 
     /**
@@ -51,9 +67,9 @@ class EweCardReportService extends ReportServiceBase
      * @param ArrayCollection $content
      * @return JsonResponse
      */
-    private function getPdfReport(Person $actionBy, Location $location, ArrayCollection $content)
+    private function getPdfReport(Person $actionBy, Location $location)
     {
-        $data = $this->getAnimalData($content, $location);
+        $data = $this->getAnimalData($location);
 
         $additionalData = [
             'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/css/bootstrap.min.css',
@@ -97,19 +113,17 @@ class EweCardReportService extends ReportServiceBase
         return $fileName;
     }
 
-    public function getAnimalData(ArrayCollection $content, Location $location) {
+    public function getAnimalData(Location $location) {
 
-        $animalIds = AnimalArrayReader::getAnimalsInContentArray($this->em, $content);
+        $animalAndProductionValues = $this->getAnimalAndProductionData($this->animalIds, $location);
 
-        $animalAndProductionValues = $this->getAnimalAndProductionData($animalIds, $location);
+        $offspringData = $this->getOffspringData($this->animalIds, $location);
 
-        $offspringData = $this->getOffspringData($animalIds, $location);
-
-        $treatments = $this->getTreatmentsData($animalIds);
+        $treatments = $this->getTreatmentsData($this->animalIds);
 
         $data = [];
 
-        foreach ($animalIds as $animalId) {
+        foreach ($this->animalIds as $animalId) {
             $data[$animalId] = [
                 'animalAndProduction' => $this->filterAnimalAndProductionDataForAnimalId($animalId, $animalAndProductionValues),
                 'offspring' => $this->filterDataForAnimalId($animalId, $offspringData),

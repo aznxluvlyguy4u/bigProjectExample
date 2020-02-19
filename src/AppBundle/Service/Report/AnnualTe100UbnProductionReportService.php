@@ -51,7 +51,7 @@ class AnnualTe100UbnProductionReportService extends ReportServiceWithBreedValues
          * The litterOrdinals are used to determine the average_previous_litter_count_during_whelp
          */
         LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn);
-        LitterUtil::updateLitterOrdinals($this->conn);
+        LitterUtil::updateAllLitterOrdinals($this->conn);
     }
 
 

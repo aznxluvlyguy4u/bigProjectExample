@@ -54,7 +54,7 @@ class StarEwesCalculationTaskService
     private function prepareLitterData()
     {
         $this->logger->notice('Updating litter ordinals...');
-        $updatedLitterOrdinalCount = LitterUtil::updateLitterOrdinals($this->em->getConnection());
+        $updatedLitterOrdinalCount = LitterUtil::updateAllLitterOrdinals($this->em->getConnection());
         $this->logger->notice($updatedLitterOrdinalCount.' litter ordinals updated');
         $removeLitterOrdinalCount = LitterUtil::removeLitterOrdinalFromRevokedLitters($this->em->getConnection());
         $this->logger->notice($removeLitterOrdinalCount.' litter ordinals removed from revoked litters');

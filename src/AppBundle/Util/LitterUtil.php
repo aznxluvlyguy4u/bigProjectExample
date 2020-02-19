@@ -259,13 +259,41 @@ class LitterUtil
 
     /**
      * @param Connection $conn
-     * @param int|string $litterId
      * @return int
      */
-    public static function updateLitterOrdinals(Connection $conn, $litterId = null)
+    public static function updateAllLitterOrdinals(Connection $conn)
     {
-        $animalMotherIdFilter = self::getLitterAnimalMotherIdFilter($litterId);
+        return self::updateLitterOrdinalsBase($conn);
+    }
 
+
+    /**
+     * @param Connection $conn
+     * @param array $motherIds
+     * @return int
+     */
+    public static function updateLitterOrdinalsByMotherIds(Connection $conn, array $motherIds = [])
+    {
+        if (empty($motherIds)) {
+            return 0;
+        }
+
+        $litterAlias = 'l';
+        $motherIdsJoined = SqlUtil::getIdsFilterListString($motherIds);
+
+        $animalMotherIdFilter = " AND $litterAlias.animal_mother_id IN (".$motherIdsJoined.") ";
+
+        return self::updateLitterOrdinalsBase($conn, $animalMotherIdFilter);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $animalMotherIdFilter
+     * @return int
+     */
+    private static function updateLitterOrdinalsBase(Connection $conn, string $animalMotherIdFilter = '')
+    {
         $sqlGlobalLitter = "UPDATE litter SET litter_ordinal = v.calc_litter_ordinal
                 FROM (
                   SELECT l.id as litter_id,
@@ -393,13 +421,46 @@ WHERE litter.id = v.litter_id AND (
      * NOTE! Update litterOrdinals first!
      *
      * @param Connection $conn
-     * @param null $litterId
+     * @param array $motherIds
      * @return int
      */
-    public static function updateBirthInterVal(Connection $conn, $litterId = null)
+    public static function updateBirthInterValByMotherIds(Connection $conn, array $motherIds = [])
     {
-        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND l.id = '.$litterId.' ' : '';
+        if (empty($motherIds)) {
+            return 0;
+        }
 
+        $motherIdsJoined = SqlUtil::getIdsFilterListString($motherIds);
+
+        $litterIdFilter = " AND l.id IN (
+            SELECT id FROM litter WHERE animal_mother_id IN ($motherIdsJoined) GROUP BY id
+        ) ";
+
+        return self::updateBirthInterValBase($conn, $litterIdFilter);
+    }
+
+
+    /**
+     * NOTE! Update litterOrdinals first!
+     *
+     * @param Connection $conn
+     * @return int
+     */
+    public static function updateAllBirthInterVal(Connection $conn)
+    {
+        return self::updateBirthInterValBase($conn, '');
+    }
+
+
+    /**
+     * NOTE! Update litterOrdinals first!
+     *
+     * @param Connection $conn
+     * @param string $litterIdFilter
+     * @return int
+     */
+    private static function updateBirthInterValBase(Connection $conn, string $litterIdFilter = '')
+    {
         $sql = "UPDATE litter SET birth_interval = v.calc_birth_interval
                 FROM (
                        SELECT l.id as litter_id, DATE(l.litter_date)-DATE(previous_litter.litter_date) as calc_birth_interval
@@ -414,9 +475,7 @@ WHERE litter.id = v.litter_id AND (
         $updateIncongruentBirthIntervals = SqlUtil::updateWithCount($conn, $sql);
 
 
-        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND litter.id = '.$litterId.' ' : '';
-
-        $sql = "UPDATE litter SET birth_interval = NULL
+        $sql = "UPDATE litter l SET birth_interval = NULL
                 WHERE (litter_ordinal <= 1 OR litter_ordinal ISNULL) AND birth_interval NOTNULL ".$litterIdFilter;
         $updateRevokedBirthIntervals = SqlUtil::updateWithCount($conn, $sql);
 
