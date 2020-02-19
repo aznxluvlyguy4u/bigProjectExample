@@ -994,24 +994,7 @@ class SqlUtil
         return "'" . implode("','",
                 [
                     ReasonOfDepartType::BREEDING_FARM, // Fokkerij/Houderij
-                ]
-            ) . "'";
-    }
-
-
-    public static function slaughterReasonsOfDepart(): string
-    {
-        return "'" . implode("','",
-                [
-                    ReasonOfDepartType::SLAUGHTER_MATURE,
-                    ReasonOfDepartType::SLAUGHTER_UDDER,
-                    ReasonOfDepartType::SLAUGHTER_LEGS,
-                    ReasonOfDepartType::SLAUGHTER_FOOTROT,
-                    ReasonOfDepartType::SLAUGHTER_FERTILITY,
-                    ReasonOfDepartType::SLAUGHTER_GUST,
-                    ReasonOfDepartType::SLAUGHTER_DENTAL,
-                    ReasonOfDepartType::SLAUGHTER_DENTAL,
-                    ReasonOfDepartType::SLAUGHTER_DENTAL,
+                    ReasonOfDepartType::RENT,          // Verhuur
                 ]
             ) . "'";
     }

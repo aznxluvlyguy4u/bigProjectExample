@@ -235,17 +235,17 @@ class EweCardReportService extends ReportServiceBase
                '-' 
             END as average_alive_per_year,
              
-            (own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) as total_matured,       
-            other_offspring_matured_as_surrogate.count as matured_for_others,
-            own_offspring_matured_at_other_surrogate.count as matured_at_others,
+            COALESCE((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count)::text, '-') as total_matured,       
+            COALESCE(other_offspring_matured_as_surrogate.count::text, '-') as matured_for_others,
+            COALESCE(own_offspring_matured_at_other_surrogate.count::text, '-') as matured_at_others,
             CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                CAST(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_months)::numeric,1) AS TEXT)
+                COALESCE(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_months)::numeric,1)::text, '-')
             ELSE
                '-' 
             END as average_matured_per_month,
             
             CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                CAST(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_years)::numeric,1) AS TEXT)
+                COALESCE(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_years)::numeric,1)::text, '-')
             ELSE
                '-' 
             END as average_matured_per_year,
@@ -362,20 +362,26 @@ class EweCardReportService extends ReportServiceBase
             gender.dutch as gender_dutch,
             a.type = '".AnimalObjectType::Ram."' as has_l_value,
             --gewicht
-            3.0 as birth_weight,
-            11.0 as weaning_weight,
-            41.0 as delivery_weight,
-            259 as average_growth,
+            ac.birth_weight as birth_weight,
+            
+            -- weaning/'spenen'-data is not available
+            '' as weaning_weight,
+
+            COALESCE(delivery_weight.weight,'') as delivery_weight,
+            COALESCE(growth.average_growth_rate, '') as average_growth,
             COALESCE(transport.destination,'') as destination,
             --EUR
             '' as saldo, --currently an empty string placeholder
             '' as price_per_kg --currently an empty string placeholder
         FROM animal a
             INNER JOIN view_animal_livestock_overview_details vd ON vd.animal_id = a.id
+            INNER JOIN animal_cache ac ON ac.animal_id = a.id
             LEFT JOIN litter ON litter.id = a.litter_id
             LEFT JOIN animal dad ON dad.id = a.parent_father_id
             LEFT JOIN (VALUES $genderTranslationValues) AS gender(english, dutch) ON a.type = gender.english
-            LEFT JOIN (".self::queryAnimalDestination($location).")transport ON transport.animal_id = a.id
+            LEFT JOIN (".self::queryAnimalDestination($location, true).")transport ON transport.animal_id = a.id
+            LEFT JOIN (".self::queryAverageGrowth().")growth ON growth.animal_id = a.id
+            LEFT JOIN (".self::queryWeightOfDelivery($location).")delivery_weight ON delivery_weight.animal_id = a.id
         WHERE
             a.parent_mother_id IN $animalIdsArrayString
         ORDER BY vd.date_of_birth ASC
@@ -385,27 +391,111 @@ class EweCardReportService extends ReportServiceBase
     }
 
 
-    private static function queryAnimalDestination(Location $location): string
+    private static function queryAverageGrowth(): string
+    {
+        return "SELECT
+    animal_id,
+    CAST(AVG(growth_rate)::int AS TEXT) as average_growth_rate
+FROM (
+         SELECT
+             w.animal_id,
+             (w.weight - corrected_values.birth_weight) / EXTRACT(DAYS FROM (m.measurement_date - a.date_of_birth)) * 1000 as growth_rate
+         FROM weight w
+                  INNER JOIN animal a on w.animal_id = a.id
+                  INNER JOIN measurement m ON m.id = w.id
+                  INNER JOIN (
+             SELECT
+                 c.animal_id,
+                 CASE WHEN c.birth_weight ISNULL THEN
+                          (CASE WHEN va.n_ling::int = 1 THEN
+                                    5.0
+                                WHEN va.n_ling::int = 2 THEN
+                                    4.0
+                                WHEN va.n_ling::int = 3 THEN
+                                    3.0
+                                ELSE -- 4 or higher
+                                    2.5
+                              END
+                              )
+                      ELSE
+                          c.birth_weight
+                     END as birth_weight
+             FROM animal_cache c
+                      INNER JOIN view_animal_livestock_overview_details va ON va.animal_id = c.animal_id
+             WHERE (c.birth_weight NOTNULL OR (va.n_ling NOTNULL AND 0 < va.n_ling::int))
+         )corrected_values ON corrected_values.animal_id = w.animal_id
+         WHERE m.is_active AND w.is_birth_weight = FALSE
+           --ignore weights around date of birth to prevent division by zero
+           --or possible strange growth values
+           AND 4 < ABS(EXTRACT(DAYS FROM (m.measurement_date - a.date_of_birth)))
+    )growth
+GROUP BY animal_id";
+    }
+
+
+    /**
+     * Nearest weight to last depart (or loss) for
+     *
+     * @param  Location  $location
+     * @return string
+     */
+    private static function queryWeightOfDelivery(Location $location): string
+    {
+        return "SELECT
+    w.animal_id,
+    -- When more than one active weight is found on the exact same date time, take the highest weight
+    CAST(ROUND(MAX(w.weight)::numeric,10) AS TEXT) as weight
+FROM weight w
+    INNER JOIN measurement m on w.id = m.id
+    INNER JOIN (
+    SELECT
+        animal_id,
+        MAX(measurement_date) as max_measurement_date
+    FROM (
+             SELECT
+                 w.animal_id,
+                 w.weight,
+                 m.measurement_date,
+                 last_transport.depart_date
+             FROM weight w
+                      INNER JOIN measurement m on w.id = m.id
+                      INNER JOIN (
+                 ".self::queryAnimalDestination($location, false)."
+             ) last_transport ON last_transport.animal_id = w.animal_id
+             WHERE m.is_active
+               AND measurement_date <= last_transport.depart_date
+               AND EXTRACT(DAYS FROM (last_transport.depart_date - m.measurement_date)) <= 14
+         )weights_within_14_days_of_last_transport
+    GROUP BY animal_id
+    )last_qualified_weight_measurement_date ON last_qualified_weight_measurement_date.animal_id = w.animal_id
+        AND last_qualified_weight_measurement_date.max_measurement_date = m.measurement_date
+WHERE m.is_active
+GROUP BY w.animal_id";
+    }
+
+
+    private static function queryAnimalDestination(Location $location, bool $includeLoss): string
     {
         return "SELECT
     transport.animal_id,
-    transport.destination
+    transport.destination,
+    transport.depart_date
 FROM (
-    ".self::lastDepartOrLossSubQuery($location,true)."
+    ".self::lastDepartOrLossSubQuery($location,true, $includeLoss)."
 )transport
 INNER JOIN (
     SELECT
         transport.animal_id,
         MAX(transport.declare_id) as max_declare_id
     FROM (
-             ".self::lastDepartOrLossSubQuery($location,false)."
+             ".self::lastDepartOrLossSubQuery($location,false, $includeLoss)."
          )transport
              INNER JOIN (
         SELECT
             animal_id,
             MAX(depart_date) as max_depart_date
         FROM (
-                 ".self::lastDepartOrLossSubQuery($location,false)."
+                 ".self::lastDepartOrLossSubQuery($location,false, $includeLoss)."
              )transport
         GROUP BY transport.animal_id
     )transport_max_date ON transport_max_date.animal_id = transport.animal_id AND transport_max_date.max_depart_date = transport.depart_date
@@ -414,24 +504,31 @@ INNER JOIN (
     }
 
 
-    private static function lastDepartOrLossSubQuery(Location $location, bool $includeDestinationValue): string
+    private static function lastDepartOrLossSubQuery(Location $location, bool $includeDestinationValue, bool $includeLoss): string
     {
         $ubn = $location->getUbn();
 
         $breedingReasonsOfDepart = SqlUtil::breedingReasonsOfDepart();
-        $slaughterReasonsOfDepart = SqlUtil::slaughterReasonsOfDepart();
 
         $departDestinationValue = $includeDestinationValue ? "CASE WHEN reason_of_depart IN ($breedingReasonsOfDepart) THEN
                       'Fok'
-                  WHEN reason_of_depart IN ($slaughterReasonsOfDepart) THEN
-                      'Slacht'
                   ELSE
-                      ''
+                      'Slacht'
                   END as destination," : "";
 
         $lossDestinationValue = $includeDestinationValue ? "'Dood' as destination,": "";
 
         $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
+
+        $unionWithLossQuery = $includeLoss ? "UNION
+                 SELECT
+                     $lossDestinationValue
+                     db.id as declare_id,
+                     animal_id,
+                     date_of_death as depart_date
+                 FROM declare_loss loss
+                          INNER JOIN declare_base db on loss.id = db.id
+                 WHERE db.request_state IN ($activeRequestStates) AND db.ubn = '$ubn'" : "";
 
         return "SELECT
                      $departDestinationValue
@@ -441,15 +538,7 @@ INNER JOIN (
                  FROM declare_depart depart
                           INNER JOIN declare_base db on depart.id = db.id
                  WHERE db.request_state IN ($activeRequestStates) AND db.ubn = '$ubn'
-                 UNION
-                 SELECT
-                     $lossDestinationValue
-                     db.id as declare_id,
-                     animal_id,
-                     date_of_death as depart_date
-                 FROM declare_loss loss
-                          INNER JOIN declare_base db on loss.id = db.id
-                 WHERE db.request_state IN ($activeRequestStates) AND db.ubn = '$ubn'";
+                 ".$unionWithLossQuery;
     }
 
 
