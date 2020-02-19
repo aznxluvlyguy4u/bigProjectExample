@@ -230,7 +230,7 @@ class EweCardReportService extends ReportServiceBase
             grouped_weights.average_birth_weight as average_birth_weight,
        
             CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                grouped_litter_data_by_litter.total_born_alive / view_ewe_litter_age.day_standardized_years
+                CAST(ROUND((grouped_litter_data_by_litter.total_born_alive / view_ewe_litter_age.day_standardized_years)::numeric,1) AS TEXT)
             ELSE
                '-' 
             END as average_alive_per_year,
@@ -239,13 +239,13 @@ class EweCardReportService extends ReportServiceBase
             other_offspring_matured_as_surrogate.count as matured_for_others,
             own_offspring_matured_at_other_surrogate.count as matured_at_others,
             CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                (own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_months
+                CAST(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_months)::numeric,1) AS TEXT)
             ELSE
                '-' 
             END as average_matured_per_month,
             
             CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                (own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_years
+                CAST(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_years)::numeric,1) AS TEXT)
             ELSE
                '-' 
             END as average_matured_per_year,
