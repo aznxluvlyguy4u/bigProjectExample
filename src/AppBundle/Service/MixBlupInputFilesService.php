@@ -256,7 +256,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
                 $this->logger->notice(LitterUtil::updateSuckleCount($this->conn).' suckleCounts updated');
                 $this->logger->notice(LitterUtil::removeSuckleCountFromRevokedLitters($this->conn).' suckleCounts removed from revoked litters');
                 $this->logger->notice(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated');
-                $this->logger->notice(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated');
+                $this->logger->notice(LitterUtil::updateAllBirthInterVal($this->conn).' birthIntervals updated');
             }
         }
     }

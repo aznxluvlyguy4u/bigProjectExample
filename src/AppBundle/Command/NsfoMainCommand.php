@@ -484,7 +484,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 11: $this->writeLn(LitterUtil::updateCumulativeBornAliveCount($this->conn).' cumulativeBornAliveCount updated'); break;
             case 12: LitterUtil::updateLitterOffspringExteriorAndStarEweValues($this->conn, null, $this->getLogger()); break;
             case 13: $this->writeLn(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated'); break;
-            case 14: $this->writeLn(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated'); break;
+            case 14: $this->writeLn(LitterUtil::updateAllBirthInterVal($this->conn).' birthIntervals updated'); break;
 
             default: $this->writeMenuExit(); return;
         }
