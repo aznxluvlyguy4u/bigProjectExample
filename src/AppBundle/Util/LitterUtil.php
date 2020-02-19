@@ -259,13 +259,41 @@ class LitterUtil
 
     /**
      * @param Connection $conn
-     * @param int|string $litterId
      * @return int
      */
-    public static function updateLitterOrdinals(Connection $conn, $litterId = null)
+    public static function updateAllLitterOrdinals(Connection $conn)
     {
-        $animalMotherIdFilter = self::getLitterAnimalMotherIdFilter($litterId);
+        return self::updateLitterOrdinalsBase($conn);
+    }
 
+
+    /**
+     * @param Connection $conn
+     * @param array $motherIds
+     * @return int
+     */
+    public static function updateLitterOrdinalsByMotherIds(Connection $conn, array $motherIds = [])
+    {
+        if (empty($motherIds)) {
+            return 0;
+        }
+
+        $litterAlias = 'l';
+        $motherIdsJoined = SqlUtil::getIdsFilterListString($motherIds);
+
+        $animalMotherIdFilter = " AND $litterAlias.animal_mother_id IN (".$motherIdsJoined.") ";
+
+        return self::updateLitterOrdinalsBase($conn, $animalMotherIdFilter);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $animalMotherIdFilter
+     * @return int
+     */
+    private static function updateLitterOrdinalsBase(Connection $conn, string $animalMotherIdFilter = '')
+    {
         $sqlGlobalLitter = "UPDATE litter SET litter_ordinal = v.calc_litter_ordinal
                 FROM (
                   SELECT l.id as litter_id,

@@ -247,7 +247,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
             $this->logger->notice(LitterUtil::matchMatchingMates($this->conn, false).' \'mate-litter\'s matched');
             $this->logger->notice(LitterUtil::removeMatesFromRevokedLitters($this->conn).' \'mate-litter\'s unmatched');
 
-            $this->logger->notice(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
+            $this->logger->notice(LitterUtil::updateAllLitterOrdinals($this->conn).' litterOrdinals updated');
             $this->logger->notice(LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn).' litterOrdinals removed from revoked litters');
             $this->logger->notice(LitterUtil::updateCumulativeBornAliveCount($this->conn).' litterOrdinals updated');
             $this->logger->notice(LitterUtil::updateLitterOffspringExteriorAndStarEweValues($this->conn).' litter offspring exterior and starEwePoints updated');
