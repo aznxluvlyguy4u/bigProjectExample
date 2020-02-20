@@ -213,6 +213,7 @@ class Location
    * @Expose
    * @JMS\Type("AppBundle\Entity\LocationAddress")
    * @JMS\Groups({
+   *     "ANIMAL_DETAILS",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
    *     "DOSSIER"
