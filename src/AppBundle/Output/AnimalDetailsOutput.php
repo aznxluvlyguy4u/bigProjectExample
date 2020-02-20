@@ -28,7 +28,9 @@ use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\SqlView\Repository\ViewBreedValueMaxGenerationDateRepository;
 use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
+use AppBundle\SqlView\View\ViewBreedValueMaxGenerationDate;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\PedigreeUtil;
@@ -153,6 +155,9 @@ class AnimalDetailsOutput extends OutputServiceBase
         /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
         $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
 
+        /** @var ViewBreedValueMaxGenerationDateRepository $viewBreedValueMaxGenerationDateRepository */
+        $viewBreedValueMaxGenerationDateRepository = $this->getSqlViewManager()->get(ViewBreedValueMaxGenerationDate::class);
+
         $animalId = $animal->getId();
         $fatherId = $animal->getParentFatherId();
         $motherId = $animal->getParentMotherId();
@@ -261,6 +266,7 @@ class AnimalDetailsOutput extends OutputServiceBase
                     "birth_weight" => Utils::fillZero($birthWeight, $replacementString),
                     "birth_progress" => Utils::fillZero("", $replacementString)
                 ),
+            JsonInputConstant::BREED_VALUE_MAX_GENERATION_DATE => $viewBreedValueMaxGenerationDateRepository->getMaxGenerationDateAsDdMmYyyy(),
             "breed_values" => $this->breedValuesOutput->get($animal),
             "breeder" =>
                 array(

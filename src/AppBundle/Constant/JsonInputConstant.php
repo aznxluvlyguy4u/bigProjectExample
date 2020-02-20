@@ -303,6 +303,7 @@ class JsonInputConstant
     const BREED_VALUE_GROWTH = "breed_value_growth";
     const BREED_VALUE_MUSCLE_THICKNESS = "breed_value_muscle_thickness";
     const BREED_VALUE_FAT = "breed_value_fat";
+    const BREED_VALUE_MAX_GENERATION_DATE = "breed_value_max_generation_date";
     const LAMB_MEAT_INDEX = "lamb_meat_index";
     const LAMB_MEAT_INDEX_WITHOUT_ACCURACY = "lamb_meat_index_without_accuracy";
 

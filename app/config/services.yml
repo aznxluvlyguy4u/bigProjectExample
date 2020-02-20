@@ -1137,6 +1137,7 @@ services:
           - '@AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository'
           - '@AppBundle\SqlView\Repository\ViewPedigreeRegisterAbbreviationRepository'
           - '@AppBundle\SqlView\Repository\ViewPersonFullNameRepository'
+          - '@AppBundle\SqlView\Repository\ViewBreedValueMaxGenerationDateRepository'
 
     app.sqlview.repository.base:
         abstract: true
@@ -1164,6 +1165,9 @@ services:
 
     AppBundle\SqlView\Repository\ViewPersonFullNameRepository:
         parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewBreedValueMaxGenerationDateRepository:
+        parent: app.sqlView.repository.base
 
 
     app.output.base:
