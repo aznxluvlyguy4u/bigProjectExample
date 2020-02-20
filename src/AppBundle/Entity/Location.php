@@ -158,7 +158,7 @@ class Location
 
   /**
    * @var ArrayCollection
-   * 
+   *
    * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
    * @ORM\OrderBy({"dateOfDeath" = "ASC"})
    */
@@ -190,7 +190,7 @@ class Location
    * @ORM\OrderBy({"measurementDate" = "ASC"})
    */
   protected $declareWeights;
-  
+
 
   /**
    * @var Company
@@ -656,10 +656,10 @@ class Location
     public function addLoss(\AppBundle\Entity\DeclareLoss $loss)
     {
       $this->losses[] = $loss;
-  
+
       return $this;
     }
-  
+
     /**
      * Remove loss
      *
@@ -669,7 +669,7 @@ class Location
     {
       $this->losses->removeElement($loss);
     }
-  
+
     /**
      * Get losses
      *
@@ -1057,7 +1057,7 @@ class Location
     {
       return $this->tags;
     }
-  
+
     /**
      * @param ArrayCollection $tags
      */
@@ -1065,7 +1065,7 @@ class Location
     {
       $this->tags = $tags;
     }
-  
+
     /**
      * Add tag
      *
@@ -1076,10 +1076,10 @@ class Location
     public function addTag(\AppBundle\Entity\Tag $tag)
     {
       $this->tags[] = $tag;
-  
+
       return $this;
     }
-  
+
     /**
      * Remove tag
      *
@@ -1264,6 +1264,18 @@ class Location
     {
         if ($this->getAddress()) {
             return $this->getAddress()->getCountryCode();
+        }
+        return null;
+    }
+
+
+    /**
+     * @return Country|null
+     */
+    public function getCountryDetails(): ?Country
+    {
+        if ($this->getAddress()) {
+            return $this->getAddress()->getCountryDetails();
         }
         return null;
     }

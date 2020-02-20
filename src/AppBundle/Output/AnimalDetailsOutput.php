@@ -28,7 +28,9 @@ use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\SqlView\Repository\ViewBreedValueMaxGenerationDateRepository;
 use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
+use AppBundle\SqlView\View\ViewBreedValueMaxGenerationDate;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\PedigreeUtil;
@@ -115,11 +117,27 @@ class AnimalDetailsOutput extends OutputServiceBase
             $ulnFather = Utils::getUlnStringFromAnimal($father);
         }
 
+        $litterSize = $replacementString;
+        $suckleCount = $replacementString;
         $litter = $animal->getLitter();
-        if ($litter == null) {
-            $litterSize = $replacementString;
-        } else {
+        if ($litter) {
             $litterSize = $litter->getSize();
+            $suckleCount = $litter->getSuckleCount();
+        }
+
+        //Birth
+        $translatedCountryName = $replacementString;
+        $countryDetailsOfBirth = $animal->getCountryDetailsOfBirth();
+        if ($countryDetailsOfBirth) {
+            $countryName = $countryDetailsOfBirth->getName();
+            $translatedCountryName = $this->getTranslator()->trans($countryName);
+        }
+
+
+        $inbreedingCoefficientValue = $replacementString;
+        $inbreedingCoefficient = $animal->getInbreedingCoefficient();
+        if ($inbreedingCoefficient) {
+            $inbreedingCoefficientValue = $inbreedingCoefficient->getValue();
         }
 
         /** @var BodyFatRepository $bodyFatRepository */
@@ -136,6 +154,9 @@ class AnimalDetailsOutput extends OutputServiceBase
         $animalRepository = $this->getManager()->getRepository(Animal::class);
         /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
         $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
+
+        /** @var ViewBreedValueMaxGenerationDateRepository $viewBreedValueMaxGenerationDateRepository */
+        $viewBreedValueMaxGenerationDateRepository = $this->getSqlViewManager()->get(ViewBreedValueMaxGenerationDate::class);
 
         $animalId = $animal->getId();
         $fatherId = $animal->getParentFatherId();
@@ -216,9 +237,10 @@ class AnimalDetailsOutput extends OutputServiceBase
 	          "nickname" => Utils::fillNullOrEmptyString($animal->getNickname(), $replacementString),
             Constant::DATE_OF_BIRTH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $replacementString),
             Constant::DATE_OF_DEATH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfDeath(), $replacementString),
-            "inbred_coefficient" => Utils::fillNullOrEmptyString("", $replacementString),
+            JsonInputConstant::INBREEDING_COEFFICIENT => Utils::fillNullOrEmptyString($inbreedingCoefficientValue, $replacementString),
             Constant::GENDER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getGender(), $replacementString),
             "litter_size" => Utils::fillNullOrEmptyString($litterSize, $replacementString),
+            JsonInputConstant::SUCKLE_COUNT => Utils::fillNullOrEmptyString($suckleCount, $replacementString),
             Constant::MOTHER_NAMESPACE => Utils::fillNullOrEmptyString($ulnMother, $replacementString),
             Constant::FATHER_NAMESPACE => Utils::fillNullOrEmptyString($ulnFather, $replacementString),
             "rearing" => Utils::fillNullOrEmptyString("", $replacementString),
@@ -229,6 +251,9 @@ class AnimalDetailsOutput extends OutputServiceBase
             "predicate" => Utils::fillNullOrEmptyString($predicate, $replacementString),
             "breed_status" => Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
             JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
+
+            JsonInputConstant::COUNTRY_OF_BIRTH => Utils::fillNullOrEmptyString($translatedCountryName, $replacementString),
+
             "measurement" =>
                 array(
                     "measurement_date" => Utils::fillNullOrEmptyString($bodyFat['date'], $replacementString),
@@ -241,6 +266,7 @@ class AnimalDetailsOutput extends OutputServiceBase
                     "birth_weight" => Utils::fillZero($birthWeight, $replacementString),
                     "birth_progress" => Utils::fillZero("", $replacementString)
                 ),
+            JsonInputConstant::BREED_VALUE_MAX_GENERATION_DATE => $viewBreedValueMaxGenerationDateRepository->getMaxGenerationDateAsDdMmYyyy(),
             "breed_values" => $this->breedValuesOutput->get($animal),
             "breeder" =>
                 array(
