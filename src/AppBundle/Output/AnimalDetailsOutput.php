@@ -204,23 +204,6 @@ class AnimalDetailsOutput extends OutputServiceBase
         }
 
 
-        $breeder = null;
-        $breederUbn = $replacementString;
-        $breederName = $replacementString;
-        $breederEmailAddress = $replacementString;
-        $breederTelephoneNumber = $replacementString;
-        $locationOfBirth = $animal->getLocationOfBirth();
-        if($locationOfBirth != null) {
-            $breederUbn = $locationOfBirth->getUbn();
-
-            $breeder = $locationOfBirth->getOwner();
-            if ($breeder != null) {
-                $breederName = Utils::fillNullOrEmptyString($breeder->getFullName(), $replacementString);
-                $breederEmailAddress = Utils::fillNullOrEmptyString($breeder->getEmailAddress(), $replacementString);
-                $breederTelephoneNumber = Utils::fillNullOrEmptyString($breeder->getCellphoneNumber(), $replacementString);
-            }
-        }
-
         $company = $location ? $location->getCompany() : null;
 
         $result = [
@@ -268,14 +251,8 @@ class AnimalDetailsOutput extends OutputServiceBase
                 ),
             JsonInputConstant::BREED_VALUE_MAX_GENERATION_DATE => $viewBreedValueMaxGenerationDateRepository->getMaxGenerationDateAsDdMmYyyy(),
             "breed_values" => $this->breedValuesOutput->get($animal),
-            "breeder" =>
-                array(
-                    "breeder" => Utils::fillNullOrEmptyString($breederName, $replacementString),
-                    "ubn_breeder" => Utils::fillNullOrEmptyString($breederUbn, $replacementString),
-                    "email_address" => Utils::fillNullOrEmptyString($breederEmailAddress, $replacementString),
-                    "telephone" => Utils::fillNullOrEmptyString($breederTelephoneNumber, $replacementString),
-                    "co-owner" => Utils::fillNullOrEmptyString("", $replacementString) //TODO
-                ),
+            JsonInputConstant::BREEDER => $this->getContactData($animal->getLocationOfBirth()),
+            JsonInputConstant::HOLDER => $this->getContactData($animal->getLocation()),
             "note" => Utils::fillNullOrEmptyString($animal->getNote(), $replacementString),
             "body_fats" => $bodyFatRepository->getAllOfAnimalBySql($animal, $replacementString),
             "exteriors" => $exteriorRepository->getAllOfAnimalBySql($animal, $replacementString),
@@ -334,6 +311,27 @@ class AnimalDetailsOutput extends OutputServiceBase
         $this->ownerUbns = null;
 
         return $result;
+    }
+
+
+    /**
+     * Warning! DO NOT save any entity after calling this function.
+     */
+    private function getContactData(?Location $location): ?array
+    {
+        if ($location) {
+            $address = $location->getAddress();
+            if ($address) {
+                $countryDetails = $address->getCountryDetails();
+                if ($countryDetails) {
+                    $translatedCountryName = $this->getTranslator()->trans($countryDetails->getName());
+                    $location->getCountryDetails()->setName($translatedCountryName);
+                }
+            }
+
+            return $this->getSerializer()->getDecodedJson($location, [JmsGroup::ANIMAL_DETAILS]);
+        }
+        return null;
     }
 
 

@@ -177,6 +177,7 @@ class Company
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
      *     "DOSSIER"
      *     })
      */

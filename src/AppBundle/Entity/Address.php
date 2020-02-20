@@ -55,6 +55,7 @@ abstract class Address
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ADDRESS",
+   *     "ANIMAL_DETAILS",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
    *     "DOSSIER"
@@ -70,6 +71,7 @@ abstract class Address
    * @JMS\Type("integer")
    * @JMS\Groups({
    *     "ADDRESS",
+   *     "ANIMAL_DETAILS",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
    *     "DOSSIER"
@@ -84,6 +86,7 @@ abstract class Address
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ADDRESS",
+   *     "ANIMAL_DETAILS",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
    *     "DOSSIER"
@@ -100,6 +103,7 @@ abstract class Address
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ADDRESS",
+   *     "ANIMAL_DETAILS",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
    *     "DOSSIER"
@@ -115,6 +119,7 @@ abstract class Address
    * @JMS\Type("string")
    * @JMS\Groups({
    *     "ADDRESS",
+   *     "ANIMAL_DETAILS",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
    *     "DOSSIER"
@@ -166,6 +171,21 @@ abstract class Address
      * })
      */
   private $countryDetails;
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("country_name")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     * @JMS\Type("string")
+     *
+     * @return string|null
+     */
+    public function getCountryName(): ?string
+    {
+        return $this->countryDetails ? $this->countryDetails->getName() : null;
+    }
 
     /**
      * Get id
@@ -324,16 +344,6 @@ abstract class Address
     public function getCountryId(): ?int
     {
         return $this->countryDetails ? $this->countryDetails->getId() : null;
-    }
-
-    /**
-     * Get country
-     *
-     * @return string|null
-     */
-    public function getCountryName(): ?string
-    {
-        return $this->countryDetails ? $this->countryDetails->getName() : null;
     }
 
     /**

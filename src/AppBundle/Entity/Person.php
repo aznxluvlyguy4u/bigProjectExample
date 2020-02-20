@@ -147,6 +147,7 @@ abstract class Person implements UserInterface
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
+   *     "ANIMAL_DETAILS",
    *     "BASIC",
    *     "GHOST_LOGIN",
    *     "VWA",
@@ -347,13 +348,29 @@ abstract class Person implements UserInterface
      */
     private $languagePreference;
 
+    /**
+     * Returns the full name of the user.
+     *
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("full_name")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     *
+     * @return string The username
+     */
+    public function getFullName()
+    {
+        return StringUtil::getFullName($this->firstName, $this->lastName);
+    }
+
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
   {
     $this->tokens = new ArrayCollection();
     $this->mobileDevices = new ArrayCollection();
     $this->workers = new ArrayCollection();
-    
+
     $this->setFirstName($firstName);
     $this->setLastName($lastName);
     $this->setEmailAddress($emailAddress);
@@ -521,16 +538,6 @@ abstract class Person implements UserInterface
   public function getUsername()
   {
     return $this->username;
-  }
-
-  /**
-   * Returns the full name of the user.
-   *
-   * @return string The username
-   */
-  public function getFullName()
-  {
-    return StringUtil::getFullName($this->firstName, $this->lastName);
   }
 
   /**

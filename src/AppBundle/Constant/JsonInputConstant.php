@@ -77,8 +77,6 @@ class JsonInputConstant
     const BLINDNESS_FACTOR = 'blindness_factor';
     const PREDICATE = 'predicate';
     const PREDICATE_SCORE = 'predicate_score';
-    const BREEDER_NAME = 'breeder_name';
-    const BREEDER_NUMBER = 'breeder_number';
     const ANIMAL_TYPE = 'animal_type';
     const NICKNAME = 'nickname';
     const ANIMAL_RESIDENCE_HISTORY = 'animal_residence_history';
@@ -115,6 +113,10 @@ class JsonInputConstant
     const SUCCESSFUL_EDITS = 'successful_edits';
     const SUCCESS_COUNT = 'success_count';
     const ERROR_COUNT = 'error_count';
+
+    // Breeder & Holder
+    const BREEDER = 'breeder';
+    const HOLDER = 'holder';
 
     //Sync
     const IS_RVO_LEADING = 'is_rvo_leading';
