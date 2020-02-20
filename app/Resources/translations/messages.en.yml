@@ -491,6 +491,10 @@ CANNOT BE IN THE FUTURE: cannot be in the future
 IS MISSING: is missing
 NO ANIMAL FOUND FOR GIVEN ULN: no animal was found for the given ULN
 
+SURROGATE_MOTHER_NO_EWE_FOUND_FOR_GIVEN_ID: Surrogate mother input error. No ewe found for given id
+SURROGATE_MOTHER_IS_SAME_AS_CHILD: Surrogate mother is identical to the child
+SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD: Surrogate mother is younger than the child
+
 #Declares
 DECLARE_ARRIVALS: arrivals
 DECLARE_DEPARTS: departs

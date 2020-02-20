@@ -15,14 +15,17 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class AnimalDetailsUpdaterService extends ControllerServiceBase
 {
@@ -30,6 +33,11 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
 
     const ERROR_ULN_ALREADY_EXISTS = 'Het opgegeven nieuwe uln is al in gebruik bij een ander dier';
     const ERROR_LOCATION_NOT_FOUND = 'Er is geen locatie gevonden met ubn: ';
+
+    /* Surrogate mother error messages */
+    const SURROGATE_MOTHER_NO_EWE_FOUND_FOR_GIVEN_ID = 'SURROGATE_MOTHER_NO_EWE_FOUND_FOR_GIVEN_ID';
+    const SURROGATE_MOTHER_IS_SAME_AS_CHILD = 'SURROGATE_MOTHER_IS_SAME_AS_CHILD';
+    const SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD = 'SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD';
 
     /* Parent error messages */
     const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
@@ -52,6 +60,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         ]
     ];
 
+    /** @var array */
+    private $errors;
 
     /** @var string */
     private $animalIdLogPrefix;
@@ -97,6 +107,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     public function updateAnimalDetails(Request $request, $ulnString)
     {
         $this->request = $request;
+        $this->errors = [];
 
         //Get content to array
         $content = RequestUtil::getContentAsArray($request);
@@ -181,10 +192,10 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         $this->clearActionLogMessage();
 
         //Collar color & number
-        if($content->containsKey('collar')) {
-            $collar = $content->get('collar');
-            $newCollarNumber = StringUtil::convertEmptyStringToNull(ArrayUtil::get('number',$collar));
-            $newCollarColor = StringUtil::convertEmptyStringToNull(ArrayUtil::get('color',$collar));
+        if($content->containsKey(JsonInputConstant::COLLAR)) {
+            $collar = $content->get(JsonInputConstant::COLLAR);
+            $newCollarNumber = StringUtil::convertEmptyStringToNull(ArrayUtil::get(JsonInputConstant::NUMBER, $collar));
+            $newCollarColor = StringUtil::convertEmptyStringToNull(ArrayUtil::get(JsonInputConstant::COLOR, $collar));
 
             $oldCollarColor = $animal->getCollarColor();
             $oldCollarNumber = $animal->getCollarNumber();
@@ -205,6 +216,91 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
 
         }
 
+        if ($content->containsKey(JsonInputConstant::PREDICATE_DETAILS)) {
+            $predicateContent = $content->get(JsonInputConstant::PREDICATE_DETAILS);
+
+            $newPredicate = StringUtil::convertEmptyStringToNull(ArrayUtil::get(JsonInputConstant::TYPE, $predicateContent));
+            $newPredicateScore = ArrayUtil::get(JsonInputConstant::SCORE, $predicateContent);
+            $oldPredicate = $animal->getPredicate();
+            $oldPredicateScore = $animal->getPredicateScore();
+
+            // TODO VALIDATE PREDICATE INPUT
+
+            if ($oldPredicate != $newPredicate) {
+                $animal->setPredicate($newPredicate);
+                $animal->setPreviousPredicate($oldPredicate);
+                $animal->setPredicateUpdatedAt(new \DateTime());
+                $anyValueWasUpdated = true;
+                $this->updateActionLogMessage('predikaat', $oldPredicate, $newPredicate);
+            }
+
+            if ($oldPredicateScore != $newPredicateScore) {
+                $animal->setPredicateScore($newPredicateScore);
+                $animal->setPreviousPredicateScore($oldPredicateScore);
+                $animal->setPredicateUpdatedAt(new \DateTime());
+                $anyValueWasUpdated = true;
+                $this->updateActionLogMessage('predikaat score', $oldPredicateScore, $newPredicateScore);
+            }
+        }
+
+
+        $newBlindnessFactor = StringUtil::convertEmptyStringToNull($content->get(JsonInputConstant::BLINDNESS_FACTOR));
+        $oldBlindnessFactor = $animal->getBlindnessFactor();
+
+        // TODO VALIDATE BLINDNESS FACTOR INPUT
+
+        if ($oldBlindnessFactor != $newBlindnessFactor) {
+            $animal->setBlindnessFactor($newBlindnessFactor);
+            $anyValueWasUpdated = true;
+            $this->updateActionLogMessage('blindfactor', $oldBlindnessFactor, $newBlindnessFactor);
+        }
+
+        $newBirthProcess = StringUtil::convertEmptyStringToNull($content->get(JsonInputConstant::BIRTH_PROGRESS));
+        $oldBirthProcess = $animal->getBirthProgress();
+
+        // TODO VALIDATE BIRTH PROCESS INPUT
+
+        if ($oldBirthProcess != $newBirthProcess) {
+            $animal->setBirthProgress($newBirthProcess);
+            $anyValueWasUpdated = true;
+            $this->updateActionLogMessage('geboorteproces', $oldBirthProcess, $newBirthProcess);
+        }
+
+        $newRearing = StringUtil::convertEmptyStringToNull($content->get(JsonInputConstant::REARING));
+
+        if ($newRearing === 'LAMBAR') {
+            $newSurrogateId = null;
+            $newLambar = true;
+        } elseif (ctype_digit($newRearing) || is_int($newRearing)) {
+            $newSurrogateId = intval($newRearing);
+            $newLambar = false;
+        } else {
+            $newSurrogateId = null;
+            $newLambar = false;
+        }
+
+        $oldSurrogateId = $animal->getSurrogate() ? $animal->getSurrogate()->getId() : null;
+        $oldLambar = $animal->getLambar();
+
+        if ($oldSurrogateId !== $newSurrogateId) {
+
+            $newSurrogate = $this->getValidatedSurrogateInput($animal, $newSurrogateId);
+            if ($newSurrogate != null || ($oldSurrogateId != null && $newSurrogateId == null)) {
+                $animal->setSurrogate($newSurrogate);
+                $anyValueWasUpdated = true;
+                $this->updateActionLogMessage('pleegmoeder', $oldSurrogateId, $newSurrogateId);
+            }
+        }
+
+        if (!$this->hasSurrogateInputError() && $oldLambar != $newLambar) {
+            $animal->setLambar($newLambar);
+            $anyValueWasUpdated = true;
+            $this->updateActionLogMessage('lambar', $oldLambar, $newLambar);
+        }
+
+
+        $this->checkForValidationErrors();
+
         //Only update animal in database if any values were actually updated
         if($anyValueWasUpdated) {
             $this->getManager()->persist($animal);
@@ -221,6 +317,64 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
         return $animal;
+    }
+
+
+    private function checkForValidationErrors()
+    {
+        if (empty($this->errors)) {
+            return;
+        }
+
+        $errorMessage = '';
+        $prefix = '';
+        foreach ($this->errors as $error => $errorValue) {
+            $errorMessage = $prefix . $this->translator->trans($error);
+            if ($errorValue !== 0) {
+                $errorMessage .= ': '.$errorValue;
+            }
+            $prefix = ', ';
+        }
+        $errorMessage .= '.';
+
+        throw new BadRequestHttpException($errorMessage);
+    }
+
+
+    private function getValidatedSurrogateInput(Animal $animal, ?int $newSurrogateId): ?Ewe
+    {
+        if ($newSurrogateId === null) {
+            return null;
+        }
+
+        /** @var Ewe $newSurrogate */
+        $newSurrogate = $this->getManager()->getRepository(Ewe::class)->find($newSurrogateId);
+
+        $isValidSurrogateInput = true;
+
+        if (!$newSurrogate) {
+            $this->errors[self::SURROGATE_MOTHER_NO_EWE_FOUND_FOR_GIVEN_ID] = $newSurrogateId;
+            $isValidSurrogateInput = false;
+        }
+
+        if ($newSurrogateId === $animal->getId()) {
+            $this->errors[self::SURROGATE_MOTHER_IS_SAME_AS_CHILD] = $newSurrogateId;
+            $isValidSurrogateInput = false;
+        }
+
+        if (TimeUtil::isDate1BeforeDate2($newSurrogate->getDateOfBirth(), $animal->getDateOfBirth())) {
+            $this->errors[self::SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD] = $newSurrogate->getDateOfBirthString();
+            $isValidSurrogateInput = false;
+        }
+
+        return $isValidSurrogateInput ? $newSurrogate : null;
+    }
+
+    private function hasSurrogateInputError(): bool
+    {
+        return key_exists(self::SURROGATE_MOTHER_IS_SAME_AS_CHILD, $this->errors) ||
+            key_exists(self::SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD, $this->errors) ||
+            key_exists(self::SURROGATE_MOTHER_NO_EWE_FOUND_FOR_GIVEN_ID, $this->errors);
     }
 
 
