@@ -36,7 +36,6 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\PedigreeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\UlnValidator;
-use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 /**
@@ -231,7 +230,8 @@ class AnimalDetailsOutput extends OutputServiceBase
             "blind_factor" => Utils::fillNullOrEmptyString("", $replacementString),
             "scrapie_genotype" => Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), $replacementString),
             "breed" => Utils::fillNullOrEmptyString($animal->getBreedCode(), $replacementString),
-            "predicate" => Utils::fillNullOrEmptyString($predicate, $replacementString),
+            JsonInputConstant::PREDICATE => Utils::fillNullOrEmptyString($predicate, $replacementString),
+            JsonInputConstant::PREDICATE_DETAILS => $this->getPredicateDetails($animal, $predicate),
             "breed_status" => Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
             JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
 
@@ -311,6 +311,16 @@ class AnimalDetailsOutput extends OutputServiceBase
         $this->ownerUbns = null;
 
         return $result;
+    }
+
+
+    private function getPredicateDetails(Animal $animal, $formattedPredicate): array
+    {
+        return [
+            JsonInputConstant::FORMATTED => $formattedPredicate,
+            JsonInputConstant::TYPE => $animal->getPredicate(),
+            JsonInputConstant::SCORE => $animal->getPredicateScore(),
+        ];
     }
 
 

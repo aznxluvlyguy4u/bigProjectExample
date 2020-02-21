@@ -20,6 +20,7 @@ class JsonInputConstant
     const IS_VALID = 'is_valid';
     const KEY = 'key';
     const TRANSLATION_KEY = 'translation_key';
+    const FORMATTED = 'formatted';
 
     //Admins
     const ADMINS = 'admins';
@@ -41,6 +42,11 @@ class JsonInputConstant
     const EWES = 'ewes';
     const CHILDREN = 'children';
     const COUNTRY_OF_BIRTH = 'country_of_birth';
+
+    const COLLAR = 'collar';
+    const COLOR = 'color';
+    const NUMBER = 'number';
+
     const LITTERS = 'litters';
     const COUNTRY = 'country';
     const COUNTRY_CODE = 'country_code';
@@ -76,7 +82,9 @@ class JsonInputConstant
     const BREED_TYPE = 'breed_type';
     const BLINDNESS_FACTOR = 'blindness_factor';
     const PREDICATE = 'predicate';
+    const PREDICATE_DETAILS = 'predicate_details';
     const PREDICATE_SCORE = 'predicate_score';
+    const SCORE = 'score';
     const ANIMAL_TYPE = 'animal_type';
     const NICKNAME = 'nickname';
     const ANIMAL_RESIDENCE_HISTORY = 'animal_residence_history';
@@ -97,6 +105,7 @@ class JsonInputConstant
     const FOUND_ULNS = 'found_ulns';
     const FOUND_STNS = 'found_stns';
     const BREED_CODE_UPDATED = 'breed_code_updated';
+    const REARING = 'rearing';
 
     //Request & Response
     const ERROR_CODE = 'error_code';

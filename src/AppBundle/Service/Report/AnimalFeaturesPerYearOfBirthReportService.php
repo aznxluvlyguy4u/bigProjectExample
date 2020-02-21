@@ -60,7 +60,7 @@ class AnimalFeaturesPerYearOfBirthReportService extends ReportServiceWithBreedVa
     }
 
     private function fixRelatedData() {
-        LitterUtil::updateSuckleCount($this->conn);
+        LitterUtil::updateAllSuckleCounts($this->conn);
     }
 
     private function getAnimalFeaturesPerYearOfBirthFileName($location): string {

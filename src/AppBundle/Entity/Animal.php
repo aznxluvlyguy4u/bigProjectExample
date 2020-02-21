@@ -3110,7 +3110,7 @@ abstract class Animal
     }
 
     /**
-     * @return boolean
+     * @return boolean|null
      */
     public function getLambar()
     {

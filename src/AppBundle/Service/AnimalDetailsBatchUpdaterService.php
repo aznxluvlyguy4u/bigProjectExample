@@ -428,7 +428,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                     } elseif ($parentType === Constant::SURROGATE_NAMESPACE) {
                         $parentLabelId = 'surrogate_id';
                     } else {
-                        throw new \Exception('$parentTeyp must be Ram::class or Ewe::class or surrogate');
+                        throw new \Exception('$parentType must be Ram::class or Ewe::class or surrogate');
                     }
 
                     switch ($typeKey) {
@@ -1058,7 +1058,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 return QueryType::DELETE;
             }
         }
-        
+
         return null;
     }
 
@@ -1218,7 +1218,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         if ($this->retrievedPedigreeRegistersById === null) {
             $this->retrievedPedigreeRegistersById = [];
         }
-        
+
         if (!key_exists($pedigreeRegisterId, $this->retrievedPedigreeRegistersById)) {
             $this->retrievedPedigreeRegistersById[$pedigreeRegisterId] = $this->getManager()->getRepository(PedigreeRegister::class)->find($pedigreeRegisterId);
         }
