@@ -499,11 +499,17 @@ CANNOT BE IN THE FUTURE: mag niet in de toekomst liggen
 IS MISSING: ontbreekt
 NO ANIMAL FOUND FOR GIVEN ULN: er is geen dier gevonden voor het opgegeven ULN
 
-SURROGATE MOTHER NO EWE_FOUND FOR GIVEN ID: Pleegmoeder invoer fout. Er is geen ooi gevonden voor het opgegeven id
+SURROGATE MOTHER NO EWE FOUND FOR GIVEN ID: Pleegmoeder invoer fout. Er is geen ooi gevonden voor het opgegeven id
 SURROGATE MOTHER IS SAME AS CHILD: Pleegmoeder is het identiek aan het kind
 SURROGATE MOTHER IS YOUNGER THAN CHILD: Pleegmoeder is jonger dan het kind
 
 IN COMBINATION WITH: in combinatie met
+
+INVALID BIRTH PROCESS: Ongeldig geboorteproces
+INVALID BLINDNESS FACTOR: Ongeldige blindfactor
+INVALID PREDICATE TYPE: Ongeldige predikaat type
+INVALID PREDICATE SCORE: Ongeldige predikaat score
+
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen

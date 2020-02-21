@@ -62,10 +62,10 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         ]
     ];
 
-    const INVALID_PREDICATE_TYPE = 'INVALID_PREDICATE_TYPE';
-    const INVALID_PREDICATE_SCORE = 'INVALID_PREDICATE_SCORE';
-    const INVALID_BLINDNESS_FACTOR = 'INVALID_BLINDNESS_FACTOR';
-    const INVALID_BIRTH_PROCESS = 'INVALID_BIRTH_PROCESS';
+    const INVALID_PREDICATE_TYPE = 'INVALID PREDICATE TYPE';
+    const INVALID_PREDICATE_SCORE = 'INVALID PREDICATE SCORE';
+    const INVALID_BLINDNESS_FACTOR = 'INVALID BLINDNESS FACTOR';
+    const INVALID_BIRTH_PROCESS = 'INVALID BIRTH PROCESS';
 
     /** @var array */
     private $errors;
@@ -379,7 +379,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         $errorMessage = '';
         $prefix = '';
         foreach ($this->errors as $error => $errorValue) {
-            $errorMessage = $prefix . $this->translator->trans($error);
+            $errorMessage .= $prefix . $this->translator->trans($error);
             if ($errorValue !== 0) {
                 $errorMessage .= ': '.$errorValue;
             }
@@ -412,7 +412,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $isValidSurrogateInput = false;
         }
 
-        if (TimeUtil::isDate1BeforeDate2($newSurrogate->getDateOfBirth(), $animal->getDateOfBirth())) {
+        if ($newSurrogate != null && TimeUtil::isDate1BeforeDate2($newSurrogate->getDateOfBirth(), $animal->getDateOfBirth())) {
             $this->errors[self::SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD] = $newSurrogate->getDateOfBirthString();
             $isValidSurrogateInput = false;
         }
