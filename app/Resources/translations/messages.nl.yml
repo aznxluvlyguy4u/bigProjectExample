@@ -499,9 +499,11 @@ CANNOT BE IN THE FUTURE: mag niet in de toekomst liggen
 IS MISSING: ontbreekt
 NO ANIMAL FOUND FOR GIVEN ULN: er is geen dier gevonden voor het opgegeven ULN
 
-SURROGATE_MOTHER_NO_EWE_FOUND_FOR_GIVEN_ID: Pleegmoeder invoer fout. Er is geen ooi gevonden voor het opgegeven id
-SURROGATE_MOTHER_IS_SAME_AS_CHILD: Pleegmoeder is het identiek aan het kind
-SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD: Pleegmoeder is jonger dan het kind
+SURROGATE MOTHER NO EWE_FOUND FOR GIVEN ID: Pleegmoeder invoer fout. Er is geen ooi gevonden voor het opgegeven id
+SURROGATE MOTHER IS SAME AS CHILD: Pleegmoeder is het identiek aan het kind
+SURROGATE MOTHER IS YOUNGER THAN CHILD: Pleegmoeder is jonger dan het kind
+
+IN COMBINATION WITH: in combinatie met
 
 #Declares
 DECLARE_ARRIVALS: aanvoermeldingen

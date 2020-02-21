@@ -22,10 +22,12 @@ use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Token;
+use AppBundle\Enumerator\BirthType;
 use AppBundle\Enumerator\BlindnessFactorType;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\EmailPrefix;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -102,7 +104,7 @@ class Validator
         $string = str_replace('.', '', $string);
         return ctype_digit($string);
     }
-    
+
 
     /**
      * validate if Id is of format: AZ123456789012
@@ -309,7 +311,7 @@ class Validator
     /**
      * Note! This will only validate for pedigreeCodes is they exist in the array.
      * If they don't exist in the array or are null, then by default 'true' is returned.
-     * 
+     *
      * @param ObjectManager $manager
      * @param array $animalArray
      * @param boolean $nullResult
@@ -327,7 +329,7 @@ class Validator
     /**
      * Note! This will only validate for pedigreeCodes is they exist in the array.
      * If they don't exist in the array or are null, then by default 'true' is returned.
-     * 
+     *
      * @param ObjectManager $manager
      * @param string $pedigreeCountryCode
      * @param string $pedigreeNumber
@@ -374,7 +376,7 @@ class Validator
         if(!$containsUlnOrPedigree) {
             return false;
         }
-        
+
         //Then validate the uln if it exists
         $ulnString = NullChecker::getUlnStringFromArray($animalArray, null);
         if ($ulnString != null) {
@@ -537,7 +539,7 @@ class Validator
 
     /**
      * Test if database used is the test database.
-     * 
+     *
      * @param EntityManagerInterface|ObjectManager $em
      * @throws \Exception
      */
@@ -547,7 +549,7 @@ class Validator
         $connection = $em->getConnection();
         $databaseName = $connection->getDatabase();
         $host = $connection->getHost();
-        
+
         $isIgnoreCase = true;
         //$isLocalHost = self::isStringContainsAtleastOne($host, ['localhost', '127.0.0.1'], $isIgnoreCase);
         $isTestDatabaseName = self::isStringContainsAtleastOne($databaseName, ['test'], $isIgnoreCase);
@@ -571,7 +573,7 @@ class Validator
 
         } elseif(empty($array1) || empty($array2)) {
             return true;
-            
+
         } else {
             $isUnique = true;
             foreach ($array1 as $item) {
@@ -1028,4 +1030,62 @@ class Validator
     {
         return self::isFillerEmailAddress($emailAddress) ? $nullFiller : $emailAddress;
     }
+
+
+    /**
+     * @param  string|null $predicateType
+     * @param  bool  $allowNull
+     * @return bool
+     */
+    public static function isValidPredicateType(?string $predicateType, bool $allowNull): bool
+    {
+        return ($predicateType === null && $allowNull) ||
+            in_array($predicateType, PredicateType::getConstants());
+    }
+
+
+    /**
+     * @param  string|null $predicateScore
+     * @param  string|null $predicateType
+     * @param  bool  $allowNull
+     * @return bool
+     */
+    public static function isValidPredicateScore(?string $predicateScore, ?string $predicateType, bool $allowNull = true): bool
+    {
+        if ($predicateType === null && $predicateScore != null) {
+            return false;
+        }
+
+
+        $minimumValue = 13;
+        return ($predicateScore === null && $allowNull) || (
+            (ctype_digit($predicateScore) || is_int($predicateScore)) && $minimumValue <= intval($predicateScore)
+        );
+    }
+
+
+    /**
+     * @param  string|null $blindnessFactor
+     * @param  bool  $allowNull
+     * @return bool
+     */
+    public static function isValidBlindnessFactor(?string $blindnessFactor, bool $allowNull): bool
+    {
+        return ($blindnessFactor === null && $allowNull) ||
+            in_array($blindnessFactor, BlindnessFactorType::getConstants());
+    }
+
+
+    /**
+     * @param  string|null $birthProcess
+     * @param  bool  $allowNull
+     * @return bool
+     */
+    public static function isValidBirthProcess(?string $birthProcess, bool $allowNull): bool
+    {
+        return ($birthProcess === null && $allowNull) ||
+            in_array($birthProcess, BirthType::getConstants());
+    }
+
+
 }
