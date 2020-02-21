@@ -16,6 +16,7 @@ use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DateUtil;
+use AppBundle\Util\LitterUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
@@ -284,6 +285,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
 
         $oldSurrogateId = $animal->getSurrogate() ? $animal->getSurrogate()->getId() : null;
         $oldLambar = $animal->getLambar();
+        $isSurrogateUpdated = false;
 
         if ($oldSurrogateId !== $newSurrogateId) {
 
@@ -292,6 +294,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
                 $animal->setSurrogate($newSurrogate);
                 $anyValueWasUpdated = true;
                 $this->updateActionLogMessage('pleegmoeder', $oldSurrogateId, $newSurrogateId);
+                $isSurrogateUpdated = true;
             }
         }
 
@@ -318,6 +321,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             //Update heterosis and recombination values of parent and children if breedCode of parent was changed
             GeneDiversityUpdater::updateByParentId($this->getConnection(), $animal->getId());
         }
+
+        $this->updateLitterData($isSurrogateUpdated, $animal->getId());
 
         return $animal;
     }
@@ -496,4 +501,10 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $this->getUser(), $this->animalIdLogPrefix . $this->actionLogMessage,true);
     }
 
+    private function updateLitterData(bool $isSurrogateUpdated, int $animalId)
+    {
+        if ($isSurrogateUpdated) {
+            LitterUtil::updateSuckleCountsForChildWithUpdatedSurrogateMother($this->getConnection(), $animalId);
+        }
+    }
 }

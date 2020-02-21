@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareBirthRepository;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\ExteriorKind;
@@ -167,18 +168,81 @@ class LitterUtil
     }
 
 
+    public static function updateSuckleCountsForChildWithUpdatedSurrogateMother(Connection $conn, int $childId)
+    {
+        $sql = "SELECT
+    child.litter_id
+FROM animal child
+    LEFT JOIN animal mother ON mother.id = child.parent_mother_id
+    LEFT JOIN animal surrogate ON surrogate.id = child.surrogate_id
+    LEFT JOIN litter mother_litter ON mother_litter.animal_mother_id = mother.id
+    LEFT JOIN litter surrogate_litter ON surrogate_litter.animal_mother_id = surrogate.id
+WHERE child.id = $childId
+UNION DISTINCT
+SELECT
+    surrogate_litter.id as litter_id
+FROM animal child
+         LEFT JOIN animal surrogate ON surrogate.id = child.surrogate_id
+         LEFT JOIN litter surrogate_litter ON surrogate_litter.animal_mother_id = surrogate.id
+WHERE child.id = $childId
+UNION DISTINCT
+SELECT
+    mother_litter.id as litter_id
+FROM animal child
+         LEFT JOIN animal mother ON mother.id = child.parent_mother_id
+         LEFT JOIN litter mother_litter ON mother_litter.animal_mother_id = mother.id
+WHERE child.id = $childId";
+
+        $results = $conn->query($sql)->fetchAll();
+        if (empty($results)) {
+            return 0;
+        }
+
+        $litterIds = array_map(function ($result) {
+            return $result['litter_id'];
+        }, $results);
+
+        $litterIdFilterString = ' AND l.id IN ('.implode(',', $litterIds).') ';
+
+        return self::updateSuckleCountsBase($conn, $litterIdFilterString);
+    }
+
+
+    /**
+     *
+     * @param Connection $conn
+     * @return int
+     */
+    public static function updateAllSuckleCounts(Connection $conn)
+    {
+        return self::updateSuckleCountsBase($conn, '');
+    }
+
+
+    /**
+     *
+     * @param Connection $conn
+     * @param int $litterId
+     * @return int
+     */
+    public static function updateSuckleCountsByLitterId(Connection $conn, int $litterId)
+    {
+        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND l.id = '.$litterId.' ' : '';
+        return self::updateSuckleCountsBase($conn, $litterIdFilter);
+    }
+
+
     /**
      * Ewes with abortions and pseudopregnancies cannot give milk, while an ewe with only stillborns can.
      * Because the imported data from VSM has no registered surrogate mothers, the suckleCount will only be calculated
      * for litters registered in this current NSFO system.
      *
      * @param Connection $conn
-     * @param null $litterId
+     * @param string $litterId
      * @return int
      */
-    public static function updateSuckleCount(Connection $conn, $litterId = null)
+    private static function updateSuckleCountsBase(Connection $conn, string $litterIdFilter = '')
     {
-        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND l.id = '.$litterId.' ' : '';
 
         $sql = "UPDATE litter SET suckle_count_update_date = NOW(), suckle_count = v.calculated_suckle_count
                 FROM(

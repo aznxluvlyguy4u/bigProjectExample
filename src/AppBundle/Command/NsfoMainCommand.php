@@ -477,7 +477,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 4: $this->writeLn(LitterUtil::matchMatchingMates($this->conn, true).' \'mate-litter\'s matched'); break;
             case 5: $this->writeLn(LitterUtil::removeMatesFromRevokedLitters($this->conn).' \'mate-litter\'s unmatched'); break;
             case 6: $this->writeLn(LitterUtil::countToBeMatchedLitters($this->conn).' \'mate-litter\'s to be matched'); break;
-            case 7: $this->writeLn(LitterUtil::updateSuckleCount($this->conn).' suckleCounts updated'); break;
+            case 7: $this->writeLn(LitterUtil::updateAllSuckleCounts($this->conn).' suckleCounts updated'); break;
             case 8: $this->writeLn(LitterUtil::removeSuckleCountFromRevokedLitters($this->conn).' suckleCounts removed from revoked litters'); break;
             case 9: $this->writeLn(LitterUtil::updateAllLitterOrdinals($this->conn).' litterOrdinals updated'); break;
             case 10: $this->writeLn(LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn).' litterOrdinals removed from revoked litters'); break;
