@@ -173,25 +173,21 @@ class LitterUtil
         $sql = "SELECT
     child.litter_id
 FROM animal child
-    LEFT JOIN animal mother ON mother.id = child.parent_mother_id
-    LEFT JOIN animal surrogate ON surrogate.id = child.surrogate_id
-    LEFT JOIN litter mother_litter ON mother_litter.animal_mother_id = mother.id
-    LEFT JOIN litter surrogate_litter ON surrogate_litter.animal_mother_id = surrogate.id
-WHERE child.id = $childId
+WHERE child.id = $childId AND child.litter_id NOTNULL
 UNION DISTINCT
 SELECT
     surrogate_litter.id as litter_id
 FROM animal child
-         LEFT JOIN animal surrogate ON surrogate.id = child.surrogate_id
-         LEFT JOIN litter surrogate_litter ON surrogate_litter.animal_mother_id = surrogate.id
-WHERE child.id = $childId
+         INNER JOIN animal surrogate ON surrogate.id = child.surrogate_id
+         INNER JOIN litter surrogate_litter ON surrogate_litter.animal_mother_id = surrogate.id
+WHERE child.id = $childId AND surrogate_litter.id NOTNULL
 UNION DISTINCT
 SELECT
     mother_litter.id as litter_id
 FROM animal child
-         LEFT JOIN animal mother ON mother.id = child.parent_mother_id
-         LEFT JOIN litter mother_litter ON mother_litter.animal_mother_id = mother.id
-WHERE child.id = $childId";
+         INNER JOIN animal mother ON mother.id = child.parent_mother_id
+         INNER JOIN litter mother_litter ON mother_litter.animal_mother_id = mother.id
+WHERE child.id = $childId AND mother_litter.id NOTNULL";
 
         $results = $conn->query($sql)->fetchAll();
         if (empty($results)) {
