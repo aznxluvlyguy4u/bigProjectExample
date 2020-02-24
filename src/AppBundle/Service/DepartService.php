@@ -454,10 +454,10 @@ class DepartService extends DeclareControllerServiceBase
         $this->nullCheckLocation($location);
 
         $repository = $this->getManager()->getRepository(DeclareDepartResponse::class);
-        $declareDeparts = $repository->getDeparturesWithLastHistoryResponses($location);
+        $declareDeparts = $repository->getDeparturesWithLastHistoryResponses($location, $request->query->getInt('page', 1));
 
         $repository = $this->getManager()->getRepository(DeclareExportResponse::class);
-        $declareExports = $repository->getExportsWithLastHistoryResponses($location);
+        $declareExports = $repository->getExportsWithLastHistoryResponses($location, $request->query->getInt('page', 1));
 
         return ResultUtil::successResult(['departs' => $declareDeparts, 'exports' => $declareExports]);
     }
