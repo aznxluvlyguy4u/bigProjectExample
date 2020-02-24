@@ -98,6 +98,16 @@ class ViewMinimalParentDetails implements SqlViewInterface
     private $isOwnHistoricAnimal;
 
     /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("id")
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->getAnimalId();
+    }
+
+    /**
      * @return string
      */
     static function getPrimaryKeyName()

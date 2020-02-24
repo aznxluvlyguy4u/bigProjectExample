@@ -596,7 +596,12 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      */
     public function getAnimalById(Request $request, $uln)
     {
-        $animal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
+        if (ctype_digit($uln) || is_int($uln)) {
+            $animal = $this->getManager()->getRepository(Animal::class)->find(intval($uln));
+        } else {
+            $animal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
+        }
+
         $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
         return new JsonResponse($minimizedOutput, 200);
     }

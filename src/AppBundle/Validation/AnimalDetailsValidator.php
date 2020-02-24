@@ -51,11 +51,19 @@ class AnimalDetailsValidator extends BaseValidator
 
         $this->isInputValid = false;
 
-        if(Validator::verifyUlnFormat($ulnString)) {
+        $isPrimaryKey = $this->isIdentifierPrimaryKey($ulnString);
+
+        if(Validator::verifyUlnFormat($ulnString) || $isPrimaryKey) {
 
             /** @var AnimalRepository $repository */
             $repository = $this->em->getRepository(Animal::class);
-            $this->animal = $repository->findAnimalByUlnString($ulnString);
+
+            if ($isPrimaryKey) {
+                // Find animal by animal Id. Query is 100x faster than search by ULN
+                $this->animal = $repository->find(intval($ulnString));
+            } else {
+                $this->animal = $repository->findAnimalByUlnString($ulnString);
+            }
 
             if($this->animal) {
                 if($isAdmin) {
@@ -83,6 +91,11 @@ class AnimalDetailsValidator extends BaseValidator
                 }
             }
         }
+    }
+
+
+    private function isIdentifierPrimaryKey($identifier): bool {
+        return ctype_digit($identifier) || is_int($identifier);
     }
 
 
