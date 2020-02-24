@@ -51,7 +51,7 @@ class AnimalCache
      * @JMS\Type("string")
      */
     private $dutchBreedStatus;
-    
+
     /**
      * @var string
      * @ORM\Column(type="string", options={"default":null}, nullable=true)
@@ -146,7 +146,7 @@ class AnimalCache
 
     /**
      * NOTE! Only include the lambIndexValue if the accuracy is at least the MIN accuracy required
-     * 
+     *
      * @var float
      * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
@@ -285,7 +285,7 @@ class AnimalCache
 
     /**
      * Bronstsynchronisatie/Bronstinductie
-     * 
+     *
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
@@ -434,8 +434,8 @@ class AnimalCache
     public function setPredicate($predicate)
     {
         $this->predicate = $predicate;
-    }    
-    
+    }
+
     /**
      * @return string
      */
@@ -715,7 +715,7 @@ class AnimalCache
     {
         $this->exteriorMeasurementDate = $exteriorMeasurementDate;
     }
-    
+
     /**
      * @param string $exteriorMeasurementDateString
      */
@@ -841,7 +841,7 @@ class AnimalCache
     }
 
     /**
-     * @return float
+     * @return float|null
      */
     public function getBirthWeight()
     {
@@ -849,7 +849,7 @@ class AnimalCache
     }
 
     /**
-     * @param float $birthWeight
+     * @param float|null $birthWeight
      * @return AnimalCache
      */
     public function setBirthWeight($birthWeight)
@@ -895,7 +895,7 @@ class AnimalCache
     }
 
     /**
-     * @return float
+     * @return float|null
      */
     public function getTailLength()
     {
@@ -903,7 +903,7 @@ class AnimalCache
     }
 
     /**
-     * @param float $tailLength
+     * @param float|null $tailLength
      * @return AnimalCache
      */
     public function setTailLength($tailLength)
