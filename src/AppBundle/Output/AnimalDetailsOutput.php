@@ -24,8 +24,12 @@ use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository;
+use AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository;
 use AppBundle\SqlView\Repository\ViewBreedValueMaxGenerationDateRepository;
 use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
+use AppBundle\SqlView\View\ViewAnimalHistoricLocations;
+use AppBundle\SqlView\View\ViewAnimalIsPublicDetails;
 use AppBundle\SqlView\View\ViewBreedValueMaxGenerationDate;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
@@ -240,22 +244,36 @@ class AnimalDetailsOutput extends OutputServiceBase
             "declare_log" => $this->getLog($animal, $replacementString),
         ];
 
+
+        /** @var ViewAnimalHistoricLocationsRepository $viewAnimalHistoricLocationsRepository */
+        $viewAnimalHistoricLocationsRepository = $this->getSqlViewManager()->get(ViewAnimalHistoricLocations::class);
+        /** @var ViewAnimalIsPublicDetailsRepository $viewAnimalIsPublicDetailsRepository */
+        $viewAnimalIsPublicDetailsRepository =  $this->getSqlViewManager()->get(ViewAnimalIsPublicDetails::class);
+
         if ($fatherId) {
             /** @var ViewMinimalParentDetails $viewParentFather */
             $viewParentFather = $viewMinimalParentDetails->get($fatherId);
-            $viewParentFather->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentFather, $user));
+            /** @var ViewAnimalHistoricLocations $viewHistoricLocations */
+            $viewHistoricLocationsFather = $viewAnimalHistoricLocationsRepository->findOneByAnimalId($fatherId);
+            $isFatherPublic = $viewAnimalIsPublicDetailsRepository->findOneByAnimalId($fatherId)->isPublic();
+
+            $viewParentFather->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewHistoricLocationsFather, $user));
             $result["parent_father"] = $this->getSerializer()->getDecodedJson($viewParentFather);
             $result["parent_father"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                UlnValidator::isUserAllowedToAccessAnimalDetails($viewParentFather, $user, $company);
+                UlnValidator::isUserAllowedToAccessAnimalDetails($viewHistoricLocationsFather, $isFatherPublic, $user, $company);
         }
 
         if ($motherId) {
             /** @var ViewMinimalParentDetails $viewParentMother */
             $viewParentMother = $viewMinimalParentDetails->get($motherId);
-            $viewParentMother->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentMother, $user));
+            /** @var ViewAnimalHistoricLocations $viewHistoricLocations */
+            $viewHistoricLocationsMother = $viewAnimalHistoricLocationsRepository->findOneByAnimalId($motherId);
+            $isMotherPublic = $viewAnimalIsPublicDetailsRepository->findOneByAnimalId($motherId)->isPublic();
+
+            $viewParentMother->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewHistoricLocationsMother, $user));
             $result["parent_mother"] = $this->getSerializer()->getDecodedJson($viewParentMother);
             $result["parent_mother"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                UlnValidator::isUserAllowedToAccessAnimalDetails($viewParentMother, $user, $company);
+                UlnValidator::isUserAllowedToAccessAnimalDetails($viewHistoricLocationsMother, $isMotherPublic, $user, $company);
         }
 
         if ($includeAscendants) {
@@ -363,17 +381,17 @@ class AnimalDetailsOutput extends OutputServiceBase
 
 
     /**
-     * @param ViewMinimalParentDetails $minimalParentDetails
+     * @param ViewAnimalHistoricLocations $viewAnimalHistoricLocations
      * @param Person $user
      * @return bool
      */
-    private function isHistoricAnimalOfOwner(ViewMinimalParentDetails $minimalParentDetails, Person $user)
+    private function isHistoricAnimalOfOwner(ViewAnimalHistoricLocations $viewAnimalHistoricLocations, Person $user)
     {
         if (!($user instanceof Client)) {
             return false;
         }
 
-        foreach ($minimalParentDetails->getHistoricUbnsAsArray() as $historicUbn) {
+        foreach ($viewAnimalHistoricLocations->getHistoricUbnsAsArray() as $historicUbn) {
             if (in_array($historicUbn, $this->getOwnerUbns($user))) {
                 return true;
             }
@@ -383,12 +401,18 @@ class AnimalDetailsOutput extends OutputServiceBase
 
 
     /**
-     * @param ViewMinimalParentDetails $animal
+     * @param ViewAnimalHistoricLocations $animalHistoricLocations
      * @param Person $person
      * @param Location|null $location
+     * @param bool $isPublicAnimal
      * @return bool
      */
-    public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Location $location)
+    public static function isUserAllowedToAccessAnimalDetails(
+        ViewAnimalHistoricLocations $animalHistoricLocations,
+        Person $person,
+        ?Location $location,
+        bool $isPublicAnimal = true
+    )
     {
         if ($person instanceof Employee) {
             return true;
@@ -404,7 +428,12 @@ class AnimalDetailsOutput extends OutputServiceBase
             return false;
         }
 
-        return Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser, $location->getId());
+        return Validator::isUserAllowedToAccessAnimalDetails(
+            $animalHistoricLocations,
+            $company,
+            $isPublicAnimal,
+            $currentUbnsOfUser
+        );
     }
 
 
@@ -433,6 +462,10 @@ class AnimalDetailsOutput extends OutputServiceBase
     {
         /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
         $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
+        /** @var ViewAnimalIsPublicDetailsRepository $viewAnimalIsPublicDetailsRepository */
+        $viewAnimalIsPublicDetailsRepository = $this->getSqlViewManager()->get(ViewAnimalIsPublicDetails::class);
+        /** @var ViewAnimalHistoricLocationsRepository $viewAnimalHistoricLocationsRepository */
+        $viewAnimalHistoricLocationsRepository = $this->getSqlViewManager()->get(ViewAnimalHistoricLocations::class);
 
         $genderPrimaryParent = $animal->getGender();
 
@@ -447,16 +480,19 @@ class AnimalDetailsOutput extends OutputServiceBase
 
                 $childArray = $this->getSerializer()->getDecodedJson($child, [JmsGroup::CHILD],true);
 
-                /** @var ViewMinimalParentDetails $viewDetails */
-                $viewDetails = $viewMinimalParentDetailsRepository->findOneByAnimalId($child->getId());
-                if ($viewDetails) {
-                    $childArray[JsonInputConstant::PRODUCTION] = $viewDetails->getProduction();
-                    $childArray[JsonInputConstant::N_LING] = $viewDetails->getNLing();
-                    $childArray[JsonInputConstant::GENERAL_APPEARANCE] = $viewDetails->getGeneralAppearance();
-                    $childArray[JsonInputConstant::IS_PUBLIC] = $viewDetails->isPublic();
-                    $childArray[JsonInputConstant::IS_OWN_HISTORIC_ANIMAL] = $this->isHistoricAnimalOfOwner($viewDetails, $user);
+                $minimalParentDetails = $viewMinimalParentDetailsRepository->findOneByAnimalId($child->getId());
+                $isPublicDetails = $viewAnimalIsPublicDetailsRepository->findOneByAnimalId($child->getId());
+                $historicLocationsDetails = $viewAnimalHistoricLocationsRepository->findOneByAnimalId($child->getId());
+
+                if ($minimalParentDetails) {
+                    $isPublic = $isPublicDetails->isPublic();
+                    $childArray[JsonInputConstant::PRODUCTION] = $minimalParentDetails->getProduction();
+                    $childArray[JsonInputConstant::N_LING] = $minimalParentDetails->getNLing();
+                    $childArray[JsonInputConstant::GENERAL_APPEARANCE] = $minimalParentDetails->getGeneralAppearance();
+                    $childArray[JsonInputConstant::IS_PUBLIC] = $isPublicDetails->isPublic();
+                    $childArray[JsonInputConstant::IS_OWN_HISTORIC_ANIMAL] = $this->isHistoricAnimalOfOwner($historicLocationsDetails, $user);
                     $childArray[ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                        UlnValidator::isUserAllowedToAccessAnimalDetails($viewDetails, $user, $company);
+                        UlnValidator::isUserAllowedToAccessAnimalDetails($historicLocationsDetails, $isPublic, $user, $company);
                 }
 
                 switch ($genderPrimaryParent) {

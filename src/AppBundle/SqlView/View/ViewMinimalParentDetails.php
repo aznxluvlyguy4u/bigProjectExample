@@ -92,20 +92,6 @@ class ViewMinimalParentDetails implements SqlViewInterface
     private $locationOfBirthId;
 
     /**
-     * Array as json string
-     * @var string
-     * @JMS\Type("string")
-     */
-    private $historicUbns;
-
-    /**
-     * Array as json string
-     * @var string
-     * @JMS\Type("string")
-     */
-    private $historicLocationIds;
-
-    /**
      * @var bool
      * @JMS\Type("boolean")
      */
@@ -352,16 +338,6 @@ class ViewMinimalParentDetails implements SqlViewInterface
     }
 
     /**
-     * @param bool $isPublic
-     * @return ViewMinimalParentDetails
-     */
-    public function setIsPublic(bool $isPublic): ViewMinimalParentDetails
-    {
-        $this->isPublic = $isPublic;
-        return $this;
-    }
-
-    /**
      * @return int|null
      */
     public function getLocationOfBirthId(): ?int
@@ -376,64 +352,6 @@ class ViewMinimalParentDetails implements SqlViewInterface
     public function setLocationOfBirthId(?int $locationOfBirthId): ViewMinimalParentDetails
     {
         $this->locationOfBirthId = $locationOfBirthId;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getHistoricUbnsAsArray(): array
-    {
-        if (!empty($this->historicUbns)) {
-            $ubns = json_decode($this->historicUbns);
-            if (is_array($ubns)) {
-                return $ubns;
-            }
-        }
-        return [];
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getHistoricUbns()
-    {
-        return $this->historicUbns;
-    }
-
-    /**
-     * @param string $historicUbns
-     * @return ViewMinimalParentDetails
-     */
-    public function setHistoricUbns(string $historicUbns): ViewMinimalParentDetails
-    {
-        $this->historicUbns = $historicUbns;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getHistoricLocationIdsAsArray(): array
-    {
-        return empty($this->historicLocationIds) ? [] : json_decode($this->historicLocationIds,false);
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getHistoricLocationIds()
-    {
-        return $this->historicLocationIds;
-    }
-
-    /**
-     * @param string $historicLocationIds
-     * @return ViewMinimalParentDetails
-     */
-    public function setHistoricLocationIds(string $historicLocationIds): ViewMinimalParentDetails
-    {
-        $this->historicLocationIds = $historicLocationIds;
         return $this;
     }
 

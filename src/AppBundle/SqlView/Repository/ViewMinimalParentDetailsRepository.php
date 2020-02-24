@@ -47,20 +47,6 @@ class ViewMinimalParentDetailsRepository extends SqlViewRepositoryBase implement
      */
     public function findByUlns(array $ulns = [])
     {
-        $results = new ArrayCollection();
-        if (empty($ulns)) {
-            return $results;
-        }
-
-        $ulnSearchString = "'" . implode("','", $ulns) . "'";
-        $sql = "SELECT * FROM ".$this->getTableName()." WHERE uln IN (".$ulnSearchString.")";
-        $sqlResults = $this->getConnection()->query($sql)->fetchAll();
-        $objects = $this->denormalizeToObjects($sqlResults);
-
-        /** @var ViewMinimalParentDetails $object */
-        foreach ($objects as $object) {
-            $results->set($object->getPrimaryKey(), $object);
-        }
-        return $results;
+        return $this->findByUlnsBase($ulns);
     }
 }
