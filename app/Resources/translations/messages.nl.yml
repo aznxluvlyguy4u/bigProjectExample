@@ -74,6 +74,10 @@ REGISTER: REGISTER
 SECONDARY_REGISTER: HULPBOEK
 UNDETERMINED: ONBEPAALD
 
+#Blindness factor
+BLINDNESS_FACTOR_FREE: Blindfactor vrij
+BLINDNESS_FACTOR_CARRIER: Drager Blindfactor
+
 #Countries
 Austria: Oostenrijk
 Belgium: België

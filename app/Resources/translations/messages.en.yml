@@ -74,6 +74,10 @@ REGISTER: REGISTER
 SECONDARY_REGISTER: SECONDARY_REGISTER
 UNDETERMINED: UNDETERMINED
 
+#Blindness factor
+BLINDNESS_FACTOR_FREE: Blindness factor free
+BLINDNESS_FACTOR_CARRIER: Blindness factor carrier
+
 #Countries
 Austria: Austria
 Belgium: Belgium
