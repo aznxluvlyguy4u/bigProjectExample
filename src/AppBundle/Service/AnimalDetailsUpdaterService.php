@@ -351,9 +351,11 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
         if (!$isValidPredicateScore) {
+            $translatedPredicateType = $isValidPredicateType ? $this->translator->trans($newPredicateType) : $newPredicateType;
+
             $this->errors[self::INVALID_PREDICATE_SCORE] = $newPredicateScore . ' ' .
             $this->translator->trans('IN COMBINATION WITH').' '.
-            $this->translator->trans('PREDICATE'). ': '. $newPredicateType;
+            strtolower($this->translator->trans('PREDICATE')). ': '. $translatedPredicateType;
         }
 
         return $isValidPredicateType && $isValidPredicateScore;
