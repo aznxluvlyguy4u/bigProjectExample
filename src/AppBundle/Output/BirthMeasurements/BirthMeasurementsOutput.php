@@ -24,6 +24,12 @@ class BirthMeasurementsOutput
     private $birthWeight = null;
 
     /**
+     * @var string|null
+     * @JMS\Type("string")
+     */
+    private $birthProgress = null;
+
+    /**
      * @return TailLengthOutput|null
      */
     public function getTailLength(): ?TailLengthOutput
@@ -58,6 +64,25 @@ class BirthMeasurementsOutput
         $this->birthWeight = $birthWeight;
         return $this;
     }
+
+    /**
+     * @return string|null
+     */
+    public function getBirthProgress(): ?string
+    {
+        return $this->birthProgress;
+    }
+
+    /**
+     * @param  string|null  $birthProgress
+     * @return BirthMeasurementsOutput
+     */
+    public function setBirthProgress(?string $birthProgress): BirthMeasurementsOutput
+    {
+        $this->birthProgress = $birthProgress;
+        return $this;
+    }
+
 
 
 }

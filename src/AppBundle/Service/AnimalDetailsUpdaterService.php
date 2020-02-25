@@ -65,7 +65,6 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     const INVALID_PREDICATE_TYPE = 'INVALID PREDICATE TYPE';
     const INVALID_PREDICATE_SCORE = 'INVALID PREDICATE SCORE';
     const INVALID_BLINDNESS_FACTOR = 'INVALID BLINDNESS FACTOR';
-    const INVALID_BIRTH_PROCESS = 'INVALID BIRTH PROCESS';
 
     /** @var array */
     private $errors;
@@ -261,15 +260,6 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $this->updateActionLogMessage('blindfactor', $oldBlindnessFactor, $newBlindnessFactor);
         }
 
-        $newBirthProcess = StringUtil::convertEmptyStringToNull($content->get(JsonInputConstant::BIRTH_PROGRESS));
-        $oldBirthProcess = $animal->getBirthProgress();
-
-        if ($oldBirthProcess != $newBirthProcess && $this->isBirthProcessInputValid($newBirthProcess)) {
-            $animal->setBirthProgress($newBirthProcess);
-            $anyValueWasUpdated = true;
-            $this->updateActionLogMessage('geboorteproces', $oldBirthProcess, $newBirthProcess);
-        }
-
         $newRearing = StringUtil::convertEmptyStringToNull($content->get(JsonInputConstant::REARING));
 
         if ($newRearing === 'LAMBAR') {
@@ -355,18 +345,6 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
         return $isValidBlindnessFactor;
-    }
-
-
-    private function isBirthProcessInputValid(?string $newBirthProcess): bool
-    {
-        $isValidBirthProcess = Validator::isValidBirthProcess($newBirthProcess, true);
-
-        if (!$isValidBirthProcess) {
-            $this->errors[self::INVALID_BIRTH_PROCESS] = $newBirthProcess;
-        }
-
-        return $isValidBirthProcess;
     }
 
 

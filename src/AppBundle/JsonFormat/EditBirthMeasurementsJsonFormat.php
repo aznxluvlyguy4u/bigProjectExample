@@ -20,6 +20,11 @@ class EditBirthMeasurementsJsonFormat
     private $birthWeight = null;
 
     /**
+     * @var string|null
+     */
+    private $birthProgress = null;
+
+    /**
      * @var boolean
      */
     private $resetMeasurementDateUsingDateOfBirth = false;
@@ -57,6 +62,24 @@ class EditBirthMeasurementsJsonFormat
     public function setBirthWeight(?float $birthWeight): EditBirthMeasurementsJsonFormat
     {
         $this->birthWeight = $birthWeight;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getBirthProgress(): ?string
+    {
+        return $this->birthProgress;
+    }
+
+    /**
+     * @param  string|null  $birthProgress
+     * @return EditBirthMeasurementsJsonFormat
+     */
+    public function setBirthProgress(?string $birthProgress): EditBirthMeasurementsJsonFormat
+    {
+        $this->birthProgress = $birthProgress;
         return $this;
     }
 
