@@ -74,6 +74,10 @@ REGISTER: REGISTER
 SECONDARY_REGISTER: HULPBOEK
 UNDETERMINED: ONBEPAALD
 
+#Blindness factor
+BLINDNESS_FACTOR_FREE: Blindfactor vrij
+BLINDNESS_FACTOR_CARRIER: Drager Blindfactor
+
 #Countries
 Austria: Oostenrijk
 Belgium: België
@@ -498,6 +502,7 @@ CANNOT BE OLDER THAN: mag niet ouder zijn dan
 CANNOT BE IN THE FUTURE: mag niet in de toekomst liggen
 IS MISSING: ontbreekt
 NO ANIMAL FOUND FOR GIVEN ULN: er is geen dier gevonden voor het opgegeven ULN
+YOU DO NOT HAVE PERMISSION TO CHANGE THE FOLLOWING VALUES: U heeft geen authorizatie om deze waarden aan te passen
 
 SURROGATE MOTHER NO EWE FOUND FOR GIVEN ID: Pleegmoeder invoer fout. Er is geen ooi gevonden voor het opgegeven id
 SURROGATE MOTHER IS SAME AS CHILD: Pleegmoeder is het identiek aan het kind

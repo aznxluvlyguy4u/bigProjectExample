@@ -16,6 +16,7 @@ class ScanMeasurementSet extends Measurement
     use EntityClassInfo;
 
     /**
+     * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal", cascade={"persist"})
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Animal")
@@ -104,7 +105,7 @@ class ScanMeasurementSet extends Measurement
     }
 
     /**
-     * @return mixed
+     * @return Animal
      */
     public function getAnimal()
     {
@@ -112,7 +113,7 @@ class ScanMeasurementSet extends Measurement
     }
 
     /**
-     * @param mixed $animal
+     * @param Animal $animal
      * @return ScanMeasurementSet
      */
     public function setAnimal($animal)
@@ -121,5 +122,52 @@ class ScanMeasurementSet extends Measurement
         return $this;
     }
 
+    /**
+     * @return float|null
+     */
+    public function getFat1Value(): ?float
+    {
+        if ($this->getBodyFat()) {
+            return $this->getBodyFat()->getFat1() ? $this->getBodyFat()->getFat1()->getFat() : null;
+        }
+        return null;
+    }
 
+    /**
+     * @return float|null
+     */
+    public function getFat2Value(): ?float
+    {
+        if ($this->getBodyFat()) {
+            return $this->getBodyFat()->getFat2() ? $this->getBodyFat()->getFat2()->getFat() : null;
+        }
+        return null;
+    }
+
+    /**
+     * @return float|null
+     */
+    public function getFat3Value(): ?float
+    {
+        if ($this->getBodyFat()) {
+            return $this->getBodyFat()->getFat3() ? $this->getBodyFat()->getFat3()->getFat() : null;
+        }
+        return null;
+    }
+
+    /**
+     * @return float|null
+     */
+    public function getScanWeightValue(): ?float
+    {
+        return $this->getScanWeight() ? $this->getScanWeight()->getWeight() : null;
+    }
+
+    /**
+     * @return float|null
+     */
+    public function getMuscleThicknessValue(): ?float
+    {
+        return $this->getMuscleThickness() ? $this->getMuscleThickness()->getMuscleThickness() : null;
+    }
 }

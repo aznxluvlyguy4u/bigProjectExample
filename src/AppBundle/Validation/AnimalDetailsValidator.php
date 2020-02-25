@@ -10,9 +10,11 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
-use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
+use AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository;
+use AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository;
 use AppBundle\SqlView\SqlViewManagerInterface;
-use AppBundle\SqlView\View\ViewMinimalParentDetails;
+use AppBundle\SqlView\View\ViewAnimalHistoricLocations;
+use AppBundle\SqlView\View\ViewAnimalIsPublicDetails;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -29,6 +31,9 @@ class AnimalDetailsValidator extends BaseValidator
     /** @var Animal */
     private $animal;
 
+    /** @var SqlViewManagerInterface */
+    private $sqlViewManager;
+
     /**
      * AnimalDetailsValidator constructor.
      * @param ObjectManager $em
@@ -42,28 +47,34 @@ class AnimalDetailsValidator extends BaseValidator
     {
         parent::__construct($em, new ArrayCollection());
         $this->em = $em;
+        $this->sqlViewManager = $sqlViewManager;
 
         $this->isInputValid = false;
 
-        if(Validator::verifyUlnFormat($ulnString)) {
-            
+        $isPrimaryKey = $this->isIdentifierPrimaryKey($ulnString);
+
+        if(Validator::verifyUlnFormat($ulnString) || $isPrimaryKey) {
+
             /** @var AnimalRepository $repository */
             $repository = $this->em->getRepository(Animal::class);
-            $this->animal = $repository->findAnimalByUlnString($ulnString);
+
+            if ($isPrimaryKey) {
+                // Find animal by animal Id. Query is 100x faster than search by ULN
+                $this->animal = $repository->find(intval($ulnString));
+            } else {
+                $this->animal = $repository->findAnimalByUlnString($ulnString);
+            }
 
             if($this->animal) {
                 if($isAdmin) {
                     $this->isInputValid = true;
                 } else {
-                    /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsManager */
-                    $viewMinimalParentDetailsManager = $sqlViewManager->get(ViewMinimalParentDetails::class);
-                    $viewMinimalParentDetails = $viewMinimalParentDetailsManager->findOneByAnimalId($this->animal->getId());
-
                     $company = $location->getCompany();
                     if ($company && !empty($company->getUbns())) {
                         $this->isInputValid = Validator::isUserAllowedToAccessAnimalDetails(
-                            $viewMinimalParentDetails,
+                            $this->getViewAnimalHistoricLocations(),
                             $company,
+                            $this->isPublicAnimal(),
                             $company->getUbns()
                         );
                     }
@@ -81,6 +92,28 @@ class AnimalDetailsValidator extends BaseValidator
             }
         }
     }
+
+
+    private function isIdentifierPrimaryKey($identifier): bool {
+        return ctype_digit($identifier) || is_int($identifier);
+    }
+
+
+    public function getViewAnimalHistoricLocations(): ViewAnimalHistoricLocations
+    {
+        /** @var ViewAnimalHistoricLocationsRepository $viewAnimalHistoricLocations */
+        $viewAnimalHistoricLocations = $this->sqlViewManager->get(ViewAnimalHistoricLocations::class);
+        return $viewAnimalHistoricLocations->findOneByAnimalId($this->animal->getId());
+    }
+
+
+    public function isPublicAnimal(): bool
+    {
+        /** @var ViewAnimalIsPublicDetailsRepository $viewAnimalIsPublicDetailsRepository */
+        $viewAnimalIsPublicDetailsRepository = $this->sqlViewManager->get(ViewAnimalIsPublicDetails::class);
+        return $viewAnimalIsPublicDetailsRepository->findOneByAnimalId($this->animal->getId())->isPublic();
+    }
+
 
     /**
      * @return Animal|Ewe|Neuter|Ram|null

@@ -4,32 +4,32 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Criteria\AnimalCriteria;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalCache;
+use AppBundle\Entity\AnimalCacheRepository;
 use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\BodyFat;
-use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareBase;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\MuscleThickness;
-use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\ParentInterface;
 use AppBundle\Entity\Person;
-use AppBundle\Entity\TailLength;
-use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository;
+use AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository;
 use AppBundle\SqlView\Repository\ViewBreedValueMaxGenerationDateRepository;
 use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
+use AppBundle\SqlView\View\ViewAnimalHistoricLocations;
+use AppBundle\SqlView\View\ViewAnimalIsPublicDetails;
 use AppBundle\SqlView\View\ViewBreedValueMaxGenerationDate;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
@@ -102,20 +102,6 @@ class AnimalDetailsOutput extends OutputServiceBase
 
         $replacementString = "";
 
-        $mother = $animal->getParentMother();
-        if ($mother == null) {
-            $ulnMother = $replacementString;
-        } else {
-            $ulnMother = Utils::getUlnStringFromAnimal($mother);
-        }
-
-        $father = $animal->getParentFather();
-        if ($father == null) {
-            $ulnFather = $replacementString;
-        } else {
-            $ulnFather = Utils::getUlnStringFromAnimal($father);
-        }
-
         $litterSize = $replacementString;
         $suckleCount = $replacementString;
         $litter = $animal->getLitter();
@@ -139,16 +125,15 @@ class AnimalDetailsOutput extends OutputServiceBase
             $inbreedingCoefficientValue = $inbreedingCoefficient->getValue();
         }
 
-        /** @var BodyFatRepository $bodyFatRepository */
-        $bodyFatRepository = $this->getManager()->getRepository(BodyFat::class);
         /** @var ExteriorRepository $exteriorRepository */
         $exteriorRepository = $this->getManager()->getRepository(Exterior::class);
         /** @var WeightRepository $weightRepository */
         $weightRepository = $this->getManager()->getRepository(Weight::class);
-        /** @var MuscleThicknessRepository $muscleThicknessRepository */
-        $muscleThicknessRepository = $this->getManager()->getRepository(MuscleThickness::class);
-        /** @var TailLengthRepository $tailLengthRepository */
-        $tailLengthRepository = $this->getManager()->getRepository(TailLength::class);
+        /** @var AnimalCacheRepository $animalCacheRepository */
+        $animalCacheRepository = $this->getManager()->getRepository(AnimalCache::class);
+
+        $animalCache = $animalCacheRepository->findByAnimalId($animal->getId());
+
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getManager()->getRepository(Animal::class);
         /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
@@ -172,114 +157,123 @@ class AnimalDetailsOutput extends OutputServiceBase
         $predicate = $viewMinimalAnimalDetails ? $viewMinimalAnimalDetails->getFormattedPredicate() : null;
         $production = $viewMinimalAnimalDetails ? $viewMinimalAnimalDetails->getProduction() : null;
 
-        $bodyFats = $animal->getBodyFatMeasurements();
-        if (sizeof($bodyFats) == 0) {
-            $bodyFat = 0.00;
-        } else {
-            $bodyFat = $bodyFatRepository->getLatestBodyFat($animal);
-        }
-
-        $weights = $animal->getWeightMeasurements();
-        if (sizeof($weights) == 0) {
-            $weight = 0.00;
-            $birthWeight = 0.00;
-        } else {
-            $weight = $weightRepository->getLatestWeight($animal, false);
-            $birthWeight = $weightRepository->getLatestBirthWeight($animal);
-        }
-
-        $muscleThicknesses = $animal->getMuscleThicknessMeasurements();
-        if (sizeof($muscleThicknesses) == 0) {
-            $muscleThickness = 0.00;
-        } else {
-            $muscleThickness = $muscleThicknessRepository->getLatestMuscleThickness($animal);
-        }
-
-        $tailLengths = $animal->getTailLengthMeasurements();
-        if (sizeof($tailLengths) == 0) {
-            $tailLength = 0.00;
-        } else {
-            $tailLength = $tailLengthRepository->getLatestTailLength($animal);
-        }
-
+        $scanMeasurements = $animal->getScanMeasurementSet();
 
         $company = $location ? $location->getCompany() : null;
 
         $result = [
-        	  "id" => $animal->getId(),
+            // Primary Details
+        	JsonInputConstant::ID => $animal->getId(),
+            JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
             JsonInputConstant::UBN => $animal->getUbn(),
-            Constant::ULN_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
-            Constant::ULN_NUMBER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnNumber(), $replacementString),
-            Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode(), $replacementString),
-            Constant::PEDIGREE_NUMBER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getPedigreeNumber(), $replacementString),
+
+            JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
+            JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($animal->getUlnNumber(), $replacementString),
+
+            JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode(), $replacementString),
+            JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($animal->getPedigreeNumber(), $replacementString),
+
+            JsonInputConstant::NICKNAME => Utils::fillNullOrEmptyString($animal->getNickname(), $replacementString),
             JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($animal->getAnimalOrderNumber(), $replacementString),
-            "collar" => array ("color" => Utils::fillNullOrEmptyString($animal->getCollarColor(), $replacementString),
-                "number" => Utils::fillNullOrEmptyString($animal->getCollarNumber(), $replacementString)),
-            "name" => Utils::fillNullOrEmptyString($animal->getName(), $replacementString),
-	          "nickname" => Utils::fillNullOrEmptyString($animal->getNickname(), $replacementString),
-            Constant::DATE_OF_BIRTH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $replacementString),
-            Constant::DATE_OF_DEATH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfDeath(), $replacementString),
-            JsonInputConstant::INBREEDING_COEFFICIENT => Utils::fillNullOrEmptyString($inbreedingCoefficientValue, $replacementString),
-            Constant::GENDER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getGender(), $replacementString),
-            "litter_size" => Utils::fillNullOrEmptyString($litterSize, $replacementString),
-            JsonInputConstant::SUCKLE_COUNT => Utils::fillNullOrEmptyString($suckleCount, $replacementString),
-            Constant::MOTHER_NAMESPACE => Utils::fillNullOrEmptyString($ulnMother, $replacementString),
-            Constant::FATHER_NAMESPACE => Utils::fillNullOrEmptyString($ulnFather, $replacementString),
-            "rearing" => Utils::fillNullOrEmptyString("", $replacementString),
-            "suction_size" => Utils::fillNullOrEmptyString("", $replacementString),
-            "blind_factor" => Utils::fillNullOrEmptyString("", $replacementString),
-            "scrapie_genotype" => Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), $replacementString),
-            "breed" => Utils::fillNullOrEmptyString($animal->getBreedCode(), $replacementString),
-            JsonInputConstant::PREDICATE => Utils::fillNullOrEmptyString($predicate, $replacementString),
-            JsonInputConstant::PREDICATE_DETAILS => $this->getPredicateDetails($animal, $predicate),
-            "breed_status" => Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
-            JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
+
+            JsonInputConstant::COLLAR => [
+                JsonInputConstant::COLOR => Utils::fillNullOrEmptyString($animal->getCollarColor(), $replacementString),
+                JsonInputConstant::NUMBER => Utils::fillNullOrEmptyString($animal->getCollarNumber(), $replacementString)
+            ],
+
+            JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $replacementString),
+            JsonInputConstant::DATE_OF_DEATH => Utils::fillNullOrEmptyString($animal->getDateOfDeath(), $replacementString),
 
             JsonInputConstant::COUNTRY_OF_BIRTH => Utils::fillNullOrEmptyString($translatedCountryName, $replacementString),
 
-            "measurement" =>
-                array(
-                    "measurement_date" => Utils::fillNullOrEmptyString($bodyFat['date'], $replacementString),
-                    "fat_cover_one" => Utils::fillZero($bodyFat['one'], $replacementString),
-                    "fat_cover_two" => Utils::fillZero($bodyFat['two'], $replacementString),
-                    "fat_cover_three" => Utils::fillZero($bodyFat['three'], $replacementString),
-                    "muscular_thickness" => Utils::fillZero($muscleThickness, $replacementString),
-                    "scan_weight" => Utils::fillZero($weight, $replacementString),
-                    "tail_length" => Utils::fillZero($tailLength, $replacementString),
-                    "birth_weight" => Utils::fillZero($birthWeight, $replacementString),
-                    "birth_progress" => Utils::fillZero("", $replacementString)
-                ),
-            JsonInputConstant::BREED_VALUE_MAX_GENERATION_DATE => $viewBreedValueMaxGenerationDateRepository->getMaxGenerationDateAsDdMmYyyy(),
-            "breed_values" => $this->breedValuesOutput->get($animal),
+            JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($animal->getGender(), $replacementString),
+
+            JsonInputConstant::LITTER_SIZE => Utils::fillNullOrEmptyString($litterSize, $replacementString),
+            JsonInputConstant::SUCKLE_COUNT => Utils::fillNullOrEmptyString($suckleCount, $replacementString),
+            JsonInputConstant::PRODUCTION => $production,
+
+            JsonInputConstant::SCRAPIE_GENOTYPE => Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), $replacementString),
+            JsonInputConstant::INBREEDING_COEFFICIENT => Utils::fillNullOrEmptyString($inbreedingCoefficientValue, $replacementString),
+
+            // Predicate & Statuses
+            JsonInputConstant::BREED => Utils::fillNullOrEmptyString($animal->getBreedCode(), $replacementString),
+            JsonInputConstant::PREDICATE => Utils::fillNullOrEmptyString($predicate, $replacementString),
+            JsonInputConstant::PREDICATE_DETAILS => $this->getPredicateDetails($animal, $predicate),
+            JsonInputConstant::BREED_TYPE => Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
+            JsonInputConstant::BLINDNESS_FACTOR => $animal->getBlindnessFactor(),
+
+            // Scan measurements
+            JsonInputConstant::SCAN_MEASUREMENTS =>
+                [
+                    JsonInputConstant::MEASUREMENT_DATE => $scanMeasurements ? $scanMeasurements->getMeasurementDate() : null,
+                    "fat_cover_one" => $scanMeasurements ? $scanMeasurements->getFat1Value() : null,
+                    "fat_cover_two" => $scanMeasurements ? $scanMeasurements->getFat2Value() : null,
+                    "fat_cover_three" => $scanMeasurements ? $scanMeasurements->getFat3Value() : null,
+                    "muscular_thickness" => $scanMeasurements ? $scanMeasurements->getMuscleThicknessValue() : null,
+                    "scan_weight" => $scanMeasurements ? $scanMeasurements->getScanWeightValue() : null,
+                ],
+
+            // Birth measurements
+            JsonInputConstant::BIRTH => [
+                JsonInputConstant::TAIL_LENGTH => $animalCache->getTailLength(),
+                JsonInputConstant::BIRTH_WEIGHT => $animalCache->getBirthWeight(),
+                JsonInputConstant::BIRTH_PROGRESS => $animal->getBirthProgress(),
+            ],
+
+            // Contact data
             JsonInputConstant::BREEDER => $this->getContactData($animal->getLocationOfBirth()),
             JsonInputConstant::HOLDER => $this->getContactData($animal->getLocation()),
-            "note" => Utils::fillNullOrEmptyString($animal->getNote(), $replacementString),
-            "body_fats" => $bodyFatRepository->getAllOfAnimalBySql($animal, $replacementString),
-            "exteriors" => $exteriorRepository->getAllOfAnimalBySql($animal, $replacementString),
-            "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal, $replacementString),
-            "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
-            "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
-            "declare_log" => $this->getLog($animal, $replacementString),
+
+            // Rearing
+            JsonInputConstant::REARING => [
+                JsonInputConstant::LABEL => $this->getRearingLabel($animal),
+                JsonInputConstant::LAMBAR => $animal->getLambar(),
+                JsonInputConstant::SURROGATE => $this->getSurrogate($animal->getSurrogate()),
+            ],
+
+            // Calculated values
             "child_count" => $animalRepository->offspringCount($animal),
-            "production" => $production,
+
+            // Breed Values
+            JsonInputConstant::BREED_VALUE_MAX_GENERATION_DATE => $viewBreedValueMaxGenerationDateRepository->getMaxGenerationDateAsDdMmYyyy(),
+            "breed_values" => $this->breedValuesOutput->get($animal),
+
+            "exteriors" => $exteriorRepository->getAllOfAnimalBySql($animal, $replacementString),
+            "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
+
+            "declare_log" => $this->getLog($animal, $replacementString),
         ];
+
+
+        /** @var ViewAnimalHistoricLocationsRepository $viewAnimalHistoricLocationsRepository */
+        $viewAnimalHistoricLocationsRepository = $this->getSqlViewManager()->get(ViewAnimalHistoricLocations::class);
+        /** @var ViewAnimalIsPublicDetailsRepository $viewAnimalIsPublicDetailsRepository */
+        $viewAnimalIsPublicDetailsRepository =  $this->getSqlViewManager()->get(ViewAnimalIsPublicDetails::class);
 
         if ($fatherId) {
             /** @var ViewMinimalParentDetails $viewParentFather */
             $viewParentFather = $viewMinimalParentDetails->get($fatherId);
-            $viewParentFather->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentFather, $user));
+            /** @var ViewAnimalHistoricLocations $viewHistoricLocations */
+            $viewHistoricLocationsFather = $viewAnimalHistoricLocationsRepository->findOneByAnimalId($fatherId);
+            $isFatherPublic = $viewAnimalIsPublicDetailsRepository->findOneByAnimalId($fatherId)->isPublic();
+
+            $viewParentFather->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewHistoricLocationsFather, $user));
             $result["parent_father"] = $this->getSerializer()->getDecodedJson($viewParentFather);
             $result["parent_father"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                UlnValidator::isUserAllowedToAccessAnimalDetails($viewParentFather, $user, $company);
+                UlnValidator::isUserAllowedToAccessAnimalDetails($viewHistoricLocationsFather, $isFatherPublic, $user, $company);
         }
 
         if ($motherId) {
             /** @var ViewMinimalParentDetails $viewParentMother */
             $viewParentMother = $viewMinimalParentDetails->get($motherId);
-            $viewParentMother->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewParentMother, $user));
+            /** @var ViewAnimalHistoricLocations $viewHistoricLocations */
+            $viewHistoricLocationsMother = $viewAnimalHistoricLocationsRepository->findOneByAnimalId($motherId);
+            $isMotherPublic = $viewAnimalIsPublicDetailsRepository->findOneByAnimalId($motherId)->isPublic();
+
+            $viewParentMother->setIsOwnHistoricAnimal($this->isHistoricAnimalOfOwner($viewHistoricLocationsMother, $user));
             $result["parent_mother"] = $this->getSerializer()->getDecodedJson($viewParentMother);
             $result["parent_mother"][ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                UlnValidator::isUserAllowedToAccessAnimalDetails($viewParentMother, $user, $company);
+                UlnValidator::isUserAllowedToAccessAnimalDetails($viewHistoricLocationsMother, $isMotherPublic, $user, $company);
         }
 
         if ($includeAscendants) {
@@ -311,6 +305,29 @@ class AnimalDetailsOutput extends OutputServiceBase
         $this->ownerUbns = null;
 
         return $result;
+    }
+
+
+    private function getSurrogate(?Ewe $ewe): array
+    {
+        if (!$ewe) {
+            return [];
+        }
+        return $this->getSerializer()->normalizeToArray($ewe, [JmsGroup::BASIC]);
+    }
+
+
+    private function getRearingLabel(Animal $animal): ?string
+    {
+        if ($animal->getLambar() === true) {
+            return 'LAMBAR';
+        }
+
+        if ($animal->getSurrogate() != null) {
+            return $animal->getSurrogate()->getUln();
+        }
+
+        return null;
     }
 
 
@@ -364,17 +381,17 @@ class AnimalDetailsOutput extends OutputServiceBase
 
 
     /**
-     * @param ViewMinimalParentDetails $minimalParentDetails
+     * @param ViewAnimalHistoricLocations $viewAnimalHistoricLocations
      * @param Person $user
      * @return bool
      */
-    private function isHistoricAnimalOfOwner(ViewMinimalParentDetails $minimalParentDetails, Person $user)
+    private function isHistoricAnimalOfOwner(ViewAnimalHistoricLocations $viewAnimalHistoricLocations, Person $user)
     {
         if (!($user instanceof Client)) {
             return false;
         }
 
-        foreach ($minimalParentDetails->getHistoricUbnsAsArray() as $historicUbn) {
+        foreach ($viewAnimalHistoricLocations->getHistoricUbnsAsArray() as $historicUbn) {
             if (in_array($historicUbn, $this->getOwnerUbns($user))) {
                 return true;
             }
@@ -384,12 +401,18 @@ class AnimalDetailsOutput extends OutputServiceBase
 
 
     /**
-     * @param ViewMinimalParentDetails $animal
+     * @param ViewAnimalHistoricLocations $animalHistoricLocations
      * @param Person $person
      * @param Location|null $location
+     * @param bool $isPublicAnimal
      * @return bool
      */
-    public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Location $location)
+    public static function isUserAllowedToAccessAnimalDetails(
+        ViewAnimalHistoricLocations $animalHistoricLocations,
+        Person $person,
+        ?Location $location,
+        bool $isPublicAnimal = true
+    )
     {
         if ($person instanceof Employee) {
             return true;
@@ -405,7 +428,12 @@ class AnimalDetailsOutput extends OutputServiceBase
             return false;
         }
 
-        return Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser, $location->getId());
+        return Validator::isUserAllowedToAccessAnimalDetails(
+            $animalHistoricLocations,
+            $company,
+            $isPublicAnimal,
+            $currentUbnsOfUser
+        );
     }
 
 
@@ -434,6 +462,10 @@ class AnimalDetailsOutput extends OutputServiceBase
     {
         /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
         $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
+        /** @var ViewAnimalIsPublicDetailsRepository $viewAnimalIsPublicDetailsRepository */
+        $viewAnimalIsPublicDetailsRepository = $this->getSqlViewManager()->get(ViewAnimalIsPublicDetails::class);
+        /** @var ViewAnimalHistoricLocationsRepository $viewAnimalHistoricLocationsRepository */
+        $viewAnimalHistoricLocationsRepository = $this->getSqlViewManager()->get(ViewAnimalHistoricLocations::class);
 
         $genderPrimaryParent = $animal->getGender();
 
@@ -448,16 +480,19 @@ class AnimalDetailsOutput extends OutputServiceBase
 
                 $childArray = $this->getSerializer()->getDecodedJson($child, [JmsGroup::CHILD],true);
 
-                /** @var ViewMinimalParentDetails $viewDetails */
-                $viewDetails = $viewMinimalParentDetailsRepository->findOneByAnimalId($child->getId());
-                if ($viewDetails) {
-                    $childArray[JsonInputConstant::PRODUCTION] = $viewDetails->getProduction();
-                    $childArray[JsonInputConstant::N_LING] = $viewDetails->getNLing();
-                    $childArray[JsonInputConstant::GENERAL_APPEARANCE] = $viewDetails->getGeneralAppearance();
-                    $childArray[JsonInputConstant::IS_PUBLIC] = $viewDetails->isPublic();
-                    $childArray[JsonInputConstant::IS_OWN_HISTORIC_ANIMAL] = $this->isHistoricAnimalOfOwner($viewDetails, $user);
+                $minimalParentDetails = $viewMinimalParentDetailsRepository->findOneByAnimalId($child->getId());
+                $isPublicDetails = $viewAnimalIsPublicDetailsRepository->findOneByAnimalId($child->getId());
+                $historicLocationsDetails = $viewAnimalHistoricLocationsRepository->findOneByAnimalId($child->getId());
+
+                if ($minimalParentDetails) {
+                    $isPublic = $isPublicDetails->isPublic();
+                    $childArray[JsonInputConstant::PRODUCTION] = $minimalParentDetails->getProduction();
+                    $childArray[JsonInputConstant::N_LING] = $minimalParentDetails->getNLing();
+                    $childArray[JsonInputConstant::GENERAL_APPEARANCE] = $minimalParentDetails->getGeneralAppearance();
+                    $childArray[JsonInputConstant::IS_PUBLIC] = $isPublicDetails->isPublic();
+                    $childArray[JsonInputConstant::IS_OWN_HISTORIC_ANIMAL] = $this->isHistoricAnimalOfOwner($historicLocationsDetails, $user);
                     $childArray[ReportLabel::IS_USER_ALLOWED_TO_ACCESS_ANIMAL_DETAILS] =
-                        UlnValidator::isUserAllowedToAccessAnimalDetails($viewDetails, $user, $company);
+                        UlnValidator::isUserAllowedToAccessAnimalDetails($historicLocationsDetails, $isPublic, $user, $company);
                 }
 
                 switch ($genderPrimaryParent) {

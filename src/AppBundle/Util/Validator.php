@@ -29,6 +29,7 @@ use AppBundle\Enumerator\EmailPrefix;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\SqlView\View\ViewAnimalHistoricLocations;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -771,13 +772,18 @@ class Validator
 
 
     /**
-     * @param ViewMinimalParentDetails $animal
+     * @param ViewAnimalHistoricLocations $animalHistoricLocations
      * @param Company $companyOfUser
+     * @param bool $isPublicAnimal
      * @param array $currentUbnsOfUser
      * @return bool
      */
-    public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Company $companyOfUser,
-                                                              $currentUbnsOfUser = []): bool
+    public static function isUserAllowedToAccessAnimalDetails(
+        ViewAnimalHistoricLocations $animalHistoricLocations,
+        Company $companyOfUser,
+        bool $isPublicAnimal = true,
+        $currentUbnsOfUser = []
+    ): bool
     {
         /*
          * 1. Always show animals on own location/ubn
@@ -787,8 +793,8 @@ class Validator
          * Note, the current ubn is included in the historic ubns list of the sqlViews
          */
 
-        if (!empty($animal->getHistoricUbns()) && !empty($currentUbnsOfUser)
-        && ArrayUtil::hasAtLeastOneValueInArray($animal->getHistoricUbnsAsArray(), $currentUbnsOfUser)) {
+        if (!empty($animalHistoricLocations->getHistoricUbns()) && !empty($currentUbnsOfUser)
+        && ArrayUtil::hasAtLeastOneValueInArray($animalHistoricLocations->getHistoricUbnsAsArray(), $currentUbnsOfUser)) {
             return true;
         }
 
@@ -796,7 +802,7 @@ class Validator
          * 3. For the public, allow access to all public animals
          */
         if (!$companyOfUser) {
-            return $animal->isPublic();
+            return $isPublicAnimal;
 
         } elseif ($companyOfUser->getIsRevealHistoricAnimals()) {
 
@@ -806,7 +812,7 @@ class Validator
 
             // TODO 6. Set a delay before giving access to animal using $company->getLastMakeLivestockPublicDate()
 
-            return $animal->isPublic();
+            return $isPublicAnimal;
         }
 
         /*

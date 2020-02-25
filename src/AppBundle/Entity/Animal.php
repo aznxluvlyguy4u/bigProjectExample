@@ -72,8 +72,10 @@ abstract class Animal
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "BASIC_SUB_ANIMAL_DETAILS",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MIXBLUP",
      *     "PARENT_DATA",
      *     "RESPONSE_PERSISTENCE",
@@ -762,7 +764,7 @@ abstract class Animal
     /**
      * The current blindnessFactor
      *
-     * @var string
+     * @var string|null
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -851,7 +853,7 @@ abstract class Animal
     /**
      * @var boolean
      * @JMS\Type("boolean")
-     * @ORM\Column(type="boolean", nullable=true)
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT"
@@ -882,7 +884,7 @@ abstract class Animal
     protected $treatments;
 
     /**
-     * @var ScanMeasurementSet
+     * @var ScanMeasurementSet|null
      * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", cascade={"persist", "remove"})
      * @ORM\JoinColumn(name="scan_measurement_set_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\ScanMeasurementSet")
@@ -1181,6 +1183,7 @@ abstract class Animal
         $this->animalOrderNumber = '';
         $this->isImportAnimal = false;
         $this->isExportAnimal = false;
+        $this->lambar = false;
         $this->isDepartedAnimal = false;
         $this->updatedGeneDiversity = false;
         $this->creationDate = new \DateTime();
@@ -2853,7 +2856,7 @@ abstract class Animal
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getBlindnessFactor()
     {
@@ -2922,18 +2925,18 @@ abstract class Animal
     }
 
     /**
-     * @return ScanMeasurementSet
+     * @return ScanMeasurementSet|null
      */
-    public function getScanMeasurementSet(): ScanMeasurementSet
+    public function getScanMeasurementSet(): ?ScanMeasurementSet
     {
         return $this->scanMeasurementSet;
     }
 
     /**
-     * @param ScanMeasurementSet $scanMeasurementSet
+     * @param ScanMeasurementSet|null $scanMeasurementSet
      * @return Animal
      */
-    public function setScanMeasurementSet(ScanMeasurementSet $scanMeasurementSet): Animal
+    public function setScanMeasurementSet(?ScanMeasurementSet $scanMeasurementSet): Animal
     {
         $this->scanMeasurementSet = $scanMeasurementSet;
         return $this;
@@ -3110,7 +3113,7 @@ abstract class Animal
     }
 
     /**
-     * @return boolean|null
+     * @return boolean
      */
     public function getLambar()
     {
