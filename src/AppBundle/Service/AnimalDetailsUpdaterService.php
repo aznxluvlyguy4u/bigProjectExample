@@ -7,6 +7,7 @@ namespace AppBundle\Service;
 use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
@@ -27,6 +28,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class AnimalDetailsUpdaterService extends ControllerServiceBase
@@ -68,6 +70,9 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
 
     /** @var array */
     private $errors;
+
+    /** @var array */
+    private $unauthorizedEdits;
 
     /** @var string */
     private $animalIdLogPrefix;
@@ -114,6 +119,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     {
         $this->request = $request;
         $this->errors = [];
+        $this->unauthorizedEdits = [];
 
         //Get content to array
         $content = RequestUtil::getContentAsArray($request);
@@ -154,8 +160,9 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
 
         //User environment
         $user = $this->getUser();
+        $isAdmin = $user instanceof Employee;
 
-        if(!$user instanceof Employee) {
+        if(!$isAdmin) {
             $animalOwner = $animal->getOwner();
             if ($animalOwner !== $user && $animalOwner !== $user->getEmployer()) {
                 $message = 'Dit dier is op dit moment niet in uw bezit en u bent niet door de huidige eigenaar geautoriseerd,'
@@ -165,7 +172,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
         //Animal Edit from USER environment
-        $this->updateValues($animal, $content);
+        $this->updateValues($animal, $content, $isAdmin);
 
         //Clear cache for this location, to reflect changes on the livestock
         if($animal->getLocation()) {
@@ -186,9 +193,10 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     /**
      * @param Animal $animal
      * @param Collection $content
+     * @param bool $isAdmin
      * @return Animal
      */
-    private function updateValues($animal, Collection $content)
+    private function updateValues(Animal $animal, Collection $content, bool $isAdmin)
     {
         if(!($animal instanceof Animal)){ return $animal; }
 
@@ -228,9 +236,12 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $newPredicate = StringUtil::convertEmptyStringToNull(ArrayUtil::get(JsonInputConstant::TYPE, $predicateContent));
             $newPredicateScore = ArrayUtil::get(JsonInputConstant::SCORE, $predicateContent);
 
-            if ($this->isPredicateInputValid($newPredicate, $newPredicateScore)) {
-                $oldPredicate = $animal->getPredicate();
-                $oldPredicateScore = $animal->getPredicateScore();
+            $oldPredicate = $animal->getPredicate();
+            $oldPredicateScore = $animal->getPredicateScore();
+
+            $isAuthorizedForPredicate = $this->isAuthorizedValidationByAdmin($isAdmin, TranslationKey::PREDICATE);
+
+            if ($isAuthorizedForPredicate && $this->isPredicateInputValid($newPredicate, $newPredicateScore)) {
 
                 if ($oldPredicate != $newPredicate) {
                     $animal->setPredicate($newPredicate);
@@ -254,10 +265,13 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         $newBlindnessFactor = StringUtil::convertEmptyStringToNull($content->get(JsonInputConstant::BLINDNESS_FACTOR));
         $oldBlindnessFactor = $animal->getBlindnessFactor();
 
-        if ($oldBlindnessFactor != $newBlindnessFactor && $this->isBlindnessFactorInputValid($newBlindnessFactor)) {
-            $animal->setBlindnessFactor($newBlindnessFactor);
-            $anyValueWasUpdated = true;
-            $this->updateActionLogMessage('blindfactor', $oldBlindnessFactor, $newBlindnessFactor);
+        if ($oldBlindnessFactor != $newBlindnessFactor) {
+            $isAuthorizedForBlindnessFactor = $this->isAuthorizedValidationByAdmin($isAdmin, TranslationKey::BLINDNESS_FACTOR);
+            if ($isAuthorizedForBlindnessFactor && $this->isBlindnessFactorInputValid($newBlindnessFactor)) {
+                $animal->setBlindnessFactor($newBlindnessFactor);
+                $anyValueWasUpdated = true;
+                $this->updateActionLogMessage('blindfactor', $oldBlindnessFactor, $newBlindnessFactor);
+            }
         }
 
         $newRearing = StringUtil::convertEmptyStringToNull($content->get(JsonInputConstant::REARING));
@@ -318,6 +332,15 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     }
 
 
+    private function isAuthorizedValidationByAdmin(bool $isAdmin, string $propertyTranslationKey): bool
+    {
+        if (!$isAdmin) {
+            $this->unauthorizedEdits[$propertyTranslationKey] = $this->translator->trans($propertyTranslationKey);
+        }
+        return $isAdmin;
+    }
+
+
     private function isPredicateInputValid(?string $newPredicateType, ?string $newPredicateScore): bool
     {
         $isValidPredicateType = Validator::isValidPredicateType($newPredicateType, true);
@@ -350,6 +373,14 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
 
     private function checkForValidationErrors()
     {
+        if (!empty($this->unauthorizedEdits)) {
+            throw new AccessDeniedHttpException(
+                $this->translator->trans(TranslationKey::YOU_DO_NOT_HAVE_PERMISSION_TO_CHANGE_THE_FOLLOWING_VALUES).': '.
+                implode(',', $this->unauthorizedEdits)
+            );
+        }
+
+
         if (empty($this->errors)) {
             return;
         }

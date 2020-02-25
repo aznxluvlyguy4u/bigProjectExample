@@ -305,7 +305,7 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
 
         $birthWeight = $this->getFloatValueInput(JsonInputConstant::BIRTH_WEIGHT, $requestBody);
         $tailLength = $this->getFloatValueInput(JsonInputConstant::TAIL_LENGTH, $requestBody);
-        $birthProgress = $requestBody->get(JsonInputConstant::BIRTH_PROGRESS);
+        $birthProgress = StringUtil::convertEmptyStringToNull($requestBody->get(JsonInputConstant::BIRTH_PROGRESS));
 
         $defaultResetMeasurementDate = false;
         $resetMeasurementDate = $requestBody->get(JsonInputConstant::RESET_MEASUREMENT_DATE_USING_DATE_OF_BIRTH)
