@@ -269,7 +269,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   {
       return $this->get('app.animal')->getHistoricLiveStock($request);
   }
-  
+
   /**
    * Retrieve all alive rams in the NSFO database
    *
@@ -295,7 +295,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   {
       return $this->get('app.animal')->getAllRams($request);
   }
-  
+
   /**
    * Create a RetrieveAnimal request
    *
@@ -458,7 +458,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
 
   /**
-   * Get Animal Details by ULN. For example NL100029511721
+   * Get Animal Details by ULN or its primary key. For example NL100029511721 or 12345
    *
    * @ApiDoc(
    *   section = "Animals",
@@ -480,18 +480,18 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve an Animal by ULN"
+   *   description = "Retrieve an Animal by ULN or its primary key"
    * )
    * @param Request $request the request object
-   * @param string $ulnString
+   * @param string $ulnStringOrId
    * @return JsonResponse
-   * @Route("-details/{ulnString}")
+   * @Route("-details/{ulnStringOrId}")
    * @Method("GET")
    * @throws \Exception
    */
-  public function getAnimalDetailsByUln(Request $request, $ulnString)
+  public function getAnimalDetailsByUlnOrId(Request $request, $ulnStringOrId)
   {
-      return $this->get('app.animal')->getAnimalDetailsByUln($request, $ulnString);
+      return $this->get('app.animal')->getAnimalDetailsByUlnOrId($request, $ulnStringOrId);
   }
 
 

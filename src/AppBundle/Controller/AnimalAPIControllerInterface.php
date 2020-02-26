@@ -20,10 +20,10 @@ interface AnimalAPIControllerInterface
 
   /**
    * @param Request $request
-   * @param string $ulnString
+   * @param string $ulnStringOrId
    * @return jsonResponse
    */
-  function getAnimalDetailsByUln(Request $request, $ulnString);
+  function getAnimalDetailsByUlnOrId(Request $request, $ulnStringOrId);
 
   /**
    * @param Request $request

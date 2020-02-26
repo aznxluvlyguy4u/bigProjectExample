@@ -4,6 +4,7 @@
 namespace AppBundle\Validation;
 
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Ewe;
@@ -18,6 +19,7 @@ use AppBundle\SqlView\View\ViewAnimalIsPublicDetails;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\HttpFoundation\Response;
 
 class AnimalDetailsValidator extends BaseValidator
 {
@@ -40,10 +42,10 @@ class AnimalDetailsValidator extends BaseValidator
      * @param SqlViewManagerInterface $sqlViewManager
      * @param boolean $isAdmin
      * @param Location $location
-     * @param string $ulnString
+     * @param string $idOrUlnString
      */
     public function __construct(ObjectManager $em, SqlViewManagerInterface $sqlViewManager,
-                                $isAdmin, $location, $ulnString)
+                                $isAdmin, $location, $idOrUlnString)
     {
         parent::__construct($em, new ArrayCollection());
         $this->em = $em;
@@ -51,18 +53,18 @@ class AnimalDetailsValidator extends BaseValidator
 
         $this->isInputValid = false;
 
-        $isPrimaryKey = $this->isIdentifierPrimaryKey($ulnString);
+        $isPrimaryKey = $this->isIdentifierPrimaryKey($idOrUlnString);
 
-        if(Validator::verifyUlnFormat($ulnString) || $isPrimaryKey) {
+        if(Validator::verifyUlnFormat($idOrUlnString) || $isPrimaryKey) {
 
             /** @var AnimalRepository $repository */
             $repository = $this->em->getRepository(Animal::class);
 
             if ($isPrimaryKey) {
                 // Find animal by animal Id. Query is 100x faster than search by ULN
-                $this->animal = $repository->find(intval($ulnString));
+                $this->animal = $repository->find(intval($idOrUlnString));
             } else {
-                $this->animal = $repository->findAnimalByUlnString($ulnString);
+                $this->animal = $repository->findAnimalByUlnString($idOrUlnString);
             }
 
             if($this->animal) {
@@ -121,5 +123,22 @@ class AnimalDetailsValidator extends BaseValidator
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    public function createJsonResponse()
+    {
+        if($this->isInputValid){
+            return Validator::createJsonResponse(self::VALID_MESSAGE, Response::HTTP_OK);
+        } else {
+            if (!$this->animal) {
+                return Validator::createJsonResponse('Geen dier gevonden', Response::HTTP_NOT_FOUND);
+            }
+
+            return Validator::createJsonResponse(self::ERROR_MESSAGE, Response::HTTP_PRECONDITION_REQUIRED, $this->errors);
+        }
     }
 }

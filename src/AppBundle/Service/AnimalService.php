@@ -48,6 +48,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -933,35 +934,30 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
     /**
      * @param Request $request
-     * @param string $ulnString
+     * @param string $ulnStringOrId
      * @return JsonResponse
      * @throws \Exception
      */
-    public function getAnimalDetailsByUln(Request $request, $ulnString)
+    public function getAnimalDetailsByUlnOrId(Request $request, $ulnStringOrId)
     {
         $isAdminEnvironment = RequestUtil::getBooleanQuery($request, JsonInputConstant::IS_ADMIN_ENV);
 
         if($isAdminEnvironment) {
 
             if(!AdminValidator::isAdmin($this->getEmployee(), AccessLevelType::ADMIN))
-            { return AdminValidator::getStandardErrorResponse(); }
+            { throw AdminValidator::standardException(); }
 
             if (RequestUtil::getBooleanQuery($request, QueryParameter::MINIMAL_OUTPUT, false)) {
-                return $this->getBasicAnimalDetailsByUln($ulnString);
+                return $this->getBasicAnimalDetailsByUlnOrId($ulnStringOrId);
             }
 
-            $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
-
-            if($animal === null) {
-                return ResultUtil::errorResult("No animal was found with uln: ".$ulnString, Response::HTTP_NOT_FOUND);
-            }
-
+            $animal = $this->findAnimalByUlnStringOrId($ulnStringOrId);
             return $this->getAnimalDetailsOutputForAdminEnvironment($animal);
         }
 
         //VWA environment
         if ($this->getUser() instanceof VwaEmployee) {
-            return $this->getBasicAnimalDetailsByUln($ulnString);
+            return $this->getBasicAnimalDetailsByUlnOrId($ulnStringOrId);
         }
 
         //User environment
@@ -970,7 +966,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $location = null;
         if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
 
-        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $this->getSqlViewManager(), $isAdmin, $location, $ulnString);
+        $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $this->getSqlViewManager(), $isAdmin, $location, $ulnStringOrId);
         if(!$animalDetailsValidator->getIsInputValid()) {
             return $animalDetailsValidator->createJsonResponse();
         }
@@ -978,7 +974,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $animal = $animalDetailsValidator->getAnimal();
 
         if (RequestUtil::getBooleanQuery($request, QueryParameter::MINIMAL_OUTPUT, false)) {
-            return $this->getBasicAnimalDetailsByUln($ulnString);
+            return $this->getBasicAnimalDetailsByUlnOrId($ulnStringOrId);
         }
 
         return ResultUtil::successResult(
@@ -988,6 +984,20 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
                 $location
             )
         );
+    }
+
+    private function findAnimalByUlnStringOrId($ulnStringOrId): Animal {
+        if (ctype_digit($ulnStringOrId) || is_int($ulnStringOrId)) {
+            $animalId = intval($ulnStringOrId);
+            $animal = $this->getManager()->getRepository(Animal::class)->find($animalId);
+        } else {
+            $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnStringOrId);
+        }
+        if (!$animal) {
+            $errorMessage = $this->translateUcFirstLower(AnimalDetailsValidator::ERROR_NON_EXISTENT_ANIMAL);
+            throw new NotFoundHttpException($errorMessage);
+        }
+        return $animal;
     }
 
     /**
@@ -1040,15 +1050,12 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     }
 
     /**
-     * @param string $ulnString
+     * @param string $idOrUlnString
      * @return JsonResponse
      */
-    private function getBasicAnimalDetailsByUln($ulnString)
+    private function getBasicAnimalDetailsByUlnOrId($idOrUlnString)
     {
-        $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
-        if ($animal === null) {
-            return ResultUtil::errorResult($this->translateUcFirstLower(AnimalDetailsValidator::ERROR_NON_EXISTENT_ANIMAL), Response::HTTP_BAD_REQUEST);
-        }
+        $animal = $this->findAnimalByUlnStringOrId($idOrUlnString);
         $output = $this->getBaseSerializer()->getDecodedJson($animal, [JmsGroup::BASIC]);
         return ResultUtil::successResult($output);
     }
