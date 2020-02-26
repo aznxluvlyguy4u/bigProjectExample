@@ -282,9 +282,12 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         } elseif (ctype_digit($newRearing) || is_int($newRearing)) {
             $newSurrogateId = intval($newRearing);
             $newLambar = false;
-        } else {
+        } elseif ($newRearing === '' || $newRearing === null) {
             $newSurrogateId = null;
             $newLambar = false;
+        } else {
+            throw new BadRequestHttpException("Invalid rearing input format: ".$newRearing.
+            ". Allowed values: LAMBAR, null, integer");
         }
 
         $oldSurrogateId = $animal->getSurrogate() ? $animal->getSurrogate()->getId() : null;
@@ -423,7 +426,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $isValidSurrogateInput = false;
         }
 
-        if ($newSurrogate != null && TimeUtil::isDate1BeforeDate2($newSurrogate->getDateOfBirth(), $animal->getDateOfBirth())) {
+        if ($newSurrogate != null && TimeUtil::isDate1BeforeDate2($animal->getDateOfBirth(), $newSurrogate->getDateOfBirth())) {
             $this->errors[self::SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD] = $newSurrogate->getDateOfBirthString();
             $isValidSurrogateInput = false;
         }
