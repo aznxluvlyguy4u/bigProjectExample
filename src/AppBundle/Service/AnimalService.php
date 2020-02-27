@@ -117,7 +117,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $actionBy = $this->getUser();
         AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN, true);
 
-        $animalArray = RequestUtil::getContentAsArray($request)->toArray();
+        $animalArray = RequestUtil::getContentAsArrayCollection($request)->toArray();
 
         /** @var Neuter|Ram|Ewe $newAnimal */
         $tempNewAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, Animal::class, false);
@@ -372,7 +372,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     {
         AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN, true);
 
-        $data = RequestUtil::getContentAsArray($request);
+        $data = RequestUtil::getContentAsArrayCollection($request);
         $uln = $data->get('uln');
         if (is_string($uln)) {
             $uln = strtoupper(strtr($uln, [' ' => '']));
@@ -418,7 +418,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             return $validationResult;
         }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $plainTextInput = StringUtil::preparePlainTextInput($content->get(JsonInputConstant::PLAIN_TEXT_INPUT));
         $separator = $content->get(JsonInputConstant::SEPARATOR);
 
@@ -537,7 +537,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      */
     private function validateAnimalsByPlainTextInputRequest(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         if ($content === null) {
             return ResultUtil::errorResult($this->translateUcFirstLower('CONTENT IS MISSING.'), Response::HTTP_BAD_REQUEST);
@@ -749,7 +749,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     public function createRetrieveAnimals(Request $request)
     {
         //Get content to array
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -915,7 +915,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     function createAnimalDetails(Request $request)
     {
         //Get content to array
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -1067,7 +1067,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      */
     public function changeGenderOfUln(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $animal = null;
 
         //Check if mandatory field values are given
@@ -1153,7 +1153,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 	 */
 		public function changeNicknameOfAnimal(Request $request, Animal $animal)
 		{
-				$content = RequestUtil::getContentAsArray($request);
+				$content = RequestUtil::getContentAsArrayCollection($request);
 
 				//Check if mandatory field values are given
 				if(!$content->containsKey(ReportLabel::NICKNAME)) {

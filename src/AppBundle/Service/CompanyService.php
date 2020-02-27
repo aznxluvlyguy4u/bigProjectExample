@@ -106,7 +106,7 @@ class CompanyService extends AuthServiceBase
         }
 
         // Validate content
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         // TODO VALIDATE CONTENT
         $companyValidator = new CompanyValidator($this->getManager(), $content);
@@ -322,7 +322,7 @@ class CompanyService extends AuthServiceBase
             return AdminValidator::getStandardErrorResponse();
         }
         // Validate content
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         // TODO VALIDATE CONTENT
 
         // Get Company
@@ -672,7 +672,7 @@ class CompanyService extends AuthServiceBase
         }
 
         // Validate content
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         // TODO VALIDATE CONTENT
 
         // Get Content
@@ -794,7 +794,7 @@ class CompanyService extends AuthServiceBase
         }
 
         // Validate content
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         // TODO VALIDATE CONTENT
 
         // Get Company

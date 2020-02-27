@@ -279,10 +279,10 @@ class Validator
         if(!($animal instanceof Animal) || !($client instanceof Client)) { return $nullInputResult; }
 
         $location = $animal->getLocation();
-        if($location == null) { return $nullInputResult; }
+        if($location == null || !$location->getIsActive()) { return $nullInputResult; }
 
         $company = $location->getCompany();
-        if($company == null) { return $nullInputResult; }
+        if($company == null || !$company->isActive()) { return $nullInputResult; }
 
         $ownerOfAnimal = $company->getOwner();
         if($ownerOfAnimal == null) { return $nullInputResult; }

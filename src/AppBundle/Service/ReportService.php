@@ -243,7 +243,7 @@ class ReportService
         $location = $this->userService->getSelectedLocation($request);
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
 
         $report = $this->livestockReportService->getReport($person, $location, $fileType, $concatValueAndAccuracy, $content,$language);
@@ -261,7 +261,7 @@ class ReportService
     private function createLiveStockReportAsWorkerTask(Request $request): JsonResponse
     {
         $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $contentAsJson = JSON::encode($content->toArray());
 
         $inputForHash = $contentAsJson . StringUtil::getBooleanAsString($concatValueAndAccuracy);
@@ -304,7 +304,7 @@ class ReportService
      */
     public function createPedigreeCertificates(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
@@ -345,7 +345,7 @@ class ReportService
         $location = $this->userService->getSelectedLocation($request);
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
-        $content = empty($content) ? RequestUtil::getContentAsArray($request) : $content;
+        $content = empty($content) ? RequestUtil::getContentAsArrayCollection($request) : $content;
 
         $report = $this->pedigreeCertificateReportService->getReport($person, $location, $fileType, $content, $language);
         if ($report instanceof Response) {
@@ -428,7 +428,7 @@ class ReportService
      */
     public function createOffspringReport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $animalsArray = $content->get(JsonInputConstant::PARENTS);
         if (!is_array($animalsArray)) {
             return ResultUtil::errorResult("'".JsonInputConstant::PARENTS."' key is missing in body", Response::HTTP_BAD_REQUEST);
@@ -459,7 +459,7 @@ class ReportService
      */
     public function createEweCardReport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $animalsArray = $content->get(JsonInputConstant::ANIMALS);
 
         if (!is_array($animalsArray)) {
@@ -623,7 +623,7 @@ class ReportService
      */
     public function createInbreedingCoefficientsReport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $contentAsJson = JSON::encode($content->toArray());
         $inputForHash = $contentAsJson;
 

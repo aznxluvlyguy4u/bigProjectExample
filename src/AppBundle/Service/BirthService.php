@@ -195,7 +195,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
      */
     public function createBirth(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -455,7 +455,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     public function revokeBirth(Request $request)
     {
         $location = $this->getSelectedLocation($request);
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $statusCode = Response::HTTP_PRECONDITION_REQUIRED;
@@ -827,7 +827,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
      */
     public function getCandidateFathers(Request $request, $uln)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $dateOfBirth = new \DateTime();
 
         if(key_exists('date_of_birth', $content->toArray())) {
@@ -960,7 +960,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             );
         }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         if($content->containsKey('date_of_birth')) {
             $dateOfBirth = new \DateTime($content->get('date_of_birth'));
         } else {
@@ -1065,7 +1065,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
 
     public function getCandidateMothers(Request $request) {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $dateOfBirth = new \DateTime();
 
         if(key_exists('date_of_birth', $content->toArray())) {
@@ -1187,7 +1187,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
      */
     public function processInternalQueueMessage(Request $request)
     {
-        $messageId = RequestUtil::getContentAsArray($request)->get('message_id');
+        $messageId = RequestUtil::getContentAsArrayCollection($request)->get('message_id');
         $taskType = 'DECLARE_BIRTH';
         $jsonMessage = $request->getContent();
 

@@ -2013,12 +2013,10 @@ WHERE animal_id IN (
      */
     public function findAnimalByIdOrUln($id)
     {
-        if(StringUtil::isStringContains($id, 'NL')) {
-            return $this->findAnimalByUlnString($id);
-        } elseif(ctype_digit($id) || is_int($id)) {
-            return $this->find($id);
+        if (ctype_digit($id) || is_int($id)) {
+            return $this->find(intval($id));
         }
-        return null;
+        return $this->findAnimalByUlnString($id);
     }
 
 

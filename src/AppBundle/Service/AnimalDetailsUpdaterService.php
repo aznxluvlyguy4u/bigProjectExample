@@ -123,7 +123,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         $this->unauthorizedEdits = [];
 
         //Get content to array
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         /** @var Animal $animal */
         $animal = $this->getManager()->getRepository(Animal::class)->findAnimalByUlnString($ulnString);
 

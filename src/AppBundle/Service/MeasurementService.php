@@ -53,7 +53,7 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
 
         $allowedExteriorCodes = MeasurementsUtil::getExteriorKinds($this->getManager(), $animal);
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $exteriorValidator = new ExteriorValidator($this->getManager(), $content, $allowedExteriorCodes, $ulnString, self::ALLOW_BLANK_INSPECTOR);
         if (!$exteriorValidator->getIsInputValid()) {
             return $exteriorValidator->createJsonResponse();
@@ -134,7 +134,7 @@ class MeasurementService extends ControllerServiceBase implements MeasurementAPI
         }
         $animal = $animalDetailsValidator->getAnimal();
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         if($content->get('is_active') === false) {
 

@@ -100,7 +100,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
         if(!AdminValidator::isAdmin($admin, AccessLevelType::SUPER_ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $firstName = $content->get(JsonInputConstant::FIRST_NAME);
         $lastName = $content->get(JsonInputConstant::LAST_NAME);
@@ -206,7 +206,7 @@ class VwaEmployeeService extends AuthServiceBase implements VwaEmployeeAPIContro
             return ResultUtil::errorResult(self::ERROR_VWA_EMPLOYEE_DEACTIVATED, Response::HTTP_BAD_REQUEST);
         }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $anyValuesUpdated = false;
         $this->clearActionLogEditMessage();

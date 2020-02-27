@@ -320,6 +320,14 @@ class Location
     private $workers;
 
     /**
+     * @var ArrayCollection|AnimalAnnotation[]
+     * @ORM\OrderBy({"updatedAt" = "DESC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\AnimalAnnotation", mappedBy="location", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalAnnotation>")
+     */
+    private $animalAnnotations;
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("owner")
      * @JMS\Groups({
@@ -409,6 +417,7 @@ class Location
     $this->pedigreeRegisterRegistrations = new ArrayCollection();
     $this->workers = new ArrayCollection();
     $this->animalRelocations = new ArrayCollection();
+    $this->animalAnnotations = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 
@@ -1328,5 +1337,44 @@ class Location
         return $this;
     }
 
+    /**
+     * @return AnimalAnnotation[]|ArrayCollection
+     */
+    public function getAnimalAnnotations()
+    {
+        return $this->animalAnnotations;
+    }
 
+    /**
+     * @param  AnimalAnnotation[]|ArrayCollection  $annotations
+     * @return Location
+     */
+    public function setAnimalAnnotations(ArrayCollection $annotations)
+    {
+        $this->animalAnnotations = $annotations;
+        return $this;
+    }
+
+    /**
+     * Add annotation
+     *
+     * @param AnimalAnnotation $annotation
+     *
+     * @return Location
+     */
+    public function addAnimalAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->animalAnnotations->add($annotation);
+        return $this;
+    }
+
+    /**
+     * Remove annotation
+     *
+     * @param AnimalAnnotation $annotation
+     */
+    public function removeAnimalAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->animalAnnotations->removeElement($annotation);
+    }
 }
