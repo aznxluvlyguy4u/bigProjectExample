@@ -876,6 +876,14 @@ abstract class Animal
     protected $latestNormalizedBreedGrades;
 
     /**
+     * @var ArrayCollection|AnimalAnnotation[]
+     * @ORM\OrderBy({"updatedAt" = "DESC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\AnimalAnnotation", mappedBy="animal", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalAnnotation>")
+     */
+    protected $annotations;
+
+    /**
      * @var ArrayCollection
      * @ORM\OrderBy({"description" = "ASC"})
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentAnimal", mappedBy="animal", cascade={"persist", "remove"})
@@ -1177,6 +1185,7 @@ abstract class Animal
         $this->treatments = new ArrayCollection();
         $this->wormResistances = new ArrayCollection();
         $this->animalRelocations = new ArrayCollection();
+        $this->annotations = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -3508,7 +3517,46 @@ abstract class Animal
         return $this;
     }
 
+    /**
+     * @return AnimalAnnotation[]|ArrayCollection
+     */
+    public function getAnnotations()
+    {
+        return $this->annotations;
+    }
 
+    /**
+     * @param  AnimalAnnotation[]|ArrayCollection  $annotations
+     * @return Animal
+     */
+    public function setAnnotations(ArrayCollection $annotations)
+    {
+        $this->annotations = $annotations;
+        return $this;
+    }
+
+    /**
+     * Add annotation
+     *
+     * @param AnimalAnnotation $annotation
+     *
+     * @return Animal
+     */
+    public function addAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->annotations->add($annotation);
+        return $this;
+    }
+
+    /**
+     * Remove annotation
+     *
+     * @param AnimalAnnotation $annotation
+     */
+    public function removeAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->annotations->removeElement($annotation);
+    }
 
 
 }
