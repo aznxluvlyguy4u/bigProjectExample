@@ -16,10 +16,12 @@ class RequestUtil
     /**
      * @param Request $request
      * @param bool $allowEmptyContent
-     * @param null $emptyContentResponse
-     * @return ArrayCollection
+     * @param $emptyContentResponse
+     * @param bool $isArrayCollection
+     * @return array|ArrayCollection
      */
-    public static function getContentAsArrayCollection(Request $request, $allowEmptyContent = false, $emptyContentResponse = null)
+    private static function getContentBase(Request $request, bool $allowEmptyContent, $emptyContentResponse,
+        bool $isArrayCollection)
     {
         $content = $request->getContent();
 
@@ -36,7 +38,32 @@ class RequestUtil
             throw new BadRequestHttpException();
         }
 
-        return new ArrayCollection($decodedJson);
+        if ($isArrayCollection) {
+            return new ArrayCollection($decodedJson);
+        }
+        return $decodedJson;
+    }
+
+    /**
+     * @param Request $request
+     * @param bool $allowEmptyContent
+     * @param null $emptyContentResponse
+     * @return array
+     */
+    public static function getContentAsArray(Request $request, $allowEmptyContent = false, $emptyContentResponse = null)
+    {
+        return self::getContentBase($request, $allowEmptyContent, $emptyContentResponse, false);
+    }
+
+    /**
+     * @param Request $request
+     * @param bool $allowEmptyContent
+     * @param null $emptyContentResponse
+     * @return ArrayCollection
+     */
+    public static function getContentAsArrayCollection(Request $request, $allowEmptyContent = false, $emptyContentResponse = null)
+    {
+        return self::getContentBase($request, $allowEmptyContent, $emptyContentResponse, true);
     }
 
 
