@@ -812,6 +812,9 @@ services:
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
 
+    AppBundle\Service\AnimalAnnotationService:
+      parent: app.abstract_base.controller
+
     AppBundle\Service\ArrivalService:
         parent: app.abstract_base.declare
         calls:

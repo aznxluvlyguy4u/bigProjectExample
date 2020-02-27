@@ -4,11 +4,13 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Constant\Constant;
+use AppBundle\Util\RequestUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\LazyCriteriaCollection;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class BaseSerializer
@@ -186,6 +188,22 @@ class BaseSerializer
         return $array;
     }
 
+    /**
+     * @param  Request  $request
+     * @param  $clazz
+     * @param  bool  $isArrayOfObjects
+     * @param  DeserializationContext|null  $context
+     * @return mixed
+     */
+    public function denormalizeRequestContent(Request $request, $clazz, $isArrayOfObjects = false, DeserializationContext $context = null)
+    {
+        try {
+            $array = RequestUtil::getContentAsArray($request, false);
+        } catch (\Exception $e) {
+            throw new BadRequestHttpException('Invalid request body', $e);
+        }
+        return $this->denormalizeToObject($array, $clazz, $isArrayOfObjects, $context);
+    }
 
     /**
      * @param array $array

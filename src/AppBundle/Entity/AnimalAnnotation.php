@@ -11,10 +11,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class AnimalAnnotation
- * @ORM\Table(name="animal_annotation",indexes={
+ * @ORM\Table(name="ANIMAL_ANNOTATIONS",indexes={
  *     @ORM\Index(name="animal_annotation_idx", columns={"animal_id", "company_id"})
  * })
- * @ORM\Entity(repositoryClass="AnimalAnnotationRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalAnnotationRepository")
  * @package AppBundle\Entity
  */
 class AnimalAnnotation
@@ -37,7 +37,7 @@ class AnimalAnnotation
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_ANNOTATIONS"
      * })
      * @Assert\NotBlank
      */
@@ -66,9 +66,6 @@ class AnimalAnnotation
      * @ORM\ManyToOne(targetEntity="Company", inversedBy="animalAnnotations")
      * @ORM\JoinColumn(name="company_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Company")
-     * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
-     * })
      * @Assert\NotBlank
      */
     private $company;
@@ -78,9 +75,6 @@ class AnimalAnnotation
      * @ORM\ManyToOne(targetEntity="Person", inversedBy="animalAnnotations")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id", onDelete="CASCADE")
      * @JMS\Type("AppBundle\Entity\Person")
-     * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
-     * })
      * @Assert\NotBlank
      */
     private $actionBy;
@@ -90,7 +84,7 @@ class AnimalAnnotation
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false, options={"default":""})
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_ANNOTATIONS"
      * })
      */
     private $body;
@@ -106,7 +100,6 @@ class AnimalAnnotation
 
     /**
      * @return AnimalAnnotation
-     * @throws \Exception
      */
     public function refreshUpdatedAt(): AnimalAnnotation {
         $this->updatedAt = new \DateTime();
@@ -115,22 +108,61 @@ class AnimalAnnotation
 
     /**
      * @JMS\VirtualProperty
-     * @JMS\SerializedName("is_last_edited_by_admin")
+     * @JMS\SerializedName("animal_id")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_ANNOTATIONS"
      * })
-     * @return bool
+     * @return int
      */
-    public function isLastEditedByAdmin(): bool
+    public function getAnimalId(): int
     {
-        return $this->actionBy instanceof Employee;
+        return $this->animal->getId();
+    }
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("uln")
+     * @JMS\Groups({
+     *     "ANIMAL_ANNOTATIONS"
+     * })
+     * @return string
+     */
+    public function getUln(): string
+    {
+        return $this->animal->getUln();
+    }
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("action_by_full_name")
+     * @JMS\Groups({
+     *     "ANIMAL_ANNOTATIONS"
+     * })
+     * @return string
+     */
+    public function getActionByFullName(): string
+    {
+        return $this->actionBy->getFullName();
+    }
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("company_name")
+     * @JMS\Groups({
+     *     "ANIMAL_ANNOTATIONS"
+     * })
+     * @return string
+     */
+    public function getCompanyName(): string
+    {
+        return $this->company->getCompanyName();
     }
 
     /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("ubn")
      * @JMS\Groups({
-     *     "ANIMAL_DETAILS"
+     *     "ANIMAL_ANNOTATIONS"
      * })
      * @return string
      */
