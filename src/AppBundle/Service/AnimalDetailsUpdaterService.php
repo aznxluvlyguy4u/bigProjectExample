@@ -67,6 +67,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     const INVALID_PREDICATE_TYPE = 'INVALID PREDICATE TYPE';
     const INVALID_PREDICATE_SCORE = 'INVALID PREDICATE SCORE';
     const INVALID_BLINDNESS_FACTOR = 'INVALID BLINDNESS FACTOR';
+    const INVALID_BREED_TYPE = 'INVALID BREED TYPE';
 
     /** @var array */
     private $errors;
@@ -274,6 +275,20 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             }
         }
 
+
+        $newBreedType = StringUtil::convertEmptyStringToNull($content->get(JsonInputConstant::BREED_TYPE));
+        $oldBreedType = $animal->getBreedType();
+
+        if ($oldBreedType != $newBreedType) {
+            $isAuthorizedForBlindnessFactor = $this->isAuthorizedValidationByAdmin($isAdmin, TranslationKey::BREED_TYPE);
+            if ($isAuthorizedForBlindnessFactor && $this->isBreedTypeInputValid($newBreedType)) {
+                $animal->setBreedType($newBreedType);
+                $anyValueWasUpdated = true;
+                $this->updateActionLogMessage('breedType', $oldBreedType, $newBreedType);
+            }
+        }
+
+
         $newRearing = StringUtil::convertEmptyStringToNull($content->get(JsonInputConstant::REARING));
 
         if ($newRearing === 'LAMBAR') {
@@ -373,6 +388,18 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
         return $isValidBlindnessFactor;
+    }
+
+
+    private function isBreedTypeInputValid(?string $newBreedType): bool
+    {
+        $isValidBreedType = Validator::isValidBreedType($newBreedType, true);
+
+        if (!$isValidBreedType) {
+            $this->errors[self::INVALID_BREED_TYPE] = $newBreedType;
+        }
+
+        return $isValidBreedType;
     }
 
 
