@@ -46,7 +46,7 @@ class TagReplaceService extends DeclareControllerServiceBase
      */
     public function createTagReplaceRequest(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -120,7 +120,7 @@ class TagReplaceService extends DeclareControllerServiceBase
             return ResultUtil::unauthorized();
         }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $minId = $content->get('min_id');
 
         if (!$minId) {

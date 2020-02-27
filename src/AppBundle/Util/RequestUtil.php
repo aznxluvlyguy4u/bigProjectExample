@@ -19,7 +19,7 @@ class RequestUtil
      * @param null $emptyContentResponse
      * @return ArrayCollection
      */
-    public static function getContentAsArray(Request $request, $allowEmptyContent = false, $emptyContentResponse = null)
+    public static function getContentAsArrayCollection(Request $request, $allowEmptyContent = false, $emptyContentResponse = null)
     {
         $content = $request->getContent();
 

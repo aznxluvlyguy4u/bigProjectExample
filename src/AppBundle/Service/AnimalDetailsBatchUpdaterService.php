@@ -102,7 +102,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      */
     public function updateAnimalDetails(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         return $this->updateAnimalDetailsByArrayCollection($content);
     }
 

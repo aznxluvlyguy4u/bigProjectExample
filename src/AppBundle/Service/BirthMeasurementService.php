@@ -301,7 +301,7 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
 
     private function getContent(Request $request): EditBirthMeasurementsJsonFormat {
         $content = new EditBirthMeasurementsJsonFormat();
-        $requestBody = RequestUtil::getContentAsArray($request);
+        $requestBody = RequestUtil::getContentAsArrayCollection($request);
 
         $birthWeight = $this->getFloatValueInput(JsonInputConstant::BIRTH_WEIGHT, $requestBody);
         $tailLength = $this->getFloatValueInput(JsonInputConstant::TAIL_LENGTH, $requestBody);

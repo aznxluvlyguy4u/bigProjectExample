@@ -91,7 +91,7 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
      */
     private function createRvoRevoke(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -124,7 +124,7 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
      */
     private function processNonRvoRevoke(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
 

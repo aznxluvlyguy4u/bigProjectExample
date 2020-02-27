@@ -149,7 +149,7 @@ class LocationHealthInspectionAPIController extends APIController
         }
 
         // Validate content
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         // TODO VALIDATE CONTENT
 
         $repository = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY);
@@ -258,7 +258,7 @@ class LocationHealthInspectionAPIController extends APIController
         }
 
         // Validate content
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         // TODO VALIDATE CONTENT
 
         $repository = $this->getDoctrine()->getRepository(LocationHealthInspection::class);
@@ -353,7 +353,7 @@ class LocationHealthInspectionAPIController extends APIController
 
         $twigFile = 'animal_health/barcodes.html.twig';
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT
@@ -442,7 +442,7 @@ class LocationHealthInspectionAPIController extends APIController
 
         $twigFile = 'animal_health/base_letter.html.twig';
 
-        $contents = RequestUtil::getContentAsArray($request);
+        $contents = RequestUtil::getContentAsArrayCollection($request);
 
         $letters = [];
         foreach ($contents as $content) {
@@ -533,7 +533,7 @@ class LocationHealthInspectionAPIController extends APIController
      */
     public function createInspectionResults(Request $request)
     {
-        $contentResults = RequestUtil::getContentAsArray($request);
+        $contentResults = RequestUtil::getContentAsArrayCollection($request);
         $ubn = $contentResults->get('ubn');
         $illness = $contentResults->get('illness');
 
@@ -618,7 +618,7 @@ class LocationHealthInspectionAPIController extends APIController
      */
     public function createFailedInspectionResults(Request $request)
     {
-        $contentResults = RequestUtil::getContentAsArray($request);
+        $contentResults = RequestUtil::getContentAsArrayCollection($request);
         $filename = $contentResults->get('filename');
         $url = $contentResults->get('url');
         $serverName = $contentResults->get('server_name');
@@ -668,7 +668,7 @@ class LocationHealthInspectionAPIController extends APIController
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $contentResults = RequestUtil::getContentAsArray($request);
+        $contentResults = RequestUtil::getContentAsArrayCollection($request);
         $fileExtension = $contentResults->get('extension');
         $encodedContent = $contentResults->get('content');
         $fileName = $contentResults->get('filename');

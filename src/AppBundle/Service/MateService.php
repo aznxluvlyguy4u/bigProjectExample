@@ -25,7 +25,7 @@ class MateService extends ControllerServiceBase
      */
     public function createMate(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
@@ -65,7 +65,7 @@ class MateService extends ControllerServiceBase
     {
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
         $location = $this->getSelectedLocation($request);
 

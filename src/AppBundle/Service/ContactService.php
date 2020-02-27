@@ -19,7 +19,7 @@ class ContactService extends AuthServiceBase implements ContactAPIControllerInte
      */
     public function postContactEmail(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $user = $this->getAccountOwner($request);
         $ubn = $this->getSelectedUbn($request);
         $loggedInUser = $this->getUser();

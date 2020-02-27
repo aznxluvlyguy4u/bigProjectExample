@@ -50,7 +50,7 @@ class CountryService extends DeclareControllerServiceBase
     function getCountries(Request $request)
     {
         //Get content to array
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
 

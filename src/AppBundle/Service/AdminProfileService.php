@@ -49,7 +49,7 @@ class AdminProfileService extends AuthServiceBase implements AdminProfileAPICont
             throw AdminValidator::standardException();
         }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         //Validate input
         $inputValidator = new EditAdminProfileValidator($this->getManager(), $content, $admin);

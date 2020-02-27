@@ -66,7 +66,7 @@ class LocationHealthLetterAPIController extends APIController
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         // TODO VALIDATE CONTENT
 
         $type = strtoupper($content->get('illness') . '_' . $content->get('letter_type'));

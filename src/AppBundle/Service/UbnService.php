@@ -31,7 +31,7 @@ class UbnService extends DeclareControllerServiceBase
     function getUBNDetails(Request $request)
     {
         //Get content to array
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);

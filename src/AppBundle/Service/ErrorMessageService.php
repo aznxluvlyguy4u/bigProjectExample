@@ -95,7 +95,7 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
      * @return JsonResponse
      */
     public function updateError(Request $request) {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $requestId = $content->get("request_id");
         $isRemovedByUserBoolean = $content['is_removed_by_user'];
 
@@ -118,7 +118,7 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
      * @return JsonResponse
      */
     public function updateNsfoDeclarationError(Request $request, $messageId) {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $isHidden = $content->get(JsonInputConstant::IS_HIDDEN);
 
         if($messageId !== null && $isHidden !== null) {
@@ -144,7 +144,7 @@ class ErrorMessageService extends ControllerServiceBase implements ErrorMessageA
     public function updateHideStatus(Request $request)
     {
         $employee = $this->getEmployee();
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         /* Validation: content format */
         $validationResult = $this->validateUpdateHideStatusContent($content, $employee);

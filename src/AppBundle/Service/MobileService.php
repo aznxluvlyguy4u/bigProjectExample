@@ -20,7 +20,7 @@ class MobileService extends ControllerServiceBase
      */
     public function logout(Request $request)
     {
-        $requestData = RequestUtil::getContentAsArray($request);
+        $requestData = RequestUtil::getContentAsArrayCollection($request);
         $uuid = $requestData[JsonInputConstant::DEVICE_ID];
         if(!empty($uuid)) {
             $mobileDevice = $this->getManager()->getRepository(MobileDevice::class)->findOneBy(['uuid' => $uuid]);
@@ -35,7 +35,7 @@ class MobileService extends ControllerServiceBase
 
     public function validateRegistrationToken(Request $request)
     {
-        $requestData = RequestUtil::getContentAsArray($request);
+        $requestData = RequestUtil::getContentAsArrayCollection($request);
         $uuid = $requestData[JsonInputConstant::DEVICE_ID];
         $registrationToken = $requestData[JsonInputConstant::REGISTRATION_TOKEN];
 

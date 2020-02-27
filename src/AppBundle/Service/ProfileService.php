@@ -66,7 +66,7 @@ class ProfileService extends ControllerServiceBase implements ProfileAPIControll
     {
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $location = $this->getSelectedLocation($request);
 
         $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::ADMIN);

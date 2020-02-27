@@ -55,7 +55,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
         $actionBy = $this->getEmployee();
         AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN, true);
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $log = AdminActionLogWriter::createAdmin($this->getManager(), $actionBy, $content);
 
@@ -109,7 +109,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
         $actionBy = $this->getEmployee();
         AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN, true);
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $log = AdminActionLogWriter::editAdmin($this->getManager(), $actionBy, $content);
 
         // Validate content
@@ -154,7 +154,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
         $actionBy = $this->getEmployee();
         AdminValidator::isAdmin($actionBy, AccessLevelType::SUPER_ADMIN, true);
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $personId = $content->get('person_id');
         /** @var Employee $adminToDeactivate */
@@ -189,7 +189,7 @@ class AdminService extends AuthServiceBase implements AdminAPIControllerInterfac
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $personId = $content->get(JsonInputConstant::PERSON_ID);
 
         /** @var Client $client */

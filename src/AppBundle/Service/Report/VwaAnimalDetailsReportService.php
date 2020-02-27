@@ -38,7 +38,7 @@ class VwaAnimalDetailsReportService extends ReportServiceBase
      */
     public function getAnimalDetailsReport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $ubns = [];
         if ($content->containsKey(JsonInputConstant::LOCATIONS)) {

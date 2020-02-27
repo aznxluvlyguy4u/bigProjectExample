@@ -23,7 +23,7 @@ class WeightService extends ControllerServiceBase
      */
     public function createWeightMeasurements(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getUser();
@@ -58,7 +58,7 @@ class WeightService extends ControllerServiceBase
     {
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
         $location = $this->getSelectedLocation($request);
 
