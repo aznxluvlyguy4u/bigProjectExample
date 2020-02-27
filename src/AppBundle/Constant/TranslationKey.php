@@ -8,6 +8,7 @@ class TranslationKey
 {
     const ALLOWED_VALUES = "ALLOWED VALUES";
     const BLINDNESS_FACTOR = 'BLINDNESS_FACTOR';
+    const BREED_TYPE = 'BREED TYPE';
     const CANNOT_BE_IN_THE_FUTURE = "CANNOT BE IN THE FUTURE";
     const CANNOT_BE_OLDER_THAN = "CANNOT BE OLDER THAN";
     const FOR = "FOR";

@@ -1083,6 +1083,18 @@ class Validator
 
 
     /**
+     * @param  string|null $breedType
+     * @param  bool  $allowNull
+     * @return bool
+     */
+    public static function isValidBreedType(?string $breedType, bool $allowNull): bool
+    {
+        return ($breedType === null && $allowNull) ||
+            in_array($breedType, BreedType::getConstants());
+    }
+
+
+    /**
      * @param  string|null $birthProcess
      * @param  bool  $allowNull
      * @return bool
