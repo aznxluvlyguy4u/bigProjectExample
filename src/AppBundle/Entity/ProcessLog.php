@@ -99,7 +99,7 @@ class ProcessLog
     /**
      * @var bool
      * @ORM\Column(type="boolean", nullable=false, options={"default":true})
-     * @Assert\NotBlank
+     * @Assert\NotNull
      * @JMS\Type("boolean")
      */
     private $isActive;

@@ -73,7 +73,7 @@ class AnimalRelocation
      *
      * @ORM\Column(type="boolean", nullable=false)
      * @JMS\Type("boolean")
-     * @Assert\NotBlank
+     * @Assert\NotNull
      */
     private $isRemoval;
 
@@ -82,7 +82,7 @@ class AnimalRelocation
      *
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
-     * @Assert\NotBlank
+     * @Assert\NotNull
      */
     private $relocatedByRvoLeadingSync;
 

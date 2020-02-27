@@ -299,7 +299,7 @@ class Company
     /**
      * @var boolean
      *
-     * @Assert\NotBlank
+     * @Assert\NotNull
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
      * @JMS\Groups({

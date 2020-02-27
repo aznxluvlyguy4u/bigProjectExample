@@ -430,7 +430,7 @@ abstract class Animal
 
     /**
      * @var boolean
-     * @Assert\NotBlank
+     * @Assert\NotNull
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
      * @JMS\Groups({
