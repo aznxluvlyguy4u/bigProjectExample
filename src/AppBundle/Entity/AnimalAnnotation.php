@@ -11,7 +11,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class AnimalAnnotation
- * @ORM\Table(name="ANIMAL_ANNOTATIONS",indexes={
+ * @ORM\Table(name="animal_annotation",indexes={
  *     @ORM\Index(name="animal_annotation_idx", columns={"animal_id", "company_id"})
  * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalAnnotationRepository")
